@@ -62,6 +62,10 @@ enum Commands {
         /// Path to the project directory containing legacy specs
         #[arg(short, long)]
         project: String,
+
+        /// Allow execution of Python specs (UNSAFE: only use with trusted files)
+        #[arg(long)]
+        allow_exec_specs: bool,
     },
 
     /// Format a spec file to canonical style
@@ -84,7 +88,7 @@ fn main() -> ExitCode {
         Commands::Generate { spec, out_root } => commands::generate::run(&spec, out_root.as_deref()),
         Commands::Preview { spec, out_root } => commands::preview::run(&spec, out_root.as_deref()),
         Commands::Doctor => commands::doctor::run(),
-        Commands::Migrate { project } => commands::migrate::run(&project),
+        Commands::Migrate { project, allow_exec_specs } => commands::migrate::run(&project, allow_exec_specs),
         Commands::Fmt { spec, output } => commands::fmt::run(&spec, output.as_deref()),
     };
 

@@ -14,7 +14,15 @@ path = "src/main.rs"
 
 [dependencies]
 speccade-spec = { path = "../speccade-spec" }
+speccade-backend-audio = { path = "../speccade-backend-audio" }
+speccade-backend-music = { path = "../speccade-backend-music" }
+speccade-backend-texture = { path = "../speccade-backend-texture" }
+speccade-backend-blender = { path = "../speccade-backend-blender" }
 clap = { version = "4", features = ["derive"] }
 serde_json = "1"
 anyhow = "1"
 colored = "2"
+regex = "1"
+walkdir = "2"
+blake3 = "1"
+serde = { version = "1", features = ["derive"] }
