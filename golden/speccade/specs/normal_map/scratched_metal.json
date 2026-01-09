@@ -1,0 +1,32 @@
+{
+  "spec_version": 1,
+  "asset_id": "scratched_metal",
+  "asset_type": "texture_2d",
+  "license": "CC0-1.0",
+  "seed": 5003,
+  "description": "Scratched metal surface normal map",
+  "outputs": [
+    {
+      "kind": "texture",
+      "format": "png",
+      "path": "scratched_metal.png"
+    }
+  ],
+  "recipe": {
+    "kind": "texture_2d.normal_map_v1",
+    "params": {
+      "size": [256, 256],
+      "pattern": {
+        "type": "scratches",
+        "density": 80,
+        "length_range": [15, 60],
+        "depth": 0.12
+      },
+      "processing": {
+        "strength": 0.8,
+        "blur": 0.2,
+        "invert": false
+      }
+    }
+  }
+}

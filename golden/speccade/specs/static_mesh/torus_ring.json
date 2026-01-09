@@ -1,0 +1,39 @@
+{
+  "spec_version": 1,
+  "asset_id": "torus_ring",
+  "asset_type": "static_mesh",
+  "license": "CC0-1.0",
+  "seed": 6004,
+  "description": "Torus ring - donut shape",
+  "outputs": [
+    {
+      "kind": "mesh",
+      "format": "glb",
+      "path": "torus_ring.glb"
+    }
+  ],
+  "recipe": {
+    "kind": "static_mesh.blender_primitives_v1",
+    "params": {
+      "primitive": "torus",
+      "primitive_params": {
+        "major_radius": 0.5,
+        "minor_radius": 0.15,
+        "major_segments": 48,
+        "minor_segments": 24
+      },
+      "location": [0, 0, 0],
+      "rotation": [1.5708, 0, 0],
+      "scale": [1, 1, 1],
+      "shade": "smooth",
+      "modifiers": [],
+      "uv": {
+        "mode": "smart_project",
+        "angle_limit": 60.0
+      },
+      "export": {
+        "tangents": true
+      }
+    }
+  }
+}

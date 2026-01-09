@@ -1,0 +1,61 @@
+{
+  "spec_version": 1,
+  "asset_id": "attack_swing",
+  "asset_type": "skeletal_animation",
+  "license": "CC0-1.0",
+  "seed": 8003,
+  "description": "Attack swing animation - simple overhead swing",
+  "outputs": [
+    {
+      "kind": "animation",
+      "format": "glb",
+      "path": "attack_swing.glb"
+    }
+  ],
+  "recipe": {
+    "kind": "skeletal_animation.blender_clip_v1",
+    "params": {
+      "input_armature": "simple_biped.glb",
+      "character": "simple_biped",
+      "duration_frames": 24,
+      "fps": 30,
+      "loop": false,
+      "ground_offset": 0.0,
+      "poses": {
+        "ready": {
+          "arm_upper_R": {"pitch": -60, "yaw": 30},
+          "arm_lower_R": {"pitch": -90},
+          "chest": {"pitch": 10, "yaw": -20},
+          "spine": {"pitch": 5}
+        },
+        "windup": {
+          "arm_upper_R": {"pitch": -120, "yaw": 45},
+          "arm_lower_R": {"pitch": -45},
+          "chest": {"pitch": 15, "yaw": -30},
+          "spine": {"pitch": 10, "roll": -5}
+        },
+        "strike": {
+          "arm_upper_R": {"pitch": 30, "yaw": -10},
+          "arm_lower_R": {"pitch": -15},
+          "chest": {"pitch": -10, "yaw": 20},
+          "spine": {"pitch": -5, "roll": 5}
+        },
+        "follow_through": {
+          "arm_upper_R": {"pitch": 45, "yaw": -20},
+          "arm_lower_R": {"pitch": -30},
+          "chest": {"pitch": -5, "yaw": 10},
+          "spine": {"pitch": 0, "roll": 3}
+        }
+      },
+      "phases": [
+        {"name": "ready", "frames": [0, 4], "pose": "ready", "timing_curve": "linear"},
+        {"name": "windup", "frames": [4, 10], "pose": "windup", "timing_curve": "ease_out"},
+        {"name": "strike", "frames": [10, 14], "pose": "strike", "timing_curve": "exponential_in"},
+        {"name": "follow_through", "frames": [14, 24], "pose": "follow_through", "timing_curve": "ease_out"}
+      ],
+      "rig_setup": {
+        "presets": {}
+      }
+    }
+  }
+}

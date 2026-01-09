@@ -1,0 +1,45 @@
+{
+  "spec_version": 1,
+  "asset_id": "lowpoly_icosphere",
+  "asset_type": "static_mesh",
+  "license": "CC0-1.0",
+  "seed": 6005,
+  "description": "Low-poly icosphere with decimation - game-ready",
+  "outputs": [
+    {
+      "kind": "mesh",
+      "format": "glb",
+      "path": "lowpoly_icosphere.glb"
+    }
+  ],
+  "recipe": {
+    "kind": "static_mesh.blender_primitives_v1",
+    "params": {
+      "primitive": "icosphere",
+      "primitive_params": {
+        "radius": 0.5,
+        "subdivisions": 2
+      },
+      "location": [0, 0, 0],
+      "rotation": [0, 0, 0],
+      "scale": [1, 1, 1],
+      "shade": "flat",
+      "modifiers": [
+        {
+          "type": "decimate",
+          "ratio": 0.6
+        },
+        {
+          "type": "triangulate"
+        }
+      ],
+      "uv": {
+        "mode": "smart_project",
+        "angle_limit": 45.0
+      },
+      "export": {
+        "tangents": false
+      }
+    }
+  }
+}

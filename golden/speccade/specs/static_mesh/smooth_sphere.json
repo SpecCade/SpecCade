@@ -1,0 +1,38 @@
+{
+  "spec_version": 1,
+  "asset_id": "smooth_sphere",
+  "asset_type": "static_mesh",
+  "license": "CC0-1.0",
+  "seed": 6002,
+  "description": "High-poly UV sphere - smooth shading",
+  "outputs": [
+    {
+      "kind": "mesh",
+      "format": "glb",
+      "path": "smooth_sphere.glb"
+    }
+  ],
+  "recipe": {
+    "kind": "static_mesh.blender_primitives_v1",
+    "params": {
+      "primitive": "sphere",
+      "primitive_params": {
+        "radius": 0.5,
+        "segments": 48,
+        "rings": 24
+      },
+      "location": [0, 0, 0],
+      "rotation": [0, 0, 0],
+      "scale": [1, 1, 1],
+      "shade": "smooth",
+      "modifiers": [],
+      "uv": {
+        "mode": "smart_project",
+        "angle_limit": 66.0
+      },
+      "export": {
+        "tangents": true
+      }
+    }
+  }
+}

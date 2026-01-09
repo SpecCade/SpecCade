@@ -1,0 +1,56 @@
+{
+  "spec_version": 1,
+  "asset_id": "metal_plate",
+  "asset_type": "texture_2d",
+  "license": "CC0-1.0",
+  "seed": 4002,
+  "description": "Metal plate texture - tileable with subtle variation",
+  "outputs": [
+    {
+      "kind": "texture",
+      "format": "png",
+      "path": "metal_plate_albedo.png"
+    },
+    {
+      "kind": "texture",
+      "format": "png",
+      "path": "metal_plate_roughness.png"
+    },
+    {
+      "kind": "texture",
+      "format": "png",
+      "path": "metal_plate_metallic.png"
+    }
+  ],
+  "recipe": {
+    "kind": "texture_2d.material_maps_v1",
+    "params": {
+      "size": [256, 256],
+      "tileable": true,
+      "layers": [
+        {
+          "type": "solid",
+          "color": 0.5
+        },
+        {
+          "type": "noise",
+          "noise_type": "perlin",
+          "scale": 0.1,
+          "octaves": 2,
+          "blend": "add",
+          "opacity": 0.15
+        },
+        {
+          "type": "gradient",
+          "direction": "radial",
+          "center": [0.5, 0.5],
+          "inner": 0.6,
+          "outer": 0.4,
+          "blend": "overlay",
+          "opacity": 0.2
+        }
+      ],
+      "color_ramp": ["#404040", "#606060", "#808080"]
+    }
+  }
+}

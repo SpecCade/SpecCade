@@ -1,0 +1,39 @@
+{
+  "spec_version": 1,
+  "asset_id": "white_noise_burst",
+  "asset_type": "audio_sfx",
+  "license": "CC0-1.0",
+  "seed": 1005,
+  "description": "Pure white noise burst - useful for percussion/static",
+  "outputs": [
+    {
+      "kind": "audio",
+      "format": "wav",
+      "path": "white_noise_burst.wav"
+    }
+  ],
+  "recipe": {
+    "kind": "audio_sfx.layered_synth_v1",
+    "params": {
+      "duration_seconds": 0.15,
+      "sample_rate": 44100,
+      "normalize": true,
+      "peak_db": -3.0,
+      "layers": [
+        {
+          "synthesis": {
+            "type": "noise_burst",
+            "color": "white"
+          },
+          "amplitude": 1.0,
+          "envelope": {
+            "attack": 0.001,
+            "decay": 0.05,
+            "sustain": 0.3,
+            "release": 0.08
+          }
+        }
+      ]
+    }
+  }
+}

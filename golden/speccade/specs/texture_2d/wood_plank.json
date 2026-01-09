@@ -1,0 +1,52 @@
+{
+  "spec_version": 1,
+  "asset_id": "wood_plank",
+  "asset_type": "texture_2d",
+  "license": "CC0-1.0",
+  "seed": 4003,
+  "description": "Wood plank texture - grain pattern with variation",
+  "outputs": [
+    {
+      "kind": "texture",
+      "format": "png",
+      "path": "wood_plank_albedo.png"
+    },
+    {
+      "kind": "texture",
+      "format": "png",
+      "path": "wood_plank_roughness.png"
+    }
+  ],
+  "recipe": {
+    "kind": "texture_2d.material_maps_v1",
+    "params": {
+      "size": [512, 512],
+      "tileable": true,
+      "layers": [
+        {
+          "type": "wood_grain",
+          "ring_count": 12,
+          "distortion": 0.25
+        },
+        {
+          "type": "noise",
+          "noise_type": "perlin",
+          "scale": 0.02,
+          "octaves": 4,
+          "blend": "multiply",
+          "opacity": 0.2
+        },
+        {
+          "type": "stripes",
+          "direction": "vertical",
+          "stripe_width": 128,
+          "color1": 0.4,
+          "color2": 0.5,
+          "blend": "soft_light",
+          "opacity": 0.1
+        }
+      ],
+      "color_ramp": ["#8B4513", "#A0522D", "#DEB887", "#D2691E"]
+    }
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "spec_version": 1,
+  "asset_id": "bass_pluck",
+  "asset_type": "audio_instrument",
+  "license": "CC0-1.0",
+  "seed": 2001,
+  "description": "Bass pluck instrument - Karplus-Strong synthesis",
+  "outputs": [
+    {
+      "kind": "audio",
+      "format": "wav",
+      "path": "bass_pluck.wav"
+    }
+  ],
+  "recipe": {
+    "kind": "audio_instrument.synth_patch_v1",
+    "params": {
+      "base_note": "C2",
+      "sample_rate": 44100,
+      "duration_seconds": 1.5,
+      "bit_depth": 16,
+      "synthesis": {
+        "type": "karplus_strong",
+        "damping": 0.998,
+        "brightness": 0.5
+      },
+      "envelope": {
+        "attack": 0.001,
+        "decay": 0.2,
+        "sustain": 0.3,
+        "release": 0.4
+      }
+    }
+  }
+}
