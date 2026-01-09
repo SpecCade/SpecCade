@@ -3,7 +3,7 @@
 //! Pure Rust implementation of 2D simplex noise based on Stefan Gustavson's
 //! reference implementation, adapted for deterministic output.
 
-use super::{Noise2D, lerp};
+use super::Noise2D;
 use crate::rng::DeterministicRng;
 
 /// 2D Simplex noise generator.
@@ -50,10 +50,8 @@ impl SimplexNoise {
         }
 
         // Double the permutation table for overflow handling
-        for i in 0..256 {
-            perm[i] = source[i];
-            perm[i + 256] = source[i];
-        }
+        perm[..256].copy_from_slice(&source);
+        perm[256..512].copy_from_slice(&source);
 
         Self { perm }
     }
@@ -136,58 +134,6 @@ impl Noise2D for SimplexNoise {
 
         // Scale to return values in the interval [-1, 1]
         70.0 * (n0 + n1 + n2)
-    }
-}
-
-/// Tileable 2D simplex noise.
-pub struct TileableSimplexNoise {
-    noise: SimplexNoise,
-    period_x: f64,
-    period_y: f64,
-}
-
-impl TileableSimplexNoise {
-    /// Create a new tileable simplex noise generator.
-    pub fn new(seed: u32, period_x: f64, period_y: f64) -> Self {
-        Self {
-            noise: SimplexNoise::new(seed),
-            period_x,
-            period_y,
-        }
-    }
-}
-
-impl Noise2D for TileableSimplexNoise {
-    fn sample(&self, x: f64, y: f64) -> f64 {
-        // Use 4 samples with bilinear blending for tileability
-        let px = self.period_x;
-        let py = self.period_y;
-
-        let s = x / px;
-        let t = y / py;
-
-        // Sample at four corners with weights
-        let nx = px.recip();
-        let ny = py.recip();
-
-        let n00 = self.noise.sample(x, y);
-        let n10 = self.noise.sample(x - px, y);
-        let n01 = self.noise.sample(x, y - py);
-        let n11 = self.noise.sample(x - px, y - py);
-
-        // Blend based on position within tile
-        let u = s - s.floor();
-        let v = t - t.floor();
-
-        // Smooth interpolation weights
-        let wu = u * u * (3.0 - 2.0 * u);
-        let wv = v * v * (3.0 - 2.0 * v);
-
-        lerp(
-            lerp(n00, n10, wu),
-            lerp(n01, n11, wu),
-            wv,
-        )
     }
 }
 

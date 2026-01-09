@@ -7,7 +7,7 @@
   "description": "Power-up sound - rising FM sweep",
   "outputs": [
     {
-      "kind": "audio",
+      "kind": "primary",
       "format": "wav",
       "path": "powerup_rise.wav"
     }
@@ -17,52 +17,60 @@
     "params": {
       "duration_seconds": 0.6,
       "sample_rate": 44100,
-      "normalize": true,
-      "peak_db": -2.0,
       "layers": [
         {
           "synthesis": {
             "type": "fm_synth",
-            "carrier_freq": 400,
-            "mod_ratio": 1.5,
-            "mod_index": 4.0,
-            "index_decay": 2.0
+            "carrier_freq": 400.0,
+            "modulator_freq": 600.0,
+            "modulation_index": 4.0
           },
-          "amplitude": 0.8,
           "envelope": {
             "attack": 0.02,
             "decay": 0.1,
             "sustain": 0.7,
             "release": 0.2
-          }
+          },
+          "volume": 0.8,
+          "pan": 0.0
         },
         {
           "synthesis": {
-            "type": "sine",
-            "freq": 400,
-            "freq_end": 1600
+            "type": "oscillator",
+            "waveform": "sine",
+            "frequency": 400.0,
+            "freq_sweep": {
+              "end_freq": 1600.0,
+              "curve": "linear"
+            }
           },
-          "amplitude": 0.5,
           "envelope": {
             "attack": 0.01,
             "decay": 0.1,
             "sustain": 0.6,
             "release": 0.2
-          }
+          },
+          "volume": 0.5,
+          "pan": 0.0
         },
         {
           "synthesis": {
-            "type": "sine",
-            "freq": 800,
-            "freq_end": 3200
+            "type": "oscillator",
+            "waveform": "sine",
+            "frequency": 800.0,
+            "freq_sweep": {
+              "end_freq": 3200.0,
+              "curve": "linear"
+            }
           },
-          "amplitude": 0.3,
           "envelope": {
             "attack": 0.02,
             "decay": 0.15,
             "sustain": 0.5,
             "release": 0.2
-          }
+          },
+          "volume": 0.3,
+          "pan": 0.0
         }
       ]
     }

@@ -7,7 +7,7 @@
   "description": "Walk cycle animation - basic locomotion",
   "outputs": [
     {
-      "kind": "animation",
+      "kind": "primary",
       "format": "glb",
       "path": "walk_cycle.glb"
     }

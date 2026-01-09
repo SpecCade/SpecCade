@@ -49,6 +49,7 @@ impl NormalGenerator {
     }
 
     /// Calculate normal at a specific pixel using Sobel operators.
+    #[allow(clippy::needless_range_loop)]
     fn calculate_normal(&self, height_map: &GrayscaleBuffer, x: i32, y: i32) -> Color {
         // Sample 3x3 neighborhood with wrapping
         let mut samples = [[0.0; 3]; 3];
@@ -168,24 +169,6 @@ impl Default for NormalGenerator {
     fn default() -> Self {
         Self::new()
     }
-}
-
-/// Generate normal map from any grayscale source.
-pub fn generate_normal_from_grayscale(
-    grayscale: &[f64],
-    width: u32,
-    height: u32,
-    strength: f64,
-) -> TextureBuffer {
-    let height_map = GrayscaleBuffer {
-        width,
-        height,
-        data: grayscale.to_vec(),
-    };
-
-    NormalGenerator::new()
-        .with_strength(strength)
-        .generate_from_height(&height_map)
 }
 
 #[cfg(test)]

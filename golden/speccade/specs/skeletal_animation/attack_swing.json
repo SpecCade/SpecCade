@@ -7,7 +7,7 @@
   "description": "Attack swing animation - simple overhead swing",
   "outputs": [
     {
-      "kind": "animation",
+      "kind": "primary",
       "format": "glb",
       "path": "attack_swing.glb"
     }

@@ -93,6 +93,7 @@ impl EdgeWearPattern {
     }
 
     /// Calculate edge factor using Sobel-like edge detection.
+    #[allow(clippy::needless_range_loop)]
     fn edge_factor(&self, x: u32, y: u32) -> f64 {
         // Sample 3x3 neighborhood
         let mut samples = [[0.0; 3]; 3];
@@ -169,83 +170,6 @@ impl Pattern2D for EdgeWearPattern {
         };
 
         wear.clamp(0.0, 1.0)
-    }
-}
-
-/// Simple edge distance pattern.
-///
-/// Returns distance from edges for use in other effects.
-#[derive(Debug, Clone)]
-pub struct EdgeDistancePattern {
-    /// Source height map.
-    height_map: Vec<f64>,
-    /// Width.
-    width: u32,
-    /// Height.
-    height: u32,
-    /// Edge threshold.
-    threshold: f64,
-}
-
-impl EdgeDistancePattern {
-    /// Create a new edge distance pattern from a height map.
-    pub fn new(height_map: Vec<f64>, width: u32, height: u32) -> Self {
-        Self {
-            height_map,
-            width,
-            height,
-            threshold: 0.1,
-        }
-    }
-
-    /// Set the edge threshold.
-    pub fn with_threshold(mut self, threshold: f64) -> Self {
-        self.threshold = threshold;
-        self
-    }
-
-    fn sample_height(&self, x: u32, y: u32) -> f64 {
-        let idx = (y * self.width + x) as usize;
-        if idx < self.height_map.len() {
-            self.height_map[idx]
-        } else {
-            0.5
-        }
-    }
-}
-
-impl Pattern2D for EdgeDistancePattern {
-    fn sample(&self, x: u32, y: u32) -> f64 {
-        let center = self.sample_height(x, y);
-
-        // Check all 8 neighbors
-        let mut min_diff = f64::MAX;
-
-        for dy in -1i32..=1 {
-            for dx in -1i32..=1 {
-                if dx == 0 && dy == 0 {
-                    continue;
-                }
-
-                let sx = (x as i32 + dx).rem_euclid(self.width as i32) as u32;
-                let sy = (y as i32 + dy).rem_euclid(self.height as i32) as u32;
-
-                let neighbor = self.sample_height(sx, sy);
-                let diff = (center - neighbor).abs();
-
-                if diff > self.threshold {
-                    min_diff = min_diff.min(diff);
-                }
-            }
-        }
-
-        if min_diff == f64::MAX {
-            // Not near an edge
-            1.0
-        } else {
-            // Near an edge - return inverse distance (closer = lower value)
-            1.0 - (min_diff / (1.0 - self.threshold)).clamp(0.0, 1.0)
-        }
     }
 }
 

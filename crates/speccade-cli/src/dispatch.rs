@@ -226,7 +226,7 @@ fn generate_texture_material_maps(spec: &Spec, out_root: &Path) -> Result<Vec<Ou
                 .map_err(|e| DispatchError::BackendError(format!("Failed to write texture file: {}", e)))?;
 
             outputs.push(OutputResult::tier1(
-                output.kind.clone(),
+                output.kind,
                 OutputFormat::Png,
                 PathBuf::from(&output.path),
                 map_result.hash,

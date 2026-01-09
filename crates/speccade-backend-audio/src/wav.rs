@@ -318,7 +318,7 @@ pub fn extract_pcm_data(wav_data: &[u8]) -> Option<&[u8]> {
 
         pos += 8 + chunk_size;
         // Align to word boundary
-        if chunk_size % 2 != 0 {
+        if !chunk_size.is_multiple_of(2) {
             pos += 1;
         }
     }

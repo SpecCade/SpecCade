@@ -7,7 +7,7 @@
   "description": "Pure white noise burst - useful for percussion/static",
   "outputs": [
     {
-      "kind": "audio",
+      "kind": "primary",
       "format": "wav",
       "path": "white_noise_burst.wav"
     }
@@ -17,21 +17,20 @@
     "params": {
       "duration_seconds": 0.15,
       "sample_rate": 44100,
-      "normalize": true,
-      "peak_db": -3.0,
       "layers": [
         {
           "synthesis": {
             "type": "noise_burst",
-            "color": "white"
+            "noise_type": "white"
           },
-          "amplitude": 1.0,
           "envelope": {
             "attack": 0.001,
             "decay": 0.05,
             "sustain": 0.3,
             "release": 0.08
-          }
+          },
+          "volume": 1.0,
+          "pan": 0.0
         }
       ]
     }

@@ -14,13 +14,13 @@ use speccade_spec::recipe::texture::{
 
 use crate::color::Color;
 use crate::maps::{
-    TextureBuffer, GrayscaleBuffer,
+    GrayscaleBuffer,
     AlbedoGenerator, RoughnessGenerator, MetallicGenerator,
     NormalGenerator, AoGenerator, EmissiveGenerator,
 };
 use crate::noise::{Noise2D, Fbm, PerlinNoise, SimplexNoise, WorleyNoise};
 use crate::pattern::{
-    Pattern2D, BrickPattern, CheckerPattern, WoodGrainPattern,
+    Pattern2D, BrickPattern, WoodGrainPattern,
     ScratchesPattern, EdgeWearPattern,
 };
 use crate::png::{self, PngConfig, PngError};
@@ -387,7 +387,7 @@ fn generate_albedo_map(
                     }
                 }
             }
-            TextureLayer::Dirt { density, color, strength, .. } => {
+            TextureLayer::Dirt { density, color, .. } => {
                 let dirt_color = Color::rgb(color[0], color[1], color[2]);
                 generator.apply_dirt(&mut buffer, *density, dirt_color, layer_seed);
             }
@@ -523,7 +523,7 @@ fn generate_ao_map(
 
 /// Generate emissive map.
 fn generate_emissive_map(
-    layers: &[TextureLayer],
+    _layers: &[TextureLayer],
     width: u32,
     height: u32,
     seed: u32,

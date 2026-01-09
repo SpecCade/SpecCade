@@ -7,7 +7,7 @@
   "description": "Simple biped character - minimal humanoid skeleton",
   "outputs": [
     {
-      "kind": "mesh",
+      "kind": "primary",
       "format": "glb",
       "path": "simple_biped.glb"
     }

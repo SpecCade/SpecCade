@@ -85,10 +85,12 @@ pub fn parse_note_name(name: &str) -> Option<u8> {
     };
 
     let rest: String = chars.collect();
-    let (accidental_offset, octave_str) = if rest.starts_with('#') || rest.starts_with('s') {
-        (1i32, &rest[1..])
-    } else if rest.starts_with('b') {
-        (-1i32, &rest[1..])
+    let (accidental_offset, octave_str) = if let Some(stripped) = rest.strip_prefix('#') {
+        (1i32, stripped)
+    } else if let Some(stripped) = rest.strip_prefix('s') {
+        (1i32, stripped)
+    } else if let Some(stripped) = rest.strip_prefix('b') {
+        (-1i32, stripped)
     } else {
         (0i32, rest.as_str())
     };
@@ -99,7 +101,7 @@ pub fn parse_note_name(name: &str) -> Option<u8> {
     // C4 = 60, A4 = 69
     let midi = (octave + 1) * 12 + base_semitone + accidental_offset;
 
-    if midi >= 0 && midi <= 127 {
+    if (0..=127).contains(&midi) {
         Some(midi as u8)
     } else {
         None

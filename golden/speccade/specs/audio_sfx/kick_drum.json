@@ -7,7 +7,7 @@
   "description": "Synthesized kick drum - pitched body with noise layer",
   "outputs": [
     {
-      "kind": "audio",
+      "kind": "primary",
       "format": "wav",
       "path": "kick_drum.wav"
     }
@@ -17,40 +17,44 @@
     "params": {
       "duration_seconds": 0.35,
       "sample_rate": 44100,
-      "normalize": true,
-      "peak_db": -1.0,
       "layers": [
         {
           "synthesis": {
-            "type": "pitched_body",
-            "start_freq": 180,
-            "end_freq": 45
+            "type": "oscillator",
+            "waveform": "sine",
+            "frequency": 180.0,
+            "freq_sweep": {
+              "end_freq": 45.0,
+              "curve": "exponential"
+            }
           },
-          "amplitude": 1.0,
           "envelope": {
             "attack": 0.001,
             "decay": 0.15,
             "sustain": 0.1,
             "release": 0.15
-          }
+          },
+          "volume": 1.0,
+          "pan": 0.0
         },
         {
           "synthesis": {
             "type": "noise_burst",
-            "color": "white"
+            "noise_type": "white",
+            "filter": {
+              "type": "highpass",
+              "cutoff": 2000.0,
+              "resonance": 0.5
+            }
           },
-          "amplitude": 0.2,
           "envelope": {
             "attack": 0.001,
             "decay": 0.02,
             "sustain": 0.0,
             "release": 0.02
           },
-          "filter": {
-            "type": "highpass",
-            "cutoff": 2000,
-            "q": 0.5
-          }
+          "volume": 0.2,
+          "pan": 0.0
         }
       ]
     }

@@ -7,7 +7,7 @@
   "description": "High-poly UV sphere - smooth shading",
   "outputs": [
     {
-      "kind": "mesh",
+      "kind": "primary",
       "format": "glb",
       "path": "smooth_sphere.glb"
     }

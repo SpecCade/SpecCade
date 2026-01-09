@@ -7,7 +7,7 @@
   "description": "Complex layered explosion - multiple synthesis types combined",
   "outputs": [
     {
-      "kind": "audio",
+      "kind": "primary",
       "format": "wav",
       "path": "explosion_layered.wav"
     }
@@ -17,61 +17,63 @@
     "params": {
       "duration_seconds": 1.2,
       "sample_rate": 44100,
-      "normalize": true,
-      "peak_db": -0.5,
       "layers": [
         {
           "synthesis": {
             "type": "noise_burst",
-            "color": "brown"
+            "noise_type": "brown",
+            "filter": {
+              "type": "lowpass",
+              "cutoff": 800.0,
+              "resonance": 1.2
+            }
           },
-          "amplitude": 1.0,
           "envelope": {
             "attack": 0.005,
             "decay": 0.3,
             "sustain": 0.2,
             "release": 0.7
           },
-          "filter": {
-            "type": "lowpass",
-            "cutoff": 800,
-            "cutoff_end": 200,
-            "q": 1.2
-          }
+          "volume": 1.0,
+          "pan": 0.0
         },
         {
           "synthesis": {
-            "type": "pitched_body",
-            "start_freq": 150,
-            "end_freq": 30
+            "type": "oscillator",
+            "waveform": "sine",
+            "frequency": 150.0,
+            "freq_sweep": {
+              "end_freq": 30.0,
+              "curve": "exponential"
+            }
           },
-          "amplitude": 0.7,
-          "delay": 0.01,
           "envelope": {
             "attack": 0.01,
             "decay": 0.4,
             "sustain": 0.1,
             "release": 0.5
-          }
+          },
+          "volume": 0.7,
+          "pan": 0.0
         },
         {
           "synthesis": {
             "type": "noise_burst",
-            "color": "white"
+            "noise_type": "white",
+            "filter": {
+              "type": "highpass",
+              "cutoff": 4000.0,
+              "resonance": 0.7
+            }
           },
-          "amplitude": 0.3,
-          "delay": 0.0,
           "envelope": {
             "attack": 0.001,
             "decay": 0.05,
             "sustain": 0.0,
             "release": 0.1
           },
-          "filter": {
-            "type": "highpass",
-            "cutoff": 4000,
-            "q": 0.7
-          }
+          "volume": 0.3,
+          "pan": 0.0
         }
       ]
     }

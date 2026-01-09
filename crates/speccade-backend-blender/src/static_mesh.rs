@@ -144,7 +144,7 @@ pub fn generate_from_params(
         .seed(seed)
         .output(OutputSpec::primary(
             OutputFormat::Glb,
-            &format!("meshes/{}.glb", asset_id),
+            format!("meshes/{}.glb", asset_id),
         ))
         .recipe(speccade_spec::recipe::Recipe::new(
             "static_mesh.blender_primitives_v1",

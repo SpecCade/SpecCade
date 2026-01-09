@@ -197,6 +197,8 @@ fn get_target_triple() -> String {
     #[cfg(not(any(target_env = "msvc", target_env = "gnu")))]
     const ENV: &str = "";
 
+    // ENV is conditionally compiled, so is_empty() varies by platform
+    #[allow(clippy::const_is_empty)]
     if ENV.is_empty() {
         format!("{}-unknown-{}", ARCH, OS)
     } else {

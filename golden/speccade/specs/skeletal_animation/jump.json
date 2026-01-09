@@ -7,7 +7,7 @@
   "description": "Jump animation - anticipation, launch, apex, landing",
   "outputs": [
     {
-      "kind": "animation",
+      "kind": "primary",
       "format": "glb",
       "path": "jump.glb"
     }

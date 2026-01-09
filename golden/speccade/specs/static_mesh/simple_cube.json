@@ -7,7 +7,7 @@
   "description": "Simple beveled cube - basic primitive",
   "outputs": [
     {
-      "kind": "mesh",
+      "kind": "primary",
       "format": "glb",
       "path": "simple_cube.glb"
     }
@@ -15,14 +15,8 @@
   "recipe": {
     "kind": "static_mesh.blender_primitives_v1",
     "params": {
-      "primitive": "cube",
-      "primitive_params": {
-        "size": 1.0
-      },
-      "location": [0, 0, 0],
-      "rotation": [0, 0, 0],
-      "scale": [1, 1, 1],
-      "shade": "smooth",
+      "base_primitive": "cube",
+      "dimensions": [1.0, 1.0, 1.0],
       "modifiers": [
         {
           "type": "bevel",
@@ -30,12 +24,14 @@
           "segments": 2
         }
       ],
-      "uv": {
-        "mode": "smart_project",
-        "angle_limit": 66.0
-      },
+      "uv_projection": "box",
+      "material_slots": [],
       "export": {
-        "tangents": false
+        "apply_modifiers": true,
+        "triangulate": true,
+        "include_normals": true,
+        "include_uvs": true,
+        "include_vertex_colors": false
       }
     }
   }

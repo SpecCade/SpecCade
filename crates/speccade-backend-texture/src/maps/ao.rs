@@ -176,16 +176,6 @@ impl Default for AoGenerator {
     }
 }
 
-/// Generate AO map with sensible defaults.
-pub fn generate_ao_from_height(
-    height_map: &GrayscaleBuffer,
-    strength: f64,
-) -> GrayscaleBuffer {
-    AoGenerator::new()
-        .with_strength(strength)
-        .generate_from_height(height_map)
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -198,7 +188,6 @@ mod tests {
         let ao_map = generator.generate_from_height(&height_map);
 
         // Check that AO is relatively uniform
-        let first = ao_map.get(0, 0);
         for y in 0..64 {
             for x in 0..64 {
                 let v = ao_map.get(x, y);

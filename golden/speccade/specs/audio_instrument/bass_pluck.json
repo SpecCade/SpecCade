@@ -7,7 +7,7 @@
   "description": "Bass pluck instrument - Karplus-Strong synthesis",
   "outputs": [
     {
-      "kind": "audio",
+      "kind": "primary",
       "format": "wav",
       "path": "bass_pluck.wav"
     }
@@ -15,14 +15,12 @@
   "recipe": {
     "kind": "audio_instrument.synth_patch_v1",
     "params": {
-      "base_note": "C2",
       "sample_rate": 44100,
-      "duration_seconds": 1.5,
-      "bit_depth": 16,
       "synthesis": {
         "type": "karplus_strong",
-        "damping": 0.998,
-        "brightness": 0.5
+        "frequency": 65.41,
+        "decay": 0.998,
+        "blend": 0.5
       },
       "envelope": {
         "attack": 0.001,

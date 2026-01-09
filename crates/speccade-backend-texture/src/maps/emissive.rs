@@ -189,18 +189,6 @@ impl EmissiveGenerator {
     }
 }
 
-/// Generate a simple emissive map based on a pattern.
-pub fn generate_emissive_from_pattern(
-    pattern: &GrayscaleBuffer,
-    color: Color,
-    intensity: f64,
-    threshold: f64,
-) -> TextureBuffer {
-    EmissiveGenerator::new(color, 42)
-        .with_intensity(intensity)
-        .generate_from_mask(pattern, threshold)
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;

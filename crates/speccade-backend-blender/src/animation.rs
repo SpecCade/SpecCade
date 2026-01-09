@@ -154,7 +154,7 @@ pub fn generate_from_params(
         .seed(seed)
         .output(OutputSpec::primary(
             OutputFormat::Glb,
-            &format!("animations/{}.glb", asset_id),
+            format!("animations/{}.glb", asset_id),
         ))
         .recipe(speccade_spec::recipe::Recipe::new(
             "skeletal_animation.blender_clip_v1",

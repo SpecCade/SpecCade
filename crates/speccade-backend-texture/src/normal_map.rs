@@ -393,6 +393,7 @@ fn create_noise_generator(config: &NoiseConfig, seed: u32) -> Box<dyn Noise2D> {
 }
 
 /// Convert height map to normal map using Sobel operators.
+#[allow(clippy::needless_range_loop)]
 fn height_to_normal(height_map: &GrayscaleBuffer, strength: f64) -> TextureBuffer {
     let width = height_map.width;
     let height = height_map.height;

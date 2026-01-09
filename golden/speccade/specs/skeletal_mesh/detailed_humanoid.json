@@ -7,7 +7,7 @@
   "description": "Detailed humanoid - more complex skeleton with fingers",
   "outputs": [
     {
-      "kind": "mesh",
+      "kind": "primary",
       "format": "glb",
       "path": "detailed_humanoid.glb"
     }

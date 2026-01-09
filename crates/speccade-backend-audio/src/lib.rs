@@ -152,11 +152,11 @@ mod integration_tests {
         let spec1 = create_fm_spec(42);
         let spec2 = create_fm_spec(43);
 
-        let result1 = generate(&spec1).expect("first generation");
-        let result2 = generate(&spec2).expect("second generation");
+        let _result1 = generate(&spec1).expect("first generation");
+        let _result2 = generate(&spec2).expect("second generation");
 
         // Note: FM synthesis without noise is deterministic from oscillators,
-        // so the seeds won't affect it. Let's use a noise-based test instead.
+        // so the seeds won't affect it. See test_noise_different_seeds for proper coverage.
     }
 
     #[test]

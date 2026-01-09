@@ -7,7 +7,7 @@
   "description": "FM synthesis laser shot - classic arcade sound",
   "outputs": [
     {
-      "kind": "audio",
+      "kind": "primary",
       "format": "wav",
       "path": "laser_shot.wav"
     }
@@ -17,24 +17,26 @@
     "params": {
       "duration_seconds": 0.25,
       "sample_rate": 44100,
-      "normalize": true,
-      "peak_db": -1.0,
       "layers": [
         {
           "synthesis": {
             "type": "fm_synth",
-            "carrier_freq": 1200,
-            "mod_ratio": 2.5,
-            "mod_index": 8.0,
-            "index_decay": 20.0
+            "carrier_freq": 1200.0,
+            "modulator_freq": 3000.0,
+            "modulation_index": 8.0,
+            "freq_sweep": {
+              "end_freq": 300.0,
+              "curve": "exponential"
+            }
           },
-          "amplitude": 0.9,
           "envelope": {
             "attack": 0.001,
             "decay": 0.1,
             "sustain": 0.3,
             "release": 0.1
-          }
+          },
+          "volume": 0.9,
+          "pan": 0.0
         }
       ]
     }

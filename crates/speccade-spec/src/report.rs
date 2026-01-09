@@ -523,6 +523,8 @@ impl ReportBuilder {
         )))]
         const ENV: &str = "";
 
+        // ENV is conditionally compiled, so is_empty() varies by platform
+        #[allow(clippy::const_is_empty)]
         if ENV.is_empty() {
             format!("{}-{}-{}", ARCH, VENDOR, OS)
         } else {

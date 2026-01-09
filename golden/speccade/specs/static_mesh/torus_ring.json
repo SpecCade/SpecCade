@@ -7,7 +7,7 @@
   "description": "Torus ring - donut shape",
   "outputs": [
     {
-      "kind": "mesh",
+      "kind": "primary",
       "format": "glb",
       "path": "torus_ring.glb"
     }

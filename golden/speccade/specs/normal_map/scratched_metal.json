@@ -7,7 +7,7 @@
   "description": "Scratched metal surface normal map",
   "outputs": [
     {
-      "kind": "texture",
+      "kind": "primary",
       "format": "png",
       "path": "scratched_metal.png"
     }
@@ -15,18 +15,19 @@
   "recipe": {
     "kind": "texture_2d.normal_map_v1",
     "params": {
-      "size": [256, 256],
+      "resolution": [256, 256],
+      "tileable": true,
       "pattern": {
-        "type": "scratches",
-        "density": 80,
-        "length_range": [15, 60],
-        "depth": 0.12
+        "type": "noise_bumps",
+        "noise": {
+          "algorithm": "perlin",
+          "scale": 0.05,
+          "octaves": 4,
+          "persistence": 0.5,
+          "lacunarity": 2.0
+        }
       },
-      "processing": {
-        "strength": 0.8,
-        "blur": 0.2,
-        "invert": false
-      }
+      "bump_strength": 0.8
     }
   }
 }

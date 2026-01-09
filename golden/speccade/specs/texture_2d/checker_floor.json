@@ -3,42 +3,28 @@
   "asset_id": "checker_floor",
   "asset_type": "texture_2d",
   "license": "CC0-1.0",
-  "seed": 4004,
-  "description": "Checkerboard floor texture - classic pattern with noise",
+  "seed": 4003,
+  "description": "Checkered floor texture - clean procedural pattern",
   "outputs": [
     {
-      "kind": "texture",
+      "kind": "primary",
       "format": "png",
       "path": "checker_floor_albedo.png"
-    },
-    {
-      "kind": "texture",
-      "format": "png",
-      "path": "checker_floor_roughness.png"
     }
   ],
   "recipe": {
     "kind": "texture_2d.material_maps_v1",
     "params": {
-      "size": [256, 256],
+      "resolution": [256, 256],
       "tileable": true,
-      "layers": [
-        {
-          "type": "checkerboard",
-          "tile_size": 32,
-          "color1": 0.2,
-          "color2": 0.8
-        },
-        {
-          "type": "noise",
-          "noise_type": "perlin",
-          "scale": 0.08,
-          "octaves": 2,
-          "blend": "multiply",
-          "opacity": 0.1
-        }
-      ],
-      "palette": ["#1a1a1a", "#e0e0e0"]
+      "maps": ["albedo"],
+      "base_material": {
+        "type": "plastic",
+        "base_color": [0.9, 0.9, 0.9],
+        "roughness_range": [0.3, 0.4],
+        "metallic": 0.0
+      },
+      "layers": []
     }
   }
 }

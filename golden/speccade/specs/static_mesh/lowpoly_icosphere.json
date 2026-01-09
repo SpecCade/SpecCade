@@ -7,7 +7,7 @@
   "description": "Low-poly icosphere with decimation - game-ready",
   "outputs": [
     {
-      "kind": "mesh",
+      "kind": "primary",
       "format": "glb",
       "path": "lowpoly_icosphere.glb"
     }

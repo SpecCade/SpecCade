@@ -7,6 +7,8 @@ use colored::Colorize;
 use std::env;
 use std::process::{Command, ExitCode};
 
+use crate::dispatch::{get_backend_tier, is_backend_available};
+
 /// Run the doctor command
 ///
 /// Checks:
@@ -114,6 +116,35 @@ pub fn run() -> Result<ExitCode> {
                 e
             );
             all_ok = false;
+        }
+    }
+
+    println!();
+
+    // Check 4: Available backends
+    println!("{}", "Backends:".bold());
+    let recipe_kinds = [
+        "audio_sfx.layered_synth_v1",
+        "audio_instrument.synth_patch_v1",
+        "music.tracker_song_v1",
+        "texture_2d.material_maps_v1",
+        "texture_2d.normal_map_v1",
+        "static_mesh.blender_primitives_v1",
+        "skeletal_mesh.blender_rigged_mesh_v1",
+        "skeletal_animation.blender_clip_v1",
+    ];
+    for kind in recipe_kinds {
+        let available = is_backend_available(kind);
+        let tier = get_backend_tier(kind);
+        let tier_str = match tier {
+            Some(1) => "(Tier 1: deterministic)".dimmed(),
+            Some(2) => "(Tier 2: metrics)".dimmed(),
+            _ => "".dimmed(),
+        };
+        if available {
+            println!("  {} {} {}", "ok".green(), kind, tier_str);
+        } else {
+            println!("  {} {} (not implemented)", "!!".yellow(), kind);
         }
     }
 

@@ -7,7 +7,7 @@
   "description": "Sawtooth lead instrument - subtractive synthesis",
   "outputs": [
     {
-      "kind": "audio",
+      "kind": "primary",
       "format": "wav",
       "path": "saw_lead.wav"
     }
@@ -15,21 +15,11 @@
   "recipe": {
     "kind": "audio_instrument.synth_patch_v1",
     "params": {
-      "base_note": "C4",
       "sample_rate": 44100,
-      "duration_seconds": 1.0,
-      "bit_depth": 16,
       "synthesis": {
-        "type": "subtractive",
-        "oscillators": [
-          {"waveform": "saw", "detune": 0},
-          {"waveform": "saw", "detune": 7}
-        ],
-        "filter": {
-          "type": "lowpass",
-          "cutoff": 4000,
-          "q": 1.5
-        }
+        "type": "oscillator",
+        "waveform": "sawtooth",
+        "frequency": 261.63
       },
       "envelope": {
         "attack": 0.05,

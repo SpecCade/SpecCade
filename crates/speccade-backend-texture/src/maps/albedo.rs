@@ -3,7 +3,6 @@
 use super::{TextureBuffer, GrayscaleBuffer};
 use crate::color::{Color, BlendMode};
 use crate::noise::{Noise2D, Fbm, PerlinNoise};
-use crate::rng::DeterministicRng;
 
 /// Albedo map generator.
 pub struct AlbedoGenerator {
@@ -143,32 +142,6 @@ impl AlbedoGenerator {
             }
         }
     }
-}
-
-/// Helper function to generate albedo from material type.
-pub fn generate_material_albedo(
-    material_type: &str,
-    base_color: [f64; 3],
-    width: u32,
-    height: u32,
-    seed: u32,
-) -> TextureBuffer {
-    let color = Color::rgb(base_color[0], base_color[1], base_color[2]);
-
-    let variation = match material_type {
-        "metal" => 0.05,
-        "wood" => 0.15,
-        "stone" => 0.1,
-        "fabric" => 0.08,
-        "plastic" => 0.03,
-        "concrete" => 0.12,
-        "brick" => 0.1,
-        _ => 0.1,
-    };
-
-    let generator = AlbedoGenerator::new(color, seed).with_variation(variation);
-
-    generator.generate_with_variation(width, height)
 }
 
 #[cfg(test)]

@@ -7,7 +7,7 @@
   "description": "Cylinder with beveled edges - good for pillars",
   "outputs": [
     {
-      "kind": "mesh",
+      "kind": "primary",
       "format": "glb",
       "path": "cylinder_capped.glb"
     }

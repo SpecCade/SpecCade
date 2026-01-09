@@ -40,10 +40,8 @@ impl PerlinNoise {
         }
 
         // Double the permutation table for overflow handling
-        for i in 0..256 {
-            perm[i] = source[i];
-            perm[i + 256] = source[i];
-        }
+        perm[..256].copy_from_slice(&source);
+        perm[256..512].copy_from_slice(&source);
 
         Self { perm }
     }
@@ -109,84 +107,6 @@ impl Noise2D for PerlinNoise {
     }
 }
 
-/// Tileable 2D Perlin noise.
-pub struct TileablePerlinNoise {
-    noise: PerlinNoise,
-    period_x: i32,
-    period_y: i32,
-}
-
-impl TileablePerlinNoise {
-    /// Create a new tileable Perlin noise generator.
-    pub fn new(seed: u32, period_x: i32, period_y: i32) -> Self {
-        Self {
-            noise: PerlinNoise::new(seed),
-            period_x,
-            period_y,
-        }
-    }
-
-    /// Hash function with wrapping for tileability.
-    #[inline]
-    fn hash(&self, x: i32, y: i32) -> usize {
-        let xi = ((x % self.period_x + self.period_x) % self.period_x) as usize & 255;
-        let yi = ((y % self.period_y + self.period_y) % self.period_y) as usize & 255;
-        self.noise.perm[xi + self.noise.perm[yi] as usize] as usize
-    }
-
-    /// Compute gradient dot product.
-    #[inline]
-    fn grad(&self, hash: usize, x: f64, y: f64) -> f64 {
-        let g = &PerlinNoise::GRAD2[hash & 7];
-        g[0] * x + g[1] * y
-    }
-
-    /// Fast floor function.
-    #[inline]
-    fn fast_floor(x: f64) -> i32 {
-        if x >= 0.0 {
-            x as i32
-        } else {
-            x as i32 - 1
-        }
-    }
-}
-
-impl Noise2D for TileablePerlinNoise {
-    fn sample(&self, x: f64, y: f64) -> f64 {
-        // Grid cell coordinates
-        let x0 = Self::fast_floor(x);
-        let y0 = Self::fast_floor(y);
-        let x1 = x0 + 1;
-        let y1 = y0 + 1;
-
-        // Fractional parts
-        let fx = x - x0 as f64;
-        let fy = y - y0 as f64;
-
-        // Smoothed interpolation weights
-        let u = quintic(fx);
-        let v = quintic(fy);
-
-        // Hash the four corners with tiling
-        let h00 = self.hash(x0, y0);
-        let h10 = self.hash(x1, y0);
-        let h01 = self.hash(x0, y1);
-        let h11 = self.hash(x1, y1);
-
-        // Gradient dot products at corners
-        let n00 = self.grad(h00, fx, fy);
-        let n10 = self.grad(h10, fx - 1.0, fy);
-        let n01 = self.grad(h01, fx, fy - 1.0);
-        let n11 = self.grad(h11, fx - 1.0, fy - 1.0);
-
-        // Bilinear interpolation
-        let nx0 = lerp(n00, n10, u);
-        let nx1 = lerp(n01, n11, u);
-        lerp(nx0, nx1, v)
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -222,26 +142,5 @@ mod tests {
         // Perlin noise values should be roughly in [-1, 1]
         assert!(min >= -1.5);
         assert!(max <= 1.5);
-    }
-
-    #[test]
-    fn test_tileable_perlin() {
-        let period = 8;
-        let noise = TileablePerlinNoise::new(42, period, period);
-
-        // Check that edges match
-        for i in 0..100 {
-            let t = i as f64 * 0.1;
-
-            // Left/right edges should match
-            let left = noise.sample(0.0, t);
-            let right = noise.sample(period as f64, t);
-            assert!((left - right).abs() < 1e-10, "Left/right edges don't match");
-
-            // Top/bottom edges should match
-            let top = noise.sample(t, 0.0);
-            let bottom = noise.sample(t, period as f64);
-            assert!((top - bottom).abs() < 1e-10, "Top/bottom edges don't match");
-        }
     }
 }

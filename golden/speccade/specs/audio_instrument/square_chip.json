@@ -7,7 +7,7 @@
   "description": "Chiptune square wave instrument - retro 8-bit style",
   "outputs": [
     {
-      "kind": "audio",
+      "kind": "primary",
       "format": "wav",
       "path": "square_chip.wav"
     }
@@ -15,20 +15,11 @@
   "recipe": {
     "kind": "audio_instrument.synth_patch_v1",
     "params": {
-      "base_note": "C4",
       "sample_rate": 44100,
-      "duration_seconds": 0.8,
-      "bit_depth": 16,
       "synthesis": {
-        "type": "subtractive",
-        "oscillators": [
-          {"waveform": "square", "duty": 0.5, "detune": 0}
-        ],
-        "filter": {
-          "type": "lowpass",
-          "cutoff": 8000,
-          "q": 0.7
-        }
+        "type": "oscillator",
+        "waveform": "square",
+        "frequency": 261.63
       },
       "envelope": {
         "attack": 0.001,

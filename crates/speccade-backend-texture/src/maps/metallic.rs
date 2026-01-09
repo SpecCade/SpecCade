@@ -128,32 +128,6 @@ impl MetallicGenerator {
     }
 }
 
-/// Helper function to generate metallic based on material type.
-pub fn generate_material_metallic(
-    material_type: &str,
-    metallic_override: Option<f64>,
-    width: u32,
-    height: u32,
-    seed: u32,
-) -> GrayscaleBuffer {
-    let (base, variation) = match material_type {
-        "metal" => (1.0, 0.05),
-        "wood" => (0.0, 0.0),
-        "stone" => (0.0, 0.0),
-        "fabric" => (0.0, 0.0),
-        "plastic" => (0.0, 0.0),
-        "concrete" => (0.0, 0.0),
-        "brick" => (0.0, 0.0),
-        _ => (0.0, 0.0),
-    };
-
-    let metallic = metallic_override.unwrap_or(base);
-
-    let generator = MetallicGenerator::new(metallic, seed).with_variation(variation);
-
-    generator.generate_with_variation(width, height)
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;

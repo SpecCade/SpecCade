@@ -10,6 +10,7 @@ use serde::{Deserialize, Serialize};
 /// These metrics are used for Tier 2 validation where determinism is
 /// validated via metrics rather than file hashes.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Default)]
 pub struct BlenderMetrics {
     /// Number of triangles in the mesh.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -48,21 +49,6 @@ pub struct BlenderMetrics {
     pub vertex_count: Option<u32>,
 }
 
-impl Default for BlenderMetrics {
-    fn default() -> Self {
-        Self {
-            triangle_count: None,
-            bounding_box: None,
-            uv_island_count: None,
-            bone_count: None,
-            material_slot_count: None,
-            max_bone_influences: None,
-            animation_frame_count: None,
-            animation_duration_seconds: None,
-            vertex_count: None,
-        }
-    }
-}
 
 impl BlenderMetrics {
     /// Creates metrics for a static mesh.

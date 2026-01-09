@@ -7,7 +7,7 @@
   "description": "Idle breathing animation - subtle procedural movement",
   "outputs": [
     {
-      "kind": "animation",
+      "kind": "primary",
       "format": "glb",
       "path": "idle_breathe.glb"
     }

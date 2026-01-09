@@ -7,7 +7,7 @@
   "description": "Simple 4-channel loop - basic XM module",
   "outputs": [
     {
-      "kind": "audio",
+      "kind": "primary",
       "format": "xm",
       "path": "simple_loop.xm"
     }
@@ -15,19 +15,16 @@
   "recipe": {
     "kind": "music.tracker_song_v1",
     "params": {
-      "title": "Simple Loop",
       "format": "xm",
       "bpm": 120,
       "speed": 6,
       "channels": 4,
-      "restart_position": 0,
+      "loop": true,
       "instruments": [
         {
           "name": "lead",
           "synthesis": {
-            "type": "karplus_strong",
-            "damping": 0.996,
-            "brightness": 0.7
+            "type": "triangle"
           },
           "envelope": {
             "attack": 0.001,
@@ -39,9 +36,7 @@
         {
           "name": "bass",
           "synthesis": {
-            "type": "subtractive",
-            "oscillators": [{"waveform": "saw"}],
-            "filter": {"type": "lowpass", "cutoff": 800}
+            "type": "sawtooth"
           },
           "envelope": {
             "attack": 0.01,
@@ -54,18 +49,14 @@
       "patterns": {
         "intro": {
           "rows": 64,
-          "notes": {
-            "0": [
-              {"row": 0, "note": "C4", "inst": 0, "vol": 64},
-              {"row": 16, "note": "E4", "inst": 0, "vol": 64},
-              {"row": 32, "note": "G4", "inst": 0, "vol": 64},
-              {"row": 48, "note": "C5", "inst": 0, "vol": 64}
-            ],
-            "1": [
-              {"row": 0, "note": "C2", "inst": 1, "vol": 48},
-              {"row": 32, "note": "G2", "inst": 1, "vol": 48}
-            ]
-          }
+          "data": [
+            {"row": 0, "channel": 0, "note": "C4", "instrument": 0, "volume": 64},
+            {"row": 16, "channel": 0, "note": "E4", "instrument": 0, "volume": 64},
+            {"row": 32, "channel": 0, "note": "G4", "instrument": 0, "volume": 64},
+            {"row": 48, "channel": 0, "note": "C5", "instrument": 0, "volume": 64},
+            {"row": 0, "channel": 1, "note": "C2", "instrument": 1, "volume": 48},
+            {"row": 32, "channel": 1, "note": "G2", "instrument": 1, "volume": 48}
+          ]
         }
       },
       "arrangement": [

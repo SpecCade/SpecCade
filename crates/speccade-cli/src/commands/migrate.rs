@@ -422,11 +422,9 @@ fn extract_asset_id(spec_file: &Path) -> Result<String> {
         .ok_or_else(|| anyhow::anyhow!("Invalid filename"))?;
 
     // Remove .spec suffix if present
-    let asset_id = if file_stem.ends_with(".spec") {
-        &file_stem[..file_stem.len() - 5]
-    } else {
-        file_stem
-    };
+    let asset_id = file_stem
+        .strip_suffix(".spec")
+        .unwrap_or(file_stem);
 
     // Convert to lowercase and replace invalid characters
     let asset_id = asset_id.to_lowercase().replace("_", "-");

@@ -3,16 +3,16 @@
   "asset_id": "wood_plank",
   "asset_type": "texture_2d",
   "license": "CC0-1.0",
-  "seed": 4003,
-  "description": "Wood plank texture - grain pattern with variation",
+  "seed": 4005,
+  "description": "Wood plank texture - procedural wood grain",
   "outputs": [
     {
-      "kind": "texture",
+      "kind": "primary",
       "format": "png",
       "path": "wood_plank_albedo.png"
     },
     {
-      "kind": "texture",
+      "kind": "primary",
       "format": "png",
       "path": "wood_plank_roughness.png"
     }
@@ -20,33 +20,35 @@
   "recipe": {
     "kind": "texture_2d.material_maps_v1",
     "params": {
-      "size": [512, 512],
+      "resolution": [512, 512],
       "tileable": true,
+      "maps": ["albedo", "roughness"],
+      "base_material": {
+        "type": "wood",
+        "base_color": [0.4, 0.25, 0.15],
+        "roughness_range": [0.5, 0.7]
+      },
       "layers": [
         {
-          "type": "wood_grain",
-          "ring_count": 12,
-          "distortion": 0.25
+          "type": "noise_pattern",
+          "noise": {
+            "algorithm": "fbm",
+            "scale": 0.08,
+            "octaves": 5,
+            "persistence": 0.6,
+            "lacunarity": 2.2
+          },
+          "affects": ["albedo", "roughness"],
+          "strength": 0.4
         },
         {
-          "type": "noise",
-          "noise_type": "perlin",
-          "scale": 0.02,
-          "octaves": 4,
-          "blend": "multiply",
-          "opacity": 0.2
-        },
-        {
-          "type": "stripes",
-          "direction": "vertical",
-          "stripe_width": 128,
-          "color1": 0.4,
-          "color2": 0.5,
-          "blend": "soft_light",
-          "opacity": 0.1
+          "type": "color_variation",
+          "hue_range": 10.0,
+          "saturation_range": 0.1,
+          "value_range": 0.2,
+          "noise_scale": 0.05
         }
-      ],
-      "color_ramp": ["#8B4513", "#A0522D", "#DEB887", "#D2691E"]
+      ]
     }
   }
 }

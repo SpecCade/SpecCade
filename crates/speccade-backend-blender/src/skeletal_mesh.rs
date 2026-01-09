@@ -93,10 +93,8 @@ pub fn generate_with_config(
     if let Some(actual_bone_count) = metrics.bone_count {
         if actual_bone_count != expected_bone_count {
             return Err(BlenderError::metrics_validation_failed(format!(
-                "Bone count {} does not match skeleton preset {} (expected {})",
-                actual_bone_count,
-                format!("{:?}", params.skeleton_preset),
-                expected_bone_count
+                "Bone count {} does not match skeleton preset {:?} (expected {})",
+                actual_bone_count, params.skeleton_preset, expected_bone_count
             )));
         }
     }
@@ -160,7 +158,7 @@ pub fn generate_from_params(
         .seed(seed)
         .output(OutputSpec::primary(
             OutputFormat::Glb,
-            &format!("characters/{}.glb", asset_id),
+            format!("characters/{}.glb", asset_id),
         ))
         .recipe(speccade_spec::recipe::Recipe::new(
             "skeletal_mesh.blender_rigged_mesh_v1",

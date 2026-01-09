@@ -121,32 +121,6 @@ impl RoughnessGenerator {
     }
 }
 
-/// Helper function to generate roughness based on material type.
-pub fn generate_material_roughness(
-    material_type: &str,
-    roughness_range: Option<[f64; 2]>,
-    width: u32,
-    height: u32,
-    seed: u32,
-) -> GrayscaleBuffer {
-    let (base, default_range) = match material_type {
-        "metal" => (0.3, [0.2, 0.5]),
-        "wood" => (0.6, [0.5, 0.8]),
-        "stone" => (0.7, [0.5, 0.9]),
-        "fabric" => (0.9, [0.8, 1.0]),
-        "plastic" => (0.4, [0.3, 0.5]),
-        "concrete" => (0.8, [0.6, 0.95]),
-        "brick" => (0.75, [0.6, 0.9]),
-        _ => (0.5, [0.3, 0.7]),
-    };
-
-    let range = roughness_range.unwrap_or(default_range);
-
-    let generator = RoughnessGenerator::new(base, seed).with_range(range[0], range[1]);
-
-    generator.generate_with_variation(width, height)
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;

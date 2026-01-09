@@ -7,7 +7,7 @@
   "description": "Complex arrangement - multiple patterns, automation",
   "outputs": [
     {
-      "kind": "audio",
+      "kind": "primary",
       "format": "xm",
       "path": "complex_arrangement.xm"
     }
@@ -15,22 +15,16 @@
   "recipe": {
     "kind": "music.tracker_song_v1",
     "params": {
-      "title": "Complex Arrangement",
       "format": "xm",
       "bpm": 130,
       "speed": 6,
       "channels": 8,
-      "restart_position": 0,
+      "loop": true,
       "instruments": [
         {
           "name": "lead_synth",
           "synthesis": {
-            "type": "subtractive",
-            "oscillators": [
-              {"waveform": "saw", "detune": 0},
-              {"waveform": "saw", "detune": 5}
-            ],
-            "filter": {"type": "lowpass", "cutoff": 3000, "q": 1.2}
+            "type": "sawtooth"
           },
           "envelope": {
             "attack": 0.01,
@@ -42,9 +36,7 @@
         {
           "name": "bass_sub",
           "synthesis": {
-            "type": "subtractive",
-            "oscillators": [{"waveform": "sine"}],
-            "filter": {"type": "lowpass", "cutoff": 400}
+            "type": "sine"
           },
           "envelope": {
             "attack": 0.01,
@@ -56,9 +48,7 @@
         {
           "name": "arp_pluck",
           "synthesis": {
-            "type": "karplus_strong",
-            "damping": 0.995,
-            "brightness": 0.9
+            "type": "triangle"
           },
           "envelope": {
             "attack": 0.001,
@@ -71,58 +61,46 @@
       "patterns": {
         "intro": {
           "rows": 64,
-          "notes": {
-            "0": [
-              {"row": 0, "note": "C4", "inst": 2, "vol": 48},
-              {"row": 4, "note": "E4", "inst": 2, "vol": 40},
-              {"row": 8, "note": "G4", "inst": 2, "vol": 48},
-              {"row": 12, "note": "E4", "inst": 2, "vol": 40}
-            ]
-          }
+          "data": [
+            {"row": 0, "channel": 0, "note": "C4", "instrument": 2, "volume": 48},
+            {"row": 4, "channel": 0, "note": "E4", "instrument": 2, "volume": 40},
+            {"row": 8, "channel": 0, "note": "G4", "instrument": 2, "volume": 48},
+            {"row": 12, "channel": 0, "note": "E4", "instrument": 2, "volume": 40}
+          ]
         },
         "verse": {
           "rows": 64,
-          "notes": {
-            "0": [
-              {"row": 0, "note": "C4", "inst": 0, "vol": 64},
-              {"row": 16, "note": "D4", "inst": 0, "vol": 64},
-              {"row": 32, "note": "E4", "inst": 0, "vol": 64},
-              {"row": 48, "note": "G4", "inst": 0, "vol": 64}
-            ],
-            "1": [
-              {"row": 0, "note": "C2", "inst": 1, "vol": 56},
-              {"row": 16, "note": "D2", "inst": 1, "vol": 56},
-              {"row": 32, "note": "E2", "inst": 1, "vol": 56},
-              {"row": 48, "note": "G2", "inst": 1, "vol": 56}
-            ],
-            "2": [
-              {"row": 0, "note": "C4", "inst": 2, "vol": 40},
-              {"row": 4, "note": "E4", "inst": 2, "vol": 32},
-              {"row": 8, "note": "G4", "inst": 2, "vol": 40},
-              {"row": 12, "note": "E4", "inst": 2, "vol": 32},
-              {"row": 16, "note": "D4", "inst": 2, "vol": 40},
-              {"row": 20, "note": "F4", "inst": 2, "vol": 32},
-              {"row": 24, "note": "A4", "inst": 2, "vol": 40},
-              {"row": 28, "note": "F4", "inst": 2, "vol": 32}
-            ]
-          }
+          "data": [
+            {"row": 0, "channel": 0, "note": "C4", "instrument": 0, "volume": 64},
+            {"row": 16, "channel": 0, "note": "D4", "instrument": 0, "volume": 64},
+            {"row": 32, "channel": 0, "note": "E4", "instrument": 0, "volume": 64},
+            {"row": 48, "channel": 0, "note": "G4", "instrument": 0, "volume": 64},
+            {"row": 0, "channel": 1, "note": "C2", "instrument": 1, "volume": 56},
+            {"row": 16, "channel": 1, "note": "D2", "instrument": 1, "volume": 56},
+            {"row": 32, "channel": 1, "note": "E2", "instrument": 1, "volume": 56},
+            {"row": 48, "channel": 1, "note": "G2", "instrument": 1, "volume": 56},
+            {"row": 0, "channel": 2, "note": "C4", "instrument": 2, "volume": 40},
+            {"row": 4, "channel": 2, "note": "E4", "instrument": 2, "volume": 32},
+            {"row": 8, "channel": 2, "note": "G4", "instrument": 2, "volume": 40},
+            {"row": 12, "channel": 2, "note": "E4", "instrument": 2, "volume": 32},
+            {"row": 16, "channel": 2, "note": "D4", "instrument": 2, "volume": 40},
+            {"row": 20, "channel": 2, "note": "F4", "instrument": 2, "volume": 32},
+            {"row": 24, "channel": 2, "note": "A4", "instrument": 2, "volume": 40},
+            {"row": 28, "channel": 2, "note": "F4", "instrument": 2, "volume": 32}
+          ]
         },
         "chorus": {
           "rows": 64,
-          "notes": {
-            "0": [
-              {"row": 0, "note": "G4", "inst": 0, "vol": 64},
-              {"row": 8, "note": "A4", "inst": 0, "vol": 64},
-              {"row": 16, "note": "B4", "inst": 0, "vol": 64},
-              {"row": 24, "note": "C5", "inst": 0, "vol": 64}
-            ],
-            "1": [
-              {"row": 0, "note": "G2", "inst": 1, "vol": 64},
-              {"row": 16, "note": "A2", "inst": 1, "vol": 64},
-              {"row": 32, "note": "B2", "inst": 1, "vol": 64},
-              {"row": 48, "note": "C3", "inst": 1, "vol": 64}
-            ]
-          }
+          "data": [
+            {"row": 0, "channel": 0, "note": "G4", "instrument": 0, "volume": 64},
+            {"row": 8, "channel": 0, "note": "A4", "instrument": 0, "volume": 64},
+            {"row": 16, "channel": 0, "note": "B4", "instrument": 0, "volume": 64},
+            {"row": 24, "channel": 0, "note": "C5", "instrument": 0, "volume": 64},
+            {"row": 0, "channel": 1, "note": "G2", "instrument": 1, "volume": 64},
+            {"row": 16, "channel": 1, "note": "A2", "instrument": 1, "volume": 64},
+            {"row": 32, "channel": 1, "note": "B2", "instrument": 1, "volume": 64},
+            {"row": 48, "channel": 1, "note": "C3", "instrument": 1, "volume": 64}
+          ]
         }
       },
       "arrangement": [
@@ -131,17 +109,6 @@
         {"pattern": "chorus", "repeat": 2},
         {"pattern": "verse", "repeat": 1},
         {"pattern": "chorus", "repeat": 2}
-      ],
-      "automation": [
-        {
-          "type": "volume_fade",
-          "pattern": "intro",
-          "channel": 0,
-          "start_row": 0,
-          "end_row": 63,
-          "start_vol": 0,
-          "end_vol": 48
-        }
       ]
     }
   }
