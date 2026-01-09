@@ -41,6 +41,7 @@
 //! - [`error`]: Error and warning types for validation
 //! - [`output`]: Output specification types (kind, format, path)
 //! - [`recipe`]: Recipe types for all supported backends
+//! - [`report`]: Report types and builder for generation results
 //! - [`spec`]: Main spec type and builder
 //! - [`validation`]: Spec validation functions
 //! - [`hash`]: Canonical hashing and seed derivation
@@ -49,6 +50,7 @@ pub mod error;
 pub mod hash;
 pub mod output;
 pub mod recipe;
+pub mod report;
 pub mod spec;
 pub mod validation;
 
@@ -57,6 +59,10 @@ pub use error::{ErrorCode, SpecError, ValidationError, ValidationResult, Validat
 pub use hash::{canonical_spec_hash, derive_layer_seed, derive_variant_seed};
 pub use output::{EngineTarget, OutputFormat, OutputKind, OutputSpec, VariantSpec};
 pub use recipe::Recipe;
+pub use report::{
+    BoundingBox, OutputMetrics, OutputResult, Report, ReportBuilder, ReportError, ReportWarning,
+    REPORT_VERSION,
+};
 pub use spec::{AssetType, Spec, SpecBuilder, SPEC_VERSION, MAX_SEED};
 pub use validation::{is_safe_output_path, is_valid_asset_id, validate_for_generate, validate_spec};
 
