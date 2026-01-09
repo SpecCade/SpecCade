@@ -3,3 +3,8 @@ target/
 **/*.rs.bk
 Cargo.lock
 *.pdb
+
+# Test outputs
+test_output/
+test_spec.json
+*.report.json
