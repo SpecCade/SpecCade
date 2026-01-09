@@ -4,6 +4,7 @@
 //! from a spec.
 
 use std::collections::HashMap;
+use std::collections::HashSet;
 use std::path::Path;
 use thiserror::Error;
 
@@ -63,6 +64,84 @@ pub struct MapResult {
     pub is_color: bool,
 }
 
+fn validate_resolution(width: u32, height: u32) -> Result<(), GenerateError> {
+    if width == 0 || height == 0 {
+        return Err(GenerateError::InvalidParameter(format!(
+            "resolution must be at least 1x1, got [{}, {}]",
+            width, height
+        )));
+    }
+
+    (width as usize)
+        .checked_mul(height as usize)
+        .ok_or_else(|| GenerateError::InvalidParameter("resolution is too large".to_string()))?;
+
+    Ok(())
+}
+
+fn validate_map_list(map_types: &[TextureMapType]) -> Result<(), GenerateError> {
+    if map_types.is_empty() {
+        return Err(GenerateError::InvalidParameter(
+            "maps must contain at least one map type".to_string(),
+        ));
+    }
+
+    let mut seen: HashSet<TextureMapType> = HashSet::new();
+    for map_type in map_types {
+        if !seen.insert(*map_type) {
+            return Err(GenerateError::InvalidParameter(format!(
+                "duplicate map type: {:?}",
+                map_type
+            )));
+        }
+    }
+
+    Ok(())
+}
+
+fn validate_unit_interval(name: &str, value: f64) -> Result<(), GenerateError> {
+    if !value.is_finite() {
+        return Err(GenerateError::InvalidParameter(format!(
+            "{} must be finite, got {}",
+            name, value
+        )));
+    }
+    if !(0.0..=1.0).contains(&value) {
+        return Err(GenerateError::InvalidParameter(format!(
+            "{} must be in [0, 1], got {}",
+            name, value
+        )));
+    }
+    Ok(())
+}
+
+fn validate_base_material(params: &Texture2dMaterialMapsV1Params) -> Result<(), GenerateError> {
+    let Some(mat) = &params.base_material else {
+        return Ok(());
+    };
+
+    for (i, c) in mat.base_color.iter().enumerate() {
+        validate_unit_interval(&format!("base_material.base_color[{}]", i), *c)?;
+    }
+
+    if let Some([min, max]) = mat.roughness_range {
+        validate_unit_interval("base_material.roughness_range[0]", min)?;
+        validate_unit_interval("base_material.roughness_range[1]", max)?;
+        if min > max {
+            return Err(GenerateError::InvalidParameter(format!(
+                "base_material.roughness_range must have min <= max, got [{}, {}]",
+                min, max
+            )));
+        }
+    }
+
+    if let Some(metallic) = mat.metallic {
+        validate_unit_interval("base_material.metallic", metallic)?;
+    }
+
+    Ok(())
+}
+
 /// Generate PBR material maps from parameters.
 pub fn generate_material_maps(
     params: &Texture2dMaterialMapsV1Params,
@@ -70,6 +149,10 @@ pub fn generate_material_maps(
 ) -> Result<TextureResult, GenerateError> {
     let width = params.resolution[0];
     let height = params.resolution[1];
+
+    validate_resolution(width, height)?;
+    validate_map_list(&params.maps)?;
+    validate_base_material(params)?;
 
     let mut results = HashMap::new();
 
@@ -616,4 +699,101 @@ pub fn save_texture_result(
     }
 
     Ok(paths)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use speccade_spec::recipe::texture::BaseMaterial;
+
+    fn make_params() -> Texture2dMaterialMapsV1Params {
+        Texture2dMaterialMapsV1Params {
+            resolution: [32, 32],
+            tileable: true,
+            maps: vec![
+                TextureMapType::Albedo,
+                TextureMapType::Normal,
+                TextureMapType::Roughness,
+            ],
+            base_material: Some(BaseMaterial {
+                material_type: MaterialType::Metal,
+                base_color: [0.8, 0.2, 0.1],
+                roughness_range: Some([0.2, 0.5]),
+                metallic: Some(1.0),
+            }),
+            layers: vec![],
+        }
+    }
+
+    #[test]
+    fn test_generate_material_maps_deterministic() {
+        let params = make_params();
+        let result1 = generate_material_maps(&params, 42).unwrap();
+        let result2 = generate_material_maps(&params, 42).unwrap();
+
+        assert_eq!(result1.maps.len(), params.maps.len());
+        assert_eq!(result2.maps.len(), params.maps.len());
+
+        for map_type in &params.maps {
+            let m1 = result1.maps.get(map_type).unwrap();
+            let m2 = result2.maps.get(map_type).unwrap();
+            assert_eq!(m1.hash, m2.hash);
+            assert_eq!(m1.data, m2.data);
+            assert_eq!(m1.width, params.resolution[0]);
+            assert_eq!(m1.height, params.resolution[1]);
+            assert!(!m1.data.is_empty());
+        }
+    }
+
+    #[test]
+    fn test_generate_material_maps_seed_changes_output() {
+        let params = make_params();
+        let result1 = generate_material_maps(&params, 1).unwrap();
+        let result2 = generate_material_maps(&params, 2).unwrap();
+
+        let hash1 = &result1.maps.get(&TextureMapType::Albedo).unwrap().hash;
+        let hash2 = &result2.maps.get(&TextureMapType::Albedo).unwrap().hash;
+        assert_ne!(hash1, hash2);
+    }
+
+    #[test]
+    fn test_generate_material_maps_invalid_resolution() {
+        let mut params = make_params();
+        params.resolution = [0, 32];
+        let err = generate_material_maps(&params, 42).unwrap_err();
+        assert!(err.to_string().contains("resolution"));
+    }
+
+    #[test]
+    fn test_generate_material_maps_empty_maps_is_error() {
+        let mut params = make_params();
+        params.maps.clear();
+        let err = generate_material_maps(&params, 42).unwrap_err();
+        assert!(err.to_string().contains("maps"));
+    }
+
+    #[test]
+    fn test_generate_material_maps_duplicate_maps_is_error() {
+        let mut params = make_params();
+        params.maps = vec![TextureMapType::Albedo, TextureMapType::Albedo];
+        let err = generate_material_maps(&params, 42).unwrap_err();
+        assert!(err.to_string().contains("duplicate"));
+    }
+
+    #[test]
+    fn test_save_texture_result_writes_files() {
+        let params = make_params();
+        let result = generate_material_maps(&params, 42).unwrap();
+
+        let tmp = tempfile::tempdir().unwrap();
+        let paths = save_texture_result(&result, tmp.path(), "material").unwrap();
+
+        assert!(paths.contains_key(&TextureMapType::Albedo));
+        assert!(paths.contains_key(&TextureMapType::Normal));
+        assert!(paths.contains_key(&TextureMapType::Roughness));
+
+        for path in paths.values() {
+            assert!(std::path::Path::new(path).exists());
+        }
+    }
 }

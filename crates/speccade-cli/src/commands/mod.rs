@@ -6,3 +6,5 @@ pub mod generate;
 pub mod migrate;
 pub mod preview;
 pub mod validate;
+
+mod reporting;

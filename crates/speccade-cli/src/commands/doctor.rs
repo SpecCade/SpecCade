@@ -173,6 +173,14 @@ enum BlenderStatus {
     Error(String),
 }
 
+fn parse_blender_version(output: &str) -> Option<String> {
+    output
+        .lines()
+        .next()
+        .and_then(|line| line.strip_prefix("Blender "))
+        .map(|v| v.trim().to_string())
+}
+
 /// Check if Blender is installed and get its version
 fn check_blender() -> BlenderStatus {
     // Try to run `blender --version`
@@ -185,12 +193,8 @@ fn check_blender() -> BlenderStatus {
             if output.status.success() {
                 let stdout = String::from_utf8_lossy(&output.stdout);
                 // Parse version from output like "Blender 4.0.2\n..."
-                let version = stdout
-                    .lines()
-                    .next()
-                    .and_then(|line| line.strip_prefix("Blender "))
-                    .map(|v| v.trim().to_string())
-                    .unwrap_or_else(|| "unknown".to_string());
+                let version =
+                    parse_blender_version(&stdout).unwrap_or_else(|| "unknown".to_string());
                 BlenderStatus::Found(version)
             } else {
                 BlenderStatus::Error(format!(
@@ -209,6 +213,11 @@ fn check_blender() -> BlenderStatus {
     }
 }
 
+fn parse_rustc_version(output: &str) -> Option<String> {
+    // Parse "rustc 1.75.0 (..."
+    output.split_whitespace().nth(1).map(|s| s.to_string())
+}
+
 /// Get the rustc version
 fn get_rustc_version() -> Option<String> {
     let output = Command::new("rustc")
@@ -218,12 +227,27 @@ fn get_rustc_version() -> Option<String> {
 
     if output.status.success() {
         let stdout = String::from_utf8_lossy(&output.stdout);
-        // Parse "rustc 1.75.0 (..."
-        stdout
-            .split_whitespace()
-            .nth(1)
-            .map(|s| s.to_string())
+        parse_rustc_version(&stdout)
     } else {
         None
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_parse_blender_version() {
+        let out = "Blender 4.0.2\nBuild date: ...\n";
+        assert_eq!(parse_blender_version(out).as_deref(), Some("4.0.2"));
+        assert_eq!(parse_blender_version("not blender\n"), None);
+    }
+
+    #[test]
+    fn test_parse_rustc_version() {
+        let out = "rustc 1.75.0 (82e1608df 2023-12-21)\n";
+        assert_eq!(parse_rustc_version(out).as_deref(), Some("1.75.0"));
+        assert_eq!(parse_rustc_version("rustc\n"), None);
     }
 }

@@ -3,8 +3,9 @@
 //! This module handles spawning Blender as a subprocess and managing
 //! communication via JSON files.
 
+use std::io::Read;
 use std::path::{Path, PathBuf};
-use std::process::{Command, Stdio};
+use std::process::{Child, Command, ExitStatus, Stdio};
 use std::time::{Duration, Instant};
 
 use crate::error::{BlenderError, BlenderResult};
@@ -189,8 +190,6 @@ impl Orchestrator {
             });
         }
 
-        let start = Instant::now();
-
         // Build the command
         // blender --background --factory-startup --python entrypoint.py -- --mode <mode> --spec <path> --out-root <path> --report <path>
         let mut cmd = Command::new(&blender_path);
@@ -209,40 +208,16 @@ impl Orchestrator {
             .arg(report_path);
 
         if self.config.capture_output {
-            cmd.stdout(Stdio::piped()).stderr(Stdio::piped());
+            // Only stderr is surfaced today; keep stdout unpiped to reduce the risk of
+            // subprocess deadlocks caused by a filled stdout pipe.
+            cmd.stdout(Stdio::null()).stderr(Stdio::piped());
         }
 
         // Spawn the process
-        let mut child = cmd.spawn().map_err(BlenderError::SpawnFailed)?;
+        let child = cmd.spawn().map_err(BlenderError::SpawnFailed)?;
 
-        // Wait with timeout
-        let timeout = self.config.timeout;
-        let result = loop {
-            match child.try_wait() {
-                Ok(Some(status)) => break Ok(status),
-                Ok(None) => {
-                    if start.elapsed() > timeout {
-                        // Kill the process
-                        let _ = child.kill();
-                        break Err(BlenderError::Timeout {
-                            timeout_secs: timeout.as_secs(),
-                        });
-                    }
-                    std::thread::sleep(Duration::from_millis(100));
-                }
-                Err(e) => break Err(BlenderError::SpawnFailed(e)),
-            }
-        };
-
-        let status = result?;
-
-        // Capture output if needed
-        let stderr = if self.config.capture_output {
-            let output = child.wait_with_output().map_err(BlenderError::SpawnFailed)?;
-            String::from_utf8_lossy(&output.stderr).to_string()
-        } else {
-            String::new()
-        };
+        let (status, stderr) =
+            wait_with_timeout(child, self.config.timeout, self.config.capture_output)?;
 
         // Check exit status
         if !status.success() {
@@ -291,6 +266,43 @@ impl Orchestrator {
         // Run Blender
         self.run(mode, &spec_path, out_root, &report_path)
     }
+}
+
+fn wait_with_timeout(
+    mut child: Child,
+    timeout: Duration,
+    capture_output: bool,
+) -> BlenderResult<(ExitStatus, String)> {
+    let start = Instant::now();
+
+    let status = loop {
+        match child.try_wait() {
+            Ok(Some(status)) => break status,
+            Ok(None) => {
+                if start.elapsed() > timeout {
+                    let _ = child.kill();
+                    let _ = child.wait();
+                    return Err(BlenderError::Timeout {
+                        timeout_secs: timeout.as_secs(),
+                    });
+                }
+                std::thread::sleep(Duration::from_millis(100));
+            }
+            Err(e) => return Err(BlenderError::SpawnFailed(e)),
+        }
+    };
+
+    let stderr = if capture_output {
+        let mut buf = String::new();
+        if let Some(mut err) = child.stderr.take() {
+            let _ = err.read_to_string(&mut buf);
+        }
+        buf
+    } else {
+        String::new()
+    };
+
+    Ok((status, stderr))
 }
 
 impl Default for Orchestrator {
@@ -349,5 +361,25 @@ mod tests {
         assert_eq!(config.entrypoint_path, PathBuf::from("custom/path.py"));
         assert_eq!(config.blender_path, Some(PathBuf::from("/usr/bin/blender")));
         assert_eq!(config.timeout, Duration::from_secs(600));
+    }
+
+    #[test]
+    fn test_wait_with_timeout_captures_stderr() {
+        let mut cmd = if cfg!(windows) {
+            let mut cmd = Command::new("cmd");
+            cmd.args(["/C", "echo hello 1>&2"]);
+            cmd
+        } else {
+            let mut cmd = Command::new("sh");
+            cmd.args(["-c", "echo hello 1>&2"]);
+            cmd
+        };
+
+        cmd.stdout(Stdio::piped()).stderr(Stdio::piped());
+        let child = cmd.spawn().unwrap();
+
+        let (status, stderr) = wait_with_timeout(child, Duration::from_secs(2), true).unwrap();
+        assert!(status.success());
+        assert!(stderr.to_lowercase().contains("hello"));
     }
 }

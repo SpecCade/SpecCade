@@ -2,7 +2,9 @@
 //!
 //! Dispatches generation requests to the appropriate backend based on recipe.kind.
 
+use speccade_spec::recipe::texture::TextureMapType;
 use speccade_spec::{OutputFormat, OutputKind, OutputResult, Spec};
+use std::collections::HashSet;
 use std::fmt;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -99,24 +101,34 @@ pub fn dispatch_generate(spec: &Spec, out_root: &str) -> Result<Vec<OutputResult
     }
 }
 
+fn get_primary_output(spec: &Spec) -> Result<&speccade_spec::OutputSpec, DispatchError> {
+    spec.outputs
+        .iter()
+        .find(|o| o.kind == OutputKind::Primary)
+        .ok_or_else(|| DispatchError::BackendError("No primary output specified".to_string()))
+}
+
+fn write_output_bytes(out_root: &Path, rel_path: &str, bytes: &[u8]) -> Result<(), DispatchError> {
+    let output_path = out_root.join(rel_path);
+    if let Some(parent) = output_path.parent() {
+        fs::create_dir_all(parent).map_err(|e| {
+            DispatchError::BackendError(format!("Failed to create output directory: {}", e))
+        })?;
+    }
+
+    fs::write(&output_path, bytes)
+        .map_err(|e| DispatchError::BackendError(format!("Failed to write output file: {}", e)))?;
+    Ok(())
+}
+
 /// Generate audio SFX using the audio backend
 fn generate_audio_sfx(spec: &Spec, out_root: &Path) -> Result<Vec<OutputResult>, DispatchError> {
     let result = speccade_backend_audio::generate(spec)
         .map_err(|e| DispatchError::BackendError(format!("Audio generation failed: {}", e)))?;
 
     // Write WAV file to the output path from spec
-    let primary_output = spec.outputs.iter()
-        .find(|o| o.kind == OutputKind::Primary)
-        .ok_or_else(|| DispatchError::BackendError("No primary output specified".to_string()))?;
-
-    let output_path = out_root.join(&primary_output.path);
-    if let Some(parent) = output_path.parent() {
-        fs::create_dir_all(parent)
-            .map_err(|e| DispatchError::BackendError(format!("Failed to create output directory: {}", e)))?;
-    }
-
-    fs::write(&output_path, &result.wav.wav_data)
-        .map_err(|e| DispatchError::BackendError(format!("Failed to write WAV file: {}", e)))?;
+    let primary_output = get_primary_output(spec)?;
+    write_output_bytes(out_root, &primary_output.path, &result.wav.wav_data)?;
 
     Ok(vec![OutputResult::tier1(
         OutputKind::Primary,
@@ -136,18 +148,8 @@ fn generate_audio_instrument(spec: &Spec, out_root: &Path) -> Result<Vec<OutputR
         .map_err(|e| DispatchError::BackendError(format!("Instrument generation failed: {}", e)))?;
 
     // Write WAV file to the output path from spec
-    let primary_output = spec.outputs.iter()
-        .find(|o| o.kind == OutputKind::Primary)
-        .ok_or_else(|| DispatchError::BackendError("No primary output specified".to_string()))?;
-
-    let output_path = out_root.join(&primary_output.path);
-    if let Some(parent) = output_path.parent() {
-        fs::create_dir_all(parent)
-            .map_err(|e| DispatchError::BackendError(format!("Failed to create output directory: {}", e)))?;
-    }
-
-    fs::write(&output_path, &result.wav.wav_data)
-        .map_err(|e| DispatchError::BackendError(format!("Failed to write WAV file: {}", e)))?;
+    let primary_output = get_primary_output(spec)?;
+    write_output_bytes(out_root, &primary_output.path, &result.wav.wav_data)?;
 
     Ok(vec![OutputResult::tier1(
         OutputKind::Primary,
@@ -167,18 +169,8 @@ fn generate_music(spec: &Spec, out_root: &Path) -> Result<Vec<OutputResult>, Dis
         .map_err(|e| DispatchError::BackendError(format!("Music generation failed: {}", e)))?;
 
     // Write tracker module file to the output path from spec
-    let primary_output = spec.outputs.iter()
-        .find(|o| o.kind == OutputKind::Primary)
-        .ok_or_else(|| DispatchError::BackendError("No primary output specified".to_string()))?;
-
-    let output_path = out_root.join(&primary_output.path);
-    if let Some(parent) = output_path.parent() {
-        fs::create_dir_all(parent)
-            .map_err(|e| DispatchError::BackendError(format!("Failed to create output directory: {}", e)))?;
-    }
-
-    fs::write(&output_path, &result.data)
-        .map_err(|e| DispatchError::BackendError(format!("Failed to write music file: {}", e)))?;
+    let primary_output = get_primary_output(spec)?;
+    write_output_bytes(out_root, &primary_output.path, &result.data)?;
 
     // Determine format based on extension
     let format = match result.extension {
@@ -204,34 +196,89 @@ fn generate_texture_material_maps(spec: &Spec, out_root: &Path) -> Result<Vec<Ou
     let result = speccade_backend_texture::generate_material_maps(&params, spec.seed)
         .map_err(|e| DispatchError::BackendError(format!("Texture generation failed: {}", e)))?;
 
-    let mut outputs = Vec::new();
+    // Collect PNG outputs once and map them deterministically to the requested map types.
+    //
+    // Prefer explicit filename suffixes (e.g. `_albedo.png`) to avoid silently overwriting
+    // multiple maps to the same output path.
+    let mut unused_png_output_indices: Vec<usize> = spec
+        .outputs
+        .iter()
+        .enumerate()
+        .filter(|(_, o)| o.format == OutputFormat::Png)
+        .map(|(i, _)| i)
+        .collect();
 
-    // Write each generated map
-    for (_map_type, map_result) in result.maps {
-        // Find the corresponding output spec
-        let output_spec = spec.outputs.iter()
-            .find(|o| {
-                // Match by format - each map type should have a corresponding output
-                o.format == OutputFormat::Png
-            });
+    if unused_png_output_indices.len() < params.maps.len() {
+        return Err(DispatchError::BackendError(format!(
+            "Not enough PNG outputs for material maps: {} requested, but only {} PNG outputs declared",
+            params.maps.len(),
+            unused_png_output_indices.len()
+        )));
+    }
 
-        if let Some(output) = output_spec {
-            let output_path = out_root.join(&output.path);
-            if let Some(parent) = output_path.parent() {
-                fs::create_dir_all(parent)
-                    .map_err(|e| DispatchError::BackendError(format!("Failed to create output directory: {}", e)))?;
+    let mut used_paths: HashSet<&str> = HashSet::new();
+    let mut outputs = Vec::with_capacity(params.maps.len());
+
+    for (map_index, map_type) in params.maps.iter().enumerate() {
+        let map_result = result.maps.get(map_type).ok_or_else(|| {
+            DispatchError::BackendError(format!("Missing generated map for {:?}", map_type))
+        })?;
+
+        let suffix = texture_map_suffix(*map_type);
+        let mut matching_indices: Vec<usize> = unused_png_output_indices
+            .iter()
+            .copied()
+            .filter(|&i| output_path_matches_suffix(&spec.outputs[i].path, suffix))
+            .collect();
+
+        let chosen_index = match matching_indices.len() {
+            0 => {
+                // Fallback: if the caller provided exactly one PNG output per requested map,
+                // map them in order.
+                let remaining_maps = params.maps.len() - map_index;
+                if unused_png_output_indices.len() == remaining_maps {
+                    unused_png_output_indices[0]
+                } else {
+                    return Err(DispatchError::BackendError(format!(
+                        "No PNG output path found for map {:?}. Expected a path ending with '_{}.png' (or provide exactly one PNG output per map in the same order as 'recipe.params.maps')",
+                        map_type, suffix
+                    )));
+                }
             }
+            1 => matching_indices.pop().unwrap(),
+            _ => {
+                matching_indices.sort();
+                let matching_paths: Vec<String> = matching_indices
+                    .iter()
+                    .map(|&i| spec.outputs[i].path.clone())
+                    .collect();
+                return Err(DispatchError::BackendError(format!(
+                    "Multiple PNG outputs match map {:?} (suffix '{}'): {}",
+                    map_type,
+                    suffix,
+                    matching_paths.join(", ")
+                )));
+            }
+        };
 
-            fs::write(&output_path, &map_result.data)
-                .map_err(|e| DispatchError::BackendError(format!("Failed to write texture file: {}", e)))?;
+        unused_png_output_indices.retain(|&i| i != chosen_index);
 
-            outputs.push(OutputResult::tier1(
-                output.kind,
-                OutputFormat::Png,
-                PathBuf::from(&output.path),
-                map_result.hash,
-            ));
+        let output_spec = &spec.outputs[chosen_index];
+        if !used_paths.insert(output_spec.path.as_str()) {
+            return Err(DispatchError::BackendError(format!(
+                "Output path matched more than once while mapping texture maps: {}",
+                output_spec.path
+            )));
         }
+
+        write_output_bytes(out_root, &output_spec.path, &map_result.data)?;
+
+        outputs.push(OutputResult::tier1(
+            output_spec.kind,
+            OutputFormat::Png,
+            PathBuf::from(&output_spec.path),
+            map_result.hash.clone(),
+        ));
     }
 
     Ok(outputs)
@@ -247,18 +294,8 @@ fn generate_texture_normal_map(spec: &Spec, out_root: &Path) -> Result<Vec<Outpu
         .map_err(|e| DispatchError::BackendError(format!("Normal map generation failed: {}", e)))?;
 
     // Write normal map file to the output path from spec
-    let primary_output = spec.outputs.iter()
-        .find(|o| o.kind == OutputKind::Primary)
-        .ok_or_else(|| DispatchError::BackendError("No primary output specified".to_string()))?;
-
-    let output_path = out_root.join(&primary_output.path);
-    if let Some(parent) = output_path.parent() {
-        fs::create_dir_all(parent)
-            .map_err(|e| DispatchError::BackendError(format!("Failed to create output directory: {}", e)))?;
-    }
-
-    fs::write(&output_path, &result.data)
-        .map_err(|e| DispatchError::BackendError(format!("Failed to write normal map file: {}", e)))?;
+    let primary_output = get_primary_output(spec)?;
+    write_output_bytes(out_root, &primary_output.path, &result.data)?;
 
     Ok(vec![OutputResult::tier1(
         OutputKind::Primary,
@@ -385,6 +422,30 @@ pub fn is_backend_available(kind: &str) -> bool {
     )
 }
 
+fn texture_map_suffix(map_type: TextureMapType) -> &'static str {
+    match map_type {
+        TextureMapType::Albedo => "albedo",
+        TextureMapType::Normal => "normal",
+        TextureMapType::Roughness => "roughness",
+        TextureMapType::Metallic => "metallic",
+        TextureMapType::Ao => "ao",
+        TextureMapType::Emissive => "emissive",
+        TextureMapType::Height => "height",
+    }
+}
+
+fn output_path_matches_suffix(path: &str, suffix: &str) -> bool {
+    let path_lower = path.to_ascii_lowercase();
+    let stem = match path_lower.strip_suffix(".png") {
+        Some(stem) => stem,
+        None => path_lower.as_str(),
+    };
+
+    stem.ends_with(&format!("_{}", suffix))
+        || stem.ends_with(&format!("-{}", suffix))
+        || stem.ends_with(&format!("/{}", suffix))
+}
+
 /// Get the backend tier for a recipe kind
 ///
 /// # Arguments
@@ -413,6 +474,8 @@ pub fn get_backend_tier(kind: &str) -> Option<u8> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use speccade_spec::recipe::texture::Texture2dMaterialMapsV1Params;
+    use speccade_spec::{AssetType, OutputSpec, Recipe};
 
     #[test]
     fn test_backend_tier_classification() {
@@ -444,5 +507,111 @@ mod tests {
 
         // Unknown backends should not be available
         assert!(!is_backend_available("unknown.kind"));
+    }
+
+    #[test]
+    fn test_dispatch_texture_material_maps_matches_by_suffix() {
+        let tmp = tempfile::tempdir().unwrap();
+
+        let params = Texture2dMaterialMapsV1Params {
+            resolution: [16, 16],
+            tileable: true,
+            maps: vec![TextureMapType::Albedo, TextureMapType::Normal],
+            base_material: None,
+            layers: vec![],
+        };
+
+        let recipe = Recipe::new(
+            "texture_2d.material_maps_v1",
+            serde_json::to_value(&params).unwrap(),
+        );
+
+        let spec = Spec::builder("test-tex-01", AssetType::Texture2d)
+            .license("CC0-1.0")
+            .seed(42)
+            .output(OutputSpec::primary(
+                OutputFormat::Png,
+                "textures/test-tex-01_albedo.png",
+            ))
+            .output(OutputSpec::primary(
+                OutputFormat::Png,
+                "textures/test-tex-01_normal.png",
+            ))
+            .recipe(recipe)
+            .build();
+
+        let outputs = dispatch_generate(&spec, tmp.path().to_str().unwrap()).unwrap();
+        assert_eq!(outputs.len(), 2);
+
+        let albedo_path = tmp.path().join("textures/test-tex-01_albedo.png");
+        let normal_path = tmp.path().join("textures/test-tex-01_normal.png");
+
+        assert!(albedo_path.exists());
+        assert!(normal_path.exists());
+
+        let albedo_bytes = std::fs::read(&albedo_path).unwrap();
+        let normal_bytes = std::fs::read(&normal_path).unwrap();
+        assert!(!albedo_bytes.is_empty());
+        assert!(!normal_bytes.is_empty());
+        assert_ne!(albedo_bytes, normal_bytes, "maps should not overwrite each other");
+    }
+
+    #[test]
+    fn test_dispatch_texture_material_maps_fallbacks_to_order() {
+        let tmp = tempfile::tempdir().unwrap();
+
+        let params = Texture2dMaterialMapsV1Params {
+            resolution: [8, 8],
+            tileable: true,
+            maps: vec![TextureMapType::Roughness, TextureMapType::Metallic],
+            base_material: None,
+            layers: vec![],
+        };
+
+        let recipe = Recipe::new(
+            "texture_2d.material_maps_v1",
+            serde_json::to_value(&params).unwrap(),
+        );
+
+        let spec = Spec::builder("test-tex-02", AssetType::Texture2d)
+            .license("CC0-1.0")
+            .seed(123)
+            .output(OutputSpec::primary(OutputFormat::Png, "textures/out1.png"))
+            .output(OutputSpec::primary(OutputFormat::Png, "textures/out2.png"))
+            .recipe(recipe)
+            .build();
+
+        let outputs = dispatch_generate(&spec, tmp.path().to_str().unwrap()).unwrap();
+        assert_eq!(outputs.len(), 2);
+        assert!(tmp.path().join("textures/out1.png").exists());
+        assert!(tmp.path().join("textures/out2.png").exists());
+    }
+
+    #[test]
+    fn test_dispatch_texture_material_maps_requires_enough_outputs() {
+        let tmp = tempfile::tempdir().unwrap();
+
+        let params = Texture2dMaterialMapsV1Params {
+            resolution: [8, 8],
+            tileable: true,
+            maps: vec![TextureMapType::Albedo, TextureMapType::Normal],
+            base_material: None,
+            layers: vec![],
+        };
+
+        let recipe = Recipe::new(
+            "texture_2d.material_maps_v1",
+            serde_json::to_value(&params).unwrap(),
+        );
+
+        let spec = Spec::builder("test-tex-03", AssetType::Texture2d)
+            .license("CC0-1.0")
+            .seed(1)
+            .output(OutputSpec::primary(OutputFormat::Png, "textures/only_one.png"))
+            .recipe(recipe)
+            .build();
+
+        let err = dispatch_generate(&spec, tmp.path().to_str().unwrap()).unwrap_err();
+        assert!(err.to_string().contains("Not enough PNG outputs"));
     }
 }

@@ -17,6 +17,7 @@ use std::process::ExitCode;
 /// # Returns
 /// Exit code: 0 success, 1 error
 pub fn run(spec_path: &str, _out_root: Option<&str>) -> Result<ExitCode> {
+    // TODO: Implement preview for generated assets (open viewers, or launch Blender for mesh/anim).
     println!(
         "{} {}",
         "Preview:".cyan().bold(),
@@ -44,4 +45,30 @@ pub fn run(spec_path: &str, _out_root: Option<&str>) -> Result<ExitCode> {
 
     // Return success since this is expected behavior for now
     Ok(ExitCode::SUCCESS)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_preview_stub_returns_success() {
+        let tmp = tempfile::tempdir().unwrap();
+        let spec_path = tmp.path().join("spec.json");
+        std::fs::write(
+            &spec_path,
+            r#"{
+  "spec_version": 1,
+  "asset_id": "test-asset-01",
+  "asset_type": "audio_sfx",
+  "license": "CC0-1.0",
+  "seed": 42,
+  "outputs": [{"kind": "primary", "format": "wav", "path": "sounds/test.wav"}]
+}"#,
+        )
+        .unwrap();
+
+        let code = run(spec_path.to_str().unwrap(), None).unwrap();
+        assert_eq!(code, ExitCode::SUCCESS);
+    }
 }

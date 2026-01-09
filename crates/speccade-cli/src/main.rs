@@ -100,3 +100,65 @@ fn main() -> ExitCode {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_cli_parses_validate() {
+        let cli = Cli::try_parse_from(["speccade", "validate", "--spec", "spec.json"]).unwrap();
+        match cli.command {
+            Commands::Validate { spec, artifacts } => {
+                assert_eq!(spec, "spec.json");
+                assert!(!artifacts);
+            }
+            _ => panic!("expected validate command"),
+        }
+    }
+
+    #[test]
+    fn test_cli_parses_validate_with_artifacts() {
+        let cli = Cli::try_parse_from([
+            "speccade",
+            "validate",
+            "--spec",
+            "spec.json",
+            "--artifacts",
+        ])
+        .unwrap();
+        match cli.command {
+            Commands::Validate { spec, artifacts } => {
+                assert_eq!(spec, "spec.json");
+                assert!(artifacts);
+            }
+            _ => panic!("expected validate command"),
+        }
+    }
+
+    #[test]
+    fn test_cli_parses_generate() {
+        let cli = Cli::try_parse_from([
+            "speccade",
+            "generate",
+            "--spec",
+            "spec.json",
+            "--out-root",
+            "out",
+        ])
+        .unwrap();
+        match cli.command {
+            Commands::Generate { spec, out_root } => {
+                assert_eq!(spec, "spec.json");
+                assert_eq!(out_root.as_deref(), Some("out"));
+            }
+            _ => panic!("expected generate command"),
+        }
+    }
+
+    #[test]
+    fn test_cli_requires_spec_for_generate() {
+        let err = Cli::try_parse_from(["speccade", "generate"]).err().unwrap();
+        assert!(err.to_string().contains("--spec"));
+    }
+}

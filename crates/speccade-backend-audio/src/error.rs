@@ -79,3 +79,21 @@ impl AudioError {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_invalid_param_helper() {
+        let err = AudioError::invalid_param("gain", "must be between 0 and 1");
+        assert!(err.to_string().contains("gain"));
+        assert!(err.to_string().contains("between 0 and 1"));
+    }
+
+    #[test]
+    fn test_synthesis_helper() {
+        let err = AudioError::synthesis("oscillator blew up");
+        assert!(err.to_string().contains("oscillator blew up"));
+    }
+}

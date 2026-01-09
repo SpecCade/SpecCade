@@ -52,6 +52,24 @@ pub fn generate_normal_map(
     let width = params.resolution[0];
     let height = params.resolution[1];
 
+    if width == 0 || height == 0 {
+        return Err(NormalMapError::InvalidParameter(format!(
+            "resolution must be at least 1x1, got [{}, {}]",
+            width, height
+        )));
+    }
+
+    (width as usize)
+        .checked_mul(height as usize)
+        .ok_or_else(|| NormalMapError::InvalidParameter("resolution is too large".to_string()))?;
+
+    if !params.bump_strength.is_finite() || params.bump_strength < 0.0 {
+        return Err(NormalMapError::InvalidParameter(format!(
+            "bump_strength must be finite and >= 0, got {}",
+            params.bump_strength
+        )));
+    }
+
     // Generate height map from pattern
     let height_map = if let Some(pattern) = &params.pattern {
         generate_height_from_pattern(pattern, width, height, seed, params.tileable)
@@ -531,5 +549,31 @@ mod tests {
 
         assert_eq!(result1.hash, result2.hash);
         assert_eq!(result1.data, result2.data);
+    }
+
+    #[test]
+    fn test_generate_normal_map_invalid_resolution() {
+        let params = Texture2dNormalMapV1Params {
+            resolution: [0, 64],
+            tileable: false,
+            pattern: None,
+            bump_strength: 1.0,
+        };
+
+        let err = generate_normal_map(&params, 42).unwrap_err();
+        assert!(err.to_string().contains("resolution"));
+    }
+
+    #[test]
+    fn test_generate_normal_map_invalid_bump_strength() {
+        let params = Texture2dNormalMapV1Params {
+            resolution: [64, 64],
+            tileable: false,
+            pattern: None,
+            bump_strength: -1.0,
+        };
+
+        let err = generate_normal_map(&params, 42).unwrap_err();
+        assert!(err.to_string().contains("bump_strength"));
     }
 }

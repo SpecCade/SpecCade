@@ -15,7 +15,6 @@ use speccade_spec::{AssetType, OutputFormat, OutputKind, OutputSpec, Spec};
 
 /// Migration report entry
 #[derive(Debug)]
-#[allow(dead_code)]
 struct MigrationEntry {
     source_path: PathBuf,
     target_path: Option<PathBuf>,
@@ -26,7 +25,6 @@ struct MigrationEntry {
 
 /// Legacy spec data extracted from .spec.py
 #[derive(Debug)]
-#[allow(dead_code)]
 struct LegacySpec {
     dict_name: String,
     category: String,
@@ -98,25 +96,27 @@ pub fn run(project_path: &str, allow_exec_specs: bool) -> Result<ExitCode> {
     let mut entries = Vec::new();
 
     for spec_file in &spec_files {
-        let entry = migrate_spec(spec_file, path, allow_exec_specs);
+        let entry = match migrate_spec(spec_file, path, allow_exec_specs) {
+            Ok(entry) => entry,
+            Err(e) => MigrationEntry {
+                source_path: spec_file.to_path_buf(),
+                target_path: None,
+                success: false,
+                warnings: Vec::new(),
+                error: Some(e.to_string()),
+            },
+        };
 
         // Print progress
-        match &entry {
-            Ok(e) if e.success => {
-                print!("{} ", "✓".green());
-            }
-            Ok(e) if !e.warnings.is_empty() => {
-                print!("{} ", "⚠".yellow());
-            }
-            Err(_) => {
-                print!("{} ", "✗".red());
-            }
-            _ => {}
+        if entry.success && !entry.warnings.is_empty() {
+            print!("{} ", "⚠".yellow());
+        } else if entry.success {
+            print!("{} ", "✓".green());
+        } else {
+            print!("{} ", "✗".red());
         }
 
-        if let Ok(e) = entry {
-            entries.push(e);
-        }
+        entries.push(entry);
     }
 
     println!("\n");
@@ -456,7 +456,7 @@ fn map_legacy_keys_to_params(
     let mut warnings = Vec::new();
 
     // For now, just pass through the legacy data as params
-    // In a full implementation, we would map each key according to PARITY_MATRIX.md
+    // TODO: Map legacy keys to canonical params using PARITY_MATRIX.md (SSOT for mapping rules).
 
     // Remove the 'name' field as it's used for asset_id
     let mut params = legacy.data.clone();
@@ -465,8 +465,8 @@ fn map_legacy_keys_to_params(
     // Add warning for manual review
     if !params.is_empty() {
         warnings.push(format!(
-            "Legacy params passed through for {}. Manual review recommended.",
-            recipe_kind
+            "Legacy params dict '{}' passed through for {}. Manual review recommended (TODO: key mapping per PARITY_MATRIX.md).",
+            legacy.dict_name, recipe_kind
         ));
     }
 
@@ -547,7 +547,7 @@ fn print_migration_report(entries: &[MigrationEntry]) {
     let total = entries.len();
     let success = entries.iter().filter(|e| e.success).count();
     let with_warnings = entries.iter().filter(|e| !e.warnings.is_empty()).count();
-    let failed = total - success;
+    let failed = entries.iter().filter(|e| !e.success).count();
 
     println!("{}", "Migration Report".cyan().bold());
     println!("{}", "=".repeat(50).dimmed());
@@ -563,6 +563,9 @@ fn print_migration_report(entries: &[MigrationEntry]) {
         for entry in entries {
             if !entry.warnings.is_empty() {
                 println!("  {} {}", "⚠".yellow(), entry.source_path.display().to_string().dimmed());
+                if let Some(ref target) = entry.target_path {
+                    println!("    -> {}", target.display().to_string().dimmed());
+                }
                 for warning in &entry.warnings {
                     println!("    - {}", warning);
                 }
@@ -576,6 +579,9 @@ fn print_migration_report(entries: &[MigrationEntry]) {
         for entry in entries {
             if !entry.success {
                 println!("  {} {}", "✗".red(), entry.source_path.display().to_string().dimmed());
+                if let Some(ref target) = entry.target_path {
+                    println!("    -> {}", target.display().to_string().dimmed());
+                }
                 if let Some(ref error) = entry.error {
                     println!("    {}", error);
                 }
@@ -589,4 +595,97 @@ fn print_migration_report(entries: &[MigrationEntry]) {
     println!("  2. Update license fields from 'UNKNOWN'");
     println!("  3. Review and address any warnings");
     println!("  4. Test with: speccade validate --spec specs/<type>/<asset>.json");
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_determine_category_from_path() {
+        assert_eq!(
+            determine_category(Path::new("project/.studio/specs/sounds/laser.spec.py")).unwrap(),
+            "sounds"
+        );
+        assert_eq!(
+            determine_category(Path::new("project/.studio/specs/textures/metal.spec.py")).unwrap(),
+            "textures"
+        );
+        assert_eq!(
+            determine_category(Path::new("project/.studio/specs/normals/wall.spec.py")).unwrap(),
+            "normals"
+        );
+        assert_eq!(
+            determine_category(Path::new("project/.studio/specs/meshes/crate.spec.py")).unwrap(),
+            "meshes"
+        );
+    }
+
+    #[test]
+    fn test_category_to_dict_name() {
+        assert_eq!(category_to_dict_name("sounds"), "SOUND");
+        assert_eq!(category_to_dict_name("animations"), "ANIMATION");
+        assert_eq!(category_to_dict_name("unknown"), "UNKNOWN");
+    }
+
+    #[test]
+    fn test_map_category_to_type() {
+        let (asset_type, kind) = map_category_to_type("sounds").unwrap();
+        assert_eq!(asset_type, AssetType::AudioSfx);
+        assert_eq!(kind, "audio_sfx.layered_synth_v1");
+    }
+
+    #[test]
+    fn test_extract_asset_id() {
+        let id = extract_asset_id(Path::new("laser_blast_01.spec.py")).unwrap();
+        assert_eq!(id, "laser-blast-01");
+
+        assert!(extract_asset_id(Path::new("AB.spec.py")).is_err(), "too short");
+        assert!(extract_asset_id(Path::new("INVALID!.spec.py")).is_err(), "invalid chars");
+    }
+
+    #[test]
+    fn test_generate_seed_from_filename_is_deterministic() {
+        let seed1 = generate_seed_from_filename(Path::new("a.spec.py"));
+        let seed2 = generate_seed_from_filename(Path::new("a.spec.py"));
+        let seed3 = generate_seed_from_filename(Path::new("b.spec.py"));
+
+        assert_eq!(seed1, seed2);
+        assert_ne!(seed1, seed3);
+    }
+
+    #[test]
+    fn test_parse_python_dict_literal_simple() {
+        let dict = r#"{'name': 'laser', 'enabled': True, 'value': None, 'nums': [1, 2, 3]}"#;
+        let parsed = parse_python_dict_literal(dict).unwrap();
+
+        assert_eq!(parsed.get("name").and_then(|v| v.as_str()), Some("laser"));
+        assert_eq!(parsed.get("enabled").and_then(|v| v.as_bool()), Some(true));
+        assert!(parsed.get("value").is_some_and(|v| v.is_null()));
+        assert_eq!(parsed.get("nums").unwrap().as_array().unwrap().len(), 3);
+    }
+
+    #[test]
+    fn test_map_legacy_keys_to_params_removes_name_and_warns() {
+        let legacy = LegacySpec {
+            dict_name: "SOUND".to_string(),
+            category: "sounds".to_string(),
+            data: HashMap::from([
+                ("name".to_string(), serde_json::json!("laser")),
+                ("duration".to_string(), serde_json::json!(0.5)),
+            ]),
+        };
+
+        let (params, warnings) = map_legacy_keys_to_params(&legacy, "audio_sfx.layered_synth_v1").unwrap();
+        assert!(warnings.iter().any(|w| w.contains("PARITY_MATRIX.md")));
+        assert!(params.get("name").is_none(), "name should be removed");
+        assert!(params.get("duration").is_some());
+    }
+
+    #[test]
+    fn test_generate_outputs_normals() {
+        let outputs = generate_outputs("wall-01", &AssetType::Texture2d, "normals").unwrap();
+        assert_eq!(outputs.len(), 1);
+        assert!(outputs[0].path.ends_with("_normal.png"));
+    }
 }

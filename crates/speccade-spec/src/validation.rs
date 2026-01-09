@@ -1,6 +1,7 @@
 //! Spec validation logic.
 
 use std::collections::HashSet;
+use std::sync::OnceLock;
 
 use regex::Regex;
 
@@ -14,6 +15,12 @@ const ASSET_ID_PATTERN: &str = r"^[a-z][a-z0-9_-]{2,63}$";
 
 /// Threshold for warning about seed near overflow boundary.
 const SEED_OVERFLOW_WARNING_THRESHOLD: u32 = u32::MAX - 1000;
+
+static ASSET_ID_REGEX: OnceLock<Regex> = OnceLock::new();
+
+fn asset_id_regex() -> &'static Regex {
+    ASSET_ID_REGEX.get_or_init(|| Regex::new(ASSET_ID_PATTERN).expect("invalid regex pattern"))
+}
 
 /// Validates a spec and returns a validation result.
 ///
@@ -74,9 +81,7 @@ fn validate_spec_version(spec: &Spec, result: &mut ValidationResult) {
 
 /// Validates the asset_id format.
 fn validate_asset_id(spec: &Spec, result: &mut ValidationResult) {
-    let re = Regex::new(ASSET_ID_PATTERN).expect("invalid regex pattern");
-
-    if !re.is_match(&spec.asset_id) {
+    if !asset_id_regex().is_match(&spec.asset_id) {
         result.add_error(ValidationError::with_path(
             ErrorCode::InvalidAssetId,
             format!(
@@ -155,53 +160,12 @@ fn validate_output_path(
     let path = &output.path;
     let path_field = format!("outputs[{}].path", index);
 
-    // Check for empty path
-    if path.is_empty() {
+    for message in output_path_safety_errors(path) {
         result.add_error(ValidationError::with_path(
             ErrorCode::UnsafeOutputPath,
-            "output path cannot be empty",
+            message,
             &path_field,
         ));
-        return;
-    }
-
-    // Check for absolute paths (leading slash or drive letter)
-    if path.starts_with('/') || path.starts_with('\\') {
-        result.add_error(ValidationError::with_path(
-            ErrorCode::UnsafeOutputPath,
-            format!("output path must be relative, not absolute: '{}'", path),
-            &path_field,
-        ));
-    }
-
-    // Check for Windows drive letter
-    if path.len() >= 2 && path.chars().nth(1) == Some(':') {
-        result.add_error(ValidationError::with_path(
-            ErrorCode::UnsafeOutputPath,
-            format!("output path must not contain drive letter: '{}'", path),
-            &path_field,
-        ));
-    }
-
-    // Check for backslashes
-    if path.contains('\\') {
-        result.add_error(ValidationError::with_path(
-            ErrorCode::UnsafeOutputPath,
-            format!("output path must use forward slashes only: '{}'", path),
-            &path_field,
-        ));
-    }
-
-    // Check for path traversal (..)
-    for segment in path.split('/') {
-        if segment == ".." {
-            result.add_error(ValidationError::with_path(
-                ErrorCode::UnsafeOutputPath,
-                format!("output path must not contain '..': '{}'", path),
-                &path_field,
-            ));
-            break;
-        }
     }
 
     // Check that extension matches format
@@ -295,8 +259,7 @@ pub fn validate_for_generate(spec: &Spec) -> ValidationResult {
 /// # Returns
 /// * `true` if the asset_id is valid, `false` otherwise.
 pub fn is_valid_asset_id(asset_id: &str) -> bool {
-    let re = Regex::new(ASSET_ID_PATTERN).expect("invalid regex pattern");
-    re.is_match(asset_id)
+    asset_id_regex().is_match(asset_id)
 }
 
 /// Checks if an output path is safe.
@@ -307,33 +270,42 @@ pub fn is_valid_asset_id(asset_id: &str) -> bool {
 /// # Returns
 /// * `true` if the path is safe, `false` otherwise.
 pub fn is_safe_output_path(path: &str) -> bool {
+    output_path_safety_errors(path).is_empty()
+}
+
+fn output_path_safety_errors(path: &str) -> Vec<String> {
+    let mut errors = Vec::new();
+
+    // Check for empty path
     if path.is_empty() {
-        return false;
+        errors.push("output path cannot be empty".to_string());
+        return errors;
     }
 
-    // No absolute paths
+    // Check for absolute paths (leading slash or drive letter)
     if path.starts_with('/') || path.starts_with('\\') {
-        return false;
+        errors.push(format!("output path must be relative, not absolute: '{}'", path));
     }
 
-    // No drive letters
+    // Check for Windows drive letter
     if path.len() >= 2 && path.chars().nth(1) == Some(':') {
-        return false;
+        errors.push(format!("output path must not contain drive letter: '{}'", path));
     }
 
-    // No backslashes
+    // Check for backslashes
     if path.contains('\\') {
-        return false;
+        errors.push(format!("output path must use forward slashes only: '{}'", path));
     }
 
-    // No path traversal
+    // Check for path traversal (..)
     for segment in path.split('/') {
         if segment == ".." {
-            return false;
+            errors.push(format!("output path must not contain '..': '{}'", path));
+            break;
         }
     }
 
-    true
+    errors
 }
 
 #[cfg(test)]
