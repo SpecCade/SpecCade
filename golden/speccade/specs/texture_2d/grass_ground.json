@@ -1,0 +1,57 @@
+{
+  "spec_version": 1,
+  "asset_id": "grass_ground",
+  "asset_type": "texture_2d",
+  "license": "CC0-1.0",
+  "seed": 4005,
+  "description": "Grass ground texture - organic noise-based tileable",
+  "outputs": [
+    {
+      "kind": "texture",
+      "format": "png",
+      "path": "grass_ground_albedo.png"
+    },
+    {
+      "kind": "texture",
+      "format": "png",
+      "path": "grass_ground_roughness.png"
+    },
+    {
+      "kind": "texture",
+      "format": "png",
+      "path": "grass_ground_ao.png"
+    }
+  ],
+  "recipe": {
+    "kind": "texture_2d.material_maps_v1",
+    "params": {
+      "size": [512, 512],
+      "tileable": true,
+      "layers": [
+        {
+          "type": "noise",
+          "noise_type": "simplex",
+          "scale": 0.03,
+          "octaves": 5
+        },
+        {
+          "type": "noise",
+          "noise_type": "voronoi",
+          "scale": 0.1,
+          "jitter": 0.8,
+          "blend": "overlay",
+          "opacity": 0.3
+        },
+        {
+          "type": "noise",
+          "noise_type": "perlin",
+          "scale": 0.01,
+          "octaves": 2,
+          "blend": "multiply",
+          "opacity": 0.2
+        }
+      ],
+      "color_ramp": ["#228B22", "#32CD32", "#7CFC00", "#006400"]
+    }
+  }
+}

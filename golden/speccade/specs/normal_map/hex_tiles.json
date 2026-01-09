@@ -1,0 +1,32 @@
+{
+  "spec_version": 1,
+  "asset_id": "hex_tiles",
+  "asset_type": "texture_2d",
+  "license": "CC0-1.0",
+  "seed": 5002,
+  "description": "Hexagonal tile pattern normal map",
+  "outputs": [
+    {
+      "kind": "texture",
+      "format": "png",
+      "path": "hex_tiles.png"
+    }
+  ],
+  "recipe": {
+    "kind": "texture_2d.normal_map_v1",
+    "params": {
+      "size": [256, 256],
+      "pattern": {
+        "type": "hexagons",
+        "hex_size": 32,
+        "gap_width": 3,
+        "gap_depth": 0.25
+      },
+      "processing": {
+        "strength": 1.0,
+        "blur": 0.3,
+        "invert": true
+      }
+    }
+  }
+}

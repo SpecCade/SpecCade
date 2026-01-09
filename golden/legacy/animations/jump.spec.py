@@ -1,0 +1,66 @@
+# Legacy .spec.py - REFERENCE ONLY (DO NOT EXECUTE)
+# Jump animation - anticipation, launch, apex, landing
+
+ANIMATION = {
+    "name": "jump",
+    "input_armature": "simple_biped.glb",
+    "character": "simple_biped",
+    "duration_frames": 36,
+    "fps": 30,
+    "loop": False,
+    "ground_offset": 0.0,
+    "poses": {
+        "crouch": {
+            "spine": {"pitch": 20},
+            "chest": {"pitch": 15},
+            "leg_upper_L": {"pitch": 45},
+            "leg_lower_L": {"pitch": -90},
+            "leg_upper_R": {"pitch": 45},
+            "leg_lower_R": {"pitch": -90},
+            "arm_upper_L": {"pitch": -30},
+            "arm_upper_R": {"pitch": -30}
+        },
+        "launch": {
+            "spine": {"pitch": -10},
+            "chest": {"pitch": -15},
+            "leg_upper_L": {"pitch": -15},
+            "leg_lower_L": {"pitch": 0},
+            "leg_upper_R": {"pitch": -15},
+            "leg_lower_R": {"pitch": 0},
+            "arm_upper_L": {"pitch": 60},
+            "arm_upper_R": {"pitch": 60}
+        },
+        "apex": {
+            "spine": {"pitch": 0},
+            "chest": {"pitch": 0},
+            "leg_upper_L": {"pitch": 10},
+            "leg_lower_L": {"pitch": -20},
+            "leg_upper_R": {"pitch": 10},
+            "leg_lower_R": {"pitch": -20},
+            "arm_upper_L": {"pitch": 30},
+            "arm_upper_R": {"pitch": 30}
+        },
+        "land": {
+            "spine": {"pitch": 15},
+            "chest": {"pitch": 10},
+            "leg_upper_L": {"pitch": 30},
+            "leg_lower_L": {"pitch": -60},
+            "leg_upper_R": {"pitch": 30},
+            "leg_lower_R": {"pitch": -60},
+            "arm_upper_L": {"pitch": -20},
+            "arm_upper_R": {"pitch": -20}
+        }
+    },
+    "phases": [
+        {"name": "anticipation", "frames": [0, 8], "pose": "crouch", "timing_curve": "ease_in"},
+        {"name": "launch", "frames": [8, 14], "pose": "launch", "timing_curve": "exponential_out"},
+        {"name": "apex", "frames": [14, 22], "pose": "apex", "timing_curve": "ease_in_out"},
+        {"name": "landing", "frames": [22, 36], "pose": "land", "timing_curve": "ease_in"}
+    ],
+    "rig_setup": {
+        "presets": {
+            "humanoid_legs": True
+        }
+    },
+    "save_blend": False
+}

@@ -1,0 +1,42 @@
+{
+  "spec_version": 1,
+  "asset_id": "laser_shot",
+  "asset_type": "audio_sfx",
+  "license": "CC0-1.0",
+  "seed": 1002,
+  "description": "FM synthesis laser shot - classic arcade sound",
+  "outputs": [
+    {
+      "kind": "audio",
+      "format": "wav",
+      "path": "laser_shot.wav"
+    }
+  ],
+  "recipe": {
+    "kind": "audio_sfx.layered_synth_v1",
+    "params": {
+      "duration_seconds": 0.25,
+      "sample_rate": 44100,
+      "normalize": true,
+      "peak_db": -1.0,
+      "layers": [
+        {
+          "synthesis": {
+            "type": "fm_synth",
+            "carrier_freq": 1200,
+            "mod_ratio": 2.5,
+            "mod_index": 8.0,
+            "index_decay": 20.0
+          },
+          "amplitude": 0.9,
+          "envelope": {
+            "attack": 0.001,
+            "decay": 0.1,
+            "sustain": 0.3,
+            "release": 0.1
+          }
+        }
+      ]
+    }
+  }
+}

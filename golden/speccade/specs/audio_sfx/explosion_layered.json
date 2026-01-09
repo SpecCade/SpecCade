@@ -1,0 +1,79 @@
+{
+  "spec_version": 1,
+  "asset_id": "explosion_layered",
+  "asset_type": "audio_sfx",
+  "license": "CC0-1.0",
+  "seed": 1003,
+  "description": "Complex layered explosion - multiple synthesis types combined",
+  "outputs": [
+    {
+      "kind": "audio",
+      "format": "wav",
+      "path": "explosion_layered.wav"
+    }
+  ],
+  "recipe": {
+    "kind": "audio_sfx.layered_synth_v1",
+    "params": {
+      "duration_seconds": 1.2,
+      "sample_rate": 44100,
+      "normalize": true,
+      "peak_db": -0.5,
+      "layers": [
+        {
+          "synthesis": {
+            "type": "noise_burst",
+            "color": "brown"
+          },
+          "amplitude": 1.0,
+          "envelope": {
+            "attack": 0.005,
+            "decay": 0.3,
+            "sustain": 0.2,
+            "release": 0.7
+          },
+          "filter": {
+            "type": "lowpass",
+            "cutoff": 800,
+            "cutoff_end": 200,
+            "q": 1.2
+          }
+        },
+        {
+          "synthesis": {
+            "type": "pitched_body",
+            "start_freq": 150,
+            "end_freq": 30
+          },
+          "amplitude": 0.7,
+          "delay": 0.01,
+          "envelope": {
+            "attack": 0.01,
+            "decay": 0.4,
+            "sustain": 0.1,
+            "release": 0.5
+          }
+        },
+        {
+          "synthesis": {
+            "type": "noise_burst",
+            "color": "white"
+          },
+          "amplitude": 0.3,
+          "delay": 0.0,
+          "envelope": {
+            "attack": 0.001,
+            "decay": 0.05,
+            "sustain": 0.0,
+            "release": 0.1
+          },
+          "filter": {
+            "type": "highpass",
+            "cutoff": 4000,
+            "q": 0.7
+          }
+        }
+      ]
+    }
+  }
+}

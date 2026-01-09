@@ -1,0 +1,39 @@
+{
+  "spec_version": 1,
+  "asset_id": "fm_bell",
+  "asset_type": "audio_instrument",
+  "license": "CC0-1.0",
+  "seed": 2002,
+  "description": "FM bell instrument - classic FM synthesis bell tone",
+  "outputs": [
+    {
+      "kind": "audio",
+      "format": "wav",
+      "path": "fm_bell.wav"
+    }
+  ],
+  "recipe": {
+    "kind": "audio_instrument.synth_patch_v1",
+    "params": {
+      "base_note": "C5",
+      "sample_rate": 44100,
+      "duration_seconds": 2.0,
+      "bit_depth": 16,
+      "synthesis": {
+        "type": "fm",
+        "operators": [
+          {"ratio": 1.0, "amplitude": 1.0},
+          {"ratio": 4.0, "amplitude": 0.8}
+        ],
+        "index": 5.0,
+        "index_decay": 3.0
+      },
+      "envelope": {
+        "attack": 0.001,
+        "decay": 0.5,
+        "sustain": 0.2,
+        "release": 1.0
+      }
+    }
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "spec_version": 1,
+  "asset_id": "brick_wall",
+  "asset_type": "texture_2d",
+  "license": "CC0-1.0",
+  "seed": 4001,
+  "description": "Brick wall texture - tileable with layered noise",
+  "outputs": [
+    {
+      "kind": "texture",
+      "format": "png",
+      "path": "brick_wall_albedo.png"
+    },
+    {
+      "kind": "texture",
+      "format": "png",
+      "path": "brick_wall_roughness.png"
+    }
+  ],
+  "recipe": {
+    "kind": "texture_2d.material_maps_v1",
+    "params": {
+      "size": [512, 512],
+      "tileable": true,
+      "layers": [
+        {
+          "type": "brick",
+          "brick_width": 64,
+          "brick_height": 32,
+          "mortar_width": 4,
+          "mortar_color": 0.3,
+          "brick_color": 0.7,
+          "variation": 0.1
+        },
+        {
+          "type": "noise",
+          "noise_type": "perlin",
+          "scale": 0.05,
+          "octaves": 3,
+          "blend": "multiply",
+          "opacity": 0.3
+        }
+      ],
+      "color_ramp": ["#8B4513", "#A0522D", "#CD853F"]
+    }
+  }
+}

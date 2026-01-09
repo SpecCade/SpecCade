@@ -1,0 +1,42 @@
+{
+  "spec_version": 1,
+  "asset_id": "organ_additive",
+  "asset_type": "audio_instrument",
+  "license": "CC0-1.0",
+  "seed": 2004,
+  "description": "Organ instrument - additive synthesis with drawbar-style partials",
+  "outputs": [
+    {
+      "kind": "audio",
+      "format": "wav",
+      "path": "organ_additive.wav"
+    }
+  ],
+  "recipe": {
+    "kind": "audio_instrument.synth_patch_v1",
+    "params": {
+      "base_note": "C4",
+      "sample_rate": 44100,
+      "duration_seconds": 1.0,
+      "bit_depth": 16,
+      "synthesis": {
+        "type": "additive",
+        "partials": [
+          {"ratio": 0.5, "amplitude": 0.8},
+          {"ratio": 1.0, "amplitude": 1.0},
+          {"ratio": 2.0, "amplitude": 0.9},
+          {"ratio": 3.0, "amplitude": 0.7},
+          {"ratio": 4.0, "amplitude": 0.5},
+          {"ratio": 6.0, "amplitude": 0.3},
+          {"ratio": 8.0, "amplitude": 0.2}
+        ]
+      },
+      "envelope": {
+        "attack": 0.01,
+        "decay": 0.05,
+        "sustain": 0.9,
+        "release": 0.1
+      }
+    }
+  }
+}

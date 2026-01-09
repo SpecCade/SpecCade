@@ -1,0 +1,59 @@
+{
+  "spec_version": 1,
+  "asset_id": "snare_hit",
+  "asset_type": "audio_sfx",
+  "license": "CC0-1.0",
+  "seed": 1007,
+  "description": "Synthesized snare drum - noise + tonal component",
+  "outputs": [
+    {
+      "kind": "audio",
+      "format": "wav",
+      "path": "snare_hit.wav"
+    }
+  ],
+  "recipe": {
+    "kind": "audio_sfx.layered_synth_v1",
+    "params": {
+      "duration_seconds": 0.25,
+      "sample_rate": 44100,
+      "normalize": true,
+      "peak_db": -2.0,
+      "layers": [
+        {
+          "synthesis": {
+            "type": "noise_burst",
+            "color": "pink"
+          },
+          "amplitude": 0.8,
+          "envelope": {
+            "attack": 0.001,
+            "decay": 0.08,
+            "sustain": 0.1,
+            "release": 0.12
+          },
+          "filter": {
+            "type": "bandpass",
+            "cutoff_low": 800,
+            "cutoff_high": 8000,
+            "q": 0.7
+          }
+        },
+        {
+          "synthesis": {
+            "type": "sine",
+            "freq": 200,
+            "freq_end": 120
+          },
+          "amplitude": 0.5,
+          "envelope": {
+            "attack": 0.001,
+            "decay": 0.04,
+            "sustain": 0.0,
+            "release": 0.05
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "spec_version": 1,
+  "asset_id": "pluck_string",
+  "asset_type": "audio_sfx",
+  "license": "CC0-1.0",
+  "seed": 1010,
+  "description": "Karplus-Strong plucked string sound",
+  "outputs": [
+    {
+      "kind": "audio",
+      "format": "wav",
+      "path": "pluck_string.wav"
+    }
+  ],
+  "recipe": {
+    "kind": "audio_sfx.layered_synth_v1",
+    "params": {
+      "duration_seconds": 0.8,
+      "sample_rate": 44100,
+      "normalize": true,
+      "peak_db": -2.0,
+      "layers": [
+        {
+          "synthesis": {
+            "type": "karplus_strong",
+            "freq": 330,
+            "damping": 0.995,
+            "brightness": 0.8
+          },
+          "amplitude": 1.0,
+          "envelope": {
+            "attack": 0.001,
+            "decay": 0.3,
+            "sustain": 0.4,
+            "release": 0.3
+          }
+        }
+      ]
+    }
+  }
+}
