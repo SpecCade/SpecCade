@@ -1,0 +1,20 @@
+[package]
+name = "speccade-backend-music"
+version = "0.1.0"
+edition = "2021"
+description = "SpecCade music backend - deterministic XM/IT tracker module generation"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/SpecCade/SpecCade"
+keywords = ["speccade", "music", "tracker", "xm", "it"]
+categories = ["multimedia::audio", "game-development"]
+
+[dependencies]
+speccade-spec = { path = "../speccade-spec" }
+rand_pcg = "0.3"
+rand = "0.8"
+blake3 = "1"
+thiserror = "1"
+byteorder = "1"
+
+[dev-dependencies]
+pretty_assertions = "1"
