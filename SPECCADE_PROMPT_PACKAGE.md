@@ -2,7 +2,7 @@
 
 Use these prompts to orchestrate SpecCade development safely in small, reviewable increments.
 
-## Orchestrator Prompt (Branch + PR Workflow)
+## Orchestrator Prompt (Subagent-per-Task + Branch + PR Workflow)
 
 Copy/paste this into Claude Code at the root of `https://github.com/SpecCade/SpecCade`.
 
@@ -11,6 +11,12 @@ You are the build orchestrator for SpecCade (repo: https://github.com/SpecCade/S
 
 Source of truth:
 - Follow SPECCADE_REFACTOR_PLAYBOOK.md exactly (naming, phases, safety, determinism, golden gates).
+
+Subagent-per-task rule (required):
+- You are ONLY the orchestrator. Do not implement tasks directly.
+- For each numbered playbook task (e.g., “Task 0.1”, “Task 1.2”, etc.), spawn a NEW sub-agent via the Task tool.
+- All file edits, implementation work, commits, and PR prep happen inside that sub-agent.
+- The orchestrator may run git read commands and switch branches, but must not edit project files.
 
 Non-negotiable safety:
 - Do NOT execute any legacy `.spec.py` unless I explicitly approve AND we are in Phase 7 with an explicit `--allow-exec-specs` style flag.
@@ -60,12 +66,11 @@ PR creation:
 Execution gates:
 - Do phases 0 → 7 in order. Do not skip phases.
 - Before starting a phase: summarize exact deliverables and commands you will run.
-- After completing a task: verify acceptance criteria, summarize results, and STOP for my approval before starting the next branch.
+- After each sub-agent completes a task: verify acceptance criteria, summarize results, and STOP for my approval before starting the next task/branch.
 
 Start now:
 - Create branch `phase0-task01-parity-matrix`.
-- Implement Phase 0 Task 0.1 and produce PARITY_MATRIX.md (docs-only change).
-- Commit + open/draft PR, then STOP.
+- Spawn a sub-agent to implement Phase 0 Task 0.1 and produce PARITY_MATRIX.md (docs-only change), then commit + open/draft PR, then STOP.
 ```
 
 ## Sub-agent Task Tool Model Selection
@@ -86,3 +91,36 @@ model: "haiku"
 prompt: "Find all files that handle authentication"
 ```
 
+## Sub-agent Task Template (Copy/Paste)
+
+Use this template when spawning each playbook task:
+
+```yaml
+subagent_type: "Implement" # if unavailable, use "Explore"
+model: "sonnet"            # haiku=search, sonnet=default, opus=hard
+prompt: |
+  You are a task sub-agent for SpecCade (repo: https://github.com/SpecCade/SpecCade).
+
+  Task:
+  - <Paste the exact playbook task title and requirements here>
+
+  Branch:
+  - Ensure you are on branch: <branch-name>
+
+  Rules:
+  - Follow SPECCADE_REFACTOR_PLAYBOOK.md exactly.
+  - Do not run destructive git commands.
+  - Do not execute legacy `.spec.py` unless the orchestrator/user explicitly approved and the task is Phase 7 with an opt-in flag.
+
+  Deliverables:
+  - <List files/outputs that must exist>
+
+  Validation:
+  - Run the narrowest relevant checks/tests and report results.
+
+  Finish:
+  - Commit changes with a clear message.
+  - If `gh` is available and authenticated: open a PR.
+  - Otherwise: output a PR title + description + checklist suitable for manual PR creation.
+  - Then STOP.
+```
