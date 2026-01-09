@@ -1,7 +1,8 @@
-//! SpecCade Audio SFX Backend
+//! SpecCade Audio Backend
 //!
-//! This crate implements the `audio_sfx.layered_synth_v1` backend for SpecCade,
-//! providing deterministic procedural audio synthesis for sound effects.
+//! This crate implements audio generation backends for SpecCade:
+//! - `audio_sfx.layered_synth_v1` - Layered sound effects
+//! - `audio_instrument.synth_patch_v1` - Musical instrument samples
 //!
 //! # Overview
 //!
@@ -38,7 +39,8 @@
 //!
 //! # Crate Structure
 //!
-//! - [`generate`] - Main entry point for audio generation
+//! - [`generate`] - Main entry point for audio SFX generation
+//! - [`instrument`] - Instrument sample generation
 //! - [`envelope`] - ADSR envelope generators
 //! - [`filter`] - Biquad filter implementations
 //! - [`mixer`] - Layer mixing with volume/pan
@@ -51,6 +53,7 @@ pub mod envelope;
 pub mod error;
 pub mod filter;
 pub mod generate;
+pub mod instrument;
 pub mod mixer;
 pub mod oscillator;
 pub mod rng;
@@ -60,6 +63,7 @@ pub mod wav;
 // Re-export main types at crate root
 pub use error::{AudioError, AudioResult};
 pub use generate::{generate, generate_from_params, GenerateResult};
+pub use instrument::{generate_instrument, GenerateInstrumentResult};
 pub use wav::{WavResult, WavWriter};
 
 #[cfg(test)]
