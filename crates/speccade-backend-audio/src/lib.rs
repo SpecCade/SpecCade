@@ -212,10 +212,10 @@ mod integration_tests {
                 .license("CC0-1.0")
                 .seed(seed)
                 .output(OutputSpec::primary(OutputFormat::Wav, "test.wav"))
-                .recipe(Recipe {
-                    kind: "audio_sfx.layered_synth_v1".to_string(),
-                    params: RecipeParams::AudioSfxLayeredSynthV1(params),
-                })
+                .recipe(Recipe::new(
+                    "audio_sfx.layered_synth_v1",
+                    serde_json::to_value(&params).unwrap(),
+                ))
                 .build()
         };
 

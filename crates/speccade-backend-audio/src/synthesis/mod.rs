@@ -115,8 +115,9 @@ impl FrequencySweep {
 
     /// Generates a frequency curve for the given number of samples.
     pub fn generate(&self, num_samples: usize) -> Vec<f64> {
+        let divisor = if num_samples > 1 { num_samples - 1 } else { 1 };
         (0..num_samples)
-            .map(|i| self.at(i as f64 / num_samples as f64))
+            .map(|i| self.at(i as f64 / divisor as f64))
             .collect()
     }
 }
