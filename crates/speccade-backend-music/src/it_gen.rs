@@ -21,8 +21,8 @@ use crate::it::{
     ItSample,
 };
 use crate::note::{
-    calculate_c5_speed_for_base_note, note_name_to_it, note_name_to_midi, DEFAULT_IT_SYNTH_MIDI_NOTE,
-    DEFAULT_SAMPLE_RATE,
+    calculate_c5_speed_for_base_note, note_name_to_it, note_name_to_midi,
+    DEFAULT_IT_SYNTH_MIDI_NOTE, DEFAULT_SAMPLE_RATE,
 };
 use crate::synthesis::{derive_instrument_seed, generate_loopable_sample, load_wav_sample};
 
@@ -61,8 +61,7 @@ pub fn generate_it(
 
     // Generate instruments and samples
     for (idx, instr) in params.instruments.iter().enumerate() {
-        let (it_instrument, it_sample) =
-            generate_it_instrument(instr, seed, idx as u32, spec_dir)?;
+        let (it_instrument, it_sample) = generate_it_instrument(instr, seed, idx as u32, spec_dir)?;
         module.add_instrument(it_instrument);
         module.add_sample(it_sample);
     }
@@ -70,8 +69,17 @@ pub fn generate_it(
     // Build pattern index map
     let mut pattern_index_map: HashMap<String, u8> = HashMap::new();
 
-    // Convert patterns (with automation)
-    for (pattern_idx, (name, pattern)) in params.patterns.iter().enumerate() {
+    // Convert patterns (with automation).
+    //
+    // Determinism: `patterns` is a HashMap, so we must iterate in a stable order.
+    let mut pattern_names: Vec<&String> = params.patterns.keys().collect();
+    pattern_names.sort();
+
+    for (pattern_idx, name) in pattern_names.into_iter().enumerate() {
+        let pattern = params
+            .patterns
+            .get(name)
+            .expect("pattern name came from patterns.keys()");
         let mut it_pattern = convert_pattern_to_it(pattern, params.channels)?;
 
         // Apply automation to this pattern
@@ -153,7 +161,7 @@ fn generate_it_instrument(
             // Load WAV sample - preserves original sample rate
             let sample_path = spec_dir.join(path);
             let (data, actual_sample_rate) =
-                load_wav_sample(&sample_path).map_err(|e| GenerateError::SampleLoadError(e))?;
+                load_wav_sample(&sample_path).map_err(GenerateError::SampleLoadError)?;
 
             // Calculate C-5 speed (IT's pitch reference) based on actual sample rate and base_note
             let c5_speed = if let Some(note_name) = base_note {
@@ -316,12 +324,7 @@ fn apply_automation_to_pattern(
             } => {
                 if target == pattern_name {
                     apply_volume_fade_it(
-                        pattern,
-                        *channel,
-                        *start_row,
-                        *end_row,
-                        *start_vol,
-                        *end_vol,
+                        pattern, *channel, *start_row, *end_row, *start_vol, *end_vol,
                     )?;
                 }
             }
@@ -419,22 +422,25 @@ mod tests {
         };
 
         let mut notes = HashMap::new();
-        notes.insert("0".to_string(), vec![
-            PatternNote {
-                row: 0,
-                note: "C4".to_string(),
-                inst: 0,
-                vol: Some(64),
-                ..Default::default()
-            },
-            PatternNote {
-                row: 4,
-                note: "E4".to_string(),
-                inst: 0,
-                vol: Some(64),
-                ..Default::default()
-            },
-        ]);
+        notes.insert(
+            "0".to_string(),
+            vec![
+                PatternNote {
+                    row: 0,
+                    note: "C4".to_string(),
+                    inst: 0,
+                    vol: Some(64),
+                    ..Default::default()
+                },
+                PatternNote {
+                    row: 4,
+                    note: "E4".to_string(),
+                    inst: 0,
+                    vol: Some(64),
+                    ..Default::default()
+                },
+            ],
+        );
         let pattern = TrackerPattern {
             rows: 16,
             notes: Some(notes),
@@ -834,20 +840,29 @@ mod tests {
     #[test]
     fn test_it_default_sample_rate_constant() {
         use crate::note::DEFAULT_SAMPLE_RATE;
-        assert_eq!(DEFAULT_SAMPLE_RATE, 22050, "Default sample rate should be 22050 Hz");
+        assert_eq!(
+            DEFAULT_SAMPLE_RATE, 22050,
+            "Default sample rate should be 22050 Hz"
+        );
     }
 
     /// Test: Verify XM default synth MIDI note constant is 60 (C4)
     #[test]
     fn test_xm_default_synth_midi_note_constant() {
         use crate::note::DEFAULT_SYNTH_MIDI_NOTE;
-        assert_eq!(DEFAULT_SYNTH_MIDI_NOTE, 60, "XM default synth MIDI note should be 60 (C4)");
+        assert_eq!(
+            DEFAULT_SYNTH_MIDI_NOTE, 60,
+            "XM default synth MIDI note should be 60 (C4)"
+        );
     }
 
     /// Test: Verify IT default synth MIDI note constant is 72 (C5)
     #[test]
     fn test_it_default_synth_midi_note_constant() {
         use crate::note::DEFAULT_IT_SYNTH_MIDI_NOTE;
-        assert_eq!(DEFAULT_IT_SYNTH_MIDI_NOTE, 72, "IT default synth MIDI note should be 72 (C5)");
+        assert_eq!(
+            DEFAULT_IT_SYNTH_MIDI_NOTE, 72,
+            "IT default synth MIDI note should be 72 (C5)"
+        );
     }
 }

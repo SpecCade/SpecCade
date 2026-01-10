@@ -46,7 +46,10 @@ pub fn print_audit_report(entries: &[AuditEntry], threshold: f64) -> f64 {
 
         // Collect missing keys (not_implemented and unknown)
         for (key, status) in &kc.key_details {
-            if matches!(status, MigrationKeyStatus::NotImplemented | MigrationKeyStatus::Unknown) {
+            if matches!(
+                status,
+                MigrationKeyStatus::NotImplemented | MigrationKeyStatus::Unknown
+            ) {
                 // Get section from the entry path
                 let section = determine_category(&entry.source_path)
                     .map(|c| category_to_parity_section(&c).to_string())
@@ -110,9 +113,7 @@ pub fn print_audit_report(entries: &[AuditEntry], threshold: f64) -> f64 {
 
     println!(
         "{:20} {} (threshold: {:.0}%)",
-        "Completeness:",
-        completeness_colored,
-        threshold_percent
+        "Completeness:", completeness_colored, threshold_percent
     );
     println!(
         "{:20} {}",
@@ -128,19 +129,13 @@ pub fn print_audit_report(entries: &[AuditEntry], threshold: f64) -> f64 {
 
         // Sort by frequency (descending), then by key name
         let mut sorted_missing: Vec<_> = missing_keys.iter().collect();
-        sorted_missing.sort_by(|a, b| {
-            b.1.cmp(a.1).then_with(|| a.0.cmp(b.0))
-        });
+        sorted_missing.sort_by(|a, b| b.1.cmp(a.1).then_with(|| a.0.cmp(b.0)));
 
         // Show top 10 missing keys
         let display_count = sorted_missing.len().min(10);
         for ((section, key), count) in sorted_missing.iter().take(display_count) {
             let qualified = format!("{}::{}", section, key);
-            println!(
-                "  {:>4}x  {}",
-                count,
-                qualified.red()
-            );
+            println!("  {:>4}x  {}", count, qualified.red());
         }
 
         if sorted_missing.len() > display_count {
@@ -158,7 +153,11 @@ pub fn print_audit_report(entries: &[AuditEntry], threshold: f64) -> f64 {
         println!("{}", "Parse Errors:".red().bold());
         for entry in entries {
             if !entry.success {
-                println!("  {} {}", "!".red(), entry.source_path.display().to_string().dimmed());
+                println!(
+                    "  {} {}",
+                    "!".red(),
+                    entry.source_path.display().to_string().dimmed()
+                );
                 if let Some(ref error) = entry.error {
                     println!("    {}", error);
                 }
@@ -200,7 +199,11 @@ pub fn print_migration_report(entries: &[MigrationEntry]) {
     println!();
     println!("{:20} {}", "Total files:", total);
     println!("{:20} {}", "Converted:", format!("{}", success).green());
-    println!("{:20} {}", "With warnings:", format!("{}", with_warnings).yellow());
+    println!(
+        "{:20} {}",
+        "With warnings:",
+        format!("{}", with_warnings).yellow()
+    );
     println!("{:20} {}", "Failed:", format!("{}", failed).red());
     println!();
 
@@ -333,7 +336,11 @@ pub fn print_migration_report(entries: &[MigrationEntry]) {
         println!("{}", "Warnings:".yellow().bold());
         for entry in entries {
             if !entry.warnings.is_empty() {
-                println!("  {} {}", "⚠".yellow(), entry.source_path.display().to_string().dimmed());
+                println!(
+                    "  {} {}",
+                    "⚠".yellow(),
+                    entry.source_path.display().to_string().dimmed()
+                );
                 if let Some(ref target) = entry.target_path {
                     println!("    -> {}", target.display().to_string().dimmed());
                 }
@@ -349,7 +356,11 @@ pub fn print_migration_report(entries: &[MigrationEntry]) {
         println!("{}", "Errors:".red().bold());
         for entry in entries {
             if !entry.success {
-                println!("  {} {}", "✗".red(), entry.source_path.display().to_string().dimmed());
+                println!(
+                    "  {} {}",
+                    "✗".red(),
+                    entry.source_path.display().to_string().dimmed()
+                );
                 if let Some(ref target) = entry.target_path {
                     println!("    -> {}", target.display().to_string().dimmed());
                 }

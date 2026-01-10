@@ -198,7 +198,7 @@ fn load_instrument_from_ref(
     })?;
 
     // Check recipe kind - must be audio_v1
-    if recipe.kind != "audio_v1" && recipe.kind != "audio.v1" {
+    if recipe.kind != "audio_v1" {
         return Err(GenerateError::InstrumentError(format!(
             "External instrument spec '{}' has unsupported recipe kind '{}', expected 'audio_v1'",
             ref_path, recipe.kind
@@ -353,10 +353,8 @@ where
     let param = if let Some((x, y)) = effect.effect_xy {
         // Convert nibbles to byte: param = (x << 4) | y
         (x << 4) | y
-    } else if let Some(p) = effect.param {
-        p
     } else {
-        0
+        effect.param.unwrap_or_default()
     };
 
     // Get effect code from type name
@@ -393,35 +391,38 @@ mod tests {
         };
 
         let mut notes = HashMap::new();
-        notes.insert("0".to_string(), vec![
-            PatternNote {
-                row: 0,
-                note: "C4".to_string(),
-                inst: 0,
-                vol: Some(64),
-                ..Default::default()
-            },
-            PatternNote {
-                row: 4,
-                note: "E4".to_string(),
-                inst: 0,
-                vol: Some(64),
-                ..Default::default()
-            },
-            PatternNote {
-                row: 8,
-                note: "G4".to_string(),
-                inst: 0,
-                vol: Some(64),
-                ..Default::default()
-            },
-            PatternNote {
-                row: 12,
-                note: "OFF".to_string(),
-                inst: 0,
-                ..Default::default()
-            },
-        ]);
+        notes.insert(
+            "0".to_string(),
+            vec![
+                PatternNote {
+                    row: 0,
+                    note: "C4".to_string(),
+                    inst: 0,
+                    vol: Some(64),
+                    ..Default::default()
+                },
+                PatternNote {
+                    row: 4,
+                    note: "E4".to_string(),
+                    inst: 0,
+                    vol: Some(64),
+                    ..Default::default()
+                },
+                PatternNote {
+                    row: 8,
+                    note: "G4".to_string(),
+                    inst: 0,
+                    vol: Some(64),
+                    ..Default::default()
+                },
+                PatternNote {
+                    row: 12,
+                    note: "OFF".to_string(),
+                    inst: 0,
+                    ..Default::default()
+                },
+            ],
+        );
         let pattern = TrackerPattern {
             rows: 16,
             notes: Some(notes),
@@ -654,8 +655,8 @@ mod tests {
     fn test_load_external_oscillator_spec() {
         // Test loading a real external spec file with oscillator synthesis
         // The saw_lead.json uses oscillator synthesis which should convert successfully
-        let spec_dir = Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("../../golden/speccade/specs/audio");
+        let spec_dir =
+            Path::new(env!("CARGO_MANIFEST_DIR")).join("../../golden/speccade/specs/audio");
 
         // Check if the file exists (may not exist in all CI environments)
         let ref_path = "saw_lead.json";
@@ -671,8 +672,8 @@ mod tests {
     #[test]
     fn test_load_external_karplus_spec_returns_error() {
         // Test loading a spec file with Karplus-Strong synthesis (should fail with helpful error)
-        let spec_dir = Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("../../golden/speccade/specs/audio");
+        let spec_dir =
+            Path::new(env!("CARGO_MANIFEST_DIR")).join("../../golden/speccade/specs/audio");
 
         let ref_path = "bass_pluck.json";
         let full_path = spec_dir.join(ref_path);

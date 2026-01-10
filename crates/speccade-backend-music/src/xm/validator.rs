@@ -22,8 +22,8 @@ use std::fmt;
 
 // Re-use constants from header module to avoid duplication
 use super::header::{
-    XM_MAGIC, XM_VERSION, XM_HEADER_SIZE,
-    XM_MAX_CHANNELS as XM_MAX_CHANNELS_U8, XM_MAX_PATTERNS, XM_MAX_INSTRUMENTS, XM_MAX_PATTERN_ROWS,
+    XM_HEADER_SIZE, XM_MAGIC, XM_MAX_CHANNELS as XM_MAX_CHANNELS_U8, XM_MAX_INSTRUMENTS,
+    XM_MAX_PATTERNS, XM_MAX_PATTERN_ROWS, XM_VERSION,
 };
 use super::instrument::XM_SAMPLE_HEADER_SIZE;
 
@@ -121,34 +121,65 @@ pub enum XmFormatError {
     /// Invalid BPM value.
     InvalidBpm { bpm: u16, min: u16, max: u16 },
     /// Pattern order references non-existent pattern.
-    InvalidPatternOrder { position: usize, pattern: u8, max_pattern: u16 },
+    InvalidPatternOrder {
+        position: usize,
+        pattern: u8,
+        max_pattern: u16,
+    },
     /// Pattern header error.
-    PatternError { pattern_index: usize, message: String },
+    PatternError {
+        pattern_index: usize,
+        message: String,
+    },
     /// Instrument header error.
-    InstrumentError { instrument_index: usize, message: String },
+    InstrumentError {
+        instrument_index: usize,
+        message: String,
+    },
     /// Sample error.
-    SampleError { instrument: usize, sample: usize, message: String },
+    SampleError {
+        instrument: usize,
+        sample: usize,
+        message: String,
+    },
     /// Envelope error.
-    EnvelopeError { instrument: usize, envelope_type: &'static str, message: String },
+    EnvelopeError {
+        instrument: usize,
+        envelope_type: &'static str,
+        message: String,
+    },
     /// File truncated.
     FileTruncated { expected: usize, actual: usize },
     /// Invalid note value.
-    InvalidNoteValue { value: u8, pattern: usize, row: usize, channel: usize },
+    InvalidNoteValue {
+        value: u8,
+        pattern: usize,
+        row: usize,
+        channel: usize,
+    },
     /// Invalid volume value.
     InvalidVolume { value: u8, context: String },
     /// Invalid packing type.
     InvalidPackingType { found: u8, pattern: usize },
     /// Invalid sample flags.
-    InvalidSampleFlags { flags: u8, instrument: usize, sample: usize },
+    InvalidSampleFlags {
+        flags: u8,
+        instrument: usize,
+        sample: usize,
+    },
     /// Invalid loop type.
-    InvalidLoopType { loop_type: u8, instrument: usize, sample: usize },
+    InvalidLoopType {
+        loop_type: u8,
+        instrument: usize,
+        sample: usize,
+    },
     /// Loop extends beyond sample.
     InvalidLoopBounds {
         instrument: usize,
         sample: usize,
         loop_start: u32,
         loop_length: u32,
-        sample_length: u32
+        sample_length: u32,
     },
 }
 
@@ -156,35 +187,65 @@ impl fmt::Display for XmFormatError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             XmFormatError::FileTooSmall { size, minimum } => {
-                write!(f, "File too small: {} bytes (minimum {} required)", size, minimum)
+                write!(
+                    f,
+                    "File too small: {} bytes (minimum {} required)",
+                    size, minimum
+                )
             }
             XmFormatError::InvalidIdText { found } => {
-                write!(f, "Invalid ID text at offset 0: expected 'Extended Module: ', got {:?}",
-                    String::from_utf8_lossy(found))
+                write!(
+                    f,
+                    "Invalid ID text at offset 0: expected 'Extended Module: ', got {:?}",
+                    String::from_utf8_lossy(found)
+                )
             }
             XmFormatError::MissingMagicByte { found, offset } => {
-                write!(f, "Missing magic byte at offset {}: expected 0x1A, got 0x{:02X}", offset, found)
+                write!(
+                    f,
+                    "Missing magic byte at offset {}: expected 0x1A, got 0x{:02X}",
+                    offset, found
+                )
             }
             XmFormatError::UnsupportedVersion { version } => {
-                write!(f, "Unsupported XM version: 0x{:04X} (expected 0x0104)", version)
+                write!(
+                    f,
+                    "Unsupported XM version: 0x{:04X} (expected 0x0104)",
+                    version
+                )
             }
             XmFormatError::InvalidHeaderSize { size, expected } => {
                 write!(f, "Invalid header size: {} (expected {})", size, expected)
             }
             XmFormatError::InvalidChannelCount { channels, min, max } => {
-                write!(f, "Invalid channel count: {} (must be {}-{})", channels, min, max)
+                write!(
+                    f,
+                    "Invalid channel count: {} (must be {}-{})",
+                    channels, min, max
+                )
             }
             XmFormatError::InvalidPatternCount { patterns, max } => {
                 write!(f, "Invalid pattern count: {} (maximum {})", patterns, max)
             }
             XmFormatError::InvalidInstrumentCount { instruments, max } => {
-                write!(f, "Invalid instrument count: {} (maximum {})", instruments, max)
+                write!(
+                    f,
+                    "Invalid instrument count: {} (maximum {})",
+                    instruments, max
+                )
             }
             XmFormatError::InvalidSongLength { length } => {
                 write!(f, "Invalid song length: {} (must be 1-256)", length)
             }
-            XmFormatError::InvalidRestartPosition { restart, song_length } => {
-                write!(f, "Restart position {} exceeds song length {}", restart, song_length)
+            XmFormatError::InvalidRestartPosition {
+                restart,
+                song_length,
+            } => {
+                write!(
+                    f,
+                    "Restart position {} exceeds song length {}",
+                    restart, song_length
+                )
             }
             XmFormatError::InvalidTempo { tempo, min, max } => {
                 write!(f, "Invalid tempo: {} (must be {}-{})", tempo, min, max)
@@ -192,40 +253,109 @@ impl fmt::Display for XmFormatError {
             XmFormatError::InvalidBpm { bpm, min, max } => {
                 write!(f, "Invalid BPM: {} (must be {}-{})", bpm, min, max)
             }
-            XmFormatError::InvalidPatternOrder { position, pattern, max_pattern } => {
-                write!(f, "Pattern order[{}] = {} exceeds pattern count {}", position, pattern, max_pattern)
+            XmFormatError::InvalidPatternOrder {
+                position,
+                pattern,
+                max_pattern,
+            } => {
+                write!(
+                    f,
+                    "Pattern order[{}] = {} exceeds pattern count {}",
+                    position, pattern, max_pattern
+                )
             }
-            XmFormatError::PatternError { pattern_index, message } => {
+            XmFormatError::PatternError {
+                pattern_index,
+                message,
+            } => {
                 write!(f, "Pattern {} error: {}", pattern_index, message)
             }
-            XmFormatError::InstrumentError { instrument_index, message } => {
+            XmFormatError::InstrumentError {
+                instrument_index,
+                message,
+            } => {
                 write!(f, "Instrument {} error: {}", instrument_index, message)
             }
-            XmFormatError::SampleError { instrument, sample, message } => {
-                write!(f, "Instrument {} sample {} error: {}", instrument, sample, message)
+            XmFormatError::SampleError {
+                instrument,
+                sample,
+                message,
+            } => {
+                write!(
+                    f,
+                    "Instrument {} sample {} error: {}",
+                    instrument, sample, message
+                )
             }
-            XmFormatError::EnvelopeError { instrument, envelope_type, message } => {
-                write!(f, "Instrument {} {} envelope error: {}", instrument, envelope_type, message)
+            XmFormatError::EnvelopeError {
+                instrument,
+                envelope_type,
+                message,
+            } => {
+                write!(
+                    f,
+                    "Instrument {} {} envelope error: {}",
+                    instrument, envelope_type, message
+                )
             }
             XmFormatError::FileTruncated { expected, actual } => {
-                write!(f, "File truncated: expected {} bytes, got {}", expected, actual)
+                write!(
+                    f,
+                    "File truncated: expected {} bytes, got {}",
+                    expected, actual
+                )
             }
-            XmFormatError::InvalidNoteValue { value, pattern, row, channel } => {
-                write!(f, "Invalid note value {} at pattern {}, row {}, channel {}", value, pattern, row, channel)
+            XmFormatError::InvalidNoteValue {
+                value,
+                pattern,
+                row,
+                channel,
+            } => {
+                write!(
+                    f,
+                    "Invalid note value {} at pattern {}, row {}, channel {}",
+                    value, pattern, row, channel
+                )
             }
             XmFormatError::InvalidVolume { value, context } => {
                 write!(f, "Invalid volume {} in {}", value, context)
             }
             XmFormatError::InvalidPackingType { found, pattern } => {
-                write!(f, "Invalid packing type {} in pattern {} (must be 0)", found, pattern)
+                write!(
+                    f,
+                    "Invalid packing type {} in pattern {} (must be 0)",
+                    found, pattern
+                )
             }
-            XmFormatError::InvalidSampleFlags { flags, instrument, sample } => {
-                write!(f, "Invalid sample flags 0x{:02X} in instrument {} sample {}", flags, instrument, sample)
+            XmFormatError::InvalidSampleFlags {
+                flags,
+                instrument,
+                sample,
+            } => {
+                write!(
+                    f,
+                    "Invalid sample flags 0x{:02X} in instrument {} sample {}",
+                    flags, instrument, sample
+                )
             }
-            XmFormatError::InvalidLoopType { loop_type, instrument, sample } => {
-                write!(f, "Invalid loop type {} in instrument {} sample {} (must be 0-2)", loop_type, instrument, sample)
+            XmFormatError::InvalidLoopType {
+                loop_type,
+                instrument,
+                sample,
+            } => {
+                write!(
+                    f,
+                    "Invalid loop type {} in instrument {} sample {} (must be 0-2)",
+                    loop_type, instrument, sample
+                )
             }
-            XmFormatError::InvalidLoopBounds { instrument, sample, loop_start, loop_length, sample_length } => {
+            XmFormatError::InvalidLoopBounds {
+                instrument,
+                sample,
+                loop_start,
+                loop_length,
+                sample_length,
+            } => {
                 write!(f, "Invalid loop bounds in instrument {} sample {}: start {} + length {} > sample length {}",
                     instrument, sample, loop_start, loop_length, sample_length)
             }
@@ -247,20 +377,35 @@ pub enum XmWarning {
     /// Instrument with no samples.
     InstrumentWithoutSamples { instrument_index: usize },
     /// Envelope with zero points but enabled.
-    EmptyEnabledEnvelope { instrument: usize, envelope_type: &'static str },
+    EmptyEnabledEnvelope {
+        instrument: usize,
+        envelope_type: &'static str,
+    },
     /// Non-standard tracker name.
     NonStandardTrackerName { name: String },
     /// High envelope frame values (compatible but unusual).
-    HighEnvelopeFrameValue { instrument: usize, envelope_type: &'static str, frame: u16 },
+    HighEnvelopeFrameValue {
+        instrument: usize,
+        envelope_type: &'static str,
+        frame: u16,
+    },
     /// Sample with unusual panning.
-    UnusualSamplePanning { instrument: usize, sample: usize, panning: u8 },
+    UnusualSamplePanning {
+        instrument: usize,
+        sample: usize,
+        panning: u8,
+    },
 }
 
 impl fmt::Display for XmWarning {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             XmWarning::NonStandardHeaderSize { size, standard } => {
-                write!(f, "Non-standard header size {} (standard: {})", size, standard)
+                write!(
+                    f,
+                    "Non-standard header size {} (standard: {})",
+                    size, standard
+                )
             }
             XmWarning::UnusualTempoBpm { tempo, bpm } => {
                 write!(f, "Unusual tempo/BPM combination: {}/{}", tempo, bpm)
@@ -271,17 +416,40 @@ impl fmt::Display for XmWarning {
             XmWarning::InstrumentWithoutSamples { instrument_index } => {
                 write!(f, "Instrument {} has no samples", instrument_index)
             }
-            XmWarning::EmptyEnabledEnvelope { instrument, envelope_type } => {
-                write!(f, "Instrument {} has {} envelope enabled but zero points", instrument, envelope_type)
+            XmWarning::EmptyEnabledEnvelope {
+                instrument,
+                envelope_type,
+            } => {
+                write!(
+                    f,
+                    "Instrument {} has {} envelope enabled but zero points",
+                    instrument, envelope_type
+                )
             }
             XmWarning::NonStandardTrackerName { name } => {
                 write!(f, "Non-standard tracker name: '{}'", name)
             }
-            XmWarning::HighEnvelopeFrameValue { instrument, envelope_type, frame } => {
-                write!(f, "Instrument {} {} envelope has high frame value {}", instrument, envelope_type, frame)
+            XmWarning::HighEnvelopeFrameValue {
+                instrument,
+                envelope_type,
+                frame,
+            } => {
+                write!(
+                    f,
+                    "Instrument {} {} envelope has high frame value {}",
+                    instrument, envelope_type, frame
+                )
             }
-            XmWarning::UnusualSamplePanning { instrument, sample, panning } => {
-                write!(f, "Instrument {} sample {} has unusual panning: {}", instrument, sample, panning)
+            XmWarning::UnusualSamplePanning {
+                instrument,
+                sample,
+                panning,
+            } => {
+                write!(
+                    f,
+                    "Instrument {} sample {} has unusual panning: {}",
+                    instrument, sample, panning
+                )
             }
         }
     }
@@ -511,7 +679,10 @@ impl XmValidator {
     }
 
     /// Validate the XM header (offsets 0x00-0x3C and extended header).
-    fn validate_header(data: &[u8], report: &mut XmValidationReport) -> Result<XmHeaderInfo, XmFormatError> {
+    fn validate_header(
+        data: &[u8],
+        report: &mut XmValidationReport,
+    ) -> Result<XmHeaderInfo, XmFormatError> {
         // Check minimum file size
         if data.len() < XM_MIN_FILE_SIZE {
             return Err(XmFormatError::FileTooSmall {
@@ -552,7 +723,7 @@ impl XmValidator {
         let version = u16::from_le_bytes([data[58], data[59]]);
         if version != XM_VERSION_104 {
             // We'll accept it but log if it's not 1.04
-            if version < 0x0100 || version > 0x0104 {
+            if !(0x0100..=0x0104).contains(&version) {
                 return Err(XmFormatError::UnsupportedVersion { version });
             }
         }
@@ -578,7 +749,9 @@ impl XmValidator {
         // Song length at offset 64-65
         let song_length = u16::from_le_bytes([data[64], data[65]]);
         if song_length == 0 || song_length > 256 {
-            return Err(XmFormatError::InvalidSongLength { length: song_length });
+            return Err(XmFormatError::InvalidSongLength {
+                length: song_length,
+            });
         }
 
         // Restart position at offset 66-67
@@ -592,7 +765,7 @@ impl XmValidator {
 
         // Number of channels at offset 68-69
         let num_channels = u16::from_le_bytes([data[68], data[69]]);
-        if num_channels < XM_MIN_CHANNELS || num_channels > XM_VALIDATOR_MAX_CHANNELS {
+        if !(XM_MIN_CHANNELS..=XM_VALIDATOR_MAX_CHANNELS).contains(&num_channels) {
             return Err(XmFormatError::InvalidChannelCount {
                 channels: num_channels,
                 min: XM_MIN_CHANNELS,
@@ -624,7 +797,7 @@ impl XmValidator {
 
         // Default tempo at offset 76-77
         let default_tempo = u16::from_le_bytes([data[76], data[77]]);
-        if default_tempo < XM_MIN_TEMPO || default_tempo > XM_MAX_TEMPO {
+        if !(XM_MIN_TEMPO..=XM_MAX_TEMPO).contains(&default_tempo) {
             return Err(XmFormatError::InvalidTempo {
                 tempo: default_tempo,
                 min: XM_MIN_TEMPO,
@@ -634,7 +807,7 @@ impl XmValidator {
 
         // Default BPM at offset 78-79
         let default_bpm = u16::from_le_bytes([data[78], data[79]]);
-        if default_bpm < XM_MIN_BPM || default_bpm > XM_MAX_BPM {
+        if !(XM_MIN_BPM..=XM_MAX_BPM).contains(&default_bpm) {
             return Err(XmFormatError::InvalidBpm {
                 bpm: default_bpm,
                 min: XM_MIN_BPM,
@@ -643,7 +816,7 @@ impl XmValidator {
         }
 
         // Check for unusual tempo/BPM combinations
-        if default_tempo > 20 || default_bpm < 50 || default_bpm > 200 {
+        if default_tempo > 20 || !(50..=200).contains(&default_bpm) {
             report.add_warning(XmWarning::UnusualTempoBpm {
                 tempo: default_tempo,
                 bpm: default_bpm,
@@ -655,11 +828,16 @@ impl XmValidator {
         pattern_order.copy_from_slice(&data[80..336]);
 
         // Validate pattern order entries
-        for i in 0..song_length as usize {
-            if pattern_order[i] as u16 >= num_patterns && num_patterns > 0 {
+        for (i, pattern) in pattern_order
+            .iter()
+            .copied()
+            .take(song_length as usize)
+            .enumerate()
+        {
+            if pattern as u16 >= num_patterns && num_patterns > 0 {
                 return Err(XmFormatError::InvalidPatternOrder {
                     position: i,
-                    pattern: pattern_order[i],
+                    pattern,
                     max_pattern: num_patterns,
                 });
             }
@@ -720,7 +898,7 @@ impl XmValidator {
 
             // Number of rows (2 bytes)
             let num_rows = u16::from_le_bytes([data[offset + 5], data[offset + 6]]);
-            if num_rows < XM_MIN_PATTERN_ROWS || num_rows > XM_MAX_PATTERN_ROWS {
+            if !(XM_MIN_PATTERN_ROWS..=XM_MAX_PATTERN_ROWS).contains(&num_rows) {
                 return Err(XmFormatError::PatternError {
                     pattern_index: pattern_idx,
                     message: format!(
@@ -735,7 +913,9 @@ impl XmValidator {
 
             let is_empty = packed_size == 0;
             if is_empty {
-                report.add_warning(XmWarning::EmptyPattern { pattern_index: pattern_idx });
+                report.add_warning(XmWarning::EmptyPattern {
+                    pattern_index: pattern_idx,
+                });
             }
 
             // Validate pattern data if not empty
@@ -947,7 +1127,8 @@ impl XmValidator {
                 let sample_header_size = inst_info.sample_header_size;
 
                 for sample_idx in 0..inst_info.num_samples as usize {
-                    let sample_offset = sample_headers_offset + sample_idx * sample_header_size as usize;
+                    let sample_offset =
+                        sample_headers_offset + sample_idx * sample_header_size as usize;
 
                     if sample_offset + sample_header_size as usize > data.len() {
                         return Err(XmFormatError::FileTruncated {
@@ -956,7 +1137,13 @@ impl XmValidator {
                         });
                     }
 
-                    let sample_info = Self::parse_sample_header(data, sample_offset, inst_idx, sample_idx, report)?;
+                    let sample_info = Self::parse_sample_header(
+                        data,
+                        sample_offset,
+                        inst_idx,
+                        sample_idx,
+                        report,
+                    )?;
                     total_sample_data_size += sample_info.length as usize;
 
                     // Create a mutable copy of inst_info for samples
@@ -964,10 +1151,13 @@ impl XmValidator {
                 }
 
                 // Skip sample data
-                let sample_data_offset = sample_headers_offset + inst_info.num_samples as usize * sample_header_size as usize;
+                let sample_data_offset = sample_headers_offset
+                    + inst_info.num_samples as usize * sample_header_size as usize;
                 offset = sample_data_offset + total_sample_data_size;
             } else {
-                report.add_warning(XmWarning::InstrumentWithoutSamples { instrument_index: inst_idx });
+                report.add_warning(XmWarning::InstrumentWithoutSamples {
+                    instrument_index: inst_idx,
+                });
                 offset += inst_size as usize;
             }
 
@@ -985,7 +1175,12 @@ impl XmValidator {
         inst_idx: usize,
         report: &mut XmValidationReport,
     ) -> Result<XmInstrumentInfo, XmFormatError> {
-        let inst_size = u32::from_le_bytes([data[offset], data[offset + 1], data[offset + 2], data[offset + 3]]);
+        let inst_size = u32::from_le_bytes([
+            data[offset],
+            data[offset + 1],
+            data[offset + 2],
+            data[offset + 3],
+        ]);
 
         // Instrument name (22 bytes at offset +4)
         let name = if offset + 26 <= data.len() {
@@ -1010,7 +1205,12 @@ impl XmValidator {
 
         // Sample header size at offset +29 (only if num_samples > 0)
         let sample_header_size = if num_samples > 0 && offset + 33 <= data.len() {
-            u32::from_le_bytes([data[offset + 29], data[offset + 30], data[offset + 31], data[offset + 32]])
+            u32::from_le_bytes([
+                data[offset + 29],
+                data[offset + 30],
+                data[offset + 31],
+                data[offset + 32],
+            ])
         } else {
             XM_SAMPLE_HEADER_SIZE
         };
@@ -1046,10 +1246,26 @@ impl XmValidator {
         };
 
         // Vibrato parameters
-        let vibrato_type = if num_samples > 0 && offset + 236 <= data.len() { data[offset + 235] } else { 0 };
-        let vibrato_sweep = if num_samples > 0 && offset + 237 <= data.len() { data[offset + 236] } else { 0 };
-        let vibrato_depth = if num_samples > 0 && offset + 238 <= data.len() { data[offset + 237] } else { 0 };
-        let vibrato_rate = if num_samples > 0 && offset + 239 <= data.len() { data[offset + 238] } else { 0 };
+        let vibrato_type = if num_samples > 0 && offset + 236 <= data.len() {
+            data[offset + 235]
+        } else {
+            0
+        };
+        let vibrato_sweep = if num_samples > 0 && offset + 237 <= data.len() {
+            data[offset + 236]
+        } else {
+            0
+        };
+        let vibrato_depth = if num_samples > 0 && offset + 238 <= data.len() {
+            data[offset + 237]
+        } else {
+            0
+        };
+        let vibrato_rate = if num_samples > 0 && offset + 239 <= data.len() {
+            data[offset + 238]
+        } else {
+            0
+        };
 
         // Volume fadeout
         let volume_fadeout = if num_samples > 0 && offset + 241 <= data.len() {
@@ -1096,14 +1312,20 @@ impl XmValidator {
             return Err(XmFormatError::EnvelopeError {
                 instrument: inst_idx,
                 envelope_type: "volume",
-                message: format!("Too many points: {} (max {})", num_vol_points, XM_MAX_ENVELOPE_POINTS),
+                message: format!(
+                    "Too many points: {} (max {})",
+                    num_vol_points, XM_MAX_ENVELOPE_POINTS
+                ),
             });
         }
         if num_pan_points > XM_MAX_ENVELOPE_POINTS {
             return Err(XmFormatError::EnvelopeError {
                 instrument: inst_idx,
                 envelope_type: "panning",
-                message: format!("Too many points: {} (max {})", num_pan_points, XM_MAX_ENVELOPE_POINTS),
+                message: format!(
+                    "Too many points: {} (max {})",
+                    num_pan_points, XM_MAX_ENVELOPE_POINTS
+                ),
             });
         }
 
@@ -1196,20 +1418,26 @@ impl XmValidator {
             report.add_error(XmFormatError::EnvelopeError {
                 instrument: inst_idx,
                 envelope_type: "volume",
-                message: format!("Sustain point {} exceeds point count {}", vol_sustain, num_vol_points),
+                message: format!(
+                    "Sustain point {} exceeds point count {}",
+                    vol_sustain, num_vol_points
+                ),
             });
         }
-        if vol_loop_enabled && num_vol_points > 0 {
-            if vol_loop_start >= num_vol_points || vol_loop_end >= num_vol_points || vol_loop_start > vol_loop_end {
-                report.add_error(XmFormatError::EnvelopeError {
-                    instrument: inst_idx,
-                    envelope_type: "volume",
-                    message: format!(
-                        "Invalid loop points: start={}, end={}, points={}",
-                        vol_loop_start, vol_loop_end, num_vol_points
-                    ),
-                });
-            }
+        if vol_loop_enabled
+            && num_vol_points > 0
+            && (vol_loop_start >= num_vol_points
+                || vol_loop_end >= num_vol_points
+                || vol_loop_start > vol_loop_end)
+        {
+            report.add_error(XmFormatError::EnvelopeError {
+                instrument: inst_idx,
+                envelope_type: "volume",
+                message: format!(
+                    "Invalid loop points: start={}, end={}, points={}",
+                    vol_loop_start, vol_loop_end, num_vol_points
+                ),
+            });
         }
 
         Ok((
@@ -1247,13 +1475,28 @@ impl XmValidator {
         report: &mut XmValidationReport,
     ) -> Result<XmSampleInfo, XmFormatError> {
         // Sample length (4 bytes)
-        let length = u32::from_le_bytes([data[offset], data[offset + 1], data[offset + 2], data[offset + 3]]);
+        let length = u32::from_le_bytes([
+            data[offset],
+            data[offset + 1],
+            data[offset + 2],
+            data[offset + 3],
+        ]);
 
         // Loop start (4 bytes)
-        let loop_start = u32::from_le_bytes([data[offset + 4], data[offset + 5], data[offset + 6], data[offset + 7]]);
+        let loop_start = u32::from_le_bytes([
+            data[offset + 4],
+            data[offset + 5],
+            data[offset + 6],
+            data[offset + 7],
+        ]);
 
         // Loop length (4 bytes)
-        let loop_length = u32::from_le_bytes([data[offset + 8], data[offset + 9], data[offset + 10], data[offset + 11]]);
+        let loop_length = u32::from_le_bytes([
+            data[offset + 8],
+            data[offset + 9],
+            data[offset + 10],
+            data[offset + 11],
+        ]);
 
         // Volume (1 byte, 0-64)
         let volume = data[offset + 12];
@@ -1282,16 +1525,14 @@ impl XmValidator {
         }
 
         // Validate loop bounds
-        if loop_type != 0 && length > 0 {
-            if loop_start + loop_length > length {
-                return Err(XmFormatError::InvalidLoopBounds {
-                    instrument: inst_idx,
-                    sample: sample_idx,
-                    loop_start,
-                    loop_length,
-                    sample_length: length,
-                });
-            }
+        if loop_type != 0 && length > 0 && loop_start + loop_length > length {
+            return Err(XmFormatError::InvalidLoopBounds {
+                instrument: inst_idx,
+                sample: sample_idx,
+                loop_start,
+                loop_length,
+                sample_length: length,
+            });
         }
 
         // Panning (1 byte, 0-255)
@@ -1343,9 +1584,7 @@ impl XmValidator {
 /// Extract a null-terminated or space-padded string from a byte slice.
 fn extract_string(data: &[u8]) -> String {
     let end = data.iter().position(|&b| b == 0).unwrap_or(data.len());
-    String::from_utf8_lossy(&data[..end])
-        .trim_end()
-        .to_string()
+    String::from_utf8_lossy(&data[..end]).trim_end().to_string()
 }
 
 #[cfg(test)]
@@ -1455,7 +1694,10 @@ mod tests {
         data[37] = 0x00;
 
         let result = XmValidator::validate_header_only(&data);
-        assert!(matches!(result, Err(XmFormatError::MissingMagicByte { .. })));
+        assert!(matches!(
+            result,
+            Err(XmFormatError::MissingMagicByte { .. })
+        ));
     }
 
     #[test]
@@ -1464,7 +1706,10 @@ mod tests {
         data[58..60].copy_from_slice(&0x0200u16.to_le_bytes());
 
         let result = XmValidator::validate_header_only(&data);
-        assert!(matches!(result, Err(XmFormatError::UnsupportedVersion { .. })));
+        assert!(matches!(
+            result,
+            Err(XmFormatError::UnsupportedVersion { .. })
+        ));
     }
 
     #[test]
@@ -1472,12 +1717,18 @@ mod tests {
         // Too few channels
         let data = create_minimal_xm("Test", 0, 1, 0, 6, 125);
         let result = XmValidator::validate_header_only(&data);
-        assert!(matches!(result, Err(XmFormatError::InvalidChannelCount { .. })));
+        assert!(matches!(
+            result,
+            Err(XmFormatError::InvalidChannelCount { .. })
+        ));
 
         // Too many channels
         let data = create_minimal_xm("Test", 64, 1, 0, 6, 125);
         let result = XmValidator::validate_header_only(&data);
-        assert!(matches!(result, Err(XmFormatError::InvalidChannelCount { .. })));
+        assert!(matches!(
+            result,
+            Err(XmFormatError::InvalidChannelCount { .. })
+        ));
     }
 
     #[test]
@@ -1523,9 +1774,7 @@ mod tests {
         data.extend_from_slice(&8u16.to_le_bytes()); // Packed size (2 channels * 4 rows = 8 empty notes)
 
         // Packed pattern data (all empty notes with packing flag)
-        for _ in 0..8 {
-            data.push(0x80); // Empty packed note
-        }
+        data.extend(std::iter::repeat_n(0x80, 8));
 
         let result = XmValidator::validate(&data);
         assert!(result.is_ok());
@@ -1546,7 +1795,10 @@ mod tests {
         data.extend_from_slice(&0u16.to_le_bytes());
 
         let result = XmValidator::validate(&data);
-        assert!(matches!(result, Err(XmFormatError::InvalidPackingType { .. })));
+        assert!(matches!(
+            result,
+            Err(XmFormatError::InvalidPackingType { .. })
+        ));
     }
 
     #[test]
@@ -1585,7 +1837,10 @@ mod tests {
         let report = result.unwrap();
         assert!(report.valid);
         assert_eq!(report.instruments.len(), 1);
-        assert!(report.warnings.iter().any(|w| matches!(w, XmWarning::InstrumentWithoutSamples { .. })));
+        assert!(report
+            .warnings
+            .iter()
+            .any(|w| matches!(w, XmWarning::InstrumentWithoutSamples { .. })));
     }
 
     #[test]
@@ -1702,7 +1957,10 @@ mod tests {
         data.extend_from_slice(&[128u8; 100]);
 
         let result = XmValidator::validate(&data);
-        assert!(matches!(result, Err(XmFormatError::InvalidLoopBounds { .. })));
+        assert!(matches!(
+            result,
+            Err(XmFormatError::InvalidLoopBounds { .. })
+        ));
     }
 
     #[test]
@@ -1758,14 +2016,28 @@ mod tests {
         add_empty_pattern(&mut data, 64);
 
         let result = XmValidator::validate(&data);
-        assert!(result.is_ok(), "Validation should succeed with warnings: {:?}", result);
+        assert!(
+            result.is_ok(),
+            "Validation should succeed with warnings: {:?}",
+            result
+        );
 
         let report = result.unwrap();
         // Should have warnings but still be valid
         assert!(report.has_warnings(), "Should have warnings");
-        assert!(report.warnings.iter().any(|w| matches!(w, XmWarning::NonStandardHeaderSize { .. })),
-            "Should have non-standard header size warning");
-        assert!(report.warnings.iter().any(|w| matches!(w, XmWarning::UnusualTempoBpm { .. })),
-            "Should have unusual tempo/BPM warning");
+        assert!(
+            report
+                .warnings
+                .iter()
+                .any(|w| matches!(w, XmWarning::NonStandardHeaderSize { .. })),
+            "Should have non-standard header size warning"
+        );
+        assert!(
+            report
+                .warnings
+                .iter()
+                .any(|w| matches!(w, XmWarning::UnusualTempoBpm { .. })),
+            "Should have unusual tempo/BPM warning"
+        );
     }
 }

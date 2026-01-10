@@ -280,11 +280,7 @@ impl GoldenFixtures {
             .flatten()
             .filter_map(|e| e.ok())
             .map(|e| e.path())
-            .filter(|p| {
-                p.extension()
-                    .map(|e| e == "py")
-                    .unwrap_or(false)
-            })
+            .filter(|p| p.extension().map(|e| e == "py").unwrap_or(false))
             .collect()
     }
 
@@ -300,9 +296,10 @@ impl GoldenFixtures {
             .flatten()
             .filter_map(|e| e.ok())
             .map(|e| e.path())
+            .filter(|p| p.extension().map(|e| e == "json").unwrap_or(false))
             .filter(|p| {
-                p.extension()
-                    .map(|e| e == "json")
+                !p.file_name()
+                    .map(|name| name.to_string_lossy().contains(".report."))
                     .unwrap_or(false)
             })
             .collect()
@@ -337,9 +334,21 @@ mod tests {
         fixture.add_texture("metal");
         fixture.add_mesh("cube");
 
-        assert!(fixture.specs_dir.join("sounds").join("beep.spec.py").exists());
-        assert!(fixture.specs_dir.join("textures").join("metal.spec.py").exists());
-        assert!(fixture.specs_dir.join("meshes").join("cube.spec.py").exists());
+        assert!(fixture
+            .specs_dir
+            .join("sounds")
+            .join("beep.spec.py")
+            .exists());
+        assert!(fixture
+            .specs_dir
+            .join("textures")
+            .join("metal.spec.py")
+            .exists());
+        assert!(fixture
+            .specs_dir
+            .join("meshes")
+            .join("cube.spec.py")
+            .exists());
     }
 
     #[test]

@@ -27,11 +27,12 @@ rand_pcg = "0.3"
 clap = { version = "4", features = ["derive"] }
 colored = "2"
 regex = "1"
-walkdir = "1"
+walkdir = "2"
 byteorder = "1"
 png = "0.17"
 tempfile = "3"
 which = "6"
+hound = "3"
 
 # Test dependencies
 pretty_assertions = "1"

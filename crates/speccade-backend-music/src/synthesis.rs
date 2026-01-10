@@ -42,15 +42,9 @@ pub fn generate_instrument_sample(
             // Square wave is a 50% duty cycle pulse
             generate_pulse_wave(0.5, sample_rate, duration_samples)
         }
-        InstrumentSynthesis::Triangle => {
-            generate_triangle_wave(sample_rate, duration_samples)
-        }
-        InstrumentSynthesis::Sawtooth => {
-            generate_sawtooth_wave(sample_rate, duration_samples)
-        }
-        InstrumentSynthesis::Sine => {
-            generate_sine_wave(sample_rate, duration_samples)
-        }
+        InstrumentSynthesis::Triangle => generate_triangle_wave(sample_rate, duration_samples),
+        InstrumentSynthesis::Sawtooth => generate_sawtooth_wave(sample_rate, duration_samples),
+        InstrumentSynthesis::Sine => generate_sine_wave(sample_rate, duration_samples),
         InstrumentSynthesis::Noise { periodic } => {
             generate_noise(*periodic, sample_rate, duration_samples, seed)
         }
@@ -84,51 +78,51 @@ pub fn generate_single_cycle(
     seed: u32,
 ) -> Vec<f64> {
     match synthesis {
-        InstrumentSynthesis::Pulse { duty_cycle } => {
-            (0..samples_per_cycle)
-                .map(|i| {
-                    let t = i as f64 / samples_per_cycle as f64;
-                    if t < *duty_cycle { 1.0 } else { -1.0 }
-                })
-                .collect()
-        }
+        InstrumentSynthesis::Pulse { duty_cycle } => (0..samples_per_cycle)
+            .map(|i| {
+                let t = i as f64 / samples_per_cycle as f64;
+                if t < *duty_cycle {
+                    1.0
+                } else {
+                    -1.0
+                }
+            })
+            .collect(),
         InstrumentSynthesis::Square => {
             // Square wave is a 50% duty cycle pulse
             (0..samples_per_cycle)
                 .map(|i| {
                     let t = i as f64 / samples_per_cycle as f64;
-                    if t < 0.5 { 1.0 } else { -1.0 }
-                })
-                .collect()
-        }
-        InstrumentSynthesis::Triangle => {
-            (0..samples_per_cycle)
-                .map(|i| {
-                    let t = i as f64 / samples_per_cycle as f64;
                     if t < 0.5 {
-                        4.0 * t - 1.0
+                        1.0
                     } else {
-                        3.0 - 4.0 * t
+                        -1.0
                     }
                 })
                 .collect()
         }
-        InstrumentSynthesis::Sawtooth => {
-            (0..samples_per_cycle)
-                .map(|i| {
-                    let t = i as f64 / samples_per_cycle as f64;
-                    2.0 * t - 1.0
-                })
-                .collect()
-        }
-        InstrumentSynthesis::Sine => {
-            (0..samples_per_cycle)
-                .map(|i| {
-                    let t = i as f64 / samples_per_cycle as f64;
-                    (2.0 * PI * t).sin()
-                })
-                .collect()
-        }
+        InstrumentSynthesis::Triangle => (0..samples_per_cycle)
+            .map(|i| {
+                let t = i as f64 / samples_per_cycle as f64;
+                if t < 0.5 {
+                    4.0 * t - 1.0
+                } else {
+                    3.0 - 4.0 * t
+                }
+            })
+            .collect(),
+        InstrumentSynthesis::Sawtooth => (0..samples_per_cycle)
+            .map(|i| {
+                let t = i as f64 / samples_per_cycle as f64;
+                2.0 * t - 1.0
+            })
+            .collect(),
+        InstrumentSynthesis::Sine => (0..samples_per_cycle)
+            .map(|i| {
+                let t = i as f64 / samples_per_cycle as f64;
+                (2.0 * PI * t).sin()
+            })
+            .collect(),
         InstrumentSynthesis::Noise { periodic } => {
             let mut rng = create_rng(seed);
             if *periodic {
@@ -159,7 +153,11 @@ fn generate_pulse_wave(duty_cycle: f64, sample_rate: u32, num_samples: usize) ->
     (0..num_samples)
         .map(|i| {
             let t = (i % samples_per_cycle) as f64 / samples_per_cycle as f64;
-            if t < duty_cycle { 0.8 } else { -0.8 }
+            if t < duty_cycle {
+                0.8
+            } else {
+                -0.8
+            }
         })
         .collect()
 }
@@ -304,13 +302,7 @@ fn create_rng(seed: u32) -> Pcg32 {
 ///
 /// Uses BLAKE3 hash for deterministic seed derivation as per SpecCade policy.
 pub fn derive_instrument_seed(base_seed: u32, instrument_index: u32) -> u32 {
-    let mut input = Vec::with_capacity(8);
-    input.extend_from_slice(&base_seed.to_le_bytes());
-    input.extend_from_slice(&instrument_index.to_le_bytes());
-
-    let hash = blake3::hash(&input);
-    let bytes: [u8; 4] = hash.as_bytes()[0..4].try_into().unwrap();
-    u32::from_le_bytes(bytes)
+    speccade_spec::hash::derive_layer_seed(base_seed, instrument_index)
 }
 
 /// Generate a loopable waveform sample for tracker playback.
@@ -339,98 +331,13 @@ pub fn generate_loopable_sample(
 
     // Generate single cycle and repeat
     let cycle = generate_single_cycle(synthesis, samples_per_cycle, seed);
-    let samples: Vec<f64> = cycle
-        .iter()
-        .cycle()
-        .take(total_samples)
-        .copied()
-        .collect();
+    let samples: Vec<f64> = cycle.iter().cycle().take(total_samples).copied().collect();
 
     let bytes = samples_to_bytes(&samples);
 
     // For looping, the entire sample is the loop
     // Loop start and length are in samples, not bytes
     (bytes, 0, total_samples as u32)
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_generate_sine_wave() {
-        let samples = generate_sine_wave(22050, 1000);
-        assert_eq!(samples.len(), 1000);
-        // Check that values are in valid range
-        for s in &samples {
-            assert!(*s >= -1.0 && *s <= 1.0);
-        }
-    }
-
-    #[test]
-    fn test_generate_pulse_wave() {
-        let samples = generate_pulse_wave(0.5, 22050, 1000);
-        assert_eq!(samples.len(), 1000);
-        // Square wave should have only two values
-        for s in &samples {
-            assert!((*s - 0.8).abs() < 0.001 || (*s - (-0.8)).abs() < 0.001);
-        }
-    }
-
-    #[test]
-    fn test_samples_to_bytes() {
-        let samples = vec![0.0, 0.5, 1.0, -1.0];
-        let bytes = samples_to_bytes(&samples);
-        assert_eq!(bytes.len(), 8); // 4 samples * 2 bytes each
-
-        // Check zero
-        let s0 = i16::from_le_bytes([bytes[0], bytes[1]]);
-        assert_eq!(s0, 0);
-
-        // Check max
-        let s2 = i16::from_le_bytes([bytes[4], bytes[5]]);
-        assert_eq!(s2, 32767);
-
-        // Check min
-        let s3 = i16::from_le_bytes([bytes[6], bytes[7]]);
-        assert_eq!(s3, -32767);
-    }
-
-    #[test]
-    fn test_derive_instrument_seed_deterministic() {
-        let seed1 = derive_instrument_seed(42, 0);
-        let seed2 = derive_instrument_seed(42, 0);
-        assert_eq!(seed1, seed2);
-
-        let seed3 = derive_instrument_seed(42, 1);
-        assert_ne!(seed1, seed3);
-    }
-
-    #[test]
-    fn test_generate_noise_deterministic() {
-        let samples1 = generate_noise(false, 22050, 100, 42);
-        let samples2 = generate_noise(false, 22050, 100, 42);
-        assert_eq!(samples1, samples2);
-
-        let samples3 = generate_noise(false, 22050, 100, 43);
-        assert_ne!(samples1, samples3);
-    }
-
-    #[test]
-    fn test_apply_envelope() {
-        let samples: Vec<f64> = vec![1.0; 1000];
-        let envelope = Envelope {
-            attack: 0.01,
-            decay: 0.01,
-            sustain: 0.5,
-            release: 0.01,
-        };
-        let result = apply_envelope(&samples, &envelope, 22050);
-        assert_eq!(result.len(), 1000);
-
-        // First sample should be near 0 (attack start)
-        assert!(result[0] < 0.1);
-    }
 }
 
 /// Load a WAV file and return 16-bit PCM bytes (little-endian i16), mono.
@@ -590,4 +497,84 @@ fn resample_linear(samples: &[f64], from_rate: u32, to_rate: u32) -> Vec<f64> {
     }
 
     output
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_generate_sine_wave() {
+        let samples = generate_sine_wave(22050, 1000);
+        assert_eq!(samples.len(), 1000);
+        // Check that values are in valid range
+        for s in &samples {
+            assert!((-1.0..=1.0).contains(s));
+        }
+    }
+
+    #[test]
+    fn test_generate_pulse_wave() {
+        let samples = generate_pulse_wave(0.5, 22050, 1000);
+        assert_eq!(samples.len(), 1000);
+        // Square wave should have only two values
+        for s in &samples {
+            assert!((*s - 0.8).abs() < 0.001 || (*s - (-0.8)).abs() < 0.001);
+        }
+    }
+
+    #[test]
+    fn test_samples_to_bytes() {
+        let samples = vec![0.0, 0.5, 1.0, -1.0];
+        let bytes = samples_to_bytes(&samples);
+        assert_eq!(bytes.len(), 8); // 4 samples * 2 bytes each
+
+        // Check zero
+        let s0 = i16::from_le_bytes([bytes[0], bytes[1]]);
+        assert_eq!(s0, 0);
+
+        // Check max
+        let s2 = i16::from_le_bytes([bytes[4], bytes[5]]);
+        assert_eq!(s2, 32767);
+
+        // Check min
+        let s3 = i16::from_le_bytes([bytes[6], bytes[7]]);
+        assert_eq!(s3, -32767);
+    }
+
+    #[test]
+    fn test_derive_instrument_seed_deterministic() {
+        let seed1 = derive_instrument_seed(42, 0);
+        let seed2 = derive_instrument_seed(42, 0);
+        assert_eq!(seed1, seed2);
+
+        let seed3 = derive_instrument_seed(42, 1);
+        assert_ne!(seed1, seed3);
+    }
+
+    #[test]
+    fn test_generate_noise_deterministic() {
+        let samples1 = generate_noise(false, 22050, 100, 42);
+        let samples2 = generate_noise(false, 22050, 100, 42);
+        assert_eq!(samples1, samples2);
+
+        let samples3 = generate_noise(false, 22050, 100, 43);
+        assert_ne!(samples1, samples3);
+    }
+
+    #[test]
+    fn test_apply_envelope() {
+        let samples: Vec<f64> = vec![1.0; 1000];
+        let envelope = Envelope {
+            attack: 0.01,
+            decay: 0.01,
+            sustain: 0.5,
+            release: 0.01,
+        };
+        let result = apply_envelope(&samples, &envelope, 22050);
+        assert_eq!(result.len(), 1000);
+
+        // First sample should be near 0 (attack start)
+        assert!(result[0] < 0.1);
+    }
 }

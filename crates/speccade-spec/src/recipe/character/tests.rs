@@ -475,7 +475,10 @@ fn test_parity_skeleton_preset() {
         "parts": {}
     }"#;
     let params: SkeletalMeshBlenderRiggedMeshV1Params = serde_json::from_str(json).unwrap();
-    assert_eq!(params.skeleton_preset, Some(SkeletonPreset::HumanoidBasicV1));
+    assert_eq!(
+        params.skeleton_preset,
+        Some(SkeletonPreset::HumanoidBasicV1)
+    );
     assert!(params.skeleton.is_empty());
 }
 
@@ -812,7 +815,7 @@ fn test_parity_skinning_max_bone_influences() {
 fn test_parity_export_save_blend() {
     let json = r#"{"save_blend": true}"#;
     let export: SkeletalMeshExportSettings = serde_json::from_str(json).unwrap();
-    assert_eq!(export.save_blend, true);
+    assert!(export.save_blend);
 }
 
 /// Test: Export settings key 'include_armature'
@@ -820,7 +823,7 @@ fn test_parity_export_save_blend() {
 fn test_parity_export_include_armature() {
     let json = r#"{"include_armature": false}"#;
     let export: SkeletalMeshExportSettings = serde_json::from_str(json).unwrap();
-    assert_eq!(export.include_armature, false);
+    assert!(!export.include_armature);
 }
 
 /// Test: Body part mesh key 'primitive'

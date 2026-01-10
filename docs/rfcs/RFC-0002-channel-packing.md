@@ -109,19 +109,23 @@ The `outputs` array declares packed textures with explicit channel mappings:
    { "r": "roughness" }
    ```
 
-2. **Object with options** - Reference with transforms:
+2. **Object with options** - Reference with options:
    ```json
-   { "r": { "key": "roughness", "invert": true } }
+   { "r": { "key": "roughness", "invert": true, "component": "luminance" } }
    ```
 
-**Channel options:**
+3. **Constant** - Fill a channel with a constant:
+   ```json
+   { "a": { "constant": 1.0 } }
+   ```
+
+**Channel options (extended reference):**
 
 | Option | Type | Description | Default |
 |--------|------|-------------|---------|
 | `key` | string | Map name to reference | required |
+| `component` | string | Extract `r`/`g`/`b`/`a`/`luminance` from RGB(A) sources | `luminance` |
 | `invert` | bool | Invert values (1.0 - value) | `false` |
-| `scale` | float | Multiply values | `1.0` |
-| `bias` | float | Add to values (after scale) | `0.0` |
 
 ### 2.4 Complete Example: ORM Texture
 
@@ -199,7 +203,7 @@ The texture backend must:
    - Create output buffer at specified resolution
    - For each channel (r, g, b, a):
      - Look up referenced map
-     - Apply transforms (invert, scale, bias)
+     - Apply transforms (invert, component extraction, constants)
      - Write to channel
 
 ### 4.2 Spec Type Responsibilities (Worker P1)
@@ -216,8 +220,10 @@ The spec types must:
 | Rule | Error Code | Description |
 |------|------------|-------------|
 | Channel references valid map | E020 | Unknown map key in channel reference |
-| At least one channel specified | E021 | Packed output has no channels |
-| Channel key is r, g, b, or a | E022 | Invalid channel name |
+| Packed output must have channels | E021 | Packed output has no channels mapping |
+| Packed output must be PNG | E022 | Packed output format is not `png` |
+| Packed recipe must declare packed outputs | E023 | No `kind: "packed"` outputs declared |
+| `channels` only valid for packed outputs | E015 | `channels` present on non-`packed` output |
 
 ---
 

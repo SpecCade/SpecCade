@@ -1,9 +1,7 @@
 //! Simple test to verify instrument generation works.
 
 use speccade_backend_audio::generate;
-use speccade_spec::recipe::audio::{
-    AudioV1Params, Synthesis, Envelope, Waveform, NoteSpec,
-};
+use speccade_spec::recipe::audio::{AudioV1Params, Envelope, NoteSpec, Synthesis, Waveform};
 use speccade_spec::{AssetType, OutputFormat, OutputSpec, Recipe, Spec};
 
 fn main() {
@@ -37,7 +35,7 @@ fn main() {
         generate_loop_points: true,
     };
 
-    let spec = Spec::builder("test-instrument", AssetType::AudioInstrument)
+    let spec = Spec::builder("test-instrument", AssetType::Audio)
         .license("CC0-1.0")
         .seed(42)
         .output(OutputSpec::primary(
@@ -45,7 +43,7 @@ fn main() {
             "instruments/test_instrument.wav",
         ))
         .recipe(Recipe::new(
-            "audio.v1",
+            "audio_v1",
             serde_json::to_value(&params).unwrap(),
         ))
         .build();

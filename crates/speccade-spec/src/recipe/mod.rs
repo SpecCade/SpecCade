@@ -105,30 +105,6 @@ impl std::fmt::Display for RecipeKind {
     }
 }
 
-/// Recipe parameters enum for all recipe kinds.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(untagged)]
-pub enum RecipeParams {
-    /// Unified audio parameters.
-    Audio(AudioV1Params),
-    /// Music tracker song parameters.
-    MusicTrackerSong(MusicTrackerSongV1Params),
-    /// Texture material maps parameters.
-    TextureMaterial(TextureMaterialV1Params),
-    /// Texture normal map parameters.
-    TextureNormal(TextureNormalV1Params),
-    /// Static mesh Blender primitives parameters.
-    StaticMeshBlenderPrimitives(StaticMeshBlenderPrimitivesV1Params),
-    /// Skeletal mesh Blender rigged mesh parameters.
-    SkeletalMeshBlenderRiggedMesh(SkeletalMeshBlenderRiggedMeshV1Params),
-    /// Skeletal animation Blender clip parameters (simple keyframes).
-    SkeletalAnimationBlenderClip(SkeletalAnimationBlenderClipV1Params),
-    /// Skeletal animation Blender rigged parameters (with IK support).
-    SkeletalAnimationBlenderRigged(SkeletalAnimationBlenderRiggedV1Params),
-    /// Unknown/generic parameters (stored as raw JSON).
-    Unknown(serde_json::Value),
-}
-
 /// Recipe specification containing kind and params.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -193,9 +169,7 @@ impl Recipe {
     }
 
     /// Attempts to parse params as texture material maps params.
-    pub fn as_texture_material(
-        &self,
-    ) -> Result<TextureMaterialV1Params, serde_json::Error> {
+    pub fn as_texture_material(&self) -> Result<TextureMaterialV1Params, serde_json::Error> {
         serde_json::from_value(self.params.clone())
     }
 
@@ -255,14 +229,8 @@ mod tests {
     #[test]
     fn test_recipe_kind_asset_type_prefix() {
         assert_eq!(RecipeKind::AudioV1.asset_type_prefix(), "audio");
-        assert_eq!(
-            RecipeKind::TextureMaterialV1.asset_type_prefix(),
-            "texture"
-        );
-        assert_eq!(
-            RecipeKind::TextureNormalV1.asset_type_prefix(),
-            "texture"
-        );
+        assert_eq!(RecipeKind::TextureMaterialV1.asset_type_prefix(), "texture");
+        assert_eq!(RecipeKind::TextureNormalV1.asset_type_prefix(), "texture");
         assert_eq!(
             RecipeKind::StaticMeshBlenderPrimitivesV1.asset_type_prefix(),
             "static_mesh"
@@ -281,6 +249,6 @@ mod tests {
     fn test_recipe_parse_kind() {
         let recipe = Recipe::new("audio_v1", serde_json::json!({"duration_seconds": 0.5}));
         assert_eq!(recipe.parse_kind(), Some(RecipeKind::AudioV1));
-        assert_eq!(recipe.asset_type_prefix(), Some("audio_v1"));
+        assert_eq!(recipe.asset_type_prefix(), Some("audio"));
     }
 }

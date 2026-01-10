@@ -294,7 +294,7 @@ spec_hash = hex(BLAKE3(JCS(spec_json)))
 **Example:**
 
 ```json
-{"asset_id":"laser-blast-01","asset_type":"audio_sfx","seed":42,"spec_version":1}
+{"asset_id":"laser-blast-01","asset_type":"audio","seed":42,"spec_version":1}
 ```
 
 Produces hash: `a1b2c3d4...` (64 hex chars)

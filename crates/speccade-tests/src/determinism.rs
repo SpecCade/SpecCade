@@ -205,12 +205,7 @@ where
 
         // Compare byte-by-byte
         if let Some(diff) = find_first_difference(reference_bytes, output_bytes, run_index) {
-            return DeterminismResult::failure(
-                runs,
-                reference_bytes.len(),
-                reference_hash,
-                diff,
-            );
+            return DeterminismResult::failure(runs, reference_bytes.len(), reference_hash, diff);
         }
     }
 
@@ -422,7 +417,6 @@ impl DeterminismFixture {
 
         match spec.asset_type {
             AssetType::Audio => {
-                // Generic Audio type - same as AudioSfx for now
                 let spec_clone = spec.clone();
                 let runs = self.runs;
                 Ok(verify_determinism(
@@ -432,39 +426,20 @@ impl DeterminismFixture {
                             .unwrap_or_default()
                     },
                     runs,
-                ))
-            }
-            AssetType::AudioSfx => {
-                let spec_clone = spec.clone();
-                let runs = self.runs;
-                Ok(verify_determinism(
-                    || {
-                        speccade_backend_audio::generate(&spec_clone)
-                            .map(|r| r.wav.wav_data)
-                            .unwrap_or_default()
-                    },
-                    runs,
-                ))
-            }
-            AssetType::AudioInstrument => {
-                // AudioInstrument uses generate_instrument with params directly
-                // For full spec-based generation, use verify_determinism with custom generator
-                Err(DeterminismError::UnsupportedAssetType(
-                    "AudioInstrument - use verify_determinism with custom generator".to_string()
                 ))
             }
             AssetType::Texture => {
                 // Texture backend uses generate_material_maps with params directly
                 // For full spec-based generation, use verify_determinism with custom generator
                 Err(DeterminismError::UnsupportedAssetType(
-                    "Texture - use verify_determinism with custom generator".to_string()
+                    "Texture - use verify_determinism with custom generator".to_string(),
                 ))
             }
             AssetType::Music => {
                 // Music backend uses generate_music with params directly
                 // For full spec-based generation, use verify_determinism with custom generator
                 Err(DeterminismError::UnsupportedAssetType(
-                    "Music - use verify_determinism with custom generator".to_string()
+                    "Music - use verify_determinism with custom generator".to_string(),
                 ))
             }
             AssetType::StaticMesh | AssetType::SkeletalMesh | AssetType::SkeletalAnimation => {
@@ -541,7 +516,9 @@ where
     /// # Panics
     /// Panics if no generator was set.
     pub fn verify(self) -> DeterminismResult {
-        let generator = self.generator.expect("No generator set - call .generate() first");
+        let generator = self
+            .generator
+            .expect("No generator set - call .generate() first");
         verify_determinism(generator, self.runs)
     }
 

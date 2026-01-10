@@ -139,7 +139,11 @@ impl ItSample {
     }
 
     /// Write the sample header to a writer.
-    pub fn write_header<W: Write>(&self, writer: &mut W, sample_data_offset: u32) -> io::Result<()> {
+    pub fn write_header<W: Write>(
+        &self,
+        writer: &mut W,
+        sample_data_offset: u32,
+    ) -> io::Result<()> {
         // Magic
         writer.write_all(IT_SAMPLE_MAGIC)?;
 
@@ -219,7 +223,9 @@ impl ItSample {
 
 /// Convert unsigned 8-bit samples to signed 8-bit.
 pub fn convert_u8_to_s8(data: &[u8]) -> Vec<u8> {
-    data.iter().map(|&s| (s as i8).wrapping_sub(-128) as u8).collect()
+    data.iter()
+        .map(|&s| (s as i8).wrapping_sub(-128) as u8)
+        .collect()
 }
 
 /// Convert f32 samples to 16-bit signed PCM bytes.

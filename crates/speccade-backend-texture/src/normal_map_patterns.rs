@@ -4,7 +4,7 @@
 //! in normal map generation. Each generator creates a grayscale height map
 //! that is later converted to a normal map using Sobel operators.
 
-use speccade_spec::recipe::texture::{NormalMapPattern, NoiseConfig};
+use speccade_spec::recipe::texture::{NoiseConfig, NormalMapPattern};
 
 use crate::maps::GrayscaleBuffer;
 use crate::rng::DeterministicRng;
@@ -19,30 +19,54 @@ pub fn generate_height_from_pattern(
     tileable: bool,
 ) -> GrayscaleBuffer {
     match pattern {
-        NormalMapPattern::Grid { cell_size, line_width, bevel } => {
-            generate_grid_height(width, height, *cell_size, *line_width, *bevel)
-        }
-        NormalMapPattern::Bricks { brick_width, brick_height, mortar_width, offset } => {
-            generate_brick_height(width, height, *brick_width, *brick_height, *mortar_width, *offset, seed)
-        }
+        NormalMapPattern::Grid {
+            cell_size,
+            line_width,
+            bevel,
+        } => generate_grid_height(width, height, *cell_size, *line_width, *bevel),
+        NormalMapPattern::Bricks {
+            brick_width,
+            brick_height,
+            mortar_width,
+            offset,
+        } => generate_brick_height(
+            width,
+            height,
+            *brick_width,
+            *brick_height,
+            *mortar_width,
+            *offset,
+            seed,
+        ),
         NormalMapPattern::Hexagons { size, gap } => {
             generate_hexagon_height(width, height, *size, *gap)
         }
         NormalMapPattern::NoiseBumps { noise } => {
             generate_noise_height(width, height, noise, seed, tileable)
         }
-        NormalMapPattern::DiamondPlate { diamond_size, height: plate_height } => {
-            generate_diamond_plate_height(width, height, *diamond_size, *plate_height)
-        }
-        NormalMapPattern::Tiles { tile_size, gap_width, gap_depth, seed: tile_seed } => {
-            generate_tiles_height(width, height, *tile_size, *gap_width, *gap_depth, *tile_seed)
-        }
-        NormalMapPattern::Rivets { spacing, radius, height: rivet_height, seed: rivet_seed } => {
-            generate_rivets_height(width, height, *spacing, *radius, *rivet_height, *rivet_seed)
-        }
-        NormalMapPattern::Weave { thread_width, gap, depth } => {
-            generate_weave_height(width, height, *thread_width, *gap, *depth)
-        }
+        NormalMapPattern::DiamondPlate {
+            diamond_size,
+            height: plate_height,
+        } => generate_diamond_plate_height(width, height, *diamond_size, *plate_height),
+        NormalMapPattern::Tiles {
+            tile_size,
+            gap_width,
+            gap_depth,
+            seed: tile_seed,
+        } => generate_tiles_height(
+            width, height, *tile_size, *gap_width, *gap_depth, *tile_seed,
+        ),
+        NormalMapPattern::Rivets {
+            spacing,
+            radius,
+            height: rivet_height,
+            seed: rivet_seed,
+        } => generate_rivets_height(width, height, *spacing, *radius, *rivet_height, *rivet_seed),
+        NormalMapPattern::Weave {
+            thread_width,
+            gap,
+            depth,
+        } => generate_weave_height(width, height, *thread_width, *gap, *depth),
     }
 }
 
@@ -220,9 +244,9 @@ fn generate_hexagon_height(width: u32, height: u32, size: u32, gap: u32) -> Gray
                     // 3. |dx|/2 + |dy| * sqrt(3)/2 <= sqrt(3)/2 * size (diagonal edges)
                     //
                     // Convert to a normalized distance where 1.0 = on the edge
-                    let hex_dist = (dx / size_f).max(dy / (sqrt3 / 2.0 * size_f)).max(
-                        (dx / 2.0 + dy * sqrt3 / 2.0) / (sqrt3 / 2.0 * size_f)
-                    );
+                    let hex_dist = (dx / size_f)
+                        .max(dy / (sqrt3 / 2.0 * size_f))
+                        .max((dx / 2.0 + dy * sqrt3 / 2.0) / (sqrt3 / 2.0 * size_f));
 
                     if hex_dist < best_dist {
                         best_dist = hex_dist;
@@ -273,10 +297,7 @@ fn generate_noise_height(
                     angle_y.sin() * noise_config.scale,
                 )
             } else {
-                (
-                    x as f64 * noise_config.scale,
-                    y as f64 * noise_config.scale,
-                )
+                (x as f64 * noise_config.scale, y as f64 * noise_config.scale)
             };
 
             let noise_val = noise_gen.sample_01(nx, ny);
@@ -304,7 +325,8 @@ fn generate_diamond_plate_height(
             let center = diamond_size / 2;
 
             // Diamond shape using Manhattan distance
-            let dist = (cell_x as i32 - center as i32).abs() + (cell_y as i32 - center as i32).abs();
+            let dist =
+                (cell_x as i32 - center as i32).abs() + (cell_y as i32 - center as i32).abs();
             let max_dist = center as i32;
 
             if dist < max_dist {
@@ -386,8 +408,8 @@ fn generate_rivets_height(
 ) -> GrayscaleBuffer {
     let mut buffer = GrayscaleBuffer::new(width, height, 0.5);
 
-    let cols = (width + spacing - 1) / spacing;
-    let rows = (height + spacing - 1) / spacing;
+    let cols = width.div_ceil(spacing);
+    let rows = height.div_ceil(spacing);
 
     for row in 0..rows {
         for col in 0..cols {
@@ -460,8 +482,10 @@ fn generate_weave_height(
             let half_pattern = pattern_size / 2;
 
             // Determine if horizontal or vertical thread is on top
-            let h_thread = pattern_x < thread_width || (pattern_x >= half_pattern && pattern_x < half_pattern + thread_width);
-            let v_thread = pattern_y < thread_width || (pattern_y >= half_pattern && pattern_y < half_pattern + thread_width);
+            let h_thread = pattern_x < thread_width
+                || (pattern_x >= half_pattern && pattern_x < half_pattern + thread_width);
+            let v_thread = pattern_y < thread_width
+                || (pattern_y >= half_pattern && pattern_y < half_pattern + thread_width);
 
             let in_gap_x = pattern_x >= thread_width && pattern_x < half_pattern;
             let in_gap_y = pattern_y >= thread_width && pattern_y < half_pattern;
@@ -473,19 +497,29 @@ fn generate_weave_height(
                 buffer.set(x, y, 0.5 - depth * 0.5);
             } else if h_thread && v_thread {
                 // Weave intersection
-                let h_pos = if pattern_x < half_pattern { pattern_x } else { pattern_x - half_pattern };
-                let v_pos = if pattern_y < half_pattern { pattern_y } else { pattern_y - half_pattern };
+                let h_pos = if pattern_x < half_pattern {
+                    pattern_x
+                } else {
+                    pattern_x - half_pattern
+                };
+                let v_pos = if pattern_y < half_pattern {
+                    pattern_y
+                } else {
+                    pattern_y - half_pattern
+                };
 
                 // Alternate which thread is on top
                 let h_on_top = (pattern_x < half_pattern) == (pattern_y < half_pattern);
 
                 if h_on_top {
                     // Horizontal thread on top
-                    let height_val = 0.5 + depth * 0.5 - (v_pos as f64 / thread_width as f64) * depth * 0.3;
+                    let height_val =
+                        0.5 + depth * 0.5 - (v_pos as f64 / thread_width as f64) * depth * 0.3;
                     buffer.set(x, y, height_val.clamp(0.0, 1.0));
                 } else {
                     // Vertical thread on top
-                    let height_val = 0.5 + depth * 0.5 - (h_pos as f64 / thread_width as f64) * depth * 0.3;
+                    let height_val =
+                        0.5 + depth * 0.5 - (h_pos as f64 / thread_width as f64) * depth * 0.3;
                     buffer.set(x, y, height_val.clamp(0.0, 1.0));
                 }
             } else if h_thread {
@@ -605,8 +639,17 @@ mod tests {
     #[test]
     fn test_generate_height_from_pattern_all_types() {
         let patterns = vec![
-            NormalMapPattern::Grid { cell_size: 16, line_width: 2, bevel: 0.5 },
-            NormalMapPattern::Bricks { brick_width: 32, brick_height: 16, mortar_width: 3, offset: 0.5 },
+            NormalMapPattern::Grid {
+                cell_size: 16,
+                line_width: 2,
+                bevel: 0.5,
+            },
+            NormalMapPattern::Bricks {
+                brick_width: 32,
+                brick_height: 16,
+                mortar_width: 3,
+                offset: 0.5,
+            },
             NormalMapPattern::Hexagons { size: 10, gap: 2 },
             NormalMapPattern::NoiseBumps {
                 noise: NoiseConfig {
@@ -615,12 +658,29 @@ mod tests {
                     octaves: 4,
                     persistence: 0.5,
                     lacunarity: 2.0,
-                }
+                },
             },
-            NormalMapPattern::DiamondPlate { diamond_size: 16, height: 0.5 },
-            NormalMapPattern::Tiles { tile_size: 16, gap_width: 2, gap_depth: 0.4, seed: 42 },
-            NormalMapPattern::Rivets { spacing: 16, radius: 3, height: 0.5, seed: 42 },
-            NormalMapPattern::Weave { thread_width: 6, gap: 1, depth: 0.2 },
+            NormalMapPattern::DiamondPlate {
+                diamond_size: 16,
+                height: 0.5,
+            },
+            NormalMapPattern::Tiles {
+                tile_size: 16,
+                gap_width: 2,
+                gap_depth: 0.4,
+                seed: 42,
+            },
+            NormalMapPattern::Rivets {
+                spacing: 16,
+                radius: 3,
+                height: 0.5,
+                seed: 42,
+            },
+            NormalMapPattern::Weave {
+                thread_width: 6,
+                gap: 1,
+                depth: 0.2,
+            },
         ];
 
         for pattern in patterns {
@@ -636,7 +696,7 @@ mod tests {
             brick_width: 32,
             brick_height: 16,
             mortar_width: 3,
-            offset: 0.5
+            offset: 0.5,
         };
 
         let buffer1 = generate_height_from_pattern(&pattern, 64, 64, 42, false);
@@ -651,7 +711,7 @@ mod tests {
             brick_width: 32,
             brick_height: 16,
             mortar_width: 3,
-            offset: 0.5
+            offset: 0.5,
         };
 
         let buffer1 = generate_height_from_pattern(&pattern, 64, 64, 42, false);

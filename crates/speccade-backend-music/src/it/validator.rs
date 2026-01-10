@@ -530,13 +530,11 @@ impl ItValidator {
         Self::validate_instruments(data, &header, offset_table_start, &mut report)?;
 
         // Validate samples
-        let sample_offsets_start =
-            offset_table_start + (header.instrument_count as usize * 4);
+        let sample_offsets_start = offset_table_start + (header.instrument_count as usize * 4);
         Self::validate_samples(data, &header, sample_offsets_start, &mut report)?;
 
         // Validate patterns
-        let pattern_offsets_start =
-            sample_offsets_start + (header.sample_count as usize * 4);
+        let pattern_offsets_start = sample_offsets_start + (header.sample_count as usize * 4);
         Self::validate_patterns(data, &header, pattern_offsets_start, &mut report)?;
 
         // Validate message if present
@@ -642,10 +640,7 @@ impl ItValidator {
             report.add_error(ItFormatError::field_at_offset(
                 ItErrorCategory::Header,
                 "global_volume",
-                format!(
-                    "Global volume {} exceeds maximum of 128",
-                    global_volume
-                ),
+                format!("Global volume {} exceeds maximum of 128", global_volume),
                 0x30,
             ));
         }
@@ -674,10 +669,7 @@ impl ItValidator {
         let initial_tempo = data[0x33];
         if initial_tempo < 32 {
             report.add_warning(
-                format!(
-                    "Initial tempo {} is below minimum of 32",
-                    initial_tempo
-                ),
+                format!("Initial tempo {} is below minimum of 32", initial_tempo),
                 Some(0x33),
             );
         }
@@ -731,10 +723,7 @@ impl ItValidator {
         for (i, &vol) in channel_vol.iter().enumerate() {
             if vol > 64 {
                 report.add_warning(
-                    format!(
-                        "Channel {} volume {} exceeds maximum of 64",
-                        i, vol
-                    ),
+                    format!("Channel {} volume {} exceeds maximum of 64", i, vol),
                     Some(0x80 + i),
                 );
             }
@@ -862,10 +851,7 @@ impl ItValidator {
         if offset + 554 > data.len() {
             return Err(ItFormatError::at_offset(
                 ItErrorCategory::Instrument,
-                format!(
-                    "Instrument {} header extends beyond file",
-                    index
-                ),
+                format!("Instrument {} header extends beyond file", index),
                 offset,
             ));
         }
@@ -1015,13 +1001,16 @@ impl ItValidator {
         // We skip detailed validation here but could check that sample indices are valid
 
         // Volume envelope starts at 0x130 (offset 304)
-        let volume_envelope = Self::parse_envelope(&inst[0x130..], "volume", index, offset + 0x130, report);
+        let volume_envelope =
+            Self::parse_envelope(&inst[0x130..], "volume", index, offset + 0x130, report);
 
         // Panning envelope at 0x182 (offset 386)
-        let panning_envelope = Self::parse_envelope(&inst[0x182..], "panning", index, offset + 0x182, report);
+        let panning_envelope =
+            Self::parse_envelope(&inst[0x182..], "panning", index, offset + 0x182, report);
 
         // Pitch envelope at 0x1D4 (offset 468)
-        let pitch_envelope = Self::parse_envelope(&inst[0x1D4..], "pitch", index, offset + 0x1D4, report);
+        let pitch_envelope =
+            Self::parse_envelope(&inst[0x1D4..], "pitch", index, offset + 0x1D4, report);
 
         Ok(ItInstrumentInfo {
             index,
@@ -1292,25 +1281,22 @@ impl ItValidator {
         }
 
         // Sustain loop begin at 0x40 (4 bytes)
-        let sustain_loop_begin =
-            u32::from_le_bytes([smp[0x40], smp[0x41], smp[0x42], smp[0x43]]);
+        let sustain_loop_begin = u32::from_le_bytes([smp[0x40], smp[0x41], smp[0x42], smp[0x43]]);
 
         // Sustain loop end at 0x44 (4 bytes)
         let sustain_loop_end = u32::from_le_bytes([smp[0x44], smp[0x45], smp[0x46], smp[0x47]]);
 
         // Validate sustain loop points
-        if flags.sustain_loop_enabled {
-            if sustain_loop_begin > sustain_loop_end {
-                report.add_error(ItFormatError::field_at_offset(
-                    ItErrorCategory::Sample,
-                    "sustain_loop_begin",
-                    format!(
-                        "Sample {} sustain loop begin ({}) > end ({})",
-                        index, sustain_loop_begin, sustain_loop_end
-                    ),
-                    offset + 0x40,
-                ));
-            }
+        if flags.sustain_loop_enabled && sustain_loop_begin > sustain_loop_end {
+            report.add_error(ItFormatError::field_at_offset(
+                ItErrorCategory::Sample,
+                "sustain_loop_begin",
+                format!(
+                    "Sample {} sustain loop begin ({}) > end ({})",
+                    index, sustain_loop_begin, sustain_loop_end
+                ),
+                offset + 0x40,
+            ));
         }
 
         // Sample data pointer at 0x48 (4 bytes)
@@ -1326,7 +1312,10 @@ impl ItValidator {
                 report.add_warning(
                     format!(
                         "Sample {} data ({} bytes at offset {}) extends beyond file ({})",
-                        index, expected_size, data_offset, data.len()
+                        index,
+                        expected_size,
+                        data_offset,
+                        data.len()
                     ),
                     Some(offset + 0x48),
                 );
@@ -1485,10 +1474,7 @@ impl ItValidator {
         }
         if num_rows > 200 {
             report.add_warning(
-                format!(
-                    "Pattern {} has {} rows (maximum is 200)",
-                    index, num_rows
-                ),
+                format!("Pattern {} has {} rows (maximum is 200)", index, num_rows),
                 Some(offset + 2),
             );
         }
@@ -1552,10 +1538,7 @@ impl ItValidator {
                 if pos >= packed_data.len() {
                     report.add_error(ItFormatError::at_offset(
                         ItErrorCategory::Pattern,
-                        format!(
-                            "Pattern {} truncated: expected mask byte",
-                            pattern_index
-                        ),
+                        format!("Pattern {} truncated: expected mask byte", pattern_index),
                         base_offset + pos,
                     ));
                     return;
@@ -1637,7 +1620,9 @@ impl ItValidator {
                 ItErrorCategory::Message,
                 format!(
                     "Message extends beyond file: {} bytes at offset {}, file has {}",
-                    msg_length, msg_offset, data.len()
+                    msg_length,
+                    msg_offset,
+                    data.len()
                 ),
                 msg_offset,
             ));
@@ -1654,9 +1639,7 @@ impl ItValidator {
 /// Extract a null-terminated string from a byte slice.
 fn extract_string(data: &[u8]) -> String {
     let end = data.iter().position(|&b| b == 0).unwrap_or(data.len());
-    String::from_utf8_lossy(&data[..end])
-        .trim_end()
-        .to_string()
+    String::from_utf8_lossy(&data[..end]).trim_end().to_string()
 }
 
 // ============================================================================
@@ -1714,14 +1697,10 @@ mod tests {
         it[0x34] = 128;
 
         // Channel pan (all center)
-        for i in 0x40..0x80 {
-            it[i] = 32;
-        }
+        it[0x40..0x80].fill(32);
 
         // Channel volume
-        for i in 0x80..0xC0 {
-            it[i] = 64;
-        }
+        it[0x80..0xC0].fill(64);
 
         // Order: 255 (end)
         it.push(255);
@@ -1886,12 +1865,7 @@ mod tests {
     fn test_it_instrument_invalid_magic() {
         let mut it = create_it_with_instrument();
         // Find instrument data and corrupt magic
-        let inst_offset = u32::from_le_bytes([
-            it[193],
-            it[194],
-            it[195],
-            it[196],
-        ]) as usize;
+        let inst_offset = u32::from_le_bytes([it[193], it[194], it[195], it[196]]) as usize;
         it[inst_offset..inst_offset + 4].copy_from_slice(b"XXXX");
 
         let report = ItValidator::validate(&it).unwrap();
@@ -1917,12 +1891,7 @@ mod tests {
     #[test]
     fn test_it_sample_invalid_magic() {
         let mut it = create_it_with_sample();
-        let sample_offset = u32::from_le_bytes([
-            it[193],
-            it[194],
-            it[195],
-            it[196],
-        ]) as usize;
+        let sample_offset = u32::from_le_bytes([it[193], it[194], it[195], it[196]]) as usize;
         it[sample_offset..sample_offset + 4].copy_from_slice(b"XXXX");
 
         let report = ItValidator::validate(&it).unwrap();
@@ -1932,12 +1901,7 @@ mod tests {
     #[test]
     fn test_it_sample_compression() {
         let mut it = create_it_with_sample();
-        let sample_offset = u32::from_le_bytes([
-            it[193],
-            it[194],
-            it[195],
-            it[196],
-        ]) as usize;
+        let sample_offset = u32::from_le_bytes([it[193], it[194], it[195], it[196]]) as usize;
         // Set compressed flag
         it[sample_offset + 0x12] |= 0x08;
 
@@ -1958,12 +1922,7 @@ mod tests {
     #[test]
     fn test_it_pattern_zero_rows() {
         let mut it = create_it_with_pattern();
-        let pattern_offset = u32::from_le_bytes([
-            it[193],
-            it[194],
-            it[195],
-            it[196],
-        ]) as usize;
+        let pattern_offset = u32::from_le_bytes([it[193], it[194], it[195], it[196]]) as usize;
         // Set rows to 0
         it[pattern_offset + 2..pattern_offset + 4].copy_from_slice(&0u16.to_le_bytes());
 
@@ -2046,9 +2005,9 @@ mod tests {
         it[0x20..0x22].copy_from_slice(&5u16.to_le_bytes());
         // Remove the existing order (255) and add new ones
         it.pop();
-        it.push(0);   // Pattern 0
+        it.push(0); // Pattern 0
         it.push(254); // Skip marker
-        it.push(0);   // Pattern 0
+        it.push(0); // Pattern 0
         it.push(100); // Invalid: no pattern 100
         it.push(255); // End marker
 
@@ -2061,7 +2020,10 @@ mod tests {
 
         // Should have a warning about referencing non-existent pattern
         assert!(!report.warnings.is_empty());
-        assert!(report.warnings.iter().any(|w| w.message.contains("pattern 100")));
+        assert!(report
+            .warnings
+            .iter()
+            .any(|w| w.message.contains("pattern 100")));
     }
 
     #[test]
@@ -2073,7 +2035,10 @@ mod tests {
 
         let report = ItValidator::validate(&it).unwrap();
 
-        assert!(report.warnings.iter().any(|w| w.message.contains("panning")));
+        assert!(report
+            .warnings
+            .iter()
+            .any(|w| w.message.contains("panning")));
     }
 
     #[test]
@@ -2094,14 +2059,13 @@ mod tests {
         assert_eq!(format!("{}", err), "IT header error: test error");
 
         let err = ItFormatError::at_offset(ItErrorCategory::Sample, "at offset", 0x100);
-        assert_eq!(format!("{}", err), "IT sample error at offset 0x0100: at offset");
-
-        let err = ItFormatError::field_at_offset(
-            ItErrorCategory::Pattern,
-            "num_rows",
-            "invalid",
-            0x50,
+        assert_eq!(
+            format!("{}", err),
+            "IT sample error at offset 0x0100: at offset"
         );
+
+        let err =
+            ItFormatError::field_at_offset(ItErrorCategory::Pattern, "num_rows", "invalid", 0x50);
         assert!(format!("{}", err).contains("field 'num_rows'"));
         assert!(format!("{}", err).contains("0x0050"));
     }
@@ -2119,12 +2083,7 @@ mod tests {
     #[test]
     fn test_sample_loop_validation() {
         let mut it = create_it_with_sample();
-        let sample_offset = u32::from_le_bytes([
-            it[193],
-            it[194],
-            it[195],
-            it[196],
-        ]) as usize;
+        let sample_offset = u32::from_le_bytes([it[193], it[194], it[195], it[196]]) as usize;
 
         // Enable loop
         it[sample_offset + 0x12] |= 0x10;
@@ -2134,7 +2093,10 @@ mod tests {
 
         let report = ItValidator::validate(&it).unwrap();
         assert!(!report.is_valid);
-        assert!(report.errors.iter().any(|e| e.message.contains("loop begin")));
+        assert!(report
+            .errors
+            .iter()
+            .any(|e| e.message.contains("loop begin")));
     }
 
     #[test]
@@ -2152,17 +2114,15 @@ mod tests {
     #[test]
     fn test_instrument_fadeout_warning() {
         let mut it = create_it_with_instrument();
-        let inst_offset = u32::from_le_bytes([
-            it[193],
-            it[194],
-            it[195],
-            it[196],
-        ]) as usize;
+        let inst_offset = u32::from_le_bytes([it[193], it[194], it[195], it[196]]) as usize;
 
         // Set fadeout > 1024
         it[inst_offset + 0x14..inst_offset + 0x16].copy_from_slice(&2000u16.to_le_bytes());
 
         let report = ItValidator::validate(&it).unwrap();
-        assert!(report.warnings.iter().any(|w| w.message.contains("fadeout")));
+        assert!(report
+            .warnings
+            .iter()
+            .any(|w| w.message.contains("fadeout")));
     }
 }

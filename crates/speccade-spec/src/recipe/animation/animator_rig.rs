@@ -229,10 +229,11 @@ impl Default for BoneColor {
 }
 
 /// Bone color scheme for automatic bone coloring.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
 #[serde(tag = "scheme", rename_all = "snake_case", deny_unknown_fields)]
 pub enum BoneColorScheme {
     /// Standard scheme: left=blue, right=red, center=yellow.
+    #[default]
     Standard,
     /// Custom color mapping by bone side.
     Custom {
@@ -253,12 +254,6 @@ pub enum BoneColorScheme {
     },
 }
 
-impl Default for BoneColorScheme {
-    fn default() -> Self {
-        BoneColorScheme::Standard
-    }
-}
-
 impl BoneColorScheme {
     /// Creates the standard color scheme (L=blue, R=red, center=yellow).
     pub fn standard() -> Self {
@@ -267,7 +262,11 @@ impl BoneColorScheme {
 
     /// Creates a custom color scheme with specified colors.
     pub fn custom(left: BoneColor, right: BoneColor, center: BoneColor) -> Self {
-        BoneColorScheme::Custom { left, right, center }
+        BoneColorScheme::Custom {
+            left,
+            right,
+            center,
+        }
     }
 
     /// Returns the color for a given bone name based on the scheme.
@@ -282,7 +281,11 @@ impl BoneColorScheme {
                     BoneColor::center_yellow()
                 }
             }
-            BoneColorScheme::Custom { left, right, center } => {
+            BoneColorScheme::Custom {
+                left,
+                right,
+                center,
+            } => {
                 if bone_name.ends_with("_l") || bone_name.ends_with("_L") {
                     *left
                 } else if bone_name.ends_with("_r") || bone_name.ends_with("_R") {
@@ -452,17 +455,44 @@ impl AnimatorRigConfig {
     /// Creates default bone collections for a humanoid rig.
     pub fn default_humanoid_collections() -> Vec<BoneCollection> {
         vec![
-            BoneCollectionPreset::IkControls.to_collection()
-                .with_bones(["ik_foot_l", "ik_foot_r", "ik_hand_l", "ik_hand_r",
-                            "pole_knee_l", "pole_knee_r", "pole_elbow_l", "pole_elbow_r"]),
-            BoneCollectionPreset::FkControls.to_collection()
-                .with_bones(["root", "hips", "spine", "chest", "neck", "head",
-                            "shoulder_l", "shoulder_r"]),
-            BoneCollectionPreset::Deform.to_collection()
-                .with_bones(["upper_arm_l", "lower_arm_l", "hand_l",
-                            "upper_arm_r", "lower_arm_r", "hand_r",
-                            "upper_leg_l", "lower_leg_l", "foot_l",
-                            "upper_leg_r", "lower_leg_r", "foot_r"]),
+            BoneCollectionPreset::IkControls
+                .to_collection()
+                .with_bones([
+                    "ik_foot_l",
+                    "ik_foot_r",
+                    "ik_hand_l",
+                    "ik_hand_r",
+                    "pole_knee_l",
+                    "pole_knee_r",
+                    "pole_elbow_l",
+                    "pole_elbow_r",
+                ]),
+            BoneCollectionPreset::FkControls
+                .to_collection()
+                .with_bones([
+                    "root",
+                    "hips",
+                    "spine",
+                    "chest",
+                    "neck",
+                    "head",
+                    "shoulder_l",
+                    "shoulder_r",
+                ]),
+            BoneCollectionPreset::Deform.to_collection().with_bones([
+                "upper_arm_l",
+                "lower_arm_l",
+                "hand_l",
+                "upper_arm_r",
+                "lower_arm_r",
+                "hand_r",
+                "upper_leg_l",
+                "lower_leg_l",
+                "foot_l",
+                "upper_leg_r",
+                "lower_leg_r",
+                "foot_r",
+            ]),
             BoneCollectionPreset::Mechanism.to_collection(),
         ]
     }
@@ -480,10 +510,7 @@ pub enum AnimatorRigError {
     /// Duplicate collection name.
     DuplicateCollectionName(String),
     /// Invalid widget style for bone type.
-    InvalidWidgetStyle {
-        bone: String,
-        style: String,
-    },
+    InvalidWidgetStyle { bone: String, style: String },
 }
 
 impl std::fmt::Display for AnimatorRigError {
@@ -558,8 +585,8 @@ mod tests {
 
     #[test]
     fn test_bone_collection_with_bones() {
-        let collection = BoneCollection::new("Deform")
-            .with_bones(["arm_l", "arm_r", "leg_l", "leg_r"]);
+        let collection =
+            BoneCollection::new("Deform").with_bones(["arm_l", "arm_r", "leg_l", "leg_r"]);
 
         assert_eq!(collection.bones.len(), 4);
         assert!(collection.bones.contains(&"arm_l".to_string()));
@@ -573,7 +600,10 @@ mod tests {
 
         // Invalid - empty name
         let invalid = BoneCollection::new("");
-        assert_eq!(invalid.validate(), Err(AnimatorRigError::EmptyCollectionName));
+        assert_eq!(
+            invalid.validate(),
+            Err(AnimatorRigError::EmptyCollectionName)
+        );
     }
 
     #[test]
@@ -672,9 +702,9 @@ mod tests {
     #[test]
     fn test_bone_color_scheme_custom() {
         let scheme = BoneColorScheme::custom(
-            BoneColor::new(0.0, 1.0, 0.0),  // green for left
-            BoneColor::new(1.0, 0.0, 1.0),  // magenta for right
-            BoneColor::new(0.5, 0.5, 0.5),  // gray for center
+            BoneColor::new(0.0, 1.0, 0.0), // green for left
+            BoneColor::new(1.0, 0.0, 1.0), // magenta for right
+            BoneColor::new(0.5, 0.5, 0.5), // gray for center
         );
 
         let left = scheme.color_for_bone("leg_l");
@@ -798,8 +828,7 @@ mod tests {
             .with_display(ArmatureDisplay::Bbone)
             .with_widget_style(WidgetStyle::WireSphere)
             .with_bone_collection(
-                BoneCollection::new("Test Collection")
-                    .with_bones(["bone1", "bone2"])
+                BoneCollection::new("Test Collection").with_bones(["bone1", "bone2"]),
             );
 
         let json = serde_json::to_string(&config).unwrap();
@@ -817,14 +846,15 @@ mod tests {
     #[test]
     fn test_animator_rig_config_validation() {
         // Valid config
-        let valid = AnimatorRigConfig::new()
-            .with_bone_collection(BoneCollection::new("Valid"));
+        let valid = AnimatorRigConfig::new().with_bone_collection(BoneCollection::new("Valid"));
         assert!(valid.validate().is_ok());
 
         // Invalid - empty collection name
-        let invalid = AnimatorRigConfig::new()
-            .with_bone_collection(BoneCollection::new(""));
-        assert_eq!(invalid.validate(), Err(AnimatorRigError::EmptyCollectionName));
+        let invalid = AnimatorRigConfig::new().with_bone_collection(BoneCollection::new(""));
+        assert_eq!(
+            invalid.validate(),
+            Err(AnimatorRigError::EmptyCollectionName)
+        );
     }
 
     #[test]
@@ -870,7 +900,8 @@ mod tests {
             AnimatorRigError::InvalidWidgetStyle {
                 bone: "arm".to_string(),
                 style: "invalid".to_string()
-            }.to_string(),
+            }
+            .to_string(),
             "Invalid widget style 'invalid' for bone 'arm'"
         );
     }

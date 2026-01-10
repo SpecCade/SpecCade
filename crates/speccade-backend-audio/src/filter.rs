@@ -301,9 +301,7 @@ impl BiquadFilter {
     /// Processes a single sample through the filter.
     #[inline]
     pub fn process(&mut self, input: f64) -> f64 {
-        let output = self.coeffs.b0 * input
-            + self.coeffs.b1 * self.x1
-            + self.coeffs.b2 * self.x2
+        let output = self.coeffs.b0 * input + self.coeffs.b1 * self.x1 + self.coeffs.b2 * self.x2
             - self.coeffs.a1 * self.y1
             - self.coeffs.a2 * self.y2;
 
@@ -443,9 +441,7 @@ pub fn generate_cutoff_sweep(
         let t = i as f64 / num_samples as f64;
         let cutoff = match mode {
             SweepMode::Linear => start_cutoff + (end_cutoff - start_cutoff) * t,
-            SweepMode::Exponential => {
-                start_cutoff * (end_cutoff / start_cutoff).powf(t)
-            }
+            SweepMode::Exponential => start_cutoff * (end_cutoff / start_cutoff).powf(t),
         };
         cutoffs.push(cutoff);
     }

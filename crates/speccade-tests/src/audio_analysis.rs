@@ -42,7 +42,11 @@ impl fmt::Display for AudioAnalysisError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             AudioAnalysisError::DataTooShort { expected, actual } => {
-                write!(f, "WAV data too short: expected at least {} bytes, got {}", expected, actual)
+                write!(
+                    f,
+                    "WAV data too short: expected at least {} bytes, got {}",
+                    expected, actual
+                )
             }
             AudioAnalysisError::InvalidRiffHeader => {
                 write!(f, "Invalid or missing RIFF header")
@@ -57,10 +61,18 @@ impl fmt::Display for AudioAnalysisError {
                 write!(f, "Missing data chunk in WAV file")
             }
             AudioAnalysisError::UnsupportedAudioFormat { format_code } => {
-                write!(f, "Unsupported audio format code: {} (only PCM/1 supported)", format_code)
+                write!(
+                    f,
+                    "Unsupported audio format code: {} (only PCM/1 supported)",
+                    format_code
+                )
             }
             AudioAnalysisError::UnsupportedBitsPerSample { bits } => {
-                write!(f, "Unsupported bits per sample: {} (only 8, 16, 24, 32 supported)", bits)
+                write!(
+                    f,
+                    "Unsupported bits per sample: {} (only 8, 16, 24, 32 supported)",
+                    bits
+                )
             }
             AudioAnalysisError::InvalidChunk { message } => {
                 write!(f, "Invalid chunk: {}", message)
@@ -120,9 +132,7 @@ pub fn calculate_rms(samples: &[f32]) -> f32 {
         return 0.0;
     }
 
-    let sum_of_squares: f64 = samples.iter()
-        .map(|&s| (s as f64) * (s as f64))
-        .sum();
+    let sum_of_squares: f64 = samples.iter().map(|&s| (s as f64) * (s as f64)).sum();
 
     ((sum_of_squares / samples.len() as f64).sqrt()) as f32
 }
@@ -133,7 +143,7 @@ pub fn calculate_rms(samples: &[f32]) -> f32 {
 ///
 /// * `samples` - Audio samples normalized to the range [-1.0, 1.0].
 /// * `threshold` - Maximum absolute value for a sample to be considered silent.
-///                 Typical values: 0.001 for strict silence, 0.01 for near-silence.
+///   Typical values: 0.001 for strict silence, 0.01 for near-silence.
 ///
 /// # Returns
 ///
@@ -174,7 +184,8 @@ pub fn is_silent(samples: &[f32], threshold: f32) -> bool {
 /// assert_eq!(peak_amplitude(&samples), 0.9);
 /// ```
 pub fn peak_amplitude(samples: &[f32]) -> f32 {
-    samples.iter()
+    samples
+        .iter()
         .map(|s| s.abs())
         .fold(0.0f32, |max, s| max.max(s))
 }
@@ -242,7 +253,8 @@ pub fn zero_crossing_rate(samples: &[f32]) -> f32 {
         return 0.0;
     }
 
-    let crossings: usize = samples.windows(2)
+    let crossings: usize = samples
+        .windows(2)
         .filter(|w| (w[0] >= 0.0) != (w[1] >= 0.0))
         .count();
 
@@ -337,8 +349,8 @@ pub fn parse_wav_header(wav_data: &[u8]) -> Result<WavHeader, AudioAnalysisError
     }
 
     // Find fmt chunk
-    let (fmt_offset, _fmt_size) = find_chunk(wav_data, b"fmt ")?
-        .ok_or(AudioAnalysisError::MissingFmtChunk)?;
+    let (fmt_offset, _fmt_size) =
+        find_chunk(wav_data, b"fmt ")?.ok_or(AudioAnalysisError::MissingFmtChunk)?;
 
     // Parse fmt chunk
     let fmt_data = &wav_data[fmt_offset..];
@@ -363,8 +375,8 @@ pub fn parse_wav_header(wav_data: &[u8]) -> Result<WavHeader, AudioAnalysisError
     }
 
     // Find data chunk
-    let (data_offset, data_size) = find_chunk(wav_data, b"data")?
-        .ok_or(AudioAnalysisError::MissingDataChunk)?;
+    let (data_offset, data_size) =
+        find_chunk(wav_data, b"data")?.ok_or(AudioAnalysisError::MissingDataChunk)?;
 
     // Calculate number of samples
     let bytes_per_sample = (bits_per_sample / 8) as usize;
@@ -385,7 +397,9 @@ pub fn parse_wav_header(wav_data: &[u8]) -> Result<WavHeader, AudioAnalysisError
         return Err(AudioAnalysisError::InvalidChunk {
             message: format!(
                 "data chunk extends beyond file: offset {} + size {} > file length {}",
-                data_offset, data_size, wav_data.len()
+                data_offset,
+                data_size,
+                wav_data.len()
             ),
         });
     }
@@ -436,8 +450,8 @@ pub fn parse_wav_samples(wav_data: &[u8]) -> Result<Vec<f32>, AudioAnalysisError
     let header = parse_wav_header(wav_data)?;
 
     // Find data chunk
-    let (data_offset, data_size) = find_chunk(wav_data, b"data")?
-        .ok_or(AudioAnalysisError::MissingDataChunk)?;
+    let (data_offset, data_size) =
+        find_chunk(wav_data, b"data")?.ok_or(AudioAnalysisError::MissingDataChunk)?;
 
     let data = &wav_data[data_offset..data_offset + data_size];
 
@@ -453,7 +467,10 @@ pub fn parse_wav_samples(wav_data: &[u8]) -> Result<Vec<f32>, AudioAnalysisError
 }
 
 /// Find a chunk in WAV data and return its data offset and size.
-fn find_chunk(wav_data: &[u8], chunk_id: &[u8; 4]) -> Result<Option<(usize, usize)>, AudioAnalysisError> {
+fn find_chunk(
+    wav_data: &[u8],
+    chunk_id: &[u8; 4],
+) -> Result<Option<(usize, usize)>, AudioAnalysisError> {
     let mut offset = 12; // Skip RIFF header
 
     while offset + 8 <= wav_data.len() {
@@ -479,9 +496,7 @@ fn find_chunk(wav_data: &[u8], chunk_id: &[u8; 4]) -> Result<Option<(usize, usiz
 
 /// Parse 8-bit unsigned PCM samples to f32.
 fn parse_8bit_samples(data: &[u8]) -> Vec<f32> {
-    data.iter()
-        .map(|&b| (b as f32 - 128.0) / 128.0)
-        .collect()
+    data.iter().map(|&b| (b as f32 - 128.0) / 128.0).collect()
 }
 
 /// Parse 16-bit signed PCM samples to f32.
@@ -544,7 +559,8 @@ fn parse_32bit_samples(data: &[u8]) -> Vec<f32> {
 /// assert!((mono[1] - 0.5).abs() < 0.001); // (0.8 + 0.2) / 2
 /// ```
 pub fn stereo_to_mono(samples: &[f32]) -> Vec<f32> {
-    samples.chunks_exact(2)
+    samples
+        .chunks_exact(2)
         .map(|chunk| (chunk[0] + chunk[1]) / 2.0)
         .collect()
 }
@@ -559,9 +575,7 @@ pub fn stereo_to_mono(samples: &[f32]) -> Vec<f32> {
 ///
 /// Only the left channel samples.
 pub fn left_channel(samples: &[f32]) -> Vec<f32> {
-    samples.chunks_exact(2)
-        .map(|chunk| chunk[0])
-        .collect()
+    samples.chunks_exact(2).map(|chunk| chunk[0]).collect()
 }
 
 /// Get only the right channel from stereo samples.
@@ -574,9 +588,7 @@ pub fn left_channel(samples: &[f32]) -> Vec<f32> {
 ///
 /// Only the right channel samples.
 pub fn right_channel(samples: &[f32]) -> Vec<f32> {
-    samples.chunks_exact(2)
-        .map(|chunk| chunk[1])
-        .collect()
+    samples.chunks_exact(2).map(|chunk| chunk[1]).collect()
 }
 
 #[cfg(test)]
@@ -602,7 +614,9 @@ mod tests {
     #[test]
     fn test_rms_alternating() {
         // RMS of alternating +1/-1 is 1.0
-        let alternating: Vec<f32> = (0..100).map(|i| if i % 2 == 0 { 1.0 } else { -1.0 }).collect();
+        let alternating: Vec<f32> = (0..100)
+            .map(|i| if i % 2 == 0 { 1.0 } else { -1.0 })
+            .collect();
         assert!((calculate_rms(&alternating) - 1.0).abs() < 0.001);
     }
 
@@ -786,9 +800,7 @@ mod tests {
 
     #[test]
     fn test_has_content_sine_wave() {
-        let sine: Vec<f32> = (0..1000)
-            .map(|i| (i as f32 * 0.1).sin() * 0.5)
-            .collect();
+        let sine: Vec<f32> = (0..1000).map(|i| (i as f32 * 0.1).sin() * 0.5).collect();
         assert!(has_audio_content(&sine));
     }
 
@@ -801,9 +813,7 @@ mod tests {
 
     #[test]
     fn test_has_content_very_quiet() {
-        let quiet: Vec<f32> = (0..1000)
-            .map(|i| (i as f32 * 0.1).sin() * 0.0001)
-            .collect();
+        let quiet: Vec<f32> = (0..1000).map(|i| (i as f32 * 0.1).sin() * 0.0001).collect();
         assert!(!has_audio_content(&quiet));
     }
 
@@ -818,7 +828,12 @@ mod tests {
     // ==========================================================================
 
     /// Create a minimal valid WAV file for testing.
-    fn create_test_wav(channels: u16, sample_rate: u32, bits_per_sample: u16, samples: &[i16]) -> Vec<u8> {
+    fn create_test_wav(
+        channels: u16,
+        sample_rate: u32,
+        bits_per_sample: u16,
+        samples: &[i16],
+    ) -> Vec<u8> {
         let num_samples = samples.len();
         let bytes_per_sample = bits_per_sample as usize / 8;
         let data_size = num_samples * bytes_per_sample;
@@ -896,7 +911,10 @@ mod tests {
     fn test_parse_wav_invalid_riff() {
         let invalid = b"NOTARIFF".to_vec();
         let result = parse_wav_header(&invalid);
-        assert!(matches!(result, Err(AudioAnalysisError::DataTooShort { .. })));
+        assert!(matches!(
+            result,
+            Err(AudioAnalysisError::DataTooShort { .. })
+        ));
     }
 
     #[test]
@@ -912,7 +930,10 @@ mod tests {
     fn test_parse_wav_too_short() {
         let short = vec![0u8; 20];
         let result = parse_wav_header(&short);
-        assert!(matches!(result, Err(AudioAnalysisError::DataTooShort { .. })));
+        assert!(matches!(
+            result,
+            Err(AudioAnalysisError::DataTooShort { .. })
+        ));
     }
 
     // ==========================================================================
@@ -963,7 +984,10 @@ mod tests {
 
     #[test]
     fn test_error_display() {
-        let err = AudioAnalysisError::DataTooShort { expected: 44, actual: 10 };
+        let err = AudioAnalysisError::DataTooShort {
+            expected: 44,
+            actual: 10,
+        };
         assert!(err.to_string().contains("44"));
         assert!(err.to_string().contains("10"));
 

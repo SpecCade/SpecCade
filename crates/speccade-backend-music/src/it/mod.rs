@@ -43,5 +43,5 @@ pub use header::*;
 pub use instrument::*;
 pub use pattern::*;
 pub use sample::*;
-pub use validator::{ItValidator, ItValidationReport, ItFormatError, ItErrorCategory};
+pub use validator::{ItErrorCategory, ItFormatError, ItValidationReport, ItValidator};
 pub use writer::*;

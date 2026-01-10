@@ -1,7 +1,7 @@
 //! Metallic map generator.
 
 use super::GrayscaleBuffer;
-use crate::noise::{Noise2D, Fbm, PerlinNoise};
+use crate::noise::{Fbm, Noise2D, PerlinNoise};
 
 /// Metallic map generator.
 pub struct MetallicGenerator {
@@ -153,7 +153,7 @@ mod tests {
         for y in 0..64 {
             for x in 0..64 {
                 let v = buffer.get(x, y);
-                assert!(v >= 0.0 && v <= 1.0);
+                assert!((0.0..=1.0).contains(&v));
             }
         }
     }

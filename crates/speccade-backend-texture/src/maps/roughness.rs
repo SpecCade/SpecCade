@@ -1,7 +1,7 @@
 //! Roughness map generator.
 
 use super::GrayscaleBuffer;
-use crate::noise::{Noise2D, Fbm, PerlinNoise};
+use crate::noise::{Fbm, Noise2D, PerlinNoise};
 
 /// Roughness map generator.
 pub struct RoughnessGenerator {
@@ -69,8 +69,13 @@ impl RoughnessGenerator {
     }
 
     /// Generate roughness from a height map (recessed areas accumulate dirt = rougher).
-    pub fn generate_from_height(&self, height_map: &GrayscaleBuffer, invert: bool) -> GrayscaleBuffer {
-        let mut buffer = GrayscaleBuffer::new(height_map.width, height_map.height, self.base_roughness);
+    pub fn generate_from_height(
+        &self,
+        height_map: &GrayscaleBuffer,
+        invert: bool,
+    ) -> GrayscaleBuffer {
+        let mut buffer =
+            GrayscaleBuffer::new(height_map.width, height_map.height, self.base_roughness);
 
         let range = self.roughness_range[1] - self.roughness_range[0];
 
@@ -145,7 +150,7 @@ mod tests {
         for y in 0..64 {
             for x in 0..64 {
                 let v = buffer.get(x, y);
-                assert!(v >= 0.3 && v <= 0.7, "Value {} out of range", v);
+                assert!((0.3..=0.7).contains(&v), "Value {} out of range", v);
             }
         }
     }

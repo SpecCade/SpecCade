@@ -3,15 +3,15 @@
 //! All noise functions are pure Rust with no external dependencies
 //! and produce deterministic output given the same seed.
 
-mod simplex;
-mod perlin;
-mod worley;
 mod fbm;
+mod perlin;
+mod simplex;
+mod worley;
 
-pub use simplex::SimplexNoise;
-pub use perlin::PerlinNoise;
-pub use worley::{WorleyNoise, DistanceFunction, WorleyReturn};
 pub use fbm::Fbm;
+pub use perlin::PerlinNoise;
+pub use simplex::SimplexNoise;
+pub use worley::{DistanceFunction, WorleyNoise, WorleyReturn};
 
 /// Trait for 2D noise generators.
 pub trait Noise2D {

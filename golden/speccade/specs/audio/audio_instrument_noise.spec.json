@@ -28,7 +28,6 @@
             "filter": {
               "type": "bandpass",
               "center": 2000.0,
-              "bandwidth": 500.0,
               "resonance": 0.707,
               "center_end": 500.0
             }

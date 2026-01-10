@@ -4,13 +4,12 @@
 //! sample handling, and IT-specific features like NNA modes and envelope loops.
 
 use speccade_backend_music::it::{
-    dca, dct, env_flags, flags, nna, sample_flags, convert_flags,
-    ItEnvelope, ItEnvelopePoint, ItHeader, ItInstrument, ItModule, ItNote, ItPattern,
-    ItSample, IT_INSTRUMENT_MAGIC, IT_INSTRUMENT_SIZE, IT_MAGIC, IT_SAMPLE_HEADER_SIZE,
-    IT_SAMPLE_MAGIC, effects,
+    convert_flags, dca, dct, effects, env_flags, flags, nna, sample_flags, ItEnvelope,
+    ItEnvelopePoint, ItHeader, ItInstrument, ItModule, ItNote, ItPattern, ItSample,
+    IT_INSTRUMENT_MAGIC, IT_INSTRUMENT_SIZE, IT_MAGIC, IT_SAMPLE_HEADER_SIZE, IT_SAMPLE_MAGIC,
 };
 use speccade_backend_music::it::{validate_it_bytes, ItValidationError};
-use speccade_backend_music::note::{note_name_to_it, it as it_notes};
+use speccade_backend_music::note::{it as it_notes, note_name_to_it};
 
 // =============================================================================
 // Helper Functions
@@ -62,7 +61,11 @@ fn read_u32_le(data: &[u8], offset: usize) -> u32 {
 #[test]
 fn test_it_header_magic() {
     let it = generate_minimal_it();
-    assert_eq!(&it[0..4], b"IMPM", "IT file must start with 'IMPM' magic bytes");
+    assert_eq!(
+        &it[0..4],
+        b"IMPM",
+        "IT file must start with 'IMPM' magic bytes"
+    );
 }
 
 #[test]
@@ -138,7 +141,11 @@ fn test_it_header_counts() {
 
     // Add 2 samples
     for i in 0..2 {
-        module.add_sample(ItSample::new(&format!("Sample{}", i), vec![0u8; 100], 22050));
+        module.add_sample(ItSample::new(
+            &format!("Sample{}", i),
+            vec![0u8; 100],
+            22050,
+        ));
     }
 
     module.set_orders(&[0, 1, 2]);
@@ -265,11 +272,7 @@ fn test_it_header_channel_volume() {
     // Channel volume starts at 0x80 (128), 64 bytes
     for i in 0..8 {
         let vol = it[0x80 + i];
-        assert_eq!(
-            vol, 64,
-            "Active channel {} should have full volume (64)",
-            i
-        );
+        assert_eq!(vol, 64, "Active channel {} should have full volume (64)", i);
     }
 
     // Disabled channels should have volume 0
@@ -341,13 +344,21 @@ fn test_it_envelope_flags() {
 
 #[test]
 fn test_it_envelope_basic() {
-    let mut env = ItEnvelope::default();
-    env.flags = env_flags::ENABLED;
-    env.points = vec![
-        ItEnvelopePoint { tick: 0, value: 0 },
-        ItEnvelopePoint { tick: 10, value: 64 },
-        ItEnvelopePoint { tick: 50, value: 32 },
-    ];
+    let env = ItEnvelope {
+        flags: env_flags::ENABLED,
+        points: vec![
+            ItEnvelopePoint { tick: 0, value: 0 },
+            ItEnvelopePoint {
+                tick: 10,
+                value: 64,
+            },
+            ItEnvelopePoint {
+                tick: 50,
+                value: 32,
+            },
+        ],
+        ..Default::default()
+    };
 
     let mut buf = Vec::new();
     env.write(&mut buf, false).unwrap();
@@ -364,19 +375,29 @@ fn test_it_envelope_basic() {
 
 #[test]
 fn test_it_envelope_loops() {
-    let mut env = ItEnvelope::default();
-    env.flags = env_flags::ENABLED | env_flags::LOOP | env_flags::SUSTAIN_LOOP;
-    env.loop_begin = 1;
-    env.loop_end = 3;
-    env.sustain_begin = 2;
-    env.sustain_end = 4;
-    env.points = vec![
-        ItEnvelopePoint { tick: 0, value: 0 },
-        ItEnvelopePoint { tick: 10, value: 64 },
-        ItEnvelopePoint { tick: 20, value: 48 },
-        ItEnvelopePoint { tick: 30, value: 32 },
-        ItEnvelopePoint { tick: 40, value: 0 },
-    ];
+    let env = ItEnvelope {
+        flags: env_flags::ENABLED | env_flags::LOOP | env_flags::SUSTAIN_LOOP,
+        loop_begin: 1,
+        loop_end: 3,
+        sustain_begin: 2,
+        sustain_end: 4,
+        points: vec![
+            ItEnvelopePoint { tick: 0, value: 0 },
+            ItEnvelopePoint {
+                tick: 10,
+                value: 64,
+            },
+            ItEnvelopePoint {
+                tick: 20,
+                value: 48,
+            },
+            ItEnvelopePoint {
+                tick: 30,
+                value: 32,
+            },
+            ItEnvelopePoint { tick: 40, value: 0 },
+        ],
+    };
 
     let mut buf = Vec::new();
     env.write(&mut buf, false).unwrap();
@@ -482,8 +503,16 @@ fn test_it_instrument_filter() {
     //       + pitch-pan(2) + global_vol(1) + default_pan(1) + random(2) + reserved(4)
     //       + name(26) = 58 bytes before filter cutoff
     // Bit 7 should be set to indicate filter is enabled
-    assert_eq!(buf[58], 64 | 0x80, "Filter cutoff should be set with enable bit");
-    assert_eq!(buf[59], 32 | 0x80, "Filter resonance should be set with enable bit");
+    assert_eq!(
+        buf[58],
+        64 | 0x80,
+        "Filter cutoff should be set with enable bit"
+    );
+    assert_eq!(
+        buf[59],
+        32 | 0x80,
+        "Filter resonance should be set with enable bit"
+    );
 }
 
 // =============================================================================
@@ -510,7 +539,11 @@ fn test_it_pattern_compression_empty() {
     let packed = pattern.pack(4);
 
     // Empty pattern should only have row end markers (one 0x00 per row)
-    assert_eq!(packed.len(), 64, "Empty pattern should pack to 64 bytes (row markers)");
+    assert_eq!(
+        packed.len(),
+        64,
+        "Empty pattern should pack to 64 bytes (row markers)"
+    );
 
     for &b in &packed {
         assert_eq!(b, 0, "All bytes should be row end markers");
@@ -533,11 +566,7 @@ fn test_it_pattern_compression_with_notes() {
     );
 
     // Count row end markers (zeros at expected positions)
-    let row_markers: Vec<_> = packed
-        .iter()
-        .enumerate()
-        .filter(|(_, &b)| b == 0)
-        .collect();
+    let row_markers: Vec<_> = packed.iter().enumerate().filter(|(_, &b)| b == 0).collect();
     assert!(
         row_markers.len() >= 4,
         "Should have at least 4 row end markers"
@@ -579,10 +608,7 @@ fn test_it_pattern_effects() {
 
     // The mask byte should indicate effect data is present (bit 3)
     let mask = packed[1];
-    assert!(
-        mask & 0x08 != 0,
-        "Mask should indicate effect data (bit 3)"
-    );
+    assert!(mask & 0x08 != 0, "Mask should indicate effect data (bit 3)");
 }
 
 #[test]
@@ -655,7 +681,10 @@ fn test_it_sample_creation() {
     let sample = ItSample::new("Test", data.clone(), 44100);
 
     assert_eq!(sample.name, "Test");
-    assert_eq!(sample.length, 500, "Length should be in samples (1000 bytes / 2)");
+    assert_eq!(
+        sample.length, 500,
+        "Length should be in samples (1000 bytes / 2)"
+    );
     assert_eq!(sample.c5_speed, 44100);
     assert!(sample.flags & sample_flags::HAS_DATA != 0);
     assert!(sample.flags & sample_flags::BITS_16 != 0);
@@ -688,7 +717,11 @@ fn test_it_sample_header_size() {
     let mut buf = Vec::new();
     sample.write_header(&mut buf, 1000).unwrap();
 
-    assert_eq!(buf.len(), IT_SAMPLE_HEADER_SIZE, "Sample header should be 80 bytes");
+    assert_eq!(
+        buf.len(),
+        IT_SAMPLE_HEADER_SIZE,
+        "Sample header should be 80 bytes"
+    );
 }
 
 #[test]
@@ -711,7 +744,10 @@ fn test_it_sample_header_data_pointer() {
 
     // Sample data pointer is at offset 72
     let stored_offset = read_u32_le(&buf, 72);
-    assert_eq!(stored_offset, data_offset, "Sample data pointer should match");
+    assert_eq!(
+        stored_offset, data_offset,
+        "Sample data pointer should match"
+    );
 }
 
 #[test]
@@ -719,7 +755,10 @@ fn test_it_sample_with_loop() {
     let data = vec![0u8; 1000];
     let sample = ItSample::new("Test", data, 22050).with_loop(0, 400, false);
 
-    assert!(sample.flags & sample_flags::LOOP != 0, "Loop flag should be set");
+    assert!(
+        sample.flags & sample_flags::LOOP != 0,
+        "Loop flag should be set"
+    );
     assert_eq!(sample.loop_begin, 0);
     assert_eq!(sample.loop_end, 400);
 }
@@ -729,8 +768,14 @@ fn test_it_sample_with_pingpong_loop() {
     let data = vec![0u8; 1000];
     let sample = ItSample::new("Test", data, 22050).with_loop(100, 400, true);
 
-    assert!(sample.flags & sample_flags::LOOP != 0, "Loop flag should be set");
-    assert!(sample.flags & sample_flags::LOOP_PINGPONG != 0, "Pingpong flag should be set");
+    assert!(
+        sample.flags & sample_flags::LOOP != 0,
+        "Loop flag should be set"
+    );
+    assert!(
+        sample.flags & sample_flags::LOOP_PINGPONG != 0,
+        "Pingpong flag should be set"
+    );
     assert_eq!(sample.loop_begin, 100);
     assert_eq!(sample.loop_end, 400);
 }
@@ -984,7 +1029,11 @@ fn test_it_module_order_table() {
     for i in 0..5 {
         module.add_pattern(ItPattern::empty(64, 4));
         module.add_instrument(ItInstrument::new(&format!("Inst{}", i)));
-        module.add_sample(ItSample::new(&format!("Sample{}", i), vec![0u8; 100], 22050));
+        module.add_sample(ItSample::new(
+            &format!("Sample{}", i),
+            vec![0u8; 100],
+            22050,
+        ));
     }
 
     // Set custom order: 0, 2, 1, 4, 3, 0

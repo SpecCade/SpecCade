@@ -30,11 +30,7 @@ use reporting::{print_audit_report, print_migration_report};
 /// # Returns
 /// Exit code: 0 success, 1 error
 pub fn run(project_path: &str, allow_exec_specs: bool) -> Result<ExitCode> {
-    println!(
-        "{} {}",
-        "Migrate project:".cyan().bold(),
-        project_path
-    );
+    println!("{} {}", "Migrate project:".cyan().bold(), project_path);
 
     if allow_exec_specs {
         println!(
@@ -63,11 +59,7 @@ pub fn run(project_path: &str, allow_exec_specs: bool) -> Result<ExitCode> {
         );
     }
 
-    println!(
-        "\n{} {}",
-        "Scanning:".cyan(),
-        specs_dir.display()
-    );
+    println!("\n{} {}", "Scanning:".cyan(), specs_dir.display());
 
     let spec_files = find_legacy_specs(&specs_dir)?;
 
@@ -136,16 +128,8 @@ pub fn run(project_path: &str, allow_exec_specs: bool) -> Result<ExitCode> {
 /// # Returns
 /// Exit code: 0 if completeness >= threshold, 1 otherwise
 pub fn run_audit(project_path: &str, allow_exec_specs: bool, threshold: f64) -> Result<ExitCode> {
-    println!(
-        "{} {}",
-        "Audit project:".cyan().bold(),
-        project_path
-    );
-    println!(
-        "{} {:.0}%",
-        "Threshold:".cyan(),
-        threshold * 100.0
-    );
+    println!("{} {}", "Audit project:".cyan().bold(), project_path);
+    println!("{} {:.0}%", "Threshold:".cyan(), threshold * 100.0);
 
     if allow_exec_specs {
         println!(
@@ -174,11 +158,7 @@ pub fn run_audit(project_path: &str, allow_exec_specs: bool, threshold: f64) -> 
         );
     }
 
-    println!(
-        "\n{} {}",
-        "Scanning:".cyan(),
-        specs_dir.display()
-    );
+    println!("\n{} {}", "Scanning:".cyan(), specs_dir.display());
 
     let spec_files = find_legacy_specs(&specs_dir)?;
 

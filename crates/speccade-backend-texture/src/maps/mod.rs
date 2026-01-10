@@ -3,18 +3,18 @@
 //! Each module generates a specific type of PBR texture map.
 
 mod albedo;
-mod roughness;
-mod metallic;
-mod normal;
 mod ao;
 mod emissive;
+mod metallic;
+mod normal;
+mod roughness;
 
 pub use albedo::AlbedoGenerator;
-pub use roughness::RoughnessGenerator;
-pub use metallic::MetallicGenerator;
-pub use normal::NormalGenerator;
 pub use ao::AoGenerator;
 pub use emissive::EmissiveGenerator;
+pub use metallic::MetallicGenerator;
+pub use normal::NormalGenerator;
+pub use roughness::RoughnessGenerator;
 
 use crate::color::Color;
 
@@ -103,7 +103,11 @@ impl TextureBuffer {
     /// Create from a grayscale buffer.
     pub fn from_grayscale(gray: &[f64], width: u32, height: u32) -> Self {
         let data: Vec<Color> = gray.iter().map(|&v| Color::gray(v)).collect();
-        Self { width, height, data }
+        Self {
+            width,
+            height,
+            data,
+        }
     }
 
     /// Convert to 8-bit RGBA bytes.

@@ -3,13 +3,13 @@
 //! These tests validate the binary format, headers, patterns, instruments,
 //! and sample data of generated XM files.
 
+use speccade_backend_music::xm::effects;
 use speccade_backend_music::xm::{
     validate_xm_bytes, XmEnvelope, XmEnvelopePoint, XmInstrument, XmModule, XmNote, XmPattern,
     XmSample, XmValidationError, XM_HEADER_SIZE, XM_INSTRUMENT_HEADER_SIZE, XM_MAGIC,
-    XM_MAX_CHANNELS, XM_MAX_INSTRUMENTS, XM_MAX_PATTERNS, XM_MAX_PATTERN_ROWS, XM_SAMPLE_HEADER_SIZE,
-    XM_VERSION,
+    XM_MAX_CHANNELS, XM_MAX_INSTRUMENTS, XM_MAX_PATTERNS, XM_MAX_PATTERN_ROWS,
+    XM_SAMPLE_HEADER_SIZE, XM_VERSION,
 };
-use speccade_backend_music::xm::effects;
 
 // =============================================================================
 // Helper Functions
@@ -93,10 +93,7 @@ fn test_xm_header_version() {
     let xm = generate_minimal_xm();
     // Version is at offset 58-59 (little-endian)
     let version = u16::from_le_bytes([xm[58], xm[59]]);
-    assert_eq!(
-        version, 0x0104,
-        "XM version should be 0x0104 (1.04)"
-    );
+    assert_eq!(version, 0x0104, "XM version should be 0x0104 (1.04)");
 }
 
 #[test]
@@ -110,8 +107,7 @@ fn test_xm_header_size_field() {
     // Header size is at offset 60-63 (little-endian u32)
     let header_size = u32::from_le_bytes([xm[60], xm[61], xm[62], xm[63]]);
     assert_eq!(
-        header_size,
-        XM_HEADER_SIZE,
+        header_size, XM_HEADER_SIZE,
         "Header size field should be {}",
         XM_HEADER_SIZE
     );
@@ -155,7 +151,10 @@ fn test_xm_header_song_name_truncation() {
 fn test_xm_header_1a_byte() {
     let xm = generate_minimal_xm();
     // 0x1A byte is at offset 37 (after 17 magic + 20 name)
-    assert_eq!(xm[37], 0x1A, "0x1A marker byte should be present after song name");
+    assert_eq!(
+        xm[37], 0x1A,
+        "0x1A marker byte should be present after song name"
+    );
 }
 
 #[test]
@@ -180,7 +179,10 @@ fn test_xm_header_song_length() {
 
     // Song length is at offset 64-65
     let song_length = u16::from_le_bytes([xm[64], xm[65]]);
-    assert_eq!(song_length, 4, "Song length should match order table entries");
+    assert_eq!(
+        song_length, 4,
+        "Song length should match order table entries"
+    );
 }
 
 #[test]
@@ -305,12 +307,22 @@ fn test_pattern_empty() {
     let packed = pattern.pack(4);
 
     // Empty pattern should have packed data
-    assert!(!packed.is_empty(), "Empty pattern should still have packed data");
+    assert!(
+        !packed.is_empty(),
+        "Empty pattern should still have packed data"
+    );
 
     // Each empty note should be encoded as 0x80 (packing byte with no data)
     // 64 rows * 4 channels = 256 empty notes = 256 bytes
-    assert_eq!(packed.len(), 256, "Empty pattern should be 256 bytes for 64x4");
-    assert!(packed.iter().all(|&b| b == 0x80), "All bytes should be 0x80 for empty notes");
+    assert_eq!(
+        packed.len(),
+        256,
+        "Empty pattern should be 256 bytes for 64x4"
+    );
+    assert!(
+        packed.iter().all(|&b| b == 0x80),
+        "All bytes should be 0x80 for empty notes"
+    );
 }
 
 #[test]
@@ -347,7 +359,7 @@ fn test_pattern_with_effects() {
     // Packing byte: 0x80 | 0x01 | 0x02 | 0x08 | 0x10 = 0x9B
     assert_eq!(packed[0], 0x9B);
     assert_eq!(packed[1], 49); // C4
-    assert_eq!(packed[2], 1);  // instrument
+    assert_eq!(packed[2], 1); // instrument
     assert_eq!(packed[3], effects::VIBRATO); // effect
     assert_eq!(packed[4], 0x34); // param
 }
@@ -361,7 +373,7 @@ fn test_pattern_note_off() {
 
     // Note-off should have note = 97
     assert_eq!(packed[0], 0x81); // 0x80 | 0x01 (has note)
-    assert_eq!(packed[1], 97);   // note-off value
+    assert_eq!(packed[1], 97); // note-off value
 }
 
 #[test]
@@ -372,7 +384,11 @@ fn test_pattern_mixed_content() {
     pattern.set_note(0, 0, XmNote::from_name("C4", 1, Some(64)));
     // Row 0, ch 1: empty (default)
     // Row 4, ch 0: note with effect
-    pattern.set_note(4, 0, XmNote::from_name("E4", 1, None).with_effect(effects::VOL_SLIDE, 0x0F));
+    pattern.set_note(
+        4,
+        0,
+        XmNote::from_name("E4", 1, None).with_effect(effects::VOL_SLIDE, 0x0F),
+    );
     // Row 4, ch 1: note-off
     pattern.set_note(4, 1, XmNote::note_off());
 
@@ -483,14 +499,22 @@ fn test_instrument_write() {
 
 #[test]
 fn test_instrument_envelope_points() {
-    let mut env = XmEnvelope::default();
-    env.enabled = true;
-    env.points = vec![
-        XmEnvelopePoint { frame: 0, value: 0 },
-        XmEnvelopePoint { frame: 10, value: 64 },
-        XmEnvelopePoint { frame: 50, value: 32 },
-    ];
-    env.sustain_point = 2;
+    let env = XmEnvelope {
+        enabled: true,
+        points: vec![
+            XmEnvelopePoint { frame: 0, value: 0 },
+            XmEnvelopePoint {
+                frame: 10,
+                value: 64,
+            },
+            XmEnvelopePoint {
+                frame: 50,
+                value: 32,
+            },
+        ],
+        sustain_point: 2,
+        ..Default::default()
+    };
 
     let sample = XmSample::new("Test", vec![0; 100], true);
     let instrument = XmInstrument::new("EnvTest", sample).with_volume_envelope(env);
@@ -566,9 +590,9 @@ fn test_instrument_vibrato_settings() {
     //       + pan_sustain(1) + pan_loop_start(1) + pan_loop_end(1) + vol_flags(1) + pan_flags(1)
     //       = 10 bytes, so vibrato starts at 235
     let vib_offset = 235;
-    assert_eq!(buf[vib_offset], 1);     // type
+    assert_eq!(buf[vib_offset], 1); // type
     assert_eq!(buf[vib_offset + 1], 10); // sweep
-    assert_eq!(buf[vib_offset + 2], 5);  // depth
+    assert_eq!(buf[vib_offset + 2], 5); // depth
     assert_eq!(buf[vib_offset + 3], 20); // rate
 }
 
@@ -665,8 +689,7 @@ fn test_sample_delta_encoding_negative() {
 #[test]
 fn test_sample_loop_points() {
     let sample_data = vec![0u8; 2000]; // 1000 samples
-    let sample = XmSample::new("LoopTest", sample_data, true)
-        .with_loop(100, 500, 1); // forward loop
+    let sample = XmSample::new("LoopTest", sample_data, true).with_loop(100, 500, 1); // forward loop
 
     let mut buf = Vec::new();
     sample.write_header(&mut buf).unwrap();
@@ -687,8 +710,7 @@ fn test_sample_loop_points() {
 #[test]
 fn test_sample_loop_pingpong() {
     let sample_data = vec![0u8; 2000];
-    let sample = XmSample::new("PingPong", sample_data, true)
-        .with_loop(0, 1000, 2); // ping-pong loop
+    let sample = XmSample::new("PingPong", sample_data, true).with_loop(0, 1000, 2); // ping-pong loop
 
     let mut buf = Vec::new();
     sample.write_header(&mut buf).unwrap();
@@ -878,7 +900,10 @@ fn test_xm_hash_different_content() {
     let hash1 = module1.compute_hash().unwrap();
     let hash2 = module2.compute_hash().unwrap();
 
-    assert_ne!(hash1, hash2, "Different modules should produce different hashes");
+    assert_ne!(
+        hash1, hash2,
+        "Different modules should produce different hashes"
+    );
 }
 
 #[test]
@@ -931,7 +956,7 @@ fn test_xm_complex_module() {
         for row in (0..64).step_by(4) {
             for ch in 0..4 {
                 let note_names = ["C4", "E4", "G4", "B4"];
-                let note = XmNote::from_name(note_names[(p + ch as usize) % 4], (ch + 1) as u8, Some(48));
+                let note = XmNote::from_name(note_names[(p + ch as usize) % 4], ch + 1, Some(48));
                 pattern.set_note(row, ch, note);
             }
         }
@@ -946,8 +971,8 @@ fn test_xm_complex_module() {
             .collect();
         let sample = XmSample::new(&format!("Wave{}", i), sample_data, false);
         let env = XmEnvelope::adsr(10, 30, 40, 50);
-        let instrument = XmInstrument::new(&format!("Synth{}", i), sample)
-            .with_volume_envelope(env);
+        let instrument =
+            XmInstrument::new(&format!("Synth{}", i), sample).with_volume_envelope(env);
         module.add_instrument(instrument);
     }
 

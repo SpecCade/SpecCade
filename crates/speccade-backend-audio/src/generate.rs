@@ -1,4 +1,4 @@
-//! Main entry point for audio SFX generation.
+//! Main entry point for audio generation.
 //!
 //! This module takes a spec and generates a WAV file deterministically.
 
@@ -7,9 +7,6 @@ use speccade_spec::recipe::audio::{
     PitchEnvelope, SweepCurve, Synthesis, Waveform,
 };
 use speccade_spec::Spec;
-
-// Legacy type alias for backwards compatibility
-type AudioSfxLayeredSynthV1Params = AudioV1Params;
 
 use crate::envelope::{AdsrEnvelope, AdsrParams};
 use crate::error::{AudioError, AudioResult};
@@ -46,65 +43,36 @@ pub struct GenerateResult {
 /// # Returns
 /// Generated WAV file and metadata
 pub fn generate(spec: &Spec) -> AudioResult<GenerateResult> {
-    let recipe = spec
-        .recipe
-        .as_ref()
-        .ok_or(AudioError::MissingRecipe)?;
+    let recipe = spec.recipe.as_ref().ok_or(AudioError::MissingRecipe)?;
 
-    // Handle both unified and legacy recipe kinds
     match recipe.kind.as_str() {
-        // Unified audio recipe (both underscore and dot variants for compatibility)
-        "audio.v1" | "audio_v1" => {
-            let params: AudioV1Params = serde_json::from_value(recipe.params.clone())
-                .map_err(|e| AudioError::InvalidRecipeType {
-                    expected: "audio.v1 or audio_v1".to_string(),
-                    found: format!("{}: {}", recipe.kind, e),
-                })?;
-            generate_from_unified_params(&params, spec.seed)
-        }
-        // Legacy SFX recipe (both underscore and dot variants)
-        "audio_sfx.layered_synth_v1" | "audio.sfx_v1" => {
-            // Legacy support
-            let params: AudioSfxLayeredSynthV1Params = serde_json::from_value(recipe.params.clone())
-                .map_err(|e| AudioError::InvalidRecipeType {
-                    expected: "audio_sfx.layered_synth_v1".to_string(),
-                    found: format!("{}: {}", recipe.kind, e),
+        "audio_v1" => {
+            let params: AudioV1Params =
+                serde_json::from_value(recipe.params.clone()).map_err(|e| {
+                    AudioError::InvalidRecipeType {
+                        expected: "audio_v1".to_string(),
+                        found: format!("{}: {}", recipe.kind, e),
+                    }
                 })?;
             generate_from_params(&params, spec.seed)
         }
         _ => Err(AudioError::InvalidRecipeType {
-            expected: "audio.v1, audio_v1, audio_sfx.layered_synth_v1, or audio.sfx_v1".to_string(),
+            expected: "audio_v1".to_string(),
             found: recipe.kind.clone(),
         }),
     }
 }
 
-/// Generates audio from parameters directly (legacy).
-///
-/// This function converts legacy AudioSfxLayeredSynthV1Params to the unified
-/// AudioV1Params format and delegates to generate_from_unified_params.
+/// Generates audio directly from parameters (without a full `Spec`).
 ///
 /// # Arguments
-/// * `params` - Audio synthesis parameters (legacy format)
+/// * `params` - Unified audio parameters
 /// * `seed` - RNG seed for deterministic generation
 ///
 /// # Returns
 /// Generated WAV file and metadata
-pub fn generate_from_params(params: &AudioSfxLayeredSynthV1Params, seed: u32) -> AudioResult<GenerateResult> {
-    // Convert legacy params to unified AudioV1Params
-    // Since we can't directly convert between different AudioLayer types,
-    // we serialize to JSON and deserialize to the unified type
-    let params_value = serde_json::to_value(params)
-        .map_err(|e| AudioError::invalid_param("params", &format!("Failed to serialize: {}", e)))?;
-
-    let mut unified_params: AudioV1Params = serde_json::from_value(params_value)
-        .map_err(|e| AudioError::invalid_param("params", &format!("Failed to deserialize: {}", e)))?;
-
-    // Legacy SFX doesn't have a base_note, leave as None (tracker uses default)
-    unified_params.base_note = None;
-
-    // Delegate to unified implementation
-    generate_from_unified_params(&unified_params, seed)
+pub fn generate_from_params(params: &AudioV1Params, seed: u32) -> AudioResult<GenerateResult> {
+    generate_from_unified_params(params, seed)
 }
 
 /// Generates audio from unified AudioV1Params.
@@ -115,10 +83,7 @@ pub fn generate_from_params(params: &AudioSfxLayeredSynthV1Params, seed: u32) ->
 ///
 /// # Returns
 /// Generated WAV file and metadata
-pub fn generate_from_unified_params(
-    params: &AudioV1Params,
-    seed: u32,
-) -> AudioResult<GenerateResult> {
+fn generate_from_unified_params(params: &AudioV1Params, seed: u32) -> AudioResult<GenerateResult> {
     let sample_rate = params.sample_rate as f64;
     let num_samples = (params.duration_seconds * sample_rate).ceil() as usize;
 
@@ -126,7 +91,9 @@ pub fn generate_from_unified_params(
     use speccade_spec::recipe::audio::NoteSpec as UnifiedNoteSpec;
     let base_note_midi: Option<u8> = match &params.base_note {
         Some(UnifiedNoteSpec::MidiNote(n)) => Some(*n),
-        Some(UnifiedNoteSpec::NoteName(name)) => speccade_spec::recipe::audio::parse_note_name(name),
+        Some(UnifiedNoteSpec::NoteName(name)) => {
+            speccade_spec::recipe::audio::parse_note_name(name)
+        }
         None => None, // Tracker uses native default (C3 for IT, C4 for XM)
     };
 
@@ -243,11 +210,14 @@ fn generate_layer(
             let color = convert_noise_type(noise_type);
 
             // Check if filter has sweep parameter
-            let has_sweep = filter.as_ref().map(|f| match f {
-                Filter::Lowpass { cutoff_end, .. } => cutoff_end.is_some(),
-                Filter::Highpass { cutoff_end, .. } => cutoff_end.is_some(),
-                Filter::Bandpass { center_end, .. } => center_end.is_some(),
-            }).unwrap_or(false);
+            let has_sweep = filter
+                .as_ref()
+                .map(|f| match f {
+                    Filter::Lowpass { cutoff_end, .. } => cutoff_end.is_some(),
+                    Filter::Highpass { cutoff_end, .. } => cutoff_end.is_some(),
+                    Filter::Bandpass { center_end, .. } => center_end.is_some(),
+                })
+                .unwrap_or(false);
 
             let mut samples = if has_sweep {
                 // Generate raw noise without filter, then apply swept filter
@@ -285,17 +255,28 @@ fn generate_layer(
             freq_sweep,
             duty,
             ..
-        } => {
-            generate_oscillator_samples(waveform, *frequency, freq_sweep.as_ref(), *duty, synthesis_samples, sample_rate, &mut rng)
-        }
+        } => generate_oscillator_samples(
+            waveform,
+            *frequency,
+            freq_sweep.as_ref(),
+            *duty,
+            synthesis_samples,
+            sample_rate,
+            &mut rng,
+        ),
 
         Synthesis::MultiOscillator {
             frequency,
             oscillators,
             freq_sweep,
-        } => {
-            generate_multi_oscillator(*frequency, oscillators, freq_sweep.as_ref(), synthesis_samples, sample_rate, &mut rng)
-        }
+        } => generate_multi_oscillator(
+            *frequency,
+            oscillators,
+            freq_sweep.as_ref(),
+            synthesis_samples,
+            sample_rate,
+            &mut rng,
+        ),
 
         Synthesis::PitchedBody {
             start_freq,
@@ -349,7 +330,11 @@ fn generate_oscillator_samples(
     match waveform {
         Waveform::Sine => {
             if let Some(s) = sweep {
-                SineSynth::with_sweep(frequency, s.end_freq, s.curve).synthesize(num_samples, sample_rate, rng)
+                SineSynth::with_sweep(frequency, s.end_freq, s.curve).synthesize(
+                    num_samples,
+                    sample_rate,
+                    rng,
+                )
             } else {
                 SineSynth::new(frequency).synthesize(num_samples, sample_rate, rng)
             }
@@ -367,14 +352,22 @@ fn generate_oscillator_samples(
         }
         Waveform::Sawtooth => {
             if let Some(s) = sweep {
-                SawSynth::with_sweep(frequency, s.end_freq, s.curve).synthesize(num_samples, sample_rate, rng)
+                SawSynth::with_sweep(frequency, s.end_freq, s.curve).synthesize(
+                    num_samples,
+                    sample_rate,
+                    rng,
+                )
             } else {
                 SawSynth::new(frequency).synthesize(num_samples, sample_rate, rng)
             }
         }
         Waveform::Triangle => {
             if let Some(s) = sweep {
-                TriangleSynth::with_sweep(frequency, s.end_freq, s.curve).synthesize(num_samples, sample_rate, rng)
+                TriangleSynth::with_sweep(frequency, s.end_freq, s.curve).synthesize(
+                    num_samples,
+                    sample_rate,
+                    rng,
+                )
             } else {
                 TriangleSynth::new(frequency).synthesize(num_samples, sample_rate, rng)
             }
@@ -416,7 +409,7 @@ fn generate_multi_oscillator(
         // Generate oscillator samples
         let mut phase_acc = PhaseAccumulator::new(sample_rate);
 
-        for i in 0..num_samples {
+        for (i, out_sample) in output.iter_mut().enumerate() {
             let base_freq = if let Some(ref sweep) = sweep_curve {
                 sweep.at(i as f64 / num_samples as f64)
             } else {
@@ -439,7 +432,7 @@ fn generate_multi_oscillator(
                 Waveform::Triangle => crate::oscillator::triangle(phase),
             };
 
-            output[i] += sample * volume;
+            *out_sample += sample * volume;
         }
     }
 
@@ -473,19 +466,20 @@ fn convert_noise_type(noise_type: &NoiseType) -> NoiseColor {
 /// Applies filter configuration to noise synthesizer.
 fn apply_noise_filter(mut synth: NoiseSynth, filter: &Filter) -> NoiseSynth {
     match filter {
-        Filter::Lowpass { cutoff, resonance, .. } => {
+        Filter::Lowpass {
+            cutoff, resonance, ..
+        } => {
             synth = synth.with_lowpass(*cutoff, *resonance);
         }
-        Filter::Highpass { cutoff, resonance, .. } => {
+        Filter::Highpass {
+            cutoff, resonance, ..
+        } => {
             synth = synth.with_highpass(*cutoff, *resonance);
         }
         Filter::Bandpass {
-            center,
-            bandwidth,
-            resonance,
-            ..
+            center, resonance, ..
         } => {
-            synth = synth.with_bandpass(*center, *bandwidth, *resonance);
+            synth = synth.with_bandpass(*center, *resonance);
         }
     }
     synth
@@ -493,15 +487,24 @@ fn apply_noise_filter(mut synth: NoiseSynth, filter: &Filter) -> NoiseSynth {
 
 /// Applies a swept filter to a buffer of samples.
 fn apply_swept_filter(samples: &mut [f64], filter: &Filter, sample_rate: f64) {
-    use crate::filter::{BiquadCoeffs, BiquadFilter, SweepMode, generate_cutoff_sweep};
+    use crate::filter::{generate_cutoff_sweep, BiquadCoeffs, BiquadFilter, SweepMode};
 
     let num_samples = samples.len();
 
     match filter {
-        Filter::Lowpass { cutoff, resonance, cutoff_end } => {
+        Filter::Lowpass {
+            cutoff,
+            resonance,
+            cutoff_end,
+        } => {
             if let Some(end_cutoff) = cutoff_end {
                 // Generate cutoff sweep
-                let cutoffs = generate_cutoff_sweep(*cutoff, *end_cutoff, num_samples, SweepMode::Exponential);
+                let cutoffs = generate_cutoff_sweep(
+                    *cutoff,
+                    *end_cutoff,
+                    num_samples,
+                    SweepMode::Exponential,
+                );
 
                 // Apply time-varying filter
                 let mut filter_state = BiquadFilter::lowpass(*cutoff, *resonance, sample_rate);
@@ -517,10 +520,19 @@ fn apply_swept_filter(samples: &mut [f64], filter: &Filter, sample_rate: f64) {
                 filter.process_buffer(samples);
             }
         }
-        Filter::Highpass { cutoff, resonance, cutoff_end } => {
+        Filter::Highpass {
+            cutoff,
+            resonance,
+            cutoff_end,
+        } => {
             if let Some(end_cutoff) = cutoff_end {
                 // Generate cutoff sweep
-                let cutoffs = generate_cutoff_sweep(*cutoff, *end_cutoff, num_samples, SweepMode::Exponential);
+                let cutoffs = generate_cutoff_sweep(
+                    *cutoff,
+                    *end_cutoff,
+                    num_samples,
+                    SweepMode::Exponential,
+                );
 
                 // Apply time-varying filter
                 let mut filter_state = BiquadFilter::highpass(*cutoff, *resonance, sample_rate);
@@ -536,25 +548,31 @@ fn apply_swept_filter(samples: &mut [f64], filter: &Filter, sample_rate: f64) {
                 filter.process_buffer(samples);
             }
         }
-        Filter::Bandpass { center, bandwidth, resonance, center_end } => {
+        Filter::Bandpass {
+            center,
+            resonance,
+            center_end,
+        } => {
             if let Some(end_center) = center_end {
                 // Generate center frequency sweep
-                let centers = generate_cutoff_sweep(*center, *end_center, num_samples, SweepMode::Exponential);
+                let centers = generate_cutoff_sweep(
+                    *center,
+                    *end_center,
+                    num_samples,
+                    SweepMode::Exponential,
+                );
 
                 // Apply time-varying filter
-                // Q = center / bandwidth for bandpass
-                let q = *center / bandwidth;
+                let q = *resonance;
                 let mut filter_state = BiquadFilter::bandpass(*center, q, sample_rate);
                 for (i, sample) in samples.iter_mut().enumerate() {
-                    // Keep Q constant, which means bandwidth scales with center
-                    let q_at_i = centers[i] / bandwidth;
-                    let coeffs = BiquadCoeffs::bandpass(centers[i], q_at_i, sample_rate);
+                    let coeffs = BiquadCoeffs::bandpass(centers[i], q, sample_rate);
                     filter_state.set_coeffs(coeffs);
                     *sample = filter_state.process(*sample);
                 }
             } else {
                 // Static filter
-                let q = *center / bandwidth;
+                let q = *resonance;
                 let mut filter = BiquadFilter::bandpass(*center, q, sample_rate);
                 filter.process_buffer(samples);
             }
@@ -643,12 +661,17 @@ fn apply_pitch_envelope_to_layer_samples(
 ) -> AudioResult<Vec<f64>> {
     use crate::oscillator::{PhaseAccumulator, TWO_PI};
 
-    let mut rng = crate::rng::create_rng(seed);
     let mut output = vec![0.0; num_samples];
 
     // Only oscillator-based synthesis can be pitch-modulated per-sample
     match &layer.synthesis {
-        Synthesis::Oscillator { waveform, frequency, detune, duty, .. } => {
+        Synthesis::Oscillator {
+            waveform,
+            frequency,
+            detune,
+            duty,
+            ..
+        } => {
             let base_frequency = *frequency;
             let detune_mult = if let Some(detune_cents) = detune {
                 2.0_f64.powf(*detune_cents / 1200.0)
@@ -663,14 +686,20 @@ fn apply_pitch_envelope_to_layer_samples(
                 let phase = phase_acc.advance(freq);
                 let sample = match waveform {
                     Waveform::Sine => crate::oscillator::sine(phase),
-                    Waveform::Square | Waveform::Pulse => crate::oscillator::square(phase, duty_cycle),
+                    Waveform::Square | Waveform::Pulse => {
+                        crate::oscillator::square(phase, duty_cycle)
+                    }
                     Waveform::Sawtooth => crate::oscillator::sawtooth(phase),
                     Waveform::Triangle => crate::oscillator::triangle(phase),
                 };
                 output[i] = sample;
             }
         }
-        Synthesis::MultiOscillator { frequency, oscillators, .. } => {
+        Synthesis::MultiOscillator {
+            frequency,
+            oscillators,
+            ..
+        } => {
             let base_frequency = *frequency;
             for osc_config in oscillators {
                 let detune_mult = if let Some(detune_cents) = osc_config.detune {
@@ -692,7 +721,9 @@ fn apply_pitch_envelope_to_layer_samples(
                     }
                     let sample = match osc_config.waveform {
                         Waveform::Sine => crate::oscillator::sine(phase),
-                        Waveform::Square | Waveform::Pulse => crate::oscillator::square(phase, duty),
+                        Waveform::Square | Waveform::Pulse => {
+                            crate::oscillator::square(phase, duty)
+                        }
                         Waveform::Sawtooth => crate::oscillator::sawtooth(phase),
                         Waveform::Triangle => crate::oscillator::triangle(phase),
                     };
@@ -720,7 +751,7 @@ mod tests {
     use speccade_spec::{AssetType, OutputFormat, OutputSpec, Spec};
 
     fn create_test_spec() -> Spec {
-        let params = AudioSfxLayeredSynthV1Params {
+        let params = AudioV1Params {
             duration_seconds: 0.5,
             sample_rate: 44100,
             master_filter: None,
@@ -746,12 +777,12 @@ mod tests {
             generate_loop_points: false,
         };
 
-        Spec::builder("test-sfx", AssetType::AudioSfx)
+        Spec::builder("test-sfx", AssetType::Audio)
             .license("CC0-1.0")
             .seed(42)
             .output(OutputSpec::primary(OutputFormat::Wav, "test.wav"))
             .recipe(Recipe::new(
-                "audio_sfx.layered_synth_v1",
+                "audio_v1",
                 serde_json::to_value(&params).unwrap(),
             ))
             .build()
@@ -779,7 +810,7 @@ mod tests {
 
     #[test]
     fn test_generate_different_seeds() {
-        let params = AudioSfxLayeredSynthV1Params {
+        let params = AudioV1Params {
             duration_seconds: 0.1,
             sample_rate: 22050,
             master_filter: None,
@@ -798,12 +829,12 @@ mod tests {
             generate_loop_points: false,
         };
 
-        let spec1 = Spec::builder("test-sfx", AssetType::AudioSfx)
+        let spec1 = Spec::builder("test-sfx", AssetType::Audio)
             .license("CC0-1.0")
             .seed(42)
             .output(OutputSpec::primary(OutputFormat::Wav, "test.wav"))
             .recipe(Recipe::new(
-                "audio_sfx.layered_synth_v1",
+                "audio_v1",
                 serde_json::to_value(&params).unwrap(),
             ))
             .build();
@@ -819,7 +850,7 @@ mod tests {
 
     #[test]
     fn test_generate_stereo() {
-        let params = AudioSfxLayeredSynthV1Params {
+        let params = AudioV1Params {
             duration_seconds: 0.1,
             sample_rate: 44100,
             master_filter: None,

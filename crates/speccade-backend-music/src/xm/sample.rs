@@ -71,7 +71,8 @@ pub fn resample_linear(data: &[u8], src_rate: u32, dst_rate: u32) -> Vec<u8> {
 
         let sample = if src_idx + 1 < num_src_samples {
             let s0 = i16::from_le_bytes([data[src_idx * 2], data[src_idx * 2 + 1]]) as f64;
-            let s1 = i16::from_le_bytes([data[(src_idx + 1) * 2], data[(src_idx + 1) * 2 + 1]]) as f64;
+            let s1 =
+                i16::from_le_bytes([data[(src_idx + 1) * 2], data[(src_idx + 1) * 2 + 1]]) as f64;
             s0 + (s1 - s0) * frac
         } else if src_idx < num_src_samples {
             i16::from_le_bytes([data[src_idx * 2], data[src_idx * 2 + 1]]) as f64

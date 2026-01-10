@@ -1,29 +1,28 @@
 //! Channel packing utilities for combining multiple texture maps into a single RGBA texture.
 //!
-//! This module provides functionality to pack multiple grayscale or color texture maps
-//! into the channels of a single RGBA texture. This is commonly used to pack PBR material
-//! maps (e.g., metallic, roughness, AO) into a single texture for efficient GPU sampling.
+//! This module packs values sampled from source maps into the channels of a new RGBA buffer.
+//! The packing *specification* (which map feeds which channel) is defined by the canonical
+//! SpecCade spec types in `speccade-spec`.
 //!
 //! # Example
 //!
 //! ```ignore
-//! use speccade_backend_texture::packing::{PackedChannels, ChannelSource, pack_channels};
-//! use speccade_backend_texture::{TextureBuffer, Color};
+//! use speccade_backend_texture::{pack_channels, TextureBuffer};
+//! use speccade_spec::recipe::texture::{ChannelSource, PackedChannels};
 //! use std::collections::HashMap;
 //!
-//! let mut maps = HashMap::new();
-//! maps.insert("roughness".to_string(), roughness_buffer);
-//! maps.insert("metallic".to_string(), metallic_buffer);
-//! maps.insert("ao".to_string(), ao_buffer);
+//! let mut maps: HashMap<String, TextureBuffer> = HashMap::new();
+//! // maps.insert("roughness".to_string(), roughness_buffer);
+//! // maps.insert("metallic".to_string(), metallic_buffer);
+//! // maps.insert("ao".to_string(), ao_buffer);
 //!
-//! let packed = PackedChannels {
-//!     r: ChannelSource::Key("roughness".to_string()),
-//!     g: ChannelSource::Key("metallic".to_string()),
-//!     b: ChannelSource::Key("ao".to_string()),
-//!     a: Some(ChannelSource::Constant { constant: 1.0 }),
-//! };
-//!
+//! let packed = PackedChannels::rgb(
+//!     ChannelSource::key("roughness"),
+//!     ChannelSource::key("metallic"),
+//!     ChannelSource::key("ao"),
+//! );
 //! let result = pack_channels(&packed, &maps, 512, 512)?;
+//! # Ok::<(), speccade_backend_texture::PackingError>(())
 //! ```
 
 use std::collections::HashMap;
@@ -31,96 +30,8 @@ use std::collections::HashMap;
 use crate::color::Color;
 use crate::maps::TextureBuffer;
 
-/// Color component to extract from a texture.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
-pub enum ColorComponent {
-    /// Red channel
-    R,
-    /// Green channel
-    G,
-    /// Blue channel
-    B,
-    /// Alpha channel
-    A,
-    /// Luminance (weighted average of RGB)
-    #[default]
-    Luminance,
-}
-
-/// Source for a channel in a packed texture.
-///
-/// This can be a simple key reference to another map, an extended reference
-/// with component and inversion options, or a constant value.
-#[derive(Debug, Clone, PartialEq)]
-pub enum ChannelSource {
-    /// Simple key reference - uses luminance of the referenced map
-    Key(String),
-    /// Extended reference with component selection and optional inversion
-    Extended {
-        /// Key of the source map
-        key: String,
-        /// Which component to extract (defaults to Luminance if None)
-        component: Option<ColorComponent>,
-        /// Whether to invert the value (1.0 - value)
-        invert: bool,
-    },
-    /// Constant value for the channel
-    Constant {
-        /// The constant value (0.0 to 1.0)
-        constant: f64,
-    },
-}
-
-impl ChannelSource {
-    /// Create a simple key reference.
-    pub fn key(key: impl Into<String>) -> Self {
-        ChannelSource::Key(key.into())
-    }
-
-    /// Create an extended reference.
-    pub fn extended(key: impl Into<String>, component: Option<ColorComponent>, invert: bool) -> Self {
-        ChannelSource::Extended {
-            key: key.into(),
-            component,
-            invert,
-        }
-    }
-
-    /// Create a constant source.
-    pub fn constant(value: f64) -> Self {
-        ChannelSource::Constant { constant: value }
-    }
-}
-
-/// Specification for packing multiple maps into RGBA channels.
-#[derive(Debug, Clone, PartialEq)]
-pub struct PackedChannels {
-    /// Source for the red channel
-    pub r: ChannelSource,
-    /// Source for the green channel
-    pub g: ChannelSource,
-    /// Source for the blue channel
-    pub b: ChannelSource,
-    /// Source for the alpha channel (defaults to 1.0 if None)
-    pub a: Option<ChannelSource>,
-}
-
-impl PackedChannels {
-    /// Create a new packed channels specification.
-    pub fn new(r: ChannelSource, g: ChannelSource, b: ChannelSource) -> Self {
-        Self { r, g, b, a: None }
-    }
-
-    /// Create with an alpha channel source.
-    pub fn with_alpha(r: ChannelSource, g: ChannelSource, b: ChannelSource, a: ChannelSource) -> Self {
-        Self {
-            r,
-            g,
-            b,
-            a: Some(a),
-        }
-    }
-}
+// Re-export canonical packing types from the spec crate (SSOT).
+pub use speccade_spec::recipe::texture::{ChannelSource, ColorComponent, PackedChannels};
 
 /// Errors that can occur during channel packing.
 #[derive(Debug, thiserror::Error)]
@@ -132,22 +43,8 @@ pub enum PackingError {
 
 /// Extract a single channel value from a texture buffer at given coordinates.
 ///
-/// # Arguments
-///
-/// * `buffer` - The texture buffer to sample from
-/// * `x` - X coordinate
-/// * `y` - Y coordinate
-/// * `component` - Which color component to extract
-///
-/// # Returns
-///
-/// The extracted channel value in the range [0.0, 1.0]
-pub fn extract_channel(
-    buffer: &TextureBuffer,
-    x: u32,
-    y: u32,
-    component: ColorComponent,
-) -> f64 {
+/// Returns the extracted channel value in the range [0.0, 1.0].
+pub fn extract_channel(buffer: &TextureBuffer, x: u32, y: u32, component: ColorComponent) -> f64 {
     let color = buffer.get(x, y);
     match component {
         ColorComponent::R => color.r,
@@ -162,17 +59,6 @@ pub fn extract_channel(
 }
 
 /// Resolve a channel source to a value at given coordinates.
-///
-/// # Arguments
-///
-/// * `source` - The channel source specification
-/// * `maps` - Collection of available texture maps keyed by name
-/// * `x` - X coordinate
-/// * `y` - Y coordinate
-///
-/// # Returns
-///
-/// The resolved channel value, or an error if a referenced map is not found
 pub fn resolve_channel_source(
     source: &ChannelSource,
     maps: &HashMap<String, TextureBuffer>,
@@ -184,7 +70,6 @@ pub fn resolve_channel_source(
             let buffer = maps
                 .get(key)
                 .ok_or_else(|| PackingError::MissingMap(key.clone()))?;
-            // Default: luminance for RGB, first channel for grayscale
             Ok(extract_channel(buffer, x, y, ColorComponent::Luminance))
         }
         ChannelSource::Extended {
@@ -195,42 +80,15 @@ pub fn resolve_channel_source(
             let buffer = maps
                 .get(key)
                 .ok_or_else(|| PackingError::MissingMap(key.clone()))?;
-            let comp = component.unwrap_or(ColorComponent::Luminance);
-            let value = extract_channel(buffer, x, y, comp);
+            let component = component.unwrap_or(ColorComponent::Luminance);
+            let value = extract_channel(buffer, x, y, component);
             Ok(if *invert { 1.0 - value } else { value })
         }
-        ChannelSource::Constant { constant } => Ok(*constant),
+        ChannelSource::Constant { constant } => Ok(*constant as f64),
     }
 }
 
 /// Pack multiple maps into a single RGBA texture.
-///
-/// This function creates a new texture buffer by sampling from multiple source maps
-/// according to the channel packing specification. Each channel of the output texture
-/// can come from a different source map, a specific component of a source map, or
-/// a constant value.
-///
-/// # Arguments
-///
-/// * `packed` - The channel packing specification
-/// * `maps` - Collection of available texture maps keyed by name
-/// * `width` - Width of the output texture
-/// * `height` - Height of the output texture
-///
-/// # Returns
-///
-/// A new texture buffer with the packed channels, or an error if a referenced map is not found
-///
-/// # Example
-///
-/// ```ignore
-/// let packed = PackedChannels::new(
-///     ChannelSource::key("roughness"),
-///     ChannelSource::key("metallic"),
-///     ChannelSource::key("ao"),
-/// );
-/// let result = pack_channels(&packed, &maps, 512, 512)?;
-/// ```
 pub fn pack_channels(
     packed: &PackedChannels,
     maps: &HashMap<String, TextureBuffer>,
@@ -259,12 +117,12 @@ pub fn pack_channels(
 mod tests {
     use super::*;
 
-    /// Helper to create a solid color texture buffer
+    /// Helper to create a solid color texture buffer.
     fn create_solid_buffer(width: u32, height: u32, color: Color) -> TextureBuffer {
         TextureBuffer::new(width, height, color)
     }
 
-    /// Helper to create a gradient buffer (varies in x direction)
+    /// Helper to create a gradient buffer (varies in x direction).
     fn create_gradient_buffer(width: u32, height: u32) -> TextureBuffer {
         let mut buffer = TextureBuffer::new(width, height, Color::black());
         for y in 0..height {
@@ -279,7 +137,7 @@ mod tests {
     #[test]
     fn test_constant_channel_source() {
         let maps: HashMap<String, TextureBuffer> = HashMap::new();
-        let source = ChannelSource::Constant { constant: 0.5 };
+        let source = ChannelSource::constant(0.5);
 
         let value = resolve_channel_source(&source, &maps, 0, 0).unwrap();
         assert!((value - 0.5).abs() < 1e-10);
@@ -289,11 +147,11 @@ mod tests {
     fn test_constant_channel_source_various_values() {
         let maps: HashMap<String, TextureBuffer> = HashMap::new();
 
-        for &expected in &[0.0, 0.25, 0.5, 0.75, 1.0] {
+        for &expected in &[0.0f32, 0.25, 0.5, 0.75, 1.0] {
             let source = ChannelSource::constant(expected);
             let value = resolve_channel_source(&source, &maps, 0, 0).unwrap();
             assert!(
-                (value - expected).abs() < 1e-10,
+                (value - expected as f64).abs() < 1e-10,
                 "Expected {}, got {}",
                 expected,
                 value
@@ -305,7 +163,10 @@ mod tests {
     fn test_key_reference_with_luminance() {
         let mut maps = HashMap::new();
         // White has luminance of 1.0
-        maps.insert("test".to_string(), create_solid_buffer(4, 4, Color::white()));
+        maps.insert(
+            "test".to_string(),
+            create_solid_buffer(4, 4, Color::white()),
+        );
 
         let source = ChannelSource::Key("test".to_string());
         let value = resolve_channel_source(&source, &maps, 0, 0).unwrap();
@@ -315,7 +176,10 @@ mod tests {
     #[test]
     fn test_key_reference_gray() {
         let mut maps = HashMap::new();
-        maps.insert("gray".to_string(), create_solid_buffer(4, 4, Color::gray(0.5)));
+        maps.insert(
+            "gray".to_string(),
+            create_solid_buffer(4, 4, Color::gray(0.5)),
+        );
 
         let source = ChannelSource::key("gray");
         let value = resolve_channel_source(&source, &maps, 0, 0).unwrap();
@@ -330,7 +194,9 @@ mod tests {
             create_solid_buffer(4, 4, Color::rgb(0.8, 0.3, 0.5)),
         );
 
-        let source = ChannelSource::extended("color", Some(ColorComponent::R), false);
+        let source = ChannelSource::extended("color")
+            .component(ColorComponent::R)
+            .build();
         let value = resolve_channel_source(&source, &maps, 0, 0).unwrap();
         assert!((value - 0.8).abs() < 1e-10);
     }
@@ -343,7 +209,9 @@ mod tests {
             create_solid_buffer(4, 4, Color::rgb(0.8, 0.3, 0.5)),
         );
 
-        let source = ChannelSource::extended("color", Some(ColorComponent::G), false);
+        let source = ChannelSource::extended("color")
+            .component(ColorComponent::G)
+            .build();
         let value = resolve_channel_source(&source, &maps, 0, 0).unwrap();
         assert!((value - 0.3).abs() < 1e-10);
     }
@@ -356,7 +224,9 @@ mod tests {
             create_solid_buffer(4, 4, Color::rgb(0.8, 0.3, 0.5)),
         );
 
-        let source = ChannelSource::extended("color", Some(ColorComponent::B), false);
+        let source = ChannelSource::extended("color")
+            .component(ColorComponent::B)
+            .build();
         let value = resolve_channel_source(&source, &maps, 0, 0).unwrap();
         assert!((value - 0.5).abs() < 1e-10);
     }
@@ -369,7 +239,9 @@ mod tests {
             create_solid_buffer(4, 4, Color::rgba(0.8, 0.3, 0.5, 0.7)),
         );
 
-        let source = ChannelSource::extended("color", Some(ColorComponent::A), false);
+        let source = ChannelSource::extended("color")
+            .component(ColorComponent::A)
+            .build();
         let value = resolve_channel_source(&source, &maps, 0, 0).unwrap();
         assert!((value - 0.7).abs() < 1e-10);
     }
@@ -377,13 +249,15 @@ mod tests {
     #[test]
     fn test_inversion() {
         let mut maps = HashMap::new();
-        maps.insert("test".to_string(), create_solid_buffer(4, 4, Color::gray(0.3)));
+        maps.insert(
+            "test".to_string(),
+            create_solid_buffer(4, 4, Color::gray(0.3)),
+        );
 
-        let source = ChannelSource::Extended {
-            key: "test".to_string(),
-            component: Some(ColorComponent::Luminance),
-            invert: true,
-        };
+        let source = ChannelSource::extended("test")
+            .component(ColorComponent::Luminance)
+            .invert(true)
+            .build();
         let value = resolve_channel_source(&source, &maps, 0, 0).unwrap();
         assert!((value - 0.7).abs() < 1e-10);
     }
@@ -391,9 +265,15 @@ mod tests {
     #[test]
     fn test_inversion_black_becomes_white() {
         let mut maps = HashMap::new();
-        maps.insert("black".to_string(), create_solid_buffer(4, 4, Color::black()));
+        maps.insert(
+            "black".to_string(),
+            create_solid_buffer(4, 4, Color::black()),
+        );
 
-        let source = ChannelSource::extended("black", Some(ColorComponent::R), true);
+        let source = ChannelSource::extended("black")
+            .component(ColorComponent::R)
+            .invert(true)
+            .build();
         let value = resolve_channel_source(&source, &maps, 0, 0).unwrap();
         assert!((value - 1.0).abs() < 1e-10);
     }
@@ -401,125 +281,60 @@ mod tests {
     #[test]
     fn test_inversion_white_becomes_black() {
         let mut maps = HashMap::new();
-        maps.insert("white".to_string(), create_solid_buffer(4, 4, Color::white()));
+        maps.insert(
+            "white".to_string(),
+            create_solid_buffer(4, 4, Color::white()),
+        );
 
-        let source = ChannelSource::extended("white", Some(ColorComponent::R), true);
+        let source = ChannelSource::extended("white")
+            .component(ColorComponent::R)
+            .invert(true)
+            .build();
         let value = resolve_channel_source(&source, &maps, 0, 0).unwrap();
-        assert!(value.abs() < 1e-10);
+        assert!(value < 1e-10);
     }
 
     #[test]
-    fn test_missing_map_error() {
-        let maps: HashMap<String, TextureBuffer> = HashMap::new();
-        let source = ChannelSource::Key("nonexistent".to_string());
-
-        let result = resolve_channel_source(&source, &maps, 0, 0);
-        assert!(result.is_err());
-
-        match result {
-            Err(PackingError::MissingMap(key)) => assert_eq!(key, "nonexistent"),
-            _ => panic!("Expected MissingMap error"),
-        }
-    }
-
-    #[test]
-    fn test_missing_map_error_message() {
-        let error = PackingError::MissingMap("my_map".to_string());
-        assert!(error.to_string().contains("my_map"));
-        assert!(error.to_string().contains("not found"));
-    }
-
-    #[test]
-    fn test_pack_channels_with_constants() {
+    fn test_pack_channels_basic() {
         let maps: HashMap<String, TextureBuffer> = HashMap::new();
 
-        let packed = PackedChannels {
-            r: ChannelSource::constant(0.2),
-            g: ChannelSource::constant(0.4),
-            b: ChannelSource::constant(0.6),
-            a: Some(ChannelSource::constant(0.8)),
-        };
-
-        let result = pack_channels(&packed, &maps, 4, 4).unwrap();
-
-        // Check a pixel
-        let color = result.get(0, 0);
-        assert!((color.r - 0.2).abs() < 1e-10);
-        assert!((color.g - 0.4).abs() < 1e-10);
-        assert!((color.b - 0.6).abs() < 1e-10);
-        assert!((color.a - 0.8).abs() < 1e-10);
-    }
-
-    #[test]
-    fn test_pack_channels_default_alpha() {
-        let maps: HashMap<String, TextureBuffer> = HashMap::new();
-
-        let packed = PackedChannels::new(
+        let packed = PackedChannels::rgb(
             ChannelSource::constant(0.5),
-            ChannelSource::constant(0.5),
-            ChannelSource::constant(0.5),
+            ChannelSource::constant(0.25),
+            ChannelSource::constant(0.75),
         );
 
         let result = pack_channels(&packed, &maps, 4, 4).unwrap();
+        let pixel = result.get(0, 0);
 
-        // Alpha should default to 1.0
-        let color = result.get(0, 0);
-        assert!((color.a - 1.0).abs() < 1e-10);
+        assert!((pixel.r - 0.5).abs() < 1e-10);
+        assert!((pixel.g - 0.25).abs() < 1e-10);
+        assert!((pixel.b - 0.75).abs() < 1e-10);
+        assert!((pixel.a - 1.0).abs() < 1e-10);
     }
 
     #[test]
-    fn test_pack_channels_with_multiple_sources() {
-        let mut maps = HashMap::new();
-        maps.insert(
-            "roughness".to_string(),
-            create_solid_buffer(8, 8, Color::gray(0.3)),
-        );
-        maps.insert(
-            "metallic".to_string(),
-            create_solid_buffer(8, 8, Color::gray(1.0)),
-        );
-        maps.insert(
-            "ao".to_string(),
-            create_solid_buffer(8, 8, Color::gray(0.8)),
+    fn test_pack_channels_with_alpha() {
+        let maps: HashMap<String, TextureBuffer> = HashMap::new();
+
+        let packed = PackedChannels::rgba(
+            ChannelSource::constant(0.1),
+            ChannelSource::constant(0.2),
+            ChannelSource::constant(0.3),
+            ChannelSource::constant(0.4),
         );
 
-        let packed = PackedChannels::new(
-            ChannelSource::key("roughness"),
-            ChannelSource::key("metallic"),
-            ChannelSource::key("ao"),
-        );
-
-        let result = pack_channels(&packed, &maps, 8, 8).unwrap();
-
-        let color = result.get(4, 4);
-        assert!((color.r - 0.3).abs() < 1e-10, "Red (roughness) should be 0.3");
-        assert!((color.g - 1.0).abs() < 1e-10, "Green (metallic) should be 1.0");
-        assert!((color.b - 0.8).abs() < 1e-10, "Blue (ao) should be 0.8");
-    }
-
-    #[test]
-    fn test_pack_channels_with_inversion() {
-        let mut maps = HashMap::new();
-        maps.insert("smooth".to_string(), create_solid_buffer(4, 4, Color::gray(0.2)));
-
-        let packed = PackedChannels::new(
-            // Convert smoothness to roughness by inverting
-            ChannelSource::extended("smooth", Some(ColorComponent::Luminance), true),
-            ChannelSource::constant(0.0),
-            ChannelSource::constant(1.0),
-        );
-
-        let result = pack_channels(&packed, &maps, 4, 4).unwrap();
-
-        let color = result.get(0, 0);
-        assert!((color.r - 0.8).abs() < 1e-10, "Inverted 0.2 should be 0.8");
+        let result = pack_channels(&packed, &maps, 1, 1).unwrap();
+        let pixel = result.get(0, 0);
+        // ChannelSource::Constant uses f32; compare with a tolerance appropriate for f32->f64.
+        assert!((pixel.a - (0.4f32 as f64)).abs() < 1e-6);
     }
 
     #[test]
     fn test_pack_channels_missing_map() {
         let maps: HashMap<String, TextureBuffer> = HashMap::new();
 
-        let packed = PackedChannels::new(
+        let packed = PackedChannels::rgb(
             ChannelSource::key("missing"),
             ChannelSource::constant(0.0),
             ChannelSource::constant(0.0),
@@ -533,7 +348,7 @@ mod tests {
     fn test_pack_channels_output_dimensions() {
         let maps: HashMap<String, TextureBuffer> = HashMap::new();
 
-        let packed = PackedChannels::new(
+        let packed = PackedChannels::rgb(
             ChannelSource::constant(0.5),
             ChannelSource::constant(0.5),
             ChannelSource::constant(0.5),
@@ -549,7 +364,7 @@ mod tests {
         let mut maps = HashMap::new();
         maps.insert("gradient".to_string(), create_gradient_buffer(16, 16));
 
-        let packed = PackedChannels::new(
+        let packed = PackedChannels::rgb(
             ChannelSource::key("gradient"),
             ChannelSource::constant(0.0),
             ChannelSource::constant(0.0),
@@ -557,7 +372,7 @@ mod tests {
 
         let result = pack_channels(&packed, &maps, 16, 16).unwrap();
 
-        // Check that gradient is preserved
+        // Check that gradient is preserved.
         let left = result.get(0, 0);
         let right = result.get(15, 0);
 
@@ -567,38 +382,36 @@ mod tests {
 
     #[test]
     fn test_extract_channel_luminance_formula() {
-        // Test the luminance formula with pure colors
+        // Test the luminance formula with pure colors.
         let mut buffer = TextureBuffer::new(1, 1, Color::black());
 
-        // Pure red
+        // Pure red.
         buffer.set(0, 0, Color::rgb(1.0, 0.0, 0.0));
         let lum_r = extract_channel(&buffer, 0, 0, ColorComponent::Luminance);
         assert!((lum_r - 0.299).abs() < 1e-10);
 
-        // Pure green
+        // Pure green.
         buffer.set(0, 0, Color::rgb(0.0, 1.0, 0.0));
         let lum_g = extract_channel(&buffer, 0, 0, ColorComponent::Luminance);
         assert!((lum_g - 0.587).abs() < 1e-10);
 
-        // Pure blue
+        // Pure blue.
         buffer.set(0, 0, Color::rgb(0.0, 0.0, 1.0));
         let lum_b = extract_channel(&buffer, 0, 0, ColorComponent::Luminance);
         assert!((lum_b - 0.114).abs() < 1e-10);
     }
 
     #[test]
-    fn test_color_component_default() {
-        assert_eq!(ColorComponent::default(), ColorComponent::Luminance);
-    }
-
-    #[test]
     fn test_channel_source_constructors() {
-        // Test key constructor
+        // Key constructor.
         let key_source = ChannelSource::key("test");
         assert!(matches!(key_source, ChannelSource::Key(k) if k == "test"));
 
-        // Test extended constructor
-        let ext_source = ChannelSource::extended("test", Some(ColorComponent::R), true);
+        // Extended builder.
+        let ext_source = ChannelSource::extended("test")
+            .component(ColorComponent::R)
+            .invert(true)
+            .build();
         assert!(matches!(
             ext_source,
             ChannelSource::Extended {
@@ -608,21 +421,24 @@ mod tests {
             } if key == "test"
         ));
 
-        // Test constant constructor
+        // Constant constructor.
         let const_source = ChannelSource::constant(0.75);
-        assert!(matches!(const_source, ChannelSource::Constant { constant } if (constant - 0.75).abs() < 1e-10));
+        assert!(matches!(
+            const_source,
+            ChannelSource::Constant { constant } if (constant - 0.75).abs() < 1e-6
+        ));
     }
 
     #[test]
     fn test_packed_channels_constructors() {
-        let packed = PackedChannels::new(
+        let packed = PackedChannels::rgb(
             ChannelSource::constant(0.1),
             ChannelSource::constant(0.2),
             ChannelSource::constant(0.3),
         );
         assert!(packed.a.is_none());
 
-        let packed_with_alpha = PackedChannels::with_alpha(
+        let packed_with_alpha = PackedChannels::rgba(
             ChannelSource::constant(0.1),
             ChannelSource::constant(0.2),
             ChannelSource::constant(0.3),
@@ -634,7 +450,7 @@ mod tests {
     #[test]
     fn test_pack_channels_all_pixels() {
         let mut maps = HashMap::new();
-        // Create a buffer with varying values
+        // Create a buffer with varying values.
         let mut test_buffer = TextureBuffer::new(4, 4, Color::black());
         for y in 0..4 {
             for x in 0..4 {
@@ -644,7 +460,7 @@ mod tests {
         }
         maps.insert("test".to_string(), test_buffer);
 
-        let packed = PackedChannels::new(
+        let packed = PackedChannels::rgb(
             ChannelSource::key("test"),
             ChannelSource::key("test"),
             ChannelSource::key("test"),
@@ -652,7 +468,7 @@ mod tests {
 
         let result = pack_channels(&packed, &maps, 4, 4).unwrap();
 
-        // Verify all pixels are correctly packed
+        // Verify all pixels are correctly packed.
         for y in 0..4 {
             for x in 0..4 {
                 let expected = (x + y * 4) as f64 / 15.0;

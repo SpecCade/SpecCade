@@ -159,8 +159,6 @@ pub enum Filter {
     Bandpass {
         /// Center frequency in Hz.
         center: f64,
-        /// Bandwidth in Hz.
-        bandwidth: f64,
         /// Resonance (Q factor).
         resonance: f64,
         /// Optional target center frequency for sweep.
@@ -184,9 +182,9 @@ impl NoteSpec {
     pub fn to_frequency(&self) -> f64 {
         match self {
             NoteSpec::MidiNote(n) => midi_to_frequency(*n),
-            NoteSpec::NoteName(name) => {
-                parse_note_name(name).map(midi_to_frequency).unwrap_or(261.63)
-            }
+            NoteSpec::NoteName(name) => parse_note_name(name)
+                .map(midi_to_frequency)
+                .unwrap_or(261.63),
         }
     }
 }

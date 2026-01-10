@@ -1,8 +1,7 @@
 //! SpecCade Audio Backend
 //!
 //! This crate implements audio generation backends for SpecCade:
-//! - `audio_sfx.layered_synth_v1` - Layered sound effects
-//! - `audio_instrument.synth_patch_v1` - Musical instrument samples
+//! - `audio_v1` - Unified audio synthesis (SFX and instruments)
 //!
 //! # Overview
 //!
@@ -67,13 +66,13 @@ pub use wav::{WavResult, WavWriter};
 mod integration_tests {
     use super::*;
     use speccade_spec::recipe::audio::{
-        AudioLayer, AudioV1Params as AudioSfxLayeredSynthV1Params, Envelope, NoiseType, Synthesis, Waveform,
+        AudioLayer, AudioV1Params, Envelope, NoiseType, Synthesis, Waveform,
     };
     use speccade_spec::recipe::Recipe;
     use speccade_spec::{AssetType, OutputFormat, OutputSpec, Spec};
 
     fn create_fm_spec(seed: u32) -> Spec {
-        let params = AudioSfxLayeredSynthV1Params {
+        let params = AudioV1Params {
             duration_seconds: 0.3,
             sample_rate: 44100,
             master_filter: None,
@@ -102,7 +101,7 @@ mod integration_tests {
             generate_loop_points: false,
         };
 
-        Spec::builder("laser-blast-01", AssetType::AudioSfx)
+        Spec::builder("laser-blast-01", AssetType::Audio)
             .license("CC0-1.0")
             .seed(seed)
             .description("Sci-fi laser blast sound effect")
@@ -113,7 +112,7 @@ mod integration_tests {
                 "sounds/laser_blast_01.wav",
             ))
             .recipe(Recipe::new(
-                "audio_sfx.layered_synth_v1",
+                "audio_v1",
                 serde_json::to_value(&params).unwrap(),
             ))
             .build()
@@ -163,7 +162,7 @@ mod integration_tests {
 
     #[test]
     fn test_noise_determinism() {
-        let params = AudioSfxLayeredSynthV1Params {
+        let params = AudioV1Params {
             duration_seconds: 0.1,
             sample_rate: 22050,
             master_filter: None,
@@ -182,12 +181,12 @@ mod integration_tests {
             generate_loop_points: false,
         };
 
-        let spec = Spec::builder("noise-test", AssetType::AudioSfx)
+        let spec = Spec::builder("noise-test", AssetType::Audio)
             .license("CC0-1.0")
             .seed(12345)
             .output(OutputSpec::primary(OutputFormat::Wav, "test.wav"))
             .recipe(Recipe::new(
-                "audio_sfx.layered_synth_v1",
+                "audio_v1",
                 serde_json::to_value(&params).unwrap(),
             ))
             .build();
@@ -201,7 +200,7 @@ mod integration_tests {
     #[test]
     fn test_noise_different_seeds() {
         let make_spec = |seed: u32| {
-            let params = AudioSfxLayeredSynthV1Params {
+            let params = AudioV1Params {
                 duration_seconds: 0.1,
                 sample_rate: 22050,
                 master_filter: None,
@@ -220,12 +219,12 @@ mod integration_tests {
                 generate_loop_points: false,
             };
 
-            Spec::builder("noise-test", AssetType::AudioSfx)
+            Spec::builder("noise-test", AssetType::Audio)
                 .license("CC0-1.0")
                 .seed(seed)
                 .output(OutputSpec::primary(OutputFormat::Wav, "test.wav"))
                 .recipe(Recipe::new(
-                    "audio_sfx.layered_synth_v1",
+                    "audio_v1",
                     serde_json::to_value(&params).unwrap(),
                 ))
                 .build()
@@ -243,7 +242,7 @@ mod integration_tests {
 
     #[test]
     fn test_stereo_output() {
-        let params = AudioSfxLayeredSynthV1Params {
+        let params = AudioV1Params {
             duration_seconds: 0.1,
             sample_rate: 44100,
             master_filter: None,
@@ -280,12 +279,12 @@ mod integration_tests {
             ],
         };
 
-        let spec = Spec::builder("stereo-test", AssetType::AudioSfx)
+        let spec = Spec::builder("stereo-test", AssetType::Audio)
             .license("CC0-1.0")
             .seed(42)
             .output(OutputSpec::primary(OutputFormat::Wav, "test.wav"))
             .recipe(Recipe::new(
-                "audio_sfx.layered_synth_v1",
+                "audio_v1",
                 serde_json::to_value(&params).unwrap(),
             ))
             .build();
@@ -298,7 +297,7 @@ mod integration_tests {
 
     #[test]
     fn test_karplus_strong() {
-        let params = AudioSfxLayeredSynthV1Params {
+        let params = AudioV1Params {
             duration_seconds: 0.5,
             sample_rate: 44100,
             master_filter: None,
@@ -323,12 +322,12 @@ mod integration_tests {
             generate_loop_points: false,
         };
 
-        let spec = Spec::builder("pluck-test", AssetType::AudioSfx)
+        let spec = Spec::builder("pluck-test", AssetType::Audio)
             .license("CC0-1.0")
             .seed(42)
             .output(OutputSpec::primary(OutputFormat::Wav, "test.wav"))
             .recipe(Recipe::new(
-                "audio_sfx.layered_synth_v1",
+                "audio_v1",
                 serde_json::to_value(&params).unwrap(),
             ))
             .build();
@@ -339,7 +338,7 @@ mod integration_tests {
 
     #[test]
     fn test_additive_synthesis() {
-        let params = AudioSfxLayeredSynthV1Params {
+        let params = AudioV1Params {
             duration_seconds: 0.3,
             sample_rate: 44100,
             master_filter: None,
@@ -358,12 +357,12 @@ mod integration_tests {
             generate_loop_points: false,
         };
 
-        let spec = Spec::builder("additive-test", AssetType::AudioSfx)
+        let spec = Spec::builder("additive-test", AssetType::Audio)
             .license("CC0-1.0")
             .seed(42)
             .output(OutputSpec::primary(OutputFormat::Wav, "test.wav"))
             .recipe(Recipe::new(
-                "audio_sfx.layered_synth_v1",
+                "audio_v1",
                 serde_json::to_value(&params).unwrap(),
             ))
             .build();

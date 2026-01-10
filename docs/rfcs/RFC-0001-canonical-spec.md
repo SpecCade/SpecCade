@@ -59,7 +59,7 @@ Each entry in `outputs[]` declares an expected artifact:
 
 | Field | Type | Values |
 |-------|------|--------|
-| `kind` | enum | `"primary"`, `"metadata"`, `"preview"` |
+| `kind` | enum | `"primary"`, `"metadata"`, `"preview"`, `"packed"` |
 | `format` | enum | `"wav"`, `"ogg"`, `"xm"`, `"it"`, `"png"`, `"glb"`, `"gltf"`, `"json"` |
 | `path` | string | Relative path under output root |
 
@@ -71,11 +71,13 @@ Each entry in `outputs[]` declares an expected artifact:
 - Must end with extension matching `format`
 - Must be unique within the spec
 
-**At least one output with `kind: "primary"` is required.**
+**At least one output with `kind: "primary"` or `kind: "packed"` is required.**
 
 ### 1.4 Variant Specification
 
-Variants allow a single spec to produce multiple related outputs with derived seeds:
+Variants are a contract field intended to allow a single spec to produce multiple related outputs with derived seeds.
+
+**Implementation note:** As of this RFC’s draft date, the CLI does not automatically expand `variants` during generation. Treat it as reserved metadata unless/until a variant-expansion workflow is defined.
 
 ```json
 {
@@ -91,12 +93,6 @@ Variants allow a single spec to produce multiple related outputs with derived se
 | `variant_id` | string | Identifier for the variant |
 | `seed_offset` | integer | Offset added to base seed for this variant |
 
-**Seed derivation:** `variant_seed = (spec.seed + variant.seed_offset) mod 2^32`
-
-Alternative (hash-based): `variant_seed = truncate_u32(BLAKE3(spec.seed || variant_id))`
-
-The hash-based approach is recommended for v1 to avoid seed collisions.
-
 ### 1.5 Recipe Structure
 
 The recipe defines how to generate the asset:
@@ -104,7 +100,7 @@ The recipe defines how to generate the asset:
 ```json
 {
   "recipe": {
-    "kind": "audio_sfx.layered_synth_v1",
+    "kind": "audio_v1",
     "params": {
       "duration_seconds": 0.5,
       "sample_rate": 44100,
@@ -119,7 +115,7 @@ The recipe defines how to generate the asset:
 | `recipe.kind` | string | Recipe kind identifier (see Section 2) |
 | `recipe.params` | object | Backend-specific parameters |
 
-**Constraint:** `recipe.kind` must be compatible with `asset_type` (e.g., `audio_sfx.*` kinds require `asset_type: "audio_sfx"`).
+**Constraint:** `recipe.kind` must be compatible with `asset_type` based on the kind prefix (e.g. `texture.*` requires `asset_type: "texture"`, and `audio_v1` requires `asset_type: "audio"`).
 
 ---
 
@@ -129,10 +125,9 @@ The recipe defines how to generate the asset:
 
 | Asset Type | Description | Primary Formats |
 |------------|-------------|-----------------|
-| `audio_sfx` | One-shot sound effects | WAV, OGG |
-| `audio_instrument` | Instrument/sample patches | WAV |
+| `audio` | One-shot sound effects and pitched samples | WAV |
 | `music` | Tracker modules | XM, IT |
-| `texture_2d` | 2D texture maps | PNG |
+| `texture` | 2D texture maps | PNG |
 | `static_mesh` | Non-skinned 3D meshes | GLB |
 | `skeletal_mesh` | Skinned meshes with skeleton | GLB |
 | `skeletal_animation` | Animation clips | GLB |
@@ -147,11 +142,11 @@ The recipe defines how to generate the asset:
 
 | Recipe Kind | Asset Type | Backend | Description |
 |-------------|------------|---------|-------------|
-| `audio_sfx.layered_synth_v1` | `audio_sfx` | Rust | Layered synthesis (FM, Karplus-Strong, noise, additive) |
-| `audio_instrument.synth_patch_v1` | `audio_instrument` | Rust | Single-note instrument samples |
+| `audio_v1` | `audio` | Rust | Unified layered synthesis (SFX + samples) |
 | `music.tracker_song_v1` | `music` | Rust | XM/IT tracker module generation |
-| `texture_2d.material_maps_v1` | `texture_2d` | Rust | Coherent PBR material maps (albedo, roughness, metallic, AO, emissive) |
-| `texture_2d.normal_map_v1` | `texture_2d` | Rust | Pattern-driven normal maps |
+| `texture.material_v1` | `texture` | Rust | Coherent PBR material maps (albedo, roughness, metallic, AO, emissive, height) |
+| `texture.normal_v1` | `texture` | Rust | Pattern-driven normal maps |
+| `texture.packed_v1` | `texture` | Rust | Unopinionated channel packing into RGBA outputs |
 | `static_mesh.blender_primitives_v1` | `static_mesh` | Blender | Primitive-based mesh generation |
 | `skeletal_mesh.blender_rigged_mesh_v1` | `skeletal_mesh` | Blender | Rigged character/prop meshes |
 | `skeletal_animation.blender_clip_v1` | `skeletal_animation` | Blender | Animation clips for armatures |
@@ -332,11 +327,11 @@ The `speccade migrate` command (v0.3+) converts legacy `.spec.py` files to canon
 
 | Legacy Category | SpecCade Asset Type | Recipe Kind |
 |-----------------|---------------------|-------------|
-| `sounds/` | `audio_sfx` | `audio_sfx.layered_synth_v1` |
-| `instruments/` | `audio_instrument` | `audio_instrument.synth_patch_v1` |
+| `sounds/` | `audio` | `audio_v1` |
+| `instruments/` | `audio` | `audio_v1` |
 | `music/` | `music` | `music.tracker_song_v1` |
-| `textures/` | `texture_2d` | `texture_2d.material_maps_v1` |
-| `normals/` | `texture_2d` | `texture_2d.normal_map_v1` |
+| `textures/` | `texture` | `texture.material_v1` |
+| `normals/` | `texture` | `texture.normal_v1` |
 | `meshes/` | `static_mesh` | `static_mesh.blender_primitives_v1` |
 | `characters/` | `skeletal_mesh` | `skeletal_mesh.blender_rigged_mesh_v1` |
 | `animations/` | `skeletal_animation` | `skeletal_animation.blender_clip_v1` |
@@ -345,13 +340,13 @@ The `speccade migrate` command (v0.3+) converts legacy `.spec.py` files to canon
 
 ## 6. Example Specs
 
-### 6.1 Audio SFX (Layered Synth)
+### 6.1 Audio (`audio_v1`)
 
 ```json
 {
   "spec_version": 1,
   "asset_id": "laser-blast-01",
-  "asset_type": "audio_sfx",
+  "asset_type": "audio",
   "license": "CC0-1.0",
   "seed": 42,
   "description": "Sci-fi laser blast sound effect",
@@ -364,7 +359,7 @@ The `speccade migrate` command (v0.3+) converts legacy `.spec.py` files to canon
     }
   ],
   "recipe": {
-    "kind": "audio_sfx.layered_synth_v1",
+    "kind": "audio_v1",
     "params": {
       "duration_seconds": 0.3,
       "sample_rate": 44100,
@@ -510,13 +505,13 @@ The `speccade migrate` command (v0.3+) converts legacy `.spec.py` files to canon
 }
 ```
 
-### 6.3 Texture 2D (Material Maps)
+### 6.3 Texture (Material Maps)
 
 ```json
 {
   "spec_version": 1,
   "asset_id": "metal-panel-01",
-  "asset_type": "texture_2d",
+  "asset_type": "texture",
   "license": "CC0-1.0",
   "seed": 98765,
   "description": "Worn metal panel texture with scratches",
@@ -544,7 +539,7 @@ The `speccade migrate` command (v0.3+) converts legacy `.spec.py` files to canon
     }
   ],
   "recipe": {
-    "kind": "texture_2d.material_maps_v1",
+    "kind": "texture.material_v1",
     "params": {
       "resolution": [1024, 1024],
       "tileable": true,
@@ -943,8 +938,8 @@ Backends SHOULD enforce resource limits:
 | Recipe Kind | Asset Type | Description |
 |-------------|------------|-------------|
 | `sprite_2d.spritesheet_v1` | `sprite_2d` | Animated sprite sheet generation |
-| `audio_sfx.sample_chain_v1` | `audio_sfx` | Sample-based sound effects |
-| `texture_2d.heightmap_v1` | `texture_2d` | Heightmap terrain textures |
+| `audio.sample_chain_v1` | `audio` | Sample-based sound effects (proposed; not implemented) |
+| `texture.heightmap_v1` | `texture` | Heightmap terrain textures (proposed; not implemented) |
 
 ### 9.2 Spec Version Evolution
 

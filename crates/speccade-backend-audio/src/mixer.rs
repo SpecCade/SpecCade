@@ -271,7 +271,10 @@ impl MixerOutput {
 /// * `headroom_db` - Headroom in dB below 0 dBFS (e.g., -3.0 for -3dB headroom)
 pub fn normalize(samples: &mut [f64], headroom_db: f64) {
     let target_peak = 10.0_f64.powf(headroom_db / 20.0);
-    let current_peak = samples.iter().map(|s| s.abs()).fold(0.0_f64, |a, b| a.max(b));
+    let current_peak = samples
+        .iter()
+        .map(|s| s.abs())
+        .fold(0.0_f64, |a, b| a.max(b));
 
     if current_peak > 0.0 {
         let gain = target_peak / current_peak;
@@ -285,8 +288,16 @@ pub fn normalize(samples: &mut [f64], headroom_db: f64) {
 pub fn normalize_stereo(stereo: &mut StereoOutput, headroom_db: f64) {
     let target_peak = 10.0_f64.powf(headroom_db / 20.0);
 
-    let left_peak = stereo.left.iter().map(|s| s.abs()).fold(0.0_f64, |a, b| a.max(b));
-    let right_peak = stereo.right.iter().map(|s| s.abs()).fold(0.0_f64, |a, b| a.max(b));
+    let left_peak = stereo
+        .left
+        .iter()
+        .map(|s| s.abs())
+        .fold(0.0_f64, |a, b| a.max(b));
+    let right_peak = stereo
+        .right
+        .iter()
+        .map(|s| s.abs())
+        .fold(0.0_f64, |a, b| a.max(b));
     let current_peak = left_peak.max(right_peak);
 
     if current_peak > 0.0 {
@@ -848,7 +859,10 @@ mod tests {
 
         // Peak should be at -3dB
         let target = 10.0_f64.powf(-3.0 / 20.0);
-        let peak = samples.iter().map(|s| s.abs()).fold(0.0_f64, |a, b| a.max(b));
+        let peak = samples
+            .iter()
+            .map(|s| s.abs())
+            .fold(0.0_f64, |a, b| a.max(b));
         assert!((peak - target).abs() < 0.01);
     }
 
@@ -866,7 +880,10 @@ mod tests {
         let mut samples = vec![2.0, -1.5, 3.0, -2.5];
         normalize(&mut samples, 0.0); // Normalize to 0dB (peak = 1.0)
 
-        let peak = samples.iter().map(|s| s.abs()).fold(0.0_f64, |a, b| a.max(b));
+        let peak = samples
+            .iter()
+            .map(|s| s.abs())
+            .fold(0.0_f64, |a, b| a.max(b));
         assert!((peak - 1.0).abs() < 0.001);
     }
 
@@ -875,7 +892,10 @@ mod tests {
         let mut samples = vec![0.01, -0.005, 0.008, -0.003];
         normalize(&mut samples, 0.0); // Normalize to 0dB
 
-        let peak = samples.iter().map(|s| s.abs()).fold(0.0_f64, |a, b| a.max(b));
+        let peak = samples
+            .iter()
+            .map(|s| s.abs())
+            .fold(0.0_f64, |a, b| a.max(b));
         assert!((peak - 1.0).abs() < 0.001);
     }
 
@@ -887,7 +907,10 @@ mod tests {
             normalize(&mut samples, headroom_db);
 
             let target = 10.0_f64.powf(headroom_db / 20.0);
-            let peak = samples.iter().map(|s| s.abs()).fold(0.0_f64, |a, b| a.max(b));
+            let peak = samples
+                .iter()
+                .map(|s| s.abs())
+                .fold(0.0_f64, |a, b| a.max(b));
             assert!(
                 (peak - target).abs() < 0.001,
                 "For {}dB, expected peak {}, got {}",
@@ -964,30 +987,32 @@ mod tests {
         let output = mixer.mix_mono();
 
         // First 50 samples should be silent
-        for i in 0..50 {
+        for (i, sample) in output.iter().take(50).enumerate() {
             assert!(
-                output[i].abs() < 0.001,
+                sample.abs() < 0.001,
                 "Sample {} should be silent but is {}",
                 i,
-                output[i]
+                sample
             );
         }
         // Samples 50-69 should have signal
-        for i in 50..70 {
+        for (i, sample) in output.iter().take(70).skip(50).enumerate() {
+            let i = i + 50;
             assert!(
-                (output[i] - 1.0).abs() < 0.001,
+                (*sample - 1.0).abs() < 0.001,
                 "Sample {} should be 1.0 but is {}",
                 i,
-                output[i]
+                sample
             );
         }
         // Samples 70-99 should be silent
-        for i in 70..100 {
+        for (i, sample) in output.iter().take(100).skip(70).enumerate() {
+            let i = i + 70;
             assert!(
-                output[i].abs() < 0.001,
+                sample.abs() < 0.001,
                 "Sample {} should be silent but is {}",
                 i,
-                output[i]
+                sample
             );
         }
     }
@@ -996,8 +1021,7 @@ mod tests {
     fn test_layer_delay_seconds() {
         let sample_rate = 44100.0;
         let mut mixer = Mixer::new(88200, sample_rate); // 2 seconds
-        let layer =
-            Layer::centered(vec![1.0; 4410], 1.0).with_delay_seconds(0.5, sample_rate); // 500ms delay
+        let layer = Layer::centered(vec![1.0; 4410], 1.0).with_delay_seconds(0.5, sample_rate); // 500ms delay
         mixer.add_layer(layer);
 
         let output = mixer.mix_mono();
@@ -1214,7 +1238,10 @@ mod tests {
 
         // Peak should be at -3dB
         let target = 10.0_f64.powf(-3.0 / 20.0);
-        let peak = samples.iter().map(|s| s.abs()).fold(0.0_f64, |a, b| a.max(b));
+        let peak = samples
+            .iter()
+            .map(|s| s.abs())
+            .fold(0.0_f64, |a, b| a.max(b));
         assert!((peak - target).abs() < 0.01);
     }
 

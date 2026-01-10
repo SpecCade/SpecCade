@@ -1,6 +1,6 @@
 //! Normal map generator.
 
-use super::{TextureBuffer, GrayscaleBuffer};
+use super::{GrayscaleBuffer, TextureBuffer};
 use crate::color::Color;
 
 /// Normal map generator.
@@ -90,7 +90,7 @@ impl NormalGenerator {
         // we need to negate gy to get correct Y-up normals.
         // A flat surface encodes as RGB (128, 128, 255) or normalized (0.5, 0.5, 1.0).
         let nx = -gx;
-        let ny = gy;  // OpenGL/wgpu Y-up convention (was -gy for DirectX Y-down)
+        let ny = gy; // OpenGL/wgpu Y-up convention (was -gy for DirectX Y-down)
         let nz = 1.0;
 
         // Normalize
@@ -100,11 +100,7 @@ impl NormalGenerator {
         let nz = nz / len;
 
         // Convert from [-1, 1] to [0, 1] for storage in RGB
-        Color::rgb(
-            (nx + 1.0) * 0.5,
-            (ny + 1.0) * 0.5,
-            (nz + 1.0) * 0.5,
-        )
+        Color::rgb((nx + 1.0) * 0.5, (ny + 1.0) * 0.5, (nz + 1.0) * 0.5)
     }
 
     /// Generate a flat normal map (pointing straight up).
@@ -144,7 +140,11 @@ impl NormalGenerator {
                 // Reoriented Normal Mapping (RNM) blend
                 // This preserves both base and detail normal directions better
                 let t = [base_n[0], base_n[1], base_n[2] + 1.0];
-                let u = [-detail_n[0] * blend_factor, -detail_n[1] * blend_factor, detail_n[2]];
+                let u = [
+                    -detail_n[0] * blend_factor,
+                    -detail_n[1] * blend_factor,
+                    detail_n[2],
+                ];
 
                 let dot = t[0] * u[0] + t[1] * u[1] + t[2] * u[2];
                 let result_n = [
@@ -154,17 +154,20 @@ impl NormalGenerator {
                 ];
 
                 // Normalize
-                let len = (result_n[0] * result_n[0] + result_n[1] * result_n[1] + result_n[2] * result_n[2]).sqrt();
+                let len = (result_n[0] * result_n[0]
+                    + result_n[1] * result_n[1]
+                    + result_n[2] * result_n[2])
+                    .sqrt();
                 let nx = result_n[0] / len;
                 let ny = result_n[1] / len;
                 let nz = result_n[2] / len;
 
                 // Convert back to [0, 1]
-                result.set(x, y, Color::rgb(
-                    (nx + 1.0) * 0.5,
-                    (ny + 1.0) * 0.5,
-                    (nz + 1.0) * 0.5,
-                ));
+                result.set(
+                    x,
+                    y,
+                    Color::rgb((nx + 1.0) * 0.5, (ny + 1.0) * 0.5, (nz + 1.0) * 0.5),
+                );
             }
         }
 

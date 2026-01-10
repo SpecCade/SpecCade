@@ -34,12 +34,19 @@ pub struct MusicTrackerSongV1Params {
     pub bpm: u16,
     /// Tracker speed (ticks per row, 1-31).
     pub speed: u8,
-    /// Number of channels (1-32).
+    /// Number of channels.
+    ///
+    /// - XM: 1-32
+    /// - IT: 1-64
     pub channels: u8,
     /// Whether the song should loop.
+    ///
+    /// Note: currently applied for XM via `restart_position`. IT output currently ignores looping.
     #[serde(default)]
     pub r#loop: bool,
-    /// Position in arrangement to restart from when looping (IT only).
+    /// Restart position (order-table index) to jump to when looping.
+    ///
+    /// Note: currently used for XM only.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub restart_position: Option<u16>,
     /// Instrument definitions.

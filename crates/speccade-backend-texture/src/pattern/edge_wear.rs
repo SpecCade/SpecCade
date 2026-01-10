@@ -3,7 +3,7 @@
 //! Creates worn/weathered effects at edges and corners.
 
 use super::Pattern2D;
-use crate::noise::{PerlinNoise, Noise2D, Fbm};
+use crate::noise::{Fbm, Noise2D, PerlinNoise};
 
 /// Edge wear pattern configuration.
 ///
@@ -196,7 +196,7 @@ mod tests {
         for y in 0..100 {
             for x in 0..100 {
                 let v = pattern.sample(x, y);
-                assert!(v >= 0.0 && v <= 1.0);
+                assert!((0.0..=1.0).contains(&v));
             }
         }
     }

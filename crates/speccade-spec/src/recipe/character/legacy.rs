@@ -63,19 +63,14 @@ impl Default for BaseRadius {
 }
 
 /// Skinning type for a part.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
 #[serde(rename_all = "snake_case")]
 pub enum SkinningType {
     /// Soft skinning with smooth weight blending.
+    #[default]
     Soft,
     /// Rigid skinning with 100% weight to one bone.
     Rigid,
-}
-
-impl Default for SkinningType {
-    fn default() -> Self {
-        SkinningType::Soft
-    }
 }
 
 /// Sub-part for thumbs/fingers - can be a single dict or list of dicts.

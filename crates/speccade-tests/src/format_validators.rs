@@ -40,7 +40,11 @@ impl FormatError {
 impl fmt::Display for FormatError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         if let Some(offset) = self.offset {
-            write!(f, "{} error at offset {}: {}", self.format, offset, self.message)
+            write!(
+                f,
+                "{} error at offset {}: {}",
+                self.format, offset, self.message
+            )
         } else {
             write!(f, "{} error: {}", self.format, self.message)
         }
@@ -88,7 +92,11 @@ pub fn validate_wav(data: &[u8]) -> Result<WavInfo, FormatError> {
     if data.len() < MIN_HEADER_SIZE {
         return Err(FormatError::new(
             "WAV",
-            format!("File too short: {} bytes (minimum {} required)", data.len(), MIN_HEADER_SIZE),
+            format!(
+                "File too short: {} bytes (minimum {} required)",
+                data.len(),
+                MIN_HEADER_SIZE
+            ),
         ));
     }
 
@@ -96,7 +104,10 @@ pub fn validate_wav(data: &[u8]) -> Result<WavInfo, FormatError> {
     if &data[0..4] != b"RIFF" {
         return Err(FormatError::at_offset(
             "WAV",
-            format!("Invalid RIFF header: expected 'RIFF', got {:?}", &data[0..4]),
+            format!(
+                "Invalid RIFF header: expected 'RIFF', got {:?}",
+                &data[0..4]
+            ),
             0,
         ));
     }
@@ -105,7 +116,10 @@ pub fn validate_wav(data: &[u8]) -> Result<WavInfo, FormatError> {
     if &data[8..12] != b"WAVE" {
         return Err(FormatError::at_offset(
             "WAV",
-            format!("Invalid WAVE format: expected 'WAVE', got {:?}", &data[8..12]),
+            format!(
+                "Invalid WAVE format: expected 'WAVE', got {:?}",
+                &data[8..12]
+            ),
             8,
         ));
     }
@@ -256,17 +270,17 @@ pub fn validate_png(data: &[u8]) -> Result<PngInfo, FormatError> {
     if data.len() < MIN_HEADER_SIZE {
         return Err(FormatError::new(
             "PNG",
-            format!("File too short: {} bytes (minimum {} required)", data.len(), MIN_HEADER_SIZE),
+            format!(
+                "File too short: {} bytes (minimum {} required)",
+                data.len(),
+                MIN_HEADER_SIZE
+            ),
         ));
     }
 
     // Check PNG signature
     if data[0..8] != PNG_SIGNATURE {
-        return Err(FormatError::at_offset(
-            "PNG",
-            "Invalid PNG signature",
-            0,
-        ));
+        return Err(FormatError::at_offset("PNG", "Invalid PNG signature", 0));
     }
 
     // Parse IHDR chunk (must be first chunk after signature)
@@ -310,10 +324,10 @@ pub fn validate_png(data: &[u8]) -> Result<PngInfo, FormatError> {
     // Validate color type and bit depth combination
     let valid_combination = match color_type {
         0 => matches!(bit_depth, 1 | 2 | 4 | 8 | 16), // Grayscale
-        2 => matches!(bit_depth, 8 | 16),              // RGB
-        3 => matches!(bit_depth, 1 | 2 | 4 | 8),       // Indexed
-        4 => matches!(bit_depth, 8 | 16),              // Grayscale+Alpha
-        6 => matches!(bit_depth, 8 | 16),              // RGBA
+        2 => matches!(bit_depth, 8 | 16),             // RGB
+        3 => matches!(bit_depth, 1 | 2 | 4 | 8),      // Indexed
+        4 => matches!(bit_depth, 8 | 16),             // Grayscale+Alpha
+        6 => matches!(bit_depth, 8 | 16),             // RGBA
         _ => false,
     };
 
@@ -405,7 +419,11 @@ pub fn validate_xm(data: &[u8]) -> Result<XmInfo, FormatError> {
     if data.len() < MIN_HEADER_SIZE {
         return Err(FormatError::new(
             "XM",
-            format!("File too short: {} bytes (minimum {} required)", data.len(), MIN_HEADER_SIZE),
+            format!(
+                "File too short: {} bytes (minimum {} required)",
+                data.len(),
+                MIN_HEADER_SIZE
+            ),
         ));
     }
 
@@ -442,7 +460,10 @@ pub fn validate_xm(data: &[u8]) -> Result<XmInfo, FormatError> {
     if 60 + header_size > data.len() {
         return Err(FormatError::new(
             "XM",
-            format!("Truncated header: declared size {} exceeds file", header_size),
+            format!(
+                "Truncated header: declared size {} exceeds file",
+                header_size
+            ),
         ));
     }
 
@@ -536,7 +557,11 @@ pub fn validate_it(data: &[u8]) -> Result<ItInfo, FormatError> {
     if data.len() < MIN_HEADER_SIZE {
         return Err(FormatError::new(
             "IT",
-            format!("File too short: {} bytes (minimum {} required)", data.len(), MIN_HEADER_SIZE),
+            format!(
+                "File too short: {} bytes (minimum {} required)",
+                data.len(),
+                MIN_HEADER_SIZE
+            ),
         ));
     }
 
@@ -635,12 +660,16 @@ pub fn validate_glb(data: &[u8]) -> Result<GlbInfo, FormatError> {
     const MIN_HEADER_SIZE: usize = 12;
     const CHUNK_HEADER_SIZE: usize = 8;
     const JSON_CHUNK_TYPE: u32 = 0x4E4F534A; // "JSON" in little-endian
-    const BIN_CHUNK_TYPE: u32 = 0x004E4942;  // "BIN\0" in little-endian
+    const BIN_CHUNK_TYPE: u32 = 0x004E4942; // "BIN\0" in little-endian
 
     if data.len() < MIN_HEADER_SIZE {
         return Err(FormatError::new(
             "GLB",
-            format!("File too short: {} bytes (minimum {} required)", data.len(), MIN_HEADER_SIZE),
+            format!(
+                "File too short: {} bytes (minimum {} required)",
+                data.len(),
+                MIN_HEADER_SIZE
+            ),
         ));
     }
 
@@ -668,7 +697,11 @@ pub fn validate_glb(data: &[u8]) -> Result<GlbInfo, FormatError> {
     if length as usize > data.len() {
         return Err(FormatError::new(
             "GLB",
-            format!("Declared length {} exceeds actual file size {}", length, data.len()),
+            format!(
+                "Declared length {} exceeds actual file size {}",
+                length,
+                data.len()
+            ),
         ));
     }
 
@@ -732,9 +765,7 @@ fn extract_string(data: &[u8]) -> String {
     let end = data.iter().position(|&b| b == 0).unwrap_or(data.len());
 
     // Convert to string and trim trailing spaces
-    String::from_utf8_lossy(&data[..end])
-        .trim_end()
-        .to_string()
+    String::from_utf8_lossy(&data[..end]).trim_end().to_string()
 }
 
 #[cfg(test)]
@@ -837,8 +868,8 @@ mod tests {
         // RGB with 1-bit depth is invalid
         let mut png = create_test_png(64, 64, 1, 2);
         // Note: The test helper creates a valid combination, so we need to manually corrupt it
-        png[24] = 1;  // bit_depth
-        png[25] = 2;  // color_type RGB
+        png[24] = 1; // bit_depth
+        png[25] = 2; // color_type RGB
         let err = validate_png(&png).unwrap_err();
         assert!(err.message.contains("color type") || err.message.contains("bit depth"));
     }
@@ -950,7 +981,12 @@ mod tests {
 
     // ========== Helper Functions ==========
 
-    fn create_test_wav(channels: u16, sample_rate: u32, bits_per_sample: u16, num_samples: usize) -> Vec<u8> {
+    fn create_test_wav(
+        channels: u16,
+        sample_rate: u32,
+        bits_per_sample: u16,
+        num_samples: usize,
+    ) -> Vec<u8> {
         let block_align = channels * bits_per_sample / 8;
         let byte_rate = sample_rate * block_align as u32;
         let data_size = num_samples * block_align as usize;
@@ -966,7 +1002,7 @@ mod tests {
         // fmt chunk
         wav.extend_from_slice(b"fmt ");
         wav.extend_from_slice(&16u32.to_le_bytes()); // chunk size
-        wav.extend_from_slice(&1u16.to_le_bytes());  // audio format (PCM)
+        wav.extend_from_slice(&1u16.to_le_bytes()); // audio format (PCM)
         wav.extend_from_slice(&channels.to_le_bytes());
         wav.extend_from_slice(&sample_rate.to_le_bytes());
         wav.extend_from_slice(&byte_rate.to_le_bytes());
@@ -997,7 +1033,7 @@ mod tests {
         png.push(0); // compression
         png.push(0); // filter
         png.push(0); // interlace
-        // CRC (simplified - just zeros for testing)
+                     // CRC (simplified - just zeros for testing)
         png.extend_from_slice(&[0u8; 4]);
 
         // IEND chunk
@@ -1058,7 +1094,13 @@ mod tests {
         xm
     }
 
-    fn create_test_it(name: &str, orders: u16, instruments: u16, samples: u16, patterns: u16) -> Vec<u8> {
+    fn create_test_it(
+        name: &str,
+        orders: u16,
+        instruments: u16,
+        samples: u16,
+        patterns: u16,
+    ) -> Vec<u8> {
         let mut it = vec![0u8; 192 + orders as usize];
 
         // Magic
@@ -1118,14 +1160,10 @@ mod tests {
         // Reserved (60-63)
 
         // Channel pan (64-127)
-        for i in 64..128 {
-            it[i] = 32; // Center pan
-        }
+        it[64..128].fill(32); // Center pan
 
         // Channel volume (128-191)
-        for i in 128..192 {
-            it[i] = 64; // Full volume
-        }
+        it[128..192].fill(64); // Full volume
 
         it
     }
@@ -1136,7 +1174,14 @@ mod tests {
 
         let bin_padded_len = bin_size.map(|s| (s + 3) & !3).unwrap_or(0);
 
-        let total_len = 12 + 8 + json_padded_len + if bin_size.is_some() { 8 + bin_padded_len } else { 0 };
+        let total_len = 12
+            + 8
+            + json_padded_len
+            + if bin_size.is_some() {
+                8 + bin_padded_len
+            } else {
+                0
+            };
 
         let mut glb = Vec::with_capacity(total_len);
 
@@ -1150,9 +1195,7 @@ mod tests {
         glb.extend_from_slice(&0x4E4F534Au32.to_le_bytes()); // "JSON"
         glb.extend_from_slice(json_bytes);
         // Padding
-        for _ in json_bytes.len()..json_padded_len {
-            glb.push(0x20); // Space padding for JSON
-        }
+        glb.resize(glb.len() + (json_padded_len - json_bytes.len()), 0x20); // Space padding for JSON
 
         // Binary chunk (optional)
         if let Some(size) = bin_size {
@@ -1172,7 +1215,10 @@ mod tests {
         assert_eq!(format!("{}", err), "TEST error: something went wrong");
 
         let err_offset = FormatError::at_offset("WAV", "bad header", 12);
-        assert_eq!(format!("{}", err_offset), "WAV error at offset 12: bad header");
+        assert_eq!(
+            format!("{}", err_offset),
+            "WAV error at offset 12: bad header"
+        );
     }
 
     #[test]

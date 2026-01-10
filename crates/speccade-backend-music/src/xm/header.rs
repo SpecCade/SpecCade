@@ -160,11 +160,13 @@ mod tests {
 
     #[test]
     fn test_header_write() {
-        let mut header = XmHeader::default();
-        header.name = "Test Song".to_string();
-        header.num_channels = 8;
-        header.num_patterns = 4;
-        header.num_instruments = 2;
+        let header = XmHeader {
+            name: "Test Song".to_string(),
+            num_channels: 8,
+            num_patterns: 4,
+            num_instruments: 2,
+            ..Default::default()
+        };
 
         let mut buf = Vec::new();
         header.write(&mut buf).unwrap();

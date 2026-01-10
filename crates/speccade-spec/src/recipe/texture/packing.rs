@@ -170,12 +170,7 @@ impl PackedChannels {
     }
 
     /// Creates a new PackedChannels with the given RGBA sources.
-    pub fn rgba(
-        r: ChannelSource,
-        g: ChannelSource,
-        b: ChannelSource,
-        a: ChannelSource,
-    ) -> Self {
+    pub fn rgba(r: ChannelSource, g: ChannelSource, b: ChannelSource, a: ChannelSource) -> Self {
         Self {
             r,
             g,
@@ -237,7 +232,10 @@ impl PackedChannels {
     /// * `Ok(())` if all constant values are valid
     /// * `Err(CommonValidationError)` if any constant is out of range
     pub fn validate_constants(&self) -> Result<(), CommonValidationError> {
-        fn check_constant(source: &ChannelSource, channel: &str) -> Result<(), CommonValidationError> {
+        fn check_constant(
+            source: &ChannelSource,
+            channel: &str,
+        ) -> Result<(), CommonValidationError> {
             if let ChannelSource::Constant { constant } = source {
                 if !constant.is_finite() {
                     return Err(CommonValidationError::new(format!(
@@ -287,7 +285,12 @@ impl PackedChannels {
             rgba_keys: &HashSet<&str>,
             rgb_keys: &HashSet<&str>,
         ) -> Result<(), CommonValidationError> {
-            if let ChannelSource::Extended { key, component: Some(comp), .. } = source {
+            if let ChannelSource::Extended {
+                key,
+                component: Some(comp),
+                ..
+            } = source
+            {
                 // Check if extracting alpha from a non-RGBA map
                 if comp.requires_alpha()
                     && rgb_keys.contains(key.as_str())

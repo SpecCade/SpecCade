@@ -8,7 +8,7 @@
 //!
 //! ## Recipe Kind
 //!
-//! - `audio.v1` - Unified audio recipe with layered synthesis
+//! - `audio_v1` - Unified audio recipe with layered synthesis
 
 pub mod synthesis;
 

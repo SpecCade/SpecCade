@@ -114,13 +114,28 @@ fn main() -> ExitCode {
 
     let result = match cli.command {
         Commands::Validate { spec, artifacts } => commands::validate::run(&spec, artifacts),
-        Commands::Generate { spec, out_root } => commands::generate::run(&spec, out_root.as_deref()),
-        Commands::GenerateAll { spec_dir, out_root, include_blender, verbose } => {
-            commands::generate_all::run(spec_dir.as_deref(), out_root.as_deref(), include_blender, verbose)
+        Commands::Generate { spec, out_root } => {
+            commands::generate::run(&spec, out_root.as_deref())
         }
+        Commands::GenerateAll {
+            spec_dir,
+            out_root,
+            include_blender,
+            verbose,
+        } => commands::generate_all::run(
+            spec_dir.as_deref(),
+            out_root.as_deref(),
+            include_blender,
+            verbose,
+        ),
         Commands::Preview { spec, out_root } => commands::preview::run(&spec, out_root.as_deref()),
         Commands::Doctor => commands::doctor::run(),
-        Commands::Migrate { project, allow_exec_specs, audit, audit_threshold } => {
+        Commands::Migrate {
+            project,
+            allow_exec_specs,
+            audit,
+            audit_threshold,
+        } => {
             if audit {
                 commands::migrate::run_audit(&project, allow_exec_specs, audit_threshold)
             } else {
@@ -157,14 +172,9 @@ mod tests {
 
     #[test]
     fn test_cli_parses_validate_with_artifacts() {
-        let cli = Cli::try_parse_from([
-            "speccade",
-            "validate",
-            "--spec",
-            "spec.json",
-            "--artifacts",
-        ])
-        .unwrap();
+        let cli =
+            Cli::try_parse_from(["speccade", "validate", "--spec", "spec.json", "--artifacts"])
+                .unwrap();
         match cli.command {
             Commands::Validate { spec, artifacts } => {
                 assert_eq!(spec, "spec.json");
@@ -202,15 +212,15 @@ mod tests {
 
     #[test]
     fn test_cli_parses_migrate_basic() {
-        let cli = Cli::try_parse_from([
-            "speccade",
-            "migrate",
-            "--project",
-            "/path/to/project",
-        ])
-        .unwrap();
+        let cli =
+            Cli::try_parse_from(["speccade", "migrate", "--project", "/path/to/project"]).unwrap();
         match cli.command {
-            Commands::Migrate { project, allow_exec_specs, audit, audit_threshold } => {
+            Commands::Migrate {
+                project,
+                allow_exec_specs,
+                audit,
+                audit_threshold,
+            } => {
                 assert_eq!(project, "/path/to/project");
                 assert!(!allow_exec_specs);
                 assert!(!audit);
@@ -231,7 +241,12 @@ mod tests {
         ])
         .unwrap();
         match cli.command {
-            Commands::Migrate { project, allow_exec_specs, audit, audit_threshold } => {
+            Commands::Migrate {
+                project,
+                allow_exec_specs,
+                audit,
+                audit_threshold,
+            } => {
                 assert_eq!(project, "/path/to/project");
                 assert!(!allow_exec_specs);
                 assert!(audit);
@@ -254,7 +269,12 @@ mod tests {
         ])
         .unwrap();
         match cli.command {
-            Commands::Migrate { project, allow_exec_specs, audit, audit_threshold } => {
+            Commands::Migrate {
+                project,
+                allow_exec_specs,
+                audit,
+                audit_threshold,
+            } => {
                 assert_eq!(project, "/path/to/project");
                 assert!(!allow_exec_specs);
                 assert!(audit);
@@ -275,7 +295,12 @@ mod tests {
         ])
         .unwrap();
         match cli.command {
-            Commands::Migrate { project, allow_exec_specs, audit, audit_threshold } => {
+            Commands::Migrate {
+                project,
+                allow_exec_specs,
+                audit,
+                audit_threshold,
+            } => {
                 assert_eq!(project, "/path/to/project");
                 assert!(allow_exec_specs);
                 assert!(!audit);
@@ -289,7 +314,12 @@ mod tests {
     fn test_cli_parses_generate_all_defaults() {
         let cli = Cli::try_parse_from(["speccade", "generate-all"]).unwrap();
         match cli.command {
-            Commands::GenerateAll { spec_dir, out_root, include_blender, verbose } => {
+            Commands::GenerateAll {
+                spec_dir,
+                out_root,
+                include_blender,
+                verbose,
+            } => {
                 assert!(spec_dir.is_none());
                 assert!(out_root.is_none());
                 assert!(!include_blender);
@@ -313,7 +343,12 @@ mod tests {
         ])
         .unwrap();
         match cli.command {
-            Commands::GenerateAll { spec_dir, out_root, include_blender, verbose } => {
+            Commands::GenerateAll {
+                spec_dir,
+                out_root,
+                include_blender,
+                verbose,
+            } => {
                 assert_eq!(spec_dir.as_deref(), Some("/path/to/specs"));
                 assert_eq!(out_root.as_deref(), Some("/path/to/output"));
                 assert!(include_blender);

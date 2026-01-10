@@ -2,7 +2,7 @@
 //!
 //! Pure Rust implementation of 2D Perlin noise for deterministic output.
 
-use super::{Noise2D, quintic, lerp};
+use super::{lerp, quintic, Noise2D};
 use crate::rng::DeterministicRng;
 
 /// 2D Perlin noise generator.

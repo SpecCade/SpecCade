@@ -57,13 +57,7 @@ impl HarmonicSynth {
     pub fn square(base_freq: f64, num_harmonics: usize) -> Self {
         // Square: 1/n amplitude for odd harmonics only
         let harmonics: Vec<f64> = (1..=num_harmonics * 2)
-            .map(|n| {
-                if n % 2 == 1 {
-                    1.0 / n as f64
-                } else {
-                    0.0
-                }
-            })
+            .map(|n| if n % 2 == 1 { 1.0 / n as f64 } else { 0.0 })
             .collect();
         Self::new(base_freq, harmonics)
     }
@@ -158,7 +152,10 @@ impl Synthesizer for HarmonicSynth {
         }
 
         // Normalize
-        let max = output.iter().map(|s| s.abs()).fold(0.0_f64, |a, b| a.max(b));
+        let max = output
+            .iter()
+            .map(|s| s.abs())
+            .fold(0.0_f64, |a, b| a.max(b));
         if max > 0.0 {
             for s in &mut output {
                 *s /= max;
@@ -217,7 +214,12 @@ impl Synthesizer for PartialSynth {
         let dt = 1.0 / sample_rate;
         let two_pi = 2.0 * PI;
 
-        for (i, (&freq, &amp)) in self.frequencies.iter().zip(self.amplitudes.iter()).enumerate() {
+        for (i, (&freq, &amp)) in self
+            .frequencies
+            .iter()
+            .zip(self.amplitudes.iter())
+            .enumerate()
+        {
             if amp.abs() < 1e-6 {
                 continue;
             }
@@ -231,7 +233,10 @@ impl Synthesizer for PartialSynth {
         }
 
         // Normalize
-        let max = output.iter().map(|s| s.abs()).fold(0.0_f64, |a, b| a.max(b));
+        let max = output
+            .iter()
+            .map(|s| s.abs())
+            .fold(0.0_f64, |a, b| a.max(b));
         if max > 0.0 {
             for s in &mut output {
                 *s /= max;
@@ -255,7 +260,7 @@ mod tests {
 
         assert_eq!(samples.len(), 1000);
         for &s in &samples {
-            assert!(s >= -1.0 && s <= 1.0);
+            assert!((-1.0..=1.0).contains(&s));
         }
     }
 

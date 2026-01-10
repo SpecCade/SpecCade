@@ -30,10 +30,7 @@ trait EnvelopePoint {
 
 impl EnvelopePoint for XmEnvelopePoint {
     fn new(tick: u16, value: u16) -> Self {
-        XmEnvelopePoint {
-            frame: tick,
-            value,
-        }
+        XmEnvelopePoint { frame: tick, value }
     }
 }
 

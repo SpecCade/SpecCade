@@ -187,13 +187,13 @@ fn test_it_options_stereo_serialization() {
 
     let json = serde_json::to_string(&opts).unwrap();
     let parsed: ItOptions = serde_json::from_str(&json).unwrap();
-    assert_eq!(parsed.stereo, false);
+    assert!(!parsed.stereo);
 }
 
 #[test]
 fn test_it_options_stereo_default() {
     let opts = ItOptions::default();
-    assert_eq!(opts.stereo, true);
+    assert!(opts.stereo);
 }
 
 #[test]
@@ -335,7 +335,7 @@ fn test_full_song_serialization_roundtrip() {
     assert_eq!(parsed.bpm, 125);
     assert_eq!(parsed.speed, 6);
     assert_eq!(parsed.channels, 8);
-    assert_eq!(parsed.r#loop, true);
+    assert!(parsed.r#loop);
     assert_eq!(parsed.instruments.len(), 1);
     assert_eq!(parsed.patterns.len(), 1);
     assert_eq!(parsed.arrangement.len(), 1);
@@ -364,7 +364,7 @@ fn test_full_it_song_with_it_options() {
     assert_eq!(parsed.format, TrackerFormat::It);
     assert!(parsed.it_options.is_some());
     let opts = parsed.it_options.unwrap();
-    assert_eq!(opts.stereo, false);
+    assert!(!opts.stereo);
     assert_eq!(opts.global_volume, 96);
     assert_eq!(opts.mix_volume, 64);
 }

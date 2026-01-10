@@ -3,10 +3,8 @@
 //! This module tests determinism, value ranges, tileability, seed variation,
 //! and algorithm-specific properties for all noise generators.
 
-use speccade_backend_texture::noise::{
-    Fbm, Noise2D, PerlinNoise, SimplexNoise, WorleyNoise,
-};
 use speccade_backend_texture::noise::tile_coord;
+use speccade_backend_texture::noise::{Fbm, Noise2D, PerlinNoise, SimplexNoise, WorleyNoise};
 use speccade_backend_texture::rng::DeterministicRng;
 
 // ============================================================================
@@ -19,7 +17,10 @@ fn test_simplex_determinism() {
     let noise = SimplexNoise::new(12345);
     let v1 = noise.sample(10.5, 20.3);
     let v2 = noise.sample(10.5, 20.3);
-    assert_eq!(v1, v2, "SimplexNoise should return identical values for identical inputs");
+    assert_eq!(
+        v1, v2,
+        "SimplexNoise should return identical values for identical inputs"
+    );
 }
 
 /// Verify that recreating SimplexNoise with same seed produces same output.
@@ -45,7 +46,10 @@ fn test_perlin_determinism() {
     let noise = PerlinNoise::new(12345);
     let v1 = noise.sample(10.5, 20.3);
     let v2 = noise.sample(10.5, 20.3);
-    assert_eq!(v1, v2, "PerlinNoise should return identical values for identical inputs");
+    assert_eq!(
+        v1, v2,
+        "PerlinNoise should return identical values for identical inputs"
+    );
 }
 
 /// Verify that recreating PerlinNoise with same seed produces same output.
@@ -71,7 +75,10 @@ fn test_worley_determinism() {
     let noise = WorleyNoise::new(12345);
     let v1 = noise.sample(10.5, 20.3);
     let v2 = noise.sample(10.5, 20.3);
-    assert_eq!(v1, v2, "WorleyNoise should return identical values for identical inputs");
+    assert_eq!(
+        v1, v2,
+        "WorleyNoise should return identical values for identical inputs"
+    );
 }
 
 /// Verify that recreating WorleyNoise with same seed produces same output.
@@ -97,7 +104,10 @@ fn test_fbm_determinism() {
     let noise = Fbm::new(SimplexNoise::new(12345));
     let v1 = noise.sample(10.5, 20.3);
     let v2 = noise.sample(10.5, 20.3);
-    assert_eq!(v1, v2, "FBM should return identical values for identical inputs");
+    assert_eq!(
+        v1, v2,
+        "FBM should return identical values for identical inputs"
+    );
 }
 
 /// Verify that recreating FBM with same seed produces same output.
@@ -149,9 +159,11 @@ fn test_simplex_value_range() {
         let y = rng.gen_f64() * 100.0 - 50.0;
         let v = noise.sample(x, y);
         assert!(
-            v >= -1.5 && v <= 1.5,
+            (-1.5..=1.5).contains(&v),
             "SimplexNoise value {} at ({}, {}) out of expected range [-1.5, 1.5]",
-            v, x, y
+            v,
+            x,
+            y
         );
     }
 }
@@ -175,7 +187,11 @@ fn test_simplex_uses_full_range() {
     }
 
     // Should use a substantial portion of the [-1, 1] range
-    assert!(min < -0.5, "SimplexNoise min ({}) should be below -0.5", min);
+    assert!(
+        min < -0.5,
+        "SimplexNoise min ({}) should be below -0.5",
+        min
+    );
     assert!(max > 0.5, "SimplexNoise max ({}) should be above 0.5", max);
 }
 
@@ -190,9 +206,11 @@ fn test_perlin_value_range() {
         let y = rng.gen_f64() * 100.0 - 50.0;
         let v = noise.sample(x, y);
         assert!(
-            v >= -1.5 && v <= 1.5,
+            (-1.5..=1.5).contains(&v),
             "PerlinNoise value {} at ({}, {}) out of expected range [-1.5, 1.5]",
-            v, x, y
+            v,
+            x,
+            y
         );
     }
 }
@@ -229,9 +247,11 @@ fn test_fbm_value_range() {
         let y = rng.gen_f64() * 100.0 - 50.0;
         let v = noise.sample(x, y);
         assert!(
-            v >= -1.5 && v <= 1.5,
+            (-1.5..=1.5).contains(&v),
             "FBM value {} at ({}, {}) out of expected range [-1.5, 1.5]",
-            v, x, y
+            v,
+            x,
+            y
         );
     }
 }
@@ -256,11 +276,27 @@ fn test_sample_01_range() {
         let v_fbm = fbm.sample_01(x, y);
 
         // sample_01 shifts from [-1,1] to [0,1], so slight overshoots become [~-0.25, ~1.25]
-        assert!(v_simplex >= -0.5 && v_simplex <= 1.5, "Simplex sample_01 {} out of range", v_simplex);
-        assert!(v_perlin >= -0.5 && v_perlin <= 1.5, "Perlin sample_01 {} out of range", v_perlin);
+        assert!(
+            (-0.5..=1.5).contains(&v_simplex),
+            "Simplex sample_01 {} out of range",
+            v_simplex
+        );
+        assert!(
+            (-0.5..=1.5).contains(&v_perlin),
+            "Perlin sample_01 {} out of range",
+            v_perlin
+        );
         // Worley has different characteristics, allow wider range
-        assert!(v_worley >= -2.0 && v_worley <= 3.0, "Worley sample_01 {} out of range", v_worley);
-        assert!(v_fbm >= -0.5 && v_fbm <= 1.5, "FBM sample_01 {} out of range", v_fbm);
+        assert!(
+            (-2.0..=3.0).contains(&v_worley),
+            "Worley sample_01 {} out of range",
+            v_worley
+        );
+        assert!(
+            (-0.5..=1.5).contains(&v_fbm),
+            "FBM sample_01 {} out of range",
+            v_fbm
+        );
     }
 }
 
@@ -338,7 +374,8 @@ fn test_seeds_produce_statistically_different_output() {
     assert!(
         differences > samples * 90 / 100,
         "Seeds should produce mostly different values, got {}/{} different",
-        differences, samples
+        differences,
+        samples
     );
 }
 
@@ -359,11 +396,20 @@ fn test_fbm_octaves_affect_detail() {
     let v2 = complex.sample(x, y);
 
     // Values should differ due to additional octaves
-    assert_ne!(v1, v2, "Different octave counts should produce different values");
+    assert_ne!(
+        v1, v2,
+        "Different octave counts should produce different values"
+    );
 
     // Both should still be in valid range
-    assert!(v1 >= -1.0 && v1 <= 1.0, "1 octave FBM should be normalized");
-    assert!(v2 >= -1.5 && v2 <= 1.5, "8 octave FBM should be roughly normalized");
+    assert!(
+        (-1.0..=1.0).contains(&v1),
+        "1 octave FBM should be normalized"
+    );
+    assert!(
+        (-1.5..=1.5).contains(&v2),
+        "8 octave FBM should be roughly normalized"
+    );
 }
 
 /// Test that more octaves add high-frequency detail.
@@ -393,7 +439,8 @@ fn test_fbm_more_octaves_more_variation() {
     assert!(
         variation_8 >= variation_1 * 0.5,
         "8 octaves ({}) should have at least half the variation of 1 octave ({})",
-        variation_8, variation_1
+        variation_8,
+        variation_1
     );
 }
 
@@ -578,11 +625,12 @@ fn test_worley_return_types() {
     assert!(
         v_f2 >= v_f1 - 0.0001,
         "F2 ({}) should be >= F1 ({})",
-        v_f2, v_f1
+        v_f2,
+        v_f1
     );
 
     // All return types should produce distinct values
-    let values = vec![v_f1, v_f2, v_f2_minus_f1, v_f1_plus_f2];
+    let values = [v_f1, v_f2, v_f2_minus_f1, v_f1_plus_f2];
     let mut unique_count = 0;
     for i in 0..values.len() {
         let mut is_unique = true;
@@ -725,13 +773,19 @@ fn test_tiled_noise_repeats() {
             let v1 = noise.sample(tile_coord(x, period), tile_coord(y, period));
 
             // Sample at position + period (should tile)
-            let v2 = noise.sample(tile_coord(x + period, period), tile_coord(y + period, period));
+            let v2 = noise.sample(
+                tile_coord(x + period, period),
+                tile_coord(y + period, period),
+            );
 
             // Use approximate comparison due to floating-point precision
             assert!(
                 (v1 - v2).abs() < 1e-10,
                 "Tiled noise should repeat at period boundaries: {} vs {} at ({}, {})",
-                v1, v2, x, y
+                v1,
+                v2,
+                x,
+                y
             );
         }
     }
@@ -772,9 +826,21 @@ fn test_noise_at_large_coordinates() {
     let v2 = perlin.sample(large, large);
     let v3 = worley.sample(large, large);
 
-    assert!(!v1.is_nan() && !v1.is_infinite(), "Simplex at large coords: {}", v1);
-    assert!(!v2.is_nan() && !v2.is_infinite(), "Perlin at large coords: {}", v2);
-    assert!(!v3.is_nan() && !v3.is_infinite(), "Worley at large coords: {}", v3);
+    assert!(
+        !v1.is_nan() && !v1.is_infinite(),
+        "Simplex at large coords: {}",
+        v1
+    );
+    assert!(
+        !v2.is_nan() && !v2.is_infinite(),
+        "Perlin at large coords: {}",
+        v2
+    );
+    assert!(
+        !v3.is_nan() && !v3.is_infinite(),
+        "Worley at large coords: {}",
+        v3
+    );
 }
 
 /// Test noise at negative coordinates.
@@ -824,7 +890,9 @@ fn test_noise_near_integer_boundaries() {
     assert!(
         (v1 - v2).abs() < 0.01 && (v2 - v3).abs() < 0.01,
         "Noise should be continuous across integer boundaries: {}, {}, {}",
-        v1, v2, v3
+        v1,
+        v2,
+        v3
     );
 
     let p1 = perlin.sample(near_int, 0.5);
@@ -834,7 +902,9 @@ fn test_noise_near_integer_boundaries() {
     assert!(
         (p1 - p2).abs() < 0.01 && (p2 - p3).abs() < 0.01,
         "Perlin should be continuous: {}, {}, {}",
-        p1, p2, p3
+        p1,
+        p2,
+        p3
     );
 }
 

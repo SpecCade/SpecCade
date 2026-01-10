@@ -5,16 +5,15 @@
 use anyhow::{Context, Result};
 use colored::Colorize;
 use speccade_spec::{
-    canonical_spec_hash, validate_for_generate, BackendError, ReportBuilder, ReportError,
-    Spec,
+    canonical_spec_hash, validate_for_generate, BackendError, ReportBuilder, ReportError, Spec,
 };
 use std::fs;
 use std::path::Path;
 use std::process::ExitCode;
 use std::time::Instant;
 
-use crate::dispatch::dispatch_generate;
 use super::reporting;
+use crate::dispatch::dispatch_generate;
 
 /// Run the generate command
 ///
@@ -28,16 +27,8 @@ pub fn run(spec_path: &str, out_root: Option<&str>) -> Result<ExitCode> {
     let start = Instant::now();
     let out_root = out_root.unwrap_or(".");
 
-    println!(
-        "{} {}",
-        "Generating from:".cyan().bold(),
-        spec_path
-    );
-    println!(
-        "{} {}",
-        "Output root:".cyan().bold(),
-        out_root
-    );
+    println!("{} {}", "Generating from:".cyan().bold(), spec_path);
+    println!("{} {}", "Output root:".cyan().bold(), out_root);
 
     // Read spec file
     let spec_content = fs::read_to_string(spec_path)
@@ -59,8 +50,8 @@ pub fn run(spec_path: &str, out_root: Option<&str>) -> Result<ExitCode> {
         let duration_ms = start.elapsed().as_millis() as u64;
 
         // Build error report
-        let mut report_builder = ReportBuilder::new(spec_hash, backend_version)
-            .duration_ms(duration_ms);
+        let mut report_builder =
+            ReportBuilder::new(spec_hash, backend_version).duration_ms(duration_ms);
 
         report_builder = reporting::apply_validation_messages(report_builder, &validation_result);
 
@@ -105,10 +96,11 @@ pub fn run(spec_path: &str, out_root: Option<&str>) -> Result<ExitCode> {
             let output_count = outputs.len();
 
             // Build success report
-            let mut report_builder = ReportBuilder::new(spec_hash, backend_version)
-                .duration_ms(duration_ms);
+            let mut report_builder =
+                ReportBuilder::new(spec_hash, backend_version).duration_ms(duration_ms);
 
-            report_builder = reporting::apply_validation_messages(report_builder, &validation_result);
+            report_builder =
+                reporting::apply_validation_messages(report_builder, &validation_result);
 
             for output in outputs {
                 report_builder = report_builder.output(output);
@@ -134,8 +126,8 @@ pub fn run(spec_path: &str, out_root: Option<&str>) -> Result<ExitCode> {
             let duration_ms = start.elapsed().as_millis() as u64;
 
             // Build error report
-            let mut report_builder = ReportBuilder::new(spec_hash, backend_version)
-                .duration_ms(duration_ms);
+            let mut report_builder =
+                ReportBuilder::new(spec_hash, backend_version).duration_ms(duration_ms);
 
             // Add generation error using BackendError trait
             let code = e.code();
@@ -143,7 +135,8 @@ pub fn run(spec_path: &str, out_root: Option<&str>) -> Result<ExitCode> {
 
             report_builder = report_builder.error(ReportError::new(code, &message));
 
-            report_builder = reporting::apply_validation_messages(report_builder, &validation_result);
+            report_builder =
+                reporting::apply_validation_messages(report_builder, &validation_result);
 
             let report = report_builder.ok(false).build();
 
@@ -152,11 +145,7 @@ pub fn run(spec_path: &str, out_root: Option<&str>) -> Result<ExitCode> {
             reporting::write_report(&report, &report_path)?;
 
             // Print error
-            println!(
-                "\n{} {}",
-                "GENERATION FAILED".red().bold(),
-                e
-            );
+            println!("\n{} {}", "GENERATION FAILED".red().bold(), e);
             println!("{} {}", "Report written to:".dimmed(), report_path);
 
             Ok(ExitCode::from(2))

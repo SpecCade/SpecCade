@@ -6,18 +6,16 @@
 
 use std::collections::HashSet;
 
-use speccade_spec::recipe::texture::{
-    MaterialType, TextureMapType, Texture2dMaterialMapsV1Params,
-};
+use speccade_spec::recipe::texture::{MaterialType, TextureMapType, TextureMaterialV1Params};
 use speccade_spec::validation::common as shared_validation;
 
 use super::GenerateError;
 
 // Re-export shared utilities with consistent naming for this module
-pub use crate::shared::create_noise_generator;
-pub use crate::shared::sample_pattern_to_buffer as apply_pattern_to_buffer;
-pub use crate::shared::sample_pattern_blended as apply_pattern_blended;
 pub use crate::shared::apply_buffer_transform as apply_transform;
+pub use crate::shared::create_noise_generator;
+pub use crate::shared::sample_pattern_blended as apply_pattern_blended;
+pub use crate::shared::sample_pattern_to_buffer as apply_pattern_to_buffer;
 pub use crate::shared::PatternBlendMode as BlendMode;
 
 /// Validate that resolution is positive and doesn't overflow.
@@ -60,7 +58,7 @@ pub fn validate_unit_interval(name: &str, value: f64) -> Result<(), GenerateErro
 }
 
 /// Validate base material parameters.
-pub fn validate_base_material(params: &Texture2dMaterialMapsV1Params) -> Result<(), GenerateError> {
+pub fn validate_base_material(params: &TextureMaterialV1Params) -> Result<(), GenerateError> {
     let Some(mat) = &params.base_material else {
         return Ok(());
     };

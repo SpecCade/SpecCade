@@ -1,8 +1,6 @@
 //! IK preset setup functions.
 
-use super::skeletal::{
-    IkChain, IkPreset, IkTargetConfig, PoleConfig,
-};
+use super::skeletal::{IkChain, IkPreset, IkTargetConfig, PoleConfig};
 
 // =============================================================================
 // IK Preset Setup Functions
@@ -12,18 +10,10 @@ use super::skeletal::{
 /// Returns chains for left and right legs.
 pub fn setup_humanoid_legs() -> Vec<IkChain> {
     vec![
-        IkChain::new(
-            "ik_leg_l",
-            2,
-            IkTargetConfig::new("ik_foot_l"),
-        )
-        .with_pole(PoleConfig::at_position("pole_knee_l", [0.1, 0.3, 0.5])),
-        IkChain::new(
-            "ik_leg_r",
-            2,
-            IkTargetConfig::new("ik_foot_r"),
-        )
-        .with_pole(PoleConfig::at_position("pole_knee_r", [-0.1, 0.3, 0.5])),
+        IkChain::new("ik_leg_l", 2, IkTargetConfig::new("ik_foot_l"))
+            .with_pole(PoleConfig::at_position("pole_knee_l", [0.1, 0.3, 0.5])),
+        IkChain::new("ik_leg_r", 2, IkTargetConfig::new("ik_foot_r"))
+            .with_pole(PoleConfig::at_position("pole_knee_r", [-0.1, 0.3, 0.5])),
     ]
 }
 
@@ -31,18 +21,10 @@ pub fn setup_humanoid_legs() -> Vec<IkChain> {
 /// Returns chains for left and right arms.
 pub fn setup_humanoid_arms() -> Vec<IkChain> {
     vec![
-        IkChain::new(
-            "ik_arm_l",
-            2,
-            IkTargetConfig::new("ik_hand_l"),
-        )
-        .with_pole(PoleConfig::at_position("pole_elbow_l", [0.45, -0.3, 1.35])),
-        IkChain::new(
-            "ik_arm_r",
-            2,
-            IkTargetConfig::new("ik_hand_r"),
-        )
-        .with_pole(PoleConfig::at_position("pole_elbow_r", [-0.45, -0.3, 1.35])),
+        IkChain::new("ik_arm_l", 2, IkTargetConfig::new("ik_hand_l"))
+            .with_pole(PoleConfig::at_position("pole_elbow_l", [0.45, -0.3, 1.35])),
+        IkChain::new("ik_arm_r", 2, IkTargetConfig::new("ik_hand_r"))
+            .with_pole(PoleConfig::at_position("pole_elbow_r", [-0.45, -0.3, 1.35])),
     ]
 }
 
@@ -50,18 +32,12 @@ pub fn setup_humanoid_arms() -> Vec<IkChain> {
 /// Returns chains for left and right forelegs.
 pub fn setup_quadruped_forelegs() -> Vec<IkChain> {
     vec![
-        IkChain::new(
-            "ik_foreleg_l",
-            2,
-            IkTargetConfig::new("ik_front_paw_l"),
-        )
-        .with_pole(PoleConfig::at_position("pole_front_knee_l", [0.15, 0.3, 0.0])),
-        IkChain::new(
-            "ik_foreleg_r",
-            2,
-            IkTargetConfig::new("ik_front_paw_r"),
-        )
-        .with_pole(PoleConfig::at_position("pole_front_knee_r", [-0.15, 0.3, 0.0])),
+        IkChain::new("ik_foreleg_l", 2, IkTargetConfig::new("ik_front_paw_l")).with_pole(
+            PoleConfig::at_position("pole_front_knee_l", [0.15, 0.3, 0.0]),
+        ),
+        IkChain::new("ik_foreleg_r", 2, IkTargetConfig::new("ik_front_paw_r")).with_pole(
+            PoleConfig::at_position("pole_front_knee_r", [-0.15, 0.3, 0.0]),
+        ),
     ]
 }
 
@@ -69,18 +45,12 @@ pub fn setup_quadruped_forelegs() -> Vec<IkChain> {
 /// Returns chains for left and right hindlegs.
 pub fn setup_quadruped_hindlegs() -> Vec<IkChain> {
     vec![
-        IkChain::new(
-            "ik_hindleg_l",
-            2,
-            IkTargetConfig::new("ik_back_paw_l"),
-        )
-        .with_pole(PoleConfig::at_position("pole_back_knee_l", [0.15, -0.3, 0.0])),
-        IkChain::new(
-            "ik_hindleg_r",
-            2,
-            IkTargetConfig::new("ik_back_paw_r"),
-        )
-        .with_pole(PoleConfig::at_position("pole_back_knee_r", [-0.15, -0.3, 0.0])),
+        IkChain::new("ik_hindleg_l", 2, IkTargetConfig::new("ik_back_paw_l")).with_pole(
+            PoleConfig::at_position("pole_back_knee_l", [0.15, -0.3, 0.0]),
+        ),
+        IkChain::new("ik_hindleg_r", 2, IkTargetConfig::new("ik_back_paw_r")).with_pole(
+            PoleConfig::at_position("pole_back_knee_r", [-0.15, -0.3, 0.0]),
+        ),
     ]
 }
 

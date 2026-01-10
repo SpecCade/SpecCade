@@ -63,7 +63,8 @@ pub fn generate_with_config(
 
     // Run orchestrator
     let orchestrator = Orchestrator::with_config(config);
-    let report = orchestrator.run_with_spec_json(GenerationMode::Animation, &spec_json, out_root)?;
+    let report =
+        orchestrator.run_with_spec_json(GenerationMode::Animation, &spec_json, out_root)?;
 
     // Get output path from report
     let output_path_str = report
@@ -206,10 +207,7 @@ mod tests {
                     time: 0.0,
                     bones: bones.clone(),
                 },
-                AnimationKeyframe {
-                    time: 1.0,
-                    bones: bones,
-                },
+                AnimationKeyframe { time: 1.0, bones },
             ],
             interpolation: InterpolationMode::Linear,
             export: None,

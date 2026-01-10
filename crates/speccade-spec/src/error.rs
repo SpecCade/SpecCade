@@ -38,6 +38,16 @@ pub enum ErrorCode {
     BackendExecutionFailed,
     /// E015: Output validation failed
     OutputValidationFailed,
+
+    // Packed output errors (E020-E023)
+    /// E020: Packed output channel references an unknown map key
+    PackedChannelsUnknownMapKey,
+    /// E021: Packed output is missing a channels mapping
+    PackedOutputMissingChannels,
+    /// E022: Packed output has an invalid format (must be png)
+    PackedOutputInvalidFormat,
+    /// E023: Packed texture recipe declared but no packed outputs were provided
+    NoPackedOutputs,
 }
 
 impl ErrorCode {
@@ -59,6 +69,10 @@ impl ErrorCode {
             ErrorCode::BackendNotAvailable => "E013",
             ErrorCode::BackendExecutionFailed => "E014",
             ErrorCode::OutputValidationFailed => "E015",
+            ErrorCode::PackedChannelsUnknownMapKey => "E020",
+            ErrorCode::PackedOutputMissingChannels => "E021",
+            ErrorCode::PackedOutputInvalidFormat => "E022",
+            ErrorCode::NoPackedOutputs => "E023",
         }
     }
 }
@@ -393,7 +407,9 @@ impl std::fmt::Display for GenerationError {
 
 impl std::error::Error for GenerationError {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-        self.source.as_ref().map(|e| e.as_ref() as &(dyn std::error::Error + 'static))
+        self.source
+            .as_ref()
+            .map(|e| e.as_ref() as &(dyn std::error::Error + 'static))
     }
 }
 
@@ -417,11 +433,17 @@ mod tests {
 
     #[test]
     fn test_validation_error_display() {
-        let err = ValidationError::new(ErrorCode::InvalidAssetId, "must start with lowercase letter");
+        let err = ValidationError::new(
+            ErrorCode::InvalidAssetId,
+            "must start with lowercase letter",
+        );
         assert_eq!(err.to_string(), "E002: must start with lowercase letter");
 
-        let err_with_path =
-            ValidationError::with_path(ErrorCode::UnsafeOutputPath, "contains '..'", "outputs[0].path");
+        let err_with_path = ValidationError::with_path(
+            ErrorCode::UnsafeOutputPath,
+            "contains '..'",
+            "outputs[0].path",
+        );
         assert_eq!(
             err_with_path.to_string(),
             "E008: contains '..' (at outputs[0].path)"

@@ -187,7 +187,11 @@ mod tests {
 
         for preset in presets {
             let chains = setup_ik_preset(preset);
-            assert!(!chains.is_empty(), "Preset {:?} should create chains", preset);
+            assert!(
+                !chains.is_empty(),
+                "Preset {:?} should create chains",
+                preset
+            );
             for chain in chains {
                 assert!(
                     chain.validate().is_ok(),
@@ -285,9 +289,11 @@ mod tests {
             ik_keyframes: vec![],
             interpolation: InterpolationMode::Linear,
             export: None,
-            animator_rig: Some(AnimatorRigConfig::new()
-                .with_widget_style(WidgetStyle::WireDiamond)
-                .with_bone_colors(BoneColorScheme::Standard)),
+            animator_rig: Some(
+                AnimatorRigConfig::new()
+                    .with_widget_style(WidgetStyle::WireDiamond)
+                    .with_bone_colors(BoneColorScheme::Standard),
+            ),
             save_blend: false,
             conventions: None,
         };
@@ -318,7 +324,13 @@ mod tests {
         assert!(json.contains("\"max_angle\":160.0"));
 
         let parsed: BoneConstraint = serde_json::from_str(&json).unwrap();
-        if let BoneConstraint::Hinge { bone, axis, min_angle, max_angle } = parsed {
+        if let BoneConstraint::Hinge {
+            bone,
+            axis,
+            min_angle,
+            max_angle,
+        } = parsed
+        {
             assert_eq!(bone, "lower_arm_l");
             assert_eq!(axis, ConstraintAxis::X);
             assert_eq!(min_angle, 0.0);
@@ -331,7 +343,12 @@ mod tests {
     #[test]
     fn test_constraint_config_serde() {
         let config = ConstraintConfig::new()
-            .with_constraint(BoneConstraint::hinge("lower_arm_l", ConstraintAxis::X, 0.0, 160.0))
+            .with_constraint(BoneConstraint::hinge(
+                "lower_arm_l",
+                ConstraintAxis::X,
+                0.0,
+                160.0,
+            ))
             .with_constraint(BoneConstraint::ball("upper_arm_l", 90.0, -60.0, 60.0));
 
         let json = serde_json::to_string(&config).unwrap();
@@ -348,8 +365,18 @@ mod tests {
     fn test_rig_setup_with_constraints() {
         let rig_setup = RigSetup::new()
             .with_preset(IkPreset::HumanoidArms)
-            .with_constraint(BoneConstraint::hinge("lower_arm_l", ConstraintAxis::X, 0.0, 160.0))
-            .with_constraint(BoneConstraint::hinge("lower_arm_r", ConstraintAxis::X, 0.0, 160.0))
+            .with_constraint(BoneConstraint::hinge(
+                "lower_arm_l",
+                ConstraintAxis::X,
+                0.0,
+                160.0,
+            ))
+            .with_constraint(BoneConstraint::hinge(
+                "lower_arm_r",
+                ConstraintAxis::X,
+                0.0,
+                160.0,
+            ))
             .with_constraint(BoneConstraint::ball("upper_arm_l", 90.0, -60.0, 60.0))
             .with_constraint(BoneConstraint::ball("upper_arm_r", 90.0, -60.0, 60.0));
 
@@ -388,8 +415,8 @@ mod tests {
 
     #[test]
     fn test_foot_system_serde() {
-        let foot = FootSystem::new("foot_l", "ik_foot_l", "heel_l", "toe_l")
-            .with_ball_bone("ball_l");
+        let foot =
+            FootSystem::new("foot_l", "ik_foot_l", "heel_l", "toe_l").with_ball_bone("ball_l");
 
         let json = serde_json::to_string(&foot).unwrap();
         assert!(json.contains("foot_l"));
@@ -563,8 +590,17 @@ mod tests {
         let rig_setup = RigSetup::new()
             .with_preset(IkPreset::HumanoidLegs)
             .with_preset(IkPreset::HumanoidArms)
-            .with_chain(IkChain::new("ik_spine", 3, IkTargetConfig::new("ik_spine_tip")))
-            .with_constraint(BoneConstraint::hinge("lower_arm_l", ConstraintAxis::X, 0.0, 160.0))
+            .with_chain(IkChain::new(
+                "ik_spine",
+                3,
+                IkTargetConfig::new("ik_spine_tip"),
+            ))
+            .with_constraint(BoneConstraint::hinge(
+                "lower_arm_l",
+                ConstraintAxis::X,
+                0.0,
+                160.0,
+            ))
             .with_foot_system(FootSystem::new("foot_l", "ik_foot_l", "heel_l", "toe_l"))
             .with_aim_constraint(AimConstraint::new("head_track", "head", "look_target"))
             .with_twist_bone(TwistBone::new("upper_arm_l", "upper_arm_twist_l"))
@@ -611,12 +647,10 @@ mod tests {
                 .with_bone("leg_r", PoseBoneTransform::pitch(10.0)),
         );
 
-        let phases = vec![
-            AnimationPhase::new(0, 30)
-                .with_name("start")
-                .with_curve(TimingCurve::EaseIn)
-                .with_pose("standing"),
-        ];
+        let phases = vec![AnimationPhase::new(0, 30)
+            .with_name("start")
+            .with_curve(TimingCurve::EaseIn)
+            .with_pose("standing")];
 
         let procedural_layers = vec![
             ProceduralLayer::breathing("chest"),
@@ -648,9 +682,11 @@ mod tests {
                 separate_file: false,
                 save_blend: true,
             }),
-            animator_rig: Some(AnimatorRigConfig::new()
-                .with_display(ArmatureDisplay::Stick)
-                .with_widget_style(WidgetStyle::WireDiamond)),
+            animator_rig: Some(
+                AnimatorRigConfig::new()
+                    .with_display(ArmatureDisplay::Stick)
+                    .with_widget_style(WidgetStyle::WireDiamond),
+            ),
             save_blend: true,
             conventions: Some(ConventionsConfig { strict: false }),
         };
@@ -685,25 +721,25 @@ mod tests {
         // Test that all top-level ANIMATION keys can be serialized/deserialized
         let params = SkeletalAnimationBlenderRiggedV1Params {
             skeleton_preset: Some(SkeletonPreset::HumanoidBasicV1), // skeleton_preset
-            clip_name: "test".to_string(),                           // name
-            input_armature: Some("armature.glb".to_string()),        // input_armature
-            character: Some("hero".to_string()),                     // character
-            duration_frames: 30,                                      // duration_frames
-            duration_seconds: Some(1.0),                              // (alternative)
-            fps: 24,                                                  // fps
-            r#loop: true,                                             // loop
-            ground_offset: 0.1,                                       // ground_offset
-            rig_setup: RigSetup::default(),                           // rig_setup
-            poses: std::collections::HashMap::new(),                  // poses
-            phases: vec![],                                           // phases
-            procedural_layers: vec![],                                // procedural_layers
-            keyframes: vec![],                                        // (bone_transforms via keyframes)
-            ik_keyframes: vec![],                                     // (IK keyframes)
-            interpolation: InterpolationMode::Linear,                 // (interpolation)
-            export: Some(AnimationExportSettings::default()),         // export settings
-            animator_rig: Some(AnimatorRigConfig::default()),         // animator_rig
-            save_blend: true,                                         // save_blend
-            conventions: Some(ConventionsConfig::default()),          // conventions
+            clip_name: "test".to_string(),                          // name
+            input_armature: Some("armature.glb".to_string()),       // input_armature
+            character: Some("hero".to_string()),                    // character
+            duration_frames: 30,                                    // duration_frames
+            duration_seconds: Some(1.0),                            // (alternative)
+            fps: 24,                                                // fps
+            r#loop: true,                                           // loop
+            ground_offset: 0.1,                                     // ground_offset
+            rig_setup: RigSetup::default(),                         // rig_setup
+            poses: std::collections::HashMap::new(),                // poses
+            phases: vec![],                                         // phases
+            procedural_layers: vec![],                              // procedural_layers
+            keyframes: vec![],    // (bone_transforms via keyframes)
+            ik_keyframes: vec![], // (IK keyframes)
+            interpolation: InterpolationMode::Linear, // (interpolation)
+            export: Some(AnimationExportSettings::default()), // export settings
+            animator_rig: Some(AnimatorRigConfig::default()), // animator_rig
+            save_blend: true,     // save_blend
+            conventions: Some(ConventionsConfig::default()), // conventions
         };
 
         let json = serde_json::to_string(&params).unwrap();
@@ -718,30 +754,38 @@ mod tests {
     #[test]
     fn test_all_rig_setup_components() {
         // Test all components of rig_setup
-        let rig = RigSetup {
-            presets: vec![IkPreset::HumanoidLegs],                   // presets
-            ik_chains: vec![IkChain::new(                             // ik_chains
-                "test",
-                2,
-                IkTargetConfig::new("target"),
-            )],
-            constraints: ConstraintConfig::new()                      // constraints
-                .with_constraint(BoneConstraint::hinge("bone", ConstraintAxis::X, 0.0, 160.0)),
-            foot_systems: vec![FootSystem::new(                       // foot_systems
-                "foot_l",
-                "ik_foot_l",
-                "heel_l",
-                "toe_l",
-            )],
-            aim_constraints: vec![AimConstraint::new(                 // aim_constraints
-                "aim",
-                "bone",
-                "target",
-            )],
-            twist_bones: vec![TwistBone::new("source", "target")],    // twist_bones
-            stretch: Some(StretchSettings::enabled()),                // stretch
-            bake: Some(BakeSettings::new()),                          // bake
-        };
+        let rig =
+            RigSetup {
+                presets: vec![IkPreset::HumanoidLegs], // presets
+                ik_chains: vec![IkChain::new(
+                    // ik_chains
+                    "test",
+                    2,
+                    IkTargetConfig::new("target"),
+                )],
+                constraints:
+                    ConstraintConfig::new() // constraints
+                        .with_constraint(BoneConstraint::hinge(
+                            "bone",
+                            ConstraintAxis::X,
+                            0.0,
+                            160.0,
+                        )),
+                foot_systems: vec![FootSystem::new(
+                    // foot_systems
+                    "foot_l",
+                    "ik_foot_l",
+                    "heel_l",
+                    "toe_l",
+                )],
+                aim_constraints: vec![AimConstraint::new(
+                    // aim_constraints
+                    "aim", "bone", "target",
+                )],
+                twist_bones: vec![TwistBone::new("source", "target")], // twist_bones
+                stretch: Some(StretchSettings::enabled()),             // stretch
+                bake: Some(BakeSettings::new()),                       // bake
+            };
 
         let json = serde_json::to_string(&rig).unwrap();
         let parsed: RigSetup = serde_json::from_str(&json).unwrap();

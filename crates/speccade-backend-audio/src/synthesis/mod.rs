@@ -70,11 +70,7 @@ impl SweepCurve {
             }
             SweepCurve::Logarithmic => {
                 // Logarithmic curve (slow start, fast end)
-                let log_t = if t > 0.0 {
-                    1.0 - (-t * 3.0).exp()
-                } else {
-                    0.0
-                };
+                let log_t = if t > 0.0 { 1.0 - (-t * 3.0).exp() } else { 0.0 };
                 start + (end - start) * log_t
             }
         }

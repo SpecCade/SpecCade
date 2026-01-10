@@ -5,8 +5,8 @@ use speccade_spec::recipe::texture::{
     BaseMaterial, GradientDirection, MaterialType, NoiseAlgorithm, NoiseConfig, StripeDirection,
 };
 
-fn make_params() -> Texture2dMaterialMapsV1Params {
-    Texture2dMaterialMapsV1Params {
+fn make_params() -> TextureMaterialV1Params {
+    TextureMaterialV1Params {
         resolution: [32, 32],
         tileable: true,
         maps: vec![
@@ -346,7 +346,7 @@ fn test_all_material_types() {
         });
 
         let result = generate_material_maps(&params, 42).unwrap();
-        assert!(result.maps.len() > 0);
+        assert!(!result.maps.is_empty());
     }
 }
 
@@ -434,7 +434,7 @@ fn test_noise_algorithm_all() {
         }];
 
         let result = generate_material_maps(&params, 42).unwrap();
-        assert!(result.maps.len() > 0);
+        assert!(!result.maps.is_empty());
     }
 }
 
@@ -532,7 +532,7 @@ fn test_palette_specified() {
     ]);
 
     let result = generate_material_maps(&params, 42).unwrap();
-    assert!(result.maps.len() > 0);
+    assert!(!result.maps.is_empty());
 }
 
 #[test]
@@ -545,5 +545,5 @@ fn test_color_ramp_specified() {
     ]);
 
     let result = generate_material_maps(&params, 42).unwrap();
-    assert!(result.maps.len() > 0);
+    assert!(!result.maps.is_empty());
 }

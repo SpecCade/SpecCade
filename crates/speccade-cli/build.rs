@@ -17,7 +17,7 @@ enum KeyStatus {
 }
 
 impl KeyStatus {
-    fn from_str(s: &str) -> Option<Self> {
+    fn parse_cell(s: &str) -> Option<Self> {
         let s = s.trim();
         // Check for the actual Unicode characters used in the markdown
         if s.contains('\u{2713}') || s.contains('\u{2714}') || s == "checkmark" {
@@ -33,7 +33,7 @@ impl KeyStatus {
         }
     }
 
-    fn to_code_str(&self) -> &'static str {
+    fn as_code_str(self) -> &'static str {
         match self {
             KeyStatus::Implemented => "KeyStatus::Implemented",
             KeyStatus::Partial => "KeyStatus::Partial",
@@ -68,12 +68,12 @@ fn main() {
 
     // Build the path to PARITY_MATRIX.md (relative to crates/speccade-cli)
     let parity_matrix_path = manifest_path.join("..").join("..").join("PARITY_MATRIX.md");
-    let parity_matrix_path = parity_matrix_path
-        .canonicalize()
-        .unwrap_or_else(|e| panic!(
+    let parity_matrix_path = parity_matrix_path.canonicalize().unwrap_or_else(|e| {
+        panic!(
             "Failed to canonicalize PARITY_MATRIX.md path {:?}: {}",
             parity_matrix_path, e
-        ));
+        )
+    });
 
     // Tell Cargo to rerun if the file changes
     println!("cargo:rerun-if-changed={}", parity_matrix_path.display());
@@ -95,11 +95,13 @@ fn main() {
     // Write to OUT_DIR
     let out_dir = env::var("OUT_DIR").expect("OUT_DIR not set");
     let out_path = PathBuf::from(&out_dir).join("parity_data.rs");
-    fs::write(&out_path, rust_code).unwrap_or_else(|e| {
-        panic!("Failed to write parity_data.rs to {:?}: {}", out_path, e)
-    });
+    fs::write(&out_path, rust_code)
+        .unwrap_or_else(|e| panic!("Failed to write parity_data.rs to {:?}: {}", out_path, e));
 
-    println!("cargo:warning=Generated parity_data.rs with {} keys", keys.len());
+    println!(
+        "cargo:warning=Generated parity_data.rs with {} keys",
+        keys.len()
+    );
 }
 
 /// Parse a parity matrix markdown string.
@@ -114,8 +116,8 @@ fn parse_parity_matrix(content: &str) -> Vec<ParsedKey> {
         let trimmed = line.trim();
 
         // Track section headings (## ...)
-        if trimmed.starts_with("## ") && !trimmed.starts_with("### ") {
-            current_section = trimmed[3..].trim().to_string();
+        if let Some(stripped) = trimmed.strip_prefix("## ") {
+            current_section = stripped.trim().to_string();
             current_table.clear();
             in_table = false;
             header_indices = None;
@@ -123,8 +125,8 @@ fn parse_parity_matrix(content: &str) -> Vec<ParsedKey> {
         }
 
         // Track table headings (### ...)
-        if trimmed.starts_with("### ") {
-            current_table = trimmed[4..].trim().to_string();
+        if let Some(stripped) = trimmed.strip_prefix("### ") {
+            current_table = stripped.trim().to_string();
             in_table = false;
             header_indices = None;
             continue;
@@ -158,13 +160,18 @@ fn parse_parity_matrix(content: &str) -> Vec<ParsedKey> {
         }
 
         // Skip separator rows (contain only dashes and colons)
-        if cells.iter().all(|c| c.chars().all(|ch| ch == '-' || ch == ':')) {
+        if cells
+            .iter()
+            .all(|c| c.chars().all(|ch| ch == '-' || ch == ':'))
+        {
             continue;
         }
 
         // Parse data row
         if let Some(ref indices) = header_indices {
-            if let Some(parsed_key) = parse_table_row(&cells, indices, &current_section, &current_table) {
+            if let Some(parsed_key) =
+                parse_table_row(&cells, indices, &current_section, &current_table)
+            {
                 result.push(parsed_key);
             }
         }
@@ -224,7 +231,7 @@ fn parse_table_row(
     let status = indices
         .status_idx
         .and_then(|i| cells.get(i))
-        .and_then(|s| KeyStatus::from_str(s))
+        .and_then(|s| KeyStatus::parse_cell(s))
         .unwrap_or(KeyStatus::NotImplemented);
 
     Some(ParsedKey {
@@ -286,16 +293,20 @@ fn generate_rust_code(keys: &[ParsedKey]) -> String {
         code.push_str(&format!("            key: {:?},\n", key.key));
         code.push_str("        },\n");
         code.push_str(&format!("        required: {},\n", key.required));
-        code.push_str(&format!("        status: {},\n", key.status.to_code_str()));
+        code.push_str(&format!("        status: {},\n", key.status.as_code_str()));
         code.push_str("    },\n");
     }
     code.push_str("];\n\n");
 
     // find() helper function
     code.push_str("/// Find a key by section, table, and key name.\n");
-    code.push_str("pub fn find(section: &str, table: &str, key: &str) -> Option<&'static KeyInfo> {\n");
+    code.push_str(
+        "pub fn find(section: &str, table: &str, key: &str) -> Option<&'static KeyInfo> {\n",
+    );
     code.push_str("    ALL_KEYS.iter().find(|info| {\n");
-    code.push_str("        info.key.section == section && info.key.table == table && info.key.key == key\n");
+    code.push_str(
+        "        info.key.section == section && info.key.table == table && info.key.key == key\n",
+    );
     code.push_str("    })\n");
     code.push_str("}\n");
 

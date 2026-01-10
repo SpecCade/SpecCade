@@ -299,7 +299,7 @@ mod tests {
         for i in 0..100 {
             let phase = (i as f64 / 100.0) * TWO_PI;
             let sample = sine(phase);
-            assert!(sample >= -1.0 && sample <= 1.0);
+            assert!((-1.0..=1.0).contains(&sample));
         }
     }
 
@@ -327,7 +327,7 @@ mod tests {
         for i in 0..100 {
             let phase = (i as f64 / 100.0) * TWO_PI;
             let sample = sawtooth(phase);
-            assert!(sample >= -1.0 && sample <= 1.0);
+            assert!((-1.0..=1.0).contains(&sample));
         }
     }
 
@@ -336,7 +336,7 @@ mod tests {
         for i in 0..100 {
             let phase = (i as f64 / 100.0) * TWO_PI;
             let sample = triangle(phase);
-            assert!(sample >= -1.0 && sample <= 1.0);
+            assert!((-1.0..=1.0).contains(&sample));
         }
     }
 

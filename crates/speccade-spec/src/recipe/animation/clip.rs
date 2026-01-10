@@ -202,10 +202,7 @@ mod tests {
             IkTargetTransform::at_position([-0.1, 0.0, 0.0]).with_ik_fk_blend(0.5),
         );
 
-        let keyframe = IkKeyframe {
-            time: 0.5,
-            targets,
-        };
+        let keyframe = IkKeyframe { time: 0.5, targets };
 
         let json = serde_json::to_string(&keyframe).unwrap();
         assert!(json.contains("ik_leg_l"));

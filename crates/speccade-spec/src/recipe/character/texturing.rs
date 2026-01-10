@@ -17,10 +17,11 @@ pub struct Texturing {
 }
 
 /// UV unwrapping mode.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
 #[serde(rename_all = "snake_case")]
 pub enum UvMode {
     /// Smart UV project (automatic island detection).
+    #[default]
     SmartProject,
     /// Region-based UV mapping (manual region assignment).
     RegionBased,
@@ -32,12 +33,6 @@ pub enum UvMode {
     CylinderProject,
     /// Sphere projection.
     SphereProject,
-}
-
-impl Default for UvMode {
-    fn default() -> Self {
-        UvMode::SmartProject
-    }
 }
 
 /// A texture region definition.

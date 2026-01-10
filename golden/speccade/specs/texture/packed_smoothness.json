@@ -7,7 +7,7 @@
   "description": "Demonstrates channel inversion (roughness to smoothness)",
   "outputs": [
     {
-      "kind": "primary",
+      "kind": "packed",
       "format": "png",
       "path": "smoothness.png",
       "channels": {

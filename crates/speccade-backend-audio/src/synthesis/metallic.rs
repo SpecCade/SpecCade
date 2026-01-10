@@ -188,7 +188,10 @@ impl Synthesizer for MetallicSynth {
         }
 
         // Normalize
-        let max = output.iter().map(|s| s.abs()).fold(0.0_f64, |a, b| a.max(b));
+        let max = output
+            .iter()
+            .map(|s| s.abs())
+            .fold(0.0_f64, |a, b| a.max(b));
         if max > 0.0 {
             for s in &mut output {
                 *s /= max;
@@ -252,7 +255,7 @@ mod tests {
 
         assert_eq!(samples.len(), 1000);
         for &s in &samples {
-            assert!(s >= -1.0 && s <= 1.0);
+            assert!((-1.0..=1.0).contains(&s));
         }
     }
 

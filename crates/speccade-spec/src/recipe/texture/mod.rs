@@ -16,10 +16,6 @@ pub use packed::*;
 pub use packing::*;
 pub use pbr_maps::*;
 
-// Type aliases for backward compatibility with old naming convention
-pub type Texture2dMaterialMapsV1Params = TextureMaterialV1Params;
-pub type Texture2dNormalMapV1Params = TextureNormalV1Params;
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -109,7 +105,11 @@ mod tests {
             maps: vec![TextureMapType::Albedo],
             base_material: None,
             layers: vec![],
-            palette: Some(vec!["#FF0000".to_string(), "#00FF00".to_string(), "#0000FF".to_string()]),
+            palette: Some(vec![
+                "#FF0000".to_string(),
+                "#00FF00".to_string(),
+                "#0000FF".to_string(),
+            ]),
             color_ramp: None,
         };
         let json = serde_json::to_string(&params).unwrap();
@@ -512,10 +512,7 @@ mod tests {
 
     #[test]
     fn test_normal_map_pattern_hexagons() {
-        let pattern = NormalMapPattern::Hexagons {
-            size: 32,
-            gap: 3,
-        };
+        let pattern = NormalMapPattern::Hexagons { size: 32, gap: 3 };
         let json = serde_json::to_string(&pattern).unwrap();
         assert!(json.contains("hexagons"));
     }

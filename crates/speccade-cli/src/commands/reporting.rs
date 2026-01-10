@@ -32,7 +32,9 @@ pub(crate) fn write_report(report: &speccade_spec::Report, path: &str) -> Result
 #[cfg(test)]
 mod tests {
     use super::*;
-    use speccade_spec::{ErrorCode, ValidationError, ValidationResult, ValidationWarning, WarningCode};
+    use speccade_spec::{
+        ErrorCode, ValidationError, ValidationResult, ValidationWarning, WarningCode,
+    };
     use speccade_spec::{OutputFormat, OutputKind, OutputResult, ReportBuilder};
 
     #[test]
@@ -40,7 +42,9 @@ mod tests {
         let path = report_path("specs/audio/test.json", "laser-blast-01");
         // Use Path for platform-independent comparison
         let path = Path::new(&path);
-        let expected = Path::new("specs").join("audio").join("laser-blast-01.report.json");
+        let expected = Path::new("specs")
+            .join("audio")
+            .join("laser-blast-01.report.json");
         assert_eq!(path, expected);
     }
 
@@ -72,7 +76,10 @@ mod tests {
     fn test_apply_validation_messages() {
         let validation = ValidationResult::failure_with_warnings(
             vec![ValidationError::new(ErrorCode::NoOutputs, "no outputs")],
-            vec![ValidationWarning::new(WarningCode::MissingLicense, "missing")],
+            vec![ValidationWarning::new(
+                WarningCode::MissingLicense,
+                "missing",
+            )],
         );
 
         let report = apply_validation_messages(

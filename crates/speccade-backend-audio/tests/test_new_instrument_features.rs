@@ -2,16 +2,12 @@
 
 use speccade_backend_audio::generate;
 use speccade_spec::recipe::audio::{
-    AudioV1Params, Synthesis, Envelope, NoteSpec, OscillatorConfig, PitchEnvelope, Waveform,
+    AudioV1Params, Envelope, NoteSpec, OscillatorConfig, PitchEnvelope, Synthesis, Waveform,
 };
 use speccade_spec::{AssetType, OutputFormat, OutputSpec, Recipe, Spec};
 
-fn create_instrument_spec(
-    params: AudioV1Params,
-    seed: u32,
-    name: &str,
-) -> Spec {
-    Spec::builder(name, AssetType::AudioInstrument)
+fn create_instrument_spec(params: AudioV1Params, seed: u32, name: &str) -> Spec {
+    Spec::builder(name, AssetType::Audio)
         .license("CC0-1.0")
         .seed(seed)
         .output(OutputSpec::primary(
@@ -19,7 +15,7 @@ fn create_instrument_spec(
             format!("instruments/{}.wav", name),
         ))
         .recipe(Recipe::new(
-            "audio.v1",
+            "audio_v1",
             serde_json::to_value(&params).unwrap(),
         ))
         .build()

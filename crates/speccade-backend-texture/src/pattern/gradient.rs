@@ -10,9 +10,19 @@ pub struct GradientPattern {
 }
 
 enum GradientType {
-    Horizontal { start: f64, end: f64 },
-    Vertical { start: f64, end: f64 },
-    Radial { center: [f64; 2], inner: f64, outer: f64 },
+    Horizontal {
+        start: f64,
+        end: f64,
+    },
+    Vertical {
+        start: f64,
+        end: f64,
+    },
+    Radial {
+        center: [f64; 2],
+        inner: f64,
+        outer: f64,
+    },
 }
 
 impl GradientPattern {
@@ -39,7 +49,11 @@ impl GradientPattern {
         Self {
             width,
             height,
-            gradient_type: GradientType::Radial { center, inner, outer },
+            gradient_type: GradientType::Radial {
+                center,
+                inner,
+                outer,
+            },
         }
     }
 }
@@ -55,7 +69,11 @@ impl Pattern2D for GradientPattern {
                 let t = y as f64 / (self.height as f64 - 1.0).max(1.0);
                 start + (end - start) * t
             }
-            GradientType::Radial { center, inner, outer } => {
+            GradientType::Radial {
+                center,
+                inner,
+                outer,
+            } => {
                 // Normalized coordinates [0, 1]
                 let nx = x as f64 / (self.width as f64 - 1.0).max(1.0);
                 let ny = y as f64 / (self.height as f64 - 1.0).max(1.0);
@@ -67,7 +85,8 @@ impl Pattern2D for GradientPattern {
 
                 // Normalize to [0, 1] range based on max possible distance
                 let max_dist = ((center[0].max(1.0 - center[0])).powi(2)
-                              + (center[1].max(1.0 - center[1])).powi(2)).sqrt();
+                    + (center[1].max(1.0 - center[1])).powi(2))
+                .sqrt();
                 let t = (dist / max_dist).clamp(0.0, 1.0);
 
                 // Interpolate between inner and outer

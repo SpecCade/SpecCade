@@ -18,10 +18,10 @@ use super::mesh::MaterialSlot;
 // Re-export all public types
 pub use body_parts::{BodyPart, BodyPartMesh};
 pub use legacy::{
-    BaseRadius, BulgeFactor, Instance, LegacyPart, ScaleFactor, SkinningType, Step,
-    StepDefinition, SubPart, SubPartOrList, TiltFactor,
+    BaseRadius, BulgeFactor, Instance, LegacyPart, ScaleFactor, SkinningType, Step, StepDefinition,
+    SubPart, SubPartOrList, TiltFactor,
 };
-pub use materials::{SkinningSettings, SkeletalMeshConstraints, SkeletalMeshExportSettings};
+pub use materials::{SkeletalMeshConstraints, SkeletalMeshExportSettings, SkinningSettings};
 pub use skeleton::{SkeletonBone, SkeletonPreset};
 pub use texturing::{RegionColor, TextureRegion, Texturing, UvMode};
 

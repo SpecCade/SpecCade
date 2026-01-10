@@ -105,7 +105,7 @@ mod tests {
         // Values should be different due to additional octaves
         // (unless they happen to align perfectly, which is unlikely)
         // We just verify both are in valid range
-        assert!(v1 >= -1.0 && v1 <= 1.0);
-        assert!(v2 >= -1.0 && v2 <= 1.0);
+        assert!((-1.0..=1.0).contains(&v1));
+        assert!((-1.0..=1.0).contains(&v2));
     }
 }

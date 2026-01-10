@@ -1,7 +1,7 @@
 //! Error types for the Blender backend.
 
-use std::path::PathBuf;
 use speccade_spec::BackendError;
+use std::path::PathBuf;
 use thiserror::Error;
 
 /// Result type for Blender backend operations.

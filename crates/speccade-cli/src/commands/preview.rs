@@ -18,11 +18,7 @@ use std::process::ExitCode;
 /// Exit code: 0 success, 1 error
 pub fn run(spec_path: &str, _out_root: Option<&str>) -> Result<ExitCode> {
     // TODO: Implement preview for generated assets (open viewers, or launch Blender for mesh/anim).
-    println!(
-        "{} {}",
-        "Preview:".cyan().bold(),
-        spec_path
-    );
+    println!("{} {}", "Preview:".cyan().bold(), spec_path);
 
     // Read and parse spec to get asset type
     let spec_content = fs::read_to_string(spec_path)
@@ -58,13 +54,13 @@ mod tests {
         std::fs::write(
             &spec_path,
             r#"{
-  "spec_version": 1,
-  "asset_id": "test-asset-01",
-  "asset_type": "audio_sfx",
-  "license": "CC0-1.0",
-  "seed": 42,
-  "outputs": [{"kind": "primary", "format": "wav", "path": "sounds/test.wav"}]
-}"#,
+	  "spec_version": 1,
+	  "asset_id": "test-asset-01",
+	  "asset_type": "audio",
+	  "license": "CC0-1.0",
+	  "seed": 42,
+	  "outputs": [{"kind": "primary", "format": "wav", "path": "sounds/test.wav"}]
+	}"#,
         )
         .unwrap();
 

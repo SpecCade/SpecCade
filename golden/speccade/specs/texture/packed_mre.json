@@ -7,7 +7,7 @@
   "description": "Packed MRE texture (Unity/Unreal style) demonstrating channel packing",
   "outputs": [
     {
-      "kind": "primary",
+      "kind": "packed",
       "format": "png",
       "path": "mre.png",
       "channels": {

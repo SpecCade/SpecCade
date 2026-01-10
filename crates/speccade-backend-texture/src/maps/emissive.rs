@@ -1,8 +1,8 @@
 //! Emissive map generator.
 
-use super::{TextureBuffer, GrayscaleBuffer};
+use super::{GrayscaleBuffer, TextureBuffer};
 use crate::color::Color;
-use crate::noise::{Noise2D, Fbm, PerlinNoise};
+use crate::noise::{Fbm, Noise2D, PerlinNoise};
 
 /// Emissive map generator.
 pub struct EmissiveGenerator {
@@ -46,11 +46,7 @@ impl EmissiveGenerator {
     }
 
     /// Generate emissive from a mask (where mask > 0, emit light).
-    pub fn generate_from_mask(
-        &self,
-        mask: &GrayscaleBuffer,
-        threshold: f64,
-    ) -> TextureBuffer {
+    pub fn generate_from_mask(&self, mask: &GrayscaleBuffer, threshold: f64) -> TextureBuffer {
         let mut buffer = TextureBuffer::new(mask.width, mask.height, Color::black());
 
         for y in 0..mask.height {

@@ -17,11 +17,7 @@ use std::process::ExitCode;
 /// # Returns
 /// Exit code: 0 success, 1 error
 pub fn run(spec_path: &str, output: Option<&str>) -> Result<ExitCode> {
-    println!(
-        "{} {}",
-        "Formatting:".cyan().bold(),
-        spec_path
-    );
+    println!("{} {}", "Formatting:".cyan().bold(), spec_path);
 
     // Read spec file
     let spec_content = fs::read_to_string(spec_path)
@@ -33,8 +29,7 @@ pub fn run(spec_path: &str, output: Option<&str>) -> Result<ExitCode> {
 
     // Sort keys recursively and format with 2-space indent
     let sorted = sort_json_keys(&value);
-    let formatted = serde_json::to_string_pretty(&sorted)
-        .context("Failed to format JSON")?;
+    let formatted = serde_json::to_string_pretty(&sorted).context("Failed to format JSON")?;
 
     // Determine output path
     let output_path = output.unwrap_or(spec_path);
@@ -44,16 +39,9 @@ pub fn run(spec_path: &str, output: Option<&str>) -> Result<ExitCode> {
         .with_context(|| format!("Failed to write to: {}", output_path))?;
 
     if output_path == spec_path {
-        println!(
-            "{} Formatted in place",
-            "SUCCESS".green().bold()
-        );
+        println!("{} Formatted in place", "SUCCESS".green().bold());
     } else {
-        println!(
-            "{} Formatted to: {}",
-            "SUCCESS".green().bold(),
-            output_path
-        );
+        println!("{} Formatted to: {}", "SUCCESS".green().bold(), output_path);
     }
 
     Ok(ExitCode::SUCCESS)
@@ -91,14 +79,17 @@ mod tests {
 
     #[test]
     fn test_sort_json_keys() {
-        let input: Value = serde_json::from_str(r#"{
+        let input: Value = serde_json::from_str(
+            r#"{
             "z": 1,
             "a": 2,
             "m": {
                 "z": 3,
                 "a": 4
             }
-        }"#).unwrap();
+        }"#,
+        )
+        .unwrap();
 
         let sorted = sort_json_keys(&input);
         let output = serde_json::to_string(&sorted).unwrap();

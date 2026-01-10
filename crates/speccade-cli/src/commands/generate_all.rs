@@ -22,7 +22,6 @@ const BLENDER_ASSET_TYPES: &[&str] = &["static_mesh", "skeletal_mesh", "skeletal
 /// Asset types that use pure Rust backends (Tier 1)
 const RUST_ASSET_TYPES: &[&str] = &["audio", "music", "texture"];
 
-
 /// Result of generating a single spec
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SpecResult {
@@ -141,10 +140,10 @@ pub fn run(
         .filter_map(|e| e.ok())
     {
         let path = entry.path();
-        if path.extension().map_or(false, |ext| ext == "json")
+        if path.extension().is_some_and(|ext| ext == "json")
             && !path
                 .file_name()
-                .map_or(false, |name| name.to_string_lossy().contains(".report."))
+                .is_some_and(|name| name.to_string_lossy().contains(".report."))
         {
             // Check if this is a Blender asset type
             let is_blender = BLENDER_ASSET_TYPES.iter().any(|t| {
@@ -243,14 +242,12 @@ pub fn run(
     // Add skipped Blender assets to summary
     for path in &skipped_blender {
         if let Some(asset_type) = extract_asset_type(path) {
-            let entry = by_asset_type
-                .entry(asset_type)
-                .or_insert(AssetTypeSummary {
-                    total: 0,
-                    successful: 0,
-                    failed: 0,
-                    skipped: 0,
-                });
+            let entry = by_asset_type.entry(asset_type).or_insert(AssetTypeSummary {
+                total: 0,
+                successful: 0,
+                failed: 0,
+                skipped: 0,
+            });
             entry.total += 1;
             entry.skipped += 1;
         }
@@ -445,10 +442,7 @@ fn process_spec(spec_path: &Path, out_root: &Path, _verbose: bool) -> SpecResult
     match dispatch_generate(&spec, spec_out_dir.to_str().unwrap_or("."), spec_path) {
         Ok(outputs) => {
             result.success = true;
-            result.output_hashes = outputs
-                .iter()
-                .filter_map(|o| o.hash.clone())
-                .collect();
+            result.output_hashes = outputs.iter().filter_map(|o| o.hash.clone()).collect();
         }
         Err(e) => {
             result.error = Some(format!("Generation failed: {}", e));

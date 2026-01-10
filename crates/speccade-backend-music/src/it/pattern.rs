@@ -3,7 +3,7 @@
 use byteorder::{LittleEndian, WriteBytesExt};
 use std::io::{self, Write};
 
-use crate::note::{note_name_to_it, it};
+use crate::note::{it, note_name_to_it};
 
 /// A single note event in an IT pattern cell.
 #[derive(Debug, Clone, Copy, Default)]

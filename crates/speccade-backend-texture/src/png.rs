@@ -3,12 +3,12 @@
 //! Uses fixed compression settings to ensure byte-identical output
 //! for the same input data, as required by SpecCade's Tier 1 determinism.
 
+use png::{BitDepth, ColorType, Compression, Encoder, FilterType};
 use std::io::Write;
 use std::path::Path;
-use png::{BitDepth, ColorType, Encoder, Compression, FilterType};
 use thiserror::Error;
 
-use crate::maps::{TextureBuffer, GrayscaleBuffer};
+use crate::maps::{GrayscaleBuffer, TextureBuffer};
 
 /// Errors from PNG operations.
 #[derive(Debug, Error)]
@@ -63,11 +63,7 @@ impl PngConfig {
 }
 
 /// Write an RGBA texture buffer to a PNG file.
-pub fn write_rgba(
-    buffer: &TextureBuffer,
-    path: &Path,
-    config: &PngConfig,
-) -> Result<(), PngError> {
+pub fn write_rgba(buffer: &TextureBuffer, path: &Path, config: &PngConfig) -> Result<(), PngError> {
     let file = std::fs::File::create(path)?;
     let writer = std::io::BufWriter::new(file);
 
@@ -98,11 +94,7 @@ pub fn write_rgba_to_writer<W: Write>(
 }
 
 /// Write an RGB texture buffer to a PNG file.
-pub fn write_rgb(
-    buffer: &TextureBuffer,
-    path: &Path,
-    config: &PngConfig,
-) -> Result<(), PngError> {
+pub fn write_rgb(buffer: &TextureBuffer, path: &Path, config: &PngConfig) -> Result<(), PngError> {
     let file = std::fs::File::create(path)?;
     let writer = std::io::BufWriter::new(file);
 
@@ -175,13 +167,21 @@ pub fn write_raw(
         ColorType::Rgb => (width * height * 3) as usize,
         ColorType::Rgba => (width * height * 4) as usize,
         ColorType::GrayscaleAlpha => (width * height * 2) as usize,
-        ColorType::Indexed => return Err(PngError::InvalidDimensions("Indexed color not supported".into())),
+        ColorType::Indexed => {
+            return Err(PngError::InvalidDimensions(
+                "Indexed color not supported".into(),
+            ))
+        }
     };
 
     if data.len() != expected_size {
         return Err(PngError::InvalidDimensions(format!(
             "Expected {} bytes for {}x{} {:?}, got {}",
-            expected_size, width, height, color_type, data.len()
+            expected_size,
+            width,
+            height,
+            color_type,
+            data.len()
         )));
     }
 

@@ -256,7 +256,7 @@ mod tests {
         assert_eq!(samples.len(), 1000);
         // Check that all samples are in range
         for &s in &samples {
-            assert!(s >= -1.0 && s <= 1.0);
+            assert!((-1.0..=1.0).contains(&s));
         }
     }
 

@@ -1,8 +1,8 @@
 //! Albedo (base color) map generator.
 
-use super::{TextureBuffer, GrayscaleBuffer};
-use crate::color::{Color, BlendMode};
-use crate::noise::{Noise2D, Fbm, PerlinNoise};
+use super::{GrayscaleBuffer, TextureBuffer};
+use crate::color::{BlendMode, Color};
+use crate::noise::{Fbm, Noise2D, PerlinNoise};
 
 /// Albedo map generator.
 pub struct AlbedoGenerator {
@@ -69,7 +69,11 @@ impl AlbedoGenerator {
                 let new_v = (v + v_noise).clamp(0.0, 1.0);
 
                 let color = Color::from_hsv(new_h, new_s, new_v);
-                buffer.set(x, y, Color::rgba(color.r, color.g, color.b, self.base_color.a));
+                buffer.set(
+                    x,
+                    y,
+                    Color::rgba(color.r, color.g, color.b, self.base_color.a),
+                );
             }
         }
 
@@ -97,13 +101,7 @@ impl AlbedoGenerator {
     }
 
     /// Apply dirt/grime overlay to an existing albedo map.
-    pub fn apply_dirt(
-        &self,
-        base: &mut TextureBuffer,
-        density: f64,
-        dirt_color: Color,
-        seed: u32,
-    ) {
+    pub fn apply_dirt(&self, base: &mut TextureBuffer, density: f64, dirt_color: Color, seed: u32) {
         let noise = Fbm::new(PerlinNoise::new(seed))
             .with_octaves(4)
             .with_persistence(0.6);

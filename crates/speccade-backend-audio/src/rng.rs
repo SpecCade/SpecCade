@@ -35,17 +35,7 @@ pub fn create_rng(seed: u32) -> Pcg32 {
 /// # Returns
 /// A derived u32 seed for the layer
 pub fn derive_layer_seed(base_seed: u32, layer_index: u32) -> u32 {
-    // Concatenate base_seed and layer_index as little-endian bytes
-    let mut input = Vec::with_capacity(8);
-    input.extend_from_slice(&base_seed.to_le_bytes());
-    input.extend_from_slice(&layer_index.to_le_bytes());
-
-    // Hash with BLAKE3
-    let hash = blake3::hash(&input);
-
-    // Truncate to u32 (first 4 bytes, little-endian)
-    let bytes: [u8; 4] = hash.as_bytes()[0..4].try_into().unwrap();
-    u32::from_le_bytes(bytes)
+    speccade_spec::hash::derive_layer_seed(base_seed, layer_index)
 }
 
 /// Derives a seed for a specific component from the base seed using a string key.
@@ -60,17 +50,7 @@ pub fn derive_layer_seed(base_seed: u32, layer_index: u32) -> u32 {
 /// # Returns
 /// A derived u32 seed for the component
 pub fn derive_component_seed(base_seed: u32, key: &str) -> u32 {
-    // Concatenate base_seed (as little-endian bytes) and key (as UTF-8)
-    let mut input = Vec::with_capacity(4 + key.len());
-    input.extend_from_slice(&base_seed.to_le_bytes());
-    input.extend_from_slice(key.as_bytes());
-
-    // Hash with BLAKE3
-    let hash = blake3::hash(&input);
-
-    // Truncate to u32 (first 4 bytes, little-endian)
-    let bytes: [u8; 4] = hash.as_bytes()[0..4].try_into().unwrap();
-    u32::from_le_bytes(bytes)
+    speccade_spec::hash::derive_variant_seed(base_seed, key)
 }
 
 /// Creates an RNG for a specific layer.

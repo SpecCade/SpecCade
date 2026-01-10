@@ -30,7 +30,7 @@ pub enum NoiseFilter {
     /// Highpass filter.
     Highpass { cutoff: f64, resonance: f64 },
     /// Bandpass filter.
-    Bandpass { center: f64, bandwidth: f64, resonance: f64 },
+    Bandpass { center: f64, resonance: f64 },
 }
 
 /// Noise burst synthesizer.
@@ -88,12 +88,8 @@ impl NoiseSynth {
     }
 
     /// Adds a bandpass filter.
-    pub fn with_bandpass(mut self, center: f64, bandwidth: f64, resonance: f64) -> Self {
-        self.filter = NoiseFilter::Bandpass {
-            center,
-            bandwidth,
-            resonance,
-        };
+    pub fn with_bandpass(mut self, center: f64, resonance: f64) -> Self {
+        self.filter = NoiseFilter::Bandpass { center, resonance };
         self
     }
 }
@@ -118,12 +114,7 @@ impl Synthesizer for NoiseSynth {
                 let mut filter = BiquadFilter::highpass(cutoff, resonance, sample_rate);
                 filter.process_buffer(&mut samples);
             }
-            NoiseFilter::Bandpass {
-                center,
-                bandwidth: _,
-                resonance,
-            } => {
-                // For bandpass, Q determines bandwidth
+            NoiseFilter::Bandpass { center, resonance } => {
                 let mut filter = BiquadFilter::bandpass(center, resonance, sample_rate);
                 filter.process_buffer(&mut samples);
             }
@@ -206,7 +197,7 @@ mod tests {
         assert_eq!(samples.len(), 1000);
         // Check normalized range
         for &s in &samples {
-            assert!(s >= -1.0 && s <= 1.0);
+            assert!((-1.0..=1.0).contains(&s));
         }
     }
 

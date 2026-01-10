@@ -211,7 +211,11 @@ impl AdsrEnvelope {
     ///
     /// # Returns
     /// Vector of envelope values (0.0 to 1.0)
-    pub fn generate_fixed_duration(params: &AdsrParams, sample_rate: f64, duration: f64) -> Vec<f64> {
+    pub fn generate_fixed_duration(
+        params: &AdsrParams,
+        sample_rate: f64,
+        duration: f64,
+    ) -> Vec<f64> {
         let num_samples = (duration * sample_rate).ceil() as usize;
         let mut envelope = Vec::with_capacity(num_samples);
 

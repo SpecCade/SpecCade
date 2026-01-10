@@ -15,9 +15,8 @@
 //! 6. Full file validation
 
 use speccade_backend_music::xm::{
-    XmEnvelope, XmInstrument, XmModule, XmNote, XmPattern, XmSample,
-    XmValidator, XmFormatError, XmWarning,
-    XM_ID_TEXT, XM_MAGIC_BYTE, XM_VERSION_104, XM_STANDARD_HEADER_SIZE,
+    XmEnvelope, XmFormatError, XmInstrument, XmModule, XmNote, XmPattern, XmSample, XmValidator,
+    XmWarning, XM_ID_TEXT, XM_MAGIC_BYTE, XM_STANDARD_HEADER_SIZE, XM_VERSION_104,
 };
 
 // ============================================================================
@@ -191,7 +190,7 @@ fn add_instrument_with_sample(data: &mut Vec<u8>, name: &str, sample_data: &[u8]
     data.push(128); // Panning
     data.push(0); // Relative note
     data.push(0); // Reserved
-    // Sample name (22 bytes)
+                  // Sample name (22 bytes)
     data.extend_from_slice(b"Sample\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0");
 
     // Sample data
@@ -235,7 +234,13 @@ fn test_xm_header_magic_byte_0x1a() {
     let mut bad_data = data.clone();
     bad_data[37] = 0x00;
     let result = XmValidator::validate_header_only(&bad_data);
-    assert!(matches!(result, Err(XmFormatError::MissingMagicByte { found: 0x00, offset: 37 })));
+    assert!(matches!(
+        result,
+        Err(XmFormatError::MissingMagicByte {
+            found: 0x00,
+            offset: 37
+        })
+    ));
 }
 
 #[test]
@@ -250,7 +255,10 @@ fn test_xm_header_tracker_name() {
     add_empty_pattern(&mut data, 64);
 
     let report = XmValidator::validate(&data).unwrap();
-    assert!(report.warnings.iter().any(|w| matches!(w, XmWarning::NonStandardTrackerName { .. })));
+    assert!(report
+        .warnings
+        .iter()
+        .any(|w| matches!(w, XmWarning::NonStandardTrackerName { .. })));
 }
 
 #[test]
@@ -263,7 +271,10 @@ fn test_xm_header_version_0x0104() {
     let mut bad_data = data.clone();
     bad_data[58..60].copy_from_slice(&0x0200u16.to_le_bytes());
     let result = XmValidator::validate_header_only(&bad_data);
-    assert!(matches!(result, Err(XmFormatError::UnsupportedVersion { version: 0x0200 })));
+    assert!(matches!(
+        result,
+        Err(XmFormatError::UnsupportedVersion { version: 0x0200 })
+    ));
 }
 
 #[test]
@@ -280,7 +291,10 @@ fn test_xm_header_size() {
     add_empty_pattern(&mut data, 64);
 
     let report = XmValidator::validate(&data).unwrap();
-    assert!(report.warnings.iter().any(|w| matches!(w, XmWarning::NonStandardHeaderSize { .. })));
+    assert!(report
+        .warnings
+        .iter()
+        .any(|w| matches!(w, XmWarning::NonStandardHeaderSize { .. })));
 }
 
 // ============================================================================
@@ -300,13 +314,19 @@ fn test_xm_song_length_validation() {
     let mut bad_data = create_test_xm_bytes("Test", 4, 1, 0, 6, 125);
     bad_data[64..66].copy_from_slice(&0u16.to_le_bytes());
     let result = XmValidator::validate_header_only(&bad_data);
-    assert!(matches!(result, Err(XmFormatError::InvalidSongLength { .. })));
+    assert!(matches!(
+        result,
+        Err(XmFormatError::InvalidSongLength { .. })
+    ));
 
     // Invalid song length (>256)
     let mut bad_data = create_test_xm_bytes("Test", 4, 1, 0, 6, 125);
     bad_data[64..66].copy_from_slice(&300u16.to_le_bytes());
     let result = XmValidator::validate_header_only(&bad_data);
-    assert!(matches!(result, Err(XmFormatError::InvalidSongLength { .. })));
+    assert!(matches!(
+        result,
+        Err(XmFormatError::InvalidSongLength { .. })
+    ));
 }
 
 #[test]
@@ -323,7 +343,10 @@ fn test_xm_restart_position_validation() {
     bad_data[64..66].copy_from_slice(&10u16.to_le_bytes());
     bad_data[66..68].copy_from_slice(&10u16.to_le_bytes());
     let result = XmValidator::validate_header_only(&bad_data);
-    assert!(matches!(result, Err(XmFormatError::InvalidRestartPosition { .. })));
+    assert!(matches!(
+        result,
+        Err(XmFormatError::InvalidRestartPosition { .. })
+    ));
 }
 
 #[test]
@@ -339,12 +362,18 @@ fn test_xm_channel_count_validation() {
     // Invalid: 0 channels
     let data = create_test_xm_bytes("Test", 0, 1, 0, 6, 125);
     let result = XmValidator::validate_header_only(&data);
-    assert!(matches!(result, Err(XmFormatError::InvalidChannelCount { channels: 0, .. })));
+    assert!(matches!(
+        result,
+        Err(XmFormatError::InvalidChannelCount { channels: 0, .. })
+    ));
 
     // Invalid: too many channels
     let data = create_test_xm_bytes("Test", 64, 1, 0, 6, 125);
     let result = XmValidator::validate_header_only(&data);
-    assert!(matches!(result, Err(XmFormatError::InvalidChannelCount { channels: 64, .. })));
+    assert!(matches!(
+        result,
+        Err(XmFormatError::InvalidChannelCount { channels: 64, .. })
+    ));
 }
 
 #[test]
@@ -360,7 +389,10 @@ fn test_xm_pattern_count_validation() {
     // Invalid: too many patterns
     let data = create_test_xm_bytes("Test", 4, 300, 0, 6, 125);
     let result = XmValidator::validate_header_only(&data);
-    assert!(matches!(result, Err(XmFormatError::InvalidPatternCount { patterns: 300, .. })));
+    assert!(matches!(
+        result,
+        Err(XmFormatError::InvalidPatternCount { patterns: 300, .. })
+    ));
 }
 
 #[test]
@@ -376,7 +408,13 @@ fn test_xm_instrument_count_validation() {
     // Invalid: too many instruments
     let data = create_test_xm_bytes("Test", 4, 1, 200, 6, 125);
     let result = XmValidator::validate_header_only(&data);
-    assert!(matches!(result, Err(XmFormatError::InvalidInstrumentCount { instruments: 200, .. })));
+    assert!(matches!(
+        result,
+        Err(XmFormatError::InvalidInstrumentCount {
+            instruments: 200,
+            ..
+        })
+    ));
 }
 
 #[test]
@@ -409,12 +447,18 @@ fn test_xm_tempo_validation() {
     // Invalid: tempo 0
     let data = create_test_xm_bytes("Test", 4, 1, 0, 0, 125);
     let result = XmValidator::validate_header_only(&data);
-    assert!(matches!(result, Err(XmFormatError::InvalidTempo { tempo: 0, .. })));
+    assert!(matches!(
+        result,
+        Err(XmFormatError::InvalidTempo { tempo: 0, .. })
+    ));
 
     // Invalid: tempo > 31
     let data = create_test_xm_bytes("Test", 4, 1, 0, 50, 125);
     let result = XmValidator::validate_header_only(&data);
-    assert!(matches!(result, Err(XmFormatError::InvalidTempo { tempo: 50, .. })));
+    assert!(matches!(
+        result,
+        Err(XmFormatError::InvalidTempo { tempo: 50, .. })
+    ));
 }
 
 #[test]
@@ -430,7 +474,10 @@ fn test_xm_bpm_validation() {
     // Invalid: BPM too low
     let data = create_test_xm_bytes("Test", 4, 1, 0, 6, 20);
     let result = XmValidator::validate_header_only(&data);
-    assert!(matches!(result, Err(XmFormatError::InvalidBpm { bpm: 20, .. })));
+    assert!(matches!(
+        result,
+        Err(XmFormatError::InvalidBpm { bpm: 20, .. })
+    ));
 }
 
 #[test]
@@ -459,7 +506,14 @@ fn test_xm_pattern_order_invalid_reference() {
     data[81] = 5; // Invalid: references pattern 5 but only 2 patterns exist
 
     let result = XmValidator::validate_header_only(&data);
-    assert!(matches!(result, Err(XmFormatError::InvalidPatternOrder { position: 1, pattern: 5, .. })));
+    assert!(matches!(
+        result,
+        Err(XmFormatError::InvalidPatternOrder {
+            position: 1,
+            pattern: 5,
+            ..
+        })
+    ));
 }
 
 // ============================================================================
@@ -489,7 +543,10 @@ fn test_xm_pattern_packing_type() {
     data.extend_from_slice(&0u16.to_le_bytes());
 
     let result = XmValidator::validate(&data);
-    assert!(matches!(result, Err(XmFormatError::InvalidPackingType { found: 1, .. })));
+    assert!(matches!(
+        result,
+        Err(XmFormatError::InvalidPackingType { found: 1, .. })
+    ));
 }
 
 #[test]
@@ -518,18 +575,19 @@ fn test_xm_pattern_packed_data() {
     let mut data = create_test_xm_bytes("Test", 2, 1, 0, 6, 125);
 
     // Create packed pattern data for 2 rows, 2 channels
-    let mut notes = Vec::new();
-    // Row 0, Channel 0: Note C-4, Instrument 1
-    notes.push(0x80 | 0x01 | 0x02); // Packing: has note + has instrument
-    notes.push(49); // C-4
-    notes.push(1); // Instrument 1
-    // Row 0, Channel 1: Empty
-    notes.push(0x80); // Empty packed note
-    // Row 1, Channel 0: Note off
-    notes.push(0x80 | 0x01);
-    notes.push(97); // Note off
-    // Row 1, Channel 1: Empty
-    notes.push(0x80);
+    let notes = vec![
+        // Row 0, Channel 0: Note C-4, Instrument 1
+        0x80 | 0x01 | 0x02, // Packing: has note + has instrument
+        49,                 // C-4
+        1,                  // Instrument 1
+        // Row 0, Channel 1: Empty
+        0x80, // Empty packed note
+        // Row 1, Channel 0: Note off
+        0x80 | 0x01,
+        97, // Note off
+        // Row 1, Channel 1: Empty
+        0x80,
+    ];
 
     add_pattern_with_data(&mut data, 2, 2, &notes);
 
@@ -545,7 +603,10 @@ fn test_xm_pattern_empty() {
 
     let report = XmValidator::validate(&data).unwrap();
     assert!(report.patterns[0].is_empty);
-    assert!(report.warnings.iter().any(|w| matches!(w, XmWarning::EmptyPattern { .. })));
+    assert!(report
+        .warnings
+        .iter()
+        .any(|w| matches!(w, XmWarning::EmptyPattern { .. })));
 }
 
 #[test]
@@ -553,11 +614,15 @@ fn test_xm_pattern_note_values() {
     let mut data = create_test_xm_bytes("Test", 1, 1, 0, 6, 125);
 
     // Valid notes: 1-96 (C-0 to B-7) and 97 (note off)
-    let mut notes = Vec::new();
-    notes.push(0x80 | 0x01); notes.push(1);  // C-0 (lowest)
-    notes.push(0x80 | 0x01); notes.push(96); // B-7 (highest)
-    notes.push(0x80 | 0x01); notes.push(97); // Note off
-    notes.push(0x80); // Empty
+    let notes = vec![
+        0x80 | 0x01,
+        1, // C-0 (lowest)
+        0x80 | 0x01,
+        96, // B-7 (highest)
+        0x80 | 0x01,
+        97,   // Note off
+        0x80, // Empty
+    ];
 
     add_pattern_with_data(&mut data, 4, 1, &notes);
 
@@ -570,15 +635,16 @@ fn test_xm_pattern_invalid_note() {
     let mut data = create_test_xm_bytes("Test", 1, 1, 0, 6, 125);
 
     // Invalid note value (>97)
-    let mut notes = Vec::new();
-    notes.push(0x80 | 0x01);
-    notes.push(100); // Invalid note
+    let notes = vec![0x80 | 0x01, 100]; // Invalid note
 
     add_pattern_with_data(&mut data, 1, 1, &notes);
 
     let report = XmValidator::validate(&data).unwrap();
     assert!(!report.valid);
-    assert!(report.errors.iter().any(|e| matches!(e, XmFormatError::InvalidNoteValue { value: 100, .. })));
+    assert!(report
+        .errors
+        .iter()
+        .any(|e| matches!(e, XmFormatError::InvalidNoteValue { value: 100, .. })));
 }
 
 // ============================================================================
@@ -615,7 +681,10 @@ fn test_xm_instrument_no_samples_warning() {
     add_empty_instrument(&mut data, "Empty Instrument");
 
     let report = XmValidator::validate(&data).unwrap();
-    assert!(report.warnings.iter().any(|w| matches!(w, XmWarning::InstrumentWithoutSamples { .. })));
+    assert!(report
+        .warnings
+        .iter()
+        .any(|w| matches!(w, XmWarning::InstrumentWithoutSamples { .. })));
 }
 
 #[test]
@@ -709,7 +778,12 @@ fn test_xm_envelope_max_points() {
     data.extend_from_slice(&[0u8; 22]);
     data.extend_from_slice(&100u32.to_le_bytes());
     data.extend_from_slice(&[0u8; 8]);
-    data.push(64); data.push(0); data.push(0); data.push(128); data.push(0); data.push(0);
+    data.push(64);
+    data.push(0);
+    data.push(0);
+    data.push(128);
+    data.push(0);
+    data.push(0);
     data.extend_from_slice(&[0u8; 22]);
     data.extend_from_slice(&[128u8; 100]);
 
@@ -741,7 +815,12 @@ fn test_xm_envelope_too_many_points() {
     data.extend_from_slice(&[0u8; 22]);
     data.extend_from_slice(&100u32.to_le_bytes());
     data.extend_from_slice(&[0u8; 8]);
-    data.push(64); data.push(0); data.push(0); data.push(128); data.push(0); data.push(0);
+    data.push(64);
+    data.push(0);
+    data.push(0);
+    data.push(128);
+    data.push(0);
+    data.push(0);
     data.extend_from_slice(&[0u8; 22]);
     data.extend_from_slice(&[128u8; 100]);
 
@@ -771,7 +850,12 @@ fn test_xm_vibrato_settings() {
     data.extend_from_slice(&[0u8; 22]);
     data.extend_from_slice(&100u32.to_le_bytes());
     data.extend_from_slice(&[0u8; 8]);
-    data.push(64); data.push(0); data.push(0); data.push(128); data.push(0); data.push(0);
+    data.push(64);
+    data.push(0);
+    data.push(0);
+    data.push(128);
+    data.push(0);
+    data.push(0);
     data.extend_from_slice(&[0u8; 22]);
     data.extend_from_slice(&[128u8; 100]);
 
@@ -847,7 +931,10 @@ fn test_xm_sample_volume_range() {
 
     let report = XmValidator::validate(&data).unwrap();
     assert!(!report.valid);
-    assert!(report.errors.iter().any(|e| matches!(e, XmFormatError::InvalidVolume { value: 100, .. })));
+    assert!(report
+        .errors
+        .iter()
+        .any(|e| matches!(e, XmFormatError::InvalidVolume { value: 100, .. })));
 }
 
 #[test]
@@ -878,7 +965,10 @@ fn test_xm_sample_loop_types() {
     data[sample_header_start + 14] = 3; // Invalid loop type
 
     let result = XmValidator::validate(&data);
-    assert!(matches!(result, Err(XmFormatError::InvalidLoopType { loop_type: 3, .. })));
+    assert!(matches!(
+        result,
+        Err(XmFormatError::InvalidLoopType { loop_type: 3, .. })
+    ));
 }
 
 #[test]
@@ -918,7 +1008,10 @@ fn test_xm_sample_loop_bounds() {
     data[sample_header_start + 14] = 1;
 
     let result = XmValidator::validate(&data);
-    assert!(matches!(result, Err(XmFormatError::InvalidLoopBounds { .. })));
+    assert!(matches!(
+        result,
+        Err(XmFormatError::InvalidLoopBounds { .. })
+    ));
 }
 
 #[test]
@@ -970,8 +1063,7 @@ fn test_xm_full_validation_complete_file() {
     let sample_data = vec![0u8; 1000];
     let sample = XmSample::new("Lead Sample", sample_data, true);
     let envelope = XmEnvelope::adsr(10, 20, 48, 30);
-    let instrument = XmInstrument::new("Lead Synth", sample)
-        .with_volume_envelope(envelope);
+    let instrument = XmInstrument::new("Lead Synth", sample).with_volume_envelope(envelope);
     module.add_instrument(instrument);
 
     module.set_order_table(&[0]);

@@ -74,7 +74,8 @@ impl WorleyNoise {
     /// Hash function for cell coordinates to get deterministic point positions.
     fn cell_point(&self, cell_x: i32, cell_y: i32) -> (f64, f64) {
         // Create a unique seed for this cell
-        let cell_seed = self.seed
+        let cell_seed = self
+            .seed
             .wrapping_add((cell_x as u32).wrapping_mul(374761393))
             .wrapping_add((cell_y as u32).wrapping_mul(668265263));
 

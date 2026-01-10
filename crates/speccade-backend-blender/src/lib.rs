@@ -178,7 +178,9 @@ mod tests {
     #[test]
     fn test_mode_dispatch() {
         assert!(orchestrator::mode_from_recipe_kind("static_mesh.blender_primitives_v1").is_ok());
-        assert!(orchestrator::mode_from_recipe_kind("skeletal_mesh.blender_rigged_mesh_v1").is_ok());
+        assert!(
+            orchestrator::mode_from_recipe_kind("skeletal_mesh.blender_rigged_mesh_v1").is_ok()
+        );
         assert!(orchestrator::mode_from_recipe_kind("skeletal_animation.blender_clip_v1").is_ok());
         assert!(orchestrator::mode_from_recipe_kind("invalid.kind").is_err());
     }

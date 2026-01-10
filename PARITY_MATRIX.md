@@ -455,7 +455,7 @@
 | Not Implemented (✗) | 0 | 0% |
 | Deprecated (-) | 0 | 0% |
 
-### SpecCade Rust Implementation (texture_2d.normal_map_v1)
+### SpecCade Rust Implementation (texture.normal_v1)
 
 The Rust implementation (`speccade-spec`) uses a different schema. The golden examples in `golden/speccade/specs/normal_map/` demonstrate the canonical format.
 

@@ -1,515 +1,206 @@
 # Music Spec Reference
 
-This document covers music tracker module generation in SpecCade.
-
-## Table of Contents
-
-- [Overview](#overview)
-- [Recipe: music.tracker_song_v1](#recipe-musictracker_song_v1)
-- [Instruments](#instruments)
-  - [Referential vs Inline Instruments](#referential-vs-inline-instruments)
-  - [Instrument Definition](#instrument-definition)
-- [Patterns](#patterns)
-  - [Note Events](#note-events)
-  - [Effects](#effects)
-- [Arrangement](#arrangement)
-- [Automation](#automation)
-- [Format-Specific Options](#format-specific-options)
-- [Examples](#examples)
-
----
+This document covers tracker module generation in SpecCade.
 
 ## Overview
 
-**Asset Type:** `music`
-**Recipe Kinds:** `music.tracker_song_v1`
+**Asset Type:** `music`  
+**Recipe Kinds:** `music.tracker_song_v1`  
 **Output Formats:** XM, IT
 
-Tracker module songs with instruments, patterns, and arrangement. SpecCade generates fully playable XM (FastTracker II) or IT (Impulse Tracker) modules with embedded samples.
+SpecCade generates fully playable tracker modules with embedded instruments and patterns.
 
----
+## Outputs
+
+For `music.tracker_song_v1`, `speccade generate` writes exactly one `primary` output:
+
+- `outputs[]` must contain **exactly one** entry with `kind: "primary"`.
+- The `primary` output `format` must match `recipe.params.format` (`"xm"` → `format: "xm"`, `"it"` → `format: "it"`).
+
+Example:
+
+```json
+{
+  "kind": "primary",
+  "format": "xm",
+  "path": "songs/drum_loop.xm"
+}
+```
 
 ## Recipe: `music.tracker_song_v1`
 
-### Required Params
+### Params
 
-| Param | Type | Description |
-|-------|------|-------------|
-| `format` | string | Module format: `"xm"` or `"it"` |
-| `instruments` | array | Instrument definitions |
-| `patterns` | object | Pattern definitions |
-| `arrangement` | array | Pattern order |
-
-### Optional Params
-
-| Param | Type | Description | Default |
-|-------|------|-------------|---------|
-| `name` | string | Internal song name | `""` |
-| `title` | string | Display title | `""` |
-| `bpm` | integer | Tempo in beats per minute | `125` |
-| `speed` | integer | Tracker speed (ticks per row) | `6` |
-| `channels` | integer | Number of channels | `4` |
-| `loop` | boolean | Loop song | `true` |
-| `restart_position` | integer | Loop restart position in arrangement | `0` |
-| `automation` | array | Automation events | `[]` |
-| `xm_options` | object | XM-specific options | `{}` |
-| `it_options` | object | IT-specific options | `{}` |
-
----
+| Param | Type | Required | Default | Notes |
+|------:|------|:--------:|---------|-------|
+| `format` | string | yes | — | `"xm"` or `"it"` |
+| `bpm` | integer | yes | — | Validated at generate time (`30..=300`) |
+| `speed` | integer | yes | — | Validated at generate time (`1..=31`) |
+| `channels` | integer | yes | — | XM: `1..=32`, IT: `1..=64` |
+| `name` | string | no | omitted | Module internal name |
+| `title` | string | no | omitted | Display title (metadata) |
+| `loop` | boolean | no | `false` | XM only (IT currently ignores looping) |
+| `restart_position` | integer | no | omitted | XM only; order-table index used when `loop: true` |
+| `instruments` | array | no | `[]` | Instrument definitions |
+| `patterns` | object | no | `{}` | Map of pattern name → pattern |
+| `arrangement` | array | no | `[]` | Sequence of patterns by name |
+| `automation` | array | no | `[]` | Volume fades / tempo changes |
+| `it_options` | object | no | omitted | IT-only module options |
 
 ## Instruments
 
-### Referential vs Inline Instruments
+Each entry in `instruments[]` is a `TrackerInstrument`. You must specify **exactly one** of:
 
-Music specs support two approaches for defining instruments:
+- `ref` (recommended for reuse)
+- `wav` (external sample file)
+- `synthesis` (inline tracker synthesis)
 
-**Referential Instruments (Recommended):**
-Reference a pre-generated `audio_instrument` spec by path. Benefits:
-- Cached WAV samples reused across songs
-- Smaller, cleaner music specs
-- Separation between sound design and composition
+### Instrument Fields
 
-**Inline Synthesis:**
-Define synthesis parameters directly in the music spec. Useful for:
-- Quick prototyping
-- One-off unique sounds
-- Simple waveforms
+| Field | Type | Notes |
+|------:|------|------|
+| `name` | string | Display name in tracker |
+| `comment` | string | Optional, ignored by generator |
+| `ref` | string | Path to an `audio` spec (see below) |
+| `wav` | string | Path to a WAV file (relative to the music spec directory) |
+| `synthesis` | object | Inline synthesis (see below) |
+| `base_note` | string | Note name like `"C4"` / `"A#3"` (affects pitch correction) |
+| `sample_rate` | integer | Optional; default is backend-defined (typically `22050`) |
+| `envelope` | object | ADSR envelope (defaults if omitted) |
+| `default_volume` | integer | Optional `0..=64` |
 
-### Instrument Definition
+### Referential Instruments (`ref`)
 
-Each instrument requires a `name` and exactly one of: `ref`, `wav`, or `synthesis`.
+`ref` loads an external spec file relative to the music spec’s directory. The referenced spec must be:
 
-#### Referential Instrument
+- `asset_type: "audio"`
+- `recipe.kind: "audio_v1"`
 
-```json
-{
-  "name": "bass",
-  "ref": "instruments/bass_pluck.spec.json"
-}
-```
+Only some `audio_v1` synthesis types can be converted into tracker instruments:
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `name` | string | Instrument name (displayed in tracker) |
-| `ref` | string | Path to audio_instrument spec |
+- `oscillator` → `sine` / `square` / `triangle` / `sawtooth` / `pulse`
+- `noise_burst` → `noise`
 
-#### WAV Sample Reference
+More complex synthesis types (FM, Karplus-Strong, additive, etc.) must be pre-rendered to WAV and referenced via `wav`.
 
-```json
-{
-  "name": "kick",
-  "wav": "samples/kick.wav",
-  "base_note": "C4"
-}
-```
+### Inline Instrument Synthesis (`synthesis`)
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `wav` | string | Path to WAV file |
-| `base_note` | string | Sample pitch for playback |
+`synthesis` is a tagged union with `type`:
 
-#### Inline Synthesis
-
-```json
-{
-  "name": "lead_synth",
-  "base_note": "C5",
-  "sample_rate": 44100,
-  "synthesis": {
-    "type": "sawtooth"
-  },
-  "envelope": {
-    "attack": 0.01,
-    "decay": 0.1,
-    "sustain": 0.7,
-    "release": 0.3
-  }
-}
-```
-
-| Field | Type | Description | Default |
-|-------|------|-------------|---------|
-| `base_note` | string | Sample pitch | `"C4"` (XM), `"C5"` (IT) |
-| `sample_rate` | integer | Sample rate | `22050` |
-| `synthesis` | object | Synthesis config | Required |
-| `envelope` | object | ADSR envelope | Required |
-
-**Available synthesis types:**
-- `"sine"` - Sine wave
-- `"square"` - Square wave
-- `"saw"` / `"sawtooth"` - Sawtooth wave
-- `"triangle"` - Triangle wave
-- `"noise"` - White noise
-- `"pulse"` - Pulse wave with configurable duty cycle
-
----
+- `pulse`: `{ "type": "pulse", "duty_cycle": 0.5 }`
+- `square`: `{ "type": "square" }`
+- `triangle`: `{ "type": "triangle" }`
+- `sawtooth`: `{ "type": "sawtooth" }`
+- `sine`: `{ "type": "sine" }`
+- `noise`: `{ "type": "noise", "periodic": false }`
+- `sample`: `{ "type": "sample", "path": "samples/kick.wav", "base_note": "C4" }`
 
 ## Patterns
 
-Patterns define note sequences organized by channel.
+`patterns` is an object mapping pattern name → `TrackerPattern`.
 
-### Pattern Structure
+Each pattern can use one of two formats:
 
-```json
-{
-  "patterns": {
-    "intro": {
-      "rows": 64,
-      "notes": {
-        "0": [...],
-        "1": [...],
-        "2": [...]
-      }
-    },
-    "verse": {
-      "rows": 64,
-      "notes": {...}
-    }
-  }
-}
-```
+- **Channel-keyed** (`notes`): `{ "notes": { "0": [ ... ], "1": [ ... ] } }`
+- **Flat list** (`data`): `{ "data": [ { "row": 0, "channel": 0, ... }, ... ] }`
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `rows` | integer | Number of rows (typically 64) |
-| `notes` | object | Channel-indexed note arrays |
+If both are present, they are merged and then sorted by `(row, channel)`.
 
-Channels are zero-indexed strings: `"0"`, `"1"`, `"2"`, etc.
+### Pattern Fields
+
+| Field | Type | Default |
+|------:|------|---------|
+| `rows` | integer | `0` |
+| `notes` | object | omitted |
+| `data` | array | omitted |
 
 ### Note Events
 
-Each note event in a channel specifies position and playback parameters:
+Each note event is a `PatternNote`:
 
-```json
-{
-  "row": 0,
-  "note": "C4",
-  "inst": 0,
-  "vol": 64,
-  "effect": 0,
-  "param": 0
-}
-```
+| Field | Type | Notes |
+|------:|------|------|
+| `row` | integer | 0-indexed |
+| `channel` | integer | Required for `data` format; ignored for `notes` format |
+| `note` | string \| integer | Note name (e.g. `"C-4"`, `"C4"`) or MIDI number; may be omitted for “no note” |
+| `inst` | integer | Instrument index (0-based); alias: `instrument` |
+| `vol` | integer | Optional volume (0–64); alias: `volume` |
+| `effect` | integer | Optional effect code |
+| `param` | integer | Optional effect parameter byte |
+| `effect_name` | string | Optional effect name (backend maps to code) |
+| `effect_xy` | [integer, integer] | Optional `[x, y]` nibbles → parameter byte |
 
-| Field | Type | Description | Required |
-|-------|------|-------------|----------|
-| `row` | integer | Row index (0-based) | Yes |
-| `note` | string/integer | Note name or MIDI number | Yes |
-| `inst` | integer | Instrument index (0-based) | Yes |
-| `vol` | integer | Volume (0-64) | No |
-| `effect` | integer | Effect command number | No |
-| `param` | integer | Effect parameter | No |
-| `effect_name` | string | Named effect (alternative to effect) | No |
-| `effect_xy` | array | Effect X/Y parameters `[x, y]` | No |
+Special note strings are format-specific, but these are commonly accepted:
 
-#### Note Values
-
-- Note names: `"C4"`, `"D#5"`, `"Gb3"`, etc.
-- MIDI numbers: `60` (C4), `69` (A4), etc.
-- Special values:
-  - `"OFF"` or `97` - Note off/cut
-  - `"---"` - Empty/continue
-
-### Effects
-
-Effects can be specified by number or by name.
-
-#### Named Effects
-
-```json
-{"row": 0, "note": "C4", "inst": 0, "effect_name": "vibrato", "effect_xy": [4, 8]}
-```
-
-| Effect Name | Description | Parameters |
-|-------------|-------------|------------|
-| `arpeggio` | Rapid note switching | `[semitones1, semitones2]` |
-| `porta_up` | Portamento up | `[0, speed]` |
-| `porta_down` | Portamento down | `[0, speed]` |
-| `porta_to_note` | Slide to note | `[0, speed]` |
-| `vibrato` | Pitch vibrato | `[speed, depth]` |
-| `tremolo` | Volume tremolo | `[speed, depth]` |
-| `volume_slide` | Volume slide | `[up, down]` |
-| `set_volume` | Set volume | Single value in `param` |
-| `set_tempo` | Set BPM | Single value in `param` |
-| `set_speed` | Set speed/ticks | Single value in `param` |
-
-#### Numeric Effects
-
-Standard tracker effect numbers can also be used directly:
-
-| Effect | XM | IT | Description |
-|--------|----|----|-------------|
-| 0 | Arpeggio | Arpeggio | Rapid note switching |
-| 1 | Porta Up | Porta Up | Pitch slide up |
-| 2 | Porta Down | Porta Down | Pitch slide down |
-| 3 | Porta To | Porta To | Slide to note |
-| 4 | Vibrato | Vibrato | Pitch oscillation |
-| 5 | Vol+Porta | Vol+Porta | Volume slide + porta |
-| 6 | Vol+Vib | Vol+Vib | Volume slide + vibrato |
-| 7 | Tremolo | Tremolo | Volume oscillation |
-| 10 | Vol Slide | Vol Slide | Volume slide |
-| 12 | Set Vol | Set Vol | Set volume |
-| 15 | Set Speed | Set Speed | Set speed/tempo |
-
----
+- `"---"` / `"..."` → no note
+- `"OFF"` / `"==="` → note off / cut (format-dependent)
 
 ## Arrangement
 
-The arrangement defines the order of patterns:
+`arrangement[]` is a list of entries:
 
 ```json
-{
-  "arrangement": [
-    {"pattern": "intro", "repeat": 1},
-    {"pattern": "verse", "repeat": 2},
-    {"pattern": "chorus", "repeat": 2},
-    {"pattern": "bridge", "repeat": 1},
-    {"pattern": "verse", "repeat": 1},
-    {"pattern": "chorus", "repeat": 2},
-    {"pattern": "outro", "repeat": 1}
-  ]
-}
+{ "pattern": "intro", "repeat": 2 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `pattern` | string | Pattern name from `patterns` object |
-| `repeat` | integer | Number of times to play |
-
----
+Pattern names must exist in `patterns`. `repeat` defaults to `1`.
 
 ## Automation
 
-Automation events modify playback parameters over time:
+Automation entries are tagged unions with `type`:
 
-### Volume Fade
+- `volume_fade`: fades a channel volume over a row range within a pattern
+- `tempo_change`: changes tempo at a row within a pattern
+
+Example:
+
+```json
+[
+  { "type": "tempo_change", "pattern": "intro", "row": 0, "bpm": 140 },
+  { "type": "volume_fade", "pattern": "intro", "channel": 0, "start_row": 0, "end_row": 63, "start_vol": 64, "end_vol": 0 }
+]
+```
+
+## IT Options (`it_options`)
 
 ```json
 {
-  "type": "volume_fade",
-  "pattern": "intro",
-  "channel": 0,
-  "start_row": 0,
-  "end_row": 32,
-  "start_vol": 0,
-  "end_vol": 64
+  "stereo": true,
+  "global_volume": 128,
+  "mix_volume": 48
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `pattern` | string | Target pattern |
-| `channel` | integer | Target channel |
-| `start_row` | integer | Fade start row |
-| `end_row` | integer | Fade end row |
-| `start_vol` | integer | Starting volume (0-64) |
-| `end_vol` | integer | Ending volume (0-64) |
-
-### Tempo Change
-
-```json
-{
-  "type": "tempo_change",
-  "pattern": "chorus",
-  "row": 0,
-  "bpm": 150
-}
-```
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `pattern` | string | Target pattern |
-| `row` | integer | Row to apply change |
-| `bpm` | integer | New tempo |
-
----
-
-## Format-Specific Options
-
-### XM Options
-
-```json
-{
-  "xm_options": {
-    "linear_frequency": true
-  }
-}
-```
-
-| Field | Type | Description | Default |
-|-------|------|-------------|---------|
-| `linear_frequency` | boolean | Use linear frequency table | `true` |
-
-### IT Options
-
-```json
-{
-  "it_options": {
-    "stereo": true,
-    "global_volume": 128,
-    "mix_volume": 64
-  }
-}
-```
-
-| Field | Type | Description | Default |
-|-------|------|-------------|---------|
-| `stereo` | boolean | Enable stereo output | `true` |
-| `global_volume` | integer | Global volume (0-128) | `128` |
-| `mix_volume` | integer | Mixing volume (0-128) | `64` |
-
----
-
-## Examples
-
-### Example: Simple 4-Channel Song
+## Example (Minimal XM)
 
 ```json
 {
   "spec_version": 1,
-  "asset_id": "simple_song",
+  "asset_id": "minimal_song",
   "asset_type": "music",
   "license": "CC0-1.0",
-  "seed": 12345,
-  "description": "Simple 4-channel tracker song",
-  "outputs": [
-    {"kind": "primary", "format": "xm", "path": "simple_song.xm"}
-  ],
+  "seed": 42,
+  "outputs": [{ "kind": "primary", "format": "xm", "path": "minimal_song.xm" }],
   "recipe": {
     "kind": "music.tracker_song_v1",
     "params": {
       "format": "xm",
-      "bpm": 140,
+      "bpm": 125,
       "speed": 6,
       "channels": 4,
-      "loop": true,
-      "instruments": [
-        {
-          "name": "lead",
-          "synthesis": {"type": "square"},
-          "envelope": {"attack": 0.01, "decay": 0.1, "sustain": 0.6, "release": 0.2}
-        },
-        {
-          "name": "bass",
-          "synthesis": {"type": "sine"},
-          "envelope": {"attack": 0.005, "decay": 0.2, "sustain": 0.5, "release": 0.2}
-        }
-      ],
+      "instruments": [{ "name": "lead", "synthesis": { "type": "square" } }],
       "patterns": {
-        "main": {
-          "rows": 64,
-          "notes": {
-            "0": [
-              {"row": 0, "note": "C4", "inst": 0, "vol": 64},
-              {"row": 16, "note": "E4", "inst": 0, "vol": 64},
-              {"row": 32, "note": "G4", "inst": 0, "vol": 64},
-              {"row": 48, "note": "E4", "inst": 0, "vol": 64}
-            ],
-            "1": [
-              {"row": 0, "note": "C2", "inst": 1, "vol": 56},
-              {"row": 32, "note": "G2", "inst": 1, "vol": 56}
-            ]
-          }
+        "intro": {
+          "rows": 16,
+          "data": [
+            { "row": 0, "channel": 0, "note": "C-4", "instrument": 0, "volume": 64 },
+            { "row": 4, "channel": 0, "note": "E-4", "instrument": 0, "volume": 64 },
+            { "row": 8, "channel": 0, "note": "G-4", "instrument": 0, "volume": 64 }
+          ]
         }
       },
-      "arrangement": [
-        {"pattern": "main", "repeat": 4}
-      ]
+      "arrangement": [{ "pattern": "intro", "repeat": 2 }]
     }
   }
 }
 ```
-
-### Example: IT Module with Referential Instruments
-
-```json
-{
-  "spec_version": 1,
-  "asset_id": "it_song",
-  "asset_type": "music",
-  "license": "CC0-1.0",
-  "seed": 99999,
-  "description": "IT module using external instrument specs",
-  "outputs": [
-    {"kind": "primary", "format": "it", "path": "it_song.it"}
-  ],
-  "recipe": {
-    "kind": "music.tracker_song_v1",
-    "params": {
-      "format": "it",
-      "bpm": 120,
-      "speed": 6,
-      "channels": 8,
-      "instruments": [
-        {"name": "kick", "ref": "audio_instrument/drum_kick.json"},
-        {"name": "snare", "ref": "audio_instrument/drum_snare.json"},
-        {"name": "bass", "ref": "audio_instrument/bass_electric.json"},
-        {"name": "lead", "ref": "audio_instrument/saw_lead.json"}
-      ],
-      "patterns": {
-        "verse": {
-          "rows": 64,
-          "notes": {
-            "0": [
-              {"row": 0, "note": "C4", "inst": 0, "vol": 64},
-              {"row": 16, "note": "C4", "inst": 0, "vol": 60},
-              {"row": 32, "note": "C4", "inst": 0, "vol": 64},
-              {"row": 48, "note": "C4", "inst": 0, "vol": 60}
-            ],
-            "1": [
-              {"row": 8, "note": "D4", "inst": 1, "vol": 56},
-              {"row": 24, "note": "D4", "inst": 1, "vol": 56},
-              {"row": 40, "note": "D4", "inst": 1, "vol": 56},
-              {"row": 56, "note": "D4", "inst": 1, "vol": 56}
-            ],
-            "2": [
-              {"row": 0, "note": "C2", "inst": 2, "vol": 64},
-              {"row": 32, "note": "G2", "inst": 2, "vol": 64}
-            ],
-            "3": [
-              {"row": 0, "note": "C4", "inst": 3, "vol": 48},
-              {"row": 16, "note": "E4", "inst": 3, "vol": 48},
-              {"row": 32, "note": "G4", "inst": 3, "vol": 48},
-              {"row": 48, "note": "B4", "inst": 3, "vol": 48}
-            ]
-          }
-        }
-      },
-      "arrangement": [
-        {"pattern": "verse", "repeat": 4}
-      ],
-      "it_options": {
-        "stereo": true,
-        "global_volume": 128,
-        "mix_volume": 64
-      }
-    }
-  }
-}
-```
-
----
-
-## Validation Rules
-
-### Music-Specific Validation
-
-| Rule | Error Code | Description |
-|------|------------|-------------|
-| Format must be "xm" or "it" | E040 | Invalid module format |
-| BPM must be 32-255 | E041 | BPM out of range |
-| Speed must be 1-31 | E042 | Speed out of range |
-| Channels must be 1-64 | E043 | Channel count out of range |
-| Pattern must have rows | E044 | Missing rows in pattern |
-| Pattern referenced in arrangement must exist | E045 | Unknown pattern |
-| Instrument index must be valid | E046 | Invalid instrument reference |
-| Note must be valid | E047 | Invalid note value |
-| Row must be within pattern bounds | E048 | Row exceeds pattern length |
-
----
-
-## Golden Corpus Specs
-
-Reference implementations:
-
-- `golden/speccade/music_comprehensive.spec.json` - All features demonstrated

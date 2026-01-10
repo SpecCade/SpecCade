@@ -189,7 +189,11 @@ impl AnimationPhase {
     }
 
     /// Adds IK target keyframes for a chain.
-    pub fn with_ik_targets(mut self, chain: impl Into<String>, targets: Vec<PhaseIkTarget>) -> Self {
+    pub fn with_ik_targets(
+        mut self,
+        chain: impl Into<String>,
+        targets: Vec<PhaseIkTarget>,
+    ) -> Self {
         self.ik_targets.insert(chain.into(), targets);
         self
     }
@@ -229,8 +233,7 @@ mod tests {
         assert_eq!(roll.pitch, 0.0);
 
         // Test with location
-        let with_loc = PoseBoneTransform::rotation(10.0, 20.0, 30.0)
-            .with_location([0.1, 0.2, 0.3]);
+        let with_loc = PoseBoneTransform::rotation(10.0, 20.0, 30.0).with_location([0.1, 0.2, 0.3]);
         assert!(with_loc.location.is_some());
         assert_eq!(with_loc.location.unwrap(), [0.1, 0.2, 0.3]);
 
@@ -241,8 +244,8 @@ mod tests {
 
     #[test]
     fn test_pose_bone_transform_serde() {
-        let transform = PoseBoneTransform::rotation(10.0, 20.0, 30.0)
-            .with_location([0.1, 0.2, 0.3]);
+        let transform =
+            PoseBoneTransform::rotation(10.0, 20.0, 30.0).with_location([0.1, 0.2, 0.3]);
 
         let json = serde_json::to_string(&transform).unwrap();
         assert!(json.contains("\"pitch\":10.0"));
@@ -269,8 +272,8 @@ mod tests {
 
     #[test]
     fn test_pose_definition_serde() {
-        let pose = PoseDefinition::new()
-            .with_bone("leg_l", PoseBoneTransform::rotation(20.0, 0.0, 0.0));
+        let pose =
+            PoseDefinition::new().with_bone("leg_l", PoseBoneTransform::rotation(20.0, 0.0, 0.0));
 
         let json = serde_json::to_string(&pose).unwrap();
         assert!(json.contains("leg_l"));
@@ -293,8 +296,7 @@ mod tests {
 
     #[test]
     fn test_phase_ik_target_serde() {
-        let target = PhaseIkTarget::new(15, [0.5, 0.6, 0.7])
-            .with_ikfk(0.8);
+        let target = PhaseIkTarget::new(15, [0.5, 0.6, 0.7]).with_ikfk(0.8);
 
         let json = serde_json::to_string(&target).unwrap();
         assert!(json.contains("\"frame\":15"));
@@ -328,8 +330,7 @@ mod tests {
             PhaseIkTarget::new(15, [0.1, 0.0, 0.2]),
         ];
 
-        let phase = AnimationPhase::new(0, 30)
-            .with_ik_targets("ik_foot_l", targets);
+        let phase = AnimationPhase::new(0, 30).with_ik_targets("ik_foot_l", targets);
 
         assert!(phase.ik_targets.contains_key("ik_foot_l"));
         assert_eq!(phase.ik_targets["ik_foot_l"].len(), 2);

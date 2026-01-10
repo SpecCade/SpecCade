@@ -3,10 +3,10 @@
 //! This module contains common functions used by multiple texture generation
 //! modules to avoid code duplication.
 
-use speccade_spec::recipe::texture::{NoiseConfig, NoiseAlgorithm};
+use speccade_spec::recipe::texture::{NoiseAlgorithm, NoiseConfig};
 
 use crate::maps::GrayscaleBuffer;
-use crate::noise::{Noise2D, Fbm, PerlinNoise, SimplexNoise, WorleyNoise};
+use crate::noise::{Fbm, Noise2D, PerlinNoise, SimplexNoise, WorleyNoise};
 use crate::pattern::Pattern2D;
 
 /// Create a noise generator from configuration.
@@ -29,35 +29,29 @@ pub fn create_noise_generator(config: &NoiseConfig, seed: u32) -> Box<dyn Noise2
         NoiseAlgorithm::Simplex => Box::new(SimplexNoise::new(seed)),
         NoiseAlgorithm::Worley => Box::new(WorleyNoise::new(seed)),
         NoiseAlgorithm::Value => Box::new(PerlinNoise::new(seed)), // Use Perlin as fallback
-        NoiseAlgorithm::Fbm => {
-            Box::new(
-                Fbm::new(PerlinNoise::new(seed))
-                    .with_octaves(config.octaves)
-                    .with_persistence(config.persistence)
-                    .with_lacunarity(config.lacunarity)
-            )
-        }
+        NoiseAlgorithm::Fbm => Box::new(
+            Fbm::new(PerlinNoise::new(seed))
+                .with_octaves(config.octaves)
+                .with_persistence(config.persistence)
+                .with_lacunarity(config.lacunarity),
+        ),
     };
 
     // Wrap in FBM if octaves > 1 and not already FBM
     if config.octaves > 1 && config.algorithm != NoiseAlgorithm::Fbm {
         match config.algorithm {
-            NoiseAlgorithm::Perlin => {
-                Box::new(
-                    Fbm::new(PerlinNoise::new(seed))
-                        .with_octaves(config.octaves)
-                        .with_persistence(config.persistence)
-                        .with_lacunarity(config.lacunarity)
-                )
-            }
-            NoiseAlgorithm::Simplex => {
-                Box::new(
-                    Fbm::new(SimplexNoise::new(seed))
-                        .with_octaves(config.octaves)
-                        .with_persistence(config.persistence)
-                        .with_lacunarity(config.lacunarity)
-                )
-            }
+            NoiseAlgorithm::Perlin => Box::new(
+                Fbm::new(PerlinNoise::new(seed))
+                    .with_octaves(config.octaves)
+                    .with_persistence(config.persistence)
+                    .with_lacunarity(config.lacunarity),
+            ),
+            NoiseAlgorithm::Simplex => Box::new(
+                Fbm::new(SimplexNoise::new(seed))
+                    .with_octaves(config.octaves)
+                    .with_persistence(config.persistence)
+                    .with_lacunarity(config.lacunarity),
+            ),
             _ => base_noise,
         }
     } else {
@@ -179,7 +173,7 @@ mod tests {
 
         let noise = create_noise_generator(&config, 42);
         let val = noise.sample_01(0.5, 0.5);
-        assert!(val >= 0.0 && val <= 1.0);
+        assert!((0.0..=1.0).contains(&val));
     }
 
     #[test]
@@ -194,7 +188,7 @@ mod tests {
 
         let noise = create_noise_generator(&config, 42);
         let val = noise.sample_01(0.5, 0.5);
-        assert!(val >= 0.0 && val <= 1.0);
+        assert!((0.0..=1.0).contains(&val));
     }
 
     #[test]
@@ -209,7 +203,7 @@ mod tests {
 
         let noise = create_noise_generator(&config, 42);
         let val = noise.sample_01(0.5, 0.5);
-        assert!(val >= 0.0 && val <= 1.0);
+        assert!((0.0..=1.0).contains(&val));
     }
 
     #[test]
@@ -224,7 +218,7 @@ mod tests {
 
         let noise = create_noise_generator(&config, 42);
         let val = noise.sample_01(0.5, 0.5);
-        assert!(val >= 0.0 && val <= 1.0);
+        assert!((0.0..=1.0).contains(&val));
     }
 
     #[test]
@@ -239,7 +233,7 @@ mod tests {
 
         let noise = create_noise_generator(&config, 42);
         let val = noise.sample_01(0.5, 0.5);
-        assert!(val >= 0.0 && val <= 1.0);
+        assert!((0.0..=1.0).contains(&val));
     }
 
     #[test]
@@ -254,7 +248,7 @@ mod tests {
 
         let noise = create_noise_generator(&config, 42);
         let val = noise.sample_01(0.5, 0.5);
-        assert!(val >= 0.0 && val <= 1.0);
+        assert!((0.0..=1.0).contains(&val));
     }
 
     #[test]
@@ -306,7 +300,10 @@ mod tests {
         let val_08 = buffer.get(8, 0);
 
         // Adjacent checker cells should have different values
-        assert!((val_00 - val_08).abs() > 0.5, "Checker pattern should alternate");
+        assert!(
+            (val_00 - val_08).abs() > 0.5,
+            "Checker pattern should alternate"
+        );
     }
 
     #[test]

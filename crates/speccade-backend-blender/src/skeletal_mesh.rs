@@ -5,7 +5,9 @@
 
 use std::path::Path;
 
-use speccade_spec::recipe::character::{SkeletalMeshBlenderRiggedMeshV1Params, SkeletalMeshConstraints};
+use speccade_spec::recipe::character::{
+    SkeletalMeshBlenderRiggedMeshV1Params, SkeletalMeshConstraints,
+};
 use speccade_spec::Spec;
 
 use crate::error::{BlenderError, BlenderResult};
@@ -63,7 +65,8 @@ pub fn generate_with_config(
 
     // Run orchestrator
     let orchestrator = Orchestrator::with_config(config);
-    let report = orchestrator.run_with_spec_json(GenerationMode::SkeletalMesh, &spec_json, out_root)?;
+    let report =
+        orchestrator.run_with_spec_json(GenerationMode::SkeletalMesh, &spec_json, out_root)?;
 
     // Get output path from report
     let output_path_str = report
@@ -261,7 +264,10 @@ mod tests {
         assert!(json.contains("cylinder"));
 
         let parsed: SkeletalMeshBlenderRiggedMeshV1Params = serde_json::from_str(&json).unwrap();
-        assert_eq!(parsed.skeleton_preset, Some(SkeletonPreset::HumanoidBasicV1));
+        assert_eq!(
+            parsed.skeleton_preset,
+            Some(SkeletonPreset::HumanoidBasicV1)
+        );
         assert_eq!(parsed.body_parts.len(), 1);
     }
 

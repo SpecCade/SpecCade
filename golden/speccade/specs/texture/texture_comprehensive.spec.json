@@ -4,7 +4,7 @@
   "asset_type": "texture",
   "license": "CC0-1.0",
   "seed": 999004,
-  "description": "Golden comprehensive test - exercises ALL texture_2d.material_maps_v1 keys: resolution, tileable, maps, base_material (all MaterialTypes), layers (noise_pattern, scratches, edge_wear, dirt, color_variation, gradient, stripes, checkerboard), NoiseConfig (all algorithms, octaves, persistence, lacunarity), palette, color_ramp",
+  "description": "Golden comprehensive test - exercises ALL texture.material_v1 keys: resolution, tileable, maps, base_material (all MaterialTypes), layers (noise_pattern, scratches, edge_wear, dirt, color_variation, gradient, stripes, checkerboard), NoiseConfig (all algorithms, octaves, persistence, lacunarity), palette, color_ramp",
   "style_tags": ["golden", "comprehensive", "test", "texture", "pbr"],
   "engine_targets": ["godot", "unity", "unreal"],
   "outputs": [
@@ -68,7 +68,6 @@
       },
       "layers": [
         {
-          "comment": "Layer 1: Perlin noise pattern with all NoiseConfig params",
           "type": "noise_pattern",
           "noise": {
             "algorithm": "perlin",
@@ -81,7 +80,6 @@
           "strength": 0.4
         },
         {
-          "comment": "Layer 2: Simplex noise pattern",
           "type": "noise_pattern",
           "noise": {
             "algorithm": "simplex",
@@ -94,7 +92,6 @@
           "strength": 0.3
         },
         {
-          "comment": "Layer 3: Worley/Voronoi noise pattern",
           "type": "noise_pattern",
           "noise": {
             "algorithm": "worley",
@@ -107,7 +104,6 @@
           "strength": 0.25
         },
         {
-          "comment": "Layer 4: Value noise pattern",
           "type": "noise_pattern",
           "noise": {
             "algorithm": "value",
@@ -120,7 +116,6 @@
           "strength": 0.2
         },
         {
-          "comment": "Layer 5: FBM noise pattern",
           "type": "noise_pattern",
           "noise": {
             "algorithm": "fbm",
@@ -133,7 +128,6 @@
           "strength": 0.35
         },
         {
-          "comment": "Layer 6: Scratches layer with all params",
           "type": "scratches",
           "density": 0.15,
           "length_range": [0.1, 0.4],
@@ -142,13 +136,11 @@
           "strength": 0.5
         },
         {
-          "comment": "Layer 7: Edge wear layer",
           "type": "edge_wear",
           "amount": 0.25,
           "affects": ["roughness", "metallic"]
         },
         {
-          "comment": "Layer 8: Dirt layer with all params",
           "type": "dirt",
           "density": 0.2,
           "color": [0.3, 0.25, 0.2],
@@ -156,7 +148,6 @@
           "strength": 0.35
         },
         {
-          "comment": "Layer 9: Color variation layer with all params",
           "type": "color_variation",
           "hue_range": 15.0,
           "saturation_range": 0.12,
@@ -164,7 +155,6 @@
           "noise_scale": 0.05
         },
         {
-          "comment": "Layer 10: Vertical gradient",
           "type": "gradient",
           "direction": "vertical",
           "start": 0.0,
@@ -173,7 +163,6 @@
           "strength": 0.2
         },
         {
-          "comment": "Layer 11: Horizontal gradient",
           "type": "gradient",
           "direction": "horizontal",
           "start": 0.2,
@@ -182,7 +171,6 @@
           "strength": 0.15
         },
         {
-          "comment": "Layer 12: Radial gradient with center/inner/outer",
           "type": "gradient",
           "direction": "radial",
           "center": [0.5, 0.5],
@@ -192,7 +180,6 @@
           "strength": 0.3
         },
         {
-          "comment": "Layer 13: Radial gradient off-center",
           "type": "gradient",
           "direction": "radial",
           "center": [0.3, 0.7],
@@ -202,7 +189,6 @@
           "strength": 0.2
         },
         {
-          "comment": "Layer 14: Vertical stripes with all params",
           "type": "stripes",
           "direction": "vertical",
           "stripe_width": 16,
@@ -212,7 +198,6 @@
           "strength": 0.15
         },
         {
-          "comment": "Layer 15: Horizontal stripes",
           "type": "stripes",
           "direction": "horizontal",
           "stripe_width": 8,
@@ -222,7 +207,6 @@
           "strength": 0.1
         },
         {
-          "comment": "Layer 16: Checkerboard pattern with all params",
           "type": "checkerboard",
           "tile_size": 32,
           "color1": 0.3,

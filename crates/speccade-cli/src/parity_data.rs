@@ -44,7 +44,11 @@ mod tests {
 
         let info = result.unwrap();
         assert!(info.required, "'name' should be required");
-        assert_eq!(info.status, KeyStatus::Implemented, "'name' should be implemented");
+        assert_eq!(
+            info.status,
+            KeyStatus::Implemented,
+            "'name' should be implemented"
+        );
     }
 
     #[test]
@@ -72,10 +76,8 @@ mod tests {
     #[test]
     fn test_has_multiple_sections() {
         // The matrix should have keys from multiple sections
-        let sections: std::collections::HashSet<_> = ALL_KEYS
-            .iter()
-            .map(|k| k.key.section)
-            .collect();
+        let sections: std::collections::HashSet<_> =
+            ALL_KEYS.iter().map(|k| k.key.section).collect();
 
         assert!(
             sections.len() > 1,
@@ -94,9 +96,18 @@ mod tests {
     #[test]
     fn test_has_various_statuses() {
         // Check that we have keys with different implementation statuses
-        let implemented = ALL_KEYS.iter().filter(|k| k.status == KeyStatus::Implemented).count();
-        let partial = ALL_KEYS.iter().filter(|k| k.status == KeyStatus::Partial).count();
-        let not_impl = ALL_KEYS.iter().filter(|k| k.status == KeyStatus::NotImplemented).count();
+        let implemented = ALL_KEYS
+            .iter()
+            .filter(|k| k.status == KeyStatus::Implemented)
+            .count();
+        let partial = ALL_KEYS
+            .iter()
+            .filter(|k| k.status == KeyStatus::Partial)
+            .count();
+        let not_impl = ALL_KEYS
+            .iter()
+            .filter(|k| k.status == KeyStatus::NotImplemented)
+            .count();
 
         assert!(implemented > 0, "Should have implemented keys");
         // Partial and not implemented might not always be present, so just check implemented

@@ -19,7 +19,7 @@ pub enum KeyStatus {
 
 impl KeyStatus {
     /// Parse a status string from the markdown table.
-    pub fn from_str(s: &str) -> Option<Self> {
+    pub fn parse_cell(s: &str) -> Option<Self> {
         let s = s.trim();
         // Check for the actual Unicode characters used in the markdown
         if s.contains('\u{2713}') || s.contains('\u{2714}') || s == "checkmark" {
@@ -36,7 +36,7 @@ impl KeyStatus {
     }
 
     /// Convert to a Rust code representation for code generation.
-    pub fn to_code_str(&self) -> &'static str {
+    pub fn as_code_str(self) -> &'static str {
         match self {
             KeyStatus::Implemented => "KeyStatus::Implemented",
             KeyStatus::Partial => "KeyStatus::Partial",
@@ -100,8 +100,8 @@ pub fn parse_parity_matrix(content: &str) -> ParsedMatrix {
         let trimmed = line.trim();
 
         // Track section headings (## ...)
-        if trimmed.starts_with("## ") && !trimmed.starts_with("### ") {
-            current_section = trimmed[3..].trim().to_string();
+        if let Some(stripped) = trimmed.strip_prefix("## ") {
+            current_section = stripped.trim().to_string();
             current_table.clear();
             in_table = false;
             header_indices = None;
@@ -109,8 +109,8 @@ pub fn parse_parity_matrix(content: &str) -> ParsedMatrix {
         }
 
         // Track table headings (### ...)
-        if trimmed.starts_with("### ") {
-            current_table = trimmed[4..].trim().to_string();
+        if let Some(stripped) = trimmed.strip_prefix("### ") {
+            current_table = stripped.trim().to_string();
             in_table = false;
             header_indices = None;
             continue;
@@ -144,13 +144,18 @@ pub fn parse_parity_matrix(content: &str) -> ParsedMatrix {
         }
 
         // Skip separator rows (contain only dashes and colons)
-        if cells.iter().all(|c| c.chars().all(|ch| ch == '-' || ch == ':')) {
+        if cells
+            .iter()
+            .all(|c| c.chars().all(|ch| ch == '-' || ch == ':'))
+        {
             continue;
         }
 
         // Parse data row
         if let Some(ref indices) = header_indices {
-            if let Some(parsed_key) = parse_table_row(&cells, indices, &current_section, &current_table) {
+            if let Some(parsed_key) =
+                parse_table_row(&cells, indices, &current_section, &current_table)
+            {
                 result.keys.push(parsed_key);
             }
         }
@@ -218,7 +223,7 @@ fn parse_table_row(
     let status = indices
         .status_idx
         .and_then(|i| cells.get(i))
-        .and_then(|s| KeyStatus::from_str(s))
+        .and_then(|s| KeyStatus::parse_cell(s))
         .unwrap_or(KeyStatus::NotImplemented);
 
     Some(ParsedKey {
@@ -287,16 +292,20 @@ pub fn generate_rust_code(matrix: &ParsedMatrix) -> String {
         code.push_str(&format!("            key: {:?},\n", key.key));
         code.push_str("        },\n");
         code.push_str(&format!("        required: {},\n", key.required));
-        code.push_str(&format!("        status: {},\n", key.status.to_code_str()));
+        code.push_str(&format!("        status: {},\n", key.status.as_code_str()));
         code.push_str("    },\n");
     }
     code.push_str("];\n\n");
 
     // find() helper function
     code.push_str("/// Find a key by section, table, and key name.\n");
-    code.push_str("pub fn find(section: &str, table: &str, key: &str) -> Option<&'static KeyInfo> {\n");
+    code.push_str(
+        "pub fn find(section: &str, table: &str, key: &str) -> Option<&'static KeyInfo> {\n",
+    );
     code.push_str("    ALL_KEYS.iter().find(|info| {\n");
-    code.push_str("        info.key.section == section && info.key.table == table && info.key.key == key\n");
+    code.push_str(
+        "        info.key.section == section && info.key.table == table && info.key.key == key\n",
+    );
     code.push_str("    })\n");
     code.push_str("}\n");
 
@@ -308,22 +317,37 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_key_status_from_str() {
+    fn test_key_status_parse_cell() {
         // Unicode checkmark
-        assert_eq!(KeyStatus::from_str("\u{2713}"), Some(KeyStatus::Implemented));
-        assert_eq!(KeyStatus::from_str("\u{2714}"), Some(KeyStatus::Implemented));
+        assert_eq!(
+            KeyStatus::parse_cell("\u{2713}"),
+            Some(KeyStatus::Implemented)
+        );
+        assert_eq!(
+            KeyStatus::parse_cell("\u{2714}"),
+            Some(KeyStatus::Implemented)
+        );
 
         // Tilde for partial
-        assert_eq!(KeyStatus::from_str("~"), Some(KeyStatus::Partial));
+        assert_eq!(KeyStatus::parse_cell("~"), Some(KeyStatus::Partial));
 
         // Unicode x marks
-        assert_eq!(KeyStatus::from_str("\u{2717}"), Some(KeyStatus::NotImplemented));
-        assert_eq!(KeyStatus::from_str("\u{2718}"), Some(KeyStatus::NotImplemented));
-        assert_eq!(KeyStatus::from_str("\u{2715}"), Some(KeyStatus::NotImplemented));
+        assert_eq!(
+            KeyStatus::parse_cell("\u{2717}"),
+            Some(KeyStatus::NotImplemented)
+        );
+        assert_eq!(
+            KeyStatus::parse_cell("\u{2718}"),
+            Some(KeyStatus::NotImplemented)
+        );
+        assert_eq!(
+            KeyStatus::parse_cell("\u{2715}"),
+            Some(KeyStatus::NotImplemented)
+        );
 
         // Dash for deprecated
-        assert_eq!(KeyStatus::from_str("-"), Some(KeyStatus::Deprecated));
-        assert_eq!(KeyStatus::from_str(""), Some(KeyStatus::Deprecated));
+        assert_eq!(KeyStatus::parse_cell("-"), Some(KeyStatus::Deprecated));
+        assert_eq!(KeyStatus::parse_cell(""), Some(KeyStatus::Deprecated));
     }
 
     #[test]
@@ -352,19 +376,27 @@ mod tests {
         let matrix = parse_parity_matrix(markdown);
         assert_eq!(matrix.keys.len(), 4);
 
-        let name_key = matrix.find("SOUND (audio_sfx)", "Top-Level Keys", "name").unwrap();
+        let name_key = matrix
+            .find("SOUND (audio_sfx)", "Top-Level Keys", "name")
+            .unwrap();
         assert!(name_key.required);
         assert_eq!(name_key.status, KeyStatus::Implemented);
 
-        let duration_key = matrix.find("SOUND (audio_sfx)", "Top-Level Keys", "duration").unwrap();
+        let duration_key = matrix
+            .find("SOUND (audio_sfx)", "Top-Level Keys", "duration")
+            .unwrap();
         assert!(!duration_key.required);
         assert_eq!(duration_key.status, KeyStatus::Implemented);
 
-        let layers_key = matrix.find("SOUND (audio_sfx)", "Top-Level Keys", "layers").unwrap();
+        let layers_key = matrix
+            .find("SOUND (audio_sfx)", "Top-Level Keys", "layers")
+            .unwrap();
         assert!(!layers_key.required);
         assert_eq!(layers_key.status, KeyStatus::Partial);
 
-        let deprecated_key = matrix.find("SOUND (audio_sfx)", "Top-Level Keys", "deprecated_key").unwrap();
+        let deprecated_key = matrix
+            .find("SOUND (audio_sfx)", "Top-Level Keys", "deprecated_key")
+            .unwrap();
         assert!(!deprecated_key.required);
         assert_eq!(deprecated_key.status, KeyStatus::Deprecated);
     }
@@ -457,15 +489,13 @@ mod tests {
     #[test]
     fn test_generate_rust_code() {
         let matrix = ParsedMatrix {
-            keys: vec![
-                ParsedKey {
-                    section: "SOUND".to_string(),
-                    table: "Top-Level Keys".to_string(),
-                    key: "name".to_string(),
-                    required: true,
-                    status: KeyStatus::Implemented,
-                },
-            ],
+            keys: vec![ParsedKey {
+                section: "SOUND".to_string(),
+                table: "Top-Level Keys".to_string(),
+                key: "name".to_string(),
+                required: true,
+                status: KeyStatus::Implemented,
+            }],
         };
 
         let code = generate_rust_code(&matrix);

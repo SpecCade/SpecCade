@@ -14,10 +14,8 @@ use std::collections::HashMap;
 use std::path::Path;
 use thiserror::Error;
 
+use speccade_spec::recipe::texture::{TextureLayer, TextureMapType, TextureMaterialV1Params};
 use speccade_spec::BackendError;
-use speccade_spec::recipe::texture::{
-    TextureLayer, TextureMapType, Texture2dMaterialMapsV1Params,
-};
 
 use crate::color::Color;
 use crate::maps::{
@@ -89,7 +87,7 @@ pub struct MapResult {
 
 /// Generate PBR material maps from parameters.
 pub fn generate_material_maps(
-    params: &Texture2dMaterialMapsV1Params,
+    params: &TextureMaterialV1Params,
     seed: u32,
 ) -> Result<TextureResult, GenerateError> {
     let width = params.resolution[0];
@@ -104,10 +102,12 @@ pub fn generate_material_maps(
     // Get base material properties
     let (base_color, roughness_range, metallic) = match &params.base_material {
         Some(mat) => {
-            let r_range =
-                mat.roughness_range
-                    .unwrap_or(get_default_roughness_range(&mat.material_type));
-            let m = mat.metallic.unwrap_or(get_default_metallic(&mat.material_type));
+            let r_range = mat
+                .roughness_range
+                .unwrap_or(get_default_roughness_range(&mat.material_type));
+            let m = mat
+                .metallic
+                .unwrap_or(get_default_metallic(&mat.material_type));
             (
                 Color::rgb(mat.base_color[0], mat.base_color[1], mat.base_color[2]),
                 r_range,
@@ -161,7 +161,7 @@ pub fn generate_material_maps(
 
 /// Generate height map from layers.
 fn generate_height_map(
-    params: &Texture2dMaterialMapsV1Params,
+    params: &TextureMaterialV1Params,
     width: u32,
     height: u32,
     seed: u32,
@@ -237,7 +237,9 @@ fn generate_albedo_map(
     }
 
     // Add noise-based variation on top (follows pattern via height map influence)
-    let noise = Fbm::new(PerlinNoise::new(seed)).with_octaves(4).with_persistence(0.5);
+    let noise = Fbm::new(PerlinNoise::new(seed))
+        .with_octaves(4)
+        .with_persistence(0.5);
 
     for y in 0..height {
         for x in 0..width {
@@ -255,7 +257,11 @@ fn generate_albedo_map(
             let new_v = (v + v_noise).clamp(0.0, 1.0);
 
             let new_color = Color::from_hsv(new_h, s, new_v);
-            buffer.set(x, y, Color::rgba(new_color.r, new_color.g, new_color.b, current.a));
+            buffer.set(
+                x,
+                y,
+                Color::rgba(new_color.r, new_color.g, new_color.b, current.a),
+            );
         }
     }
 
@@ -297,9 +303,7 @@ fn generate_albedo_map(
                     }
                 }
             }
-            TextureLayer::Dirt {
-                density, color, ..
-            } => {
+            TextureLayer::Dirt { density, color, .. } => {
                 let dirt_color = Color::rgb(color[0], color[1], color[2]);
                 generator.apply_dirt(&mut buffer, *density, dirt_color, layer_seed);
             }

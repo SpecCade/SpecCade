@@ -39,7 +39,12 @@ pub struct XmEnvelope {
 
 impl XmEnvelope {
     /// Create a simple ADSR-style volume envelope.
-    pub fn adsr(attack_frames: u16, decay_frames: u16, sustain_level: u8, release_frames: u16) -> Self {
+    pub fn adsr(
+        attack_frames: u16,
+        decay_frames: u16,
+        sustain_level: u8,
+        release_frames: u16,
+    ) -> Self {
         let mut points = Vec::new();
 
         // Attack: 0 -> 64
@@ -393,10 +398,10 @@ mod tests {
     fn test_delta_encode() {
         // Test data: [0, 100, 200, 100]
         let data: Vec<u8> = vec![
-            0, 0,     // 0
-            100, 0,   // 100
-            200, 0,   // 200 (as unsigned, really -56 as i16)
-            100, 0,   // 100
+            0, 0, // 0
+            100, 0, // 100
+            200, 0, // 200 (as unsigned, really -56 as i16)
+            100, 0, // 100
         ];
 
         let encoded = delta_encode_16bit(&data);

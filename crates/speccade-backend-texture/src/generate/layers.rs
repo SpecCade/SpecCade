@@ -99,10 +99,10 @@ pub fn apply_layer_to_height(height_map: &mut GrayscaleBuffer, layer: &TextureLa
         } => {
             let stripes = match direction {
                 StripeDirection::Horizontal => {
-                    StripesPattern::new_horizontal(width, height, *stripe_width, *color1, *color2)
+                    StripesPattern::new_horizontal(*stripe_width, *color1, *color2)
                 }
                 StripeDirection::Vertical => {
-                    StripesPattern::new_vertical(width, height, *stripe_width, *color1, *color2)
+                    StripesPattern::new_vertical(*stripe_width, *color1, *color2)
                 }
             };
 

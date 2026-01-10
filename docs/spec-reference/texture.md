@@ -1,715 +1,223 @@
 # Texture Spec Reference
 
-This document covers all texture-related asset types and recipes in SpecCade.
+This document covers texture generation in SpecCade.
 
-## Table of Contents
+## Overview
 
-- [Texture 2D](#texture-2d)
-  - [Material Maps (material_maps_v1)](#recipe-texture_2dmaterial_maps_v1)
-  - [Normal Maps (normal_map_v1)](#recipe-texture_2dnormal_map_v1)
-- [Packed Textures](#packed-textures)
-  - [Channel Packing (packed_v1)](#recipe-texturepacked_v1)
-
----
-
-## Texture 2D
-
-**Asset Type:** `texture_2d`
+**Asset Type:** `texture`  
+**Recipe Kinds:** `texture.material_v1`, `texture.normal_v1`, `texture.packed_v1`  
 **Output Formats:** PNG
 
-2D texture maps with coherent multi-layer generation for PBR materials.
+## Common Output Rules
 
-### Recipe: `texture_2d.material_maps_v1`
+- Texture backends write PNGs.
+- For `texture.material_v1`, you must declare at least one `primary` PNG output per requested map.
+- For `texture.normal_v1`, you declare exactly one `primary` PNG output.
+- For `texture.packed_v1`, you declare one or more `packed` PNG outputs, each with a `channels` mapping.
 
-Generates coherent PBR material maps (albedo, roughness, metallic, normal, AO, emissive, height).
+## Recipe: `texture.material_v1` (Material Maps)
 
-#### Required Params
+Generates PBR-style material maps (albedo/roughness/metallic/normal/ao/emissive/height).
 
-| Param | Type | Description |
-|-------|------|-------------|
-| `base_material` | object | Base material properties |
+### Outputs
 
-#### Optional Params
+`speccade generate` maps generated maps to declared outputs using filenames:
 
-| Param | Type | Description | Default |
-|-------|------|-------------|---------|
-| `resolution` | array | Width and height `[w, h]` | `[1024, 1024]` |
-| `tileable` | boolean | Generate tileable texture | `false` |
-| `maps` | array | Maps to generate | `["albedo"]` |
-| `layers` | array | Procedural layers | `[]` |
-| `palette` | array | Color palette (hex strings) | `[]` |
-| `color_ramp` | array | Grayscale to color ramp | `[]` |
+- Preferred: name each output path with a map suffix: `*_albedo.png`, `*_normal.png`, etc.
+- Fallback: if you declare exactly one output per map, outputs are matched in the same order as `recipe.params.maps`.
 
-#### Base Material
-
-The `base_material` object defines core material properties:
-
-| Field | Type | Description | Required |
-|-------|------|-------------|----------|
-| `type` | string | Material type: `"metal"`, `"dielectric"`, `"plastic"` | Yes |
-| `base_color` | array | RGB color `[r, g, b]` (0.0-1.0) | Yes |
-| `roughness_range` | array | Min/max roughness `[min, max]` | Yes |
-| `metallic` | float | Metallic value (0.0-1.0) | Yes |
-
-#### Available Maps
-
-The `maps` array specifies which textures to generate:
-
-- `"albedo"` - Base color/diffuse map
-- `"roughness"` - Surface roughness map
-- `"metallic"` - Metallic mask map
-- `"normal"` - Normal/bump map
-- `"ao"` - Ambient occlusion map
-- `"emissive"` - Emissive/glow map
-- `"height"` - Height/displacement map
-
-#### Layer Types
-
-Layers are applied in order to modify the base material:
-
-##### Noise Pattern Layer
+Example:
 
 ```json
 {
-  "type": "noise_pattern",
-  "noise": {
-    "algorithm": "perlin",
-    "scale": 0.05,
-    "octaves": 4,
-    "persistence": 0.5,
-    "lacunarity": 2.0
-  },
-  "affects": ["roughness", "height"],
-  "strength": 0.4
-}
-```
-
-**Noise algorithms:** `"perlin"`, `"simplex"`, `"worley"`, `"value"`, `"fbm"`
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `algorithm` | string | Noise algorithm |
-| `scale` | float | Noise frequency/scale |
-| `octaves` | integer | Number of noise octaves |
-| `persistence` | float | Amplitude scaling per octave |
-| `lacunarity` | float | Frequency scaling per octave |
-
-##### Scratches Layer
-
-```json
-{
-  "type": "scratches",
-  "density": 0.15,
-  "length_range": [0.1, 0.4],
-  "width": 0.002,
-  "affects": ["albedo", "roughness", "normal"],
-  "strength": 0.5
-}
-```
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `density` | float | Scratch density (0.0-1.0) |
-| `length_range` | array | Min/max scratch length |
-| `width` | float | Scratch width |
-
-##### Edge Wear Layer
-
-```json
-{
-  "type": "edge_wear",
-  "amount": 0.25,
-  "affects": ["roughness", "metallic"]
-}
-```
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `amount` | float | Wear amount (0.0-1.0) |
-
-##### Dirt Layer
-
-```json
-{
-  "type": "dirt",
-  "density": 0.2,
-  "color": [0.3, 0.25, 0.2],
-  "affects": ["albedo", "roughness"],
-  "strength": 0.35
-}
-```
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `density` | float | Dirt density (0.0-1.0) |
-| `color` | array | RGB dirt color |
-
-##### Color Variation Layer
-
-```json
-{
-  "type": "color_variation",
-  "hue_range": 15.0,
-  "saturation_range": 0.12,
-  "value_range": 0.1,
-  "noise_scale": 0.05
-}
-```
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `hue_range` | float | Hue variation range (degrees) |
-| `saturation_range` | float | Saturation variation |
-| `value_range` | float | Value/brightness variation |
-| `noise_scale` | float | Variation noise scale |
-
-##### Gradient Layer
-
-```json
-{
-  "type": "gradient",
-  "direction": "vertical",
-  "start": 0.0,
-  "end": 1.0,
-  "affects": ["roughness"],
-  "strength": 0.2
-}
-```
-
-Linear gradient (vertical/horizontal):
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `direction` | string | `"vertical"` or `"horizontal"` |
-| `start` | float | Start value (0.0-1.0) |
-| `end` | float | End value (0.0-1.0) |
-
-Radial gradient:
-
-```json
-{
-  "type": "gradient",
-  "direction": "radial",
-  "center": [0.5, 0.5],
-  "inner": 1.0,
-  "outer": 0.0,
-  "affects": ["emissive"],
-  "strength": 0.3
-}
-```
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `direction` | string | `"radial"` |
-| `center` | array | Center point `[x, y]` (0.0-1.0) |
-| `inner` | float | Value at center |
-| `outer` | float | Value at edge |
-
-##### Stripes Layer
-
-```json
-{
-  "type": "stripes",
-  "direction": "vertical",
-  "stripe_width": 16,
-  "color1": 0.4,
-  "color2": 0.6,
-  "affects": ["albedo", "roughness"],
-  "strength": 0.15
-}
-```
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `direction` | string | `"vertical"` or `"horizontal"` |
-| `stripe_width` | integer | Width in pixels |
-| `color1` | float | First stripe value |
-| `color2` | float | Second stripe value |
-
-##### Checkerboard Layer
-
-```json
-{
-  "type": "checkerboard",
-  "tile_size": 32,
-  "color1": 0.3,
-  "color2": 0.7,
-  "affects": ["albedo", "normal", "height"],
-  "strength": 0.1
-}
-```
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `tile_size` | integer | Tile size in pixels |
-| `color1` | float | First tile value |
-| `color2` | float | Second tile value |
-
-#### Example: Metal Material
-
-```json
-{
-  "spec_version": 1,
-  "asset_id": "brushed_steel",
-  "asset_type": "texture_2d",
-  "license": "CC0-1.0",
-  "seed": 12345,
-  "description": "Brushed steel material with scratches and wear",
   "outputs": [
-    {"kind": "primary", "format": "png", "path": "brushed_steel_albedo.png"},
-    {"kind": "primary", "format": "png", "path": "brushed_steel_roughness.png"},
-    {"kind": "primary", "format": "png", "path": "brushed_steel_metallic.png"},
-    {"kind": "primary", "format": "png", "path": "brushed_steel_normal.png"}
-  ],
-  "recipe": {
-    "kind": "texture_2d.material_maps_v1",
-    "params": {
-      "resolution": [1024, 1024],
-      "tileable": true,
-      "maps": ["albedo", "roughness", "metallic", "normal"],
-      "base_material": {
-        "type": "metal",
-        "base_color": [0.7, 0.7, 0.75],
-        "roughness_range": [0.3, 0.6],
-        "metallic": 1.0
-      },
-      "layers": [
-        {
-          "type": "noise_pattern",
-          "noise": {"algorithm": "simplex", "scale": 0.1, "octaves": 4},
-          "affects": ["roughness", "normal"],
-          "strength": 0.3
-        },
-        {
-          "type": "scratches",
-          "density": 0.15,
-          "length_range": [0.1, 0.4],
-          "width": 0.002,
-          "affects": ["albedo", "roughness"],
-          "strength": 0.5
-        },
-        {
-          "type": "edge_wear",
-          "amount": 0.25,
-          "affects": ["roughness", "metallic"]
-        }
-      ]
-    }
-  }
+    { "kind": "primary", "format": "png", "path": "metal_plate_albedo.png" },
+    { "kind": "primary", "format": "png", "path": "metal_plate_roughness.png" },
+    { "kind": "primary", "format": "png", "path": "metal_plate_metallic.png" },
+    { "kind": "primary", "format": "png", "path": "metal_plate_normal.png" }
+  ]
 }
 ```
 
----
+### Params
 
-### Recipe: `texture_2d.normal_map_v1`
+| Param | Type | Required | Notes |
+|------:|------|:--------:|------|
+| `resolution` | [integer, integer] | yes | `[width, height]` |
+| `tileable` | boolean | yes | Seamless tiling |
+| `maps` | array | yes | List of map types (see below) |
+| `base_material` | object | no | Base material preset |
+| `layers` | array | no | Procedural layers |
+| `palette` | array | no | Hex colors for palette remap |
+| `color_ramp` | array | no | Hex colors for ramp interpolation |
 
-Generates normal maps from parameterized patterns.
+#### Map Types (`maps[]`)
 
-#### Required Params
+- `albedo`
+- `normal`
+- `roughness`
+- `metallic`
+- `ao`
+- `emissive`
+- `height`
 
-| Param | Type | Description |
-|-------|------|-------------|
-| `pattern` or `patterns` | object/array | Pattern definition(s) |
-
-#### Optional Params
-
-| Param | Type | Description | Default |
-|-------|------|-------------|---------|
-| `resolution` | array | Width and height `[w, h]` | `[1024, 1024]` |
-| `size` | array | Alias for resolution | `[1024, 1024]` |
-| `tileable` | boolean | Generate tileable texture | `false` |
-| `method` | string | Generation method | `"from_pattern"` |
-| `processing` | object | Post-processing options | `{}` |
-
-#### Pattern Types
-
-##### Bricks Pattern
+#### Base Material (`base_material`)
 
 ```json
 {
-  "type": "bricks",
-  "brick_width": 64,
-  "brick_height": 32,
-  "brick_size": [64, 32],
-  "mortar_width": 4,
-  "mortar_depth": 0.3,
-  "brick_variation": 0.15,
-  "seed": 42,
-  "weight": 1.0
+  "type": "metal",
+  "base_color": [0.7, 0.7, 0.75],
+  "roughness_range": [0.2, 0.8],
+  "metallic": 0.9
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `brick_width` | integer | Brick width in pixels |
-| `brick_height` | integer | Brick height in pixels |
-| `brick_size` | array | Alternative: `[width, height]` |
-| `mortar_width` | integer | Mortar gap width |
-| `mortar_depth` | float | Mortar depth (0.0-1.0) |
-| `brick_variation` | float | Height variation between bricks |
+`type` is one of:
 
-##### Tiles Pattern
+- `metal`
+- `wood`
+- `stone`
+- `fabric`
+- `plastic`
+- `concrete`
+- `brick`
+- `procedural`
 
-```json
-{
-  "type": "tiles",
-  "tile_size": 64,
-  "gap_width": 4,
-  "gap_depth": 0.25,
-  "seed": 123,
-  "weight": 0.5
-}
-```
+Additional optional fields:
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `tile_size` | integer | Tile size in pixels |
-| `gap_width` | integer | Gap between tiles |
-| `gap_depth` | float | Gap depth (0.0-1.0) |
+- `brick_pattern`: `{ "brick_width": 32, "brick_height": 16, "mortar_width": 2, "offset": 0.5 }`
+- `normal_params`: `{ "bump_strength": 1.0, "mortar_depth": 0.3 }`
 
-##### Hexagons Pattern
+#### Layers (`layers[]`)
 
-```json
-{
-  "type": "hexagons",
-  "hex_size": 40,
-  "gap_width": 3,
-  "gap_depth": 0.2,
-  "seed": 456,
-  "weight": 0.4
-}
-```
+Each layer is a tagged union with `type`:
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `hex_size` | integer | Hexagon size |
-| `gap_width` | integer | Gap between hexagons |
-| `gap_depth` | float | Gap depth (0.0-1.0) |
+- `noise_pattern`: `{ "type": "noise_pattern", "noise": { ... }, "affects": [...], "strength": 0.5 }`
+- `scratches`: `{ "type": "scratches", "density": 0.1, "length_range": [0.1, 0.4], "width": 0.002, "affects": [...], "strength": 0.5 }`
+- `edge_wear`: `{ "type": "edge_wear", "amount": 0.4, "affects": [...] }`
+- `dirt`: `{ "type": "dirt", "density": 0.2, "color": [0.2, 0.15, 0.1], "affects": [...], "strength": 0.5 }`
+- `color_variation`: `{ "type": "color_variation", "hue_range": 10.0, "saturation_range": 0.2, "value_range": 0.2, "noise_scale": 0.05 }`
+- `gradient`: `{ "type": "gradient", "direction": "horizontal", "start": 0.0, "end": 1.0, "affects": [...], "strength": 0.5 }`
+- `stripes`: `{ "type": "stripes", "direction": "vertical", "stripe_width": 8, "color1": 0.2, "color2": 0.8, "affects": [...], "strength": 0.5 }`
+- `checkerboard`: `{ "type": "checkerboard", "tile_size": 16, "color1": 0.2, "color2": 0.8, "affects": [...], "strength": 0.5 }`
 
-##### Noise Pattern
+Noise config (`noise`) is:
 
 ```json
 {
-  "type": "noise",
+  "algorithm": "perlin",
   "scale": 0.05,
   "octaves": 4,
-  "height_range": [0.0, 1.0],
-  "seed": 789,
-  "weight": 0.3
+  "persistence": 0.5,
+  "lacunarity": 2.0
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `scale` | float | Noise scale/frequency |
-| `octaves` | integer | Number of noise octaves |
-| `height_range` | array | Min/max height values |
+Algorithms:
 
-##### Scratches Pattern
+- `perlin`
+- `simplex`
+- `worley`
+- `value`
+- `fbm`
+
+## Recipe: `texture.normal_v1` (Normal Map)
+
+Generates a standalone normal map.
+
+### Outputs
+
+- Declare exactly one `primary` output with `format: "png"`.
+
+### Params
+
+| Param | Type | Required | Default |
+|------:|------|:--------:|---------|
+| `resolution` | [integer, integer] | yes | — |
+| `tileable` | boolean | yes | — |
+| `pattern` | object | no | omitted |
+| `bump_strength` | number | no | `1.0` |
+| `processing` | object | no | omitted |
+
+`processing`:
 
 ```json
-{
-  "type": "scratches",
-  "density": 80,
-  "length_range": [15, 60],
-  "depth": 0.2,
-  "seed": 321,
-  "weight": 0.25
-}
+{ "blur": 0.5, "invert": false }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `density` | integer | Number of scratches |
-| `length_range` | array | Min/max scratch length in pixels |
-| `depth` | float | Scratch depth (0.0-1.0) |
+`pattern` is a tagged union with `type`:
 
-##### Rivets Pattern
+- `grid`: `{ "type": "grid", "cell_size": 32, "line_width": 2, "bevel": 0.5 }`
+- `bricks`: `{ "type": "bricks", "brick_width": 32, "brick_height": 16, "mortar_width": 2, "offset": 0.5 }`
+- `hexagons`: `{ "type": "hexagons", "size": 16, "gap": 2 }`
+- `noise_bumps`: `{ "type": "noise_bumps", "noise": { ... } }`
+- `diamond_plate`: `{ "type": "diamond_plate", "diamond_size": 32, "height": 0.6 }`
+- `tiles`: `{ "type": "tiles", "tile_size": 32, "gap_width": 2, "gap_depth": 0.5, "seed": 1 }`
+- `rivets`: `{ "type": "rivets", "spacing": 32, "radius": 3, "height": 0.6, "seed": 1 }`
+- `weave`: `{ "type": "weave", "thread_width": 6, "gap": 2, "depth": 0.4 }`
 
-```json
-{
-  "type": "rivets",
-  "spacing": 48,
-  "radius": 5,
-  "height": 0.25,
-  "seed": 654,
-  "weight": 0.35
-}
-```
+## Recipe: `texture.packed_v1` (Channel Packing)
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `spacing` | integer | Space between rivets |
-| `radius` | integer | Rivet radius |
-| `height` | float | Rivet height (0.0-1.0) |
+Generates one or more packed RGBA textures by packing generated maps into output channels.
 
-##### Weave Pattern
+### Outputs
+
+Each packed output must have:
+
+- `kind: "packed"`
+- `format: "png"`
+- a `channels` mapping
+
+Example:
 
 ```json
 {
-  "type": "weave",
-  "thread_width": 10,
-  "gap": 3,
-  "depth": 0.18,
-  "weight": 0.3
-}
-```
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `thread_width` | integer | Thread width |
-| `gap` | integer | Gap between threads |
-| `depth` | float | Weave depth (0.0-1.0) |
-
-#### Multi-Pattern Mode
-
-Use `patterns` array to blend multiple patterns:
-
-```json
-{
-  "patterns": [
-    {"type": "bricks", "brick_width": 64, "weight": 1.0},
-    {"type": "scratches", "density": 80, "weight": 0.25}
-  ]
-}
-```
-
-Patterns are weighted and blended together.
-
-#### Processing Options
-
-```json
-{
-  "processing": {
-    "strength": 1.5,
-    "blur": 0.5,
-    "invert": false
+  "kind": "packed",
+  "format": "png",
+  "path": "pbr_mra.png",
+  "channels": {
+    "r": "metallic",
+    "g": "roughness",
+    "b": { "key": "ao", "invert": true },
+    "a": { "constant": 1.0 }
   }
 }
 ```
 
-| Field | Type | Description | Default |
-|-------|------|-------------|---------|
-| `strength` | float | Normal intensity multiplier | `1.0` |
-| `blur` | float | Blur amount | `0.0` |
-| `invert` | boolean | Invert normals | `false` |
+You can declare multiple packed outputs in the same spec (each with its own `channels` mapping).
 
-#### Example: Brick Wall Normal
+### Params
 
-```json
-{
-  "spec_version": 1,
-  "asset_id": "brick_wall_normal",
-  "asset_type": "texture_2d",
-  "license": "CC0-1.0",
-  "seed": 99999,
-  "outputs": [
-    {"kind": "primary", "format": "png", "path": "brick_wall_normal.png"}
-  ],
-  "recipe": {
-    "kind": "texture_2d.normal_map_v1",
-    "params": {
-      "resolution": [512, 512],
-      "tileable": true,
-      "pattern": {
-        "type": "bricks",
-        "brick_width": 64,
-        "brick_height": 32,
-        "mortar_width": 4,
-        "mortar_depth": 0.3,
-        "brick_variation": 0.1
-      },
-      "processing": {
-        "strength": 1.0
-      }
-    }
-  }
-}
-```
+| Param | Type | Required |
+|------:|------|:--------:|
+| `resolution` | [integer, integer] | yes |
+| `tileable` | boolean | yes |
+| `maps` | object | yes |
 
----
+`maps` is a map of user-defined keys to `MapDefinition` objects.
 
-## Packed Textures
+### Map Definitions (`maps.*`)
 
-**Asset Type:** `texture`
-**Output Formats:** PNG
+`MapDefinition` is a tagged union with `type`:
 
-Channel-packed textures combine multiple grayscale maps into a single output file with user-defined channel assignments.
+- `grayscale` (constant / derived):
+  - `{ "type": "grayscale", "value": 0.5 }`
+  - `{ "type": "grayscale", "from_height": true }`
+  - `{ "type": "grayscale", "from_height": true, "ao_strength": 0.5 }`
+- `pattern`:
+  - `{ "type": "pattern", "pattern": "perlin", "octaves": 4 }`
 
-### Recipe: `texture.packed_v1`
+Note: packed-texture map generation is currently limited:
 
-#### Required Params
+- `type: "pattern"` is not implemented (generation fails).
+- `type: "grayscale"` with `from_height: true` currently produces a flat mid-gray map (the `ao_strength` field is currently ignored).
 
-| Param | Type | Description |
-|-------|------|-------------|
-| `maps` | object | Named grayscale source maps |
+### Channel Sources (`channels`)
 
-#### Optional Params
+Each channel (`r`, `g`, `b`, optional `a`) is a `ChannelSource`:
 
-| Param | Type | Description | Default |
-|-------|------|-------------|---------|
-| `resolution` | array | Width and height `[w, h]` | `[1024, 1024]` |
-| `tileable` | boolean | Generate tileable texture | `false` |
+- **Key reference:** `"my_key"`
+- **Extended reference:** `{ "key": "my_key", "component": "luminance", "invert": false }`
+- **Constant:** `{ "constant": 0.5 }`
 
-#### Map Definitions
-
-The `maps` object defines named grayscale sources:
-
-```json
-{
-  "maps": {
-    "ao": {"type": "grayscale", "from_height": true, "ao_strength": 0.5},
-    "roughness": {"type": "grayscale", "from_height": true},
-    "metallic": {"type": "grayscale", "value": 1.0},
-    "base": {"type": "pattern", "pattern": "noise", "noise_type": "fbm"}
-  }
-}
-```
-
-**Map types:**
-
-| Type | Description | Parameters |
-|------|-------------|------------|
-| `grayscale` | Solid or derived grayscale | `value`, `from_height`, `ao_strength` |
-| `pattern` | Procedural pattern | `pattern`, `noise_type`, `octaves` |
-
-**Grayscale parameters:**
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `value` | float | Constant value (0.0-1.0) |
-| `from_height` | boolean | Derive from height/base map |
-| `ao_strength` | float | AO computation strength |
-
-#### Output Channel Specification
-
-Outputs use `kind: "packed"` (or `kind: "primary"`) with a `channels` object:
-
-```json
-{
-  "outputs": [
-    {
-      "kind": "packed",
-      "format": "png",
-      "path": "orm.png",
-      "channels": {
-        "r": "ao",
-        "g": "roughness",
-        "b": "metallic"
-      }
-    }
-  ]
-}
-```
-
-#### Channel Reference Formats
-
-**Simple string** - Reference map by name:
-
-```json
-{"r": "roughness"}
-```
-
-**Object with options** - Reference with transforms:
-
-```json
-{"r": {"key": "roughness", "invert": true}}
-```
-
-**Channel options:**
-
-| Option | Type | Description | Default |
-|--------|------|-------------|---------|
-| `key` | string | Map name to reference | required |
-| `invert` | boolean | Invert values (1.0 - value) | `false` |
-| `scale` | float | Multiply values | `1.0` |
-| `bias` | float | Add to values (after scale) | `0.0` |
-
-#### Common Packing Conventions
-
-| Convention | R | G | B | A | Used By |
-|------------|---|---|---|---|---------|
-| ORM | Occlusion | Roughness | Metallic | - | Unity HDRP |
-| MRE | Metallic | Roughness | Emissive | - | Custom |
-| ARM | AO | Roughness | Metallic | - | Unreal |
-
-#### Example: ORM Texture
-
-```json
-{
-  "spec_version": 1,
-  "asset_id": "packed_orm",
-  "asset_type": "texture",
-  "license": "CC0-1.0",
-  "seed": 54322,
-  "description": "Packed ORM texture (ambient occlusion, roughness, metallic)",
-  "outputs": [
-    {
-      "kind": "packed",
-      "format": "png",
-      "path": "orm.png",
-      "channels": {
-        "r": "ao",
-        "g": "roughness",
-        "b": "metallic"
-      }
-    }
-  ],
-  "recipe": {
-    "kind": "texture.packed_v1",
-    "params": {
-      "resolution": [512, 512],
-      "tileable": true,
-      "maps": {
-        "ao": {"type": "grayscale", "from_height": true, "ao_strength": 0.5},
-        "roughness": {"type": "grayscale", "from_height": true},
-        "metallic": {"type": "grayscale", "value": 1.0}
-      }
-    }
-  }
-}
-```
-
-#### Example: Roughness to Smoothness Inversion
-
-```json
-{
-  "outputs": [
-    {
-      "kind": "packed",
-      "format": "png",
-      "path": "smoothness.png",
-      "channels": {
-        "r": {"key": "rough", "invert": true},
-        "g": {"key": "rough", "invert": true},
-        "b": {"key": "rough", "invert": true}
-      }
-    }
-  ]
-}
-```
-
----
-
-## Validation Rules
-
-### Texture-Specific Validation
-
-| Rule | Error Code | Description |
-|------|------------|-------------|
-| Channel references valid map | E020 | Unknown map key in channel reference |
-| At least one channel specified | E021 | Packed output has no channels |
-| Channel key is r, g, b, or a | E022 | Invalid channel name |
-| Resolution dimensions positive | E023 | Invalid resolution |
-| Layer type is known | E024 | Unknown layer type |
-
----
-
-## Golden Corpus Specs
-
-Reference implementations:
-
-- `golden/speccade/texture_comprehensive.spec.json` - Comprehensive material test
-- `golden/speccade/normal_comprehensive.spec.json` - Comprehensive normal map test
-- `golden/speccade/specs/texture/packed_orm.json` - ORM packing example
-- `golden/speccade/specs/texture/packed_mre.json` - MRE packing example
+Valid `component` values are: `r`, `g`, `b`, `a`, `luminance`.

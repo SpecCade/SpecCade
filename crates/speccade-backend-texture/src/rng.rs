@@ -27,22 +27,12 @@ impl DeterministicRng {
 
     /// Derive a seed for a specific layer using BLAKE3.
     pub fn derive_layer_seed(base_seed: u32, layer_index: u32) -> u32 {
-        let mut input = Vec::with_capacity(8);
-        input.extend_from_slice(&base_seed.to_le_bytes());
-        input.extend_from_slice(&layer_index.to_le_bytes());
-        let hash = blake3::hash(&input);
-        let bytes: [u8; 4] = hash.as_bytes()[0..4].try_into().unwrap();
-        u32::from_le_bytes(bytes)
+        speccade_spec::hash::derive_layer_seed(base_seed, layer_index)
     }
 
     /// Derive a seed for a specific variant using BLAKE3.
     pub fn derive_variant_seed(base_seed: u32, variant_id: &str) -> u32 {
-        let mut input = Vec::with_capacity(4 + variant_id.len());
-        input.extend_from_slice(&base_seed.to_le_bytes());
-        input.extend_from_slice(variant_id.as_bytes());
-        let hash = blake3::hash(&input);
-        let bytes: [u8; 4] = hash.as_bytes()[0..4].try_into().unwrap();
-        u32::from_le_bytes(bytes)
+        speccade_spec::hash::derive_variant_seed(base_seed, variant_id)
     }
 
     /// Generate a random f64 in the range [0.0, 1.0).

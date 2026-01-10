@@ -20,7 +20,10 @@ use crate::note::{
     DEFAULT_SAMPLE_RATE, DEFAULT_SYNTH_MIDI_NOTE,
 };
 use crate::synthesis::{derive_instrument_seed, generate_loopable_sample, load_wav_sample};
-use crate::xm::{effect_name_to_code as xm_effect_name_to_code, XmInstrument, XmModule, XmNote, XmPattern, XmSample};
+use crate::xm::{
+    effect_name_to_code as xm_effect_name_to_code, XmInstrument, XmModule, XmNote, XmPattern,
+    XmSample,
+};
 
 /// Generate an XM module from params.
 ///
@@ -54,8 +57,17 @@ pub fn generate_xm(
     // Build pattern index map
     let mut pattern_index_map: HashMap<String, u8> = HashMap::new();
 
-    // Convert patterns (with automation)
-    for (pattern_idx, (name, pattern)) in params.patterns.iter().enumerate() {
+    // Convert patterns (with automation).
+    //
+    // Determinism: `patterns` is a HashMap, so we must iterate in a stable order.
+    let mut pattern_names: Vec<&String> = params.patterns.keys().collect();
+    pattern_names.sort();
+
+    for (pattern_idx, name) in pattern_names.into_iter().enumerate() {
+        let pattern = params
+            .patterns
+            .get(name)
+            .expect("pattern name came from patterns.keys()");
         let mut xm_pattern = convert_pattern_to_xm(pattern, params.channels)?;
 
         // Apply automation to this pattern
@@ -82,9 +94,19 @@ pub fn generate_xm(
     }
     module.set_order_table(&order_table);
 
-    // Set restart position for looping
+    // Set restart position for looping.
+    //
+    // Note: XM uses an order-table index for restart position.
     if params.r#loop {
-        module.set_restart_position(0);
+        let restart = params.restart_position.unwrap_or(0);
+        if restart as usize >= order_table.len() {
+            return Err(GenerateError::InvalidParameter(format!(
+                "restart_position {} is out of range for arrangement length {}",
+                restart,
+                order_table.len()
+            )));
+        }
+        module.set_restart_position(restart);
     }
 
     // Generate bytes
@@ -139,7 +161,7 @@ fn generate_xm_instrument(
             // Load WAV sample - preserves original sample rate
             let sample_path = spec_dir.join(path);
             let (data, actual_sample_rate) =
-                load_wav_sample(&sample_path).map_err(|e| GenerateError::SampleLoadError(e))?;
+                load_wav_sample(&sample_path).map_err(GenerateError::SampleLoadError)?;
 
             // Calculate pitch correction based on actual sample rate and base_note
             let (ft, rn) = if let Some(note_name) = base_note {
@@ -155,8 +177,8 @@ fn generate_xm_instrument(
                 // The relative_note offset should be set so that when the tracker plays
                 // the base note, it plays at the sample's natural pitch (sample_rate Hz)
                 let base_note_index = (xm_note - 1) as i8; // 0-indexed note (C-4 = 48)
-                // calculate_pitch_correction gives the offset needed for a sample at sample_rate
-                // to play at the correct pitch when triggered at C-4 (note 48)
+                                                           // calculate_pitch_correction gives the offset needed for a sample at sample_rate
+                                                           // to play at the correct pitch when triggered at C-4 (note 48)
                 let (ft, rn) = calculate_pitch_correction(actual_sample_rate);
                 // For a sample containing base_note, we want:
                 //   base_note + relative_note = 48 + rn (the RealNote for sample_rate playback)
@@ -283,12 +305,7 @@ fn apply_automation_to_xm_pattern(
             } => {
                 if target == pattern_name {
                     apply_volume_fade_xm(
-                        pattern,
-                        *channel,
-                        *start_row,
-                        *end_row,
-                        *start_vol,
-                        *end_vol,
+                        pattern, *channel, *start_row, *end_row, *start_vol, *end_vol,
                     )?;
                 }
             }
@@ -386,22 +403,25 @@ mod tests {
         };
 
         let mut notes = HashMap::new();
-        notes.insert("0".to_string(), vec![
-            PatternNote {
-                row: 0,
-                note: "C4".to_string(),
-                inst: 0,
-                vol: Some(64),
-                ..Default::default()
-            },
-            PatternNote {
-                row: 4,
-                note: "E4".to_string(),
-                inst: 0,
-                vol: Some(64),
-                ..Default::default()
-            },
-        ]);
+        notes.insert(
+            "0".to_string(),
+            vec![
+                PatternNote {
+                    row: 0,
+                    note: "C4".to_string(),
+                    inst: 0,
+                    vol: Some(64),
+                    ..Default::default()
+                },
+                PatternNote {
+                    row: 4,
+                    note: "E4".to_string(),
+                    inst: 0,
+                    vol: Some(64),
+                    ..Default::default()
+                },
+            ],
+        );
         let pattern = TrackerPattern {
             rows: 16,
             notes: Some(notes),
@@ -457,7 +477,7 @@ mod tests {
         assert_eq!(note_start.volume, 0x10 + 64);
 
         let note_end = pattern.get_note(8, 0).unwrap();
-        assert_eq!(note_end.volume, 0x10 + 0);
+        assert_eq!(note_end.volume, 0x10);
     }
 
     // =========================================================================
@@ -563,7 +583,7 @@ mod tests {
 
         let finetune = xm_instr.sample.finetune;
         assert!(
-            finetune >= 100 && finetune <= 102,
+            (100..=102).contains(&finetune),
             "Finetune should be ~101, got {}",
             finetune
         );
@@ -852,15 +872,18 @@ mod tests {
         // Each octave difference should be 12 semitones in relative_note
         // Higher base_note = lower relative_note (formula subtracts base_note)
         assert_eq!(
-            relative_notes[0] - relative_notes[1], 12,
+            relative_notes[0] - relative_notes[1],
+            12,
             "C3 to C4: relative_note should differ by 12"
         );
         assert_eq!(
-            relative_notes[1] - relative_notes[2], 12,
+            relative_notes[1] - relative_notes[2],
+            12,
             "C4 to C5: relative_note should differ by 12"
         );
         assert_eq!(
-            relative_notes[2] - relative_notes[3], 12,
+            relative_notes[2] - relative_notes[3],
+            12,
             "C5 to C6: relative_note should differ by 12"
         );
     }
@@ -902,20 +925,29 @@ mod tests {
     #[test]
     fn test_xm_default_sample_rate_constant() {
         use crate::note::DEFAULT_SAMPLE_RATE;
-        assert_eq!(DEFAULT_SAMPLE_RATE, 22050, "Default sample rate should be 22050 Hz");
+        assert_eq!(
+            DEFAULT_SAMPLE_RATE, 22050,
+            "Default sample rate should be 22050 Hz"
+        );
     }
 
     /// Test: Verify default synth MIDI note constant is 60 (C4)
     #[test]
     fn test_xm_default_synth_midi_note_constant() {
         use crate::note::DEFAULT_SYNTH_MIDI_NOTE;
-        assert_eq!(DEFAULT_SYNTH_MIDI_NOTE, 60, "Default synth MIDI note should be 60 (C4)");
+        assert_eq!(
+            DEFAULT_SYNTH_MIDI_NOTE, 60,
+            "Default synth MIDI note should be 60 (C4)"
+        );
     }
 
     /// Test: Verify XM reference frequency constant is 8363
     #[test]
     fn test_xm_reference_frequency_constant() {
         use crate::note::XM_BASE_FREQ;
-        assert_eq!(XM_BASE_FREQ, 8363.0, "XM reference frequency should be 8363 Hz");
+        assert_eq!(
+            XM_BASE_FREQ, 8363.0,
+            "XM reference frequency should be 8363 Hz"
+        );
     }
 }

@@ -1,6 +1,6 @@
 //! Brick pattern generator.
 
-use super::{Pattern2D, DetailedPattern2D, PatternSample};
+use super::{DetailedPattern2D, Pattern2D, PatternSample};
 use crate::rng::DeterministicRng;
 
 /// Brick pattern configuration.
@@ -96,7 +96,8 @@ impl BrickPattern {
 
     /// Get brick variation value for a given brick.
     fn get_brick_variation(&self, col: i32, row: i32) -> f64 {
-        let brick_seed = self.seed
+        let brick_seed = self
+            .seed
             .wrapping_add((col as u32).wrapping_mul(374761393))
             .wrapping_add((row as u32).wrapping_mul(668265263));
 
@@ -195,7 +196,7 @@ impl DetailedPattern2D for BrickPattern {
 
         PatternSample {
             height: (1.0 + variation) * bevel,
-            mask: 1.0, // Brick mask
+            mask: 1.0,                            // Brick mask
             secondary: (col + row * 1000) as f64, // Brick ID for per-brick effects
         }
     }
@@ -245,7 +246,7 @@ mod tests {
         // They should be slightly different due to variation
         // (unless they happen to be the same brick)
         // Just verify both are valid
-        assert!(v1 >= 0.0 && v1 <= 1.5);
-        assert!(v2 >= 0.0 && v2 <= 1.5);
+        assert!((0.0..=1.5).contains(&v1));
+        assert!((0.0..=1.5).contains(&v2));
     }
 }

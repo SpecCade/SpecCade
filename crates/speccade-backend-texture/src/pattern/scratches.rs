@@ -95,7 +95,8 @@ impl ScratchesPattern {
         let mut rng = DeterministicRng::new(self.seed);
         self.scratches.clear();
 
-        let diag = ((self.tex_width * self.tex_width + self.tex_height * self.tex_height) as f64).sqrt();
+        let diag =
+            ((self.tex_width * self.tex_width + self.tex_height * self.tex_height) as f64).sqrt();
 
         for _ in 0..self.count {
             // Random start position
@@ -106,7 +107,8 @@ impl ScratchesPattern {
             let angle = rng.gen_f64() * std::f64::consts::PI * 2.0;
 
             // Random length
-            let length = (self.min_length + rng.gen_f64() * (self.max_length - self.min_length)) * diag;
+            let length =
+                (self.min_length + rng.gen_f64() * (self.max_length - self.min_length)) * diag;
 
             // Calculate end position
             let x2 = x1 + angle.cos() * length;
@@ -217,7 +219,7 @@ mod tests {
         for y in 0..100 {
             for x in 0..100 {
                 let v = pattern.sample(x, y);
-                assert!(v >= 0.0 && v <= 1.0);
+                assert!((0.0..=1.0).contains(&v));
             }
         }
     }

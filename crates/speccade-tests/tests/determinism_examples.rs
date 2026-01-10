@@ -8,14 +8,14 @@
 //! cargo test -p speccade-tests --test determinism_examples
 //! ```
 
-use speccade_tests::determinism::{verify_determinism, assert_deterministic};
+use speccade_tests::determinism::verify_determinism;
 use speccade_tests::test_determinism;
 
 // ============================================================================
-// Audio SFX Determinism Tests
+// Audio Determinism Tests
 // ============================================================================
 
-mod audio_sfx {
+mod audio {
     use super::*;
     use speccade_backend_audio::generate_from_params;
     use speccade_spec::recipe::audio::{
@@ -212,7 +212,7 @@ mod texture {
     use super::*;
     use speccade_backend_texture::generate_material_maps;
     use speccade_backend_texture::png::PngConfig;
-    use speccade_backend_texture::{TextureBuffer, Color};
+    use speccade_backend_texture::{Color, TextureBuffer};
     use speccade_spec::recipe::texture::{
         BaseMaterial, MaterialType, TextureMapType, TextureMaterialV1Params,
     };
@@ -328,9 +328,7 @@ mod hash_verification {
     fn test_hash_consistency() {
         let data = b"test data for hashing";
 
-        let hashes: Vec<String> = (0..5)
-            .map(|_| compute_hash(data))
-            .collect();
+        let hashes: Vec<String> = (0..5).map(|_| compute_hash(data)).collect();
 
         assert!(verify_hash_determinism(&hashes));
     }
@@ -349,7 +347,7 @@ mod hash_verification {
 // ============================================================================
 
 mod framework_api {
-    use speccade_tests::determinism::{verify_determinism, assert_deterministic};
+    use speccade_tests::determinism::{assert_deterministic, verify_determinism};
 
     #[test]
     fn test_verify_determinism_returns_detailed_result() {

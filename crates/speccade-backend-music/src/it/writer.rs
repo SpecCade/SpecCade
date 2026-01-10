@@ -87,11 +87,7 @@ impl ItModule {
             0
         };
 
-        let message_size = self
-            .message
-            .as_ref()
-            .map(|m| m.len() + 1)
-            .unwrap_or(0);
+        let message_size = self.message.as_ref().map(|m| m.len() + 1).unwrap_or(0);
 
         // Instruments start after message
         let instruments_start = offset_table_start + offset_table_size + message_size;
@@ -102,7 +98,8 @@ impl ItModule {
             .collect();
 
         // Samples start after instruments
-        let samples_start = instruments_start + num_instruments * super::instrument::IT_INSTRUMENT_SIZE;
+        let samples_start =
+            instruments_start + num_instruments * super::instrument::IT_INSTRUMENT_SIZE;
 
         // Calculate sample header offsets (each header is 80 bytes)
         let sample_header_offsets: Vec<u32> = (0..num_samples)
@@ -119,7 +116,13 @@ impl ItModule {
 
         for pattern in &self.patterns {
             pattern_offsets.push(current_offset as u32);
-            let packed = pattern.pack(self.header.channel_pan.iter().filter(|&&p| p != 128).count() as u8);
+            let packed = pattern.pack(
+                self.header
+                    .channel_pan
+                    .iter()
+                    .filter(|&&p| p != 128)
+                    .count() as u8,
+            );
             let pattern_size = 8 + packed.len(); // 8-byte header + data
             current_offset += pattern_size;
             packed_patterns.push(packed);

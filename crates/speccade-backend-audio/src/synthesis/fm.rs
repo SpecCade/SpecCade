@@ -277,7 +277,7 @@ mod tests {
 
         assert_eq!(samples.len(), 1000);
         for &s in &samples {
-            assert!(s >= -1.0 && s <= 1.0);
+            assert!((-1.0..=1.0).contains(&s));
         }
     }
 
@@ -306,17 +306,10 @@ mod tests {
         let samples = synth.synthesize(44100, 44100.0, &mut rng);
 
         // Initial samples should have more harmonics (larger amplitude variation)
-        let early_variance: f64 = samples[0..100]
-            .iter()
-            .map(|s| s.powi(2))
-            .sum::<f64>()
-            / 100.0;
+        let early_variance: f64 = samples[0..100].iter().map(|s| s.powi(2)).sum::<f64>() / 100.0;
 
-        let late_variance: f64 = samples[40000..40100]
-            .iter()
-            .map(|s| s.powi(2))
-            .sum::<f64>()
-            / 100.0;
+        let late_variance: f64 =
+            samples[40000..40100].iter().map(|s| s.powi(2)).sum::<f64>() / 100.0;
 
         // Both should have similar variance since carrier amplitude stays constant
         assert!(early_variance > 0.0 && late_variance > 0.0);

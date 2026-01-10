@@ -216,7 +216,10 @@ mod tests {
         let center_ao = ao_map.get(32, 32);
         let edge_ao = ao_map.get(0, 0);
 
-        assert!(center_ao < edge_ao, "Pit should have more occlusion than flat area");
+        assert!(
+            center_ao < edge_ao,
+            "Pit should have more occlusion than flat area"
+        );
     }
 
     #[test]

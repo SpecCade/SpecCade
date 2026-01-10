@@ -129,13 +129,73 @@ pub fn classify_key(section: &str, key: &str) -> MigrationKeyStatus {
     // Try other common tables based on section
     let tables_to_check: &[&str] = match section {
         "SOUND (audio_sfx)" => &["Layer Keys", "Envelope Keys (ADSR)", "Filter Keys"],
-        "INSTRUMENT (audio_instrument)" => &["Synthesis Keys", "Oscillator Keys (Subtractive)", "Output Keys"],
-        "SONG (music)" => &["Instrument Keys (inline or ref)", "Pattern Keys", "Note Keys (within pattern)", "Arrangement Entry Keys", "Automation Keys", "IT Options Keys"],
-        "TEXTURE (texture_2d)" => &["Layer Keys", "Solid Layer", "Noise Layer", "Gradient Layer", "Checkerboard Layer", "Stripes Layer", "Wood Grain Layer", "Brick Layer"],
-        "NORMAL (normal_map)" => &["Processing Keys", "Pattern Keys", "Bricks Pattern", "Tiles Pattern", "Hexagons Pattern", "Noise Pattern", "Scratches Pattern", "Rivets Pattern", "Weave Pattern"],
-        "MESH (static_mesh)" => &["Cube", "Cylinder", "Sphere (UV)", "Icosphere", "Cone", "Torus", "Modifier Keys", "Bevel Modifier", "Decimate Modifier", "UV Keys", "Export Keys"],
-        "SPEC/CHARACTER (skeletal_mesh)" => &["Skeleton Bone Keys", "Part Keys", "Step Keys", "Instance Keys", "Texturing Keys"],
-        "ANIMATION (skeletal_animation)" => &["Pose Keys (per bone)", "Phase Keys", "IK Target Keyframe Keys", "Procedural Layer Keys", "Rig Setup Keys", "IK Chain Keys", "Constraint Keys", "Twist Bone Keys", "Bake Settings Keys", "Animator Rig Config Keys", "Conventions Keys"],
+        "INSTRUMENT (audio_instrument)" => &[
+            "Synthesis Keys",
+            "Oscillator Keys (Subtractive)",
+            "Output Keys",
+        ],
+        "SONG (music)" => &[
+            "Instrument Keys (inline or ref)",
+            "Pattern Keys",
+            "Note Keys (within pattern)",
+            "Arrangement Entry Keys",
+            "Automation Keys",
+            "IT Options Keys",
+        ],
+        "TEXTURE (texture_2d)" => &[
+            "Layer Keys",
+            "Solid Layer",
+            "Noise Layer",
+            "Gradient Layer",
+            "Checkerboard Layer",
+            "Stripes Layer",
+            "Wood Grain Layer",
+            "Brick Layer",
+        ],
+        "NORMAL (normal_map)" => &[
+            "Processing Keys",
+            "Pattern Keys",
+            "Bricks Pattern",
+            "Tiles Pattern",
+            "Hexagons Pattern",
+            "Noise Pattern",
+            "Scratches Pattern",
+            "Rivets Pattern",
+            "Weave Pattern",
+        ],
+        "MESH (static_mesh)" => &[
+            "Cube",
+            "Cylinder",
+            "Sphere (UV)",
+            "Icosphere",
+            "Cone",
+            "Torus",
+            "Modifier Keys",
+            "Bevel Modifier",
+            "Decimate Modifier",
+            "UV Keys",
+            "Export Keys",
+        ],
+        "SPEC/CHARACTER (skeletal_mesh)" => &[
+            "Skeleton Bone Keys",
+            "Part Keys",
+            "Step Keys",
+            "Instance Keys",
+            "Texturing Keys",
+        ],
+        "ANIMATION (skeletal_animation)" => &[
+            "Pose Keys (per bone)",
+            "Phase Keys",
+            "IK Target Keyframe Keys",
+            "Procedural Layer Keys",
+            "Rig Setup Keys",
+            "IK Chain Keys",
+            "Constraint Keys",
+            "Twist Bone Keys",
+            "Bake Settings Keys",
+            "Animator Rig Config Keys",
+            "Conventions Keys",
+        ],
         _ => &[],
     };
 
@@ -177,7 +237,9 @@ pub fn classify_legacy_keys(legacy: &LegacySpec) -> KeyClassification {
             MigrationKeyStatus::Unknown => 3,
             MigrationKeyStatus::Deprecated => 4,
         };
-        status_order(&a.1).cmp(&status_order(&b.1)).then(a.0.cmp(&b.0))
+        status_order(&a.1)
+            .cmp(&status_order(&b.1))
+            .then(a.0.cmp(&b.0))
     });
 
     classification
@@ -192,13 +254,25 @@ mod tests {
     #[test]
     fn test_category_to_parity_section() {
         assert_eq!(category_to_parity_section("sounds"), "SOUND (audio_sfx)");
-        assert_eq!(category_to_parity_section("instruments"), "INSTRUMENT (audio_instrument)");
+        assert_eq!(
+            category_to_parity_section("instruments"),
+            "INSTRUMENT (audio_instrument)"
+        );
         assert_eq!(category_to_parity_section("music"), "SONG (music)");
-        assert_eq!(category_to_parity_section("textures"), "TEXTURE (texture_2d)");
+        assert_eq!(
+            category_to_parity_section("textures"),
+            "TEXTURE (texture_2d)"
+        );
         assert_eq!(category_to_parity_section("normals"), "NORMAL (normal_map)");
         assert_eq!(category_to_parity_section("meshes"), "MESH (static_mesh)");
-        assert_eq!(category_to_parity_section("characters"), "SPEC/CHARACTER (skeletal_mesh)");
-        assert_eq!(category_to_parity_section("animations"), "ANIMATION (skeletal_animation)");
+        assert_eq!(
+            category_to_parity_section("characters"),
+            "SPEC/CHARACTER (skeletal_mesh)"
+        );
+        assert_eq!(
+            category_to_parity_section("animations"),
+            "ANIMATION (skeletal_animation)"
+        );
         assert_eq!(category_to_parity_section("unknown"), "");
     }
 
@@ -237,7 +311,11 @@ mod tests {
         assert!(classification.unknown >= 1);
         // Total should match
         assert_eq!(
-            classification.implemented + classification.partial + classification.not_implemented + classification.deprecated + classification.unknown,
+            classification.implemented
+                + classification.partial
+                + classification.not_implemented
+                + classification.deprecated
+                + classification.unknown,
             4
         );
     }
@@ -245,22 +323,24 @@ mod tests {
     #[test]
     fn test_key_classification_gap_score() {
         // Test gap score calculation
-        let mut kc = KeyClassification::default();
-        kc.implemented = 8;
-        kc.partial = 2;
-        kc.not_implemented = 0;
-        kc.unknown = 0;
+        let kc = KeyClassification {
+            implemented: 8,
+            partial: 2,
+            ..Default::default()
+        };
 
         // (8 + 0.5*2) / 10 = 9/10 = 0.9
         let gap = kc.gap_score().unwrap();
         assert!((gap - 0.9).abs() < 0.001);
 
         // Test with mixed values
-        let mut kc2 = KeyClassification::default();
-        kc2.implemented = 4;
-        kc2.partial = 2;
-        kc2.not_implemented = 2;
-        kc2.unknown = 2;
+        let mut kc2 = KeyClassification {
+            implemented: 4,
+            partial: 2,
+            not_implemented: 2,
+            unknown: 2,
+            ..Default::default()
+        };
 
         // (4 + 0.5*2) / (4+2+2+2) = 5/10 = 0.5
         let gap2 = kc2.gap_score().unwrap();
@@ -275,12 +355,14 @@ mod tests {
 
     #[test]
     fn test_key_classification_total_used() {
-        let mut kc = KeyClassification::default();
-        kc.implemented = 5;
-        kc.partial = 3;
-        kc.not_implemented = 2;
-        kc.unknown = 1;
-        kc.deprecated = 4;
+        let kc = KeyClassification {
+            implemented: 5,
+            partial: 3,
+            not_implemented: 2,
+            deprecated: 4,
+            unknown: 1,
+            ..Default::default()
+        };
 
         // total_used excludes deprecated
         assert_eq!(kc.total_used(), 5 + 3 + 2 + 1);
@@ -294,17 +376,35 @@ mod tests {
 
     #[test]
     fn test_migration_key_status_from_key_status() {
-        assert_eq!(MigrationKeyStatus::from(KeyStatus::Implemented), MigrationKeyStatus::Implemented);
-        assert_eq!(MigrationKeyStatus::from(KeyStatus::Partial), MigrationKeyStatus::Partial);
-        assert_eq!(MigrationKeyStatus::from(KeyStatus::NotImplemented), MigrationKeyStatus::NotImplemented);
-        assert_eq!(MigrationKeyStatus::from(KeyStatus::Deprecated), MigrationKeyStatus::Deprecated);
+        assert_eq!(
+            MigrationKeyStatus::from(KeyStatus::Implemented),
+            MigrationKeyStatus::Implemented
+        );
+        assert_eq!(
+            MigrationKeyStatus::from(KeyStatus::Partial),
+            MigrationKeyStatus::Partial
+        );
+        assert_eq!(
+            MigrationKeyStatus::from(KeyStatus::NotImplemented),
+            MigrationKeyStatus::NotImplemented
+        );
+        assert_eq!(
+            MigrationKeyStatus::from(KeyStatus::Deprecated),
+            MigrationKeyStatus::Deprecated
+        );
     }
 
     #[test]
     fn test_migration_key_status_display() {
-        assert_eq!(format!("{}", MigrationKeyStatus::Implemented), "Implemented");
+        assert_eq!(
+            format!("{}", MigrationKeyStatus::Implemented),
+            "Implemented"
+        );
         assert_eq!(format!("{}", MigrationKeyStatus::Partial), "Partial");
-        assert_eq!(format!("{}", MigrationKeyStatus::NotImplemented), "NotImplemented");
+        assert_eq!(
+            format!("{}", MigrationKeyStatus::NotImplemented),
+            "NotImplemented"
+        );
         assert_eq!(format!("{}", MigrationKeyStatus::Deprecated), "Deprecated");
         assert_eq!(format!("{}", MigrationKeyStatus::Unknown), "Unknown");
     }
@@ -336,11 +436,11 @@ mod tests {
     #[test]
     fn test_audit_completeness_threshold_pass() {
         // Create a key classification that passes 90% threshold
-        let mut kc = KeyClassification::default();
-        kc.implemented = 9;
-        kc.partial = 0;
-        kc.not_implemented = 1;
-        kc.unknown = 0;
+        let kc = KeyClassification {
+            implemented: 9,
+            not_implemented: 1,
+            ..Default::default()
+        };
 
         // Gap score = (9 + 0*0.5) / (9+0+1+0) = 9/10 = 0.9
         let gap = kc.gap_score().unwrap();
@@ -351,11 +451,12 @@ mod tests {
     #[test]
     fn test_audit_completeness_threshold_fail() {
         // Create a key classification that fails 90% threshold
-        let mut kc = KeyClassification::default();
-        kc.implemented = 7;
-        kc.partial = 2;
-        kc.not_implemented = 1;
-        kc.unknown = 0;
+        let kc = KeyClassification {
+            implemented: 7,
+            partial: 2,
+            not_implemented: 1,
+            ..Default::default()
+        };
 
         // Gap score = (7 + 2*0.5) / (7+2+1+0) = 8/10 = 0.8
         let gap = kc.gap_score().unwrap();
@@ -369,12 +470,24 @@ mod tests {
         let mut missing_keys: HashMap<(String, String), usize> = HashMap::new();
 
         // Same key appearing in multiple specs should increase frequency
-        *missing_keys.entry(("SOUND (audio_sfx)".to_string(), "reverb".to_string())).or_insert(0) += 1;
-        *missing_keys.entry(("SOUND (audio_sfx)".to_string(), "reverb".to_string())).or_insert(0) += 1;
-        *missing_keys.entry(("SOUND (audio_sfx)".to_string(), "echo".to_string())).or_insert(0) += 1;
+        *missing_keys
+            .entry(("SOUND (audio_sfx)".to_string(), "reverb".to_string()))
+            .or_insert(0) += 1;
+        *missing_keys
+            .entry(("SOUND (audio_sfx)".to_string(), "reverb".to_string()))
+            .or_insert(0) += 1;
+        *missing_keys
+            .entry(("SOUND (audio_sfx)".to_string(), "echo".to_string()))
+            .or_insert(0) += 1;
 
-        assert_eq!(missing_keys.get(&("SOUND (audio_sfx)".to_string(), "reverb".to_string())), Some(&2));
-        assert_eq!(missing_keys.get(&("SOUND (audio_sfx)".to_string(), "echo".to_string())), Some(&1));
+        assert_eq!(
+            missing_keys.get(&("SOUND (audio_sfx)".to_string(), "reverb".to_string())),
+            Some(&2)
+        );
+        assert_eq!(
+            missing_keys.get(&("SOUND (audio_sfx)".to_string(), "echo".to_string())),
+            Some(&1)
+        );
     }
 
     #[test]

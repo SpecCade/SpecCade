@@ -78,14 +78,14 @@ fn test_channels_serialization() {
 fn test_loop_serialization() {
     let json = r#"{"format":"xm","bpm":125,"speed":6,"channels":8,"loop":true,"instruments":[],"patterns":{},"arrangement":[]}"#;
     let parsed: MusicTrackerSongV1Params = serde_json::from_str(json).unwrap();
-    assert_eq!(parsed.r#loop, true);
+    assert!(parsed.r#loop);
 }
 
 #[test]
 fn test_loop_default_value() {
     let json = r#"{"format":"xm","bpm":125,"speed":6,"channels":8,"instruments":[],"patterns":{},"arrangement":[]}"#;
     let parsed: MusicTrackerSongV1Params = serde_json::from_str(json).unwrap();
-    assert_eq!(parsed.r#loop, false);
+    assert!(!parsed.r#loop);
 }
 
 #[test]
@@ -175,7 +175,7 @@ fn test_it_options_serialization() {
 
     let json = serde_json::to_string(&it_options).unwrap();
     let parsed: ItOptions = serde_json::from_str(&json).unwrap();
-    assert_eq!(parsed.stereo, true);
+    assert!(parsed.stereo);
     assert_eq!(parsed.global_volume, 128);
     assert_eq!(parsed.mix_volume, 48);
 }

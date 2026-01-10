@@ -52,16 +52,16 @@ pub fn generate_with_config(
     }
 
     // Parse and validate params
-    let params: StaticMeshBlenderPrimitivesV1Params =
-        serde_json::from_value(recipe.params.clone())
-            .map_err(BlenderError::DeserializeParamsFailed)?;
+    let params: StaticMeshBlenderPrimitivesV1Params = serde_json::from_value(recipe.params.clone())
+        .map_err(BlenderError::DeserializeParamsFailed)?;
 
     // Serialize spec to JSON
     let spec_json = serde_json::to_string(spec).map_err(BlenderError::SerializeFailed)?;
 
     // Run orchestrator
     let orchestrator = Orchestrator::with_config(config);
-    let report = orchestrator.run_with_spec_json(GenerationMode::StaticMesh, &spec_json, out_root)?;
+    let report =
+        orchestrator.run_with_spec_json(GenerationMode::StaticMesh, &spec_json, out_root)?;
 
     // Get output path from report
     let output_path_str = report
@@ -96,7 +96,10 @@ pub fn generate_with_config(
 }
 
 /// Validates metrics against mesh constraints.
-fn validate_constraints(metrics: &BlenderMetrics, constraints: &MeshConstraints) -> BlenderResult<()> {
+fn validate_constraints(
+    metrics: &BlenderMetrics,
+    constraints: &MeshConstraints,
+) -> BlenderResult<()> {
     if let (Some(max), Some(actual)) = (constraints.max_triangles, metrics.triangle_count) {
         if actual > max {
             return Err(BlenderError::constraint_violation(format!(

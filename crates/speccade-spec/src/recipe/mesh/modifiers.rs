@@ -127,12 +127,11 @@ mod tests {
         let modifier = MeshModifier::Bevel {
             width: 0.05,
             segments: 4,
-            angle_limit: Some(0.785398), // ~45 degrees in radians
+            angle_limit: Some(std::f64::consts::FRAC_PI_4),
         };
 
         let json = serde_json::to_string(&modifier).unwrap();
         assert!(json.contains("angle_limit"));
-        assert!(json.contains("0.785398"));
 
         let parsed: MeshModifier = serde_json::from_str(&json).unwrap();
         assert_eq!(parsed, modifier);

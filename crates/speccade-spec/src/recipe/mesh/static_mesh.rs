@@ -33,8 +33,8 @@ pub struct StaticMeshBlenderPrimitivesV1Params {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use super::super::modifiers::UvProjectionMethod;
+    use super::*;
 
     // ========================================================================
     // StaticMeshBlenderPrimitivesV1Params Tests - Full integration

@@ -7,7 +7,7 @@ use regex::Regex;
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use speccade_spec::{AssetType, OutputFormat, OutputKind, OutputSpec, Spec};
+use speccade_spec::{AssetType, OutputFormat, OutputKind, OutputSpec, Recipe, Spec};
 
 use super::audit::{classify_legacy_keys, KeyClassification};
 use super::legacy_parser::{parse_legacy_spec_exec, parse_legacy_spec_static, LegacySpec};
@@ -69,31 +69,21 @@ pub fn migrate_spec(
     }
 
     // Add recipe with params
-    let recipe_json = serde_json::json!({
-        "kind": recipe_kind,
-        "params": params
-    });
+    spec = spec.recipe(Recipe::new(recipe_kind, params));
 
-    let mut spec_value = spec.build().to_value()?;
-    if let Some(obj) = spec_value.as_object_mut() {
-        obj.insert("recipe".to_string(), recipe_json);
-
-        // Add migration notes
+    // Add migration notes
+    spec = spec.migration_notes({
         let mut notes = vec![
             "Migrated from legacy .spec.py format".to_string(),
             "Please review and update the license field".to_string(),
         ];
         if !warnings.is_empty() {
-            notes.push("See warnings for manual review items".to_string());
+            notes.push("See migrator warnings for manual review items".to_string());
         }
-        obj.insert(
-            "migration_notes".to_string(),
-            serde_json::json!(notes)
-        );
-    }
+        notes
+    });
 
-    // Parse back to ensure it's valid
-    let spec: Spec = serde_json::from_value(spec_value)?;
+    let spec = spec.build();
 
     // Determine target path
     let target_path = project_root
@@ -123,14 +113,23 @@ pub fn migrate_spec(
 /// Map category to asset type and recipe kind
 pub fn map_category_to_type(category: &str) -> Result<(AssetType, String)> {
     match category {
-        "sounds" => Ok((AssetType::AudioSfx, "audio_sfx.layered_synth_v1".to_string())),
-        "instruments" => Ok((AssetType::AudioInstrument, "audio_instrument.synth_patch_v1".to_string())),
+        "sounds" => Ok((AssetType::Audio, "audio_v1".to_string())),
+        "instruments" => Ok((AssetType::Audio, "audio_v1".to_string())),
         "music" => Ok((AssetType::Music, "music.tracker_song_v1".to_string())),
-        "textures" => Ok((AssetType::Texture, "texture_2d.material_maps_v1".to_string())),
-        "normals" => Ok((AssetType::Texture, "texture_2d.normal_map_v1".to_string())),
-        "meshes" => Ok((AssetType::StaticMesh, "static_mesh.blender_primitives_v1".to_string())),
-        "characters" => Ok((AssetType::SkeletalMesh, "skeletal_mesh.blender_rigged_mesh_v1".to_string())),
-        "animations" => Ok((AssetType::SkeletalAnimation, "skeletal_animation.blender_clip_v1".to_string())),
+        "textures" => Ok((AssetType::Texture, "texture.material_v1".to_string())),
+        "normals" => Ok((AssetType::Texture, "texture.normal_v1".to_string())),
+        "meshes" => Ok((
+            AssetType::StaticMesh,
+            "static_mesh.blender_primitives_v1".to_string(),
+        )),
+        "characters" => Ok((
+            AssetType::SkeletalMesh,
+            "skeletal_mesh.blender_rigged_mesh_v1".to_string(),
+        )),
+        "animations" => Ok((
+            AssetType::SkeletalAnimation,
+            "skeletal_animation.blender_clip_v1".to_string(),
+        )),
         _ => bail!("Unknown category: {}", category),
     }
 }
@@ -143,9 +142,7 @@ pub fn extract_asset_id(spec_file: &Path) -> Result<String> {
         .ok_or_else(|| anyhow::anyhow!("Invalid filename"))?;
 
     // Remove .spec suffix if present
-    let asset_id = file_stem
-        .strip_suffix(".spec")
-        .unwrap_or(file_stem);
+    let asset_id = file_stem.strip_suffix(".spec").unwrap_or(file_stem);
 
     // Convert to lowercase and replace invalid characters
     let asset_id = asset_id.to_lowercase().replace("_", "-");
@@ -206,22 +203,6 @@ pub fn generate_outputs(
                 kind: OutputKind::Primary,
                 format: OutputFormat::Wav,
                 path: format!("audio/{}.wav", asset_id),
-                channels: None,
-            }]
-        }
-        AssetType::AudioSfx => {
-            vec![OutputSpec {
-                kind: OutputKind::Primary,
-                format: OutputFormat::Wav,
-                path: format!("sounds/{}.wav", asset_id),
-                channels: None,
-            }]
-        }
-        AssetType::AudioInstrument => {
-            vec![OutputSpec {
-                kind: OutputKind::Primary,
-                format: OutputFormat::Wav,
-                path: format!("instruments/{}.wav", asset_id),
                 channels: None,
             }]
         }
@@ -287,8 +268,8 @@ mod tests {
     #[test]
     fn test_map_category_to_type() {
         let (asset_type, kind) = map_category_to_type("sounds").unwrap();
-        assert_eq!(asset_type, AssetType::AudioSfx);
-        assert_eq!(kind, "audio_sfx.layered_synth_v1");
+        assert_eq!(asset_type, AssetType::Audio);
+        assert_eq!(kind, "audio_v1");
     }
 
     #[test]
@@ -296,8 +277,14 @@ mod tests {
         let id = extract_asset_id(Path::new("laser_blast_01.spec.py")).unwrap();
         assert_eq!(id, "laser-blast-01");
 
-        assert!(extract_asset_id(Path::new("AB.spec.py")).is_err(), "too short");
-        assert!(extract_asset_id(Path::new("INVALID!.spec.py")).is_err(), "invalid chars");
+        assert!(
+            extract_asset_id(Path::new("AB.spec.py")).is_err(),
+            "too short"
+        );
+        assert!(
+            extract_asset_id(Path::new("INVALID!.spec.py")).is_err(),
+            "invalid chars"
+        );
     }
 
     #[test]
@@ -321,7 +308,7 @@ mod tests {
             ]),
         };
 
-        let (params, warnings) = map_legacy_keys_to_params(&legacy, "audio_sfx.layered_synth_v1").unwrap();
+        let (params, warnings) = map_legacy_keys_to_params(&legacy, "audio_v1").unwrap();
         assert!(warnings.iter().any(|w| w.contains("PARITY_MATRIX.md")));
         assert!(params.get("name").is_none(), "name should be removed");
         assert!(params.get("duration").is_some());

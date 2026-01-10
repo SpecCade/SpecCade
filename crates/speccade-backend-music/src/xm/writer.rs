@@ -19,12 +19,7 @@ pub struct XmModule {
 
 impl XmModule {
     /// Create a new XM module with the given parameters.
-    pub fn new(
-        name: &str,
-        num_channels: u8,
-        speed: u8,
-        bpm: u16,
-    ) -> Self {
+    pub fn new(name: &str, num_channels: u8, speed: u8, bpm: u16) -> Self {
         Self {
             header: XmHeader::new(name, num_channels, 0, 0, speed, bpm),
             patterns: Vec::new(),

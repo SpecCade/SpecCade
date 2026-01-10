@@ -4,7 +4,7 @@
   "asset_type": "texture",
   "license": "CC0-1.0",
   "seed": 999005,
-  "description": "Golden comprehensive test - exercises ALL normal_map/NORMAL keys: all pattern types (bricks, tiles, hexagons, noise, scratches, rivets, weave), processing with strength/blur/invert, all pattern-specific params",
+  "description": "Golden normal map spec that covers the supported texture.normal_v1 fields (pattern + bump_strength + processing).",
   "style_tags": ["golden", "comprehensive", "test", "normal", "bump"],
   "engine_targets": ["godot", "unity", "unreal"],
   "outputs": [
@@ -26,90 +26,17 @@
   "recipe": {
     "kind": "texture.normal_v1",
     "params": {
-      "name": "comprehensive_normal",
-      "size": [512, 512],
       "resolution": [512, 512],
       "tileable": true,
-      "method": "from_pattern",
-      "patterns": [
-        {
-          "comment": "Pattern 1: Bricks with all params",
-          "type": "bricks",
-          "brick_width": 64,
-          "brick_height": 32,
-          "brick_size": [64, 32],
-          "mortar_width": 4,
-          "mortar_depth": 0.3,
-          "brick_variation": 0.15,
-          "seed": 42,
-          "weight": 1.0
-        },
-        {
-          "comment": "Pattern 2: Square tiles with all params",
-          "type": "tiles",
-          "tile_size": 64,
-          "gap_width": 4,
-          "gap_depth": 0.25,
-          "seed": 123,
-          "weight": 0.5
-        },
-        {
-          "comment": "Pattern 3: Hexagon tiles with all params",
-          "type": "hexagons",
-          "hex_size": 40,
-          "gap_width": 3,
-          "gap_depth": 0.2,
-          "seed": 456,
-          "weight": 0.4
-        },
-        {
-          "comment": "Pattern 4: Noise pattern with all params",
-          "type": "noise",
-          "scale": 0.05,
-          "octaves": 4,
-          "height_range": [0.0, 1.0],
-          "seed": 789,
-          "weight": 0.3
-        },
-        {
-          "comment": "Pattern 5: Scratches pattern with all params",
-          "type": "scratches",
-          "density": 80,
-          "length_range": [15, 60],
-          "depth": 0.2,
-          "seed": 321,
-          "weight": 0.25
-        },
-        {
-          "comment": "Pattern 6: Rivets pattern with all params",
-          "type": "rivets",
-          "spacing": 48,
-          "radius": 5,
-          "height": 0.25,
-          "seed": 654,
-          "weight": 0.35
-        },
-        {
-          "comment": "Pattern 7: Weave pattern with all params",
-          "type": "weave",
-          "thread_width": 10,
-          "gap": 3,
-          "depth": 0.18,
-          "weight": 0.3
-        }
-      ],
       "pattern": {
-        "comment": "Primary pattern for single-pattern mode fallback",
         "type": "bricks",
         "brick_width": 64,
         "brick_height": 32,
         "mortar_width": 4,
-        "mortar_depth": 0.3,
-        "brick_variation": 0.1,
-        "seed": 42
+        "offset": 0.5
       },
+      "bump_strength": 1.5,
       "processing": {
-        "strength": 1.5,
         "blur": 0.5,
         "invert": false
       }

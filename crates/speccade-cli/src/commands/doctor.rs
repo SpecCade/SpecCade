@@ -49,17 +49,10 @@ pub fn run() -> Result<ExitCode> {
     println!("{}", "Dependencies:".bold());
     match check_blender() {
         BlenderStatus::Found(version) => {
-            println!(
-                "  {} Blender {} (found in PATH)",
-                "ok".green(),
-                version
-            );
+            println!("  {} Blender {} (found in PATH)", "ok".green(), version);
         }
         BlenderStatus::NotFound => {
-            println!(
-                "  {} Blender not found in PATH",
-                "!!".yellow()
-            );
+            println!("  {} Blender not found in PATH", "!!".yellow());
             println!(
                 "     {}",
                 "Blender is required for mesh and animation generation.".dimmed()
@@ -71,11 +64,7 @@ pub fn run() -> Result<ExitCode> {
             // Not a hard failure - Blender is only needed for some backends
         }
         BlenderStatus::Error(e) => {
-            println!(
-                "  {} Blender check failed: {}",
-                "!!".red(),
-                e
-            );
+            println!("  {} Blender check failed: {}", "!!".red(), e);
             all_ok = false;
         }
     }
@@ -100,21 +89,13 @@ pub fn run() -> Result<ExitCode> {
                     );
                 }
                 Err(e) => {
-                    println!(
-                        "  {} Cannot write to current directory: {}",
-                        "!!".red(),
-                        e
-                    );
+                    println!("  {} Cannot write to current directory: {}", "!!".red(), e);
                     all_ok = false;
                 }
             }
         }
         Err(e) => {
-            println!(
-                "  {} Cannot determine current directory: {}",
-                "!!".red(),
-                e
-            );
+            println!("  {} Cannot determine current directory: {}", "!!".red(), e);
             all_ok = false;
         }
     }
@@ -124,11 +105,11 @@ pub fn run() -> Result<ExitCode> {
     // Check 4: Available backends
     println!("{}", "Backends:".bold());
     let recipe_kinds = [
-        "audio_sfx.layered_synth_v1",
-        "audio_instrument.synth_patch_v1",
+        "audio_v1",
         "music.tracker_song_v1",
-        "texture_2d.material_maps_v1",
-        "texture_2d.normal_map_v1",
+        "texture.material_v1",
+        "texture.normal_v1",
+        "texture.packed_v1",
         "static_mesh.blender_primitives_v1",
         "skeletal_mesh.blender_rigged_mesh_v1",
         "skeletal_animation.blender_clip_v1",
@@ -152,10 +133,7 @@ pub fn run() -> Result<ExitCode> {
 
     // Summary
     if all_ok {
-        println!(
-            "{} All checks passed!",
-            "SUCCESS".green().bold()
-        );
+        println!("{} All checks passed!", "SUCCESS".green().bold());
         Ok(ExitCode::SUCCESS)
     } else {
         println!(
@@ -184,9 +162,7 @@ fn parse_blender_version(output: &str) -> Option<String> {
 /// Check if Blender is installed and get its version
 fn check_blender() -> BlenderStatus {
     // Try to run `blender --version`
-    let result = Command::new("blender")
-        .arg("--version")
-        .output();
+    let result = Command::new("blender").arg("--version").output();
 
     match result {
         Ok(output) => {
@@ -197,10 +173,7 @@ fn check_blender() -> BlenderStatus {
                     parse_blender_version(&stdout).unwrap_or_else(|| "unknown".to_string());
                 BlenderStatus::Found(version)
             } else {
-                BlenderStatus::Error(format!(
-                    "Blender exited with status: {}",
-                    output.status
-                ))
+                BlenderStatus::Error(format!("Blender exited with status: {}", output.status))
             }
         }
         Err(e) => {
@@ -220,10 +193,7 @@ fn parse_rustc_version(output: &str) -> Option<String> {
 
 /// Get the rustc version
 fn get_rustc_version() -> Option<String> {
-    let output = Command::new("rustc")
-        .arg("--version")
-        .output()
-        .ok()?;
+    let output = Command::new("rustc").arg("--version").output().ok()?;
 
     if output.status.success() {
         let stdout = String::from_utf8_lossy(&output.stdout);

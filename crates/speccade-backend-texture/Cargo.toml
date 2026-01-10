@@ -1,20 +1,20 @@
 [package]
 name = "speccade-backend-texture"
 version = "0.1.0"
-edition = "2021"
+edition.workspace = true
 description = "SpecCade texture generation backend (material maps)"
-license = "MIT OR Apache-2.0"
-repository = "https://github.com/SpecCade/SpecCade"
+license.workspace = true
+repository.workspace = true
 keywords = ["speccade", "texture", "procedural", "pbr"]
 categories = ["game-development", "graphics"]
 
 [dependencies]
-speccade-spec = { path = "../speccade-spec" }
-rand_pcg = "0.3"
-rand = "0.8"
-blake3 = "1"
-thiserror = "1"
-png = "0.17"
+speccade-spec.workspace = true
+rand_pcg.workspace = true
+rand.workspace = true
+blake3.workspace = true
+thiserror.workspace = true
+png.workspace = true
 
 [dev-dependencies]
 tempfile = { workspace = true }

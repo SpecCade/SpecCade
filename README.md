@@ -12,8 +12,8 @@ SpecCade turns structured JSON specs into production assets:
 - **Music:** XM/IT tracker modules with inline synthesis
 - **Textures:** PNG material maps (albedo, roughness, metallic, normal, AO, emissive)
 - **Meshes:** GLB static meshes from parameterized primitives
-- **Characters:** GLB skinned meshes with skeletons and auto-weights
-- **Animations:** GLB animation clips for rigged characters
+- **Skeletal Meshes:** GLB skinned meshes with skeletons and auto-weights
+- **Animations:** GLB skeletal animation clips
 
 ### Why SpecCade?
 
@@ -30,7 +30,7 @@ SpecCade turns structured JSON specs into production assets:
 ### Installation
 
 ```bash
-# From source (requires Rust 1.70+)
+# From source (requires a recent Rust toolchain)
 git clone https://github.com/SpecCade/SpecCade.git
 cd SpecCade
 cargo install --path crates/speccade-cli
@@ -46,13 +46,15 @@ speccade doctor
 speccade validate --spec my_sound.json
 ```
 
+`validate` writes an `${asset_id}.report.json` file next to the spec file.
+
 ### Generate Assets
 
 ```bash
 speccade generate --spec my_sound.json --out-root ./output
 ```
 
-Assets are written to `./output/` with a `.report.json` file containing hashes, metrics, and validation results.
+Assets are written under `./output/`. A `${asset_id}.report.json` file (hashes/metrics/validation) is written next to the spec file.
 
 ## Example Spec
 
@@ -62,40 +64,39 @@ Here's a simple laser sound effect:
 {
   "spec_version": 1,
   "asset_id": "laser_shot",
-  "asset_type": "audio_sfx",
+  "asset_type": "audio",
   "license": "CC0-1.0",
   "seed": 1002,
   "description": "FM synthesis laser shot - classic arcade sound",
   "outputs": [
     {
-      "kind": "audio",
+      "kind": "primary",
       "format": "wav",
       "path": "laser_shot.wav"
     }
   ],
   "recipe": {
-    "kind": "audio_sfx.layered_synth_v1",
+    "kind": "audio_v1",
     "params": {
       "duration_seconds": 0.25,
       "sample_rate": 44100,
-      "normalize": true,
-      "peak_db": -1.0,
       "layers": [
         {
           "synthesis": {
             "type": "fm_synth",
-            "carrier_freq": 1200,
-            "mod_ratio": 2.5,
-            "mod_index": 8.0,
-            "index_decay": 20.0
+            "carrier_freq": 1200.0,
+            "modulator_freq": 3000.0,
+            "modulation_index": 8.0,
+            "freq_sweep": { "end_freq": 300.0, "curve": "exponential" }
           },
-          "amplitude": 0.9,
           "envelope": {
             "attack": 0.001,
             "decay": 0.1,
             "sustain": 0.3,
             "release": 0.1
-          }
+          },
+          "volume": 0.9,
+          "pan": 0.0
         }
       ]
     }
@@ -113,8 +114,11 @@ Run `speccade generate --spec laser_shot.json` and you get a deterministic `lase
 # Validate a spec without generating assets
 speccade validate --spec <path>
 
-# Generate assets from a spec
+# Generate assets from a spec (requires `recipe`)
 speccade generate --spec <path> --out-root <path>
+
+# Generate all specs in a directory
+speccade generate-all --spec-dir <dir> --out-root <dir>
 
 # Preview 3D assets (Blender-backed assets only)
 speccade preview --spec <path> --out-root <path>
@@ -129,7 +133,7 @@ speccade doctor
 ### Migration
 
 ```bash
-# Migrate legacy .studio project to SpecCade JSON specs
+# Migrate legacy `.studio/specs/*.spec.py` files to SpecCade JSON specs
 speccade migrate --project <path> --allow-exec-specs
 ```
 
@@ -139,15 +143,14 @@ See [`docs/MIGRATION.md`](docs/MIGRATION.md) for migration guide and safety note
 
 | Asset Type | Output Formats | Recipe Kinds |
 |------------|----------------|--------------|
-| `audio_sfx` | WAV, OGG | `audio_sfx.layered_synth_v1` |
-| `audio_instrument` | WAV | `audio_instrument.synth_patch_v1` |
+| `audio` | WAV | `audio_v1` |
 | `music` | XM, IT | `music.tracker_song_v1` |
-| `texture_2d` | PNG | `texture_2d.material_maps_v1`, `texture_2d.normal_map_v1` |
+| `texture` | PNG | `texture.material_v1`, `texture.normal_v1`, `texture.packed_v1` |
 | `static_mesh` | GLB | `static_mesh.blender_primitives_v1` |
 | `skeletal_mesh` | GLB | `skeletal_mesh.blender_rigged_mesh_v1` |
 | `skeletal_animation` | GLB | `skeletal_animation.blender_clip_v1` |
 
-See [`docs/SPEC_REFERENCE.md`](docs/SPEC_REFERENCE.md) for detailed schema documentation.
+See [`docs/spec-reference/README.md`](docs/spec-reference/README.md) for detailed schema documentation.
 
 ## Determinism
 
@@ -162,7 +165,7 @@ See [`docs/DETERMINISM.md`](docs/DETERMINISM.md) for full determinism policy.
 
 ## Documentation
 
-- **[Spec Reference](docs/SPEC_REFERENCE.md)** — Complete schema, recipe kinds, and examples
+- **[Spec Reference](docs/spec-reference/README.md)** — Canonical contract + per-asset reference
 - **[Migration Guide](docs/MIGRATION.md)** — Moving from legacy `.studio` system
 - **[Determinism Policy](docs/DETERMINISM.md)** — RNG, hashing, and validation rules
 - **[Contributing](docs/CONTRIBUTING.md)** — Development setup and contribution guidelines
@@ -176,7 +179,7 @@ Commit specs to version control. Generate assets as part of your CI/CD pipeline.
 
 ### Procedural Variation
 
-Use the `variants` field to generate multiple variations from a single spec with derived seeds.
+The `variants` field is reserved metadata for future variant-expansion workflows (the CLI does not currently expand variants during generation).
 
 ```json
 {
@@ -197,9 +200,9 @@ Build reusable spec libraries. Share specs as JSON. Generate locally or in the c
 
 ## Requirements
 
-- **Rust:** 1.70+ (for core backends)
+- **Rust:** stable toolchain (CI uses `dtolnay/rust-toolchain@stable`)
 - **Blender:** 3.6+ (for mesh/character/animation generation)
-- **Python:** 3.10+ (for migration tool, optional)
+- **Python:** 3.x (optional, only needed for `migrate --allow-exec-specs`)
 
 Run `speccade doctor` to check your environment.
 

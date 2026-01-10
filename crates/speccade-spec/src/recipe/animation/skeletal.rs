@@ -72,8 +72,8 @@ impl IkPreset {
     /// Represented as [X, Y, Z] offset from the mid-bone.
     pub fn default_pole_offset(&self) -> Option<[f64; 3]> {
         match self {
-            IkPreset::HumanoidLegs => Some([0.0, 0.3, 0.0]),     // Forward of knee
-            IkPreset::HumanoidArms => Some([0.0, -0.3, 0.0]),    // Behind elbow
+            IkPreset::HumanoidLegs => Some([0.0, 0.3, 0.0]), // Forward of knee
+            IkPreset::HumanoidArms => Some([0.0, -0.3, 0.0]), // Behind elbow
             IkPreset::QuadrupedForelegs => Some([0.0, 0.3, 0.0]),
             IkPreset::QuadrupedHindlegs => Some([0.0, -0.3, 0.0]),
             IkPreset::Tentacle => None,
@@ -270,7 +270,10 @@ impl std::fmt::Display for IkChainError {
             }
             IkChainError::EmptyPoleName => write!(f, "Pole target name cannot be empty"),
             IkChainError::ConflictingPoleConfig => {
-                write!(f, "Pole target cannot have both position and bone specified")
+                write!(
+                    f,
+                    "Pole target cannot have both position and bone specified"
+                )
             }
         }
     }

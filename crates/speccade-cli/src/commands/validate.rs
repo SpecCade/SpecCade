@@ -24,11 +24,7 @@ use super::reporting;
 pub fn run(spec_path: &str, artifacts: bool) -> Result<ExitCode> {
     let start = Instant::now();
 
-    println!(
-        "{} {}",
-        "Validating:".cyan().bold(),
-        spec_path
-    );
+    println!("{} {}", "Validating:".cyan().bold(), spec_path);
 
     // Read spec file
     let spec_content = fs::read_to_string(spec_path)
@@ -54,8 +50,8 @@ pub fn run(spec_path: &str, artifacts: bool) -> Result<ExitCode> {
 
     // Build report
     let backend_version = format!("speccade-cli v{}", env!("CARGO_PKG_VERSION"));
-    let mut report_builder = ReportBuilder::new(spec_hash.clone(), backend_version)
-        .duration_ms(duration_ms);
+    let mut report_builder =
+        ReportBuilder::new(spec_hash.clone(), backend_version).duration_ms(duration_ms);
 
     report_builder = reporting::apply_validation_messages(report_builder, &validation_result);
 
@@ -87,10 +83,7 @@ pub fn run(spec_path: &str, artifacts: bool) -> Result<ExitCode> {
 }
 
 /// Print validation results to the console
-fn print_validation_results(
-    result: &speccade_spec::ValidationResult,
-    report_path: &str,
-) {
+fn print_validation_results(result: &speccade_spec::ValidationResult, report_path: &str) {
     if !result.errors.is_empty() {
         println!("\n{}", "Errors:".red().bold());
         for error in &result.errors {

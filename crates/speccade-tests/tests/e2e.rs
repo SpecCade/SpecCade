@@ -25,7 +25,7 @@ use speccade_spec::recipe::music::{
     TrackerInstrument, TrackerPattern,
 };
 use speccade_spec::recipe::texture::{
-    NormalMapPattern, TextureMaterialV1Params, TextureNormalV1Params, TextureMapType,
+    NormalMapPattern, TextureMapType, TextureMaterialV1Params, TextureNormalV1Params,
 };
 use speccade_spec::{AssetType, OutputFormat, OutputSpec, Recipe, Spec};
 use speccade_tests::fixtures::{GoldenFixtures, LegacyProjectFixture};
@@ -157,8 +157,8 @@ mod migration {
             return;
         }
 
-        let audio_sfx_specs = GoldenFixtures::list_speccade_specs("audio_sfx");
-        for spec_path in audio_sfx_specs {
+        let audio_specs = GoldenFixtures::list_speccade_specs("audio");
+        for spec_path in audio_specs {
             let spec = parse_spec_file(&spec_path);
             assert!(
                 spec.is_ok(),
@@ -167,10 +167,10 @@ mod migration {
                 spec.err()
             );
             let spec = spec.unwrap();
-            assert_eq!(spec.asset_type, AssetType::AudioSfx);
+            assert_eq!(spec.asset_type, AssetType::Audio);
         }
 
-        let texture_specs = GoldenFixtures::list_speccade_specs("texture_2d");
+        let texture_specs = GoldenFixtures::list_speccade_specs("texture");
         for spec_path in texture_specs {
             let spec = parse_spec_file(&spec_path);
             assert!(
@@ -192,18 +192,21 @@ mod migration {
 mod generation_tier1 {
     use super::*;
 
-    /// Test audio SFX generation produces valid WAV output.
+    /// Test audio generation produces valid WAV output.
     #[test]
-    fn test_generate_audio_sfx() {
+    fn test_generate_audio_wav() {
         let harness = TestHarness::new();
 
-        // Create a minimal audio SFX spec
-        let spec = Spec::builder("test-beep-01", AssetType::AudioSfx)
+        // Create a minimal audio spec
+        let spec = Spec::builder("test-beep-01", AssetType::Audio)
             .license("CC0-1.0")
             .seed(42)
-            .output(OutputSpec::primary(OutputFormat::Wav, "sounds/test_beep.wav"))
+            .output(OutputSpec::primary(
+                OutputFormat::Wav,
+                "audio/test_beep.wav",
+            ))
             .recipe(Recipe::new(
-                "audio_sfx.layered_synth_v1",
+                "audio_v1",
                 serde_json::json!({
                     "duration_seconds": 0.1,
                     "sample_rate": 22050,
@@ -238,7 +241,7 @@ mod generation_tier1 {
         assert!(!gen_result.wav.wav_data.is_empty());
 
         // Write output and validate
-        let output_path = harness.path().join("sounds").join("test_beep.wav");
+        let output_path = harness.path().join("audio").join("test_beep.wav");
         fs::create_dir_all(output_path.parent().unwrap()).unwrap();
         fs::write(&output_path, &gen_result.wav.wav_data).unwrap();
 
@@ -250,9 +253,9 @@ mod generation_tier1 {
         );
     }
 
-    /// Test audio SFX generation with params struct.
+    /// Test audio generation with params struct.
     #[test]
-    fn test_generate_audio_sfx_with_params() {
+    fn test_generate_audio_from_params() {
         let params = AudioV1Params {
             base_note: None,
             duration_seconds: 0.2,
@@ -291,9 +294,9 @@ mod generation_tier1 {
         assert!(!gen_result.wav.wav_data.is_empty());
     }
 
-    /// Test audio instrument generation (now uses unified AudioV1Params).
+    /// Test audio generation with loop points enabled.
     #[test]
-    fn test_generate_audio_instrument() {
+    fn test_generate_audio_with_loop_points() {
         let params = AudioV1Params {
             base_note: None,
             duration_seconds: 0.5,
@@ -421,14 +424,15 @@ mod generation_tier1 {
             "intro".to_string(),
             TrackerPattern {
                 rows: 16,
-                data: vec![PatternNote {
+                data: Some(vec![PatternNote {
                     row: 0,
-                    channel: 0,
+                    channel: Some(0),
                     note: "C-4".to_string(),
-                    instrument: 0,
-                    volume: None,
-                    effect: None,
-                }],
+                    inst: 0,
+                    vol: None,
+                    ..Default::default()
+                }]),
+                ..Default::default()
             },
         );
 
@@ -440,7 +444,6 @@ mod generation_tier1 {
             r#loop: false,
             instruments: vec![TrackerInstrument {
                 name: "bass".to_string(),
-                r#ref: None,
                 synthesis: Some(InstrumentSynthesis::Pulse { duty_cycle: 0.5 }),
                 envelope: Envelope {
                     attack: 0.01,
@@ -448,15 +451,14 @@ mod generation_tier1 {
                     sustain: 0.7,
                     release: 0.2,
                 },
-                default_volume: None,
+                ..Default::default()
             }],
             patterns,
             arrangement: vec![ArrangementEntry {
                 pattern: "intro".to_string(),
                 repeat: 1,
             }],
-            automation: vec![],
-            it_options: None,
+            ..Default::default()
         };
 
         let result = speccade_backend_music::generate_music(&params, 42, harness.path());
@@ -482,16 +484,16 @@ mod generation_tier1 {
         );
     }
 
-    /// Test that golden audio_sfx specs can be generated.
+    /// Test that golden audio specs can be generated.
     #[test]
-    fn test_generate_golden_audio_sfx() {
+    fn test_generate_golden_audio() {
         if !GoldenFixtures::exists() {
             println!("Golden fixtures not found, skipping test");
             return;
         }
 
         let harness = TestHarness::new();
-        let specs = GoldenFixtures::list_speccade_specs("audio_sfx");
+        let specs = GoldenFixtures::list_speccade_specs("audio");
 
         for spec_path in specs.iter().take(3) {
             // Test a subset for speed
@@ -533,7 +535,7 @@ mod generation_tier1 {
             return;
         }
 
-        let specs = GoldenFixtures::list_speccade_specs("texture_2d");
+        let specs = GoldenFixtures::list_speccade_specs("texture");
 
         for spec_path in specs.iter().take(3) {
             let spec = parse_spec_file(spec_path).expect("Failed to parse spec");
@@ -599,7 +601,10 @@ mod generation_tier2 {
         let spec = Spec::builder("test-cube-01", AssetType::StaticMesh)
             .license("CC0-1.0")
             .seed(42)
-            .output(OutputSpec::primary(OutputFormat::Glb, "meshes/test_cube.glb"))
+            .output(OutputSpec::primary(
+                OutputFormat::Glb,
+                "meshes/test_cube.glb",
+            ))
             .recipe(Recipe::new(
                 "static_mesh.blender_primitives_v1",
                 serde_json::json!({
@@ -820,11 +825,11 @@ mod output_validation {
             b'W', b'A', b'V', b'E', // Format
             b'f', b'm', b't', b' ', // Subchunk1ID
             16, 0, 0, 0, // Subchunk1Size
-            1, 0,    // AudioFormat (PCM)
-            1, 0,    // NumChannels
+            1, 0, // AudioFormat (PCM)
+            1, 0, // NumChannels
             0x22, 0x56, 0, 0, // SampleRate (22050)
             0x44, 0xAC, 0, 0, // ByteRate
-            2, 0,  // BlockAlign
+            2, 0, // BlockAlign
             16, 0, // BitsPerSample
             b'd', b'a', b't', b'a', // Subchunk2ID
             0, 0, 0, 0, // Subchunk2Size
@@ -917,12 +922,12 @@ mod determinism {
     /// Test that audio generation is deterministic (same seed -> same output).
     #[test]
     fn test_audio_determinism() {
-        let spec = Spec::builder("determinism-test", AssetType::AudioSfx)
+        let spec = Spec::builder("determinism-test", AssetType::Audio)
             .license("CC0-1.0")
             .seed(12345)
             .output(OutputSpec::primary(OutputFormat::Wav, "test.wav"))
             .recipe(Recipe::new(
-                "audio_sfx.layered_synth_v1",
+                "audio_v1",
                 serde_json::json!({
                     "duration_seconds": 0.1,
                     "sample_rate": 22050,
@@ -1018,7 +1023,7 @@ mod spec_validation {
     /// Test that a valid spec passes validation.
     #[test]
     fn test_valid_spec_passes() {
-        let spec = Spec::builder("valid-spec-01", AssetType::AudioSfx)
+        let spec = Spec::builder("valid-spec-01", AssetType::Audio)
             .license("CC0-1.0")
             .seed(42)
             .output(OutputSpec::primary(OutputFormat::Wav, "sounds/test.wav"))
@@ -1035,7 +1040,7 @@ mod spec_validation {
     /// Test that a spec without recipe fails generate validation.
     #[test]
     fn test_spec_without_recipe_fails_generate() {
-        let spec = Spec::builder("no-recipe-01", AssetType::AudioSfx)
+        let spec = Spec::builder("no-recipe-01", AssetType::Audio)
             .license("CC0-1.0")
             .seed(42)
             .output(OutputSpec::primary(OutputFormat::Wav, "sounds/test.wav"))
@@ -1057,11 +1062,9 @@ mod spec_validation {
         }
 
         let asset_types = [
-            "audio_sfx",
-            "audio_instrument",
+            "audio",
             "music",
-            "texture_2d",
-            "normal_map",
+            "texture",
             "static_mesh",
             "skeletal_mesh",
             "skeletal_animation",

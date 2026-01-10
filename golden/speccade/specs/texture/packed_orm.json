@@ -7,7 +7,7 @@
   "description": "Packed ORM texture (ambient occlusion, roughness, metallic)",
   "outputs": [
     {
-      "kind": "primary",
+      "kind": "packed",
       "format": "png",
       "path": "orm.png",
       "channels": {

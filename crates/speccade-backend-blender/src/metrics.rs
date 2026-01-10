@@ -9,8 +9,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// These metrics are used for Tier 2 validation where determinism is
 /// validated via metrics rather than file hashes.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[derive(Default)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
 pub struct BlenderMetrics {
     /// Number of triangles in the mesh.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -49,7 +48,6 @@ pub struct BlenderMetrics {
     pub vertex_count: Option<u32>,
 }
 
-
 impl BlenderMetrics {
     /// Creates metrics for a static mesh.
     pub fn for_static_mesh(
@@ -86,11 +84,7 @@ impl BlenderMetrics {
     }
 
     /// Creates metrics for an animation.
-    pub fn for_animation(
-        bone_count: u32,
-        frame_count: u32,
-        duration_seconds: f64,
-    ) -> Self {
+    pub fn for_animation(bone_count: u32, frame_count: u32, duration_seconds: f64) -> Self {
         Self {
             bone_count: Some(bone_count),
             animation_frame_count: Some(frame_count),
@@ -189,7 +183,11 @@ pub struct MetricMismatch {
 
 impl BlenderMetrics {
     /// Compares these metrics to expected metrics with tolerances.
-    pub fn compare(&self, expected: &BlenderMetrics, tolerances: &MetricTolerances) -> MetricComparison {
+    pub fn compare(
+        &self,
+        expected: &BlenderMetrics,
+        tolerances: &MetricTolerances,
+    ) -> MetricComparison {
         let mut mismatches = Vec::new();
 
         // Triangle count (exact match required)
@@ -229,7 +227,8 @@ impl BlenderMetrics {
         }
 
         // Material slot count (exact match required)
-        if let (Some(actual), Some(exp)) = (self.material_slot_count, expected.material_slot_count) {
+        if let (Some(actual), Some(exp)) = (self.material_slot_count, expected.material_slot_count)
+        {
             if actual != exp {
                 mismatches.push(MetricMismatch {
                     metric_name: "material_slot_count".to_string(),
@@ -241,7 +240,9 @@ impl BlenderMetrics {
         }
 
         // Animation frame count (exact match required)
-        if let (Some(actual), Some(exp)) = (self.animation_frame_count, expected.animation_frame_count) {
+        if let (Some(actual), Some(exp)) =
+            (self.animation_frame_count, expected.animation_frame_count)
+        {
             if actual != exp {
                 mismatches.push(MetricMismatch {
                     metric_name: "animation_frame_count".to_string(),
@@ -265,7 +266,10 @@ impl BlenderMetrics {
         }
 
         // Animation duration (tolerance allowed)
-        if let (Some(actual), Some(exp)) = (self.animation_duration_seconds, expected.animation_duration_seconds) {
+        if let (Some(actual), Some(exp)) = (
+            self.animation_duration_seconds,
+            expected.animation_duration_seconds,
+        ) {
             if (actual - exp).abs() > tolerances.animation_duration {
                 mismatches.push(MetricMismatch {
                     metric_name: "animation_duration_seconds".to_string(),

@@ -114,8 +114,8 @@ print(json.dumps({}))
     }
 
     let stdout = String::from_utf8_lossy(&output.stdout);
-    let data: HashMap<String, serde_json::Value> = serde_json::from_str(&stdout)
-        .with_context(|| "Failed to parse Python output as JSON")?;
+    let data: HashMap<String, serde_json::Value> =
+        serde_json::from_str(&stdout).with_context(|| "Failed to parse Python output as JSON")?;
 
     Ok(LegacySpec {
         dict_name,
@@ -142,9 +142,18 @@ pub fn parse_python_dict_literal(dict_str: &str) -> Result<HashMap<String, serde
 
     // Replace Python keywords with JSON equivalents
     // Note: These regexes are simple and known-valid patterns, unwrap is safe
-    json_str = Regex::new(r"\bNone\b").unwrap().replace_all(&json_str, "null").to_string();
-    json_str = Regex::new(r"\bTrue\b").unwrap().replace_all(&json_str, "true").to_string();
-    json_str = Regex::new(r"\bFalse\b").unwrap().replace_all(&json_str, "false").to_string();
+    json_str = Regex::new(r"\bNone\b")
+        .unwrap()
+        .replace_all(&json_str, "null")
+        .to_string();
+    json_str = Regex::new(r"\bTrue\b")
+        .unwrap()
+        .replace_all(&json_str, "true")
+        .to_string();
+    json_str = Regex::new(r"\bFalse\b")
+        .unwrap()
+        .replace_all(&json_str, "false")
+        .to_string();
 
     // Replace single quotes with double quotes (simple approach)
     // This won't handle escaped quotes properly, but works for most cases

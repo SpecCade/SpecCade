@@ -226,12 +226,11 @@ impl Orchestrator {
         }
 
         // Read and parse the report
-        let report_content = std::fs::read_to_string(report_path).map_err(|e| {
-            BlenderError::ReadReportFailed {
+        let report_content =
+            std::fs::read_to_string(report_path).map_err(|e| BlenderError::ReadReportFailed {
                 path: report_path.to_path_buf(),
                 source: e,
-            }
-        })?;
+            })?;
 
         let report: BlenderReport =
             serde_json::from_str(&report_content).map_err(BlenderError::ParseReportFailed)?;

@@ -3,7 +3,6 @@
 //! This module provides deterministic conversion between note names, MIDI numbers,
 //! and frequencies for XM and IT tracker formats.
 
-
 /// XM reference frequency (C-4 in XM format).
 pub const XM_BASE_FREQ: f64 = 8363.0;
 
@@ -443,9 +442,9 @@ pub fn xm_note_to_it(xm_note: u8) -> u8 {
 /// XM note value (0=none, 1-96=C-0..B-7, 97=off)
 pub fn it_note_to_xm(it_note: u8) -> u8 {
     match it_note {
-        0..=95 => it_note + 1,       // IT is 0-based, XM is 1-based
-        it::NOTE_OFF => xm::NOTE_OFF, // Note off
-        it::NOTE_CUT => xm::NOTE_OFF, // Treat cut as off in XM
+        0..=95 => it_note + 1,         // IT is 0-based, XM is 1-based
+        it::NOTE_OFF => xm::NOTE_OFF,  // Note off
+        it::NOTE_CUT => xm::NOTE_OFF,  // Treat cut as off in XM
         it::NOTE_FADE => xm::NOTE_OFF, // Treat fade as off in XM
         _ => xm::NOTE_NONE,
     }
@@ -466,7 +465,9 @@ pub fn xm_note_to_name(note: u8) -> String {
             let n = note - 1;
             let octave = n / 12;
             let semitone = n % 12;
-            let note_names = ["C-", "C#", "D-", "D#", "E-", "F-", "F#", "G-", "G#", "A-", "A#", "B-"];
+            let note_names = [
+                "C-", "C#", "D-", "D#", "E-", "F-", "F#", "G-", "G#", "A-", "A#", "B-",
+            ];
             format!("{}{}", note_names[semitone as usize], octave)
         }
         _ => "---".to_string(),
@@ -488,7 +489,9 @@ pub fn it_note_to_name(note: u8) -> String {
         0..=119 => {
             let octave = note / 12;
             let semitone = note % 12;
-            let note_names = ["C-", "C#", "D-", "D#", "E-", "F-", "F#", "G-", "G#", "A-", "A#", "B-"];
+            let note_names = [
+                "C-", "C#", "D-", "D#", "E-", "F-", "F#", "G-", "G#", "A-", "A#", "B-",
+            ];
             format!("{}{}", note_names[semitone as usize], octave)
         }
         _ => "---".to_string(),
@@ -583,11 +586,17 @@ mod tests {
         // Verify that using DEFAULT_IT_SYNTH_MIDI_NOTE (72) results in c5_speed = sample_rate
         // This confirms that when no base_note is specified for IT, c5_speed = sample_rate
         let c5_speed = calculate_c5_speed_for_base_note(22050, DEFAULT_IT_SYNTH_MIDI_NOTE);
-        assert_eq!(c5_speed, 22050, "IT default (MIDI 72) should produce c5_speed = sample_rate");
+        assert_eq!(
+            c5_speed, 22050,
+            "IT default (MIDI 72) should produce c5_speed = sample_rate"
+        );
 
         // Also verify that DEFAULT_SYNTH_MIDI_NOTE (60) requires 2x adjustment
         let c5_speed_xm_default = calculate_c5_speed_for_base_note(22050, DEFAULT_SYNTH_MIDI_NOTE);
-        assert_eq!(c5_speed_xm_default, 44100, "XM default (MIDI 60) should produce c5_speed = 2x sample_rate");
+        assert_eq!(
+            c5_speed_xm_default, 44100,
+            "XM default (MIDI 60) should produce c5_speed = 2x sample_rate"
+        );
     }
 
     #[test]
@@ -651,7 +660,7 @@ mod tests {
         // 22050/8363 = 2.637, log2(2.637)*12 = 16.79 semitones
         // fractional part: 0.79 * 128 = 101.12
         assert!(
-            finetune >= 100 && finetune <= 102,
+            (100..=102).contains(&finetune),
             "finetune should be ~101, got {}",
             finetune
         );
@@ -667,7 +676,7 @@ mod tests {
         assert_eq!(relative_note, 4);
         // Same finetune as before since sample rate is the same
         assert!(
-            finetune >= 100 && finetune <= 102,
+            (100..=102).contains(&finetune),
             "finetune should be ~101, got {}",
             finetune
         );
@@ -798,7 +807,7 @@ mod tests {
         assert_eq!(relative_note, 54);
         // finetune should be around 32 (0.25 * 128)
         assert!(
-            finetune >= 30 && finetune <= 34,
+            (30..=34).contains(&finetune),
             "finetune should be ~32, got {}",
             finetune
         );
@@ -821,7 +830,7 @@ mod tests {
         assert_eq!(relative_note, 28);
         // finetune should be around 101
         assert!(
-            finetune >= 99 && finetune <= 103,
+            (99..=103).contains(&finetune),
             "finetune should be ~101, got {}",
             finetune
         );

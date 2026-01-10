@@ -15,12 +15,8 @@ pub const MAX_SEED: u32 = u32::MAX;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum AssetType {
-    /// Audio assets (SFX, instruments).
+    /// Audio assets (SFX, instruments, samples).
     Audio,
-    /// One-shot sound effects (WAV, OGG).
-    AudioSfx,
-    /// Instrument/sample patches (WAV).
-    AudioInstrument,
     /// Tracker modules (XM, IT).
     Music,
     /// 2D texture maps (PNG).
@@ -38,8 +34,6 @@ impl AssetType {
     pub fn as_str(&self) -> &'static str {
         match self {
             AssetType::Audio => "audio",
-            AssetType::AudioSfx => "audio_sfx",
-            AssetType::AudioInstrument => "audio_instrument",
             AssetType::Music => "music",
             AssetType::Texture => "texture",
             AssetType::StaticMesh => "static_mesh",
@@ -50,15 +44,20 @@ impl AssetType {
 
     /// Checks if a recipe kind is compatible with this asset type.
     pub fn is_compatible_recipe(&self, recipe_kind: &str) -> bool {
-        recipe_kind.starts_with(self.as_str())
+        let prefix = if recipe_kind.contains('.') {
+            recipe_kind.split('.').next()
+        } else {
+            // `audio_v1` uses an underscore delimiter; most other recipe kinds are `asset_type.*`.
+            recipe_kind.split('_').next()
+        };
+
+        prefix == Some(self.as_str())
     }
 
     /// Returns all asset types.
     pub fn all() -> &'static [AssetType] {
         &[
             AssetType::Audio,
-            AssetType::AudioSfx,
-            AssetType::AudioInstrument,
             AssetType::Music,
             AssetType::Texture,
             AssetType::StaticMesh,
@@ -80,8 +79,6 @@ impl std::str::FromStr for AssetType {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
             "audio" => Ok(AssetType::Audio),
-            "audio_sfx" => Ok(AssetType::AudioSfx),
-            "audio_instrument" => Ok(AssetType::AudioInstrument),
             "music" => Ok(AssetType::Music),
             "texture" => Ok(AssetType::Texture),
             "static_mesh" => Ok(AssetType::StaticMesh),
@@ -131,6 +128,12 @@ pub struct Spec {
     /// Target game engines.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub engine_targets: Option<Vec<EngineTarget>>,
+
+    /// Migration notes (e.g., from legacy `.spec.py` conversion).
+    ///
+    /// This field is informational and ignored by generators.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub migration_notes: Option<Vec<String>>,
 
     /// Variant specifications for procedural variations.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -213,6 +216,7 @@ pub struct SpecBuilder {
     description: Option<String>,
     style_tags: Option<Vec<String>>,
     engine_targets: Option<Vec<EngineTarget>>,
+    migration_notes: Option<Vec<String>>,
     variants: Option<Vec<VariantSpec>>,
     recipe: Option<Recipe>,
 }
@@ -229,6 +233,7 @@ impl SpecBuilder {
             description: None,
             style_tags: None,
             engine_targets: None,
+            migration_notes: None,
             variants: None,
             recipe: None,
         }
@@ -286,7 +291,23 @@ impl SpecBuilder {
 
     /// Adds an engine target.
     pub fn target(mut self, target: EngineTarget) -> Self {
-        self.engine_targets.get_or_insert_with(Vec::new).push(target);
+        self.engine_targets
+            .get_or_insert_with(Vec::new)
+            .push(target);
+        self
+    }
+
+    /// Sets migration notes (informational metadata).
+    pub fn migration_notes(mut self, notes: Vec<String>) -> Self {
+        self.migration_notes = Some(notes);
+        self
+    }
+
+    /// Adds a migration note.
+    pub fn migration_note(mut self, note: impl Into<String>) -> Self {
+        self.migration_notes
+            .get_or_insert_with(Vec::new)
+            .push(note.into());
         self
     }
 
@@ -320,6 +341,7 @@ impl SpecBuilder {
             description: self.description,
             style_tags: self.style_tags,
             engine_targets: self.engine_targets,
+            migration_notes: self.migration_notes,
             variants: self.variants,
             recipe: self.recipe,
         }
@@ -333,9 +355,9 @@ mod tests {
 
     #[test]
     fn test_asset_type_serde() {
-        let at = AssetType::AudioSfx;
+        let at = AssetType::Audio;
         let json = serde_json::to_string(&at).unwrap();
-        assert_eq!(json, "\"audio_sfx\"");
+        assert_eq!(json, "\"audio\"");
 
         let parsed: AssetType = serde_json::from_str("\"texture\"").unwrap();
         assert_eq!(parsed, AssetType::Texture);
@@ -343,15 +365,15 @@ mod tests {
 
     #[test]
     fn test_asset_type_is_compatible_recipe() {
-        assert!(AssetType::AudioSfx.is_compatible_recipe("audio_sfx.layered_synth_v1"));
-        assert!(!AssetType::AudioSfx.is_compatible_recipe("music.tracker_song_v1"));
+        assert!(AssetType::Audio.is_compatible_recipe("audio_v1"));
+        assert!(!AssetType::Audio.is_compatible_recipe("music.tracker_song_v1"));
         assert!(AssetType::Texture.is_compatible_recipe("texture.material_v1"));
         assert!(AssetType::Texture.is_compatible_recipe("texture.normal_v1"));
     }
 
     #[test]
     fn test_spec_builder() {
-        let spec = Spec::builder("laser-blast-01", AssetType::AudioSfx)
+        let spec = Spec::builder("laser-blast-01", AssetType::Audio)
             .license("CC0-1.0")
             .seed(42)
             .description("Sci-fi laser blast sound effect")
@@ -365,7 +387,7 @@ mod tests {
 
         assert_eq!(spec.spec_version, 1);
         assert_eq!(spec.asset_id, "laser-blast-01");
-        assert_eq!(spec.asset_type, AssetType::AudioSfx);
+        assert_eq!(spec.asset_type, AssetType::Audio);
         assert_eq!(spec.license, "CC0-1.0");
         assert_eq!(spec.seed, 42);
         assert!(spec.description.is_some());
@@ -379,7 +401,7 @@ mod tests {
         let json = r#"{
             "spec_version": 1,
             "asset_id": "test-asset-01",
-            "asset_type": "audio_sfx",
+            "asset_type": "audio",
             "license": "CC0-1.0",
             "seed": 42,
             "outputs": [
@@ -393,7 +415,7 @@ mod tests {
 
         let spec = Spec::from_json(json).unwrap();
         assert_eq!(spec.asset_id, "test-asset-01");
-        assert_eq!(spec.asset_type, AssetType::AudioSfx);
+        assert_eq!(spec.asset_type, AssetType::Audio);
         assert_eq!(spec.seed, 42);
         assert!(spec.has_primary_output());
     }

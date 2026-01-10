@@ -1,641 +1,192 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://speccade.dev/schemas/spec-v1.json",
-  "title": "SpecCade Canonical Spec v1",
-  "description": "Schema for SpecCade asset generation specifications. Defines a stable contract between spec authors and asset backends for deterministic, reproducible asset generation.",
+  "title": "SpecCade Spec v1",
+  "description": "Editor-oriented JSON Schema for SpecCade v1 specs. This schema is intentionally conservative and may not express all Rust-side validation rules; for authoritative validation use `speccade validate`.",
   "type": "object",
-  "required": [
-    "spec_version",
-    "asset_id",
-    "asset_type",
-    "license",
-    "seed",
-    "outputs"
-  ],
+  "additionalProperties": false,
+  "required": ["spec_version", "asset_id", "asset_type", "license", "seed", "outputs"],
   "properties": {
     "spec_version": {
       "type": "integer",
       "const": 1,
-      "description": "Schema version; must be 1 for this RFC"
+      "description": "SpecCade schema version (v1)."
     },
     "asset_id": {
       "type": "string",
       "pattern": "^[a-z][a-z0-9_-]{2,63}$",
-      "description": "Stable identifier for the asset. Must start with lowercase letter, followed by 2-63 lowercase letters, digits, underscores, or hyphens."
+      "description": "Stable identifier. Must match `[a-z][a-z0-9_-]{2,63}`."
     },
     "asset_type": {
       "type": "string",
-      "enum": [
-        "audio_sfx",
-        "audio_instrument",
-        "music",
-        "texture_2d",
-        "static_mesh",
-        "skeletal_mesh",
-        "skeletal_animation"
-      ],
-      "description": "Type of asset to generate. Determines which recipe kinds are compatible."
+      "enum": ["audio", "music", "texture", "static_mesh", "skeletal_mesh", "skeletal_animation"],
+      "description": "Asset type (used to select compatible recipe kinds)."
     },
     "license": {
       "type": "string",
       "minLength": 1,
-      "description": "License identifier for the generated asset. SPDX identifiers recommended (e.g., CC0-1.0, CC-BY-4.0)."
+      "description": "License identifier (SPDX recommended, e.g. `CC0-1.0`)."
     },
     "seed": {
       "type": "integer",
       "minimum": 0,
       "maximum": 4294967295,
-      "description": "RNG seed for deterministic generation. Range: 0 to 2^32-1 (4294967295)."
-    },
-    "description": {
-      "type": "string",
-      "description": "Human-readable description of the asset. Helps LLMs and humans understand the asset's purpose."
-    },
-    "style_tags": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "description": "Semantic tags for filtering and search (e.g., ['retro', '8bit', 'scifi']). Used by asset browsers and recommendation systems."
-    },
-    "engine_targets": {
-      "type": "array",
-      "items": {
-        "type": "string",
-        "enum": ["godot", "unity", "unreal"]
-      },
-      "description": "Target game engines. Backends may adjust output formats or settings based on target engine requirements."
+      "description": "Deterministic RNG seed (u32)."
     },
     "outputs": {
       "type": "array",
       "minItems": 1,
-      "description": "Expected output artifacts. At least one output with kind='primary' is required.",
-      "items": {
-        "type": "object",
-        "required": ["kind", "format", "path"],
-        "properties": {
-          "kind": {
-            "type": "string",
-            "enum": ["primary", "metadata", "preview"],
-            "description": "Output kind: 'primary' for main asset, 'metadata' for sidecar data, 'preview' for thumbnails/previews."
-          },
-          "format": {
-            "type": "string",
-            "enum": ["wav", "ogg", "xm", "it", "png", "glb", "gltf", "json"],
-            "description": "Output file format. Must match the file extension in 'path'."
-          },
-          "path": {
-            "type": "string",
-            "pattern": "^(?!.*\\.\\.)[^/\\\\:*?\"<>|]+(/[^/\\\\:*?\"<>|]+)*$",
-            "description": "Relative path under output root. Must use forward slashes, no '..' segments, and extension must match 'format'."
-          }
-        }
-      }
+      "description": "Declared output artifacts. Generation currently writes `primary` and/or `packed` outputs; other kinds are reserved.",
+      "items": { "$ref": "#/definitions/output_spec" }
+    },
+    "description": {
+      "type": "string",
+      "description": "Human-readable description."
+    },
+    "style_tags": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Semantic tags for filtering/search."
+    },
+    "engine_targets": {
+      "type": "array",
+      "items": { "type": "string", "enum": ["godot", "unity", "unreal"] },
+      "description": "Target engines."
+    },
+    "migration_notes": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Informational notes produced by `speccade migrate`."
     },
     "variants": {
       "type": "array",
-      "description": "Optional variant specifications for producing multiple related outputs with derived seeds.",
-      "items": {
-        "type": "object",
-        "required": ["variant_id", "seed_offset"],
-        "properties": {
-          "variant_id": {
-            "type": "string",
-            "pattern": "^[a-z][a-z0-9_-]*$",
-            "description": "Identifier for the variant. Used to derive variant seed via BLAKE3 hash."
-          },
-          "seed_offset": {
-            "type": "integer",
-            "minimum": 0,
-            "description": "Offset added to base seed for this variant. Variant seed = (spec.seed + seed_offset) mod 2^32."
-          }
+      "items": { "$ref": "#/definitions/variant_spec" },
+      "description": "Reserved for future variant-expansion workflows."
+    },
+    "recipe": { "$ref": "#/definitions/recipe" }
+  },
+  "definitions": {
+    "variant_spec": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["variant_id", "seed_offset"],
+      "properties": {
+        "variant_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_-]*$",
+          "description": "Variant identifier."
+        },
+        "seed_offset": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295,
+          "description": "Reserved numeric seed offset."
         }
       }
     },
     "recipe": {
       "type": "object",
-      "description": "Backend-specific generation parameters. Required for 'generate' command, optional for 'validate'.",
+      "additionalProperties": false,
       "required": ["kind", "params"],
       "properties": {
         "kind": {
           "type": "string",
-          "description": "Recipe kind identifier. Must be compatible with asset_type (e.g., 'audio_sfx.*' requires asset_type='audio_sfx')."
+          "enum": [
+            "audio_v1",
+            "music.tracker_song_v1",
+            "texture.material_v1",
+            "texture.normal_v1",
+            "texture.packed_v1",
+            "static_mesh.blender_primitives_v1",
+            "skeletal_mesh.blender_rigged_mesh_v1",
+            "skeletal_animation.blender_clip_v1"
+          ],
+          "description": "Recipe kind identifier."
         },
         "params": {
           "type": "object",
-          "description": "Backend-specific parameters for asset generation. Schema varies by recipe.kind."
+          "description": "Backend-specific parameters (validated by Rust)."
         }
-      },
+      }
+    },
+    "output_spec": {
       "oneOf": [
-        {
-          "properties": {
-            "kind": {
-              "const": "audio_sfx.layered_synth_v1"
-            },
-            "params": {
-              "$ref": "#/definitions/audio_sfx_layered_synth_v1_params"
-            }
-          }
-        },
-        {
-          "properties": {
-            "kind": {
-              "const": "audio_instrument.synth_patch_v1"
-            },
-            "params": {
-              "$ref": "#/definitions/audio_instrument_synth_patch_v1_params"
-            }
-          }
-        },
-        {
-          "properties": {
-            "kind": {
-              "const": "music.tracker_song_v1"
-            },
-            "params": {
-              "$ref": "#/definitions/music_tracker_song_v1_params"
-            }
-          }
-        },
-        {
-          "properties": {
-            "kind": {
-              "const": "texture_2d.material_maps_v1"
-            },
-            "params": {
-              "$ref": "#/definitions/texture_2d_material_maps_v1_params"
-            }
-          }
-        },
-        {
-          "properties": {
-            "kind": {
-              "const": "texture_2d.normal_map_v1"
-            },
-            "params": {
-              "$ref": "#/definitions/texture_2d_normal_map_v1_params"
-            }
-          }
-        },
-        {
-          "properties": {
-            "kind": {
-              "const": "static_mesh.blender_primitives_v1"
-            },
-            "params": {
-              "$ref": "#/definitions/static_mesh_blender_primitives_v1_params"
-            }
-          }
-        },
-        {
-          "properties": {
-            "kind": {
-              "const": "skeletal_mesh.blender_rigged_mesh_v1"
-            },
-            "params": {
-              "$ref": "#/definitions/skeletal_mesh_blender_rigged_mesh_v1_params"
-            }
-          }
-        },
-        {
-          "properties": {
-            "kind": {
-              "const": "skeletal_animation.blender_clip_v1"
-            },
-            "params": {
-              "$ref": "#/definitions/skeletal_animation_blender_clip_v1_params"
-            }
-          }
-        }
+        { "$ref": "#/definitions/output_spec_non_packed" },
+        { "$ref": "#/definitions/output_spec_packed" }
       ]
-    }
-  },
-  "definitions": {
-    "audio_sfx_layered_synth_v1_params": {
-      "type": "object",
-      "description": "Parameters for layered synthesis audio SFX generation. Supports FM, Karplus-Strong, noise, and additive synthesis.",
-      "required": ["duration_seconds", "sample_rate", "layers"],
-      "properties": {
-        "duration_seconds": {
-          "type": "number",
-          "minimum": 0.001,
-          "maximum": 60.0,
-          "description": "Duration of the sound effect in seconds."
-        },
-        "sample_rate": {
-          "type": "integer",
-          "enum": [22050, 44100, 48000],
-          "description": "Sample rate in Hz. Common values: 22050 (low quality), 44100 (CD quality), 48000 (studio quality)."
-        },
-        "layers": {
-          "type": "array",
-          "minItems": 1,
-          "description": "Synthesis layers to combine. Each layer is mixed together to produce the final sound.",
-          "items": {
-            "type": "object",
-            "description": "A single synthesis layer with envelope, volume, and pan controls."
-          }
-        }
-      }
     },
-    "audio_instrument_synth_patch_v1_params": {
+    "output_spec_non_packed": {
       "type": "object",
-      "description": "Parameters for single-note instrument sample generation. Produces WAV samples suitable for use in samplers or trackers.",
+      "additionalProperties": false,
+      "required": ["kind", "format", "path"],
       "properties": {
-        "note_duration_seconds": {
-          "type": "number",
-          "minimum": 0.1,
-          "description": "Duration of the instrument sample in seconds."
+        "kind": {
+          "type": "string",
+          "enum": ["primary", "metadata", "preview"]
         },
-        "sample_rate": {
-          "type": "integer",
-          "enum": [22050, 44100, 48000]
-        }
-      }
-    },
-    "music_tracker_song_v1_params": {
-      "type": "object",
-      "description": "Parameters for XM/IT tracker module generation. Defines instruments, patterns, and arrangement.",
-      "required": ["format", "bpm", "speed", "channels", "instruments", "patterns", "arrangement"],
-      "properties": {
         "format": {
           "type": "string",
-          "enum": ["xm", "it"],
-          "description": "Tracker format: 'xm' (FastTracker II Extended Module) or 'it' (Impulse Tracker)."
+          "enum": ["wav", "ogg", "xm", "it", "png", "glb", "gltf", "json", "blend"]
         },
-        "bpm": {
-          "type": "integer",
-          "minimum": 30,
-          "maximum": 300,
-          "description": "Beats per minute. Typical range: 80-180."
-        },
-        "speed": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 31,
-          "description": "Tracker speed (ticks per row). Default: 6."
-        },
-        "channels": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 32,
-          "description": "Number of channels. Typical: 4 (chiptune), 8-16 (modern)."
-        },
-        "loop": {
-          "type": "boolean",
-          "description": "Whether the song should loop seamlessly."
-        },
-        "instruments": {
-          "type": "array",
-          "description": "Instrument definitions for the tracker module."
-        },
-        "patterns": {
-          "type": "object",
-          "description": "Pattern definitions. Each pattern contains note data for all channels."
-        },
-        "arrangement": {
-          "type": "array",
-          "description": "Song arrangement. Defines the order in which patterns play."
-        }
+        "path": { "$ref": "#/definitions/output_path" },
+        "channels": false
       }
     },
-    "texture_2d_material_maps_v1_params": {
+    "output_spec_packed": {
       "type": "object",
-      "description": "Parameters for coherent PBR material map generation. Produces albedo, normal, roughness, metallic, AO, and emissive maps.",
-      "required": ["resolution", "tileable", "maps"],
+      "additionalProperties": false,
+      "required": ["kind", "format", "path", "channels"],
       "properties": {
-        "resolution": {
-          "type": "array",
-          "items": {
-            "type": "integer",
-            "minimum": 64,
-            "maximum": 8192
-          },
-          "minItems": 2,
-          "maxItems": 2,
-          "description": "Texture resolution [width, height] in pixels. Power-of-two recommended for best performance."
-        },
-        "tileable": {
-          "type": "boolean",
-          "description": "Whether the texture should tile seamlessly."
-        },
-        "maps": {
-          "type": "array",
-          "items": {
-            "type": "string",
-            "enum": ["albedo", "normal", "roughness", "metallic", "ao", "emissive"]
-          },
-          "description": "Which PBR maps to generate."
-        },
-        "base_material": {
-          "type": "object",
-          "description": "Base material properties before procedural layers are applied."
-        },
-        "layers": {
-          "type": "array",
-          "description": "Procedural layers to apply (noise, scratches, edge wear, etc.)."
-        }
+        "kind": { "const": "packed" },
+        "format": { "const": "png" },
+        "path": { "$ref": "#/definitions/output_path" },
+        "channels": { "$ref": "#/definitions/packed_channels" }
       }
     },
-    "texture_2d_normal_map_v1_params": {
+    "output_path": {
+      "type": "string",
+      "pattern": "^(?!.*\\.\\.)[^/\\\\:*?\"<>|]+(/[^/\\\\:*?\"<>|]+)*$",
+      "description": "Relative output path (no `..`, no backslashes)."
+    },
+    "packed_channels": {
       "type": "object",
-      "description": "Parameters for pattern-driven normal map generation.",
-      "required": ["resolution", "tileable"],
+      "additionalProperties": false,
+      "required": ["r", "g", "b"],
       "properties": {
-        "resolution": {
-          "type": "array",
-          "items": {
-            "type": "integer",
-            "minimum": 64,
-            "maximum": 8192
-          },
-          "minItems": 2,
-          "maxItems": 2
-        },
-        "tileable": {
-          "type": "boolean"
-        }
+        "r": { "$ref": "#/definitions/channel_source" },
+        "g": { "$ref": "#/definitions/channel_source" },
+        "b": { "$ref": "#/definitions/channel_source" },
+        "a": { "$ref": "#/definitions/channel_source" }
       }
     },
-    "static_mesh_blender_primitives_v1_params": {
-      "type": "object",
-      "description": "Parameters for primitive-based static mesh generation using Blender. Produces GLB files with optional modifiers.",
-      "required": ["base_primitive", "dimensions"],
-      "properties": {
-        "base_primitive": {
-          "type": "string",
-          "enum": ["cube", "sphere", "cylinder", "cone", "torus", "plane"],
-          "description": "Base Blender primitive to start from."
-        },
-        "dimensions": {
-          "type": "array",
-          "items": {
-            "type": "number",
-            "minimum": 0.001
-          },
-          "minItems": 3,
-          "maxItems": 3,
-          "description": "Dimensions [X, Y, Z] in Blender units."
-        },
-        "modifiers": {
-          "type": "array",
-          "description": "Blender modifiers to apply (bevel, edge split, subdivision, etc.)."
-        },
-        "uv_projection": {
-          "type": "string",
-          "enum": ["box", "cylinder", "sphere", "smart"],
-          "description": "UV unwrapping method."
-        },
-        "material_slots": {
-          "type": "array",
-          "description": "Material slot definitions."
-        },
-        "export": {
+    "channel_source": {
+      "oneOf": [
+        { "type": "string", "description": "Map key reference." },
+        {
           "type": "object",
-          "description": "GLB export settings."
-        },
-        "constraints": {
-          "type": "object",
-          "description": "Constraints for max triangles, materials, etc.",
+          "additionalProperties": false,
+          "required": ["key"],
           "properties": {
-            "max_triangles": {
-              "type": "integer",
-              "minimum": 1
-            },
-            "max_materials": {
-              "type": "integer",
-              "minimum": 1
-            }
-          }
-        }
-      }
-    },
-    "skeletal_mesh_blender_rigged_mesh_v1_params": {
-      "type": "object",
-      "description": "Parameters for rigged skeletal mesh generation using Blender. Produces skinned meshes with armatures.",
-      "required": ["skeleton_preset", "body_parts"],
-      "properties": {
-        "skeleton_preset": {
-          "type": "string",
-          "enum": ["humanoid_basic_v1"],
-          "description": "Predefined skeleton rig. Currently supports 'humanoid_basic_v1' (22-bone humanoid)."
+            "key": { "type": "string" },
+            "component": { "$ref": "#/definitions/color_component" },
+            "invert": { "type": "boolean", "default": false }
+          },
+          "description": "Extended map reference."
         },
-        "body_parts": {
-          "type": "array",
-          "description": "Body part mesh definitions. Each part is attached to a bone and weighted."
-        },
-        "material_slots": {
-          "type": "array",
-          "description": "Material slot definitions for the character."
-        },
-        "skinning": {
+        {
           "type": "object",
-          "description": "Skinning and weight painting settings.",
+          "additionalProperties": false,
+          "required": ["constant"],
           "properties": {
-            "max_bone_influences": {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 8
-            },
-            "auto_weights": {
-              "type": "boolean"
-            }
-          }
-        },
-        "export": {
-          "type": "object",
-          "description": "GLB export settings."
-        },
-        "constraints": {
-          "type": "object",
-          "properties": {
-            "max_triangles": {
-              "type": "integer",
-              "minimum": 1
-            },
-            "max_bones": {
-              "type": "integer",
-              "minimum": 1
-            },
-            "max_materials": {
-              "type": "integer",
-              "minimum": 1
-            }
-          }
+            "constant": { "type": "number", "minimum": 0.0, "maximum": 1.0 }
+          },
+          "description": "Constant fill value."
         }
-      }
+      ]
     },
-    "skeletal_animation_blender_clip_v1_params": {
-      "type": "object",
-      "description": "Parameters for skeletal animation clip generation using Blender. Produces animation data for armatures.",
-      "required": ["skeleton_preset", "clip_name", "duration_seconds", "fps", "keyframes"],
-      "properties": {
-        "skeleton_preset": {
-          "type": "string",
-          "enum": ["humanoid_basic_v1"],
-          "description": "Skeleton rig to animate. Must match the skeleton used in the skeletal_mesh."
-        },
-        "clip_name": {
-          "type": "string",
-          "description": "Name of the animation clip."
-        },
-        "duration_seconds": {
-          "type": "number",
-          "minimum": 0.1,
-          "maximum": 60.0,
-          "description": "Duration of the animation clip in seconds."
-        },
-        "fps": {
-          "type": "integer",
-          "enum": [24, 30, 60],
-          "description": "Frames per second. Common values: 24 (film), 30 (games), 60 (high refresh)."
-        },
-        "loop": {
-          "type": "boolean",
-          "description": "Whether the animation should loop seamlessly."
-        },
-        "keyframes": {
-          "type": "array",
-          "description": "Keyframe definitions with bone transforms."
-        },
-        "interpolation": {
-          "type": "string",
-          "enum": ["linear", "bezier", "constant"],
-          "description": "Interpolation method between keyframes."
-        },
-        "export": {
-          "type": "object",
-          "description": "GLB export settings for animations."
-        }
-      }
+    "color_component": {
+      "type": "string",
+      "enum": ["r", "g", "b", "a", "luminance"]
     }
-  },
-  "allOf": [
-    {
-      "if": {
-        "properties": {
-          "asset_type": {"const": "audio_sfx"}
-        }
-      },
-      "then": {
-        "properties": {
-          "recipe": {
-            "properties": {
-              "kind": {
-                "pattern": "^audio_sfx\\."
-              }
-            }
-          }
-        }
-      }
-    },
-    {
-      "if": {
-        "properties": {
-          "asset_type": {"const": "audio_instrument"}
-        }
-      },
-      "then": {
-        "properties": {
-          "recipe": {
-            "properties": {
-              "kind": {
-                "pattern": "^audio_instrument\\."
-              }
-            }
-          }
-        }
-      }
-    },
-    {
-      "if": {
-        "properties": {
-          "asset_type": {"const": "music"}
-        }
-      },
-      "then": {
-        "properties": {
-          "recipe": {
-            "properties": {
-              "kind": {
-                "pattern": "^music\\."
-              }
-            }
-          }
-        }
-      }
-    },
-    {
-      "if": {
-        "properties": {
-          "asset_type": {"const": "texture_2d"}
-        }
-      },
-      "then": {
-        "properties": {
-          "recipe": {
-            "properties": {
-              "kind": {
-                "pattern": "^texture_2d\\."
-              }
-            }
-          }
-        }
-      }
-    },
-    {
-      "if": {
-        "properties": {
-          "asset_type": {"const": "static_mesh"}
-        }
-      },
-      "then": {
-        "properties": {
-          "recipe": {
-            "properties": {
-              "kind": {
-                "pattern": "^static_mesh\\."
-              }
-            }
-          }
-        }
-      }
-    },
-    {
-      "if": {
-        "properties": {
-          "asset_type": {"const": "skeletal_mesh"}
-        }
-      },
-      "then": {
-        "properties": {
-          "recipe": {
-            "properties": {
-              "kind": {
-                "pattern": "^skeletal_mesh\\."
-              }
-            }
-          }
-        }
-      }
-    },
-    {
-      "if": {
-        "properties": {
-          "asset_type": {"const": "skeletal_animation"}
-        }
-      },
-      "then": {
-        "properties": {
-          "recipe": {
-            "properties": {
-              "kind": {
-                "pattern": "^skeletal_animation\\."
-              }
-            }
-          }
-        }
-      }
-    }
-  ]
+  }
 }

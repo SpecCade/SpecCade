@@ -3,9 +3,10 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
+use std::sync::OnceLock;
 use tempfile::TempDir;
 
-use speccade_spec::{Spec, OutputFormat};
+use speccade_spec::{OutputFormat, Spec};
 
 use crate::format_validators::{self, GlbInfo, ItInfo, PngInfo, WavInfo, XmInfo};
 
@@ -75,10 +76,12 @@ impl TestHarness {
     /// Note: This runs the CLI as a library call, not as a subprocess,
     /// which is more reliable for testing.
     pub fn run_cli(&self, args: &[&str]) -> CliResult {
-        // For now, we'll simulate CLI behavior by calling the library directly
-        // In a real implementation, you might want to run the actual binary
+        let manifest_path = speccade_manifest_path();
+
         let output = Command::new("cargo")
-            .args(["run", "-p", "speccade-cli", "--"])
+            .args(["run", "--quiet", "--manifest-path"])
+            .arg(&manifest_path)
+            .args(["-p", "speccade-cli", "--"])
             .args(args)
             .current_dir(self.path())
             .output();
@@ -133,6 +136,16 @@ impl TestHarness {
         fs::copy(spec_path, &dest).expect("Failed to copy spec file");
         dest
     }
+}
+
+fn speccade_manifest_path() -> PathBuf {
+    static PATH: OnceLock<PathBuf> = OnceLock::new();
+    PATH.get_or_init(|| {
+        let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        let manifest_path = manifest_dir.join("..").join("..").join("Cargo.toml");
+        manifest_path.canonicalize().unwrap_or(manifest_path)
+    })
+    .clone()
 }
 
 impl Default for TestHarness {
@@ -245,16 +258,16 @@ pub fn validate_output_format(path: &Path, format: OutputFormat) -> Result<(), S
         OutputFormat::It => validate_it_file(path),
         OutputFormat::Glb => validate_glb_file(path),
         OutputFormat::Gltf => validate_glb_file(path), // Same validation as GLB
-        OutputFormat::Ogg => Ok(()), // TODO: Implement OGG validation
-        OutputFormat::Json => Ok(()), // JSON is text, no binary validation needed
-        OutputFormat::Blend => Ok(()), // Blender files are opaque
+        OutputFormat::Ogg => Ok(()),                   // TODO: Implement OGG validation
+        OutputFormat::Json => Ok(()),                  // JSON is text, no binary validation needed
+        OutputFormat::Blend => Ok(()),                 // Blender files are opaque
     }
 }
 
 /// Parse a spec file and return the Spec.
 pub fn parse_spec_file(path: &Path) -> Result<Spec, String> {
-    let content = fs::read_to_string(path)
-        .map_err(|e| format!("Failed to read spec file: {}", e))?;
+    let content =
+        fs::read_to_string(path).map_err(|e| format!("Failed to read spec file: {}", e))?;
     Spec::from_json(&content).map_err(|e| format!("Failed to parse spec: {}", e))
 }
 

@@ -59,9 +59,8 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-# Asset types to process
-# Note: normal_map specs are merged into texture_2d category
-ASSET_TYPES=("audio_sfx" "audio_instrument" "music" "texture_2d")
+# Asset types to process (match golden corpus directories under golden/speccade/specs/)
+ASSET_TYPES=("audio" "music" "texture")
 
 if [ "$INCLUDE_BLENDER" = true ]; then
     ASSET_TYPES+=("static_mesh" "skeletal_mesh" "skeletal_animation")
@@ -164,7 +163,8 @@ process_spec() {
         SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
 
         # Extract hash from report if available
-        report_file=$(find "$out_dir" -name "*.report.json" 2>/dev/null | head -1)
+        asset_id=$(grep -o '"asset_id"[[:space:]]*:[[:space:]]*"[^"]*"' "$spec" | head -1 | sed 's/.*"asset_id"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/')
+        report_file="$(dirname "$spec")/${asset_id}.report.json"
         if [ -n "$report_file" ] && [ -f "$report_file" ]; then
             hash=$(grep -o '"spec_hash"[[:space:]]*:[[:space:]]*"[^"]*"' "$report_file" 2>/dev/null | cut -d'"' -f4 || echo "unknown")
             SUCCESS_HASHES+=("$output_category/$name: $hash")
@@ -191,15 +191,7 @@ process_spec() {
 # Process each asset type
 for asset_type in "${ASSET_TYPES[@]}"; do
     ASSET_DIR="$SPEC_DIR/$asset_type"
-
-    # For texture_2d, also include normal_map specs in the same output category
     DIRS_TO_PROCESS=("$ASSET_DIR")
-    if [ "$asset_type" = "texture_2d" ]; then
-        NORMAL_MAP_DIR="$SPEC_DIR/normal_map"
-        if [ -d "$NORMAL_MAP_DIR" ]; then
-            DIRS_TO_PROCESS+=("$NORMAL_MAP_DIR")
-        fi
-    fi
 
     has_specs=false
     for dir in "${DIRS_TO_PROCESS[@]}"; do

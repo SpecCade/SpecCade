@@ -441,7 +441,7 @@ mod tests {
         // 0.5 should be approximately 16384 (32767 * 0.5)
         let val_0_5 = i16::from_le_bytes([pcm[2], pcm[3]]);
         assert_eq!(val_0_5, 16384); // (0.5 * 32767).round() = 16384
-        // -0.5 should be approximately -16384
+                                    // -0.5 should be approximately -16384
         let val_neg_0_5 = i16::from_le_bytes([pcm[4], pcm[5]]);
         assert_eq!(val_neg_0_5, -16384);
     }
@@ -708,7 +708,10 @@ mod tests {
         let hash1 = writer.pcm_hash_mono(&samples1);
         let hash2 = writer.pcm_hash_mono(&samples2);
 
-        assert_ne!(hash1, hash2, "Different samples should produce different hashes");
+        assert_ne!(
+            hash1, hash2,
+            "Different samples should produce different hashes"
+        );
     }
 
     #[test]

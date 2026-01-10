@@ -184,12 +184,7 @@ pub struct OutputResult {
 
 impl OutputResult {
     /// Creates a new Tier 1 output result with a hash.
-    pub fn tier1(
-        kind: OutputKind,
-        format: OutputFormat,
-        path: PathBuf,
-        hash: String,
-    ) -> Self {
+    pub fn tier1(kind: OutputKind, format: OutputFormat, path: PathBuf, hash: String) -> Self {
         Self {
             kind,
             format,
@@ -405,9 +400,8 @@ impl ReportBuilder {
     pub fn validation_errors(mut self, errors: &[ValidationError]) -> Self {
         if !errors.is_empty() {
             self.ok = false;
-            self.errors.extend(
-                errors.iter().map(ReportError::from_validation_error)
-            );
+            self.errors
+                .extend(errors.iter().map(ReportError::from_validation_error));
         }
         self
     }
@@ -426,9 +420,8 @@ impl ReportBuilder {
 
     /// Adds warnings from ValidationWarnings.
     pub fn validation_warnings(mut self, warnings: &[ValidationWarning]) -> Self {
-        self.warnings.extend(
-            warnings.iter().map(ReportWarning::from_validation_warning)
-        );
+        self.warnings
+            .extend(warnings.iter().map(ReportWarning::from_validation_warning));
         self
     }
 
@@ -509,11 +502,7 @@ impl ReportBuilder {
         const OS: &str = "linux";
         #[cfg(target_os = "macos")]
         const OS: &str = "darwin";
-        #[cfg(not(any(
-            target_os = "windows",
-            target_os = "linux",
-            target_os = "macos"
-        )))]
+        #[cfg(not(any(target_os = "windows", target_os = "linux", target_os = "macos")))]
         const OS: &str = "unknown";
 
         #[cfg(target_env = "msvc")]
@@ -522,11 +511,7 @@ impl ReportBuilder {
         const ENV: &str = "gnu";
         #[cfg(target_env = "")]
         const ENV: &str = "";
-        #[cfg(not(any(
-            target_env = "msvc",
-            target_env = "gnu",
-            target_env = ""
-        )))]
+        #[cfg(not(any(target_env = "msvc", target_env = "gnu", target_env = "")))]
         const ENV: &str = "";
 
         // ENV is conditionally compiled, so is_empty() varies by platform
@@ -565,13 +550,10 @@ mod tests {
     #[test]
     fn test_report_builder_with_errors() {
         let error = ReportError::new("E001", "Unsupported spec version");
-        let report = ReportBuilder::new(
-            "abc123".to_string(),
-            "test-backend v1.0".to_string(),
-        )
-        .error(error)
-        .duration_ms(500)
-        .build();
+        let report = ReportBuilder::new("abc123".to_string(), "test-backend v1.0".to_string())
+            .error(error)
+            .duration_ms(500)
+            .build();
 
         assert!(!report.ok);
         assert_eq!(report.errors.len(), 1);
@@ -582,12 +564,9 @@ mod tests {
     #[test]
     fn test_report_builder_with_warnings() {
         let warning = ReportWarning::new("W001", "Missing license");
-        let report = ReportBuilder::new(
-            "xyz789".to_string(),
-            "test-backend v1.0".to_string(),
-        )
-        .warning(warning)
-        .build();
+        let report = ReportBuilder::new("xyz789".to_string(), "test-backend v1.0".to_string())
+            .warning(warning)
+            .build();
 
         assert!(report.ok);
         assert_eq!(report.warnings.len(), 1);
@@ -596,25 +575,25 @@ mod tests {
 
     #[test]
     fn test_report_filename() {
-        assert_eq!(Report::filename("laser-blast-01"), "laser-blast-01.report.json");
+        assert_eq!(
+            Report::filename("laser-blast-01"),
+            "laser-blast-01.report.json"
+        );
         assert_eq!(Report::filename("test"), "test.report.json");
     }
 
     #[test]
     fn test_report_serialization() {
-        let report = ReportBuilder::new(
-            "testhash".to_string(),
-            "test-backend v1.0".to_string(),
-        )
-        .ok(true)
-        .duration_ms(1000)
-        .output(OutputResult::tier1(
-            OutputKind::Primary,
-            OutputFormat::Wav,
-            PathBuf::from("sounds/test.wav"),
-            "outputhash".to_string(),
-        ))
-        .build();
+        let report = ReportBuilder::new("testhash".to_string(), "test-backend v1.0".to_string())
+            .ok(true)
+            .duration_ms(1000)
+            .output(OutputResult::tier1(
+                OutputKind::Primary,
+                OutputFormat::Wav,
+                PathBuf::from("sounds/test.wav"),
+                "outputhash".to_string(),
+            ))
+            .build();
 
         let json = report.to_json().unwrap();
         assert!(json.contains("\"report_version\":1"));
@@ -630,12 +609,9 @@ mod tests {
 
     #[test]
     fn test_report_pretty_json() {
-        let report = ReportBuilder::new(
-            "prettyhash".to_string(),
-            "test-backend v1.0".to_string(),
-        )
-        .ok(true)
-        .build();
+        let report = ReportBuilder::new("prettyhash".to_string(), "test-backend v1.0".to_string())
+            .ok(true)
+            .build();
 
         let pretty = report.to_json_pretty().unwrap();
         assert!(pretty.contains('\n'));
@@ -644,11 +620,8 @@ mod tests {
 
     #[test]
     fn test_validation_error_conversion() {
-        let val_err = ValidationError::with_path(
-            ErrorCode::InvalidAssetId,
-            "Invalid format",
-            "asset_id",
-        );
+        let val_err =
+            ValidationError::with_path(ErrorCode::InvalidAssetId, "Invalid format", "asset_id");
 
         let report_err = ReportError::from_validation_error(&val_err);
         assert_eq!(report_err.code, "E002");

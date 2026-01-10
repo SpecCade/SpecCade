@@ -6,14 +6,12 @@
 
 use std::path::Path;
 
-use speccade_spec::BackendError;
-use speccade_spec::recipe::texture::{
-    Texture2dNormalMapV1Params, NormalMapProcessing,
-};
+use speccade_spec::recipe::texture::{NormalMapProcessing, TextureNormalV1Params};
 use speccade_spec::validation::common as shared_validation;
+use speccade_spec::BackendError;
 
 use crate::color::Color;
-use crate::maps::{TextureBuffer, GrayscaleBuffer};
+use crate::maps::{GrayscaleBuffer, TextureBuffer};
 use crate::normal_map_patterns::generate_height_from_pattern;
 use crate::png::{self, PngConfig, PngError};
 
@@ -61,7 +59,7 @@ pub struct NormalMapResult {
 
 /// Generate a normal map from pattern specification.
 pub fn generate_normal_map(
-    params: &Texture2dNormalMapV1Params,
+    params: &TextureNormalV1Params,
     seed: u32,
 ) -> Result<NormalMapResult, NormalMapError> {
     let width = params.resolution[0];
@@ -155,10 +153,10 @@ fn apply_gaussian_blur(height_map: &mut GrayscaleBuffer, sigma: f64) {
     // Generate Gaussian kernel
     let mut kernel = vec![0.0; kernel_size];
     let mut sum = 0.0;
-    for i in 0..kernel_size {
+    for (i, kernel_value) in kernel.iter_mut().enumerate() {
         let x = i as f64 - half_kernel as f64;
         let value = (-x * x / (2.0 * sigma * sigma)).exp();
-        kernel[i] = value;
+        *kernel_value = value;
         sum += value;
     }
     // Normalize kernel
@@ -171,10 +169,10 @@ fn apply_gaussian_blur(height_map: &mut GrayscaleBuffer, sigma: f64) {
     for y in 0..height {
         for x in 0..width {
             let mut sum = 0.0;
-            for i in 0..kernel_size {
+            for (i, kernel_value) in kernel.iter().enumerate() {
                 let offset = i as i32 - half_kernel as i32;
                 let sample_x = (x as i32 + offset).rem_euclid(width as i32) as u32;
-                sum += height_map.get(sample_x, y) * kernel[i];
+                sum += height_map.get(sample_x, y) * kernel_value;
             }
             temp[(y * width + x) as usize] = sum;
         }
@@ -184,10 +182,10 @@ fn apply_gaussian_blur(height_map: &mut GrayscaleBuffer, sigma: f64) {
     for y in 0..height {
         for x in 0..width {
             let mut sum = 0.0;
-            for i in 0..kernel_size {
+            for (i, kernel_value) in kernel.iter().enumerate() {
                 let offset = i as i32 - half_kernel as i32;
                 let sample_y = (y as i32 + offset).rem_euclid(height as i32) as u32;
-                sum += temp[(sample_y * width + x) as usize] * kernel[i];
+                sum += temp[(sample_y * width + x) as usize] * kernel_value;
             }
             height_map.set(x, y, sum);
         }
@@ -244,7 +242,7 @@ fn height_to_normal(height_map: &GrayscaleBuffer, strength: f64) -> TextureBuffe
             // But we want OpenGL convention where Y-up is positive, so we negate gy.
             // For X: standard convention is that positive gradient = negative normal X
             let nx = -gx;
-            let ny = gy;  // Inverted for OpenGL/wgpu Y-up convention (was -gy for DirectX Y-down)
+            let ny = gy; // Inverted for OpenGL/wgpu Y-up convention (was -gy for DirectX Y-down)
             let nz = 1.0;
 
             // Normalize
@@ -254,11 +252,11 @@ fn height_to_normal(height_map: &GrayscaleBuffer, strength: f64) -> TextureBuffe
             let nz = nz / len;
 
             // Convert from [-1, 1] to [0, 1] for storage in RGB
-            buffer.set(x, y, Color::rgb(
-                (nx + 1.0) * 0.5,
-                (ny + 1.0) * 0.5,
-                (nz + 1.0) * 0.5,
-            ));
+            buffer.set(
+                x,
+                y,
+                Color::rgb((nx + 1.0) * 0.5, (ny + 1.0) * 0.5, (nz + 1.0) * 0.5),
+            );
         }
     }
 
@@ -268,11 +266,11 @@ fn height_to_normal(height_map: &GrayscaleBuffer, strength: f64) -> TextureBuffe
 #[cfg(test)]
 mod tests {
     use super::*;
-    use speccade_spec::recipe::texture::{NormalMapPattern, NoiseConfig, NoiseAlgorithm};
+    use speccade_spec::recipe::texture::{NoiseAlgorithm, NoiseConfig, NormalMapPattern};
 
     #[test]
     fn test_generate_flat_normal() {
-        let params = Texture2dNormalMapV1Params {
+        let params = TextureNormalV1Params {
             resolution: [64, 64],
             tileable: false,
             pattern: None,
@@ -288,7 +286,7 @@ mod tests {
 
     #[test]
     fn test_generate_grid_normal() {
-        let params = Texture2dNormalMapV1Params {
+        let params = TextureNormalV1Params {
             resolution: [128, 128],
             tileable: true,
             pattern: Some(NormalMapPattern::Grid {
@@ -307,7 +305,7 @@ mod tests {
 
     #[test]
     fn test_generate_brick_normal() {
-        let params = Texture2dNormalMapV1Params {
+        let params = TextureNormalV1Params {
             resolution: [256, 256],
             tileable: true,
             pattern: Some(NormalMapPattern::Bricks {
@@ -327,7 +325,7 @@ mod tests {
 
     #[test]
     fn test_deterministic() {
-        let params = Texture2dNormalMapV1Params {
+        let params = TextureNormalV1Params {
             resolution: [64, 64],
             tileable: false,
             pattern: Some(NormalMapPattern::NoiseBumps {
@@ -352,7 +350,7 @@ mod tests {
 
     #[test]
     fn test_generate_normal_map_invalid_resolution() {
-        let params = Texture2dNormalMapV1Params {
+        let params = TextureNormalV1Params {
             resolution: [0, 64],
             tileable: false,
             pattern: None,
@@ -366,7 +364,7 @@ mod tests {
 
     #[test]
     fn test_generate_normal_map_invalid_bump_strength() {
-        let params = Texture2dNormalMapV1Params {
+        let params = TextureNormalV1Params {
             resolution: [64, 64],
             tileable: false,
             pattern: None,
@@ -384,7 +382,7 @@ mod tests {
 
     #[test]
     fn test_pattern_tiles() {
-        let params = Texture2dNormalMapV1Params {
+        let params = TextureNormalV1Params {
             resolution: [128, 128],
             tileable: true,
             pattern: Some(NormalMapPattern::Tiles {
@@ -405,13 +403,10 @@ mod tests {
 
     #[test]
     fn test_pattern_hexagons() {
-        let params = Texture2dNormalMapV1Params {
+        let params = TextureNormalV1Params {
             resolution: [256, 256],
             tileable: true,
-            pattern: Some(NormalMapPattern::Hexagons {
-                size: 20,
-                gap: 2,
-            }),
+            pattern: Some(NormalMapPattern::Hexagons { size: 20, gap: 2 }),
             bump_strength: 1.2,
             processing: None,
         };
@@ -422,7 +417,7 @@ mod tests {
 
     #[test]
     fn test_pattern_rivets() {
-        let params = Texture2dNormalMapV1Params {
+        let params = TextureNormalV1Params {
             resolution: [128, 128],
             tileable: false,
             pattern: Some(NormalMapPattern::Rivets {
@@ -441,7 +436,7 @@ mod tests {
 
     #[test]
     fn test_pattern_weave() {
-        let params = Texture2dNormalMapV1Params {
+        let params = TextureNormalV1Params {
             resolution: [128, 128],
             tileable: true,
             pattern: Some(NormalMapPattern::Weave {
@@ -459,7 +454,7 @@ mod tests {
 
     #[test]
     fn test_pattern_diamond_plate() {
-        let params = Texture2dNormalMapV1Params {
+        let params = TextureNormalV1Params {
             resolution: [256, 256],
             tileable: true,
             pattern: Some(NormalMapPattern::DiamondPlate {
@@ -483,7 +478,7 @@ mod tests {
             NoiseAlgorithm::Value,
             NoiseAlgorithm::Fbm,
         ] {
-            let params = Texture2dNormalMapV1Params {
+            let params = TextureNormalV1Params {
                 resolution: [64, 64],
                 tileable: false,
                 pattern: Some(NormalMapPattern::NoiseBumps {
@@ -511,7 +506,7 @@ mod tests {
 
     #[test]
     fn test_processing_blur() {
-        let params = Texture2dNormalMapV1Params {
+        let params = TextureNormalV1Params {
             resolution: [64, 64],
             tileable: false,
             pattern: Some(NormalMapPattern::Grid {
@@ -532,7 +527,7 @@ mod tests {
 
     #[test]
     fn test_processing_invert() {
-        let params = Texture2dNormalMapV1Params {
+        let params = TextureNormalV1Params {
             resolution: [64, 64],
             tileable: false,
             pattern: Some(NormalMapPattern::Bricks {
@@ -554,7 +549,7 @@ mod tests {
 
     #[test]
     fn test_processing_blur_and_invert() {
-        let params = Texture2dNormalMapV1Params {
+        let params = TextureNormalV1Params {
             resolution: [64, 64],
             tileable: false,
             pattern: Some(NormalMapPattern::Tiles {
@@ -581,7 +576,7 @@ mod tests {
     #[test]
     fn test_various_bump_strengths() {
         for strength in [0.5, 1.0, 1.5, 2.0, 3.0] {
-            let params = Texture2dNormalMapV1Params {
+            let params = TextureNormalV1Params {
                 resolution: [32, 32],
                 tileable: false,
                 pattern: Some(NormalMapPattern::Grid {
@@ -605,7 +600,7 @@ mod tests {
 
     #[test]
     fn test_tileable_noise() {
-        let params = Texture2dNormalMapV1Params {
+        let params = TextureNormalV1Params {
             resolution: [128, 128],
             tileable: true,
             pattern: Some(NormalMapPattern::NoiseBumps {
@@ -627,7 +622,7 @@ mod tests {
 
     #[test]
     fn test_non_tileable_noise() {
-        let params = Texture2dNormalMapV1Params {
+        let params = TextureNormalV1Params {
             resolution: [128, 128],
             tileable: false,
             pattern: Some(NormalMapPattern::NoiseBumps {
@@ -653,7 +648,7 @@ mod tests {
 
     #[test]
     fn test_seed_affects_bricks() {
-        let make_params = |seed| Texture2dNormalMapV1Params {
+        let make_params = || TextureNormalV1Params {
             resolution: [64, 64],
             tileable: false,
             pattern: Some(NormalMapPattern::Bricks {
@@ -666,15 +661,15 @@ mod tests {
             processing: None,
         };
 
-        let result1 = generate_normal_map(&make_params(1), 1).unwrap();
-        let result2 = generate_normal_map(&make_params(2), 2).unwrap();
+        let result1 = generate_normal_map(&make_params(), 1).unwrap();
+        let result2 = generate_normal_map(&make_params(), 2).unwrap();
 
         assert_ne!(result1.hash, result2.hash);
     }
 
     #[test]
     fn test_seed_affects_tiles() {
-        let make_params = |seed| Texture2dNormalMapV1Params {
+        let make_params = |seed| TextureNormalV1Params {
             resolution: [64, 64],
             tileable: false,
             pattern: Some(NormalMapPattern::Tiles {
@@ -699,7 +694,7 @@ mod tests {
 
     #[test]
     fn test_save_normal_map() {
-        let params = Texture2dNormalMapV1Params {
+        let params = TextureNormalV1Params {
             resolution: [64, 64],
             tileable: false,
             pattern: Some(NormalMapPattern::Grid {
@@ -728,7 +723,7 @@ mod tests {
     #[test]
     fn test_bricks_with_different_sizes() {
         for brick_width in [32, 64, 128] {
-            let params = Texture2dNormalMapV1Params {
+            let params = TextureNormalV1Params {
                 resolution: [256, 256],
                 tileable: true,
                 pattern: Some(NormalMapPattern::Bricks {
@@ -749,7 +744,7 @@ mod tests {
     #[test]
     fn test_tiles_with_different_gap_depths() {
         for gap_depth in [0.1, 0.3, 0.5, 0.7] {
-            let params = Texture2dNormalMapV1Params {
+            let params = TextureNormalV1Params {
                 resolution: [128, 128],
                 tileable: true,
                 pattern: Some(NormalMapPattern::Tiles {
@@ -770,7 +765,7 @@ mod tests {
     #[test]
     fn test_weave_with_different_thread_widths() {
         for thread_width in [4, 8, 12, 16] {
-            let params = Texture2dNormalMapV1Params {
+            let params = TextureNormalV1Params {
                 resolution: [128, 128],
                 tileable: true,
                 pattern: Some(NormalMapPattern::Weave {

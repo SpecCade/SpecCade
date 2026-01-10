@@ -69,12 +69,19 @@ pub mod rng;
 pub mod shared;
 
 // Re-export main types for convenience
-pub use color::{Color, BlendMode};
-pub use generate::{generate_material_maps, save_texture_result, TextureResult, MapResult, GenerateError};
-pub use maps::{TextureBuffer, GrayscaleBuffer};
-pub use noise::{Noise2D, SimplexNoise, PerlinNoise, WorleyNoise, Fbm};
-pub use normal_map::{generate_normal_map, save_normal_map, NormalMapResult, NormalMapError};
-pub use packing::{ChannelSource, ColorComponent, PackedChannels, PackingError, extract_channel, resolve_channel_source, pack_channels};
-pub use pattern::{Pattern2D, BrickPattern, CheckerPattern, WoodGrainPattern, ScratchesPattern, EdgeWearPattern};
+pub use color::{BlendMode, Color};
+pub use generate::{
+    generate_material_maps, save_texture_result, GenerateError, MapResult, TextureResult,
+};
+pub use maps::{GrayscaleBuffer, TextureBuffer};
+pub use noise::{Fbm, Noise2D, PerlinNoise, SimplexNoise, WorleyNoise};
+pub use normal_map::{generate_normal_map, save_normal_map, NormalMapError, NormalMapResult};
+pub use packing::{
+    extract_channel, pack_channels, resolve_channel_source, ChannelSource, ColorComponent,
+    PackedChannels, PackingError,
+};
+pub use pattern::{
+    BrickPattern, CheckerPattern, EdgeWearPattern, Pattern2D, ScratchesPattern, WoodGrainPattern,
+};
 pub use png::{PngConfig, PngError};
 pub use rng::DeterministicRng;

@@ -4,8 +4,6 @@ use super::Pattern2D;
 
 /// Generates horizontal or vertical stripe patterns.
 pub struct StripesPattern {
-    width: u32,
-    height: u32,
     stripe_width: u32,
     color1: f64,
     color2: f64,
@@ -14,10 +12,8 @@ pub struct StripesPattern {
 
 impl StripesPattern {
     /// Create a new vertical stripes pattern.
-    pub fn new_vertical(width: u32, height: u32, stripe_width: u32, color1: f64, color2: f64) -> Self {
+    pub fn new_vertical(stripe_width: u32, color1: f64, color2: f64) -> Self {
         Self {
-            width,
-            height,
             stripe_width,
             color1,
             color2,
@@ -26,10 +22,8 @@ impl StripesPattern {
     }
 
     /// Create a new horizontal stripes pattern.
-    pub fn new_horizontal(width: u32, height: u32, stripe_width: u32, color1: f64, color2: f64) -> Self {
+    pub fn new_horizontal(stripe_width: u32, color1: f64, color2: f64) -> Self {
         Self {
-            width,
-            height,
             stripe_width,
             color1,
             color2,
@@ -57,7 +51,7 @@ mod tests {
 
     #[test]
     fn test_vertical_stripes() {
-        let pattern = StripesPattern::new_vertical(64, 64, 16, 0.0, 1.0);
+        let pattern = StripesPattern::new_vertical(16, 0.0, 1.0);
 
         // First stripe (0-15) should be color1
         assert_eq!(pattern.sample(0, 0), 0.0);
@@ -73,7 +67,7 @@ mod tests {
 
     #[test]
     fn test_horizontal_stripes() {
-        let pattern = StripesPattern::new_horizontal(64, 64, 16, 0.0, 1.0);
+        let pattern = StripesPattern::new_horizontal(16, 0.0, 1.0);
 
         // First stripe (0-15) should be color1
         assert_eq!(pattern.sample(0, 0), 0.0);

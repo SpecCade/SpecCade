@@ -18,7 +18,7 @@
 //! use speccade_spec::hash::canonical_spec_hash;
 //!
 //! // Build a spec
-//! let spec = Spec::builder("laser-blast-01", AssetType::AudioSfx)
+//! let spec = Spec::builder("laser-blast-01", AssetType::Audio)
 //!     .license("CC0-1.0")
 //!     .seed(42)
 //!     .description("Sci-fi laser blast sound effect")
@@ -55,7 +55,10 @@ pub mod spec;
 pub mod validation;
 
 // Re-export commonly used types at the crate root
-pub use error::{BackendError, ErrorCode, GenerationError, SpecError, ValidationError, ValidationResult, ValidationWarning, WarningCode};
+pub use error::{
+    BackendError, ErrorCode, GenerationError, SpecError, ValidationError, ValidationResult,
+    ValidationWarning, WarningCode,
+};
 pub use hash::{canonical_spec_hash, derive_layer_seed, derive_variant_seed};
 pub use output::{EngineTarget, OutputFormat, OutputKind, OutputSpec, VariantSpec};
 pub use recipe::Recipe;
@@ -63,20 +66,22 @@ pub use report::{
     BoundingBox, OutputMetrics, OutputResult, Report, ReportBuilder, ReportError, ReportWarning,
     REPORT_VERSION,
 };
-pub use spec::{AssetType, Spec, SpecBuilder, SPEC_VERSION, MAX_SEED};
-pub use validation::{is_safe_output_path, is_valid_asset_id, validate_for_generate, validate_spec};
+pub use spec::{AssetType, Spec, SpecBuilder, MAX_SEED, SPEC_VERSION};
+pub use validation::{
+    is_safe_output_path, is_valid_asset_id, validate_for_generate, validate_spec,
+};
 
 #[cfg(test)]
 mod integration_tests {
     use super::*;
 
-    /// Test parsing the example spec from RFC-0001 Section 6.1 (Audio SFX)
+    /// Test parsing the example spec from RFC-0001 Section 6.1 (Audio)
     #[test]
-    fn test_parse_rfc_example_audio_sfx() {
+    fn test_parse_rfc_example_audio() {
         let json = r#"{
             "spec_version": 1,
             "asset_id": "laser-blast-01",
-            "asset_type": "audio_sfx",
+            "asset_type": "audio",
             "license": "CC0-1.0",
             "seed": 42,
             "description": "Sci-fi laser blast sound effect",
@@ -89,7 +94,7 @@ mod integration_tests {
                 }
             ],
             "recipe": {
-                "kind": "audio_sfx.layered_synth_v1",
+                "kind": "audio_v1",
                 "params": {
                     "duration_seconds": 0.3,
                     "sample_rate": 44100,
@@ -123,7 +128,7 @@ mod integration_tests {
 
         assert_eq!(spec.spec_version, 1);
         assert_eq!(spec.asset_id, "laser-blast-01");
-        assert_eq!(spec.asset_type, AssetType::AudioSfx);
+        assert_eq!(spec.asset_type, AssetType::Audio);
         assert_eq!(spec.license, "CC0-1.0");
         assert_eq!(spec.seed, 42);
         assert!(spec.description.is_some());
@@ -220,7 +225,7 @@ mod integration_tests {
     /// Test hash stability
     #[test]
     fn test_hash_stability() {
-        let spec = Spec::builder("test-stable-01", AssetType::AudioSfx)
+        let spec = Spec::builder("test-stable-01", AssetType::Audio)
             .license("CC0-1.0")
             .seed(12345)
             .output(OutputSpec::primary(OutputFormat::Wav, "sounds/test.wav"))
@@ -260,7 +265,7 @@ mod integration_tests {
     #[test]
     fn test_validation_error_messages() {
         // Invalid asset_id
-        let spec = Spec::builder("INVALID", AssetType::AudioSfx)
+        let spec = Spec::builder("INVALID", AssetType::Audio)
             .license("CC0-1.0")
             .seed(42)
             .output(OutputSpec::primary(OutputFormat::Wav, "test.wav"))
@@ -269,7 +274,10 @@ mod integration_tests {
         let result = validate_spec(&spec);
         assert!(!result.is_ok());
 
-        let error = result.errors.iter().find(|e| e.code == ErrorCode::InvalidAssetId);
+        let error = result
+            .errors
+            .iter()
+            .find(|e| e.code == ErrorCode::InvalidAssetId);
         assert!(error.is_some());
         assert!(error.unwrap().message.contains("asset_id"));
     }

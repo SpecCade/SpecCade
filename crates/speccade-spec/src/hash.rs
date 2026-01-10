@@ -28,7 +28,7 @@ use crate::spec::Spec;
 /// use speccade_spec::{Spec, AssetType, OutputSpec, OutputFormat};
 /// use speccade_spec::hash::canonical_spec_hash;
 ///
-/// let spec = Spec::builder("test-01", AssetType::AudioSfx)
+/// let spec = Spec::builder("test-01", AssetType::Audio)
 ///     .license("CC0-1.0")
 ///     .seed(42)
 ///     .output(OutputSpec::primary(OutputFormat::Wav, "sounds/test.wav"))
@@ -267,7 +267,7 @@ mod tests {
 
     #[test]
     fn test_canonical_spec_hash() {
-        let spec = Spec::builder("test-01", AssetType::AudioSfx)
+        let spec = Spec::builder("test-01", AssetType::Audio)
             .license("CC0-1.0")
             .seed(42)
             .output(OutputSpec::primary(OutputFormat::Wav, "sounds/test.wav"))
@@ -284,7 +284,7 @@ mod tests {
     #[test]
     fn test_hash_stability() {
         // This test ensures the hash doesn't change between runs
-        let spec = Spec::builder("laser-blast-01", AssetType::AudioSfx)
+        let spec = Spec::builder("laser-blast-01", AssetType::Audio)
             .license("CC0-1.0")
             .seed(42)
             .description("Test laser blast")
@@ -301,13 +301,13 @@ mod tests {
 
     #[test]
     fn test_different_specs_different_hashes() {
-        let spec1 = Spec::builder("test-01", AssetType::AudioSfx)
+        let spec1 = Spec::builder("test-01", AssetType::Audio)
             .license("CC0-1.0")
             .seed(42)
             .output(OutputSpec::primary(OutputFormat::Wav, "sounds/test.wav"))
             .build();
 
-        let spec2 = Spec::builder("test-02", AssetType::AudioSfx)
+        let spec2 = Spec::builder("test-02", AssetType::Audio)
             .license("CC0-1.0")
             .seed(42)
             .output(OutputSpec::primary(OutputFormat::Wav, "sounds/test.wav"))
@@ -320,13 +320,13 @@ mod tests {
 
     #[test]
     fn test_seed_change_changes_hash() {
-        let spec1 = Spec::builder("test-01", AssetType::AudioSfx)
+        let spec1 = Spec::builder("test-01", AssetType::Audio)
             .license("CC0-1.0")
             .seed(42)
             .output(OutputSpec::primary(OutputFormat::Wav, "sounds/test.wav"))
             .build();
 
-        let spec2 = Spec::builder("test-01", AssetType::AudioSfx)
+        let spec2 = Spec::builder("test-01", AssetType::Audio)
             .license("CC0-1.0")
             .seed(43)
             .output(OutputSpec::primary(OutputFormat::Wav, "sounds/test.wav"))
@@ -342,10 +342,8 @@ mod tests {
 
     #[test]
     fn test_canonicalize_json_object_ordering() {
-        let json1: serde_json::Value =
-            serde_json::from_str(r#"{"b": 1, "a": 2}"#).unwrap();
-        let json2: serde_json::Value =
-            serde_json::from_str(r#"{"a": 2, "b": 1}"#).unwrap();
+        let json1: serde_json::Value = serde_json::from_str(r#"{"b": 1, "a": 2}"#).unwrap();
+        let json2: serde_json::Value = serde_json::from_str(r#"{"a": 2, "b": 1}"#).unwrap();
 
         let canonical1 = canonicalize_json(&json1).unwrap();
         let canonical2 = canonicalize_json(&json2).unwrap();
@@ -356,10 +354,8 @@ mod tests {
 
     #[test]
     fn test_canonicalize_json_nested() {
-        let json: serde_json::Value = serde_json::from_str(
-            r#"{"z": [1, 2, 3], "a": {"c": true, "b": false}}"#,
-        )
-        .unwrap();
+        let json: serde_json::Value =
+            serde_json::from_str(r#"{"z": [1, 2, 3], "a": {"c": true, "b": false}}"#).unwrap();
 
         let canonical = canonicalize_json(&json).unwrap();
         assert_eq!(canonical, r#"{"a":{"b":false,"c":true},"z":[1,2,3]}"#);
@@ -367,8 +363,7 @@ mod tests {
 
     #[test]
     fn test_canonicalize_json_strings() {
-        let json: serde_json::Value =
-            serde_json::from_str(r#"{"text": "hello\nworld"}"#).unwrap();
+        let json: serde_json::Value = serde_json::from_str(r#"{"text": "hello\nworld"}"#).unwrap();
 
         let canonical = canonicalize_json(&json).unwrap();
         assert_eq!(canonical, r#"{"text":"hello\nworld"}"#);

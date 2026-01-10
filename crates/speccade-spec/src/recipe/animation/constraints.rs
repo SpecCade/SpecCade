@@ -112,7 +112,12 @@ fn default_damping() -> f64 {
 
 impl BoneConstraint {
     /// Creates a new hinge constraint.
-    pub fn hinge(bone: impl Into<String>, axis: ConstraintAxis, min_angle: f64, max_angle: f64) -> Self {
+    pub fn hinge(
+        bone: impl Into<String>,
+        axis: ConstraintAxis,
+        min_angle: f64,
+        max_angle: f64,
+    ) -> Self {
         BoneConstraint::Hinge {
             bone: bone.into(),
             axis,
@@ -132,7 +137,12 @@ impl BoneConstraint {
     }
 
     /// Creates a new planar constraint.
-    pub fn planar(bone: impl Into<String>, plane_normal: ConstraintAxis, min_angle: f64, max_angle: f64) -> Self {
+    pub fn planar(
+        bone: impl Into<String>,
+        plane_normal: ConstraintAxis,
+        min_angle: f64,
+        max_angle: f64,
+    ) -> Self {
         BoneConstraint::Planar {
             bone: bone.into(),
             plane_normal,
@@ -163,7 +173,12 @@ impl BoneConstraint {
     /// Validates the constraint configuration.
     pub fn validate(&self) -> Result<(), BoneConstraintError> {
         match self {
-            BoneConstraint::Hinge { bone, min_angle, max_angle, .. } => {
+            BoneConstraint::Hinge {
+                bone,
+                min_angle,
+                max_angle,
+                ..
+            } => {
                 if bone.is_empty() {
                     return Err(BoneConstraintError::EmptyBoneName);
                 }
@@ -174,7 +189,13 @@ impl BoneConstraint {
                     });
                 }
             }
-            BoneConstraint::Ball { bone, cone_angle, twist_min, twist_max, .. } => {
+            BoneConstraint::Ball {
+                bone,
+                cone_angle,
+                twist_min,
+                twist_max,
+                ..
+            } => {
                 if bone.is_empty() {
                     return Err(BoneConstraintError::EmptyBoneName);
                 }
@@ -188,7 +209,12 @@ impl BoneConstraint {
                     });
                 }
             }
-            BoneConstraint::Planar { bone, min_angle, max_angle, .. } => {
+            BoneConstraint::Planar {
+                bone,
+                min_angle,
+                max_angle,
+                ..
+            } => {
                 if bone.is_empty() {
                     return Err(BoneConstraintError::EmptyBoneName);
                 }
@@ -199,7 +225,11 @@ impl BoneConstraint {
                     });
                 }
             }
-            BoneConstraint::Soft { bone, stiffness, damping } => {
+            BoneConstraint::Soft {
+                bone,
+                stiffness,
+                damping,
+            } => {
                 if bone.is_empty() {
                     return Err(BoneConstraintError::EmptyBoneName);
                 }
@@ -238,7 +268,11 @@ impl std::fmt::Display for BoneConstraintError {
                 write!(f, "Invalid angle range: min ({}) > max ({})", min, max)
             }
             BoneConstraintError::InvalidConeAngle(angle) => {
-                write!(f, "Cone angle must be between 0 and 180 degrees, got {}", angle)
+                write!(
+                    f,
+                    "Cone angle must be between 0 and 180 degrees, got {}",
+                    angle
+                )
             }
             BoneConstraintError::InvalidStiffness(val) => {
                 write!(f, "Stiffness must be between 0 and 1, got {}", val)

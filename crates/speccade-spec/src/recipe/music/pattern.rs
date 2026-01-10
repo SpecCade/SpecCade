@@ -3,9 +3,6 @@
 use serde::{Deserialize, Deserializer, Serialize};
 use std::collections::HashMap;
 
-#[allow(dead_code)]
-use super::effects::PatternEffect;
-
 /// Pattern definition.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
 #[serde(deny_unknown_fields)]
@@ -126,7 +123,9 @@ where
 
 /// Convert MIDI note number to note name.
 fn midi_to_note_name(midi: u8) -> String {
-    const NOTES: [&str; 12] = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+    const NOTES: [&str; 12] = [
+        "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B",
+    ];
     let octave = (midi / 12) as i32 - 1;
     let note_idx = (midi % 12) as usize;
     format!("{}{}", NOTES[note_idx], octave)
