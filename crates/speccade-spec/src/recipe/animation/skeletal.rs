@@ -84,6 +84,7 @@ impl IkPreset {
 
 /// Configuration for an IK target (the end effector target).
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct IkTargetConfig {
     /// Name of the target control bone/empty.
     pub name: String,
@@ -126,6 +127,7 @@ impl IkTargetConfig {
 
 /// Configuration for an IK pole target (controls bend direction).
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct PoleConfig {
     /// Name of the pole target control bone/empty.
     pub name: String,
@@ -170,6 +172,7 @@ impl PoleConfig {
 
 /// IK chain definition for a single limb or bone chain.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct IkChain {
     /// Unique name for this IK chain.
     pub name: String,
@@ -284,6 +287,7 @@ impl std::error::Error for IkChainError {}
 /// Configuration for an IK foot roll system.
 /// Provides automatic heel-toe roll during foot plants.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct FootSystem {
     /// Name of this foot system (e.g., "foot_l", "foot_r").
     pub name: String,
@@ -343,6 +347,7 @@ impl FootSystem {
 /// Configuration for an aim (look-at) constraint.
 /// Makes a bone always point toward a target.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct AimConstraint {
     /// Name of this aim constraint.
     pub name: String,
@@ -408,6 +413,7 @@ impl AimConstraint {
 /// Configuration for twist bone distribution.
 /// Distributes rotation from a source bone across twist bones.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct TwistBone {
     /// Name of this twist setup.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -470,6 +476,7 @@ impl TwistBone {
 /// Stretch settings for IK chains.
 /// Allows bones to stretch beyond their rest length.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
+#[serde(deny_unknown_fields)]
 pub struct StretchSettings {
     /// Whether stretch is enabled.
     #[serde(default)]
@@ -539,6 +546,7 @@ impl StretchSettings {
 
 /// Settings for baking animation to keyframes.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct BakeSettings {
     /// Simplify curves after baking (remove redundant keyframes).
     #[serde(default = "default_true")]
@@ -643,6 +651,7 @@ impl BakeSettings {
 
 /// Complete rig setup configuration for an armature.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
+#[serde(deny_unknown_fields)]
 pub struct RigSetup {
     /// IK presets to apply.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]

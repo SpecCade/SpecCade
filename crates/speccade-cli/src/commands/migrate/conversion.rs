@@ -126,8 +126,8 @@ pub fn map_category_to_type(category: &str) -> Result<(AssetType, String)> {
         "sounds" => Ok((AssetType::AudioSfx, "audio_sfx.layered_synth_v1".to_string())),
         "instruments" => Ok((AssetType::AudioInstrument, "audio_instrument.synth_patch_v1".to_string())),
         "music" => Ok((AssetType::Music, "music.tracker_song_v1".to_string())),
-        "textures" => Ok((AssetType::Texture2d, "texture_2d.material_maps_v1".to_string())),
-        "normals" => Ok((AssetType::Texture2d, "texture_2d.normal_map_v1".to_string())),
+        "textures" => Ok((AssetType::Texture, "texture_2d.material_maps_v1".to_string())),
+        "normals" => Ok((AssetType::Texture, "texture_2d.normal_map_v1".to_string())),
         "meshes" => Ok((AssetType::StaticMesh, "static_mesh.blender_primitives_v1".to_string())),
         "characters" => Ok((AssetType::SkeletalMesh, "skeletal_mesh.blender_rigged_mesh_v1".to_string())),
         "animations" => Ok((AssetType::SkeletalAnimation, "skeletal_animation.blender_clip_v1".to_string())),
@@ -201,11 +201,20 @@ pub fn generate_outputs(
     category: &str,
 ) -> Result<Vec<OutputSpec>> {
     let outputs = match asset_type {
+        AssetType::Audio => {
+            vec![OutputSpec {
+                kind: OutputKind::Primary,
+                format: OutputFormat::Wav,
+                path: format!("audio/{}.wav", asset_id),
+                channels: None,
+            }]
+        }
         AssetType::AudioSfx => {
             vec![OutputSpec {
                 kind: OutputKind::Primary,
                 format: OutputFormat::Wav,
                 path: format!("sounds/{}.wav", asset_id),
+                channels: None,
             }]
         }
         AssetType::AudioInstrument => {
@@ -213,6 +222,7 @@ pub fn generate_outputs(
                 kind: OutputKind::Primary,
                 format: OutputFormat::Wav,
                 path: format!("instruments/{}.wav", asset_id),
+                channels: None,
             }]
         }
         AssetType::Music => {
@@ -220,20 +230,23 @@ pub fn generate_outputs(
                 kind: OutputKind::Primary,
                 format: OutputFormat::Xm,
                 path: format!("music/{}.xm", asset_id),
+                channels: None,
             }]
         }
-        AssetType::Texture2d => {
+        AssetType::Texture => {
             if category == "normals" {
                 vec![OutputSpec {
                     kind: OutputKind::Primary,
                     format: OutputFormat::Png,
                     path: format!("textures/{}_normal.png", asset_id),
+                    channels: None,
                 }]
             } else {
                 vec![OutputSpec {
                     kind: OutputKind::Primary,
                     format: OutputFormat::Png,
                     path: format!("textures/{}.png", asset_id),
+                    channels: None,
                 }]
             }
         }
@@ -242,6 +255,7 @@ pub fn generate_outputs(
                 kind: OutputKind::Primary,
                 format: OutputFormat::Glb,
                 path: format!("meshes/{}.glb", asset_id),
+                channels: None,
             }]
         }
         AssetType::SkeletalMesh => {
@@ -249,6 +263,7 @@ pub fn generate_outputs(
                 kind: OutputKind::Primary,
                 format: OutputFormat::Glb,
                 path: format!("characters/{}.glb", asset_id),
+                channels: None,
             }]
         }
         AssetType::SkeletalAnimation => {
@@ -256,6 +271,7 @@ pub fn generate_outputs(
                 kind: OutputKind::Primary,
                 format: OutputFormat::Glb,
                 path: format!("animations/{}.glb", asset_id),
+                channels: None,
             }]
         }
     };
@@ -313,7 +329,7 @@ mod tests {
 
     #[test]
     fn test_generate_outputs_normals() {
-        let outputs = generate_outputs("wall-01", &AssetType::Texture2d, "normals").unwrap();
+        let outputs = generate_outputs("wall-01", &AssetType::Texture, "normals").unwrap();
         assert_eq!(outputs.len(), 1);
         assert!(outputs[0].path.ends_with("_normal.png"));
     }

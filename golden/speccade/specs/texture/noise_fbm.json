@@ -1,0 +1,33 @@
+{
+  "spec_version": 1,
+  "asset_id": "noise_fbm",
+  "asset_type": "texture",
+  "license": "CC0-1.0",
+  "seed": 5013,
+  "description": "Fractal Brownian motion noise normal map for terrain-like bumps",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "png",
+      "path": "noise_fbm.png"
+    }
+  ],
+  "recipe": {
+    "kind": "texture.normal_v1",
+    "params": {
+      "resolution": [512, 512],
+      "tileable": true,
+      "pattern": {
+        "type": "noise_bumps",
+        "noise": {
+          "algorithm": "fbm",
+          "scale": 0.02,
+          "octaves": 8,
+          "persistence": 0.45,
+          "lacunarity": 2.0
+        }
+      },
+      "bump_strength": 1.1
+    }
+  }
+}

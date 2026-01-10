@@ -27,6 +27,7 @@ pub use texturing::{RegionColor, TextureRegion, Texturing, UvMode};
 
 /// Parameters for the `skeletal_mesh.blender_rigged_mesh_v1` recipe.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct SkeletalMeshBlenderRiggedMeshV1Params {
     /// Predefined skeleton rig.
     #[serde(skip_serializing_if = "Option::is_none")]

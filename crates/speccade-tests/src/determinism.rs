@@ -421,6 +421,19 @@ impl DeterminismFixture {
         use speccade_spec::AssetType;
 
         match spec.asset_type {
+            AssetType::Audio => {
+                // Generic Audio type - same as AudioSfx for now
+                let spec_clone = spec.clone();
+                let runs = self.runs;
+                Ok(verify_determinism(
+                    || {
+                        speccade_backend_audio::generate(&spec_clone)
+                            .map(|r| r.wav.wav_data)
+                            .unwrap_or_default()
+                    },
+                    runs,
+                ))
+            }
             AssetType::AudioSfx => {
                 let spec_clone = spec.clone();
                 let runs = self.runs;
@@ -440,11 +453,11 @@ impl DeterminismFixture {
                     "AudioInstrument - use verify_determinism with custom generator".to_string()
                 ))
             }
-            AssetType::Texture2d => {
+            AssetType::Texture => {
                 // Texture backend uses generate_material_maps with params directly
                 // For full spec-based generation, use verify_determinism with custom generator
                 Err(DeterminismError::UnsupportedAssetType(
-                    "Texture2d - use verify_determinism with custom generator".to_string()
+                    "Texture - use verify_determinism with custom generator".to_string()
                 ))
             }
             AssetType::Music => {

@@ -14,6 +14,7 @@ pub const REPORT_VERSION: u32 = 1;
 
 /// A complete report for a generation or validation operation.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct Report {
     /// Report schema version (always 1).
     pub report_version: u32,
@@ -73,6 +74,7 @@ impl Report {
 
 /// Error entry in a report.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct ReportError {
     /// Error code (e.g., "E001").
     pub code: String,
@@ -118,6 +120,7 @@ impl ReportError {
 
 /// Warning entry in a report.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct ReportWarning {
     /// Warning code (e.g., "W001").
     pub code: String,
@@ -163,6 +166,7 @@ impl ReportWarning {
 
 /// Result entry for a single output artifact.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct OutputResult {
     /// The kind of output (primary, metadata, preview).
     pub kind: OutputKind,
@@ -214,6 +218,7 @@ impl OutputResult {
 
 /// Validation metrics for Tier 2 outputs (GLB meshes).
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct OutputMetrics {
     /// Number of triangles in the mesh.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -313,6 +318,7 @@ impl Default for OutputMetrics {
 
 /// Axis-aligned bounding box.
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct BoundingBox {
     /// Minimum corner (x, y, z).
     pub min: [f32; 3],

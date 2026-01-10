@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 /// Blender modifier.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "type", rename_all = "snake_case")]
+#[serde(tag = "type", rename_all = "snake_case", deny_unknown_fields)]
 pub enum MeshModifier {
     /// Bevel modifier.
     Bevel {
@@ -63,7 +63,7 @@ pub enum MeshModifier {
 
 /// UV projection method.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(untagged)]
+#[serde(untagged, deny_unknown_fields)]
 pub enum UvProjection {
     /// Simple projection method (backwards compatible).
     Simple(UvProjectionMethod),

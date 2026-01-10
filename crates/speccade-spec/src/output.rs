@@ -2,6 +2,8 @@
 
 use serde::{Deserialize, Serialize};
 
+use crate::recipe::texture::PackedChannels;
+
 /// Output kind (what role the output serves).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -12,6 +14,8 @@ pub enum OutputKind {
     Metadata,
     /// Preview file (thumbnail, preview audio, etc.).
     Preview,
+    /// Packed texture output (channel packing).
+    Packed,
 }
 
 impl std::fmt::Display for OutputKind {
@@ -20,6 +24,7 @@ impl std::fmt::Display for OutputKind {
             OutputKind::Primary => write!(f, "primary"),
             OutputKind::Metadata => write!(f, "metadata"),
             OutputKind::Preview => write!(f, "preview"),
+            OutputKind::Packed => write!(f, "packed"),
         }
     }
 }
@@ -92,14 +97,18 @@ impl std::fmt::Display for OutputFormat {
 }
 
 /// Specification for a single output artifact.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct OutputSpec {
-    /// The kind of output (primary, metadata, preview).
+    /// The kind of output (primary, metadata, preview, packed).
     pub kind: OutputKind,
     /// The file format.
     pub format: OutputFormat,
     /// Relative path under the output root.
     pub path: String,
+    /// Channel packing specification (only for kind=packed).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub channels: Option<PackedChannels>,
 }
 
 impl OutputSpec {
@@ -109,6 +118,7 @@ impl OutputSpec {
             kind,
             format,
             path: path.into(),
+            channels: None,
         }
     }
 
@@ -125,6 +135,16 @@ impl OutputSpec {
     /// Creates a preview output specification.
     pub fn preview(format: OutputFormat, path: impl Into<String>) -> Self {
         Self::new(OutputKind::Preview, format, path)
+    }
+
+    /// Creates a packed texture output specification with channel mapping.
+    pub fn packed(format: OutputFormat, path: impl Into<String>, channels: PackedChannels) -> Self {
+        Self {
+            kind: OutputKind::Packed,
+            format,
+            path: path.into(),
+            channels: Some(channels),
+        }
     }
 
     /// Returns the expected file extension based on the format.
@@ -147,6 +167,7 @@ impl OutputSpec {
 
 /// Variant specification for producing multiple related outputs.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct VariantSpec {
     /// Identifier for the variant.
     pub variant_id: String,

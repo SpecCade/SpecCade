@@ -6,7 +6,7 @@ use super::common::{GradientDirection, NoiseConfig, StripeDirection, TextureMapT
 
 /// Procedural texture layer.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "type", rename_all = "snake_case")]
+#[serde(tag = "type", rename_all = "snake_case", deny_unknown_fields)]
 pub enum TextureLayer {
     /// Noise-based pattern layer.
     NoisePattern {

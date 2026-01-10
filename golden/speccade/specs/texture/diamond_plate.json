@@ -1,0 +1,28 @@
+{
+  "spec_version": 1,
+  "asset_id": "diamond_plate",
+  "asset_type": "texture",
+  "license": "CC0-1.0",
+  "seed": 5005,
+  "description": "Diamond plate pattern normal map for industrial metal surfaces",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "png",
+      "path": "diamond_plate.png"
+    }
+  ],
+  "recipe": {
+    "kind": "texture.normal_v1",
+    "params": {
+      "resolution": [512, 512],
+      "tileable": true,
+      "pattern": {
+        "type": "diamond_plate",
+        "diamond_size": 40,
+        "height": 0.35
+      },
+      "bump_strength": 1.2
+    }
+  }
+}

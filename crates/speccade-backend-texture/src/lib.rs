@@ -33,6 +33,8 @@
 //!         base_color: [0.8, 0.2, 0.1],
 //!         roughness_range: Some([0.2, 0.5]),
 //!         metallic: Some(1.0),
+//!         brick_pattern: None,
+//!         normal_params: None,
 //!     }),
 //!     layers: vec![],
 //!     palette: None,
@@ -60,6 +62,7 @@ pub mod maps;
 pub mod noise;
 pub mod normal_map;
 pub mod normal_map_patterns;
+pub mod packing;
 pub mod pattern;
 pub mod png;
 pub mod rng;
@@ -71,6 +74,7 @@ pub use generate::{generate_material_maps, save_texture_result, TextureResult, M
 pub use maps::{TextureBuffer, GrayscaleBuffer};
 pub use noise::{Noise2D, SimplexNoise, PerlinNoise, WorleyNoise, Fbm};
 pub use normal_map::{generate_normal_map, save_normal_map, NormalMapResult, NormalMapError};
+pub use packing::{ChannelSource, ColorComponent, PackedChannels, PackingError, extract_channel, resolve_channel_source, pack_channels};
 pub use pattern::{Pattern2D, BrickPattern, CheckerPattern, WoodGrainPattern, ScratchesPattern, EdgeWearPattern};
 pub use png::{PngConfig, PngError};
 pub use rng::DeterministicRng;

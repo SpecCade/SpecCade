@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 
 /// Legacy part definition matching ai-studio-core SPEC dict format.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct LegacyPart {
     /// Associated bone name.
     pub bone: String,
@@ -89,6 +90,7 @@ pub enum SubPartOrList {
 
 /// Sub-part definition (for thumbs, fingers, etc.).
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct SubPart {
     /// Sub-part bone name.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -118,6 +120,7 @@ pub struct SubPart {
 
 /// An instance of a part at a specific position and rotation.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct Instance {
     /// Instance position [X, Y, Z].
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -144,6 +147,7 @@ pub enum Step {
 
 /// Full step definition with all possible transformations.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct StepDefinition {
     /// Extrusion distance.
     #[serde(skip_serializing_if = "Option::is_none")]

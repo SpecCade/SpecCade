@@ -19,8 +19,15 @@ pub use pattern::*;
 use serde::{Deserialize, Serialize};
 
 /// Parameters for the `music.tracker_song_v1` recipe.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
+#[serde(deny_unknown_fields)]
 pub struct MusicTrackerSongV1Params {
+    /// Song internal name (used in IT/XM module).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+    /// Song display title (for metadata).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub title: Option<String>,
     /// Tracker format: "xm" or "it".
     pub format: TrackerFormat,
     /// Beats per minute (30-300).
@@ -32,16 +39,22 @@ pub struct MusicTrackerSongV1Params {
     /// Whether the song should loop.
     #[serde(default)]
     pub r#loop: bool,
+    /// Position in arrangement to restart from when looping (IT only).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub restart_position: Option<u16>,
     /// Instrument definitions.
+    #[serde(default)]
     pub instruments: Vec<TrackerInstrument>,
     /// Pattern definitions.
+    #[serde(default)]
     pub patterns: std::collections::HashMap<String, TrackerPattern>,
     /// Song arrangement (order of patterns).
+    #[serde(default)]
     pub arrangement: Vec<ArrangementEntry>,
     /// Automation definitions (volume fades, tempo changes).
     #[serde(default)]
     pub automation: Vec<AutomationEntry>,
     /// IT-specific options.
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub it_options: Option<ItOptions>,
 }

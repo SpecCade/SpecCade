@@ -1,0 +1,45 @@
+{
+  "spec_version": 1,
+  "asset_id": "packed_mre",
+  "asset_type": "texture",
+  "license": "CC0-1.0",
+  "seed": 54321,
+  "description": "Packed MRE texture (Unity/Unreal style) demonstrating channel packing",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "png",
+      "path": "mre.png",
+      "channels": {
+        "r": "metal",
+        "g": "rough",
+        "b": "glow"
+      }
+    }
+  ],
+  "recipe": {
+    "kind": "texture.packed_v1",
+    "params": {
+      "resolution": [512, 512],
+      "tileable": true,
+      "maps": {
+        "base": {
+          "type": "grayscale",
+          "value": 0.5
+        },
+        "metal": {
+          "type": "grayscale",
+          "value": 0.0
+        },
+        "rough": {
+          "type": "grayscale",
+          "from_height": true
+        },
+        "glow": {
+          "type": "grayscale",
+          "value": 0.0
+        }
+      }
+    }
+  }
+}

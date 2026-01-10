@@ -1,19 +1,19 @@
 //! Simple test to verify instrument generation works.
 
-use speccade_backend_audio::instrument::generate_instrument;
-use speccade_spec::recipe::audio_instrument::{
-    AudioInstrumentSynthPatchV1Params, InstrumentSynthesis, NoteSpec,
+use speccade_backend_audio::generate;
+use speccade_spec::recipe::audio::{
+    AudioV1Params, Synthesis, Envelope, Waveform, NoteSpec,
 };
-use speccade_spec::recipe::audio_sfx::{Envelope, Synthesis, Waveform};
+use speccade_spec::{AssetType, OutputFormat, OutputSpec, Recipe, Spec};
 
 fn main() {
     println!("Testing instrument generation...");
 
     // Create a simple sine wave instrument at A4 (440 Hz)
-    let params = AudioInstrumentSynthPatchV1Params {
-        note_duration_seconds: 1.0,
+    let params = AudioV1Params {
+        duration_seconds: 1.0,
         sample_rate: 44100,
-        synthesis: InstrumentSynthesis::Simple {
+        layers: vec![speccade_spec::recipe::audio::AudioLayer {
             synthesis: Synthesis::Oscillator {
                 waveform: Waveform::Sine,
                 frequency: 440.0, // Will be overridden by note
@@ -21,22 +21,39 @@ fn main() {
                 detune: None,
                 duty: None,
             },
-        },
-        envelope: Envelope {
-            attack: 0.01,
-            decay: 0.1,
-            sustain: 0.7,
-            release: 0.2,
-        },
+            envelope: Envelope {
+                attack: 0.01,
+                decay: 0.1,
+                sustain: 0.7,
+                release: 0.2,
+            },
+            volume: 1.0,
+            pan: 0.0,
+            delay: None,
+        }],
+        master_filter: None,
         pitch_envelope: None,
-        notes: Some(vec![NoteSpec::MidiNote(69)]), // A4
+        base_note: Some(NoteSpec::MidiNote(69)), // A4
         generate_loop_points: true,
     };
 
-    match generate_instrument(&params, 42) {
+    let spec = Spec::builder("test-instrument", AssetType::AudioInstrument)
+        .license("CC0-1.0")
+        .seed(42)
+        .output(OutputSpec::primary(
+            OutputFormat::Wav,
+            "instruments/test_instrument.wav",
+        ))
+        .recipe(Recipe::new(
+            "audio.v1",
+            serde_json::to_value(&params).unwrap(),
+        ))
+        .build();
+
+    match generate(&spec) {
         Ok(result) => {
             println!("Success!");
-            println!("  Notes generated: {:?}", result.notes);
+            println!("  Base note: {:?}", result.base_note);
             println!("  Sample rate: {} Hz", result.wav.sample_rate);
             println!("  Number of samples: {}", result.wav.num_samples);
             println!("  Duration: {:.2} seconds", result.wav.duration_seconds());

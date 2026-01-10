@@ -19,6 +19,8 @@ fn make_params() -> Texture2dMaterialMapsV1Params {
             base_color: [0.8, 0.2, 0.1],
             roughness_range: Some([0.2, 0.5]),
             metallic: Some(1.0),
+            brick_pattern: None,
+            normal_params: None,
         }),
         layers: vec![],
         palette: None,
@@ -281,6 +283,8 @@ fn test_material_type_metal_generation() {
         base_color: [0.8, 0.8, 0.8],
         roughness_range: Some([0.2, 0.4]),
         metallic: Some(1.0),
+        brick_pattern: None,
+        normal_params: None,
     });
 
     let result = generate_material_maps(&params, 42).unwrap();
@@ -295,6 +299,8 @@ fn test_material_type_wood_generation() {
         base_color: [0.6, 0.4, 0.2],
         roughness_range: Some([0.5, 0.8]),
         metallic: Some(0.0),
+        brick_pattern: None,
+        normal_params: None,
     });
 
     let result = generate_material_maps(&params, 42).unwrap();
@@ -309,6 +315,8 @@ fn test_material_type_brick_generation() {
         base_color: [0.7, 0.3, 0.2],
         roughness_range: Some([0.6, 0.9]),
         metallic: Some(0.0),
+        brick_pattern: None,
+        normal_params: None,
     });
 
     let result = generate_material_maps(&params, 42).unwrap();
@@ -333,6 +341,8 @@ fn test_all_material_types() {
             base_color: [0.5, 0.5, 0.5],
             roughness_range: None,
             metallic: None,
+            brick_pattern: None,
+            normal_params: None,
         });
 
         let result = generate_material_maps(&params, 42).unwrap();

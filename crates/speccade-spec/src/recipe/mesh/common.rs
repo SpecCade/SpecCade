@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 
 /// Material slot definition.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct MaterialSlot {
     /// Material name.
     pub name: String,
@@ -26,6 +27,7 @@ pub struct MaterialSlot {
 
 /// GLB/glTF export settings.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct MeshExportSettings {
     /// Apply all modifiers before export.
     #[serde(default = "default_true")]
@@ -66,6 +68,7 @@ impl Default for MeshExportSettings {
 
 /// Mesh constraints for validation.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct MeshConstraints {
     /// Maximum triangle count.
     #[serde(skip_serializing_if = "Option::is_none")]

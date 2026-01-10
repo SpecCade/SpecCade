@@ -1,0 +1,29 @@
+{
+  "spec_version": 1,
+  "asset_id": "fabric_weave",
+  "asset_type": "texture",
+  "license": "CC0-1.0",
+  "seed": 5008,
+  "description": "Woven fabric pattern normal map for cloth and canvas materials",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "png",
+      "path": "fabric_weave.png"
+    }
+  ],
+  "recipe": {
+    "kind": "texture.normal_v1",
+    "params": {
+      "resolution": [256, 256],
+      "tileable": true,
+      "pattern": {
+        "type": "weave",
+        "thread_width": 8,
+        "gap": 2,
+        "depth": 0.2
+      },
+      "bump_strength": 0.8
+    }
+  }
+}

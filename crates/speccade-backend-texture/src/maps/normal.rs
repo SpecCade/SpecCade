@@ -77,13 +77,20 @@ impl NormalGenerator {
         let gx = gx * self.strength;
         let gy = gy * self.strength;
 
-        // Create normal vector
+        // Create normal vector in OpenGL/wgpu convention (Y-up)
         // For tangent-space normal maps:
         // X = right (positive = bump facing right)
-        // Y = up (positive = bump facing up)
+        // Y = up (positive = bump facing up) - OpenGL convention
         // Z = out (positive = facing camera)
+        //
+        // gx > 0 means height increases to the right -> normal tilts left -> nx < 0
+        // gy > 0 means height increases downward (image coords) -> in OpenGL Y-up,
+        //        this means normal tilts down -> ny < 0
+        // But since image Y increases downward and OpenGL Y increases upward,
+        // we need to negate gy to get correct Y-up normals.
+        // A flat surface encodes as RGB (128, 128, 255) or normalized (0.5, 0.5, 1.0).
         let nx = -gx;
-        let ny = -gy;
+        let ny = gy;  // OpenGL/wgpu Y-up convention (was -gy for DirectX Y-down)
         let nz = 1.0;
 
         // Normalize
@@ -230,5 +237,41 @@ mod tests {
                 assert_eq!(c1.b, c2.b);
             }
         }
+    }
+
+    #[test]
+    fn test_normal_y_up_convention() {
+        // Create a height map with a bump in the center
+        // The top of the bump (smaller Y values in image space) should have green > 0.5
+        // because OpenGL convention means Y-up = green = positive
+        let mut height_map = GrayscaleBuffer::new(64, 64, 0.0);
+
+        // Create a horizontal stripe of height in the middle
+        for y in 28..36 {
+            for x in 0..64 {
+                height_map.set(x, y, 1.0);
+            }
+        }
+
+        let generator = NormalGenerator::new().with_strength(1.0);
+        let normal_map = generator.generate_from_height(&height_map);
+
+        // At the top edge of the bump (y=28), the surface slopes UP (toward smaller Y)
+        // In OpenGL Y-up convention, this should give green > 0.5
+        let top_edge = normal_map.get(32, 27);
+        assert!(
+            top_edge.g > 0.5,
+            "Top edge of bump should have green > 0.5 (Y-up convention). Got: {}",
+            top_edge.g
+        );
+
+        // At the bottom edge of the bump (y=36), the surface slopes DOWN
+        // In OpenGL Y-up convention, this should give green < 0.5
+        let bottom_edge = normal_map.get(32, 36);
+        assert!(
+            bottom_edge.g < 0.5,
+            "Bottom edge of bump should have green < 0.5 (Y-up convention). Got: {}",
+            bottom_edge.g
+        );
     }
 }

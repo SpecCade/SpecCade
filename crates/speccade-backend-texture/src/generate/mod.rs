@@ -127,6 +127,7 @@ pub fn generate_material_maps(
         let result = match map_type {
             TextureMapType::Albedo => generate_albedo_map(
                 &base_color,
+                &height_map,
                 &params.layers,
                 width,
                 height,
@@ -169,7 +170,7 @@ fn generate_height_map(
 
     // Apply material-specific base pattern
     if let Some(mat) = &params.base_material {
-        apply_material_pattern(&mut height_map, &mat.material_type, width, height, seed);
+        apply_material_pattern(&mut height_map, mat, width, height, seed);
     }
 
     // Apply layers
@@ -182,8 +183,12 @@ fn generate_height_map(
 }
 
 /// Generate albedo map.
+///
+/// The height_map is used to ensure albedo follows the same pattern as other maps
+/// (e.g., differentiating brick from mortar in a brick material).
 fn generate_albedo_map(
     base_color: &Color,
+    height_map: &GrayscaleBuffer,
     layers: &[TextureLayer],
     width: u32,
     height: u32,
@@ -191,7 +196,68 @@ fn generate_albedo_map(
     _tileable: bool,
 ) -> Result<MapResult, GenerateError> {
     let generator = AlbedoGenerator::new(*base_color, seed).with_variation(0.1);
-    let mut buffer = generator.generate_with_variation(width, height);
+
+    // Start with pattern-based coloring using the height map
+    // Higher values in height map = raised surface (brick) = base color
+    // Lower values = recessed areas (mortar) = darker/different color
+    let mortar_color = Color::rgb(
+        (base_color.r * 0.4).clamp(0.0, 1.0),
+        (base_color.g * 0.4).clamp(0.0, 1.0),
+        (base_color.b * 0.4).clamp(0.0, 1.0),
+    );
+
+    // Generate base albedo following the height map pattern
+    let mut buffer = crate::maps::TextureBuffer::new(width, height, *base_color);
+
+    // Use height map to blend between brick and mortar colors
+    // Height values typically range from ~0.2 (mortar) to ~0.9-1.0 (brick)
+    // We'll use a threshold to create sharp transitions
+    let mortar_threshold = 0.5;
+
+    for y in 0..height {
+        for x in 0..width {
+            let h = height_map.get(x, y);
+
+            // Calculate blend factor: 0 = mortar, 1 = brick
+            let blend = if h < mortar_threshold {
+                // In mortar region
+                0.0
+            } else if h < mortar_threshold + 0.1 {
+                // Transition zone
+                (h - mortar_threshold) / 0.1
+            } else {
+                // In brick region
+                1.0
+            };
+
+            // Lerp between mortar and base color
+            let color = mortar_color.lerp(base_color, blend);
+            buffer.set(x, y, color);
+        }
+    }
+
+    // Add noise-based variation on top (follows pattern via height map influence)
+    let noise = Fbm::new(PerlinNoise::new(seed)).with_octaves(4).with_persistence(0.5);
+
+    for y in 0..height {
+        for x in 0..width {
+            let nx = x as f64 * 0.02;
+            let ny = y as f64 * 0.02;
+
+            let current = buffer.get(x, y);
+            let (h_val, s, v) = current.to_hsv();
+
+            // Apply subtle HSV variation
+            let h_noise = noise.sample(nx, ny) * 10.0; // Subtle hue variation
+            let v_noise = noise.sample(nx + 100.0, ny + 100.0) * 0.1;
+
+            let new_h = (h_val + h_noise) % 360.0;
+            let new_v = (v + v_noise).clamp(0.0, 1.0);
+
+            let new_color = Color::from_hsv(new_h, s, new_v);
+            buffer.set(x, y, Color::rgba(new_color.r, new_color.g, new_color.b, current.a));
+        }
+    }
 
     // Apply color variation layers
     for (i, layer) in layers.iter().enumerate() {

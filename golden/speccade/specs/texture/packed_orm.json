@@ -1,0 +1,42 @@
+{
+  "spec_version": 1,
+  "asset_id": "packed_orm",
+  "asset_type": "texture",
+  "license": "CC0-1.0",
+  "seed": 54322,
+  "description": "Packed ORM texture (ambient occlusion, roughness, metallic)",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "png",
+      "path": "orm.png",
+      "channels": {
+        "r": "ao",
+        "g": "roughness",
+        "b": "metallic"
+      }
+    }
+  ],
+  "recipe": {
+    "kind": "texture.packed_v1",
+    "params": {
+      "resolution": [512, 512],
+      "tileable": true,
+      "maps": {
+        "ao": {
+          "type": "grayscale",
+          "from_height": true,
+          "ao_strength": 0.5
+        },
+        "roughness": {
+          "type": "grayscale",
+          "from_height": true
+        },
+        "metallic": {
+          "type": "grayscale",
+          "value": 1.0
+        }
+      }
+    }
+  }
+}

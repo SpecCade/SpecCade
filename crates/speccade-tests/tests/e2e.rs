@@ -19,14 +19,13 @@
 
 use std::fs;
 
-use speccade_spec::recipe::audio_sfx::{AudioLayer, AudioSfxLayeredSynthV1Params, Envelope, Synthesis, Waveform};
-use speccade_spec::recipe::audio_instrument::AudioInstrumentSynthPatchV1Params;
+use speccade_spec::recipe::audio::{AudioLayer, AudioV1Params, Envelope, Synthesis, Waveform};
 use speccade_spec::recipe::music::{
     ArrangementEntry, InstrumentSynthesis, MusicTrackerSongV1Params, PatternNote, TrackerFormat,
     TrackerInstrument, TrackerPattern,
 };
 use speccade_spec::recipe::texture::{
-    NormalMapPattern, Texture2dMaterialMapsV1Params, Texture2dNormalMapV1Params, TextureMapType,
+    NormalMapPattern, TextureMaterialV1Params, TextureNormalV1Params, TextureMapType,
 };
 use speccade_spec::{AssetType, OutputFormat, OutputSpec, Recipe, Spec};
 use speccade_tests::fixtures::{GoldenFixtures, LegacyProjectFixture};
@@ -181,7 +180,7 @@ mod migration {
                 spec.err()
             );
             let spec = spec.unwrap();
-            assert_eq!(spec.asset_type, AssetType::Texture2d);
+            assert_eq!(spec.asset_type, AssetType::Texture);
         }
     }
 }
@@ -254,7 +253,8 @@ mod generation_tier1 {
     /// Test audio SFX generation with params struct.
     #[test]
     fn test_generate_audio_sfx_with_params() {
-        let params = AudioSfxLayeredSynthV1Params {
+        let params = AudioV1Params {
+            base_note: None,
             duration_seconds: 0.2,
             sample_rate: 22050,
             layers: vec![AudioLayer {
@@ -275,6 +275,8 @@ mod generation_tier1 {
                 pan: 0.0,
                 delay: None,
             }],
+            pitch_envelope: None,
+            generate_loop_points: false,
             master_filter: None,
         };
 
@@ -289,13 +291,14 @@ mod generation_tier1 {
         assert!(!gen_result.wav.wav_data.is_empty());
     }
 
-    /// Test audio instrument generation.
+    /// Test audio instrument generation (now uses unified AudioV1Params).
     #[test]
     fn test_generate_audio_instrument() {
-        let params = AudioInstrumentSynthPatchV1Params {
+        let params = AudioV1Params {
+            base_note: None,
+            duration_seconds: 0.5,
             sample_rate: 22050,
-            note_duration_seconds: 0.5,
-            synthesis: speccade_spec::recipe::audio_instrument::InstrumentSynthesis::Simple {
+            layers: vec![AudioLayer {
                 synthesis: Synthesis::Oscillator {
                     waveform: Waveform::Sawtooth,
                     frequency: 440.0,
@@ -303,19 +306,22 @@ mod generation_tier1 {
                     detune: None,
                     duty: None,
                 },
-            },
-            envelope: Envelope {
-                attack: 0.01,
-                decay: 0.1,
-                sustain: 0.7,
-                release: 0.2,
-            },
+                envelope: Envelope {
+                    attack: 0.01,
+                    decay: 0.1,
+                    sustain: 0.7,
+                    release: 0.2,
+                },
+                volume: 1.0,
+                pan: 0.0,
+                delay: None,
+            }],
             pitch_envelope: None,
-            notes: None,
-            generate_loop_points: false,
+            generate_loop_points: true,
+            master_filter: None,
         };
 
-        let result = speccade_backend_audio::generate_instrument(&params, 42);
+        let result = speccade_backend_audio::generate_from_params(&params, 42);
         assert!(
             result.is_ok(),
             "Instrument generation failed: {:?}",
@@ -331,7 +337,7 @@ mod generation_tier1 {
     fn test_generate_texture_material_maps() {
         let harness = TestHarness::new();
 
-        let params = Texture2dMaterialMapsV1Params {
+        let params = TextureMaterialV1Params {
             resolution: [64, 64],
             tileable: true,
             maps: vec![TextureMapType::Albedo],
@@ -370,7 +376,7 @@ mod generation_tier1 {
     fn test_generate_texture_normal_map() {
         let harness = TestHarness::new();
 
-        let params = Texture2dNormalMapV1Params {
+        let params = TextureNormalV1Params {
             resolution: [64, 64],
             tileable: true,
             bump_strength: 1.0,
@@ -539,8 +545,8 @@ mod generation_tier1 {
             let recipe = spec.recipe.as_ref().unwrap();
 
             // Handle both material_maps and normal_map recipes
-            if recipe.kind == "texture_2d.material_maps_v1" {
-                let params = recipe.as_texture_2d_material_maps();
+            if recipe.kind == "texture.material_v1" {
+                let params = recipe.as_texture_material();
                 if let Ok(params) = params {
                     let result =
                         speccade_backend_texture::generate_material_maps(&params, spec.seed);
@@ -551,8 +557,8 @@ mod generation_tier1 {
                         result.err()
                     );
                 }
-            } else if recipe.kind == "texture_2d.normal_map_v1" {
-                let params = recipe.as_texture_2d_normal_map();
+            } else if recipe.kind == "texture.normal_v1" {
+                let params = recipe.as_texture_normal();
                 if let Ok(params) = params {
                     let result = speccade_backend_texture::generate_normal_map(&params, spec.seed);
                     assert!(
@@ -955,7 +961,7 @@ mod determinism {
     /// Test that texture generation is deterministic.
     #[test]
     fn test_texture_determinism() {
-        let params = Texture2dMaterialMapsV1Params {
+        let params = TextureMaterialV1Params {
             resolution: [32, 32],
             tileable: true,
             maps: vec![TextureMapType::Albedo],
@@ -977,7 +983,7 @@ mod determinism {
     /// Test that different seeds produce different outputs.
     #[test]
     fn test_different_seeds_different_output() {
-        let params = Texture2dMaterialMapsV1Params {
+        let params = TextureMaterialV1Params {
             resolution: [32, 32],
             tileable: true,
             maps: vec![TextureMapType::Albedo],

@@ -6,6 +6,7 @@ use crate::recipe::mesh::MeshPrimitive;
 
 /// Body part definition attached to a bone.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct BodyPart {
     /// Name of the bone this part is attached to.
     pub bone: String,
@@ -18,6 +19,7 @@ pub struct BodyPart {
 
 /// Mesh configuration for a body part.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct BodyPartMesh {
     /// Base primitive type.
     pub primitive: MeshPrimitive,

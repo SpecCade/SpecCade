@@ -1,9 +1,9 @@
 //! Integration tests covering all synthesis types and filter configurations.
 
 use speccade_backend_audio::generate::generate_from_params;
-use speccade_spec::recipe::audio_sfx::{
-    AudioLayer, AudioSfxLayeredSynthV1Params, Envelope, Filter, FreqSweep, NoiseType,
-    OscillatorConfig, SweepCurve, Synthesis, Waveform,
+use speccade_spec::recipe::audio::{
+    AudioLayer, AudioV1Params as AudioSfxLayeredSynthV1Params, Envelope, Filter, FreqSweep,
+    NoiseType, OscillatorConfig, SweepCurve, Synthesis, Waveform,
 };
 
 // ============================================================================
@@ -29,6 +29,9 @@ fn test_oscillator_sine() {
             delay: None,
         }],
         master_filter: None,
+            pitch_envelope: None,
+            base_note: None,
+            generate_loop_points: false,
     };
 
     let result = generate_from_params(&params, 42);
@@ -56,6 +59,9 @@ fn test_oscillator_square() {
             delay: None,
         }],
         master_filter: None,
+            pitch_envelope: None,
+            base_note: None,
+            generate_loop_points: false,
     };
 
     let result = generate_from_params(&params, 42);
@@ -81,6 +87,9 @@ fn test_oscillator_sawtooth() {
             delay: None,
         }],
         master_filter: None,
+            pitch_envelope: None,
+            base_note: None,
+            generate_loop_points: false,
     };
 
     let result = generate_from_params(&params, 42);
@@ -106,6 +115,9 @@ fn test_oscillator_triangle() {
             delay: None,
         }],
         master_filter: None,
+            pitch_envelope: None,
+            base_note: None,
+            generate_loop_points: false,
     };
 
     let result = generate_from_params(&params, 42);
@@ -131,6 +143,9 @@ fn test_oscillator_pulse_with_duty() {
             delay: None,
         }],
         master_filter: None,
+            pitch_envelope: None,
+            base_note: None,
+            generate_loop_points: false,
     };
 
     let result = generate_from_params(&params, 42);
@@ -156,6 +171,9 @@ fn test_oscillator_with_detune() {
             delay: None,
         }],
         master_filter: None,
+            pitch_envelope: None,
+            base_note: None,
+            generate_loop_points: false,
     };
 
     let result = generate_from_params(&params, 42);
@@ -184,6 +202,9 @@ fn test_oscillator_with_freq_sweep_linear() {
             delay: None,
         }],
         master_filter: None,
+            pitch_envelope: None,
+            base_note: None,
+            generate_loop_points: false,
     };
 
     let result = generate_from_params(&params, 42);
@@ -212,6 +233,9 @@ fn test_oscillator_with_freq_sweep_exponential() {
             delay: None,
         }],
         master_filter: None,
+            pitch_envelope: None,
+            base_note: None,
+            generate_loop_points: false,
     };
 
     let result = generate_from_params(&params, 42);
@@ -240,6 +264,9 @@ fn test_oscillator_with_freq_sweep_logarithmic() {
             delay: None,
         }],
         master_filter: None,
+            pitch_envelope: None,
+            base_note: None,
+            generate_loop_points: false,
     };
 
     let result = generate_from_params(&params, 42);
@@ -268,6 +295,9 @@ fn test_fm_synth_basic() {
             delay: None,
         }],
         master_filter: None,
+            pitch_envelope: None,
+            base_note: None,
+            generate_loop_points: false,
     };
 
     let result = generate_from_params(&params, 42);
@@ -295,6 +325,9 @@ fn test_fm_synth_with_sweep() {
             delay: None,
         }],
         master_filter: None,
+            pitch_envelope: None,
+            base_note: None,
+            generate_loop_points: false,
     };
 
     let result = generate_from_params(&params, 42);
@@ -322,6 +355,9 @@ fn test_karplus_strong() {
             delay: None,
         }],
         master_filter: None,
+            pitch_envelope: None,
+            base_note: None,
+            generate_loop_points: false,
     };
 
     let result = generate_from_params(&params, 42);
@@ -345,6 +381,9 @@ fn test_karplus_strong_high_damping() {
             delay: None,
         }],
         master_filter: None,
+            pitch_envelope: None,
+            base_note: None,
+            generate_loop_points: false,
     };
 
     let result = generate_from_params(&params, 42);
@@ -376,6 +415,9 @@ fn test_noise_white() {
             delay: None,
         }],
         master_filter: None,
+            pitch_envelope: None,
+            base_note: None,
+            generate_loop_points: false,
     };
 
     let result = generate_from_params(&params, 42);
@@ -403,6 +445,9 @@ fn test_noise_pink() {
             delay: None,
         }],
         master_filter: None,
+            pitch_envelope: None,
+            base_note: None,
+            generate_loop_points: false,
     };
 
     let result = generate_from_params(&params, 42);
@@ -430,6 +475,9 @@ fn test_noise_brown() {
             delay: None,
         }],
         master_filter: None,
+            pitch_envelope: None,
+            base_note: None,
+            generate_loop_points: false,
     };
 
     let result = generate_from_params(&params, 42);
@@ -461,6 +509,9 @@ fn test_noise_with_filter() {
             delay: None,
         }],
         master_filter: None,
+            pitch_envelope: None,
+            base_note: None,
+            generate_loop_points: false,
     };
 
     let result = generate_from_params(&params, 42);
@@ -487,6 +538,9 @@ fn test_additive_synthesis() {
             delay: None,
         }],
         master_filter: None,
+            pitch_envelope: None,
+            base_note: None,
+            generate_loop_points: false,
     };
 
     let result = generate_from_params(&params, 42);
@@ -509,6 +563,9 @@ fn test_additive_synthesis_single_harmonic() {
             delay: None,
         }],
         master_filter: None,
+            pitch_envelope: None,
+            base_note: None,
+            generate_loop_points: false,
     };
 
     let result = generate_from_params(&params, 42);
@@ -544,6 +601,9 @@ fn test_multi_oscillator_basic() {
             delay: None,
         }],
         master_filter: None,
+            pitch_envelope: None,
+            base_note: None,
+            generate_loop_points: false,
     };
 
     let result = generate_from_params(&params, 42);
@@ -582,6 +642,9 @@ fn test_multi_oscillator_detuned() {
             delay: None,
         }],
         master_filter: None,
+            pitch_envelope: None,
+            base_note: None,
+            generate_loop_points: false,
     };
 
     let result = generate_from_params(&params, 42);
@@ -620,6 +683,9 @@ fn test_multi_oscillator_with_phase() {
             delay: None,
         }],
         master_filter: None,
+            pitch_envelope: None,
+            base_note: None,
+            generate_loop_points: false,
     };
 
     let result = generate_from_params(&params, 42);
@@ -658,6 +724,9 @@ fn test_multi_oscillator_with_duty() {
             delay: None,
         }],
         master_filter: None,
+            pitch_envelope: None,
+            base_note: None,
+            generate_loop_points: false,
     };
 
     let result = generate_from_params(&params, 42);
@@ -689,6 +758,9 @@ fn test_pitched_body() {
             delay: None,
         }],
         master_filter: None,
+            pitch_envelope: None,
+            base_note: None,
+            generate_loop_points: false,
     };
 
     let result = generate_from_params(&params, 42);
@@ -721,6 +793,9 @@ fn test_metallic_synthesis() {
             delay: None,
         }],
         master_filter: None,
+            pitch_envelope: None,
+            base_note: None,
+            generate_loop_points: false,
     };
 
     let result = generate_from_params(&params, 42);
@@ -749,6 +824,9 @@ fn test_metallic_synthesis_many_partials() {
             delay: None,
         }],
         master_filter: None,
+            pitch_envelope: None,
+            base_note: None,
+            generate_loop_points: false,
     };
 
     let result = generate_from_params(&params, 42);
@@ -782,6 +860,9 @@ fn test_filter_lowpass() {
             resonance: 0.707,
             cutoff_end: None,
         }),
+            pitch_envelope: None,
+            base_note: None,
+            generate_loop_points: false,
     };
 
     let result = generate_from_params(&params, 42);
@@ -811,6 +892,9 @@ fn test_filter_lowpass_with_sweep() {
             resonance: 1.0,
             cutoff_end: Some(500.0),
         }),
+            pitch_envelope: None,
+            base_note: None,
+            generate_loop_points: false,
     };
 
     let result = generate_from_params(&params, 42);
@@ -837,6 +921,9 @@ fn test_filter_highpass() {
             resonance: 0.5,
             cutoff_end: None,
         }),
+            pitch_envelope: None,
+            base_note: None,
+            generate_loop_points: false,
     };
 
     let result = generate_from_params(&params, 42);
@@ -863,6 +950,9 @@ fn test_filter_highpass_with_sweep() {
             resonance: 0.8,
             cutoff_end: Some(3000.0),
         }),
+            pitch_envelope: None,
+            base_note: None,
+            generate_loop_points: false,
     };
 
     let result = generate_from_params(&params, 42);
@@ -890,6 +980,9 @@ fn test_filter_bandpass() {
             resonance: 0.707,
             center_end: None,
         }),
+            pitch_envelope: None,
+            base_note: None,
+            generate_loop_points: false,
     };
 
     let result = generate_from_params(&params, 42);
@@ -917,6 +1010,9 @@ fn test_filter_bandpass_with_sweep() {
             resonance: 1.2,
             center_end: Some(500.0),
         }),
+            pitch_envelope: None,
+            base_note: None,
+            generate_loop_points: false,
     };
 
     let result = generate_from_params(&params, 42);
@@ -967,6 +1063,9 @@ fn test_multi_layer_with_delay() {
             },
         ],
         master_filter: None,
+            pitch_envelope: None,
+            base_note: None,
+            generate_loop_points: false,
     };
 
     let result = generate_from_params(&params, 42);
@@ -1007,6 +1106,9 @@ fn test_multi_layer_with_panning() {
             },
         ],
         master_filter: None,
+            pitch_envelope: None,
+            base_note: None,
+            generate_loop_points: false,
     };
 
     let result = generate_from_params(&params, 42);
@@ -1033,6 +1135,9 @@ fn test_determinism_noise() {
             delay: None,
         }],
         master_filter: None,
+            pitch_envelope: None,
+            base_note: None,
+            generate_loop_points: false,
     };
 
     let result1 = generate_from_params(&params, 42).expect("first generation");
@@ -1059,6 +1164,9 @@ fn test_determinism_karplus() {
             delay: None,
         }],
         master_filter: None,
+            pitch_envelope: None,
+            base_note: None,
+            generate_loop_points: false,
     };
 
     let result1 = generate_from_params(&params, 42).expect("first generation");

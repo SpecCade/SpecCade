@@ -1,0 +1,293 @@
+{
+  "spec_version": 1,
+  "asset_id": "music-comprehensive-golden",
+  "asset_type": "music",
+  "license": "CC0-1.0",
+  "seed": 999003,
+  "description": "Golden comprehensive test - exercises ALL music/SONG keys: format (IT), bpm, speed, channels, restart_position, instruments with ref/wav/synthesis/envelope, patterns with rows/notes, notes with row/note/inst/vol/effect/param/effect_name/effect_xy, arrangement with repeat, automation with volume_fade/tempo_change, it_options with stereo/global_volume/mix_volume",
+  "style_tags": ["golden", "comprehensive", "test", "music", "tracker"],
+  "engine_targets": ["godot", "unity"],
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "it",
+      "path": "music_comprehensive.it"
+    },
+    {
+      "kind": "metadata",
+      "format": "json",
+      "path": "music_comprehensive.meta.json"
+    }
+  ],
+  "variants": [
+    {"variant_id": "slow", "seed_offset": 50},
+    {"variant_id": "fast", "seed_offset": 100}
+  ],
+  "recipe": {
+    "kind": "music.tracker_song_v1",
+    "params": {
+      "name": "comprehensive_song",
+      "title": "Comprehensive Golden Test Song",
+      "format": "it",
+      "bpm": 140,
+      "speed": 6,
+      "channels": 16,
+      "restart_position": 2,
+      "instruments": [
+        {
+          "comment": "Instrument 0: Inline synthesis - lead synth",
+          "name": "lead_synth",
+          "base_note": "C5",
+          "sample_rate": 44100,
+          "synthesis": {
+            "type": "sawtooth"
+          },
+          "envelope": {
+            "attack": 0.01,
+            "decay": 0.1,
+            "sustain": 0.7,
+            "release": 0.3
+          }
+        },
+        {
+          "comment": "Instrument 1: Inline synthesis - bass",
+          "name": "bass_sub",
+          "base_note": "C4",
+          "sample_rate": 22050,
+          "synthesis": {
+            "type": "sine"
+          },
+          "envelope": {
+            "attack": 0.005,
+            "decay": 0.2,
+            "sustain": 0.5,
+            "release": 0.2
+          }
+        },
+        {
+          "comment": "Instrument 2: Square wave arp",
+          "name": "arp_square",
+          "base_note": "C5",
+          "synthesis": {
+            "type": "square"
+          },
+          "envelope": {
+            "attack": 0.001,
+            "decay": 0.15,
+            "sustain": 0.3,
+            "release": 0.2
+          }
+        },
+        {
+          "comment": "Instrument 3: Triangle pad",
+          "name": "pad_triangle",
+          "base_note": "C4",
+          "synthesis": {
+            "type": "triangle"
+          },
+          "envelope": {
+            "attack": 0.1,
+            "decay": 0.3,
+            "sustain": 0.8,
+            "release": 0.5
+          }
+        },
+        {
+          "comment": "Instrument 4: Noise for percussion",
+          "name": "noise_perc",
+          "base_note": "C5",
+          "synthesis": {
+            "type": "noise"
+          },
+          "envelope": {
+            "attack": 0.001,
+            "decay": 0.1,
+            "sustain": 0.0,
+            "release": 0.1
+          }
+        },
+        {
+          "comment": "Instrument 5: Pluck bass (inline synthesis replacing external ref)",
+          "name": "bass_pluck",
+          "base_note": "C2",
+          "sample_rate": 44100,
+          "synthesis": {
+            "type": "sawtooth"
+          },
+          "envelope": {
+            "attack": 0.001,
+            "decay": 0.2,
+            "sustain": 0.3,
+            "release": 0.4
+          }
+        },
+        {
+          "comment": "Instrument 6: Kick drum (inline noise synthesis replacing WAV sample)",
+          "name": "kick_drum",
+          "base_note": "C2",
+          "sample_rate": 44100,
+          "synthesis": {
+            "type": "noise"
+          },
+          "envelope": {
+            "attack": 0.001,
+            "decay": 0.15,
+            "sustain": 0.0,
+            "release": 0.1
+          }
+        }
+      ],
+      "patterns": {
+        "intro": {
+          "rows": 64,
+          "notes": {
+            "0": [
+              {"row": 0, "note": "C4", "inst": 2, "vol": 48},
+              {"row": 4, "note": "E4", "inst": 2, "vol": 44},
+              {"row": 8, "note": "G4", "inst": 2, "vol": 48},
+              {"row": 12, "note": "E4", "inst": 2, "vol": 44},
+              {"row": 16, "note": "C4", "inst": 2, "vol": 48},
+              {"row": 20, "note": "E4", "inst": 2, "vol": 44},
+              {"row": 24, "note": "G4", "inst": 2, "vol": 48},
+              {"row": 28, "note": "B4", "inst": 2, "vol": 52}
+            ]
+          }
+        },
+        "verse": {
+          "rows": 64,
+          "notes": {
+            "0": [
+              {"row": 0, "note": "C4", "inst": 0, "vol": 64, "effect": 0, "param": 0},
+              {"row": 16, "note": "D4", "inst": 0, "vol": 64},
+              {"row": 32, "note": "E4", "inst": 0, "vol": 64},
+              {"row": 48, "note": "G4", "inst": 0, "vol": 64}
+            ],
+            "1": [
+              {"row": 0, "note": "C2", "inst": 1, "vol": 56},
+              {"row": 16, "note": "D2", "inst": 1, "vol": 56},
+              {"row": 32, "note": "E2", "inst": 1, "vol": 56},
+              {"row": 48, "note": "G2", "inst": 1, "vol": 56}
+            ],
+            "2": [
+              {"row": 0, "note": "C4", "inst": 2, "vol": 40, "effect_name": "arpeggio", "effect_xy": [3, 7]},
+              {"row": 4, "note": "E4", "inst": 2, "vol": 36},
+              {"row": 8, "note": "G4", "inst": 2, "vol": 40},
+              {"row": 12, "note": "E4", "inst": 2, "vol": 36}
+            ],
+            "3": [
+              {"row": 0, "note": "E3", "inst": 3, "vol": 48},
+              {"row": 32, "note": "G3", "inst": 3, "vol": 48}
+            ],
+            "4": [
+              {"row": 0, "note": "C5", "inst": 4, "vol": 32},
+              {"row": 8, "note": "C5", "inst": 4, "vol": 28},
+              {"row": 16, "note": "C5", "inst": 4, "vol": 32},
+              {"row": 24, "note": "C5", "inst": 4, "vol": 28}
+            ]
+          }
+        },
+        "chorus": {
+          "rows": 64,
+          "notes": {
+            "0": [
+              {"row": 0, "note": "G4", "inst": 0, "vol": 64, "effect_name": "vibrato", "effect_xy": [4, 8]},
+              {"row": 8, "note": "A4", "inst": 0, "vol": 64},
+              {"row": 16, "note": "B4", "inst": 0, "vol": 64},
+              {"row": 24, "note": "C5", "inst": 0, "vol": 64},
+              {"row": 32, "note": "D5", "inst": 0, "vol": 64},
+              {"row": 40, "note": "C5", "inst": 0, "vol": 60},
+              {"row": 48, "note": "B4", "inst": 0, "vol": 56},
+              {"row": 56, "note": "A4", "inst": 0, "vol": 52}
+            ],
+            "1": [
+              {"row": 0, "note": "G2", "inst": 1, "vol": 64},
+              {"row": 16, "note": "A2", "inst": 1, "vol": 64},
+              {"row": 32, "note": "B2", "inst": 1, "vol": 64},
+              {"row": 48, "note": "C3", "inst": 1, "vol": 64}
+            ],
+            "2": [
+              {"row": 0, "note": "G4", "inst": 2, "vol": 44, "effect_name": "porta_down", "effect_xy": [0, 2]},
+              {"row": 4, "note": "B4", "inst": 2, "vol": 40},
+              {"row": 8, "note": "D5", "inst": 2, "vol": 44},
+              {"row": 12, "note": "B4", "inst": 2, "vol": 40}
+            ]
+          }
+        },
+        "bridge": {
+          "rows": 32,
+          "notes": {
+            "0": [
+              {"row": 0, "note": "F4", "inst": 0, "vol": 56},
+              {"row": 8, "note": "E4", "inst": 0, "vol": 56},
+              {"row": 16, "note": "D4", "inst": 0, "vol": 56},
+              {"row": 24, "note": "C4", "inst": 0, "vol": 56}
+            ],
+            "3": [
+              {"row": 0, "note": "F3", "inst": 3, "vol": 52},
+              {"row": 16, "note": "C3", "inst": 3, "vol": 52}
+            ]
+          }
+        },
+        "outro": {
+          "rows": 64,
+          "notes": {
+            "0": [
+              {"row": 0, "note": "C4", "inst": 0, "vol": 64},
+              {"row": 32, "note": "OFF", "inst": 0, "vol": 0}
+            ],
+            "3": [
+              {"row": 0, "note": "C3", "inst": 3, "vol": 48, "effect": 12, "param": 64},
+              {"row": 32, "note": 97, "inst": 3, "vol": 0}
+            ]
+          }
+        }
+      },
+      "arrangement": [
+        {"pattern": "intro", "repeat": 1},
+        {"pattern": "verse", "repeat": 2},
+        {"pattern": "chorus", "repeat": 2},
+        {"pattern": "bridge", "repeat": 1},
+        {"pattern": "verse", "repeat": 1},
+        {"pattern": "chorus", "repeat": 2},
+        {"pattern": "outro", "repeat": 1}
+      ],
+      "automation": [
+        {
+          "type": "volume_fade",
+          "pattern": "intro",
+          "channel": 0,
+          "start_row": 0,
+          "end_row": 32,
+          "start_vol": 0,
+          "end_vol": 64
+        },
+        {
+          "type": "volume_fade",
+          "pattern": "outro",
+          "channel": 0,
+          "start_row": 32,
+          "end_row": 63,
+          "start_vol": 64,
+          "end_vol": 0
+        },
+        {
+          "type": "tempo_change",
+          "pattern": "chorus",
+          "row": 0,
+          "bpm": 150
+        },
+        {
+          "type": "tempo_change",
+          "pattern": "bridge",
+          "row": 0,
+          "bpm": 140
+        }
+      ],
+      "it_options": {
+        "stereo": true,
+        "global_volume": 128,
+        "mix_volume": 64
+      }
+    }
+  }
+}

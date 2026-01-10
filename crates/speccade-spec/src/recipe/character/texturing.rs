@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 
 /// Texturing configuration for UV unwrapping and material regions.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct Texturing {
     /// UV unwrapping mode.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -41,6 +42,7 @@ impl Default for UvMode {
 
 /// A texture region definition.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct TextureRegion {
     /// Parts included in this region.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]

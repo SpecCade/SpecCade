@@ -53,13 +53,13 @@
           "name": "percussion",
           "synthesis": {
             "type": "noise",
-            "periodic": true
+            "periodic": false
           },
           "envelope": {
             "attack": 0.001,
-            "decay": 0.05,
+            "decay": 0.03,
             "sustain": 0.0,
-            "release": 0.03
+            "release": 0.02
           }
         }
       ],
@@ -79,9 +79,9 @@
         "main_with_effects": {
           "rows": 64,
           "data": [
-            {"row": 0, "channel": 0, "note": "C4", "instrument": 0, "volume": 64, "effect": {"type": "vibrato", "param": 72}},
-            {"row": 16, "channel": 0, "note": "D4", "instrument": 0, "volume": 64, "effect": {"type": "vibrato", "param": 72}},
-            {"row": 32, "channel": 0, "note": "E4", "instrument": 0, "volume": 64, "effect": {"type": "volume_slide", "param": 15}},
+            {"row": 0, "channel": 0, "note": "C4", "instrument": 0, "volume": 64, "effect_name": "vibrato", "param": 72},
+            {"row": 16, "channel": 0, "note": "D4", "instrument": 0, "volume": 64, "effect_name": "vibrato", "param": 72},
+            {"row": 32, "channel": 0, "note": "E4", "instrument": 0, "volume": 64, "effect_name": "volume_slide", "param": 15},
             {"row": 48, "channel": 0, "note": "G4", "instrument": 0, "volume": 64},
             {"row": 0, "channel": 1, "note": "C2", "instrument": 1, "volume": 56},
             {"row": 16, "channel": 1, "note": "D2", "instrument": 1, "volume": 56},

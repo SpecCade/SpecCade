@@ -1,0 +1,59 @@
+{
+  "spec_version": 1,
+  "asset_id": "grass_ground",
+  "asset_type": "texture",
+  "license": "CC0-1.0",
+  "seed": 4004,
+  "description": "Grass ground texture - natural organic variation",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "png",
+      "path": "grass_ground_albedo.png"
+    },
+    {
+      "kind": "primary",
+      "format": "png",
+      "path": "grass_ground_normal.png"
+    },
+    {
+      "kind": "primary",
+      "format": "png",
+      "path": "grass_ground_roughness.png"
+    }
+  ],
+  "recipe": {
+    "kind": "texture.material_v1",
+    "params": {
+      "resolution": [512, 512],
+      "tileable": true,
+      "maps": ["albedo", "normal", "roughness"],
+      "base_material": {
+        "type": "procedural",
+        "base_color": [0.2, 0.5, 0.1],
+        "roughness_range": [0.7, 0.9]
+      },
+      "layers": [
+        {
+          "type": "noise_pattern",
+          "noise": {
+            "algorithm": "worley",
+            "scale": 0.2,
+            "octaves": 4,
+            "persistence": 0.6,
+            "lacunarity": 2.0
+          },
+          "affects": ["albedo", "normal", "roughness"],
+          "strength": 0.4
+        },
+        {
+          "type": "color_variation",
+          "hue_range": 15.0,
+          "saturation_range": 0.2,
+          "value_range": 0.15,
+          "noise_scale": 0.1
+        }
+      ]
+    }
+  }
+}

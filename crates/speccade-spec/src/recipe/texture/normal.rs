@@ -4,9 +4,10 @@ use serde::{Deserialize, Serialize};
 
 use super::common::NoiseConfig;
 
-/// Parameters for the `texture_2d.normal_map_v1` recipe.
+/// Parameters for the `texture.normal_v1` recipe.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct Texture2dNormalMapV1Params {
+#[serde(deny_unknown_fields)]
+pub struct TextureNormalV1Params {
     /// Texture resolution [width, height] in pixels.
     pub resolution: [u32; 2],
     /// Whether the texture should tile seamlessly.
@@ -28,6 +29,7 @@ fn default_bump_strength() -> f64 {
 
 /// Post-processing options for normal maps.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct NormalMapProcessing {
     /// Gaussian blur sigma for height map smoothing.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -38,12 +40,12 @@ pub struct NormalMapProcessing {
 }
 
 fn default_invert() -> bool {
-    true
+    false
 }
 
 /// Pattern configuration for normal maps.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "type", rename_all = "snake_case")]
+#[serde(tag = "type", rename_all = "snake_case", deny_unknown_fields)]
 pub enum NormalMapPattern {
     /// Grid pattern.
     Grid {

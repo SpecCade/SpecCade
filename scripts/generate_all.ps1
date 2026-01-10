@@ -68,14 +68,16 @@ $targetDir = if ($Release) { "release" } else { "debug" }
 Write-ColorOutput "Building speccade-cli ($targetDir)..." -ForegroundColor Yellow
 Push-Location $SpeccadeRoot
 try {
+    # Cargo emits warnings to stderr which PowerShell treats as errors.
+    # Use cmd /c to avoid PowerShell's stderr-to-ErrorRecord conversion.
     if ($Release) {
-        $buildOutput = cargo build -p speccade-cli --release 2>&1
+        cmd /c "cargo build -p speccade-cli --release 2>&1"
     } else {
-        $buildOutput = cargo build -p speccade-cli 2>&1
+        cmd /c "cargo build -p speccade-cli 2>&1"
     }
+
     if ($LASTEXITCODE -ne 0) {
         Write-ColorOutput "Build failed" -ForegroundColor Red
-        Write-Host $buildOutput
         exit 1
     }
     Write-ColorOutput "Build successful" -ForegroundColor Green

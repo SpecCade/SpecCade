@@ -4,16 +4,14 @@
 //! The recipe defines the parameters for how to generate the asset.
 
 pub mod animation;
-pub mod audio_instrument;
-pub mod audio_sfx;
+pub mod audio;
 pub mod character;
 pub mod mesh;
 pub mod music;
 pub mod texture;
 
 pub use animation::*;
-pub use audio_instrument::*;
-pub use audio_sfx::*;
+pub use audio::*;
 pub use character::*;
 pub use mesh::*;
 pub use music::*;
@@ -25,21 +23,21 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum RecipeKind {
-    /// `audio_sfx.layered_synth_v1` - Layered synthesis audio SFX.
-    #[serde(rename = "audio_sfx.layered_synth_v1")]
-    AudioSfxLayeredSynthV1,
-    /// `audio_instrument.synth_patch_v1` - Synthesized instrument patch.
-    #[serde(rename = "audio_instrument.synth_patch_v1")]
-    AudioInstrumentSynthPatchV1,
+    /// `audio_v1` - Unified audio synthesis.
+    #[serde(rename = "audio_v1")]
+    AudioV1,
     /// `music.tracker_song_v1` - Tracker module song.
     #[serde(rename = "music.tracker_song_v1")]
     MusicTrackerSongV1,
-    /// `texture_2d.material_maps_v1` - PBR material maps.
-    #[serde(rename = "texture_2d.material_maps_v1")]
-    Texture2dMaterialMapsV1,
-    /// `texture_2d.normal_map_v1` - Normal map.
-    #[serde(rename = "texture_2d.normal_map_v1")]
-    Texture2dNormalMapV1,
+    /// `texture.material_v1` - PBR material maps.
+    #[serde(rename = "texture.material_v1")]
+    TextureMaterialV1,
+    /// `texture.normal_v1` - Normal map.
+    #[serde(rename = "texture.normal_v1")]
+    TextureNormalV1,
+    /// `texture.packed_v1` - Packed channel texture.
+    #[serde(rename = "texture.packed_v1")]
+    TexturePackedV1,
     /// `static_mesh.blender_primitives_v1` - Static mesh from Blender primitives.
     #[serde(rename = "static_mesh.blender_primitives_v1")]
     StaticMeshBlenderPrimitivesV1,
@@ -58,11 +56,11 @@ impl RecipeKind {
     /// Returns the recipe kind as a string.
     pub fn as_str(&self) -> &'static str {
         match self {
-            RecipeKind::AudioSfxLayeredSynthV1 => "audio_sfx.layered_synth_v1",
-            RecipeKind::AudioInstrumentSynthPatchV1 => "audio_instrument.synth_patch_v1",
+            RecipeKind::AudioV1 => "audio_v1",
             RecipeKind::MusicTrackerSongV1 => "music.tracker_song_v1",
-            RecipeKind::Texture2dMaterialMapsV1 => "texture_2d.material_maps_v1",
-            RecipeKind::Texture2dNormalMapV1 => "texture_2d.normal_map_v1",
+            RecipeKind::TextureMaterialV1 => "texture.material_v1",
+            RecipeKind::TextureNormalV1 => "texture.normal_v1",
+            RecipeKind::TexturePackedV1 => "texture.packed_v1",
             RecipeKind::StaticMeshBlenderPrimitivesV1 => "static_mesh.blender_primitives_v1",
             RecipeKind::SkeletalMeshBlenderRiggedMeshV1 => "skeletal_mesh.blender_rigged_mesh_v1",
             RecipeKind::SkeletalAnimationBlenderClipV1 => "skeletal_animation.blender_clip_v1",
@@ -73,11 +71,11 @@ impl RecipeKind {
     /// Returns the asset type prefix for this recipe kind.
     pub fn asset_type_prefix(&self) -> &'static str {
         match self {
-            RecipeKind::AudioSfxLayeredSynthV1 => "audio_sfx",
-            RecipeKind::AudioInstrumentSynthPatchV1 => "audio_instrument",
+            RecipeKind::AudioV1 => "audio",
             RecipeKind::MusicTrackerSongV1 => "music",
-            RecipeKind::Texture2dMaterialMapsV1 => "texture_2d",
-            RecipeKind::Texture2dNormalMapV1 => "texture_2d",
+            RecipeKind::TextureMaterialV1 => "texture",
+            RecipeKind::TextureNormalV1 => "texture",
+            RecipeKind::TexturePackedV1 => "texture",
             RecipeKind::StaticMeshBlenderPrimitivesV1 => "static_mesh",
             RecipeKind::SkeletalMeshBlenderRiggedMeshV1 => "skeletal_mesh",
             RecipeKind::SkeletalAnimationBlenderClipV1 => "skeletal_animation",
@@ -88,11 +86,11 @@ impl RecipeKind {
     /// Returns whether this is a Tier 1 (deterministic hash) or Tier 2 (metric validation) backend.
     pub fn is_tier1(&self) -> bool {
         match self {
-            RecipeKind::AudioSfxLayeredSynthV1
-            | RecipeKind::AudioInstrumentSynthPatchV1
+            RecipeKind::AudioV1
             | RecipeKind::MusicTrackerSongV1
-            | RecipeKind::Texture2dMaterialMapsV1
-            | RecipeKind::Texture2dNormalMapV1 => true,
+            | RecipeKind::TextureMaterialV1
+            | RecipeKind::TextureNormalV1
+            | RecipeKind::TexturePackedV1 => true,
             RecipeKind::StaticMeshBlenderPrimitivesV1
             | RecipeKind::SkeletalMeshBlenderRiggedMeshV1
             | RecipeKind::SkeletalAnimationBlenderClipV1
@@ -111,16 +109,14 @@ impl std::fmt::Display for RecipeKind {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum RecipeParams {
-    /// Audio SFX layered synth parameters.
-    AudioSfxLayeredSynth(AudioSfxLayeredSynthV1Params),
-    /// Audio instrument synth patch parameters.
-    AudioInstrumentSynthPatch(AudioInstrumentSynthPatchV1Params),
+    /// Unified audio parameters.
+    Audio(AudioV1Params),
     /// Music tracker song parameters.
     MusicTrackerSong(MusicTrackerSongV1Params),
-    /// Texture 2D material maps parameters.
-    Texture2dMaterialMaps(Texture2dMaterialMapsV1Params),
-    /// Texture 2D normal map parameters.
-    Texture2dNormalMap(Texture2dNormalMapV1Params),
+    /// Texture material maps parameters.
+    TextureMaterial(TextureMaterialV1Params),
+    /// Texture normal map parameters.
+    TextureNormal(TextureNormalV1Params),
     /// Static mesh Blender primitives parameters.
     StaticMeshBlenderPrimitives(StaticMeshBlenderPrimitivesV1Params),
     /// Skeletal mesh Blender rigged mesh parameters.
@@ -135,6 +131,7 @@ pub enum RecipeParams {
 
 /// Recipe specification containing kind and params.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct Recipe {
     /// The recipe kind identifier.
     pub kind: String,
@@ -154,11 +151,11 @@ impl Recipe {
     /// Parses the recipe kind into a typed enum.
     pub fn parse_kind(&self) -> Option<RecipeKind> {
         match self.kind.as_str() {
-            "audio_sfx.layered_synth_v1" => Some(RecipeKind::AudioSfxLayeredSynthV1),
-            "audio_instrument.synth_patch_v1" => Some(RecipeKind::AudioInstrumentSynthPatchV1),
+            "audio_v1" => Some(RecipeKind::AudioV1),
             "music.tracker_song_v1" => Some(RecipeKind::MusicTrackerSongV1),
-            "texture_2d.material_maps_v1" => Some(RecipeKind::Texture2dMaterialMapsV1),
-            "texture_2d.normal_map_v1" => Some(RecipeKind::Texture2dNormalMapV1),
+            "texture.material_v1" => Some(RecipeKind::TextureMaterialV1),
+            "texture.normal_v1" => Some(RecipeKind::TextureNormalV1),
+            "texture.packed_v1" => Some(RecipeKind::TexturePackedV1),
             "static_mesh.blender_primitives_v1" => Some(RecipeKind::StaticMeshBlenderPrimitivesV1),
             "skeletal_mesh.blender_rigged_mesh_v1" => {
                 Some(RecipeKind::SkeletalMeshBlenderRiggedMeshV1)
@@ -174,21 +171,19 @@ impl Recipe {
     }
 
     /// Returns the asset type prefix from the recipe kind.
+    /// Handles both dot format (e.g., "texture.material_v1") and underscore format (e.g., "audio_v1").
     pub fn asset_type_prefix(&self) -> Option<&str> {
-        self.kind.split('.').next()
+        // First try dot format (e.g., "texture.material_v1" -> "texture")
+        if self.kind.contains('.') {
+            self.kind.split('.').next()
+        } else {
+            // Fall back to underscore format (e.g., "audio_v1" -> "audio")
+            self.kind.split('_').next()
+        }
     }
 
-    /// Attempts to parse params as audio SFX layered synth params.
-    pub fn as_audio_sfx_layered_synth(
-        &self,
-    ) -> Result<AudioSfxLayeredSynthV1Params, serde_json::Error> {
-        serde_json::from_value(self.params.clone())
-    }
-
-    /// Attempts to parse params as audio instrument synth patch params.
-    pub fn as_audio_instrument_synth_patch(
-        &self,
-    ) -> Result<AudioInstrumentSynthPatchV1Params, serde_json::Error> {
+    /// Attempts to parse params as unified audio params.
+    pub fn as_audio(&self) -> Result<AudioV1Params, serde_json::Error> {
         serde_json::from_value(self.params.clone())
     }
 
@@ -197,15 +192,20 @@ impl Recipe {
         serde_json::from_value(self.params.clone())
     }
 
-    /// Attempts to parse params as texture 2D material maps params.
-    pub fn as_texture_2d_material_maps(
+    /// Attempts to parse params as texture material maps params.
+    pub fn as_texture_material(
         &self,
-    ) -> Result<Texture2dMaterialMapsV1Params, serde_json::Error> {
+    ) -> Result<TextureMaterialV1Params, serde_json::Error> {
         serde_json::from_value(self.params.clone())
     }
 
-    /// Attempts to parse params as texture 2D normal map params.
-    pub fn as_texture_2d_normal_map(&self) -> Result<Texture2dNormalMapV1Params, serde_json::Error> {
+    /// Attempts to parse params as texture normal map params.
+    pub fn as_texture_normal(&self) -> Result<TextureNormalV1Params, serde_json::Error> {
+        serde_json::from_value(self.params.clone())
+    }
+
+    /// Attempts to parse params as texture packed params.
+    pub fn as_texture_packed(&self) -> Result<TexturePackedV1Params, serde_json::Error> {
         serde_json::from_value(self.params.clone())
     }
 
@@ -244,9 +244,9 @@ mod tests {
 
     #[test]
     fn test_recipe_kind_serde() {
-        let kind = RecipeKind::AudioSfxLayeredSynthV1;
+        let kind = RecipeKind::AudioV1;
         let json = serde_json::to_string(&kind).unwrap();
-        assert_eq!(json, "\"audio_sfx.layered_synth_v1\"");
+        assert_eq!(json, "\"audio_v1\"");
 
         let parsed: RecipeKind = serde_json::from_str(&json).unwrap();
         assert_eq!(parsed, kind);
@@ -254,17 +254,14 @@ mod tests {
 
     #[test]
     fn test_recipe_kind_asset_type_prefix() {
+        assert_eq!(RecipeKind::AudioV1.asset_type_prefix(), "audio");
         assert_eq!(
-            RecipeKind::AudioSfxLayeredSynthV1.asset_type_prefix(),
-            "audio_sfx"
+            RecipeKind::TextureMaterialV1.asset_type_prefix(),
+            "texture"
         );
         assert_eq!(
-            RecipeKind::Texture2dMaterialMapsV1.asset_type_prefix(),
-            "texture_2d"
-        );
-        assert_eq!(
-            RecipeKind::Texture2dNormalMapV1.asset_type_prefix(),
-            "texture_2d"
+            RecipeKind::TextureNormalV1.asset_type_prefix(),
+            "texture"
         );
         assert_eq!(
             RecipeKind::StaticMeshBlenderPrimitivesV1.asset_type_prefix(),
@@ -274,7 +271,7 @@ mod tests {
 
     #[test]
     fn test_recipe_kind_tier() {
-        assert!(RecipeKind::AudioSfxLayeredSynthV1.is_tier1());
+        assert!(RecipeKind::AudioV1.is_tier1());
         assert!(RecipeKind::MusicTrackerSongV1.is_tier1());
         assert!(!RecipeKind::StaticMeshBlenderPrimitivesV1.is_tier1());
         assert!(!RecipeKind::SkeletalAnimationBlenderClipV1.is_tier1());
@@ -282,14 +279,8 @@ mod tests {
 
     #[test]
     fn test_recipe_parse_kind() {
-        let recipe = Recipe::new(
-            "audio_sfx.layered_synth_v1",
-            serde_json::json!({"duration_seconds": 0.5}),
-        );
-        assert_eq!(
-            recipe.parse_kind(),
-            Some(RecipeKind::AudioSfxLayeredSynthV1)
-        );
-        assert_eq!(recipe.asset_type_prefix(), Some("audio_sfx"));
+        let recipe = Recipe::new("audio_v1", serde_json::json!({"duration_seconds": 0.5}));
+        assert_eq!(recipe.parse_kind(), Some(RecipeKind::AudioV1));
+        assert_eq!(recipe.asset_type_prefix(), Some("audio_v1"));
     }
 }

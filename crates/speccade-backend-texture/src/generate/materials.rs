@@ -3,7 +3,7 @@
 //! This module handles applying material-specific base patterns to height maps
 //! based on the material type (brick, wood, metal, etc.).
 
-use speccade_spec::recipe::texture::MaterialType;
+use speccade_spec::recipe::texture::{BaseMaterial, MaterialType};
 
 use crate::maps::GrayscaleBuffer;
 use crate::noise::{Fbm, Noise2D, PerlinNoise};
@@ -14,14 +14,31 @@ use super::helpers::{apply_pattern_to_buffer, apply_transform};
 /// Apply material-specific base pattern to height map.
 pub fn apply_material_pattern(
     height_map: &mut GrayscaleBuffer,
-    material_type: &MaterialType,
+    material: &BaseMaterial,
     width: u32,
     height: u32,
     seed: u32,
 ) {
-    match material_type {
+    match material.material_type {
         MaterialType::Brick => {
-            let brick = BrickPattern::new(width, height).with_seed(seed);
+            let mut brick = BrickPattern::new(width, height).with_seed(seed);
+
+            // Apply brick pattern params from spec if provided
+            if let Some(ref params) = material.brick_pattern {
+                brick = brick
+                    .with_brick_size(params.brick_width, params.brick_height)
+                    .with_row_offset(params.offset);
+
+                // Mortar depth comes from normal_params if provided
+                let mortar_depth = material
+                    .normal_params
+                    .as_ref()
+                    .map(|np| np.mortar_depth)
+                    .unwrap_or(0.3);
+
+                brick = brick.with_mortar(params.mortar_width, mortar_depth);
+            }
+
             apply_pattern_to_buffer(&brick, height_map);
         }
         MaterialType::Wood => {

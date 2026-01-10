@@ -4,8 +4,8 @@
   "asset_type": "music",
   "license": "CC0-1.0",
   "seed": 3010,
-  "description": "Orchestral demo - demonstrates sample-based instruments with tracker format",
-  "style_tags": ["orchestral", "sample-based", "demo"],
+  "description": "Orchestral demo - demonstrates synthesized instruments with tracker format",
+  "style_tags": ["orchestral", "synthesized", "demo"],
   "outputs": [
     {
       "kind": "primary",
@@ -25,9 +25,7 @@
         {
           "name": "piano",
           "synthesis": {
-            "type": "sample",
-            "path": "samples/piano/c4.wav",
-            "base_note": "C4"
+            "type": "triangle"
           },
           "envelope": {
             "attack": 0.001,
@@ -39,9 +37,7 @@
         {
           "name": "strings",
           "synthesis": {
-            "type": "sample",
-            "path": "samples/strings/violin_c4.wav",
-            "base_note": "C4"
+            "type": "sawtooth"
           },
           "envelope": {
             "attack": 0.15,
@@ -53,9 +49,7 @@
         {
           "name": "bass",
           "synthesis": {
-            "type": "sample",
-            "path": "samples/bass/e1.wav",
-            "base_note": "E1"
+            "type": "sawtooth"
           },
           "envelope": {
             "attack": 0.002,
@@ -67,9 +61,7 @@
         {
           "name": "brass",
           "synthesis": {
-            "type": "sample",
-            "path": "samples/brass/trumpet_c4.wav",
-            "base_note": "C4"
+            "type": "sawtooth"
           },
           "envelope": {
             "attack": 0.03,
@@ -81,9 +73,7 @@
         {
           "name": "timpani",
           "synthesis": {
-            "type": "sample",
-            "path": "samples/drums/tom_low.wav",
-            "base_note": "C2"
+            "type": "noise"
           },
           "envelope": {
             "attack": 0.001,

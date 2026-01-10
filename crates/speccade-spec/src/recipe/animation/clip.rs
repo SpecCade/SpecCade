@@ -11,6 +11,7 @@ use crate::recipe::character::SkeletonPreset;
 
 /// Bone transform at a keyframe.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct BoneTransform {
     /// Position offset [X, Y, Z].
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -63,6 +64,7 @@ impl BoneTransform {
 
 /// Keyframe definition.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct AnimationKeyframe {
     /// Time in seconds.
     pub time: f64,
@@ -72,6 +74,7 @@ pub struct AnimationKeyframe {
 
 /// Keyframe for IK target animation.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct IkKeyframe {
     /// Time in seconds.
     pub time: f64,
@@ -82,6 +85,7 @@ pub struct IkKeyframe {
 
 /// Transform for an IK target at a keyframe.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct IkTargetTransform {
     /// World position [X, Y, Z].
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -126,6 +130,7 @@ impl IkTargetTransform {
 
 /// Parameters for the `skeletal_animation.blender_clip_v1` recipe.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct SkeletalAnimationBlenderClipV1Params {
     /// Skeleton rig to animate.
     pub skeleton_preset: SkeletonPreset,

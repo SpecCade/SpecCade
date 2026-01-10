@@ -6,6 +6,7 @@ use crate::recipe::mesh::{MeshConstraints, MeshExportSettings};
 
 /// Skinning and weight painting settings.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct SkinningSettings {
     /// Maximum bone influences per vertex (1-8).
     #[serde(default = "default_max_bone_influences")]
@@ -34,6 +35,7 @@ impl Default for SkinningSettings {
 
 /// Export settings for skeletal meshes.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct SkeletalMeshExportSettings {
     /// Include armature in export.
     #[serde(default = "default_true")]
@@ -83,6 +85,7 @@ impl From<SkeletalMeshExportSettings> for MeshExportSettings {
 
 /// Constraints for skeletal meshes.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct SkeletalMeshConstraints {
     /// Maximum triangle count.
     #[serde(skip_serializing_if = "Option::is_none")]

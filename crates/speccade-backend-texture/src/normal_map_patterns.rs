@@ -108,13 +108,15 @@ fn generate_brick_height(
             let row = y / row_height;
 
             // Apply offset for alternating rows
+            // We subtract the offset and add width to handle negative values correctly
+            // This matches the brick.rs pattern behavior for proper tiling
             let row_offset = if row % 2 == 1 {
                 (offset * col_width as f64) as u32
             } else {
                 0
             };
 
-            let adjusted_x = (x + row_offset) % width;
+            let adjusted_x = (x + width - row_offset) % width;
             let col = adjusted_x / col_width;
 
             let local_x = adjusted_x % col_width;
@@ -135,8 +137,13 @@ fn generate_brick_height(
                 let variation = brick_rng.gen_f64() * 0.1;
 
                 // Distance from edge for beveling
-                let dist_x = local_x.min(brick_width - local_x);
-                let dist_y = local_y.min(brick_height - local_y);
+                // Use saturating_sub to avoid underflow when local_x/y equals brick_width/height
+                let dist_left = local_x;
+                let dist_right = brick_width.saturating_sub(1).saturating_sub(local_x);
+                let dist_x = dist_left.min(dist_right);
+                let dist_top = local_y;
+                let dist_bottom = brick_height.saturating_sub(1).saturating_sub(local_y);
+                let dist_y = dist_top.min(dist_bottom);
                 let edge_dist = dist_x.min(dist_y) as f64;
 
                 let bevel_dist = 4.0;
@@ -155,39 +162,82 @@ fn generate_brick_height(
 }
 
 /// Generate hexagon pattern height map.
+///
+/// Creates a flat-top hexagon tessellation pattern. Each hexagon has:
+/// - Width (corner to corner horizontally) = 2 * size
+/// - Height (flat edge to flat edge vertically) = sqrt(3) * size
 fn generate_hexagon_height(width: u32, height: u32, size: u32, gap: u32) -> GrayscaleBuffer {
     let mut buffer = GrayscaleBuffer::new(width, height, 0.3);
 
-    let hex_width = size * 2;
-    let hex_height = ((size as f64) * 1.732).round() as u32; // sqrt(3) ≈ 1.732
+    let size_f = size as f64;
+    let sqrt3 = 3.0_f64.sqrt();
 
-    let col_spacing = (hex_width as f64 * 0.75) as u32;
-    let row_spacing = hex_height;
+    // For flat-top hexagons:
+    // - Column spacing (horizontal distance between centers) = 1.5 * size
+    // - Row spacing (vertical distance between centers) = sqrt(3) * size
+    let col_spacing = 1.5 * size_f;
+    let row_spacing = sqrt3 * size_f;
 
     for y in 0..height {
         for x in 0..width {
-            // Find nearest hexagon center
-            let col = x / col_spacing;
-            let row = y / row_spacing;
+            let px = x as f64;
+            let py = y as f64;
 
-            // Offset odd rows
-            let x_offset = if row % 2 == 1 { col_spacing / 2 } else { 0 };
+            // Find the best (closest) hexagon center
+            let mut best_dist = f64::MAX;
 
-            let center_x = col * col_spacing + x_offset;
-            let center_y = row * row_spacing;
+            // Check nearby hex centers to find the closest one
+            // Start from an approximate position
+            let approx_col = (px / col_spacing).floor() as i32;
+            let approx_row = (py / row_spacing).floor() as i32;
 
-            // Distance to hexagon center
-            let dx = (x as i32 - center_x as i32).abs() as f64;
-            let dy = (y as i32 - center_y as i32).abs() as f64;
+            for dc in -1..=1 {
+                for dr in -1..=1 {
+                    let col = approx_col + dc;
+                    let row = approx_row + dr;
 
-            // Approximate hexagon distance (simplified)
-            let hex_dist = (dx + dy * 0.866).max(dx);
-            let hex_radius = (size - gap) as f64;
+                    // Skip negative indices (they're handled via tiling)
+                    // But we need to check them for proper distance calculation
 
-            if hex_dist < hex_radius {
-                // Inside hexagon: raised
-                let edge_factor = 1.0 - (hex_dist / hex_radius);
-                let bevel = 0.8 + edge_factor * 0.2;
+                    // Odd columns are offset down by half a row
+                    let y_offset = if col.rem_euclid(2) == 1 {
+                        row_spacing / 2.0
+                    } else {
+                        0.0
+                    };
+
+                    let center_x = col as f64 * col_spacing;
+                    let center_y = row as f64 * row_spacing + y_offset;
+
+                    // Calculate hexagonal distance (flat-top hex)
+                    let dx = (px - center_x).abs();
+                    let dy = (py - center_y).abs();
+
+                    // Hexagonal distance formula for flat-top hexagons:
+                    // The hex boundary is defined by three constraints:
+                    // 1. |dx| <= size (left/right edges)
+                    // 2. |dy| <= sqrt(3)/2 * size (top/bottom edges)
+                    // 3. |dx|/2 + |dy| * sqrt(3)/2 <= sqrt(3)/2 * size (diagonal edges)
+                    //
+                    // Convert to a normalized distance where 1.0 = on the edge
+                    let hex_dist = (dx / size_f).max(dy / (sqrt3 / 2.0 * size_f)).max(
+                        (dx / 2.0 + dy * sqrt3 / 2.0) / (sqrt3 / 2.0 * size_f)
+                    );
+
+                    if hex_dist < best_dist {
+                        best_dist = hex_dist;
+                    }
+                }
+            }
+
+            // Account for the gap - scale the distance threshold
+            let gap_ratio = gap as f64 / size_f;
+            let inner_threshold = 1.0 - gap_ratio;
+
+            if best_dist < inner_threshold {
+                // Inside hexagon: raised with bevel near edges
+                let edge_proximity = best_dist / inner_threshold;
+                let bevel = 0.8 + (1.0 - edge_proximity) * 0.2;
                 buffer.set(x, y, bevel);
             }
             // else: stays at background (gap) level

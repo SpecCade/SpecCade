@@ -4,7 +4,7 @@
   "asset_type": "music",
   "license": "CC0-1.0",
   "seed": 3011,
-  "description": "Hybrid band demo - combines synthesis and sample-based instruments",
+  "description": "Hybrid band demo - fully synthesized instruments with varied synthesis types",
   "style_tags": ["hybrid", "rock", "electronic"],
   "outputs": [
     {
@@ -35,11 +35,9 @@
           }
         },
         {
-          "name": "sample_bass",
+          "name": "synth_bass",
           "synthesis": {
-            "type": "sample",
-            "path": "samples/bass/e1.wav",
-            "base_note": "E1"
+            "type": "sawtooth"
           },
           "envelope": {
             "attack": 0.002,
@@ -49,10 +47,9 @@
           }
         },
         {
-          "name": "sample_kick",
+          "name": "synth_kick",
           "synthesis": {
-            "type": "sample",
-            "path": "samples/drums/kick.wav"
+            "type": "sine"
           },
           "envelope": {
             "attack": 0.001,
@@ -62,10 +59,10 @@
           }
         },
         {
-          "name": "sample_snare",
+          "name": "synth_snare",
           "synthesis": {
-            "type": "sample",
-            "path": "samples/drums/snare.wav"
+            "type": "noise",
+            "periodic": false
           },
           "envelope": {
             "attack": 0.001,
@@ -75,16 +72,16 @@
           }
         },
         {
-          "name": "sample_hihat",
+          "name": "synth_hihat",
           "synthesis": {
-            "type": "sample",
-            "path": "samples/drums/hihat.wav"
+            "type": "noise",
+            "periodic": false
           },
           "envelope": {
             "attack": 0.001,
-            "decay": 0.05,
+            "decay": 0.025,
             "sustain": 0.0,
-            "release": 0.08
+            "release": 0.02
           }
         },
         {

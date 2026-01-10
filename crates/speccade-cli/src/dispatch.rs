@@ -2,9 +2,12 @@
 //!
 //! Dispatches generation requests to the appropriate backend based on recipe.kind.
 
-use speccade_spec::recipe::texture::TextureMapType;
+use speccade_spec::recipe::texture::{
+    ChannelSource as SpecChannelSource, ColorComponent as SpecColorComponent, MapDefinition,
+    TextureMapType,
+};
 use speccade_spec::{BackendError, OutputFormat, OutputKind, OutputResult, Spec};
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::fmt;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -76,14 +79,9 @@ pub fn dispatch_generate(spec: &Spec, out_root: &str, spec_path: &Path) -> Resul
 
     // Dispatch based on recipe kind prefix
     match kind.as_str() {
-        // Audio SFX backend
-        "audio_sfx.layered_synth_v1" => {
-            generate_audio_sfx(spec, out_root_path)
-        }
-
-        // Audio instrument backend
-        "audio_instrument.synth_patch_v1" => {
-            generate_audio_instrument(spec, out_root_path)
+        // Unified audio backend (handles both SFX and instruments)
+        "audio_v1" | "audio_sfx.layered_synth_v1" | "audio.sfx_v1" => {
+            generate_audio(spec, out_root_path)
         }
 
         // Music backend
@@ -92,13 +90,18 @@ pub fn dispatch_generate(spec: &Spec, out_root: &str, spec_path: &Path) -> Resul
         }
 
         // Texture material maps backend
-        "texture_2d.material_maps_v1" => {
+        "texture.material_v1" => {
             generate_texture_material_maps(spec, out_root_path)
         }
 
         // Texture normal map backend
-        "texture_2d.normal_map_v1" => {
+        "texture.normal_v1" => {
             generate_texture_normal_map(spec, out_root_path)
+        }
+
+        // Texture packed backend
+        "texture.packed_v1" => {
+            generate_texture_packed(spec, out_root_path)
         }
 
         // Blender static mesh backend
@@ -141,31 +144,10 @@ fn write_output_bytes(out_root: &Path, rel_path: &str, bytes: &[u8]) -> Result<(
     Ok(())
 }
 
-/// Generate audio SFX using the audio backend
-fn generate_audio_sfx(spec: &Spec, out_root: &Path) -> Result<Vec<OutputResult>, DispatchError> {
+/// Generate audio using the unified audio backend
+fn generate_audio(spec: &Spec, out_root: &Path) -> Result<Vec<OutputResult>, DispatchError> {
     let result = speccade_backend_audio::generate(spec)
         .map_err(|e| DispatchError::BackendError(format!("Audio generation failed: {}", e)))?;
-
-    // Write WAV file to the output path from spec
-    let primary_output = get_primary_output(spec)?;
-    write_output_bytes(out_root, &primary_output.path, &result.wav.wav_data)?;
-
-    Ok(vec![OutputResult::tier1(
-        OutputKind::Primary,
-        OutputFormat::Wav,
-        PathBuf::from(&primary_output.path),
-        result.wav.pcm_hash,
-    )])
-}
-
-/// Generate audio instrument using the audio backend
-fn generate_audio_instrument(spec: &Spec, out_root: &Path) -> Result<Vec<OutputResult>, DispatchError> {
-    let recipe = spec.recipe.as_ref().ok_or(DispatchError::NoRecipe)?;
-    let params = recipe.as_audio_instrument_synth_patch()
-        .map_err(|e| DispatchError::BackendError(format!("Invalid instrument params: {}", e)))?;
-
-    let result = speccade_backend_audio::generate_instrument(&params, spec.seed)
-        .map_err(|e| DispatchError::BackendError(format!("Instrument generation failed: {}", e)))?;
 
     // Write WAV file to the output path from spec
     let primary_output = get_primary_output(spec)?;
@@ -210,7 +192,7 @@ fn generate_music(spec: &Spec, out_root: &Path, spec_dir: &Path) -> Result<Vec<O
 /// Generate texture material maps using the texture backend
 fn generate_texture_material_maps(spec: &Spec, out_root: &Path) -> Result<Vec<OutputResult>, DispatchError> {
     let recipe = spec.recipe.as_ref().ok_or(DispatchError::NoRecipe)?;
-    let params = recipe.as_texture_2d_material_maps()
+    let params = recipe.as_texture_material()
         .map_err(|e| DispatchError::BackendError(format!("Invalid texture params: {}", e)))?;
 
     let result = speccade_backend_texture::generate_material_maps(&params, spec.seed)
@@ -307,7 +289,7 @@ fn generate_texture_material_maps(spec: &Spec, out_root: &Path) -> Result<Vec<Ou
 /// Generate texture normal map using the texture backend
 fn generate_texture_normal_map(spec: &Spec, out_root: &Path) -> Result<Vec<OutputResult>, DispatchError> {
     let recipe = spec.recipe.as_ref().ok_or(DispatchError::NoRecipe)?;
-    let params = recipe.as_texture_2d_normal_map()
+    let params = recipe.as_texture_normal()
         .map_err(|e| DispatchError::BackendError(format!("Invalid normal map params: {}", e)))?;
 
     let result = speccade_backend_texture::generate_normal_map(&params, spec.seed)
@@ -323,6 +305,141 @@ fn generate_texture_normal_map(spec: &Spec, out_root: &Path) -> Result<Vec<Outpu
         PathBuf::from(&primary_output.path),
         result.hash,
     )])
+}
+
+/// Generate packed texture using the texture backend
+fn generate_texture_packed(spec: &Spec, out_root: &Path) -> Result<Vec<OutputResult>, DispatchError> {
+    use speccade_backend_texture::{
+        ChannelSource as BackendChannelSource, ColorComponent as BackendColorComponent,
+        PackedChannels as BackendPackedChannels, PngConfig, TextureBuffer,
+    };
+
+    let recipe = spec.recipe.as_ref().ok_or(DispatchError::NoRecipe)?;
+    let params = recipe
+        .as_texture_packed()
+        .map_err(|e| DispatchError::BackendError(format!("Invalid packed texture params: {}", e)))?;
+
+    let [width, height] = params.resolution;
+
+    // Generate a TextureBuffer for each map definition
+    let mut map_buffers: HashMap<String, TextureBuffer> = HashMap::new();
+
+    for (key, map_def) in &params.maps {
+        let buffer = generate_map_buffer(map_def, width, height)?;
+        map_buffers.insert(key.clone(), buffer);
+    }
+
+    // Find the primary output with channels
+    let primary_output = spec
+        .outputs
+        .iter()
+        .find(|o| o.kind == OutputKind::Primary)
+        .ok_or_else(|| DispatchError::BackendError("No primary output specified".to_string()))?;
+
+    let spec_channels = primary_output.channels.as_ref().ok_or_else(|| {
+        DispatchError::BackendError(
+            "packed_v1 requires 'channels' field in output spec".to_string(),
+        )
+    })?;
+
+    // Convert spec ChannelSource to backend ChannelSource
+    let convert_channel_source =
+        |spec_source: &SpecChannelSource| -> Result<BackendChannelSource, DispatchError> {
+            match spec_source {
+                SpecChannelSource::Key(key) => Ok(BackendChannelSource::Key(key.clone())),
+                SpecChannelSource::Extended {
+                    key,
+                    component,
+                    invert,
+                } => {
+                    let backend_component = component.map(|c| match c {
+                        SpecColorComponent::R => BackendColorComponent::R,
+                        SpecColorComponent::G => BackendColorComponent::G,
+                        SpecColorComponent::B => BackendColorComponent::B,
+                        SpecColorComponent::A => BackendColorComponent::A,
+                        SpecColorComponent::Luminance => BackendColorComponent::Luminance,
+                    });
+                    Ok(BackendChannelSource::Extended {
+                        key: key.clone(),
+                        component: backend_component,
+                        invert: *invert,
+                    })
+                }
+                SpecChannelSource::Constant { constant } => Ok(BackendChannelSource::Constant {
+                    constant: *constant as f64,
+                }),
+            }
+        };
+
+    let backend_channels = BackendPackedChannels {
+        r: convert_channel_source(&spec_channels.r)?,
+        g: convert_channel_source(&spec_channels.g)?,
+        b: convert_channel_source(&spec_channels.b)?,
+        a: spec_channels
+            .a
+            .as_ref()
+            .map(convert_channel_source)
+            .transpose()?,
+    };
+
+    // Pack the channels
+    let packed_buffer =
+        speccade_backend_texture::pack_channels(&backend_channels, &map_buffers, width, height)
+            .map_err(|e| {
+                DispatchError::BackendError(format!("Channel packing failed: {}", e))
+            })?;
+
+    // Encode to PNG
+    let config = PngConfig::default();
+    let (png_data, hash) =
+        speccade_backend_texture::png::write_rgba_to_vec_with_hash(&packed_buffer, &config)
+            .map_err(|e| DispatchError::BackendError(format!("PNG encoding failed: {}", e)))?;
+
+    // Write to output
+    write_output_bytes(out_root, &primary_output.path, &png_data)?;
+
+    Ok(vec![OutputResult::tier1(
+        OutputKind::Primary,
+        OutputFormat::Png,
+        PathBuf::from(&primary_output.path),
+        hash,
+    )])
+}
+
+/// Generate a TextureBuffer from a MapDefinition
+fn generate_map_buffer(
+    map_def: &MapDefinition,
+    width: u32,
+    height: u32,
+) -> Result<speccade_backend_texture::TextureBuffer, DispatchError> {
+    use speccade_backend_texture::{Color, TextureBuffer};
+
+    match map_def {
+        MapDefinition::Grayscale {
+            value,
+            from_height,
+            ao_strength: _,
+        } => {
+            // For now, only handle constant grayscale values
+            // from_height and ao_strength would require more complex generation
+            if from_height == &Some(true) {
+                // For from_height, we generate a simple mid-gray buffer for now
+                // A full implementation would generate procedural noise/height
+                let gray = 0.5;
+                Ok(TextureBuffer::new(width, height, Color::gray(gray)))
+            } else {
+                let gray = value.unwrap_or(0.5);
+                Ok(TextureBuffer::new(width, height, Color::gray(gray)))
+            }
+        }
+        MapDefinition::Pattern { pattern, .. } => {
+            // For now, pattern generation is not implemented
+            Err(DispatchError::BackendError(format!(
+                "Pattern type '{}' not yet implemented for packed textures",
+                pattern
+            )))
+        }
+    }
 }
 
 /// Generate static mesh using the Blender backend
@@ -431,11 +548,13 @@ fn generate_blender_animation(spec: &Spec, out_root: &Path) -> Result<Vec<Output
 pub fn is_backend_available(kind: &str) -> bool {
     matches!(
         kind,
-        "audio_sfx.layered_synth_v1"
-            | "audio_instrument.synth_patch_v1"
+        "audio_v1"
+            | "audio_sfx.layered_synth_v1"
+            | "audio.sfx_v1"
             | "music.tracker_song_v1"
-            | "texture_2d.material_maps_v1"
-            | "texture_2d.normal_map_v1"
+            | "texture.material_v1"
+            | "texture.normal_v1"
+            | "texture.packed_v1"
             | "static_mesh.blender_primitives_v1"
             | "skeletal_mesh.blender_rigged_mesh_v1"
             | "skeletal_animation.blender_clip_v1"
@@ -476,10 +595,11 @@ fn output_path_matches_suffix(path: &str, suffix: &str) -> bool {
 pub fn get_backend_tier(kind: &str) -> Option<u8> {
     match kind {
         // Tier 1: Rust backends (deterministic hash guarantee)
+        "audio_v1" => Some(1),
         k if k.starts_with("audio_sfx.") => Some(1),
-        k if k.starts_with("audio_instrument.") => Some(1),
+        k if k.starts_with("audio.") => Some(1),
         k if k.starts_with("music.") => Some(1),
-        k if k.starts_with("texture_2d.") => Some(1),
+        k if k.starts_with("texture.") => Some(1),
 
         // Tier 2: Blender backends (metric validation only)
         k if k.starts_with("static_mesh.") => Some(2),
@@ -494,15 +614,17 @@ pub fn get_backend_tier(kind: &str) -> Option<u8> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use speccade_spec::recipe::texture::Texture2dMaterialMapsV1Params;
+    use speccade_spec::recipe::texture::TextureMaterialV1Params;
     use speccade_spec::{AssetType, OutputSpec, Recipe};
 
     #[test]
     fn test_backend_tier_classification() {
         // Tier 1 - Rust backends
+        assert_eq!(get_backend_tier("audio_v1"), Some(1));
         assert_eq!(get_backend_tier("audio_sfx.layered_synth_v1"), Some(1));
+        assert_eq!(get_backend_tier("audio.sfx_v1"), Some(1));
         assert_eq!(get_backend_tier("music.tracker_song_v1"), Some(1));
-        assert_eq!(get_backend_tier("texture_2d.material_maps_v1"), Some(1));
+        assert_eq!(get_backend_tier("texture.material_v1"), Some(1));
 
         // Tier 2 - Blender backends
         assert_eq!(get_backend_tier("static_mesh.blender_primitives_v1"), Some(2));
@@ -516,11 +638,13 @@ mod tests {
     #[test]
     fn test_backends_available() {
         // All implemented backends should be available
+        assert!(is_backend_available("audio_v1"));
         assert!(is_backend_available("audio_sfx.layered_synth_v1"));
-        assert!(is_backend_available("audio_instrument.synth_patch_v1"));
+        assert!(is_backend_available("audio.sfx_v1"));
         assert!(is_backend_available("music.tracker_song_v1"));
-        assert!(is_backend_available("texture_2d.material_maps_v1"));
-        assert!(is_backend_available("texture_2d.normal_map_v1"));
+        assert!(is_backend_available("texture.material_v1"));
+        assert!(is_backend_available("texture.normal_v1"));
+        assert!(is_backend_available("texture.packed_v1"));
         assert!(is_backend_available("static_mesh.blender_primitives_v1"));
         assert!(is_backend_available("skeletal_mesh.blender_rigged_mesh_v1"));
         assert!(is_backend_available("skeletal_animation.blender_clip_v1"));
@@ -533,7 +657,7 @@ mod tests {
     fn test_dispatch_texture_material_maps_matches_by_suffix() {
         let tmp = tempfile::tempdir().unwrap();
 
-        let params = Texture2dMaterialMapsV1Params {
+        let params = TextureMaterialV1Params {
             resolution: [16, 16],
             tileable: true,
             maps: vec![TextureMapType::Albedo, TextureMapType::Normal],
@@ -544,11 +668,11 @@ mod tests {
         };
 
         let recipe = Recipe::new(
-            "texture_2d.material_maps_v1",
+            "texture.material_v1",
             serde_json::to_value(&params).unwrap(),
         );
 
-        let spec = Spec::builder("test-tex-01", AssetType::Texture2d)
+        let spec = Spec::builder("test-tex-01", AssetType::Texture)
             .license("CC0-1.0")
             .seed(42)
             .output(OutputSpec::primary(
@@ -583,7 +707,7 @@ mod tests {
     fn test_dispatch_texture_material_maps_fallbacks_to_order() {
         let tmp = tempfile::tempdir().unwrap();
 
-        let params = Texture2dMaterialMapsV1Params {
+        let params = TextureMaterialV1Params {
             resolution: [8, 8],
             tileable: true,
             maps: vec![TextureMapType::Roughness, TextureMapType::Metallic],
@@ -594,11 +718,11 @@ mod tests {
         };
 
         let recipe = Recipe::new(
-            "texture_2d.material_maps_v1",
+            "texture.material_v1",
             serde_json::to_value(&params).unwrap(),
         );
 
-        let spec = Spec::builder("test-tex-02", AssetType::Texture2d)
+        let spec = Spec::builder("test-tex-02", AssetType::Texture)
             .license("CC0-1.0")
             .seed(123)
             .output(OutputSpec::primary(OutputFormat::Png, "textures/out1.png"))
@@ -617,7 +741,7 @@ mod tests {
     fn test_dispatch_texture_material_maps_requires_enough_outputs() {
         let tmp = tempfile::tempdir().unwrap();
 
-        let params = Texture2dMaterialMapsV1Params {
+        let params = TextureMaterialV1Params {
             resolution: [8, 8],
             tileable: true,
             maps: vec![TextureMapType::Albedo, TextureMapType::Normal],
@@ -628,11 +752,11 @@ mod tests {
         };
 
         let recipe = Recipe::new(
-            "texture_2d.material_maps_v1",
+            "texture.material_v1",
             serde_json::to_value(&params).unwrap(),
         );
 
-        let spec = Spec::builder("test-tex-03", AssetType::Texture2d)
+        let spec = Spec::builder("test-tex-03", AssetType::Texture)
             .license("CC0-1.0")
             .seed(1)
             .output(OutputSpec::primary(OutputFormat::Png, "textures/only_one.png"))
@@ -642,5 +766,79 @@ mod tests {
         let spec_path = tmp.path().join("test.spec.json");
         let err = dispatch_generate(&spec, tmp.path().to_str().unwrap(), &spec_path).unwrap_err();
         assert!(err.to_string().contains("Not enough PNG outputs"));
+    }
+
+    #[test]
+    fn test_dispatch_texture_packed_with_constant_maps() {
+        use speccade_spec::recipe::texture::{
+            ChannelSource, PackedChannels, TexturePackedV1Params,
+        };
+        use std::collections::HashMap;
+
+        let tmp = tempfile::tempdir().unwrap();
+
+        // Create params with constant grayscale maps
+        let mut maps = HashMap::new();
+        maps.insert("ao".to_string(), MapDefinition::Grayscale {
+            value: Some(0.8),
+            from_height: None,
+            ao_strength: None,
+        });
+        maps.insert("roughness".to_string(), MapDefinition::Grayscale {
+            value: Some(0.5),
+            from_height: None,
+            ao_strength: None,
+        });
+        maps.insert("metallic".to_string(), MapDefinition::Grayscale {
+            value: Some(1.0),
+            from_height: None,
+            ao_strength: None,
+        });
+
+        let params = TexturePackedV1Params {
+            resolution: [16, 16],
+            tileable: true,
+            maps,
+        };
+
+        let recipe = Recipe::new(
+            "texture.packed_v1",
+            serde_json::to_value(&params).unwrap(),
+        );
+
+        // Create channels spec
+        let channels = PackedChannels::rgb(
+            ChannelSource::key("ao"),
+            ChannelSource::key("roughness"),
+            ChannelSource::key("metallic"),
+        );
+
+        let output = OutputSpec {
+            kind: OutputKind::Primary,
+            format: OutputFormat::Png,
+            path: "packed/orm.png".to_string(),
+            channels: Some(channels),
+        };
+
+        let spec = Spec::builder("test-packed-01", AssetType::Texture)
+            .license("CC0-1.0")
+            .seed(42)
+            .output(output)
+            .recipe(recipe)
+            .build();
+
+        let spec_path = tmp.path().join("test.spec.json");
+        let outputs = dispatch_generate(&spec, tmp.path().to_str().unwrap(), &spec_path).unwrap();
+
+        assert_eq!(outputs.len(), 1);
+        assert_eq!(outputs[0].kind, OutputKind::Primary);
+        assert_eq!(outputs[0].format, OutputFormat::Png);
+
+        // Verify the file was created
+        let output_path = tmp.path().join("packed/orm.png");
+        assert!(output_path.exists(), "Output file should exist");
+
+        let bytes = std::fs::read(&output_path).unwrap();
+        assert!(!bytes.is_empty(), "Output file should not be empty");
     }
 }

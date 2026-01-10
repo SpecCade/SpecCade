@@ -10,6 +10,7 @@ use super::common::TimingCurve;
 
 /// A named pose definition containing bone rotations.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct PoseDefinition {
     /// Bone transforms in this pose.
     /// Keys are bone names, values are the rotations.
@@ -39,6 +40,7 @@ impl Default for PoseDefinition {
 
 /// Bone transform within a pose.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
+#[serde(deny_unknown_fields)]
 pub struct PoseBoneTransform {
     /// Pitch rotation in degrees (X axis).
     #[serde(default)]
@@ -98,6 +100,7 @@ impl PoseBoneTransform {
 
 /// IK target keyframe within a phase.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct PhaseIkTarget {
     /// Frame number for this keyframe.
     pub frame: i32,
@@ -128,6 +131,7 @@ impl PhaseIkTarget {
 /// Animation phase definition.
 /// Defines a segment of the animation with timing and pose/IK targets.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct AnimationPhase {
     /// Name of this phase (e.g., "contact", "passing", "lift").
     #[serde(skip_serializing_if = "Option::is_none")]

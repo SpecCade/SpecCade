@@ -1,7 +1,7 @@
 //! Tests for music/tracker recipe types - automation, IT options, and integration.
 
 use super::*;
-use crate::recipe::audio_sfx::Envelope;
+use crate::recipe::audio::Envelope;
 use std::collections::HashMap;
 
 // ==================== Automation Keys Tests ====================
@@ -281,26 +281,25 @@ fn test_full_song_serialization_roundtrip() {
 
     let instrument = TrackerInstrument {
         name: "Lead".to_string(),
-        r#ref: None,
         synthesis: Some(InstrumentSynthesis::Pulse { duty_cycle: 0.5 }),
         envelope: envelope.clone(),
         default_volume: Some(64),
+        ..Default::default()
     };
 
     let pattern = TrackerPattern {
         rows: 64,
-        data: vec![PatternNote {
+        data: Some(vec![PatternNote {
             row: 0,
-            channel: 0,
+            channel: Some(0),
             note: "C4".to_string(),
-            instrument: 0,
-            volume: Some(64),
-            effect: Some(PatternEffect {
-                r#type: Some("vibrato".to_string()),
-                param: Some(0x44),
-                effect_xy: None,
-            }),
-        }],
+            inst: 0,
+            vol: Some(64),
+            effect_name: Some("vibrato".to_string()),
+            param: Some(0x44),
+            ..Default::default()
+        }]),
+        notes: None,
     };
 
     let mut patterns = HashMap::new();
@@ -326,7 +325,7 @@ fn test_full_song_serialization_roundtrip() {
             start_vol: 0,
             end_vol: 64,
         }],
-        it_options: None,
+        ..Default::default()
     };
 
     let json = serde_json::to_string_pretty(&params).unwrap();
@@ -351,15 +350,12 @@ fn test_full_it_song_with_it_options() {
         speed: 8,
         channels: 16,
         r#loop: false,
-        instruments: vec![],
-        patterns: HashMap::new(),
-        arrangement: vec![],
-        automation: vec![],
         it_options: Some(ItOptions {
             stereo: false,
             global_volume: 96,
             mix_volume: 64,
         }),
+        ..Default::default()
     };
 
     let json = serde_json::to_string(&params).unwrap();

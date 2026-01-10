@@ -1,0 +1,33 @@
+{
+  "spec_version": 1,
+  "asset_id": "packed_smoothness",
+  "asset_type": "texture",
+  "license": "CC0-1.0",
+  "seed": 54323,
+  "description": "Demonstrates channel inversion (roughness to smoothness)",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "png",
+      "path": "smoothness.png",
+      "channels": {
+        "r": { "key": "rough", "invert": true },
+        "g": { "key": "rough", "invert": true },
+        "b": { "key": "rough", "invert": true }
+      }
+    }
+  ],
+  "recipe": {
+    "kind": "texture.packed_v1",
+    "params": {
+      "resolution": [256, 256],
+      "tileable": true,
+      "maps": {
+        "rough": {
+          "type": "grayscale",
+          "from_height": true
+        }
+      }
+    }
+  }
+}

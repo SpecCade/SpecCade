@@ -111,6 +111,7 @@ impl AimAxis {
 
 /// Export settings for animations.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct AnimationExportSettings {
     /// Bake all transforms to keyframes.
     #[serde(default = "default_true")]
@@ -143,6 +144,7 @@ impl Default for AnimationExportSettings {
 
 /// Validation conventions configuration.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
+#[serde(deny_unknown_fields)]
 pub struct ConventionsConfig {
     /// Fail on validation errors (strict mode).
     #[serde(default)]

@@ -15,6 +15,8 @@ pub const MAX_SEED: u32 = u32::MAX;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum AssetType {
+    /// Audio assets (SFX, instruments).
+    Audio,
     /// One-shot sound effects (WAV, OGG).
     AudioSfx,
     /// Instrument/sample patches (WAV).
@@ -22,8 +24,7 @@ pub enum AssetType {
     /// Tracker modules (XM, IT).
     Music,
     /// 2D texture maps (PNG).
-    #[serde(rename = "texture_2d")]
-    Texture2d,
+    Texture,
     /// Non-skinned 3D meshes (GLB).
     StaticMesh,
     /// Skinned meshes with skeleton (GLB).
@@ -36,10 +37,11 @@ impl AssetType {
     /// Returns the asset type as a string.
     pub fn as_str(&self) -> &'static str {
         match self {
+            AssetType::Audio => "audio",
             AssetType::AudioSfx => "audio_sfx",
             AssetType::AudioInstrument => "audio_instrument",
             AssetType::Music => "music",
-            AssetType::Texture2d => "texture_2d",
+            AssetType::Texture => "texture",
             AssetType::StaticMesh => "static_mesh",
             AssetType::SkeletalMesh => "skeletal_mesh",
             AssetType::SkeletalAnimation => "skeletal_animation",
@@ -54,10 +56,11 @@ impl AssetType {
     /// Returns all asset types.
     pub fn all() -> &'static [AssetType] {
         &[
+            AssetType::Audio,
             AssetType::AudioSfx,
             AssetType::AudioInstrument,
             AssetType::Music,
-            AssetType::Texture2d,
+            AssetType::Texture,
             AssetType::StaticMesh,
             AssetType::SkeletalMesh,
             AssetType::SkeletalAnimation,
@@ -76,10 +79,11 @@ impl std::str::FromStr for AssetType {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
+            "audio" => Ok(AssetType::Audio),
             "audio_sfx" => Ok(AssetType::AudioSfx),
             "audio_instrument" => Ok(AssetType::AudioInstrument),
             "music" => Ok(AssetType::Music),
-            "texture_2d" => Ok(AssetType::Texture2d),
+            "texture" => Ok(AssetType::Texture),
             "static_mesh" => Ok(AssetType::StaticMesh),
             "skeletal_mesh" => Ok(AssetType::SkeletalMesh),
             "skeletal_animation" => Ok(AssetType::SkeletalAnimation),
@@ -94,6 +98,7 @@ impl std::str::FromStr for AssetType {
 /// specification. It contains both contract fields (metadata and outputs)
 /// and an optional recipe for generation.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct Spec {
     /// Schema version; must be 1 for v1 specs.
     pub spec_version: u32,
@@ -332,16 +337,16 @@ mod tests {
         let json = serde_json::to_string(&at).unwrap();
         assert_eq!(json, "\"audio_sfx\"");
 
-        let parsed: AssetType = serde_json::from_str("\"texture_2d\"").unwrap();
-        assert_eq!(parsed, AssetType::Texture2d);
+        let parsed: AssetType = serde_json::from_str("\"texture\"").unwrap();
+        assert_eq!(parsed, AssetType::Texture);
     }
 
     #[test]
     fn test_asset_type_is_compatible_recipe() {
         assert!(AssetType::AudioSfx.is_compatible_recipe("audio_sfx.layered_synth_v1"));
         assert!(!AssetType::AudioSfx.is_compatible_recipe("music.tracker_song_v1"));
-        assert!(AssetType::Texture2d.is_compatible_recipe("texture_2d.material_maps_v1"));
-        assert!(AssetType::Texture2d.is_compatible_recipe("texture_2d.normal_map_v1"));
+        assert!(AssetType::Texture.is_compatible_recipe("texture.material_v1"));
+        assert!(AssetType::Texture.is_compatible_recipe("texture.normal_v1"));
     }
 
     #[test]
@@ -409,7 +414,7 @@ mod tests {
 
     #[test]
     fn test_spec_primary_outputs() {
-        let spec = Spec::builder("texture-01", AssetType::Texture2d)
+        let spec = Spec::builder("texture-01", AssetType::Texture)
             .license("CC0-1.0")
             .seed(0)
             .output(OutputSpec::primary(

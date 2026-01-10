@@ -13,6 +13,7 @@ speccade-spec.workspace = true
 rand_pcg.workspace = true
 rand.workspace = true
 blake3.workspace = true
+serde_json.workspace = true
 thiserror.workspace = true
 
 [dev-dependencies]

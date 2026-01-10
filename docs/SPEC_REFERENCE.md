@@ -9,6 +9,14 @@ Complete reference for SpecCade v1 spec schema, recipe kinds, and validation rul
 - [Output Specification](#output-specification)
 - [Recipe Kinds](#recipe-kinds)
 - [Asset Types](#asset-types)
+  - [Audio SFX](#audio-sfx)
+  - [Audio Instrument](#audio-instrument)
+  - [Instrument Architecture: Referential vs Inline](#instrument-architecture-referential-vs-inline-synthesis)
+  - [Music](#music)
+  - [Texture 2D](#texture-2d)
+  - [Static Mesh](#static-mesh)
+  - [Skeletal Mesh](#skeletal-mesh)
+  - [Skeletal Animation](#skeletal-animation)
 - [Validation Rules](#validation-rules)
 - [Examples](#examples)
 
@@ -240,6 +248,145 @@ Single-note instrument samples for tracker modules.
 
 ---
 
+### Instrument Architecture: Referential vs Inline Synthesis
+
+Music specs support two approaches for defining instruments:
+
+1. **Referential Instruments** (recommended) - Reference a pre-generated `audio_instrument` spec by path
+2. **Inline Synthesis** - Define synthesis parameters directly in the music spec
+
+#### Why Prefer Referential Instruments?
+
+Referential instruments provide significant advantages for production use:
+
+- **Caching**: Generated WAV samples are cached and reused across songs. A bass instrument generated once serves all songs that reference it.
+- **Smaller Specs**: Music specs stay focused on composition (patterns, arrangement) rather than bloating with synthesis definitions.
+- **Cleaner Context**: When generating specs with LLMs, referential instruments avoid clogging context with repeated synthesis parameters.
+- **Consistent Sound**: The same instrument spec produces identical output, ensuring sonic consistency across your project.
+- **Separation of Concerns**: Sound designers can iterate on instruments independently of composers.
+
+#### When Inline Synthesis is Appropriate
+
+Inline synthesis is useful for:
+
+- **Quick Prototyping**: Rapidly test musical ideas without creating separate instrument files
+- **One-off Unique Sounds**: A sound effect used in only one song that doesn't warrant a reusable spec
+- **Simple Waveforms**: Basic oscillators (sine, square, saw) where the synthesis is trivial
+
+#### Referential Instrument Example
+
+First, create an `audio_instrument` spec (e.g., `instruments/bass_pluck.json`):
+
+```json
+{
+  "spec_version": 1,
+  "asset_id": "bass_pluck",
+  "asset_type": "audio_instrument",
+  "license": "CC0-1.0",
+  "seed": 2001,
+  "description": "Bass pluck - Karplus-Strong synthesis",
+  "outputs": [
+    { "kind": "primary", "format": "wav", "path": "bass_pluck.wav" }
+  ],
+  "recipe": {
+    "kind": "audio_instrument.synth_patch_v1",
+    "params": {
+      "sample_rate": 44100,
+      "synthesis": {
+        "type": "karplus_strong",
+        "frequency": 65.41,
+        "decay": 0.998,
+        "blend": 0.5
+      },
+      "envelope": {
+        "attack": 0.001,
+        "decay": 0.2,
+        "sustain": 0.3,
+        "release": 0.4
+      }
+    }
+  }
+}
+```
+
+Then reference it in your music spec:
+
+```json
+{
+  "instruments": [
+    {
+      "name": "bass",
+      "ref": "instruments/bass_pluck.json"
+    },
+    {
+      "name": "lead",
+      "ref": "instruments/saw_lead.json"
+    }
+  ]
+}
+```
+
+The `ref` field points to an `audio_instrument` spec. When the music spec is generated, SpecCade loads the referenced instrument's output WAV (generating it first if not cached).
+
+#### Inline Synthesis Example
+
+For quick iteration or simple sounds:
+
+```json
+{
+  "instruments": [
+    {
+      "name": "lead_square",
+      "synthesis": {
+        "type": "pulse",
+        "duty_cycle": 0.5
+      },
+      "envelope": {
+        "attack": 0.01,
+        "decay": 0.1,
+        "sustain": 0.6,
+        "release": 0.2
+      }
+    }
+  ]
+}
+```
+
+#### Pre-built Instrument Library
+
+SpecCade provides a library of pre-defined instruments in `golden/speccade/specs/audio_instrument/`:
+
+| Instrument | Type | Use Case |
+|------------|------|----------|
+| `bass_pluck.json` | Karplus-Strong | Plucked bass, acoustic bass |
+| `bass_electric.json` | Subtractive | Electric/synth bass |
+| `saw_lead.json` | Sawtooth | Lead melodies, pads |
+| `square_chip.json` | Pulse | 8-bit/chiptune sounds |
+| `fm_bell.json` | FM | Bells, metallic tones |
+| `organ_additive.json` | Additive | Organ, harmonic-rich sounds |
+| `piano_acoustic.json` | Physical modeling | Piano-like tones |
+| `strings_ensemble.json` | Filtered saw | String sections |
+| `brass_section.json` | Bright sawtooth | Brass stabs, fanfares |
+| `drum_kick.json` | Pitched oscillator | Kick drums |
+| `drum_snare.json` | Noise + tone | Snare drums |
+| `drum_hihat.json` | Filtered noise | Hi-hats, cymbals |
+| `drum_tom.json` | Pitched decay | Toms, floor drums |
+
+Reference these directly in your music specs:
+
+```json
+{
+  "instruments": [
+    { "name": "kick", "ref": "audio_instrument/drum_kick.json" },
+    { "name": "snare", "ref": "audio_instrument/drum_snare.json" },
+    { "name": "bass", "ref": "audio_instrument/bass_electric.json" },
+    { "name": "lead", "ref": "audio_instrument/saw_lead.json" }
+  ]
+}
+```
+
+---
+
 ### Music
 
 **Asset Type:** `music`
@@ -266,8 +413,14 @@ Tracker module songs with instruments, patterns, and arrangement.
 | Field | Type | Description |
 |-------|------|-------------|
 | `name` | string | Instrument name |
-| `synthesis` | object | Synthesis config (same as audio layers) |
-| `envelope` | object | ADSR envelope |
+| `ref` | string | Path to an `audio_instrument` spec (recommended, see [Instrument Architecture](#instrument-architecture-referential-vs-inline-synthesis)) |
+| `wav` | string | Path to a pre-recorded WAV file |
+| `synthesis` | object | Inline synthesis config (same as audio layers) |
+| `envelope` | object | ADSR envelope (required for inline synthesis) |
+| `base_note` | string | Sample pitch for inline synthesis (`"C4"` default for XM, `"C5"` for IT) |
+| `sample_rate` | integer | Sample rate for inline synthesis (`22050` default) |
+
+Instruments must specify exactly one of: `ref`, `wav`, or `synthesis`.
 
 **Pattern Spec:**
 

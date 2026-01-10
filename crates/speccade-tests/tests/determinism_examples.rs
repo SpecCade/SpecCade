@@ -18,15 +18,18 @@ use speccade_tests::test_determinism;
 mod audio_sfx {
     use super::*;
     use speccade_backend_audio::generate_from_params;
-    use speccade_spec::recipe::audio_sfx::{
-        AudioLayer, AudioSfxLayeredSynthV1Params, Envelope, NoiseType, Synthesis, Waveform,
+    use speccade_spec::recipe::audio::{
+        AudioLayer, AudioV1Params, Envelope, NoiseType, Synthesis, Waveform,
     };
 
-    fn create_sine_params() -> AudioSfxLayeredSynthV1Params {
-        AudioSfxLayeredSynthV1Params {
+    fn create_sine_params() -> AudioV1Params {
+        AudioV1Params {
+            base_note: None,
             duration_seconds: 0.1,
             sample_rate: 22050,
             master_filter: None,
+            pitch_envelope: None,
+            generate_loop_points: false,
             layers: vec![AudioLayer {
                 synthesis: Synthesis::Oscillator {
                     waveform: Waveform::Sine,
@@ -43,11 +46,14 @@ mod audio_sfx {
         }
     }
 
-    fn create_noise_params() -> AudioSfxLayeredSynthV1Params {
-        AudioSfxLayeredSynthV1Params {
+    fn create_noise_params() -> AudioV1Params {
+        AudioV1Params {
+            base_note: None,
             duration_seconds: 0.1,
             sample_rate: 22050,
             master_filter: None,
+            pitch_envelope: None,
+            generate_loop_points: false,
             layers: vec![AudioLayer {
                 synthesis: Synthesis::NoiseBurst {
                     noise_type: NoiseType::White,
@@ -61,11 +67,14 @@ mod audio_sfx {
         }
     }
 
-    fn create_fm_params() -> AudioSfxLayeredSynthV1Params {
-        AudioSfxLayeredSynthV1Params {
+    fn create_fm_params() -> AudioV1Params {
+        AudioV1Params {
+            base_note: None,
             duration_seconds: 0.2,
             sample_rate: 44100,
             master_filter: None,
+            pitch_envelope: None,
+            generate_loop_points: false,
             layers: vec![AudioLayer {
                 synthesis: Synthesis::FmSynth {
                     carrier_freq: 440.0,
@@ -144,10 +153,13 @@ mod audio_sfx {
 
     // Using the test_determinism macro
     test_determinism!(macro_sine_test, {
-        let params = AudioSfxLayeredSynthV1Params {
+        let params = AudioV1Params {
+            base_note: None,
             duration_seconds: 0.05,
             sample_rate: 11025,
             master_filter: None,
+            pitch_envelope: None,
+            generate_loop_points: false,
             layers: vec![AudioLayer {
                 synthesis: Synthesis::Oscillator {
                     waveform: Waveform::Square,
@@ -168,10 +180,13 @@ mod audio_sfx {
     });
 
     test_determinism!(macro_noise_5_runs, runs = 5, {
-        let params = AudioSfxLayeredSynthV1Params {
+        let params = AudioV1Params {
+            base_note: None,
             duration_seconds: 0.05,
             sample_rate: 11025,
             master_filter: None,
+            pitch_envelope: None,
+            generate_loop_points: false,
             layers: vec![AudioLayer {
                 synthesis: Synthesis::NoiseBurst {
                     noise_type: NoiseType::Pink,
@@ -199,11 +214,11 @@ mod texture {
     use speccade_backend_texture::png::PngConfig;
     use speccade_backend_texture::{TextureBuffer, Color};
     use speccade_spec::recipe::texture::{
-        BaseMaterial, MaterialType, TextureMapType, Texture2dMaterialMapsV1Params,
+        BaseMaterial, MaterialType, TextureMapType, TextureMaterialV1Params,
     };
 
-    fn create_metal_params() -> Texture2dMaterialMapsV1Params {
-        Texture2dMaterialMapsV1Params {
+    fn create_metal_params() -> TextureMaterialV1Params {
+        TextureMaterialV1Params {
             resolution: [64, 64],
             tileable: true,
             maps: vec![
@@ -216,6 +231,8 @@ mod texture {
                 base_color: [0.8, 0.2, 0.1],
                 roughness_range: Some([0.2, 0.5]),
                 metallic: Some(1.0),
+                brick_pattern: None,
+                normal_params: None,
             }),
             layers: vec![],
             palette: None,
@@ -258,7 +275,7 @@ mod texture {
     }
 
     test_determinism!(macro_texture_roughness, {
-        let params = Texture2dMaterialMapsV1Params {
+        let params = TextureMaterialV1Params {
             resolution: [32, 32],
             tileable: false,
             maps: vec![TextureMapType::Roughness],
@@ -267,6 +284,8 @@ mod texture {
                 base_color: [0.5, 0.5, 0.5],
                 roughness_range: Some([0.6, 0.9]),
                 metallic: None,
+                brick_pattern: None,
+                normal_params: None,
             }),
             layers: vec![],
             palette: None,

@@ -50,13 +50,13 @@
           "name": "hihat",
           "synthesis": {
             "type": "noise",
-            "periodic": true
+            "periodic": false
           },
           "envelope": {
             "attack": 0.001,
-            "decay": 0.03,
+            "decay": 0.02,
             "sustain": 0.0,
-            "release": 0.02
+            "release": 0.015
           }
         }
       ],
@@ -64,30 +64,30 @@
         "beat_basic": {
           "rows": 64,
           "data": [
-            {"row": 0, "channel": 0, "note": "C3", "instrument": 0, "volume": 64},
-            {"row": 16, "channel": 0, "note": "C3", "instrument": 0, "volume": 64},
-            {"row": 32, "channel": 0, "note": "C3", "instrument": 0, "volume": 64},
-            {"row": 48, "channel": 0, "note": "C3", "instrument": 0, "volume": 64},
-            {"row": 8, "channel": 1, "note": "D3", "instrument": 1, "volume": 56},
-            {"row": 24, "channel": 1, "note": "D3", "instrument": 1, "volume": 56},
-            {"row": 40, "channel": 1, "note": "D3", "instrument": 1, "volume": 56},
-            {"row": 56, "channel": 1, "note": "D3", "instrument": 1, "volume": 56},
-            {"row": 0, "channel": 2, "note": "F#5", "instrument": 2, "volume": 32},
-            {"row": 4, "channel": 2, "note": "F#5", "instrument": 2, "volume": 24},
-            {"row": 8, "channel": 2, "note": "F#5", "instrument": 2, "volume": 32},
-            {"row": 12, "channel": 2, "note": "F#5", "instrument": 2, "volume": 24},
-            {"row": 16, "channel": 2, "note": "F#5", "instrument": 2, "volume": 32},
-            {"row": 20, "channel": 2, "note": "F#5", "instrument": 2, "volume": 24},
-            {"row": 24, "channel": 2, "note": "F#5", "instrument": 2, "volume": 32},
-            {"row": 28, "channel": 2, "note": "F#5", "instrument": 2, "volume": 24},
-            {"row": 32, "channel": 2, "note": "F#5", "instrument": 2, "volume": 32},
-            {"row": 36, "channel": 2, "note": "F#5", "instrument": 2, "volume": 24},
-            {"row": 40, "channel": 2, "note": "F#5", "instrument": 2, "volume": 32},
-            {"row": 44, "channel": 2, "note": "F#5", "instrument": 2, "volume": 24},
-            {"row": 48, "channel": 2, "note": "F#5", "instrument": 2, "volume": 32},
-            {"row": 52, "channel": 2, "note": "F#5", "instrument": 2, "volume": 24},
-            {"row": 56, "channel": 2, "note": "F#5", "instrument": 2, "volume": 32},
-            {"row": 60, "channel": 2, "note": "F#5", "instrument": 2, "volume": 24}
+            {"row": 0, "channel": 0, "instrument": 0, "volume": 64},
+            {"row": 16, "channel": 0, "instrument": 0, "volume": 64},
+            {"row": 32, "channel": 0, "instrument": 0, "volume": 64},
+            {"row": 48, "channel": 0, "instrument": 0, "volume": 64},
+            {"row": 8, "channel": 1, "instrument": 1, "volume": 56},
+            {"row": 24, "channel": 1, "instrument": 1, "volume": 56},
+            {"row": 40, "channel": 1, "instrument": 1, "volume": 56},
+            {"row": 56, "channel": 1, "instrument": 1, "volume": 56},
+            {"row": 0, "channel": 2, "instrument": 2, "volume": 32},
+            {"row": 4, "channel": 2, "instrument": 2, "volume": 24},
+            {"row": 8, "channel": 2, "instrument": 2, "volume": 32},
+            {"row": 12, "channel": 2, "instrument": 2, "volume": 24},
+            {"row": 16, "channel": 2, "instrument": 2, "volume": 32},
+            {"row": 20, "channel": 2, "instrument": 2, "volume": 24},
+            {"row": 24, "channel": 2, "instrument": 2, "volume": 32},
+            {"row": 28, "channel": 2, "instrument": 2, "volume": 24},
+            {"row": 32, "channel": 2, "instrument": 2, "volume": 32},
+            {"row": 36, "channel": 2, "instrument": 2, "volume": 24},
+            {"row": 40, "channel": 2, "instrument": 2, "volume": 32},
+            {"row": 44, "channel": 2, "instrument": 2, "volume": 24},
+            {"row": 48, "channel": 2, "instrument": 2, "volume": 32},
+            {"row": 52, "channel": 2, "instrument": 2, "volume": 24},
+            {"row": 56, "channel": 2, "instrument": 2, "volume": 32},
+            {"row": 60, "channel": 2, "instrument": 2, "volume": 24}
           ]
         }
       },

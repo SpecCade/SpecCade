@@ -6,9 +6,10 @@ use super::common::TextureMapType;
 use super::layers::TextureLayer;
 use super::materials::BaseMaterial;
 
-/// Parameters for the `texture_2d.material_maps_v1` recipe.
+/// Parameters for the `texture.material_v1` recipe.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct Texture2dMaterialMapsV1Params {
+#[serde(deny_unknown_fields)]
+pub struct TextureMaterialV1Params {
     /// Texture resolution [width, height] in pixels.
     pub resolution: [u32; 2],
     /// Whether the texture should tile seamlessly.

@@ -20,17 +20,8 @@ use crate::dispatch::{dispatch_generate, get_backend_tier, is_backend_available}
 const BLENDER_ASSET_TYPES: &[&str] = &["static_mesh", "skeletal_mesh", "skeletal_animation"];
 
 /// Asset types that use pure Rust backends (Tier 1)
-/// Note: normal_map specs are merged into texture_2d output category
-const RUST_ASSET_TYPES: &[&str] = &["audio_sfx", "audio_instrument", "music", "texture_2d", "normal_map"];
+const RUST_ASSET_TYPES: &[&str] = &["audio", "music", "texture"];
 
-/// Maps source asset type directories to output categories
-/// normal_map outputs go into texture_2d folder
-fn get_output_category(asset_type: &str) -> &str {
-    match asset_type {
-        "normal_map" => "texture_2d",
-        other => other,
-    }
-}
 
 /// Result of generating a single spec
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -365,8 +356,6 @@ fn process_spec(spec_path: &Path, out_root: &Path, _verbose: bool) -> SpecResult
     // Default result for errors
     let spec_path_str = spec_path.to_string_lossy().to_string();
     let asset_type = extract_asset_type(spec_path).unwrap_or_else(|| "unknown".to_string());
-    // Map asset type to output category (e.g., normal_map -> texture_2d)
-    let output_category = get_output_category(&asset_type);
 
     let mut result = SpecResult {
         spec_path: spec_path_str.clone(),
@@ -435,15 +424,15 @@ fn process_spec(spec_path: &Path, out_root: &Path, _verbose: bool) -> SpecResult
     }
 
     // Determine output directory structure based on number of outputs
-    // Single output: {category}/{spec_name}.{ext} (flat)
-    // Multiple outputs: {category}/{spec_name}/... (subdirectory)
+    // Single output: {asset_type}/{spec_name}.{ext} (flat)
+    // Multiple outputs: {asset_type}/{spec_name}/... (subdirectory)
     let output_count = spec.outputs.len();
     let spec_out_dir = if output_count == 1 {
-        // Single output: write directly to category folder
-        out_root.join(output_category)
+        // Single output: write directly to asset type folder
+        out_root.join(&asset_type)
     } else {
         // Multiple outputs: create subdirectory
-        out_root.join(output_category).join(&result.asset_id)
+        out_root.join(&asset_type).join(&result.asset_id)
     };
 
     if let Err(e) = fs::create_dir_all(&spec_out_dir) {
@@ -530,12 +519,12 @@ mod tests {
     #[test]
     fn test_extract_asset_type() {
         assert_eq!(
-            extract_asset_type(Path::new("golden/specs/audio_sfx/beep.json")),
-            Some("audio_sfx".to_string())
+            extract_asset_type(Path::new("golden/specs/audio/beep.json")),
+            Some("audio".to_string())
         );
         assert_eq!(
-            extract_asset_type(Path::new("specs/texture_2d/brick.json")),
-            Some("texture_2d".to_string())
+            extract_asset_type(Path::new("specs/texture/brick.json")),
+            Some("texture".to_string())
         );
         assert_eq!(
             extract_asset_type(Path::new("specs/static_mesh/cube.json")),
@@ -557,13 +546,13 @@ mod tests {
         assert!(BLENDER_ASSET_TYPES.contains(&"static_mesh"));
         assert!(BLENDER_ASSET_TYPES.contains(&"skeletal_mesh"));
         assert!(BLENDER_ASSET_TYPES.contains(&"skeletal_animation"));
-        assert!(!BLENDER_ASSET_TYPES.contains(&"audio_sfx"));
+        assert!(!BLENDER_ASSET_TYPES.contains(&"audio"));
     }
 
     #[test]
     fn test_rust_asset_types() {
-        assert!(RUST_ASSET_TYPES.contains(&"audio_sfx"));
-        assert!(RUST_ASSET_TYPES.contains(&"texture_2d"));
+        assert!(RUST_ASSET_TYPES.contains(&"audio"));
+        assert!(RUST_ASSET_TYPES.contains(&"texture"));
         assert!(!RUST_ASSET_TYPES.contains(&"static_mesh"));
     }
 }

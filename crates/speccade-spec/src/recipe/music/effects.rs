@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 
 /// Pattern effect command.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct PatternEffect {
     /// Effect type (e.g., "vibrato", "volume_slide").
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -18,6 +19,7 @@ pub struct PatternEffect {
 
 /// IT-specific module options.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct ItOptions {
     /// Stereo output flag.
     #[serde(default = "default_stereo")]
@@ -54,7 +56,7 @@ impl Default for ItOptions {
 
 /// Automation entry for volume fades and tempo changes.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "type", rename_all = "snake_case")]
+#[serde(tag = "type", rename_all = "snake_case", deny_unknown_fields)]
 pub enum AutomationEntry {
     /// Volume fade automation.
     VolumeFade {

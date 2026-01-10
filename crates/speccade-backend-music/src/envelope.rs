@@ -6,7 +6,7 @@
 //! The conversion uses a generic approach with the [`EnvelopePoint`] trait,
 //! allowing shared ADSR calculation logic for both XM and IT formats.
 
-use speccade_spec::recipe::audio_sfx::Envelope;
+use speccade_spec::recipe::audio::Envelope;
 
 use crate::it::{env_flags, ItEnvelope, ItEnvelopePoint};
 use crate::xm::{XmEnvelope, XmEnvelopePoint};

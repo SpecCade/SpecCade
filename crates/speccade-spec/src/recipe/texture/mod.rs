@@ -4,13 +4,21 @@ mod common;
 mod layers;
 mod materials;
 mod normal;
+mod packed;
+mod packing;
 mod pbr_maps;
 
 pub use common::*;
 pub use layers::*;
 pub use materials::*;
 pub use normal::*;
+pub use packed::*;
+pub use packing::*;
 pub use pbr_maps::*;
+
+// Type aliases for backward compatibility with old naming convention
+pub type Texture2dMaterialMapsV1Params = TextureMaterialV1Params;
+pub type Texture2dNormalMapV1Params = TextureNormalV1Params;
 
 #[cfg(test)]
 mod tests {
@@ -22,7 +30,7 @@ mod tests {
 
     #[test]
     fn test_texture_params_name() {
-        let params = Texture2dMaterialMapsV1Params {
+        let params = TextureMaterialV1Params {
             resolution: [256, 256],
             tileable: false,
             maps: vec![TextureMapType::Albedo],
@@ -37,7 +45,7 @@ mod tests {
 
     #[test]
     fn test_texture_params_resolution() {
-        let params = Texture2dMaterialMapsV1Params {
+        let params = TextureMaterialV1Params {
             resolution: [512, 1024],
             tileable: false,
             maps: vec![TextureMapType::Albedo],
@@ -47,13 +55,13 @@ mod tests {
             color_ramp: None,
         };
         let json = serde_json::to_string(&params).unwrap();
-        let parsed: Texture2dMaterialMapsV1Params = serde_json::from_str(&json).unwrap();
+        let parsed: TextureMaterialV1Params = serde_json::from_str(&json).unwrap();
         assert_eq!(parsed.resolution, [512, 1024]);
     }
 
     #[test]
     fn test_texture_params_format_serialization() {
-        let params = Texture2dMaterialMapsV1Params {
+        let params = TextureMaterialV1Params {
             resolution: [256, 256],
             tileable: true,
             maps: vec![TextureMapType::Albedo, TextureMapType::Normal],
@@ -79,7 +87,7 @@ mod tests {
             affects: vec![TextureMapType::Albedo],
             strength: 0.5,
         };
-        let params = Texture2dMaterialMapsV1Params {
+        let params = TextureMaterialV1Params {
             resolution: [256, 256],
             tileable: false,
             maps: vec![TextureMapType::Albedo],
@@ -89,13 +97,13 @@ mod tests {
             color_ramp: None,
         };
         let json = serde_json::to_string(&params).unwrap();
-        let parsed: Texture2dMaterialMapsV1Params = serde_json::from_str(&json).unwrap();
+        let parsed: TextureMaterialV1Params = serde_json::from_str(&json).unwrap();
         assert_eq!(parsed.layers.len(), 1);
     }
 
     #[test]
     fn test_texture_params_palette() {
-        let params = Texture2dMaterialMapsV1Params {
+        let params = TextureMaterialV1Params {
             resolution: [256, 256],
             tileable: false,
             maps: vec![TextureMapType::Albedo],
@@ -105,13 +113,13 @@ mod tests {
             color_ramp: None,
         };
         let json = serde_json::to_string(&params).unwrap();
-        let parsed: Texture2dMaterialMapsV1Params = serde_json::from_str(&json).unwrap();
+        let parsed: TextureMaterialV1Params = serde_json::from_str(&json).unwrap();
         assert_eq!(parsed.palette.as_ref().unwrap().len(), 3);
     }
 
     #[test]
     fn test_texture_params_color_ramp() {
-        let params = Texture2dMaterialMapsV1Params {
+        let params = TextureMaterialV1Params {
             resolution: [256, 256],
             tileable: false,
             maps: vec![TextureMapType::Albedo],
@@ -121,7 +129,7 @@ mod tests {
             color_ramp: Some(vec!["#000000".to_string(), "#FFFFFF".to_string()]),
         };
         let json = serde_json::to_string(&params).unwrap();
-        let parsed: Texture2dMaterialMapsV1Params = serde_json::from_str(&json).unwrap();
+        let parsed: TextureMaterialV1Params = serde_json::from_str(&json).unwrap();
         assert_eq!(parsed.color_ramp.as_ref().unwrap().len(), 2);
     }
 
@@ -439,7 +447,7 @@ mod tests {
 
     #[test]
     fn test_normal_map_params_name() {
-        let params = Texture2dNormalMapV1Params {
+        let params = TextureNormalV1Params {
             resolution: [256, 256],
             tileable: false,
             pattern: None,
@@ -451,7 +459,7 @@ mod tests {
 
     #[test]
     fn test_normal_map_params_resolution() {
-        let params = Texture2dNormalMapV1Params {
+        let params = TextureNormalV1Params {
             resolution: [512, 512],
             tileable: true,
             pattern: None,
@@ -459,13 +467,13 @@ mod tests {
             processing: None,
         };
         let json = serde_json::to_string(&params).unwrap();
-        let parsed: Texture2dNormalMapV1Params = serde_json::from_str(&json).unwrap();
+        let parsed: TextureNormalV1Params = serde_json::from_str(&json).unwrap();
         assert_eq!(parsed.resolution, [512, 512]);
     }
 
     #[test]
     fn test_normal_map_params_format() {
-        let params = Texture2dNormalMapV1Params {
+        let params = TextureNormalV1Params {
             resolution: [256, 256],
             tileable: true,
             pattern: None,
@@ -583,7 +591,7 @@ mod tests {
 
     #[test]
     fn test_normal_map_processing_strength() {
-        let params = Texture2dNormalMapV1Params {
+        let params = TextureNormalV1Params {
             resolution: [256, 256],
             tileable: false,
             pattern: None,
@@ -605,12 +613,11 @@ mod tests {
 
     #[test]
     fn test_normal_map_processing_defaults() {
-        let processing = NormalMapProcessing {
-            blur: None,
-            invert: true,
-        };
-        // default_invert() returns true
-        assert!(processing.invert);
+        // Test that deserializing without invert field gives default of false
+        let json = r#"{"blur": 1.0}"#;
+        let processing: NormalMapProcessing = serde_json::from_str(json).unwrap();
+        // default_invert() returns false (no inversion by default)
+        assert!(!processing.invert);
     }
 
     // ========================================================================
@@ -624,6 +631,8 @@ mod tests {
             base_color: [0.8, 0.8, 0.8],
             roughness_range: Some([0.2, 0.4]),
             metallic: Some(1.0),
+            brick_pattern: None,
+            normal_params: None,
         };
         assert_eq!(mat.material_type, MaterialType::Metal);
     }
@@ -635,6 +644,8 @@ mod tests {
             base_color: [0.6, 0.4, 0.2],
             roughness_range: Some([0.5, 0.8]),
             metallic: Some(0.0),
+            brick_pattern: None,
+            normal_params: None,
         };
         assert_eq!(mat.material_type, MaterialType::Wood);
     }
@@ -656,6 +667,8 @@ mod tests {
                 base_color: [0.5, 0.5, 0.5],
                 roughness_range: None,
                 metallic: None,
+                brick_pattern: None,
+                normal_params: None,
             };
             let json = serde_json::to_string(&mat).unwrap();
             let parsed: BaseMaterial = serde_json::from_str(&json).unwrap();
@@ -700,7 +713,7 @@ mod tests {
 
     #[test]
     fn test_full_texture_params_roundtrip() {
-        let params = Texture2dMaterialMapsV1Params {
+        let params = TextureMaterialV1Params {
             resolution: [1024, 1024],
             tileable: true,
             maps: vec![
@@ -714,6 +727,8 @@ mod tests {
                 base_color: [0.8, 0.2, 0.1],
                 roughness_range: Some([0.2, 0.5]),
                 metallic: Some(1.0),
+                brick_pattern: None,
+                normal_params: None,
             }),
             layers: vec![
                 TextureLayer::NoisePattern {
@@ -740,7 +755,7 @@ mod tests {
         };
 
         let json = serde_json::to_string_pretty(&params).unwrap();
-        let parsed: Texture2dMaterialMapsV1Params = serde_json::from_str(&json).unwrap();
+        let parsed: TextureMaterialV1Params = serde_json::from_str(&json).unwrap();
         assert_eq!(parsed.resolution, params.resolution);
         assert_eq!(parsed.maps.len(), params.maps.len());
         assert_eq!(parsed.layers.len(), params.layers.len());
@@ -748,7 +763,7 @@ mod tests {
 
     #[test]
     fn test_full_normal_map_params_roundtrip() {
-        let params = Texture2dNormalMapV1Params {
+        let params = TextureNormalV1Params {
             resolution: [512, 512],
             tileable: true,
             pattern: Some(NormalMapPattern::Bricks {
@@ -765,7 +780,7 @@ mod tests {
         };
 
         let json = serde_json::to_string_pretty(&params).unwrap();
-        let parsed: Texture2dNormalMapV1Params = serde_json::from_str(&json).unwrap();
+        let parsed: TextureNormalV1Params = serde_json::from_str(&json).unwrap();
         assert_eq!(parsed.resolution, params.resolution);
         assert_eq!(parsed.bump_strength, params.bump_strength);
     }

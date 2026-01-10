@@ -52,6 +52,7 @@ impl WidgetStyle {
 
 /// Bone collection definition for organizing bones in groups.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct BoneCollection {
     /// Name of the collection (e.g., "IK Controls", "FK Controls").
     pub name: String,
@@ -175,6 +176,7 @@ impl BoneCollectionPreset {
 
 /// RGB color value for bone coloring (0.0-1.0 range).
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct BoneColor {
     /// Red component (0.0-1.0).
     pub r: f64,
@@ -228,7 +230,7 @@ impl Default for BoneColor {
 
 /// Bone color scheme for automatic bone coloring.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "scheme", rename_all = "snake_case")]
+#[serde(tag = "scheme", rename_all = "snake_case", deny_unknown_fields)]
 pub enum BoneColorScheme {
     /// Standard scheme: left=blue, right=red, center=yellow.
     Standard,
@@ -339,6 +341,7 @@ impl ArmatureDisplay {
 /// This configuration controls how the rig appears to animators in Blender,
 /// including bone collections, custom shapes, and color coding.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct AnimatorRigConfig {
     /// Whether to organize bones into collections.
     #[serde(default = "default_true")]

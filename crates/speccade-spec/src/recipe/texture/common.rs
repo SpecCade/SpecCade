@@ -24,6 +24,7 @@ pub enum TextureMapType {
 
 /// Noise configuration.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct NoiseConfig {
     /// Noise algorithm.
     pub algorithm: NoiseAlgorithm,

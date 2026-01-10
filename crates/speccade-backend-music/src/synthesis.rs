@@ -6,7 +6,7 @@
 use rand::Rng;
 use rand::SeedableRng;
 use rand_pcg::Pcg32;
-use speccade_spec::recipe::audio_sfx::Envelope;
+use speccade_spec::recipe::audio::Envelope;
 use speccade_spec::recipe::music::InstrumentSynthesis;
 use std::f64::consts::PI;
 use std::path::Path;
@@ -37,6 +37,10 @@ pub fn generate_instrument_sample(
     let samples = match synthesis {
         InstrumentSynthesis::Pulse { duty_cycle } => {
             generate_pulse_wave(*duty_cycle, sample_rate, duration_samples)
+        }
+        InstrumentSynthesis::Square => {
+            // Square wave is a 50% duty cycle pulse
+            generate_pulse_wave(0.5, sample_rate, duration_samples)
         }
         InstrumentSynthesis::Triangle => {
             generate_triangle_wave(sample_rate, duration_samples)
@@ -85,6 +89,15 @@ pub fn generate_single_cycle(
                 .map(|i| {
                     let t = i as f64 / samples_per_cycle as f64;
                     if t < *duty_cycle { 1.0 } else { -1.0 }
+                })
+                .collect()
+        }
+        InstrumentSynthesis::Square => {
+            // Square wave is a 50% duty cycle pulse
+            (0..samples_per_cycle)
+                .map(|i| {
+                    let t = i as f64 / samples_per_cycle as f64;
+                    if t < 0.5 { 1.0 } else { -1.0 }
                 })
                 .collect()
         }
@@ -425,21 +438,21 @@ mod tests {
 /// This function:
 /// - Loads a WAV file from the specified path
 /// - Converts multi-channel audio to mono by averaging channels
-/// - Resamples to DEFAULT_SAMPLE_RATE (22050 Hz) if needed using linear interpolation
+/// - Preserves the original sample rate (returned alongside data)
 /// - Returns 16-bit PCM data as bytes (little-endian)
 ///
 /// # Arguments
 /// * `sample_path` - Absolute path to the WAV file
 ///
 /// # Returns
-/// Result containing the 16-bit PCM bytes (little-endian i16)
+/// Result containing tuple of (16-bit PCM bytes, original sample rate)
 ///
 /// # Errors
 /// Returns an error if:
 /// - The file cannot be read
 /// - The WAV format is unsupported (non-PCM formats)
 /// - The bit depth is not 8, 16, 24, or 32 bits
-pub fn load_wav_sample(sample_path: &Path) -> Result<Vec<u8>, String> {
+pub fn load_wav_sample(sample_path: &Path) -> Result<(Vec<u8>, u32), String> {
     // Read the WAV file
     let mut reader = hound::WavReader::open(sample_path)
         .map_err(|e| format!("Failed to open WAV file '{}': {}", sample_path.display(), e))?;
@@ -481,15 +494,8 @@ pub fn load_wav_sample(sample_path: &Path) -> Result<Vec<u8>, String> {
         }
     };
 
-    // Resample if needed
-    let resampled = if spec.sample_rate != crate::note::DEFAULT_SAMPLE_RATE {
-        resample_linear(&mono_samples, spec.sample_rate, crate::note::DEFAULT_SAMPLE_RATE)
-    } else {
-        mono_samples
-    };
-
-    // Convert to 16-bit PCM bytes
-    Ok(samples_to_bytes(&resampled))
+    // Convert to 16-bit PCM bytes, preserving original sample rate
+    Ok((samples_to_bytes(&mono_samples), spec.sample_rate))
 }
 
 /// Convert interleaved multi-channel samples to mono by averaging channels.
@@ -551,6 +557,7 @@ fn normalize_sample(sample: i32, bits_per_sample: u16) -> f64 {
 ///
 /// # Returns
 /// Resampled audio at the target sample rate
+#[allow(dead_code)] // Available for optional quality reduction if needed
 fn resample_linear(samples: &[f64], from_rate: u32, to_rate: u32) -> Vec<f64> {
     if samples.is_empty() {
         return Vec::new();

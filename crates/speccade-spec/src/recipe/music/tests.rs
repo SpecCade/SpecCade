@@ -1,7 +1,7 @@
 //! Tests for music/tracker recipe types - basic serialization.
 
 use super::*;
-use crate::recipe::audio_sfx::Envelope;
+use crate::recipe::audio::Envelope;
 use std::collections::HashMap;
 
 // ==================== Top-Level Keys Tests ====================
@@ -14,11 +14,7 @@ fn test_song_name_serialization() {
         speed: 6,
         channels: 8,
         r#loop: false,
-        instruments: vec![],
-        patterns: HashMap::new(),
-        arrangement: vec![],
-        automation: vec![],
-        it_options: None,
+        ..Default::default()
     };
 
     let json = serde_json::to_string(&params).unwrap();
@@ -96,7 +92,6 @@ fn test_loop_default_value() {
 fn test_instruments_serialization() {
     let instr = TrackerInstrument {
         name: "Lead".to_string(),
-        r#ref: None,
         synthesis: Some(InstrumentSynthesis::Sine),
         envelope: Envelope {
             attack: 0.01,
@@ -105,6 +100,7 @@ fn test_instruments_serialization() {
             release: 0.2,
         },
         default_volume: Some(64),
+        ..Default::default()
     };
 
     let json = serde_json::to_string(&instr).unwrap();
@@ -119,7 +115,7 @@ fn test_patterns_serialization() {
         "intro".to_string(),
         TrackerPattern {
             rows: 64,
-            data: vec![],
+            ..Default::default()
         },
     );
 
@@ -190,10 +186,8 @@ fn test_it_options_serialization() {
 fn test_instrument_name_serialization() {
     let instr = TrackerInstrument {
         name: "Bass".to_string(),
-        r#ref: None,
         synthesis: Some(InstrumentSynthesis::Sawtooth),
-        envelope: instrument::default_envelope(),
-        default_volume: None,
+        ..Default::default()
     };
 
     let json = serde_json::to_string(&instr).unwrap();
@@ -205,9 +199,7 @@ fn test_instrument_ref_serialization() {
     let instr = TrackerInstrument {
         name: "External".to_string(),
         r#ref: Some("instruments/lead.spec.py".to_string()),
-        synthesis: None,
-        envelope: instrument::default_envelope(),
-        default_volume: None,
+        ..Default::default()
     };
 
     let json = serde_json::to_string(&instr).unwrap();
@@ -312,7 +304,7 @@ fn test_instrument_envelope_default() {
 fn test_pattern_rows_serialization() {
     let pattern = TrackerPattern {
         rows: 128,
-        data: vec![],
+        ..Default::default()
     };
 
     let json = serde_json::to_string(&pattern).unwrap();
@@ -324,21 +316,22 @@ fn test_pattern_rows_serialization() {
 fn test_pattern_notes_serialization() {
     let note = PatternNote {
         row: 0,
-        channel: 0,
+        channel: Some(0),
         note: "C4".to_string(),
-        instrument: 1,
-        volume: Some(64),
-        effect: None,
+        inst: 1,
+        vol: Some(64),
+        ..Default::default()
     };
 
     let pattern = TrackerPattern {
         rows: 64,
-        data: vec![note],
+        data: Some(vec![note]),
+        notes: None,
     };
 
     let json = serde_json::to_string(&pattern).unwrap();
     let parsed: TrackerPattern = serde_json::from_str(&json).unwrap();
-    assert_eq!(parsed.data.len(), 1);
+    assert_eq!(parsed.data.as_ref().map(|d| d.len()).unwrap_or(0), 1);
 }
 
 // ==================== Note Keys Tests ====================
@@ -347,11 +340,8 @@ fn test_pattern_notes_serialization() {
 fn test_note_row_serialization() {
     let note = PatternNote {
         row: 16,
-        channel: 0,
         note: "C4".to_string(),
-        instrument: 0,
-        volume: None,
-        effect: None,
+        ..Default::default()
     };
 
     let json = serde_json::to_string(&note).unwrap();
@@ -362,28 +352,21 @@ fn test_note_row_serialization() {
 #[test]
 fn test_note_channel_serialization() {
     let note = PatternNote {
-        row: 0,
-        channel: 3,
+        channel: Some(3),
         note: "E4".to_string(),
-        instrument: 0,
-        volume: None,
-        effect: None,
+        ..Default::default()
     };
 
     let json = serde_json::to_string(&note).unwrap();
     let parsed: PatternNote = serde_json::from_str(&json).unwrap();
-    assert_eq!(parsed.channel, 3);
+    assert_eq!(parsed.channel, Some(3));
 }
 
 #[test]
 fn test_note_note_serialization() {
     let note = PatternNote {
-        row: 0,
-        channel: 0,
         note: "A#5".to_string(),
-        instrument: 0,
-        volume: None,
-        effect: None,
+        ..Default::default()
     };
 
     let json = serde_json::to_string(&note).unwrap();
@@ -394,79 +377,67 @@ fn test_note_note_serialization() {
 #[test]
 fn test_note_instrument_serialization() {
     let note = PatternNote {
-        row: 0,
-        channel: 0,
         note: "C4".to_string(),
-        instrument: 5,
-        volume: None,
-        effect: None,
+        inst: 5,
+        ..Default::default()
     };
 
     let json = serde_json::to_string(&note).unwrap();
     let parsed: PatternNote = serde_json::from_str(&json).unwrap();
-    assert_eq!(parsed.instrument, 5);
+    assert_eq!(parsed.inst, 5);
 }
 
 #[test]
 fn test_note_volume_serialization() {
     let note = PatternNote {
-        row: 0,
-        channel: 0,
         note: "C4".to_string(),
-        instrument: 0,
-        volume: Some(48),
-        effect: None,
+        vol: Some(48),
+        ..Default::default()
     };
 
     let json = serde_json::to_string(&note).unwrap();
     let parsed: PatternNote = serde_json::from_str(&json).unwrap();
-    assert_eq!(parsed.volume, Some(48));
+    assert_eq!(parsed.vol, Some(48));
 }
 
 #[test]
 fn test_note_effect_serialization() {
-    let effect = PatternEffect {
-        r#type: Some("vibrato".to_string()),
-        param: Some(0x44),
-        effect_xy: None,
-    };
-
     let note = PatternNote {
-        row: 0,
-        channel: 0,
         note: "C4".to_string(),
-        instrument: 0,
-        volume: None,
-        effect: Some(effect),
+        effect_name: Some("vibrato".to_string()),
+        param: Some(0x44),
+        ..Default::default()
     };
 
     let json = serde_json::to_string(&note).unwrap();
     let parsed: PatternNote = serde_json::from_str(&json).unwrap();
-    assert!(parsed.effect.is_some());
+    assert!(parsed.effect_name.is_some());
 }
 
 #[test]
 fn test_note_effect_param_serialization() {
-    let effect = PatternEffect {
-        r#type: Some("arpeggio".to_string()),
+    let note = PatternNote {
+        note: "C4".to_string(),
+        effect_name: Some("arpeggio".to_string()),
         param: Some(0x37),
-        effect_xy: None,
+        ..Default::default()
     };
 
-    let json = serde_json::to_string(&effect).unwrap();
-    let parsed: PatternEffect = serde_json::from_str(&json).unwrap();
+    let json = serde_json::to_string(&note).unwrap();
+    let parsed: PatternNote = serde_json::from_str(&json).unwrap();
     assert_eq!(parsed.param, Some(0x37));
 }
 
 #[test]
 fn test_note_effect_xy_serialization() {
-    let effect = PatternEffect {
-        r#type: Some("portamento".to_string()),
-        param: None,
-        effect_xy: Some((0x3, 0x7)),
+    let note = PatternNote {
+        note: "C4".to_string(),
+        effect_name: Some("portamento".to_string()),
+        effect_xy: Some([0x3, 0x7]),
+        ..Default::default()
     };
 
-    let json = serde_json::to_string(&effect).unwrap();
-    let parsed: PatternEffect = serde_json::from_str(&json).unwrap();
-    assert_eq!(parsed.effect_xy, Some((0x3, 0x7)));
+    let json = serde_json::to_string(&note).unwrap();
+    let parsed: PatternNote = serde_json::from_str(&json).unwrap();
+    assert_eq!(parsed.effect_xy, Some([0x3, 0x7]));
 }

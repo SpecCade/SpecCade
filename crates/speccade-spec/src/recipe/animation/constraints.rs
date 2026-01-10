@@ -13,7 +13,7 @@ use super::common::ConstraintAxis;
 /// These constraints map to Blender's constraint system and are used to create
 /// realistic joint limits for skeletal animations.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "type", rename_all = "snake_case")]
+#[serde(tag = "type", rename_all = "snake_case", deny_unknown_fields)]
 pub enum BoneConstraint {
     /// Hinge constraint - allows rotation around a single axis only.
     /// Maps to LIMIT_ROTATION with only one axis enabled.
@@ -254,6 +254,7 @@ impl std::error::Error for BoneConstraintError {}
 
 /// Configuration for bone constraints on a rig.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
+#[serde(deny_unknown_fields)]
 pub struct ConstraintConfig {
     /// List of bone constraints to apply.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]

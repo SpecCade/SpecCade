@@ -1,0 +1,212 @@
+# Spec Reference
+
+This directory contains detailed reference documentation for SpecCade specs organized by asset type.
+
+## Quick Links
+
+- [Texture Specs](texture.md) - Material maps, normal maps, and packed textures
+- [Audio Specs](audio.md) - Sound effects and instrument samples
+- [Music Specs](music.md) - Tracker module songs
+
+## Spec Structure
+
+Every SpecCade spec is a JSON document with two logical sections:
+
+1. **Contract** - Metadata and output declarations (required for all operations)
+2. **Recipe** - Backend-specific generation parameters (required for `generate`)
+
+### Minimal Valid Spec
+
+```json
+{
+  "spec_version": 1,
+  "asset_id": "my_asset",
+  "asset_type": "audio_sfx",
+  "license": "CC0-1.0",
+  "seed": 42,
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "my_sound.wav"
+    }
+  ],
+  "recipe": {
+    "kind": "audio_sfx.layered_synth_v1",
+    "params": {
+      "duration_seconds": 1.0,
+      "sample_rate": 44100,
+      "layers": []
+    }
+  }
+}
+```
+
+## Contract Fields
+
+### Required Fields
+
+| Field | Type | Description | Constraints |
+|-------|------|-------------|-------------|
+| `spec_version` | integer | Schema version | Must be `1` |
+| `asset_id` | string | Stable identifier | `[a-z][a-z0-9_-]{2,63}` |
+| `asset_type` | string | Asset type enum | See asset types below |
+| `license` | string | License identifier | SPDX recommended (e.g., `"CC0-1.0"`) |
+| `seed` | integer | RNG seed | Range: `0` to `4294967295` (2^32-1) |
+| `outputs` | array | Expected artifacts | At least one entry required |
+
+### Optional Fields
+
+| Field | Type | Description | Default |
+|-------|------|-------------|---------|
+| `description` | string | Human-readable description | `""` |
+| `style_tags` | array | Semantic tags (e.g., `["retro", "8bit"]`) | `[]` |
+| `engine_targets` | array | Target engines: `"godot"`, `"unity"`, `"unreal"` | `[]` |
+| `variants` | array | Variant specs for procedural variations | `[]` |
+
+## Seeds and Determinism
+
+The `seed` field controls RNG initialization for procedural generation:
+
+- Must be a non-negative integer less than 2^32 (0 to 4,294,967,295)
+- Same seed + same spec = identical output (within documented tolerances)
+- Variants can use `seed_offset` to derive related seeds
+
+```json
+{
+  "seed": 12345,
+  "variants": [
+    {"variant_id": "soft", "seed_offset": 0},
+    {"variant_id": "hard", "seed_offset": 100}
+  ]
+}
+```
+
+The variant "hard" uses effective seed `12345 + 100 = 12445`.
+
+### Determinism Tiers
+
+- **Tier 1 (Audio, Music, Textures):** Byte-identical output per platform and backend version
+- **Tier 2 (Meshes, Characters, Animations):** Metric validation (triangle count, bounds, bone count)
+
+See [DETERMINISM.md](../DETERMINISM.md) for the complete determinism policy.
+
+## Output Specification
+
+Each entry in `outputs[]` declares an expected artifact:
+
+```json
+{
+  "kind": "primary",
+  "format": "wav",
+  "path": "sounds/laser_blast.wav"
+}
+```
+
+### Output Fields
+
+| Field | Type | Description | Values |
+|-------|------|-------------|--------|
+| `kind` | string | Output category | See output kinds below |
+| `format` | string | File format | `"wav"`, `"ogg"`, `"xm"`, `"it"`, `"png"`, `"glb"`, `"gltf"`, `"json"` |
+| `path` | string | Relative output path | Must be safe (see constraints) |
+
+### Output Kinds
+
+| Kind | Description | Use Case |
+|------|-------------|----------|
+| `primary` | Main asset output | The generated asset file |
+| `preview` | Preview/thumbnail | Low-quality preview for browsing |
+| `metadata` | Generation metadata | Hash, metrics, validation results |
+| `packed` | Channel-packed texture | Multiple maps in one file (see texture docs) |
+
+### Path Constraints
+
+- Must be relative (no leading `/`, `\`, or drive letter)
+- Must use forward slashes (`/`) only
+- Must not contain `..` segments (path traversal)
+- Must end with extension matching `format`
+- Must be unique within the spec
+
+## Validation
+
+### Common Validation Rules
+
+| Rule | Error Code | Description |
+|------|------------|-------------|
+| `spec_version` must equal `1` | E001 | Unsupported spec version |
+| `asset_id` must match `[a-z][a-z0-9_-]{2,63}` | E002 | Invalid asset_id format |
+| `asset_type` must be known | E003 | Unknown asset type |
+| `seed` must be in range `0..2^32-1` | E004 | Seed out of range |
+| `outputs` must have at least one entry | E005 | No outputs declared |
+| `outputs[].path` must be unique | E007 | Duplicate output path |
+| `outputs[].path` must be safe | E008 | Unsafe output path |
+| `outputs[].path` extension must match format | E009 | Path/format mismatch |
+| `recipe` required for `generate` | E010 | Missing recipe |
+| `recipe.kind` must match `asset_type` | E011 | Recipe/asset type mismatch |
+
+### Common Warnings
+
+| Rule | Warning Code | Description |
+|------|--------------|-------------|
+| `license` is empty | W001 | Missing license information |
+| `description` is empty | W002 | Missing description |
+| Large seed near max value | W003 | Seed close to overflow |
+
+## Asset Types Overview
+
+| Asset Type | Recipe Kinds | Output Formats | Documentation |
+|------------|--------------|----------------|---------------|
+| `audio_sfx` | `audio_sfx.layered_synth_v1` | WAV, OGG | [audio.md](audio.md#audio-sfx) |
+| `audio_instrument` | `audio_instrument.synth_patch_v1` | WAV | [audio.md](audio.md#audio-instrument) |
+| `music` | `music.tracker_song_v1` | XM, IT | [music.md](music.md) |
+| `texture_2d` | `texture_2d.material_maps_v1`, `texture_2d.normal_map_v1` | PNG | [texture.md](texture.md#texture-2d) |
+| `texture` | `texture.packed_v1` | PNG | [texture.md](texture.md#packed-textures) |
+| `static_mesh` | `static_mesh.blender_primitives_v1` | GLB, GLTF | See main SPEC_REFERENCE.md |
+| `skeletal_mesh` | `skeletal_mesh.blender_rigged_mesh_v1` | GLB, GLTF | See main SPEC_REFERENCE.md |
+| `skeletal_animation` | `skeletal_animation.blender_clip_v1` | GLB, GLTF | See main SPEC_REFERENCE.md |
+
+## Recipe Structure
+
+Every recipe has a `kind` (format: `{asset_type}.{recipe_name}`) and `params`:
+
+```json
+{
+  "recipe": {
+    "kind": "audio_sfx.layered_synth_v1",
+    "params": {
+      "duration_seconds": 0.5,
+      "sample_rate": 44100,
+      "layers": [...]
+    }
+  }
+}
+```
+
+Recipe kinds must be compatible with the spec's `asset_type`. See type-specific documentation for available recipes and their parameters.
+
+## Golden Corpus
+
+Reference specs are available in the golden corpus:
+
+```
+golden/speccade/specs/
+  audio_sfx/        # Sound effect specs
+  audio_instrument/ # Instrument sample specs
+  music/            # Tracker song specs
+  texture/          # Texture specs
+  static_mesh/      # Static mesh specs
+  skeletal_mesh/    # Character mesh specs
+  skeletal_animation/ # Animation clip specs
+```
+
+Comprehensive test specs are at:
+
+```
+golden/speccade/
+  audio_sfx_comprehensive.spec.json
+  audio_instrument_comprehensive.spec.json
+  music_comprehensive.spec.json
+  texture_comprehensive.spec.json
+  normal_comprehensive.spec.json
+```

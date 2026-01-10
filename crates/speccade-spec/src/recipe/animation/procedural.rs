@@ -47,6 +47,7 @@ impl ProceduralAxis {
 /// Procedural animation layer configuration.
 /// Adds automatic motion overlays to bones.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct ProceduralLayer {
     /// Type of procedural animation.
     #[serde(rename = "type")]

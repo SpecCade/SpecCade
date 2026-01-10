@@ -139,13 +139,13 @@ mod integration_tests {
         assert!(result.is_ok(), "errors: {:?}", result.errors);
     }
 
-    /// Test parsing the example spec from RFC-0001 Section 6.3 (Texture 2D)
+    /// Test parsing the example spec from RFC-0001 Section 6.3 (Texture)
     #[test]
     fn test_parse_rfc_example_texture() {
         let json = r#"{
             "spec_version": 1,
             "asset_id": "metal-panel-01",
-            "asset_type": "texture_2d",
+            "asset_type": "texture",
             "license": "CC0-1.0",
             "seed": 98765,
             "description": "Worn metal panel texture with scratches",
@@ -167,7 +167,7 @@ mod integration_tests {
         let spec = Spec::from_json(json).expect("should parse");
 
         assert_eq!(spec.asset_id, "metal-panel-01");
-        assert_eq!(spec.asset_type, AssetType::Texture2d);
+        assert_eq!(spec.asset_type, AssetType::Texture);
         assert_eq!(spec.outputs.len(), 2);
         assert_eq!(spec.primary_outputs().count(), 2);
 

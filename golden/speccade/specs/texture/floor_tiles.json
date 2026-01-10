@@ -1,0 +1,30 @@
+{
+  "spec_version": 1,
+  "asset_id": "floor_tiles",
+  "asset_type": "texture",
+  "license": "CC0-1.0",
+  "seed": 5006,
+  "description": "Square floor tile pattern normal map with subtle variation",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "png",
+      "path": "floor_tiles.png"
+    }
+  ],
+  "recipe": {
+    "kind": "texture.normal_v1",
+    "params": {
+      "resolution": [256, 256],
+      "tileable": true,
+      "pattern": {
+        "type": "tiles",
+        "tile_size": 64,
+        "gap_width": 4,
+        "gap_depth": 0.35,
+        "seed": 42
+      },
+      "bump_strength": 1.0
+    }
+  }
+}

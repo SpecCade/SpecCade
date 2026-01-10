@@ -1,0 +1,38 @@
+{
+  "spec_version": 1,
+  "asset_id": "white_noise_burst",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 1005,
+  "description": "Pure white noise burst - useful for percussion/static",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "white_noise_burst.wav"
+    }
+  ],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "duration_seconds": 0.15,
+      "sample_rate": 44100,
+      "layers": [
+        {
+          "synthesis": {
+            "type": "noise_burst",
+            "noise_type": "white"
+          },
+          "envelope": {
+            "attack": 0.001,
+            "decay": 0.05,
+            "sustain": 0.3,
+            "release": 0.08
+          },
+          "volume": 1.0,
+          "pan": 0.0
+        }
+      ]
+    }
+  }
+}

@@ -22,6 +22,7 @@ fn default_fps() -> u8 {
 /// Parameters for the `skeletal_animation.blender_rigged_v1` recipe.
 /// This is the IK-enabled version of the animation recipe.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct SkeletalAnimationBlenderRiggedV1Params {
     /// Skeleton rig to animate.
     #[serde(skip_serializing_if = "Option::is_none")]

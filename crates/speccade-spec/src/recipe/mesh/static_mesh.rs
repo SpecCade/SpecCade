@@ -8,6 +8,7 @@ use super::primitives::MeshPrimitive;
 
 /// Parameters for the `static_mesh.blender_primitives_v1` recipe.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct StaticMeshBlenderPrimitivesV1Params {
     /// Base Blender primitive.
     pub base_primitive: MeshPrimitive,

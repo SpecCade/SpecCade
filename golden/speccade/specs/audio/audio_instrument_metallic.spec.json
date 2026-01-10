@@ -1,0 +1,43 @@
+{
+  "spec_version": 1,
+  "asset_id": "audio-instrument-metallic-golden",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 999014,
+  "description": "Golden test for metallic synthesis - exercises base_freq, num_partials, and inharmonicity",
+  "style_tags": ["golden", "metallic", "bell", "instrument"],
+  "engine_targets": ["godot", "unity", "unreal"],
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "audio_instrument_metallic.wav"
+    }
+  ],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "base_note": "C5",
+      "duration_seconds": 3.0,
+      "sample_rate": 44100,
+      "layers": [
+        {
+          "synthesis": {
+            "type": "metallic",
+            "base_freq": 800.0,
+            "num_partials": 8,
+            "inharmonicity": 1.414
+          },
+          "envelope": {
+            "attack": 0.001,
+            "decay": 0.5,
+            "sustain": 0.2,
+            "release": 1.5
+          },
+          "volume": 1.0,
+          "pan": 0.0
+        }
+      ]
+    }
+  }
+}

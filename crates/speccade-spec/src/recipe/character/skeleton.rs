@@ -47,6 +47,7 @@ impl SkeletonPreset {
 
 /// A bone in a custom skeleton definition.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct SkeletonBone {
     /// Unique bone name.
     pub bone: String,

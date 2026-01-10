@@ -1,0 +1,61 @@
+{
+  "spec_version": 1,
+  "asset_id": "checker_floor",
+  "asset_type": "texture",
+  "license": "CC0-1.0",
+  "seed": 4003,
+  "description": "Checkered floor texture - clean procedural pattern with high-contrast tiles",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "png",
+      "path": "checker_floor_albedo.png"
+    },
+    {
+      "kind": "primary",
+      "format": "png",
+      "path": "checker_floor_normal.png"
+    },
+    {
+      "kind": "primary",
+      "format": "png",
+      "path": "checker_floor_roughness.png"
+    }
+  ],
+  "recipe": {
+    "kind": "texture.material_v1",
+    "params": {
+      "resolution": [256, 256],
+      "tileable": true,
+      "maps": ["albedo", "normal", "roughness"],
+      "base_material": {
+        "type": "plastic",
+        "base_color": [0.9, 0.9, 0.9],
+        "roughness_range": [0.3, 0.5],
+        "metallic": 0.0
+      },
+      "layers": [
+        {
+          "type": "checkerboard",
+          "tile_size": 64,
+          "color1": 0.85,
+          "color2": 0.2,
+          "affects": ["albedo", "normal", "roughness"],
+          "strength": 1.0
+        },
+        {
+          "type": "noise_pattern",
+          "noise": {
+            "algorithm": "perlin",
+            "scale": 0.02,
+            "octaves": 2,
+            "persistence": 0.5,
+            "lacunarity": 2.0
+          },
+          "affects": ["albedo", "roughness"],
+          "strength": 0.05
+        }
+      ]
+    }
+  }
+}

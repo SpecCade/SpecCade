@@ -39,8 +39,7 @@
 //!
 //! # Crate Structure
 //!
-//! - [`generate`] - Main entry point for audio SFX generation
-//! - [`instrument`] - Instrument sample generation
+//! - [`generate`] - Main entry point for audio generation (SFX and instruments)
 //! - [`envelope`] - ADSR envelope generators
 //! - [`filter`] - Biquad filter implementations
 //! - [`mixer`] - Layer mixing with volume/pan
@@ -53,7 +52,6 @@ pub mod envelope;
 pub mod error;
 pub mod filter;
 pub mod generate;
-pub mod instrument;
 pub mod mixer;
 pub mod oscillator;
 pub mod rng;
@@ -63,14 +61,13 @@ pub mod wav;
 // Re-export main types at crate root
 pub use error::{AudioError, AudioResult};
 pub use generate::{generate, generate_from_params, GenerateResult};
-pub use instrument::{generate_instrument, GenerateInstrumentResult};
 pub use wav::{WavResult, WavWriter};
 
 #[cfg(test)]
 mod integration_tests {
     use super::*;
-    use speccade_spec::recipe::audio_sfx::{
-        AudioLayer, AudioSfxLayeredSynthV1Params, Envelope, NoiseType, Synthesis, Waveform,
+    use speccade_spec::recipe::audio::{
+        AudioLayer, AudioV1Params as AudioSfxLayeredSynthV1Params, Envelope, NoiseType, Synthesis, Waveform,
     };
     use speccade_spec::recipe::Recipe;
     use speccade_spec::{AssetType, OutputFormat, OutputSpec, Spec};
@@ -85,9 +82,9 @@ mod integration_tests {
                     carrier_freq: 440.0,
                     modulator_freq: 880.0,
                     modulation_index: 2.5,
-                    freq_sweep: Some(speccade_spec::recipe::audio_sfx::FreqSweep {
+                    freq_sweep: Some(speccade_spec::recipe::audio::FreqSweep {
                         end_freq: 110.0,
-                        curve: speccade_spec::recipe::audio_sfx::SweepCurve::Exponential,
+                        curve: speccade_spec::recipe::audio::SweepCurve::Exponential,
                     }),
                 },
                 envelope: Envelope {
@@ -100,6 +97,9 @@ mod integration_tests {
                 pan: 0.0,
                 delay: None,
             }],
+            pitch_envelope: None,
+            base_note: None,
+            generate_loop_points: false,
         };
 
         Spec::builder("laser-blast-01", AssetType::AudioSfx)
@@ -177,6 +177,9 @@ mod integration_tests {
                 pan: 0.0,
                 delay: None,
             }],
+            pitch_envelope: None,
+            base_note: None,
+            generate_loop_points: false,
         };
 
         let spec = Spec::builder("noise-test", AssetType::AudioSfx)
@@ -202,7 +205,7 @@ mod integration_tests {
                 duration_seconds: 0.1,
                 sample_rate: 22050,
                 master_filter: None,
-            layers: vec![AudioLayer {
+                layers: vec![AudioLayer {
                     synthesis: Synthesis::NoiseBurst {
                         noise_type: NoiseType::White,
                         filter: None,
@@ -212,6 +215,9 @@ mod integration_tests {
                     pan: 0.0,
                     delay: None,
                 }],
+                pitch_envelope: None,
+                base_note: None,
+                generate_loop_points: false,
             };
 
             Spec::builder("noise-test", AssetType::AudioSfx)
@@ -241,6 +247,9 @@ mod integration_tests {
             duration_seconds: 0.1,
             sample_rate: 44100,
             master_filter: None,
+            pitch_envelope: None,
+            base_note: None,
+            generate_loop_points: false,
             layers: vec![
                 AudioLayer {
                     synthesis: Synthesis::Oscillator {
@@ -309,6 +318,9 @@ mod integration_tests {
                 pan: 0.0,
                 delay: None,
             }],
+            pitch_envelope: None,
+            base_note: None,
+            generate_loop_points: false,
         };
 
         let spec = Spec::builder("pluck-test", AssetType::AudioSfx)
@@ -341,6 +353,9 @@ mod integration_tests {
                 pan: 0.0,
                 delay: None,
             }],
+            pitch_envelope: None,
+            base_note: None,
+            generate_loop_points: false,
         };
 
         let spec = Spec::builder("additive-test", AssetType::AudioSfx)
