@@ -1,4 +1,4 @@
-//! Parser for PARITY_MATRIX.md files.
+//! Parser for the legacy parity matrix markdown file.
 //!
 //! This module provides logic to parse markdown tables containing `Key` columns
 //! from the parity matrix documentation. It extracts section names, table names,

@@ -174,7 +174,7 @@ pub fn map_legacy_keys_to_params(
     let mut warnings = Vec::new();
 
     // For now, just pass through the legacy data as params
-    // TODO: Map legacy keys to canonical params using PARITY_MATRIX.md (SSOT for mapping rules).
+    // TODO: Map legacy keys to canonical params using docs/legacy/PARITY_MATRIX_LEGACY_SPEC_PY.md (SSOT for mapping rules).
 
     // Remove the 'name' field as it's used for asset_id
     let mut params = legacy.data.clone();
@@ -183,7 +183,7 @@ pub fn map_legacy_keys_to_params(
     // Add warning for manual review
     if !params.is_empty() {
         warnings.push(format!(
-            "Legacy params dict '{}' passed through for {}. Manual review recommended (TODO: key mapping per PARITY_MATRIX.md).",
+            "Legacy params dict '{}' passed through for {}. Manual review recommended (TODO: key mapping per docs/legacy/PARITY_MATRIX_LEGACY_SPEC_PY.md).",
             legacy.dict_name, recipe_kind
         ));
     }
@@ -309,7 +309,9 @@ mod tests {
         };
 
         let (params, warnings) = map_legacy_keys_to_params(&legacy, "audio_v1").unwrap();
-        assert!(warnings.iter().any(|w| w.contains("PARITY_MATRIX.md")));
+        assert!(warnings
+            .iter()
+            .any(|w| w.contains("docs/legacy/PARITY_MATRIX_LEGACY_SPEC_PY.md")));
         assert!(params.get("name").is_none(), "name should be removed");
         assert!(params.get("duration").is_some());
     }

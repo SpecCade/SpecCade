@@ -903,7 +903,7 @@ pub fn generate_noise_layer(base_seed: u32, layer_index: u32, num_samples: usize
 - [rand_pcg Rust crate](https://docs.rs/rand_pcg/)
 - [serde_json_canonicalizer Rust crate](https://docs.rs/serde_json_canonicalizer/)
 - [RFC-0001: Canonical Spec Architecture](./rfcs/RFC-0001-canonical-spec.md)
-- [PARITY_MATRIX.md](../PARITY_MATRIX.md) - Randomness Audit section
+- [PARITY_MATRIX.md](../PARITY_MATRIX.md) - Generator tiers (Tier 1 vs Tier 2)
 
 ---
 

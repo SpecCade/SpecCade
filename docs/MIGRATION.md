@@ -32,7 +32,7 @@ speccade migrate --project /path/to/project --audit
 speccade migrate --project /path/to/project --audit --audit-threshold 0.90
 ```
 
-Audit mode parses specs, classifies legacy keys against `PARITY_MATRIX.md`, and prints an aggregate completeness report.
+Audit mode parses specs, classifies legacy keys against `docs/legacy/PARITY_MATRIX_LEGACY_SPEC_PY.md`, and prints an aggregate completeness report.
 
 ## What the Migrator Does Today (Accurate Behavior)
 
@@ -89,4 +89,4 @@ After migrating, use the spec reference docs to translate legacy dict keys into 
 - `docs/spec-reference/music.md`
 - `docs/spec-reference/texture.md`
 
-The migration parity inventory (legacy key taxonomy) is in `PARITY_MATRIX.md`.
+The migration parity inventory (legacy key taxonomy) is in `docs/legacy/PARITY_MATRIX_LEGACY_SPEC_PY.md`.

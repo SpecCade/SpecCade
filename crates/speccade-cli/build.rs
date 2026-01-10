@@ -1,6 +1,6 @@
 //! Build script for speccade-cli.
 //!
-//! This script parses PARITY_MATRIX.md at build time and generates
+//! This script parses the legacy parity matrix at build time and generates
 //! Rust code containing parity data that can be included in the binary.
 
 use std::env;
@@ -66,11 +66,16 @@ fn main() {
     let manifest_dir = env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR not set");
     let manifest_path = PathBuf::from(&manifest_dir);
 
-    // Build the path to PARITY_MATRIX.md (relative to crates/speccade-cli)
-    let parity_matrix_path = manifest_path.join("..").join("..").join("PARITY_MATRIX.md");
+    // Build the path to the legacy parity matrix (relative to crates/speccade-cli)
+    let parity_matrix_path = manifest_path
+        .join("..")
+        .join("..")
+        .join("docs")
+        .join("legacy")
+        .join("PARITY_MATRIX_LEGACY_SPEC_PY.md");
     let parity_matrix_path = parity_matrix_path.canonicalize().unwrap_or_else(|e| {
         panic!(
-            "Failed to canonicalize PARITY_MATRIX.md path {:?}: {}",
+            "Failed to canonicalize legacy parity matrix path {:?}: {}",
             parity_matrix_path, e
         )
     });
@@ -81,7 +86,7 @@ fn main() {
     // Read the parity matrix file
     let content = fs::read_to_string(&parity_matrix_path).unwrap_or_else(|e| {
         panic!(
-            "Failed to read PARITY_MATRIX.md at {:?}: {}",
+            "Failed to read legacy parity matrix at {:?}: {}",
             parity_matrix_path, e
         )
     });

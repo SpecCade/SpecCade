@@ -1,4 +1,4 @@
-//! Parity data generated from PARITY_MATRIX.md at build time.
+//! Parity data generated from `docs/legacy/PARITY_MATRIX_LEGACY_SPEC_PY.md` at build time.
 //!
 //! This module includes the auto-generated parity data and re-exports
 //! all types and helpers for use elsewhere in the crate.
