@@ -15,16 +15,8 @@
   "recipe": {
     "kind": "static_mesh.blender_primitives_v1",
     "params": {
-      "primitive": "cylinder",
-      "primitive_params": {
-        "radius": 0.3,
-        "depth": 2.0,
-        "vertices": 32
-      },
-      "location": [0, 0, 0],
-      "rotation": [0, 0, 0],
-      "scale": [1, 1, 1],
-      "shade": "smooth",
+      "base_primitive": "cylinder",
+      "dimensions": [0.6, 0.6, 2.0],
       "modifiers": [
         {
           "type": "bevel",
@@ -33,11 +25,17 @@
           "angle_limit": 0.5236
         }
       ],
-      "uv": {
-        "mode": "cube_project",
+      "uv_projection": {
+        "method": "box",
         "cube_size": 1.0
       },
+      "material_slots": [],
       "export": {
+        "apply_modifiers": true,
+        "triangulate": true,
+        "include_normals": true,
+        "include_uvs": true,
+        "include_vertex_colors": false,
         "tangents": false
       }
     }

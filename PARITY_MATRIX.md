@@ -455,6 +455,86 @@
 | Not Implemented (✗) | 0 | 0% |
 | Deprecated (-) | 0 | 0% |
 
+### SpecCade Rust Implementation (texture_2d.normal_map_v1)
+
+The Rust implementation (`speccade-spec`) uses a different schema. The golden examples in `golden/speccade/specs/normal_map/` demonstrate the canonical format.
+
+#### Top-Level Keys (Texture2dNormalMapV1Params)
+
+| Key | Required | Type | Constraints | Default | Notes | Status |
+|-----|----------|------|-------------|---------|-------|--------|
+| `resolution` | Yes | `[u32, u32]` | Width/height > 0 | - | Output dimensions [width, height] | ✓ |
+| `tileable` | Yes | `bool` | - | - | Whether texture tiles seamlessly | ✓ |
+| `pattern` | No | `dict` | - | - | Pattern specification (tagged enum) | ✓ |
+| `bump_strength` | No | `f64` | >= 0 | `1.0` | Normal strength multiplier | ✓ |
+| `processing` | No | `dict` | - | - | Post-processing options | ✓ |
+
+#### Processing Keys (NormalMapProcessing)
+
+| Key | Required | Type | Constraints | Default | Notes | Status |
+|-----|----------|------|-------------|---------|-------|--------|
+| `blur` | No | `f64` | >= 0 | - | Gaussian blur sigma for height map | ✓ |
+| `invert` | No | `bool` | - | `true` | Invert height map before conversion | ✓ |
+
+#### Pattern Types (NormalMapPattern)
+
+| Type | Description | Status |
+|------|-------------|--------|
+| `grid` | Regular grid with beveled cells (`cell_size`, `line_width`, `bevel`) | ✓ |
+| `bricks` | Brick/masonry pattern (`brick_width`, `brick_height`, `mortar_width`, `offset`) | ✓ |
+| `hexagons` | Hexagonal tile pattern (`size`, `gap`) | ✓ |
+| `noise_bumps` | Noise-based surface detail (`noise`: NoiseConfig) | ✓ |
+| `diamond_plate` | Industrial diamond plate pattern (`diamond_size`, `height`) | ✓ |
+| `tiles` | Square tile pattern with gaps (`tile_size`, `gap_width`, `gap_depth`, `seed`) | ✓ |
+| `rivets` | Riveted metal plate pattern (`spacing`, `radius`, `height`, `seed`) | ✓ |
+| `weave` | Woven fabric/basket pattern (`thread_width`, `gap`, `depth`) | ✓ |
+
+#### NoiseConfig
+
+| Key | Required | Type | Constraints | Default | Notes | Status |
+|-----|----------|------|-------------|---------|-------|--------|
+| `algorithm` | Yes | `str` | `perlin`, `simplex`, `worley`, `value`, `fbm` | - | Noise algorithm | ✓ |
+| `scale` | Yes | `f64` | > 0 | - | Noise scale/frequency | ✓ |
+| `octaves` | No | `u8` | >= 1 | `4` | Fractal octaves | ✓ |
+| `persistence` | No | `f64` | 0-1 | `0.5` | Amplitude reduction per octave | ✓ |
+| `lacunarity` | No | `f64` | > 0 | `2.0` | Frequency increase per octave | ✓ |
+
+#### Golden Example Coverage
+
+| Example File | Pattern Type | Keywords Covered |
+|--------------|--------------|------------------|
+| `brick_normal.json` | bricks | `brick_width`, `brick_height`, `mortar_width`, `offset` |
+| `hex_tiles.json` | hexagons | `size`, `gap` |
+| `scratched_metal.json` | noise_bumps | `noise.algorithm` (perlin), `noise.scale`, `noise.octaves`, `noise.persistence`, `noise.lacunarity` |
+| `grid_panel.json` | grid | `cell_size`, `line_width`, `bevel` |
+| `diamond_plate.json` | diamond_plate | `diamond_size`, `height` |
+| `floor_tiles.json` | tiles | `tile_size`, `gap_width`, `gap_depth`, `seed` |
+| `metal_rivets.json` | rivets | `spacing`, `radius`, `height`, `seed`, `tileable: false` |
+| `fabric_weave.json` | weave | `thread_width`, `gap`, `depth` |
+| `noise_simplex.json` | noise_bumps | `noise.algorithm` (simplex) |
+| `noise_worley.json` | noise_bumps | `noise.algorithm` (worley), `tileable: false` |
+| `noise_value.json` | noise_bumps | `noise.algorithm` (value) |
+| `noise_fbm.json` | noise_bumps | `noise.algorithm` (fbm) |
+| `processed_bricks.json` | bricks | `processing.blur`, `processing.invert` |
+
+### Future Enhancements
+
+The following features are planned or under consideration for future normal map capabilities:
+
+1. **Height-to-Normal from Image** - Allow importing grayscale height maps (PNG/EXR) and converting to normal maps using Sobel operators, enabling artists to use external heightmaps or hand-painted depth.
+
+2. **Normal Map Blending** - Support for blending multiple normal map layers using Reoriented Normal Mapping (RNM) technique, allowing base pattern + detail overlays (e.g., brick pattern with scratches).
+
+3. **Additional Pattern Types**:
+   - `scratches` - Directional scratch marks for worn surfaces
+   - `circles` - Circular pattern for machine surfaces
+   - `scales` - Overlapping scale pattern for organic surfaces (fish, dragon)
+   - `bark` - Procedural tree bark pattern
+
+4. **Per-Pattern Noise Overlay** - Add optional noise overlay to any pattern type for micro-detail variation, making surfaces appear more natural and less synthetic.
+
+5. **Curvature-Based Detail** - Generate normal detail based on mesh curvature data for mesh-aware surface detail that respects edge flow and topology.
+
 ---
 
 ## MESH (static_mesh)

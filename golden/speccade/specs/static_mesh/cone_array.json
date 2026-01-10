@@ -1,0 +1,59 @@
+{
+  "spec_version": 1,
+  "asset_id": "cone_array",
+  "asset_type": "static_mesh",
+  "license": "CC0-1.0",
+  "seed": 6006,
+  "description": "Cone with array modifier - demonstrates array and solidify modifiers",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "glb",
+      "path": "cone_array.glb"
+    }
+  ],
+  "recipe": {
+    "kind": "static_mesh.blender_primitives_v1",
+    "params": {
+      "base_primitive": "cone",
+      "dimensions": [0.5, 0.5, 1.0],
+      "modifiers": [
+        {
+          "type": "solidify",
+          "thickness": 0.05,
+          "offset": 0.0
+        },
+        {
+          "type": "array",
+          "count": 3,
+          "offset": [0.0, 0.0, 1.2]
+        }
+      ],
+      "uv_projection": {
+        "method": "cylinder"
+      },
+      "material_slots": [
+        {
+          "name": "EmissiveMaterial",
+          "base_color": [0.2, 0.2, 0.2, 1.0],
+          "metallic": 0.0,
+          "roughness": 0.8,
+          "emissive": [1.0, 0.3, 0.0],
+          "emissive_strength": 2.5
+        }
+      ],
+      "export": {
+        "apply_modifiers": true,
+        "triangulate": true,
+        "include_normals": true,
+        "include_uvs": true,
+        "include_vertex_colors": false,
+        "tangents": false
+      },
+      "constraints": {
+        "max_triangles": 2000,
+        "max_materials": 1
+      }
+    }
+  }
+}

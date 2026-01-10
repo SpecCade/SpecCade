@@ -4,7 +4,7 @@
   "asset_type": "static_mesh",
   "license": "CC0-1.0",
   "seed": 6004,
-  "description": "Torus ring - donut shape",
+  "description": "Torus ring with subdivision - donut shape",
   "outputs": [
     {
       "kind": "primary",
@@ -15,23 +15,30 @@
   "recipe": {
     "kind": "static_mesh.blender_primitives_v1",
     "params": {
-      "primitive": "torus",
-      "primitive_params": {
-        "major_radius": 0.5,
-        "minor_radius": 0.15,
-        "major_segments": 48,
-        "minor_segments": 24
-      },
-      "location": [0, 0, 0],
-      "rotation": [1.5708, 0, 0],
-      "scale": [1, 1, 1],
-      "shade": "smooth",
-      "modifiers": [],
-      "uv": {
-        "mode": "smart_project",
-        "angle_limit": 60.0
-      },
+      "base_primitive": "torus",
+      "dimensions": [1.0, 1.0, 0.3],
+      "modifiers": [
+        {
+          "type": "subdivision",
+          "levels": 1,
+          "render_levels": 2
+        }
+      ],
+      "uv_projection": "smart",
+      "material_slots": [
+        {
+          "name": "GoldMetal",
+          "base_color": [1.0, 0.843, 0.0, 1.0],
+          "metallic": 1.0,
+          "roughness": 0.2
+        }
+      ],
       "export": {
+        "apply_modifiers": true,
+        "triangulate": true,
+        "include_normals": true,
+        "include_uvs": true,
+        "include_vertex_colors": false,
         "tangents": true
       }
     }

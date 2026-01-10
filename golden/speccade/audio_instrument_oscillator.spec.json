@@ -1,0 +1,49 @@
+{
+  "spec_version": 1,
+  "asset_id": "audio-instrument-oscillator-golden",
+  "asset_type": "audio_instrument",
+  "license": "CC0-1.0",
+  "seed": 999016,
+  "description": "Golden test for simple oscillator synthesis - exercises waveform, frequency, freq_sweep, detune, and duty cycle",
+  "style_tags": ["golden", "oscillator", "simple", "instrument"],
+  "engine_targets": ["godot", "unity", "unreal"],
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "audio_instrument_oscillator.wav"
+    }
+  ],
+  "recipe": {
+    "kind": "audio_instrument.synth_patch_v1",
+    "params": {
+      "note_duration_seconds": 0.5,
+      "sample_rate": 22050,
+      "synthesis": {
+        "type": "oscillator",
+        "waveform": "pulse",
+        "frequency": 440.0,
+        "freq_sweep": {
+          "end_freq": 880.0,
+          "curve": "linear"
+        },
+        "detune": 50.0,
+        "duty": 0.25
+      },
+      "envelope": {
+        "attack": 0.01,
+        "decay": 0.1,
+        "sustain": 0.7,
+        "release": 0.15
+      },
+      "pitch_envelope": {
+        "attack": 0.05,
+        "decay": 0.1,
+        "sustain": 0.5,
+        "release": 0.1,
+        "depth": -12.0
+      },
+      "notes": ["C4", "C5"]
+    }
+  }
+}

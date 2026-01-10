@@ -1,0 +1,36 @@
+{
+  "spec_version": 1,
+  "asset_id": "audio-instrument-additive-golden",
+  "asset_type": "audio_instrument",
+  "license": "CC0-1.0",
+  "seed": 999013,
+  "description": "Golden test for additive synthesis - exercises base_freq and harmonics array",
+  "style_tags": ["golden", "additive", "harmonics", "instrument"],
+  "engine_targets": ["godot", "unity", "unreal"],
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "audio_instrument_additive.wav"
+    }
+  ],
+  "recipe": {
+    "kind": "audio_instrument.synth_patch_v1",
+    "params": {
+      "note_duration_seconds": 1.5,
+      "sample_rate": 44100,
+      "synthesis": {
+        "type": "additive",
+        "base_freq": 440.0,
+        "harmonics": [1.0, 0.5, 0.33, 0.25, 0.2, 0.167, 0.143, 0.125]
+      },
+      "envelope": {
+        "attack": 0.1,
+        "decay": 0.3,
+        "sustain": 0.5,
+        "release": 0.4
+      },
+      "notes": ["C4", "E4", "G4"]
+    }
+  }
+}

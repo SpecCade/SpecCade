@@ -1,0 +1,68 @@
+{
+  "spec_version": 1,
+  "asset_id": "spiky_creature",
+  "asset_type": "skeletal_mesh",
+  "license": "CC0-1.0",
+  "seed": 7004,
+  "description": "Creature with instanced spikes - demonstrates instances and advanced step operations",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "glb",
+      "path": "spiky_creature.glb"
+    }
+  ],
+  "recipe": {
+    "kind": "skeletal_mesh.blender_rigged_mesh_v1",
+    "params": {
+      "tri_budget": 1500,
+      "skeleton": [
+        {"bone": "root", "head": [0, 0, 0], "tail": [0, 0, 0.1]},
+        {"bone": "body", "head": [0, 0, 0.1], "tail": [0, 0, 0.4], "parent": "root"},
+        {"bone": "spike_base", "head": [0, 0, 0.25], "tail": [0.1, 0, 0.25], "parent": "body"}
+      ],
+      "parts": {
+        "body_mesh": {
+          "bone": "body",
+          "base": "hexagon(8)",
+          "base_radius": [0.15, 0.12],
+          "steps": [
+            {"extrude": 0.1, "scale": 1.2, "bulge": [1.1, 0.9]},
+            {"extrude": 0.1, "scale": 1.0, "tilt": [5.0, 0.0]},
+            {"extrude": 0.1, "scale": 0.8, "rotate": 15.0}
+          ],
+          "cap_start": true,
+          "cap_end": true,
+          "skinning_type": "soft"
+        },
+        "spike": {
+          "bone": "spike_base",
+          "base": "hexagon(4)",
+          "base_radius": 0.03,
+          "offset": [0.15, 0, 0.25],
+          "rotation": [0, 90, 0],
+          "steps": [
+            {"extrude": 0.05, "scale": 0.7, "translate": [0.01, 0, 0]},
+            {"extrude": 0.03, "scale": 0.3}
+          ],
+          "cap_start": false,
+          "cap_end": true,
+          "skinning_type": "rigid",
+          "instances": [
+            {"position": [0.15, 0, 0.25], "rotation": [0, 0, 0]},
+            {"position": [-0.15, 0, 0.25], "rotation": [0, 180, 0]},
+            {"position": [0, 0.15, 0.25], "rotation": [0, 90, 0]},
+            {"position": [0, -0.15, 0.25], "rotation": [0, -90, 0]},
+            {"position": [0.1, 0.1, 0.3], "rotation": [30, 45, 0]},
+            {"position": [-0.1, 0.1, 0.3], "rotation": [30, 135, 0]},
+            {"position": [0.1, -0.1, 0.3], "rotation": [30, -45, 0]},
+            {"position": [-0.1, -0.1, 0.3], "rotation": [30, -135, 0]}
+          ]
+        }
+      },
+      "texturing": {
+        "uv_mode": "cube_project"
+      }
+    }
+  }
+}

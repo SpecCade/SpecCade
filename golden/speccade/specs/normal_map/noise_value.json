@@ -1,0 +1,33 @@
+{
+  "spec_version": 1,
+  "asset_id": "noise_value",
+  "asset_type": "texture_2d",
+  "license": "CC0-1.0",
+  "seed": 5012,
+  "description": "Value noise normal map with FBM-like appearance",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "png",
+      "path": "noise_value.png"
+    }
+  ],
+  "recipe": {
+    "kind": "texture_2d.normal_map_v1",
+    "params": {
+      "resolution": [256, 256],
+      "tileable": true,
+      "pattern": {
+        "type": "noise_bumps",
+        "noise": {
+          "algorithm": "value",
+          "scale": 0.04,
+          "octaves": 5,
+          "persistence": 0.55,
+          "lacunarity": 2.1
+        }
+      },
+      "bump_strength": 0.9
+    }
+  }
+}

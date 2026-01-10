@@ -1,0 +1,74 @@
+{
+  "spec_version": 1,
+  "asset_id": "audio-instrument-fm-advanced-golden",
+  "asset_type": "audio_instrument",
+  "license": "CC0-1.0",
+  "seed": 999011,
+  "description": "Golden test for advanced FM synthesis with operators - exercises waveform, ratio, level, modulation_index, envelope per-operator, and detune",
+  "style_tags": ["golden", "fm", "operators", "instrument"],
+  "engine_targets": ["godot", "unity", "unreal"],
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "audio_instrument_fm_advanced.wav"
+    }
+  ],
+  "recipe": {
+    "kind": "audio_instrument.synth_patch_v1",
+    "params": {
+      "note_duration_seconds": 2.0,
+      "sample_rate": 48000,
+      "operators": [
+        {
+          "waveform": "sine",
+          "ratio": 1.0,
+          "level": 1.0,
+          "modulation_index": 3.0,
+          "envelope": {
+            "attack": 0.01,
+            "decay": 0.2,
+            "sustain": 0.7,
+            "release": 0.3
+          },
+          "detune": 0.0
+        },
+        {
+          "waveform": "sine",
+          "ratio": 2.0,
+          "level": 0.5,
+          "modulation_index": 2.0,
+          "envelope": {
+            "attack": 0.005,
+            "decay": 0.15,
+            "sustain": 0.5,
+            "release": 0.2
+          },
+          "detune": 5.0
+        },
+        {
+          "waveform": "triangle",
+          "ratio": 3.5,
+          "level": 0.25,
+          "modulation_index": 1.0,
+          "detune": -5.0
+        }
+      ],
+      "envelope": {
+        "attack": 0.02,
+        "decay": 0.3,
+        "sustain": 0.6,
+        "release": 0.4
+      },
+      "pitch_envelope": {
+        "attack": 0.01,
+        "decay": 0.1,
+        "sustain": 0.0,
+        "release": 0.0,
+        "depth": 2.0
+      },
+      "notes": [60, 69, 72],
+      "generate_loop_points": true
+    }
+  }
+}

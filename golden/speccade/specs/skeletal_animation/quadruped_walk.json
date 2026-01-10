@@ -1,0 +1,142 @@
+{
+  "spec_version": 1,
+  "asset_id": "quadruped_walk",
+  "asset_type": "skeletal_animation",
+  "license": "CC0-1.0",
+  "seed": 8008,
+  "description": "Quadruped walk cycle - demonstrates quadruped IK presets and foot systems",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "glb",
+      "path": "quadruped_walk.glb"
+    }
+  ],
+  "recipe": {
+    "kind": "skeletal_animation.blender_clip_v1",
+    "params": {
+      "input_armature": "quadruped_base.glb",
+      "character": "quadruped_base",
+      "duration_frames": 40,
+      "fps": 30,
+      "loop": true,
+      "ground_offset": 0.0,
+      "poses": {
+        "front_L_contact": {
+          "leg_front_upper_L": {"pitch": -15},
+          "leg_front_lower_L": {"pitch": 10},
+          "leg_front_upper_R": {"pitch": 20},
+          "leg_front_lower_R": {"pitch": -25},
+          "leg_back_upper_L": {"pitch": 15},
+          "leg_back_lower_L": {"pitch": -20},
+          "leg_back_upper_R": {"pitch": -10},
+          "leg_back_lower_R": {"pitch": 5},
+          "spine": {"roll": -2}
+        },
+        "front_R_contact": {
+          "leg_front_upper_L": {"pitch": 20},
+          "leg_front_lower_L": {"pitch": -25},
+          "leg_front_upper_R": {"pitch": -15},
+          "leg_front_lower_R": {"pitch": 10},
+          "leg_back_upper_L": {"pitch": -10},
+          "leg_back_lower_L": {"pitch": 5},
+          "leg_back_upper_R": {"pitch": 15},
+          "leg_back_lower_R": {"pitch": -20},
+          "spine": {"roll": 2}
+        }
+      },
+      "phases": [
+        {
+          "name": "front_L_contact",
+          "frames": [0, 20],
+          "pose": "front_L_contact",
+          "timing_curve": "ease_in_out"
+        },
+        {
+          "name": "front_R_contact",
+          "frames": [20, 40],
+          "pose": "front_R_contact",
+          "timing_curve": "ease_in_out"
+        }
+      ],
+      "rig_setup": {
+        "presets": {
+          "quadruped_forelegs": true,
+          "quadruped_hindlegs": true
+        },
+        "foot_systems": [
+          {
+            "name": "front_paw_L",
+            "ik_target": "ik_front_paw_L",
+            "heel_bone": "front_heel_L",
+            "toe_bone": "front_toe_L",
+            "roll_limits": [-20, 45]
+          },
+          {
+            "name": "front_paw_R",
+            "ik_target": "ik_front_paw_R",
+            "heel_bone": "front_heel_R",
+            "toe_bone": "front_toe_R",
+            "ball_bone": "front_ball_R",
+            "roll_limits": [-20, 45]
+          },
+          {
+            "name": "back_paw_L",
+            "ik_target": "ik_back_paw_L",
+            "heel_bone": "back_heel_L",
+            "toe_bone": "back_toe_L",
+            "roll_limits": [-25, 50]
+          },
+          {
+            "name": "back_paw_R",
+            "ik_target": "ik_back_paw_R",
+            "heel_bone": "back_heel_R",
+            "toe_bone": "back_toe_R",
+            "roll_limits": [-25, 50]
+          }
+        ],
+        "constraints": [
+          {
+            "bone": "leg_front_lower_L",
+            "type": "hinge",
+            "axis": "X",
+            "limits": [-5, 120]
+          },
+          {
+            "bone": "leg_front_lower_R",
+            "type": "hinge",
+            "axis": "X",
+            "limits": [-5, 120]
+          },
+          {
+            "bone": "leg_back_lower_L",
+            "type": "hinge",
+            "axis": "X",
+            "limits": [-120, 5]
+          },
+          {
+            "bone": "leg_back_lower_R",
+            "type": "hinge",
+            "axis": "X",
+            "limits": [-120, 5]
+          },
+          {
+            "bone": "tail_1",
+            "type": "soft",
+            "stiffness": 0.3,
+            "damping": 0.6
+          }
+        ]
+      },
+      "procedural_layers": [
+        {
+          "type": "sway",
+          "target": "tail_1",
+          "axis": "yaw",
+          "period_frames": 40,
+          "amplitude": 0.08
+        }
+      ]
+    }
+  }
+}

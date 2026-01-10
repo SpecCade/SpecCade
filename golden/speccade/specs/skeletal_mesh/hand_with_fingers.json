@@ -1,0 +1,115 @@
+{
+  "spec_version": 1,
+  "asset_id": "hand_with_fingers",
+  "asset_type": "skeletal_mesh",
+  "license": "CC0-1.0",
+  "seed": 7003,
+  "description": "Hand with thumb and fingers - demonstrates sub-part features",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "glb",
+      "path": "hand_with_fingers.glb"
+    }
+  ],
+  "recipe": {
+    "kind": "skeletal_mesh.blender_rigged_mesh_v1",
+    "params": {
+      "tri_budget": 600,
+      "skeleton": [
+        {"bone": "wrist", "head": [0, 0, 0], "tail": [0.1, 0, 0]},
+        {"bone": "palm", "head": [0.1, 0, 0], "tail": [0.2, 0, 0], "parent": "wrist"},
+        {"bone": "thumb_01", "head": [0.12, 0.04, 0], "tail": [0.15, 0.06, 0], "parent": "palm"},
+        {"bone": "thumb_02", "head": [0.15, 0.06, 0], "tail": [0.18, 0.07, 0], "parent": "thumb_01"},
+        {"bone": "finger_index_01", "head": [0.2, 0.02, 0], "tail": [0.24, 0.02, 0], "parent": "palm"},
+        {"bone": "finger_index_02", "head": [0.24, 0.02, 0], "tail": [0.27, 0.02, 0], "parent": "finger_index_01"},
+        {"bone": "finger_middle_01", "head": [0.2, 0, 0], "tail": [0.25, 0, 0], "parent": "palm"},
+        {"bone": "finger_middle_02", "head": [0.25, 0, 0], "tail": [0.29, 0, 0], "parent": "finger_middle_01"},
+        {"bone": "finger_ring_01", "head": [0.2, -0.02, 0], "tail": [0.24, -0.02, 0], "parent": "palm"},
+        {"bone": "finger_ring_02", "head": [0.24, -0.02, 0], "tail": [0.27, -0.02, 0], "parent": "finger_ring_01"},
+        {"bone": "finger_pinky_01", "head": [0.19, -0.04, 0], "tail": [0.22, -0.04, 0], "parent": "palm"},
+        {"bone": "finger_pinky_02", "head": [0.22, -0.04, 0], "tail": [0.24, -0.04, 0], "parent": "finger_pinky_01"}
+      ],
+      "parts": {
+        "palm_mesh": {
+          "bone": "palm",
+          "base": "hexagon(6)",
+          "base_radius": 0.04,
+          "offset": [0.1, 0, 0],
+          "rotation": [0, 90, 0],
+          "steps": [
+            {"extrude": 0.1, "scale": [1.2, 0.6]}
+          ],
+          "cap_start": true,
+          "cap_end": true,
+          "thumb": {
+            "bone": "thumb_01",
+            "base": "circle(4)",
+            "base_radius": 0.015,
+            "offset": [0.12, 0.04, 0],
+            "rotation": [0, 45, 30],
+            "steps": [
+              {"extrude": 0.03, "scale": 0.9},
+              {"extrude": 0.03, "scale": 0.85}
+            ],
+            "cap_start": false,
+            "cap_end": true
+          },
+          "fingers": [
+            {
+              "bone": "finger_index_01",
+              "base": "circle(4)",
+              "base_radius": 0.012,
+              "offset": [0.2, 0.02, 0],
+              "steps": [
+                {"extrude": 0.04, "scale": 0.9},
+                {"extrude": 0.03, "scale": 0.85}
+              ],
+              "cap_start": false,
+              "cap_end": true
+            },
+            {
+              "bone": "finger_middle_01",
+              "base": "circle(4)",
+              "base_radius": 0.012,
+              "offset": [0.2, 0, 0],
+              "steps": [
+                {"extrude": 0.05, "scale": 0.9},
+                {"extrude": 0.04, "scale": 0.85}
+              ],
+              "cap_start": false,
+              "cap_end": true
+            },
+            {
+              "bone": "finger_ring_01",
+              "base": "circle(4)",
+              "base_radius": 0.011,
+              "offset": [0.2, -0.02, 0],
+              "steps": [
+                {"extrude": 0.04, "scale": 0.9},
+                {"extrude": 0.03, "scale": 0.85}
+              ],
+              "cap_start": false,
+              "cap_end": true
+            },
+            {
+              "bone": "finger_pinky_01",
+              "base": "circle(4)",
+              "base_radius": 0.01,
+              "offset": [0.19, -0.04, 0],
+              "steps": [
+                {"extrude": 0.03, "scale": 0.9},
+                {"extrude": 0.02, "scale": 0.85}
+              ],
+              "cap_start": false,
+              "cap_end": true
+            }
+          ]
+        }
+      },
+      "texturing": {
+        "uv_mode": "smart_project"
+      }
+    }
+  }
+}

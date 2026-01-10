@@ -4,7 +4,7 @@
   "asset_type": "static_mesh",
   "license": "CC0-1.0",
   "seed": 6002,
-  "description": "High-poly UV sphere - smooth shading",
+  "description": "High-poly UV sphere - smooth shading with smart UV projection",
   "outputs": [
     {
       "kind": "primary",
@@ -15,22 +15,20 @@
   "recipe": {
     "kind": "static_mesh.blender_primitives_v1",
     "params": {
-      "primitive": "sphere",
-      "primitive_params": {
-        "radius": 0.5,
-        "segments": 48,
-        "rings": 24
-      },
-      "location": [0, 0, 0],
-      "rotation": [0, 0, 0],
-      "scale": [1, 1, 1],
-      "shade": "smooth",
+      "base_primitive": "sphere",
+      "dimensions": [1.0, 1.0, 1.0],
       "modifiers": [],
-      "uv": {
-        "mode": "smart_project",
+      "uv_projection": {
+        "method": "smart",
         "angle_limit": 66.0
       },
+      "material_slots": [],
       "export": {
+        "apply_modifiers": true,
+        "triangulate": true,
+        "include_normals": true,
+        "include_uvs": true,
+        "include_vertex_colors": false,
         "tangents": true
       }
     }

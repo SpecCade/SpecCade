@@ -1,0 +1,39 @@
+{
+  "spec_version": 1,
+  "asset_id": "bass_thump",
+  "asset_type": "audio_sfx",
+  "license": "CC0-1.0",
+  "seed": 1013,
+  "description": "Bass thump - pitched body impact synthesis",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "bass_thump.wav"
+    }
+  ],
+  "recipe": {
+    "kind": "audio_sfx.layered_synth_v1",
+    "params": {
+      "duration_seconds": 0.5,
+      "sample_rate": 44100,
+      "layers": [
+        {
+          "synthesis": {
+            "type": "pitched_body",
+            "start_freq": 200.0,
+            "end_freq": 40.0
+          },
+          "envelope": {
+            "attack": 0.001,
+            "decay": 0.25,
+            "sustain": 0.0,
+            "release": 0.2
+          },
+          "volume": 1.0,
+          "pan": 0.0
+        }
+      ]
+    }
+  }
+}
