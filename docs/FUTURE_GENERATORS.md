@@ -26,6 +26,12 @@ This is a forward-looking brainstorm document (not a spec contract).
 - Smart masks: curvature/edge-wear, cavity, grime accumulation, slope-based masks.
 - Additional noise/patterns: blue-noise masks, cracks, pores, fabric, stone stratification, moss growth, raindrop streaking.
 
+## 2D VFX + UI Expansion
+
+- VFX sprites: particles, smoke, fire, magic impacts, shockwaves, sparks, water splashes; plus flipbooks + emission masks.
+- UI/icon generators: consistent icon sets, button frames, nine-slice panels, HUD elements, item cards.
+- Font generation (bitmap/SDF): pixel fonts, outline/shadow variants, kerning tables, MSDF for crisp scaling.
+
 ## Mesh/Animation Expansion
 
 - Modular kit generators (walls/doors/pipes), parametric LODs, collision mesh + navmesh hints.
@@ -45,4 +51,4 @@ This is a forward-looking brainstorm document (not a spec contract).
 - CI gates: `fmt`, `clippy`, determinism checks, golden hashes, performance budgets.
 - Plugin API: external generators as WASM or subprocess backends with strict I/O contracts.
 - Profiling + observability: per-stage timings, memory stats, reproducible performance runs.
-
+- Quality controls: perceptual diffing (image/audio), duplicate detection, constraint solvers, property-based fuzzing for specs.
