@@ -56,11 +56,14 @@
 //! - [`it`]: IT (Impulse Tracker) format writer
 //! - [`generate`]: Main generation entry point
 
+pub mod envelope;
 pub mod generate;
 pub mod it;
+pub mod it_gen;
 pub mod note;
 pub mod synthesis;
 pub mod xm;
+pub mod xm_gen;
 
 // Re-export main types
 pub use generate::{generate_music, GenerateError, GenerateResult};

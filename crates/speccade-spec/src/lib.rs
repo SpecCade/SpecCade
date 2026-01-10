@@ -55,7 +55,7 @@ pub mod spec;
 pub mod validation;
 
 // Re-export commonly used types at the crate root
-pub use error::{ErrorCode, SpecError, ValidationError, ValidationResult, ValidationWarning, WarningCode};
+pub use error::{BackendError, ErrorCode, GenerationError, SpecError, ValidationError, ValidationResult, ValidationWarning, WarningCode};
 pub use hash::{canonical_spec_hash, derive_layer_seed, derive_variant_seed};
 pub use output::{EngineTarget, OutputFormat, OutputKind, OutputSpec, VariantSpec};
 pub use recipe::Recipe;

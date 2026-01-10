@@ -1,364 +1,16 @@
 //! Texture recipe types (material_maps and normal_map).
 
-use serde::{Deserialize, Serialize};
+mod common;
+mod layers;
+mod materials;
+mod normal;
+mod pbr_maps;
 
-/// Parameters for the `texture_2d.material_maps_v1` recipe.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct Texture2dMaterialMapsV1Params {
-    /// Texture resolution [width, height] in pixels.
-    pub resolution: [u32; 2],
-    /// Whether the texture should tile seamlessly.
-    pub tileable: bool,
-    /// Which PBR maps to generate.
-    pub maps: Vec<TextureMapType>,
-    /// Base material properties.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub base_material: Option<BaseMaterial>,
-    /// Procedural layers to apply.
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub layers: Vec<TextureLayer>,
-    /// Discrete color palette for remapping values (hex colors).
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub palette: Option<Vec<String>>,
-    /// Interpolated color ramp (hex colors).
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub color_ramp: Option<Vec<String>>,
-}
-
-/// Parameters for the `texture_2d.normal_map_v1` recipe.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct Texture2dNormalMapV1Params {
-    /// Texture resolution [width, height] in pixels.
-    pub resolution: [u32; 2],
-    /// Whether the texture should tile seamlessly.
-    pub tileable: bool,
-    /// Pattern configuration.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub pattern: Option<NormalMapPattern>,
-    /// Bump strength (0.0 to 1.0).
-    #[serde(default = "default_bump_strength")]
-    pub bump_strength: f64,
-    /// Post-processing options.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub processing: Option<NormalMapProcessing>,
-}
-
-fn default_bump_strength() -> f64 {
-    1.0
-}
-
-/// Types of PBR texture maps.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-pub enum TextureMapType {
-    /// Base color / diffuse map.
-    Albedo,
-    /// Normal map.
-    Normal,
-    /// Roughness map.
-    Roughness,
-    /// Metallic map.
-    Metallic,
-    /// Ambient occlusion map.
-    Ao,
-    /// Emissive map.
-    Emissive,
-    /// Height/displacement map.
-    Height,
-}
-
-/// Base material properties.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct BaseMaterial {
-    /// Material type.
-    #[serde(rename = "type")]
-    pub material_type: MaterialType,
-    /// Base color as [R, G, B] (0.0 to 1.0).
-    pub base_color: [f64; 3],
-    /// Roughness range [min, max] (0.0 to 1.0).
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub roughness_range: Option<[f64; 2]>,
-    /// Metallic value (0.0 to 1.0).
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub metallic: Option<f64>,
-}
-
-/// Base material types.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-pub enum MaterialType {
-    /// Metal surface.
-    Metal,
-    /// Wood surface.
-    Wood,
-    /// Stone surface.
-    Stone,
-    /// Fabric surface.
-    Fabric,
-    /// Plastic surface.
-    Plastic,
-    /// Concrete surface.
-    Concrete,
-    /// Brick surface.
-    Brick,
-    /// Generic procedural.
-    Procedural,
-}
-
-/// Procedural texture layer.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "type", rename_all = "snake_case")]
-pub enum TextureLayer {
-    /// Noise-based pattern layer.
-    NoisePattern {
-        /// Noise configuration.
-        noise: NoiseConfig,
-        /// Which maps this layer affects.
-        affects: Vec<TextureMapType>,
-        /// Layer strength (0.0 to 1.0).
-        strength: f64,
-    },
-    /// Scratch marks layer.
-    Scratches {
-        /// Scratch density (0.0 to 1.0).
-        density: f64,
-        /// Length range [min, max] as fraction of texture size.
-        length_range: [f64; 2],
-        /// Width as fraction of texture size.
-        width: f64,
-        /// Which maps this layer affects.
-        affects: Vec<TextureMapType>,
-        /// Layer strength (0.0 to 1.0).
-        strength: f64,
-    },
-    /// Edge wear layer.
-    EdgeWear {
-        /// Wear amount (0.0 to 1.0).
-        amount: f64,
-        /// Which maps this layer affects.
-        affects: Vec<TextureMapType>,
-    },
-    /// Dirt/grime overlay.
-    Dirt {
-        /// Dirt density (0.0 to 1.0).
-        density: f64,
-        /// Dirt color as [R, G, B].
-        color: [f64; 3],
-        /// Which maps this layer affects.
-        affects: Vec<TextureMapType>,
-        /// Layer strength (0.0 to 1.0).
-        strength: f64,
-    },
-    /// Color variation layer.
-    ColorVariation {
-        /// Hue variation range in degrees.
-        hue_range: f64,
-        /// Saturation variation range (0.0 to 1.0).
-        saturation_range: f64,
-        /// Value/brightness variation range (0.0 to 1.0).
-        value_range: f64,
-        /// Noise scale for variation.
-        noise_scale: f64,
-    },
-    /// Gradient layer.
-    Gradient {
-        /// Gradient direction: "horizontal", "vertical", "radial".
-        direction: GradientDirection,
-        /// Linear gradient start value (0.0 to 1.0).
-        #[serde(skip_serializing_if = "Option::is_none")]
-        start: Option<f64>,
-        /// Linear gradient end value (0.0 to 1.0).
-        #[serde(skip_serializing_if = "Option::is_none")]
-        end: Option<f64>,
-        /// Radial gradient center [x, y] normalized (0.0 to 1.0).
-        #[serde(skip_serializing_if = "Option::is_none")]
-        center: Option<[f64; 2]>,
-        /// Radial gradient inner value (0.0 to 1.0).
-        #[serde(skip_serializing_if = "Option::is_none")]
-        inner: Option<f64>,
-        /// Radial gradient outer value (0.0 to 1.0).
-        #[serde(skip_serializing_if = "Option::is_none")]
-        outer: Option<f64>,
-        /// Which maps this layer affects.
-        affects: Vec<TextureMapType>,
-        /// Layer strength (0.0 to 1.0).
-        strength: f64,
-    },
-    /// Stripes layer.
-    Stripes {
-        /// Stripe direction: "horizontal" or "vertical".
-        direction: StripeDirection,
-        /// Stripe width in pixels.
-        stripe_width: u32,
-        /// First stripe value (0.0 to 1.0).
-        color1: f64,
-        /// Second stripe value (0.0 to 1.0).
-        color2: f64,
-        /// Which maps this layer affects.
-        affects: Vec<TextureMapType>,
-        /// Layer strength (0.0 to 1.0).
-        strength: f64,
-    },
-}
-
-/// Noise configuration.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct NoiseConfig {
-    /// Noise algorithm.
-    pub algorithm: NoiseAlgorithm,
-    /// Scale factor.
-    pub scale: f64,
-    /// Number of octaves for fractal noise.
-    #[serde(default = "default_octaves")]
-    pub octaves: u8,
-    /// Persistence for fractal noise.
-    #[serde(default = "default_persistence")]
-    pub persistence: f64,
-    /// Lacunarity for fractal noise.
-    #[serde(default = "default_lacunarity")]
-    pub lacunarity: f64,
-}
-
-fn default_octaves() -> u8 {
-    4
-}
-
-fn default_persistence() -> f64 {
-    0.5
-}
-
-fn default_lacunarity() -> f64 {
-    2.0
-}
-
-/// Noise algorithm types.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-pub enum NoiseAlgorithm {
-    /// Perlin noise.
-    Perlin,
-    /// Simplex noise.
-    Simplex,
-    /// Worley/cellular noise.
-    Worley,
-    /// Value noise.
-    Value,
-    /// Fractal Brownian motion.
-    Fbm,
-}
-
-/// Gradient direction types.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-pub enum GradientDirection {
-    /// Horizontal gradient (left to right).
-    Horizontal,
-    /// Vertical gradient (top to bottom).
-    Vertical,
-    /// Radial gradient (center outward).
-    Radial,
-}
-
-/// Stripe direction types.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-pub enum StripeDirection {
-    /// Horizontal stripes.
-    Horizontal,
-    /// Vertical stripes.
-    Vertical,
-}
-
-/// Post-processing options for normal maps.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct NormalMapProcessing {
-    /// Gaussian blur sigma for height map smoothing.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub blur: Option<f64>,
-    /// Invert height map before conversion.
-    #[serde(default = "default_invert")]
-    pub invert: bool,
-}
-
-fn default_invert() -> bool {
-    true
-}
-
-/// Pattern configuration for normal maps.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "type", rename_all = "snake_case")]
-pub enum NormalMapPattern {
-    /// Grid pattern.
-    Grid {
-        /// Cell size in pixels.
-        cell_size: u32,
-        /// Line width in pixels.
-        line_width: u32,
-        /// Bevel amount.
-        bevel: f64,
-    },
-    /// Brick pattern.
-    Bricks {
-        /// Brick width in pixels.
-        brick_width: u32,
-        /// Brick height in pixels.
-        brick_height: u32,
-        /// Mortar width in pixels.
-        mortar_width: u32,
-        /// Brick offset for alternating rows (0.0 to 1.0).
-        offset: f64,
-    },
-    /// Hexagonal pattern.
-    Hexagons {
-        /// Hexagon size in pixels.
-        size: u32,
-        /// Gap between hexagons.
-        gap: u32,
-    },
-    /// Noise-based bumps.
-    NoiseBumps {
-        /// Noise configuration.
-        noise: NoiseConfig,
-    },
-    /// Diamond plate pattern.
-    DiamondPlate {
-        /// Diamond size in pixels.
-        diamond_size: u32,
-        /// Raise height.
-        height: f64,
-    },
-    /// Tile pattern with gaps.
-    Tiles {
-        /// Size of each tile in pixels.
-        tile_size: u32,
-        /// Width of gaps between tiles.
-        gap_width: u32,
-        /// Depth of gaps (0.0-1.0).
-        gap_depth: f64,
-        /// Random seed for tile variation.
-        seed: u32,
-    },
-    /// Rivet pattern.
-    Rivets {
-        /// Distance between rivet centers.
-        spacing: u32,
-        /// Rivet radius in pixels.
-        radius: u32,
-        /// Rivet height (0.0-1.0).
-        height: f64,
-        /// Random seed for variation.
-        seed: u32,
-    },
-    /// Weave/fabric pattern.
-    Weave {
-        /// Width of threads in pixels.
-        thread_width: u32,
-        /// Gap between threads.
-        gap: u32,
-        /// Thread depth (0.0-1.0).
-        depth: f64,
-    },
-}
+pub use common::*;
+pub use layers::*;
+pub use materials::*;
+pub use normal::*;
+pub use pbr_maps::*;
 
 #[cfg(test)]
 mod tests {
@@ -625,6 +277,23 @@ mod tests {
     }
 
     #[test]
+    fn test_layer_checkerboard() {
+        let layer = TextureLayer::Checkerboard {
+            tile_size: 64,
+            color1: 0.85,
+            color2: 0.2,
+            affects: vec![TextureMapType::Albedo, TextureMapType::Normal],
+            strength: 1.0,
+        };
+        let json = serde_json::to_string(&layer).unwrap();
+        assert!(json.contains("checkerboard"));
+        assert!(json.contains("tile_size"));
+        assert!(json.contains("64"));
+        let parsed: TextureLayer = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed, layer);
+    }
+
+    #[test]
     fn test_layer_scratches() {
         let layer = TextureLayer::Scratches {
             density: 0.15,
@@ -759,9 +428,9 @@ mod tests {
             persistence: 0.5,
             lacunarity: 2.0,
         };
-        assert_eq!(noise.octaves, default_octaves());
-        assert_eq!(noise.persistence, default_persistence());
-        assert_eq!(noise.lacunarity, default_lacunarity());
+        assert_eq!(noise.octaves, common::default_octaves());
+        assert_eq!(noise.persistence, common::default_persistence());
+        assert_eq!(noise.lacunarity, common::default_lacunarity());
     }
 
     // ========================================================================
@@ -940,7 +609,8 @@ mod tests {
             blur: None,
             invert: true,
         };
-        assert_eq!(processing.invert, default_invert());
+        // default_invert() returns true
+        assert!(processing.invert);
     }
 
     // ========================================================================

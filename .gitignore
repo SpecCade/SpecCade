@@ -10,3 +10,4 @@ test_spec.json
 *.report.json
 
 __pycache__/
+test-outputs/

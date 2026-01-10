@@ -1,0 +1,39 @@
+{
+  "spec_version": 1,
+  "asset_id": "drum_tom",
+  "asset_type": "audio_instrument",
+  "license": "CC0-1.0",
+  "seed": 2023,
+  "description": "Tom drum - Mid-range pitched body with warm decay",
+  "style_tags": ["drums", "percussion", "tom"],
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "drum_tom.wav"
+    }
+  ],
+  "recipe": {
+    "kind": "audio_instrument.synth_patch_v1",
+    "params": {
+      "sample_rate": 44100,
+      "note_duration_seconds": 0.4,
+      "synthesis": {
+        "type": "oscillator",
+        "waveform": "sine",
+        "frequency": 120.0,
+        "freq_sweep": {
+          "end_freq": 90.0,
+          "curve": "exponential"
+        }
+      },
+      "envelope": {
+        "attack": 0.001,
+        "decay": 0.2,
+        "sustain": 0.0,
+        "release": 0.15
+      },
+      "generate_loop_points": false
+    }
+  }
+}

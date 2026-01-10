@@ -1,5 +1,6 @@
 //! Error types for audio backend.
 
+use speccade_spec::BackendError;
 use thiserror::Error;
 
 /// Result type for audio operations.
@@ -77,6 +78,25 @@ impl AudioError {
         Self::Synthesis {
             message: message.into(),
         }
+    }
+}
+
+impl BackendError for AudioError {
+    fn code(&self) -> &'static str {
+        match self {
+            AudioError::MissingRecipe => "AUDIO_001",
+            AudioError::InvalidRecipeType { .. } => "AUDIO_002",
+            AudioError::InvalidSampleRate { .. } => "AUDIO_003",
+            AudioError::InvalidDuration { .. } => "AUDIO_004",
+            AudioError::InvalidFrequency { .. } => "AUDIO_005",
+            AudioError::InvalidParameter { .. } => "AUDIO_006",
+            AudioError::Io(_) => "AUDIO_007",
+            AudioError::Synthesis { .. } => "AUDIO_008",
+        }
+    }
+
+    fn category(&self) -> &'static str {
+        "audio"
     }
 }
 

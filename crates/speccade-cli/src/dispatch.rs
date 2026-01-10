@@ -3,7 +3,7 @@
 //! Dispatches generation requests to the appropriate backend based on recipe.kind.
 
 use speccade_spec::recipe::texture::TextureMapType;
-use speccade_spec::{OutputFormat, OutputKind, OutputResult, Spec};
+use speccade_spec::{BackendError, OutputFormat, OutputKind, OutputResult, Spec};
 use std::collections::HashSet;
 use std::fmt;
 use std::fs;
@@ -35,6 +35,20 @@ impl fmt::Display for DispatchError {
 }
 
 impl std::error::Error for DispatchError {}
+
+impl BackendError for DispatchError {
+    fn code(&self) -> &'static str {
+        match self {
+            DispatchError::NoRecipe => "DISPATCH_001",
+            DispatchError::BackendNotImplemented(_) => "DISPATCH_002",
+            DispatchError::BackendError(_) => "DISPATCH_003",
+        }
+    }
+
+    fn category(&self) -> &'static str {
+        "dispatch"
+    }
+}
 
 /// Dispatch generation to the appropriate backend
 ///

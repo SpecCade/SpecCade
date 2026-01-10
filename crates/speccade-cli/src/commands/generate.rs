@@ -5,7 +5,7 @@
 use anyhow::{Context, Result};
 use colored::Colorize;
 use speccade_spec::{
-    canonical_spec_hash, validate_for_generate, ReportBuilder, ReportError,
+    canonical_spec_hash, validate_for_generate, BackendError, ReportBuilder, ReportError,
     Spec,
 };
 use std::fs;
@@ -13,7 +13,7 @@ use std::path::Path;
 use std::process::ExitCode;
 use std::time::Instant;
 
-use crate::dispatch::{dispatch_generate, DispatchError};
+use crate::dispatch::dispatch_generate;
 use super::reporting;
 
 /// Run the generate command
@@ -137,18 +137,9 @@ pub fn run(spec_path: &str, out_root: Option<&str>) -> Result<ExitCode> {
             let mut report_builder = ReportBuilder::new(spec_hash, backend_version)
                 .duration_ms(duration_ms);
 
-            // Add generation error
-            let (code, message) = match &e {
-                DispatchError::BackendNotImplemented(kind) => {
-                    ("E013".to_string(), format!("Backend not implemented for recipe kind: {}", kind))
-                }
-                DispatchError::BackendError(msg) => {
-                    ("E014".to_string(), format!("Backend execution failed: {}", msg))
-                }
-                DispatchError::NoRecipe => {
-                    ("E010".to_string(), "Recipe required for generate command".to_string())
-                }
-            };
+            // Add generation error using BackendError trait
+            let code = e.code();
+            let message = e.message();
 
             report_builder = report_builder.error(ReportError::new(code, &message));
 

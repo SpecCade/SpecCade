@@ -1,0 +1,39 @@
+{
+  "spec_version": 1,
+  "asset_id": "drum_kick",
+  "asset_type": "audio_instrument",
+  "license": "CC0-1.0",
+  "seed": 2020,
+  "description": "Kick drum - Low frequency pitched body with noise transient",
+  "style_tags": ["drums", "percussion", "kick", "808"],
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "drum_kick.wav"
+    }
+  ],
+  "recipe": {
+    "kind": "audio_instrument.synth_patch_v1",
+    "params": {
+      "sample_rate": 44100,
+      "note_duration_seconds": 0.5,
+      "synthesis": {
+        "type": "oscillator",
+        "waveform": "sine",
+        "frequency": 60.0,
+        "freq_sweep": {
+          "end_freq": 40.0,
+          "curve": "exponential"
+        }
+      },
+      "envelope": {
+        "attack": 0.001,
+        "decay": 0.15,
+        "sustain": 0.0,
+        "release": 0.2
+      },
+      "generate_loop_points": false
+    }
+  }
+}

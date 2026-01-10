@@ -59,9 +59,11 @@ pub mod generate;
 pub mod maps;
 pub mod noise;
 pub mod normal_map;
+pub mod normal_map_patterns;
 pub mod pattern;
 pub mod png;
 pub mod rng;
+pub mod shared;
 
 // Re-export main types for convenience
 pub use color::{Color, BlendMode};

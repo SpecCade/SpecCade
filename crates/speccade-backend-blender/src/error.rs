@@ -1,6 +1,7 @@
 //! Error types for the Blender backend.
 
 use std::path::PathBuf;
+use speccade_spec::BackendError;
 use thiserror::Error;
 
 /// Result type for Blender backend operations.
@@ -110,6 +111,34 @@ impl BlenderError {
         Self::MetricsValidationFailed {
             message: message.into(),
         }
+    }
+}
+
+impl BackendError for BlenderError {
+    fn code(&self) -> &'static str {
+        match self {
+            BlenderError::BlenderNotFound => "BLENDER_001",
+            BlenderError::SpawnFailed(_) => "BLENDER_002",
+            BlenderError::Timeout { .. } => "BLENDER_003",
+            BlenderError::ProcessFailed { .. } => "BLENDER_004",
+            BlenderError::WriteSpecFailed(_) => "BLENDER_005",
+            BlenderError::ReadReportFailed { .. } => "BLENDER_006",
+            BlenderError::ParseReportFailed(_) => "BLENDER_007",
+            BlenderError::GenerationFailed { .. } => "BLENDER_008",
+            BlenderError::InvalidRecipeKind { .. } => "BLENDER_009",
+            BlenderError::MissingRecipe => "BLENDER_010",
+            BlenderError::SerializeFailed(_) => "BLENDER_011",
+            BlenderError::DeserializeParamsFailed(_) => "BLENDER_012",
+            BlenderError::OutputNotFound { .. } => "BLENDER_013",
+            BlenderError::EntrypointNotFound { .. } => "BLENDER_014",
+            BlenderError::Io(_) => "BLENDER_015",
+            BlenderError::MetricsValidationFailed { .. } => "BLENDER_016",
+            BlenderError::ConstraintViolation { .. } => "BLENDER_017",
+        }
+    }
+
+    fn category(&self) -> &'static str {
+        "blender"
     }
 }
 

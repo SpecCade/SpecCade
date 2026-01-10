@@ -291,6 +291,112 @@ impl Default for ValidationResult {
     }
 }
 
+/// Common trait for backend errors.
+///
+/// This trait provides a unified interface for error reporting across all
+/// backends. Each backend error type implements this trait to enable:
+/// - Consistent error codes for reporting
+/// - Human-readable messages for users
+/// - Integration with the unified `GenerationError` enum
+///
+/// # Example
+///
+/// ```ignore
+/// use speccade_spec::error::BackendError;
+///
+/// fn handle_error<E: BackendError>(err: E) {
+///     eprintln!("[{}] {}", err.code(), err.message());
+/// }
+/// ```
+pub trait BackendError: std::error::Error {
+    /// Get the error code for reporting.
+    ///
+    /// Returns a static string like "AUDIO_001", "TEXTURE_002", etc.
+    /// These codes should be stable and can be used for programmatic
+    /// error handling.
+    fn code(&self) -> &'static str;
+
+    /// Get a human-readable message describing the error.
+    ///
+    /// This is typically the same as `Display::fmt` but guaranteed to
+    /// return an owned String for flexibility in error reporting.
+    fn message(&self) -> String {
+        self.to_string()
+    }
+
+    /// Get the error category for grouping related errors.
+    ///
+    /// Returns a category like "audio", "texture", "music", "blender".
+    fn category(&self) -> &'static str;
+}
+
+/// A unified error type that can wrap any backend error.
+///
+/// This type provides a way to handle errors from different backends uniformly
+/// without requiring the spec crate to depend on backend crates. It captures
+/// the error code, message, and category from any `BackendError` implementor.
+///
+/// # Example
+///
+/// ```ignore
+/// use speccade_spec::error::{GenerationError, BackendError};
+///
+/// fn handle_any_backend_error<E: BackendError + 'static>(err: E) -> GenerationError {
+///     GenerationError::from_backend(err)
+/// }
+/// ```
+#[derive(Debug)]
+pub struct GenerationError {
+    /// The error code (e.g., "AUDIO_001", "TEXTURE_002").
+    pub code: &'static str,
+    /// The human-readable error message.
+    pub message: String,
+    /// The error category (e.g., "audio", "texture", "music", "blender").
+    pub category: &'static str,
+    /// The underlying error, boxed for type erasure.
+    source: Option<Box<dyn std::error::Error + Send + Sync>>,
+}
+
+impl GenerationError {
+    /// Create a `GenerationError` from any `BackendError` implementor.
+    ///
+    /// This is the primary way to create a `GenerationError` from backend-specific
+    /// error types.
+    pub fn from_backend<E: BackendError + Send + Sync + 'static>(err: E) -> Self {
+        Self {
+            code: err.code(),
+            message: err.message(),
+            category: err.category(),
+            source: Some(Box::new(err)),
+        }
+    }
+
+    /// Create a `GenerationError` with explicit values.
+    ///
+    /// This is useful when you need to create an error without an underlying
+    /// backend error (e.g., for dispatch-level errors).
+    pub fn new(code: &'static str, message: impl Into<String>, category: &'static str) -> Self {
+        Self {
+            code,
+            message: message.into(),
+            category,
+            source: None,
+        }
+    }
+}
+
+impl std::fmt::Display for GenerationError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "[{}] {}", self.code, self.message)
+    }
+}
+
+impl std::error::Error for GenerationError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        self.source.as_ref().map(|e| e.as_ref() as &(dyn std::error::Error + 'static))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

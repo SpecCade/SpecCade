@@ -15,6 +15,11 @@
       "kind": "primary",
       "format": "png",
       "path": "brick_wall_roughness.png"
+    },
+    {
+      "kind": "primary",
+      "format": "png",
+      "path": "brick_wall_normal.png"
     }
   ],
   "recipe": {
@@ -22,11 +27,21 @@
     "params": {
       "resolution": [512, 512],
       "tileable": true,
-      "maps": ["albedo", "roughness"],
+      "maps": ["albedo", "roughness", "normal"],
       "base_material": {
         "type": "brick",
         "base_color": [0.54, 0.27, 0.07],
-        "roughness_range": [0.6, 0.9]
+        "roughness_range": [0.6, 0.9],
+        "brick_pattern": {
+          "brick_width": 64,
+          "brick_height": 32,
+          "mortar_width": 4,
+          "offset": 0.5
+        },
+        "normal_params": {
+          "bump_strength": 1.2,
+          "mortar_depth": 0.8
+        }
       },
       "layers": [
         {
@@ -38,7 +53,7 @@
             "persistence": 0.5,
             "lacunarity": 2.0
           },
-          "affects": ["albedo", "roughness"],
+          "affects": ["albedo", "roughness", "normal"],
           "strength": 0.3
         }
       ]

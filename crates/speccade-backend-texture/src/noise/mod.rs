@@ -10,7 +10,7 @@ mod fbm;
 
 pub use simplex::SimplexNoise;
 pub use perlin::PerlinNoise;
-pub use worley::WorleyNoise;
+pub use worley::{WorleyNoise, DistanceFunction, WorleyReturn};
 pub use fbm::Fbm;
 
 /// Trait for 2D noise generators.

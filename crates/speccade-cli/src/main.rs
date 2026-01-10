@@ -45,6 +45,25 @@ enum Commands {
         out_root: Option<String>,
     },
 
+    /// Generate all assets from a directory of spec files
+    GenerateAll {
+        /// Directory containing spec files (default: ./golden/speccade/specs)
+        #[arg(short, long)]
+        spec_dir: Option<String>,
+
+        /// Output root directory (default: ./test-outputs)
+        #[arg(short, long)]
+        out_root: Option<String>,
+
+        /// Include Blender-based assets (static_mesh, skeletal_mesh, skeletal_animation)
+        #[arg(long)]
+        include_blender: bool,
+
+        /// Show verbose output
+        #[arg(short, long)]
+        verbose: bool,
+    },
+
     /// Preview an asset (opens in viewer/editor)
     Preview {
         /// Path to the spec JSON file
@@ -96,6 +115,9 @@ fn main() -> ExitCode {
     let result = match cli.command {
         Commands::Validate { spec, artifacts } => commands::validate::run(&spec, artifacts),
         Commands::Generate { spec, out_root } => commands::generate::run(&spec, out_root.as_deref()),
+        Commands::GenerateAll { spec_dir, out_root, include_blender, verbose } => {
+            commands::generate_all::run(spec_dir.as_deref(), out_root.as_deref(), include_blender, verbose)
+        }
         Commands::Preview { spec, out_root } => commands::preview::run(&spec, out_root.as_deref()),
         Commands::Doctor => commands::doctor::run(),
         Commands::Migrate { project, allow_exec_specs, audit, audit_threshold } => {
@@ -260,6 +282,44 @@ mod tests {
                 assert!((audit_threshold - 0.90).abs() < 0.001);
             }
             _ => panic!("expected migrate command"),
+        }
+    }
+
+    #[test]
+    fn test_cli_parses_generate_all_defaults() {
+        let cli = Cli::try_parse_from(["speccade", "generate-all"]).unwrap();
+        match cli.command {
+            Commands::GenerateAll { spec_dir, out_root, include_blender, verbose } => {
+                assert!(spec_dir.is_none());
+                assert!(out_root.is_none());
+                assert!(!include_blender);
+                assert!(!verbose);
+            }
+            _ => panic!("expected generate-all command"),
+        }
+    }
+
+    #[test]
+    fn test_cli_parses_generate_all_with_options() {
+        let cli = Cli::try_parse_from([
+            "speccade",
+            "generate-all",
+            "--spec-dir",
+            "/path/to/specs",
+            "--out-root",
+            "/path/to/output",
+            "--include-blender",
+            "--verbose",
+        ])
+        .unwrap();
+        match cli.command {
+            Commands::GenerateAll { spec_dir, out_root, include_blender, verbose } => {
+                assert_eq!(spec_dir.as_deref(), Some("/path/to/specs"));
+                assert_eq!(out_root.as_deref(), Some("/path/to/output"));
+                assert!(include_blender);
+                assert!(verbose);
+            }
+            _ => panic!("expected generate-all command"),
         }
     }
 }

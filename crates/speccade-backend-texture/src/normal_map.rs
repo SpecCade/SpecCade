@@ -6,15 +6,16 @@
 
 use std::path::Path;
 
+use speccade_spec::BackendError;
 use speccade_spec::recipe::texture::{
-    Texture2dNormalMapV1Params, NormalMapPattern, NoiseConfig, NoiseAlgorithm, NormalMapProcessing,
+    Texture2dNormalMapV1Params, NormalMapProcessing,
 };
+use speccade_spec::validation::common as shared_validation;
 
 use crate::color::Color;
 use crate::maps::{TextureBuffer, GrayscaleBuffer};
-use crate::noise::{Noise2D, Fbm, PerlinNoise, SimplexNoise, WorleyNoise};
+use crate::normal_map_patterns::generate_height_from_pattern;
 use crate::png::{self, PngConfig, PngError};
-use crate::rng::DeterministicRng;
 
 /// Errors from normal map generation.
 #[derive(Debug, thiserror::Error)]
@@ -27,6 +28,20 @@ pub enum NormalMapError {
 
     #[error("Invalid parameter: {0}")]
     InvalidParameter(String),
+}
+
+impl BackendError for NormalMapError {
+    fn code(&self) -> &'static str {
+        match self {
+            NormalMapError::Png(_) => "NORMAL_001",
+            NormalMapError::Io(_) => "NORMAL_002",
+            NormalMapError::InvalidParameter(_) => "NORMAL_003",
+        }
+    }
+
+    fn category(&self) -> &'static str {
+        "texture"
+    }
 }
 
 /// Result of generating a normal map.
@@ -52,23 +67,13 @@ pub fn generate_normal_map(
     let width = params.resolution[0];
     let height = params.resolution[1];
 
-    if width == 0 || height == 0 {
-        return Err(NormalMapError::InvalidParameter(format!(
-            "resolution must be at least 1x1, got [{}, {}]",
-            width, height
-        )));
-    }
+    // Use shared validation for resolution
+    shared_validation::validate_resolution(width, height)
+        .map_err(|e| NormalMapError::InvalidParameter(e.message))?;
 
-    (width as usize)
-        .checked_mul(height as usize)
-        .ok_or_else(|| NormalMapError::InvalidParameter("resolution is too large".to_string()))?;
-
-    if !params.bump_strength.is_finite() || params.bump_strength < 0.0 {
-        return Err(NormalMapError::InvalidParameter(format!(
-            "bump_strength must be finite and >= 0, got {}",
-            params.bump_strength
-        )));
-    }
+    // Use shared validation for bump_strength (must be non-negative)
+    shared_validation::validate_non_negative("bump_strength", params.bump_strength)
+        .map_err(|e| NormalMapError::InvalidParameter(e.message))?;
 
     // Generate height map from pattern
     let mut height_map = if let Some(pattern) = &params.pattern {
@@ -189,491 +194,16 @@ fn apply_gaussian_blur(height_map: &mut GrayscaleBuffer, sigma: f64) {
     }
 }
 
-/// Generate height map from a normal map pattern.
-fn generate_height_from_pattern(
-    pattern: &NormalMapPattern,
-    width: u32,
-    height: u32,
-    seed: u32,
-    tileable: bool,
-) -> GrayscaleBuffer {
-    match pattern {
-        NormalMapPattern::Grid { cell_size, line_width, bevel } => {
-            generate_grid_height(width, height, *cell_size, *line_width, *bevel)
-        }
-        NormalMapPattern::Bricks { brick_width, brick_height, mortar_width, offset } => {
-            generate_brick_height(width, height, *brick_width, *brick_height, *mortar_width, *offset, seed)
-        }
-        NormalMapPattern::Hexagons { size, gap } => {
-            generate_hexagon_height(width, height, *size, *gap)
-        }
-        NormalMapPattern::NoiseBumps { noise } => {
-            generate_noise_height(width, height, noise, seed, tileable)
-        }
-        NormalMapPattern::DiamondPlate { diamond_size, height: plate_height } => {
-            generate_diamond_plate_height(width, height, *diamond_size, *plate_height)
-        }
-        NormalMapPattern::Tiles { tile_size, gap_width, gap_depth, seed: tile_seed } => {
-            generate_tiles_height(width, height, *tile_size, *gap_width, *gap_depth, *tile_seed)
-        }
-        NormalMapPattern::Rivets { spacing, radius, height: rivet_height, seed: rivet_seed } => {
-            generate_rivets_height(width, height, *spacing, *radius, *rivet_height, *rivet_seed)
-        }
-        NormalMapPattern::Weave { thread_width, gap, depth } => {
-            generate_weave_height(width, height, *thread_width, *gap, *depth)
-        }
-    }
-}
-
-/// Generate grid pattern height map.
-fn generate_grid_height(
-    width: u32,
-    height: u32,
-    cell_size: u32,
-    line_width: u32,
-    bevel: f64,
-) -> GrayscaleBuffer {
-    let mut buffer = GrayscaleBuffer::new(width, height, 1.0);
-
-    for y in 0..height {
-        for x in 0..width {
-            let cell_x = x % cell_size;
-            let cell_y = y % cell_size;
-
-            // Check if we're in a grid line
-            let in_line = cell_x < line_width || cell_y < line_width;
-
-            if in_line {
-                // Grid line: recessed
-                buffer.set(x, y, 0.3);
-            } else {
-                // Inside cell: apply bevel near edges
-                let dist_x = cell_x.saturating_sub(line_width).min(cell_size - cell_x);
-                let dist_y = cell_y.saturating_sub(line_width).min(cell_size - cell_y);
-                let edge_dist = dist_x.min(dist_y) as f64;
-
-                let bevel_dist = (cell_size / 4) as f64;
-                let bevel_factor = if edge_dist < bevel_dist {
-                    (edge_dist / bevel_dist) * bevel
-                } else {
-                    1.0
-                };
-
-                buffer.set(x, y, 0.7 + bevel_factor * 0.3);
-            }
-        }
-    }
-
-    buffer
-}
-
-/// Generate brick pattern height map.
-fn generate_brick_height(
-    width: u32,
-    height: u32,
-    brick_width: u32,
-    brick_height: u32,
-    mortar_width: u32,
-    offset: f64,
-    seed: u32,
-) -> GrayscaleBuffer {
-    let mut buffer = GrayscaleBuffer::new(width, height, 1.0);
-
-    let row_height = brick_height + mortar_width;
-    let col_width = brick_width + mortar_width;
-
-    for y in 0..height {
-        for x in 0..width {
-            let row = y / row_height;
-
-            // Apply offset for alternating rows
-            let row_offset = if row % 2 == 1 {
-                (offset * col_width as f64) as u32
-            } else {
-                0
-            };
-
-            let adjusted_x = (x + row_offset) % width;
-            let col = adjusted_x / col_width;
-
-            let local_x = adjusted_x % col_width;
-            let local_y = y % row_height;
-
-            // Check if in mortar
-            let in_mortar = local_x >= brick_width || local_y >= brick_height;
-
-            if in_mortar {
-                // Mortar: recessed
-                buffer.set(x, y, 0.2);
-            } else {
-                // Brick: raised with slight variation
-                let brick_seed = seed
-                    .wrapping_add(col.wrapping_mul(374761393))
-                    .wrapping_add(row.wrapping_mul(668265263));
-                let mut brick_rng = DeterministicRng::new(brick_seed);
-                let variation = brick_rng.gen_f64() * 0.1;
-
-                // Distance from edge for beveling
-                let dist_x = local_x.min(brick_width - local_x);
-                let dist_y = local_y.min(brick_height - local_y);
-                let edge_dist = dist_x.min(dist_y) as f64;
-
-                let bevel_dist = 4.0;
-                let bevel_factor = if edge_dist < bevel_dist {
-                    0.9 + (edge_dist / bevel_dist) * 0.1
-                } else {
-                    1.0
-                };
-
-                buffer.set(x, y, (0.8 + variation) * bevel_factor);
-            }
-        }
-    }
-
-    buffer
-}
-
-/// Generate hexagon pattern height map.
-fn generate_hexagon_height(width: u32, height: u32, size: u32, gap: u32) -> GrayscaleBuffer {
-    let mut buffer = GrayscaleBuffer::new(width, height, 0.3);
-
-    let hex_width = size * 2;
-    let hex_height = ((size as f64) * 1.732).round() as u32; // sqrt(3) ≈ 1.732
-
-    let col_spacing = (hex_width as f64 * 0.75) as u32;
-    let row_spacing = hex_height;
-
-    for y in 0..height {
-        for x in 0..width {
-            // Find nearest hexagon center
-            let col = x / col_spacing;
-            let row = y / row_spacing;
-
-            // Offset odd rows
-            let x_offset = if row % 2 == 1 { col_spacing / 2 } else { 0 };
-
-            let center_x = col * col_spacing + x_offset;
-            let center_y = row * row_spacing;
-
-            // Distance to hexagon center
-            let dx = (x as i32 - center_x as i32).abs() as f64;
-            let dy = (y as i32 - center_y as i32).abs() as f64;
-
-            // Approximate hexagon distance (simplified)
-            let hex_dist = (dx + dy * 0.866).max(dx);
-            let hex_radius = (size - gap) as f64;
-
-            if hex_dist < hex_radius {
-                // Inside hexagon: raised
-                let edge_factor = 1.0 - (hex_dist / hex_radius);
-                let bevel = 0.8 + edge_factor * 0.2;
-                buffer.set(x, y, bevel);
-            }
-            // else: stays at background (gap) level
-        }
-    }
-
-    buffer
-}
-
-/// Generate noise-based bumps height map.
-fn generate_noise_height(
-    width: u32,
-    height: u32,
-    noise_config: &NoiseConfig,
-    seed: u32,
-    tileable: bool,
-) -> GrayscaleBuffer {
-    let mut buffer = GrayscaleBuffer::new(width, height, 0.5);
-
-    let noise_gen = create_noise_generator(noise_config, seed);
-
-    for y in 0..height {
-        for x in 0..width {
-            let (nx, ny) = if tileable {
-                // Seamless tiling using domain warping
-                let u = x as f64 / width as f64;
-                let v = y as f64 / height as f64;
-                let angle_x = u * 2.0 * std::f64::consts::PI;
-                let angle_y = v * 2.0 * std::f64::consts::PI;
-
-                (
-                    angle_x.cos() * noise_config.scale,
-                    angle_y.sin() * noise_config.scale,
-                )
-            } else {
-                (
-                    x as f64 * noise_config.scale,
-                    y as f64 * noise_config.scale,
-                )
-            };
-
-            let noise_val = noise_gen.sample_01(nx, ny);
-            buffer.set(x, y, noise_val);
-        }
-    }
-
-    buffer
-}
-
-/// Generate diamond plate height map.
-fn generate_diamond_plate_height(
-    width: u32,
-    height: u32,
-    diamond_size: u32,
-    plate_height: f64,
-) -> GrayscaleBuffer {
-    let mut buffer = GrayscaleBuffer::new(width, height, 0.3);
-
-    for y in 0..height {
-        for x in 0..width {
-            let cell_x = x % diamond_size;
-            let cell_y = y % diamond_size;
-
-            let center = diamond_size / 2;
-
-            // Diamond shape using Manhattan distance
-            let dist = (cell_x as i32 - center as i32).abs() + (cell_y as i32 - center as i32).abs();
-            let max_dist = center as i32;
-
-            if dist < max_dist {
-                // Inside diamond: raised
-                let factor = 1.0 - (dist as f64 / max_dist as f64);
-                let height_val = 0.3 + plate_height * factor;
-                buffer.set(x, y, height_val.clamp(0.0, 1.0));
-            }
-            // else: background level
-        }
-    }
-
-    buffer
-}
-
-/// Create a noise generator from config.
-fn create_noise_generator(config: &NoiseConfig, seed: u32) -> Box<dyn Noise2D> {
-    let base_noise: Box<dyn Noise2D> = match config.algorithm {
-        NoiseAlgorithm::Perlin => Box::new(PerlinNoise::new(seed)),
-        NoiseAlgorithm::Simplex => Box::new(SimplexNoise::new(seed)),
-        NoiseAlgorithm::Worley => Box::new(WorleyNoise::new(seed)),
-        NoiseAlgorithm::Value => Box::new(PerlinNoise::new(seed)), // Use Perlin as fallback
-        NoiseAlgorithm::Fbm => {
-            Box::new(
-                Fbm::new(PerlinNoise::new(seed))
-                    .with_octaves(config.octaves)
-                    .with_persistence(config.persistence)
-                    .with_lacunarity(config.lacunarity)
-            )
-        }
-    };
-
-    // Wrap in FBM if octaves > 1 and not already FBM
-    if config.octaves > 1 && config.algorithm != NoiseAlgorithm::Fbm {
-        match config.algorithm {
-            NoiseAlgorithm::Perlin => {
-                Box::new(
-                    Fbm::new(PerlinNoise::new(seed))
-                        .with_octaves(config.octaves)
-                        .with_persistence(config.persistence)
-                        .with_lacunarity(config.lacunarity)
-                )
-            }
-            NoiseAlgorithm::Simplex => {
-                Box::new(
-                    Fbm::new(SimplexNoise::new(seed))
-                        .with_octaves(config.octaves)
-                        .with_persistence(config.persistence)
-                        .with_lacunarity(config.lacunarity)
-                )
-            }
-            _ => base_noise,
-        }
-    } else {
-        base_noise
-    }
-}
-
-/// Generate tiles pattern height map.
-fn generate_tiles_height(
-    width: u32,
-    height: u32,
-    tile_size: u32,
-    gap_width: u32,
-    gap_depth: f64,
-    seed: u32,
-) -> GrayscaleBuffer {
-    let mut buffer = GrayscaleBuffer::new(width, height, 1.0);
-
-    let tile_with_gap = tile_size + gap_width;
-
-    for y in 0..height {
-        for x in 0..width {
-            let tile_x = x / tile_with_gap;
-            let tile_y = y / tile_with_gap;
-
-            let local_x = x % tile_with_gap;
-            let local_y = y % tile_with_gap;
-
-            // Check if in gap
-            let in_gap = local_x >= tile_size || local_y >= tile_size;
-
-            if in_gap {
-                // Gap: recessed
-                buffer.set(x, y, 1.0 - gap_depth);
-            } else {
-                // Tile: raised with slight variation
-                let tile_seed = seed
-                    .wrapping_add(tile_x.wrapping_mul(374761393))
-                    .wrapping_add(tile_y.wrapping_mul(668265263));
-                let mut tile_rng = DeterministicRng::new(tile_seed);
-                let variation = tile_rng.gen_f64() * 0.05;
-
-                // Distance from edge for beveling
-                let dist_x = local_x.min(tile_size - 1 - local_x);
-                let dist_y = local_y.min(tile_size - 1 - local_y);
-                let edge_dist = dist_x.min(dist_y) as f64;
-
-                let bevel_dist = 3.0;
-                let bevel_factor = if edge_dist < bevel_dist {
-                    0.95 + (edge_dist / bevel_dist) * 0.05
-                } else {
-                    1.0
-                };
-
-                buffer.set(x, y, (1.0 + variation) * bevel_factor);
-            }
-        }
-    }
-
-    buffer
-}
-
-/// Generate rivets pattern height map.
-fn generate_rivets_height(
-    width: u32,
-    height: u32,
-    spacing: u32,
-    radius: u32,
-    rivet_height: f64,
-    seed: u32,
-) -> GrayscaleBuffer {
-    let mut buffer = GrayscaleBuffer::new(width, height, 0.5);
-
-    let cols = (width + spacing - 1) / spacing;
-    let rows = (height + spacing - 1) / spacing;
-
-    for row in 0..rows {
-        for col in 0..cols {
-            // Calculate rivet center with slight random offset
-            let rivet_seed = seed
-                .wrapping_add(col.wrapping_mul(374761393))
-                .wrapping_add(row.wrapping_mul(668265263));
-            let mut rivet_rng = DeterministicRng::new(rivet_seed);
-
-            let jitter = 3.0;
-            let offset_x = (rivet_rng.gen_f64() - 0.5) * jitter;
-            let offset_y = (rivet_rng.gen_f64() - 0.5) * jitter;
-
-            let center_x = (col * spacing) as f64 + offset_x;
-            let center_y = (row * spacing) as f64 + offset_y;
-
-            // Draw rivet influence
-            let rivet_radius = radius as f64;
-            let influence_radius = rivet_radius * 2.0;
-
-            let min_x = ((center_x - influence_radius).max(0.0) as u32).min(width);
-            let max_x = ((center_x + influence_radius).ceil() as u32).min(width);
-            let min_y = ((center_y - influence_radius).max(0.0) as u32).min(height);
-            let max_y = ((center_y + influence_radius).ceil() as u32).min(height);
-
-            for y in min_y..max_y {
-                for x in min_x..max_x {
-                    let dx = x as f64 - center_x;
-                    let dy = y as f64 - center_y;
-                    let dist = (dx * dx + dy * dy).sqrt();
-
-                    if dist < rivet_radius {
-                        // Inside rivet: raised dome
-                        let factor = 1.0 - (dist / rivet_radius);
-                        let height_val = 0.5 + rivet_height * factor * 0.5;
-                        buffer.set(x, y, height_val.clamp(0.0, 1.0));
-                    } else if dist < rivet_radius + 2.0 {
-                        // Edge transition
-                        let blend = (dist - rivet_radius) / 2.0;
-                        let current = buffer.get(x, y);
-                        let target = 0.5 - 0.1;
-                        let height_val = current * blend + target * (1.0 - blend);
-                        buffer.set(x, y, height_val.clamp(0.0, 1.0));
-                    }
-                }
-            }
-        }
-    }
-
-    buffer
-}
-
-/// Generate weave/fabric pattern height map.
-fn generate_weave_height(
-    width: u32,
-    height: u32,
-    thread_width: u32,
-    gap: u32,
-    depth: f64,
-) -> GrayscaleBuffer {
-    let mut buffer = GrayscaleBuffer::new(width, height, 0.5);
-
-    let pattern_size = (thread_width + gap) * 2;
-
-    for y in 0..height {
-        for x in 0..width {
-            let pattern_x = x % pattern_size;
-            let pattern_y = y % pattern_size;
-
-            let half_pattern = pattern_size / 2;
-
-            // Determine if horizontal or vertical thread is on top
-            let h_thread = pattern_x < thread_width || (pattern_x >= half_pattern && pattern_x < half_pattern + thread_width);
-            let v_thread = pattern_y < thread_width || (pattern_y >= half_pattern && pattern_y < half_pattern + thread_width);
-
-            let in_gap_x = pattern_x >= thread_width && pattern_x < half_pattern;
-            let in_gap_y = pattern_y >= thread_width && pattern_y < half_pattern;
-            let in_gap_x2 = pattern_x >= half_pattern + thread_width;
-            let in_gap_y2 = pattern_y >= half_pattern + thread_width;
-
-            if (in_gap_x || in_gap_x2) && (in_gap_y || in_gap_y2) {
-                // In gap
-                buffer.set(x, y, 0.5 - depth * 0.5);
-            } else if h_thread && v_thread {
-                // Weave intersection
-                let h_pos = if pattern_x < half_pattern { pattern_x } else { pattern_x - half_pattern };
-                let v_pos = if pattern_y < half_pattern { pattern_y } else { pattern_y - half_pattern };
-
-                // Alternate which thread is on top
-                let h_on_top = (pattern_x < half_pattern) == (pattern_y < half_pattern);
-
-                if h_on_top {
-                    // Horizontal thread on top
-                    let height_val = 0.5 + depth * 0.5 - (v_pos as f64 / thread_width as f64) * depth * 0.3;
-                    buffer.set(x, y, height_val.clamp(0.0, 1.0));
-                } else {
-                    // Vertical thread on top
-                    let height_val = 0.5 + depth * 0.5 - (h_pos as f64 / thread_width as f64) * depth * 0.3;
-                    buffer.set(x, y, height_val.clamp(0.0, 1.0));
-                }
-            } else if h_thread {
-                // Horizontal thread only
-                buffer.set(x, y, 0.5 + depth * 0.25);
-            } else if v_thread {
-                // Vertical thread only
-                buffer.set(x, y, 0.5 + depth * 0.25);
-            }
-        }
-    }
-
-    buffer
-}
-
 /// Convert height map to normal map using Sobel operators.
+///
+/// Uses the OpenGL/wgpu normal map convention:
+/// - R (X): right is positive (bump slopes right -> brighter red)
+/// - G (Y): up is positive (bump slopes up -> brighter green)
+/// - B (Z): out/towards viewer is positive
+///
+/// A flat surface encodes as RGB (128, 128, 255) or normalized (0.5, 0.5, 1.0).
+/// This matches the modern standard used by wgpu, Unity, Blender, and most game engines.
+/// Note: DirectX uses the opposite Y convention (G = down), but we follow OpenGL/wgpu.
 #[allow(clippy::needless_range_loop)]
 fn height_to_normal(height_map: &GrayscaleBuffer, strength: f64) -> TextureBuffer {
     let width = height_map.width;
@@ -707,13 +237,14 @@ fn height_to_normal(height_map: &GrayscaleBuffer, strength: f64) -> TextureBuffe
             let gx = gx * strength;
             let gy = gy * strength;
 
-            // Create normal vector
-            // For tangent-space normal maps:
-            // X = right (positive = bump facing right)
-            // Y = up (positive = bump facing up)
-            // Z = out (positive = facing camera)
+            // Create normal vector in OpenGL/wgpu convention (Y-up)
+            // gx > 0 means height increases to the right -> normal tilts left -> nx < 0
+            // gy > 0 means height increases downward (image coords) -> in world coords (Y-up),
+            //        this means height decreases upward -> normal tilts down -> ny < 0
+            // But we want OpenGL convention where Y-up is positive, so we negate gy.
+            // For X: standard convention is that positive gradient = negative normal X
             let nx = -gx;
-            let ny = -gy;
+            let ny = gy;  // Inverted for OpenGL/wgpu Y-up convention (was -gy for DirectX Y-down)
             let nz = 1.0;
 
             // Normalize
@@ -737,6 +268,7 @@ fn height_to_normal(height_map: &GrayscaleBuffer, strength: f64) -> TextureBuffe
 #[cfg(test)]
 mod tests {
     use super::*;
+    use speccade_spec::recipe::texture::{NormalMapPattern, NoiseConfig, NoiseAlgorithm};
 
     #[test]
     fn test_generate_flat_normal() {

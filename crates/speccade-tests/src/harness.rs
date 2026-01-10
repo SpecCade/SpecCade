@@ -7,6 +7,11 @@ use tempfile::TempDir;
 
 use speccade_spec::{Spec, OutputFormat};
 
+use crate::format_validators::{self, GlbInfo, ItInfo, PngInfo, WavInfo, XmInfo};
+
+// Re-export FormatError for convenience
+pub use crate::format_validators::FormatError;
+
 /// Result of running the speccade CLI.
 #[derive(Debug)]
 pub struct CliResult {
@@ -160,93 +165,71 @@ pub fn validate_output_exists(out_root: &Path, rel_path: &str) -> bool {
 /// Validate a WAV file is properly formed.
 pub fn validate_wav_file(path: &Path) -> Result<(), String> {
     let data = fs::read(path).map_err(|e| format!("Failed to read file: {}", e))?;
+    format_validators::validate_wav(&data)
+        .map(|_| ())
+        .map_err(|e| e.to_string())
+}
 
-    // Check RIFF header
-    if data.len() < 44 {
-        return Err("WAV file too short (< 44 bytes)".to_string());
-    }
-
-    if &data[0..4] != b"RIFF" {
-        return Err("Missing RIFF header".to_string());
-    }
-
-    if &data[8..12] != b"WAVE" {
-        return Err("Missing WAVE format".to_string());
-    }
-
-    Ok(())
+/// Validate a WAV file and return detailed information.
+pub fn validate_wav_file_info(path: &Path) -> Result<WavInfo, String> {
+    let data = fs::read(path).map_err(|e| format!("Failed to read file: {}", e))?;
+    format_validators::validate_wav(&data).map_err(|e| e.to_string())
 }
 
 /// Validate a PNG file is properly formed.
 pub fn validate_png_file(path: &Path) -> Result<(), String> {
     let data = fs::read(path).map_err(|e| format!("Failed to read file: {}", e))?;
+    format_validators::validate_png(&data)
+        .map(|_| ())
+        .map_err(|e| e.to_string())
+}
 
-    // Check PNG signature
-    let png_signature: [u8; 8] = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A];
-    if data.len() < 8 {
-        return Err("PNG file too short (< 8 bytes)".to_string());
-    }
-
-    if &data[0..8] != png_signature {
-        return Err("Missing PNG signature".to_string());
-    }
-
-    Ok(())
+/// Validate a PNG file and return detailed information.
+pub fn validate_png_file_info(path: &Path) -> Result<PngInfo, String> {
+    let data = fs::read(path).map_err(|e| format!("Failed to read file: {}", e))?;
+    format_validators::validate_png(&data).map_err(|e| e.to_string())
 }
 
 /// Validate an XM tracker module file is properly formed.
 pub fn validate_xm_file(path: &Path) -> Result<(), String> {
     let data = fs::read(path).map_err(|e| format!("Failed to read file: {}", e))?;
+    format_validators::validate_xm(&data)
+        .map(|_| ())
+        .map_err(|e| e.to_string())
+}
 
-    // Check XM header
-    if data.len() < 60 {
-        return Err("XM file too short".to_string());
-    }
-
-    if &data[0..17] != b"Extended Module: " {
-        return Err("Missing XM header".to_string());
-    }
-
-    Ok(())
+/// Validate an XM file and return detailed information.
+pub fn validate_xm_file_info(path: &Path) -> Result<XmInfo, String> {
+    let data = fs::read(path).map_err(|e| format!("Failed to read file: {}", e))?;
+    format_validators::validate_xm(&data).map_err(|e| e.to_string())
 }
 
 /// Validate an IT tracker module file is properly formed.
 pub fn validate_it_file(path: &Path) -> Result<(), String> {
     let data = fs::read(path).map_err(|e| format!("Failed to read file: {}", e))?;
+    format_validators::validate_it(&data)
+        .map(|_| ())
+        .map_err(|e| e.to_string())
+}
 
-    // Check IT header
-    if data.len() < 64 {
-        return Err("IT file too short".to_string());
-    }
-
-    if &data[0..4] != b"IMPM" {
-        return Err("Missing IT header".to_string());
-    }
-
-    Ok(())
+/// Validate an IT file and return detailed information.
+pub fn validate_it_file_info(path: &Path) -> Result<ItInfo, String> {
+    let data = fs::read(path).map_err(|e| format!("Failed to read file: {}", e))?;
+    format_validators::validate_it(&data).map_err(|e| e.to_string())
 }
 
 /// Validate a GLB file is properly formed.
 pub fn validate_glb_file(path: &Path) -> Result<(), String> {
     let data = fs::read(path).map_err(|e| format!("Failed to read file: {}", e))?;
+    format_validators::validate_glb(&data)
+        .map(|_| ())
+        .map_err(|e| e.to_string())
+}
 
-    // Check GLB magic number
-    if data.len() < 12 {
-        return Err("GLB file too short (< 12 bytes)".to_string());
-    }
-
-    // GLB magic: 0x46546C67 (little-endian "glTF")
-    if &data[0..4] != b"glTF" {
-        return Err("Missing GLB magic number".to_string());
-    }
-
-    // Check version (should be 2)
-    let version = u32::from_le_bytes([data[4], data[5], data[6], data[7]]);
-    if version != 2 {
-        return Err(format!("Unexpected GLB version: {} (expected 2)", version));
-    }
-
-    Ok(())
+/// Validate a GLB file and return detailed information.
+pub fn validate_glb_file_info(path: &Path) -> Result<GlbInfo, String> {
+    let data = fs::read(path).map_err(|e| format!("Failed to read file: {}", e))?;
+    format_validators::validate_glb(&data).map_err(|e| e.to_string())
 }
 
 /// Validate an output file based on its format.
