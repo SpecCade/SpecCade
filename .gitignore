@@ -8,3 +8,5 @@ Cargo.lock
 test_output/
 test_spec.json
 *.report.json
+
+__pycache__/

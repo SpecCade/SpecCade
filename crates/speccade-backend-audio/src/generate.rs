@@ -14,8 +14,10 @@ use crate::rng::create_rng;
 use crate::synthesis::fm::FmSynth;
 use crate::synthesis::harmonics::HarmonicSynth;
 use crate::synthesis::karplus::KarplusStrong;
+use crate::synthesis::metallic::MetallicSynth;
 use crate::synthesis::noise::{NoiseColor, NoiseSynth};
 use crate::synthesis::oscillators::{SawSynth, SineSynth, SquareSynth, TriangleSynth};
+use crate::synthesis::pitched_body::PitchedBody;
 use crate::synthesis::{FrequencySweep, SweepCurve, Synthesizer};
 use crate::wav::WavResult;
 
@@ -81,7 +83,22 @@ pub fn generate_from_params(params: &AudioSfxLayeredSynthV1Params, seed: u32) ->
     }
 
     // Mix layers
-    let mixed = mixer.mix();
+    let mut mixed = mixer.mix();
+
+    // Apply master filter if specified
+    if let Some(ref master_filter) = params.master_filter {
+        mixed = match mixed {
+            MixerOutput::Mono(mut samples) => {
+                apply_swept_filter(&mut samples, master_filter, sample_rate);
+                MixerOutput::Mono(samples)
+            }
+            MixerOutput::Stereo(mut stereo) => {
+                apply_swept_filter(&mut stereo.left, master_filter, sample_rate);
+                apply_swept_filter(&mut stereo.right, master_filter, sample_rate);
+                MixerOutput::Stereo(stereo)
+            }
+        };
+    }
 
     // Convert to WAV
     let wav = match mixed {
@@ -110,6 +127,10 @@ fn generate_layer(
 ) -> AudioResult<Vec<f64>> {
     let mut rng = create_rng(seed);
 
+    // Calculate delay padding
+    let delay_samples = layer.delay.map(|d| (d * sample_rate) as usize).unwrap_or(0);
+    let synthesis_samples = num_samples.saturating_sub(delay_samples);
+
     // Generate base synthesis
     let mut samples = match &layer.synthesis {
         Synthesis::FmSynth {
@@ -125,7 +146,7 @@ fn generate_layer(
                 synth = synth.with_sweep(FrequencySweep::new(*carrier_freq, sweep.end_freq, curve));
             }
 
-            synth.synthesize(num_samples, sample_rate, &mut rng)
+            synth.synthesize(synthesis_samples, sample_rate, &mut rng)
         }
 
         Synthesis::KarplusStrong {
@@ -134,18 +155,39 @@ fn generate_layer(
             blend,
         } => {
             let synth = KarplusStrong::new(*frequency, *decay, *blend);
-            synth.synthesize(num_samples, sample_rate, &mut rng)
+            synth.synthesize(synthesis_samples, sample_rate, &mut rng)
         }
 
         Synthesis::NoiseBurst { noise_type, filter } => {
             let color = convert_noise_type(noise_type);
-            let mut synth = NoiseSynth::new(color);
 
-            if let Some(f) = filter {
-                synth = apply_noise_filter(synth, f);
+            // Check if filter has sweep parameter
+            let has_sweep = filter.as_ref().map(|f| match f {
+                Filter::Lowpass { cutoff_end, .. } => cutoff_end.is_some(),
+                Filter::Highpass { cutoff_end, .. } => cutoff_end.is_some(),
+                Filter::Bandpass { center_end, .. } => center_end.is_some(),
+            }).unwrap_or(false);
+
+            let mut samples = if has_sweep {
+                // Generate raw noise without filter, then apply swept filter
+                NoiseSynth::new(color).synthesize(synthesis_samples, sample_rate, &mut rng)
+            } else {
+                // Use static filter in the synth
+                let mut synth = NoiseSynth::new(color);
+                if let Some(f) = filter {
+                    synth = apply_noise_filter(synth, f);
+                }
+                synth.synthesize(synthesis_samples, sample_rate, &mut rng)
+            };
+
+            // Apply swept filter if needed
+            if has_sweep {
+                if let Some(f) = filter {
+                    apply_swept_filter(&mut samples, f, sample_rate);
+                }
             }
 
-            synth.synthesize(num_samples, sample_rate, &mut rng)
+            samples
         }
 
         Synthesis::Additive {
@@ -153,22 +195,56 @@ fn generate_layer(
             harmonics,
         } => {
             let synth = HarmonicSynth::new(*base_freq, harmonics.clone());
-            synth.synthesize(num_samples, sample_rate, &mut rng)
+            synth.synthesize(synthesis_samples, sample_rate, &mut rng)
         }
 
         Synthesis::Oscillator {
             waveform,
             frequency,
             freq_sweep,
+            duty,
+            ..
         } => {
-            generate_oscillator_samples(waveform, *frequency, freq_sweep.as_ref(), num_samples, sample_rate, &mut rng)
+            generate_oscillator_samples(waveform, *frequency, freq_sweep.as_ref(), *duty, synthesis_samples, sample_rate, &mut rng)
+        }
+
+        Synthesis::MultiOscillator {
+            frequency,
+            oscillators,
+            freq_sweep,
+        } => {
+            generate_multi_oscillator(*frequency, oscillators, freq_sweep.as_ref(), synthesis_samples, sample_rate, &mut rng)
+        }
+
+        Synthesis::PitchedBody {
+            start_freq,
+            end_freq,
+        } => {
+            let synth = PitchedBody::new(*start_freq, *end_freq);
+            synth.synthesize(synthesis_samples, sample_rate, &mut rng)
+        }
+
+        Synthesis::Metallic {
+            base_freq,
+            num_partials,
+            inharmonicity,
+        } => {
+            let synth = MetallicSynth::new(*base_freq, *num_partials, *inharmonicity);
+            synth.synthesize(synthesis_samples, sample_rate, &mut rng)
         }
     };
 
     // Apply envelope
-    let envelope = generate_envelope(&layer.envelope, sample_rate, num_samples);
+    let envelope = generate_envelope(&layer.envelope, sample_rate, synthesis_samples);
     for (sample, env) in samples.iter_mut().zip(envelope.iter()) {
         *sample *= env;
+    }
+
+    // Pad with delay at the start if needed
+    if delay_samples > 0 {
+        let mut padded = vec![0.0; delay_samples];
+        padded.extend(samples);
+        samples = padded;
     }
 
     Ok(samples)
@@ -179,6 +255,7 @@ fn generate_oscillator_samples(
     waveform: &Waveform,
     frequency: f64,
     freq_sweep: Option<&speccade_spec::recipe::audio_sfx::FreqSweep>,
+    duty: Option<f64>,
     num_samples: usize,
     sample_rate: f64,
     rng: &mut rand_pcg::Pcg32,
@@ -197,11 +274,15 @@ fn generate_oscillator_samples(
             }
         }
         Waveform::Square | Waveform::Pulse => {
-            if let Some(s) = sweep {
-                SquareSynth::with_sweep(frequency, s.end_freq, s.curve).synthesize(num_samples, sample_rate, rng)
+            let duty_cycle = duty.unwrap_or(0.5);
+            let mut synth = if let Some(s) = sweep {
+                SquareSynth::with_sweep(frequency, s.end_freq, s.curve)
             } else {
-                SquareSynth::new(frequency).synthesize(num_samples, sample_rate, rng)
-            }
+                SquareSynth::pulse(frequency, duty_cycle)
+            };
+            // Set duty cycle even for sweep case
+            synth.duty = duty_cycle;
+            synth.synthesize(num_samples, sample_rate, rng)
         }
         Waveform::Sawtooth => {
             if let Some(s) = sweep {
@@ -218,6 +299,76 @@ fn generate_oscillator_samples(
             }
         }
     }
+}
+
+/// Generates multi-oscillator stack samples.
+fn generate_multi_oscillator(
+    base_frequency: f64,
+    oscillators: &[speccade_spec::recipe::audio_sfx::OscillatorConfig],
+    freq_sweep: Option<&speccade_spec::recipe::audio_sfx::FreqSweep>,
+    num_samples: usize,
+    sample_rate: f64,
+    _rng: &mut rand_pcg::Pcg32,
+) -> Vec<f64> {
+    use crate::oscillator::{PhaseAccumulator, TWO_PI};
+
+    let mut output = vec![0.0; num_samples];
+
+    // Sweep applied to all oscillators
+    let sweep_curve = freq_sweep.map(|s| {
+        let curve = convert_sweep_curve(&s.curve);
+        FrequencySweep::new(base_frequency, s.end_freq, curve)
+    });
+
+    for osc_config in oscillators {
+        // Calculate oscillator frequency with detune
+        let detune_mult = if let Some(detune_cents) = osc_config.detune {
+            2.0_f64.powf(detune_cents / 1200.0)
+        } else {
+            1.0
+        };
+
+        let duty = osc_config.duty.unwrap_or(0.5);
+        let phase_offset = osc_config.phase.unwrap_or(0.0);
+        let volume = osc_config.volume;
+
+        // Generate oscillator samples
+        let mut phase_acc = PhaseAccumulator::new(sample_rate);
+
+        for i in 0..num_samples {
+            let base_freq = if let Some(ref sweep) = sweep_curve {
+                sweep.at(i as f64 / num_samples as f64)
+            } else {
+                base_frequency
+            };
+
+            let freq = base_freq * detune_mult;
+            let mut phase = phase_acc.advance(freq);
+            phase += phase_offset;
+
+            // Wrap phase
+            while phase >= TWO_PI {
+                phase -= TWO_PI;
+            }
+
+            let sample = match osc_config.waveform {
+                Waveform::Sine => crate::oscillator::sine(phase),
+                Waveform::Square | Waveform::Pulse => crate::oscillator::square(phase, duty),
+                Waveform::Sawtooth => crate::oscillator::sawtooth(phase),
+                Waveform::Triangle => crate::oscillator::triangle(phase),
+            };
+
+            output[i] += sample * volume;
+        }
+    }
+
+    // Normalize by oscillator count to prevent clipping
+    let count = oscillators.len().max(1) as f64;
+    for sample in &mut output {
+        *sample /= count;
+    }
+
+    output
 }
 
 /// Converts spec sweep curve to internal representation.
@@ -241,21 +392,93 @@ fn convert_noise_type(noise_type: &NoiseType) -> NoiseColor {
 /// Applies filter configuration to noise synthesizer.
 fn apply_noise_filter(mut synth: NoiseSynth, filter: &Filter) -> NoiseSynth {
     match filter {
-        Filter::Lowpass { cutoff, resonance } => {
+        Filter::Lowpass { cutoff, resonance, .. } => {
             synth = synth.with_lowpass(*cutoff, *resonance);
         }
-        Filter::Highpass { cutoff, resonance } => {
+        Filter::Highpass { cutoff, resonance, .. } => {
             synth = synth.with_highpass(*cutoff, *resonance);
         }
         Filter::Bandpass {
             center,
             bandwidth,
             resonance,
+            ..
         } => {
             synth = synth.with_bandpass(*center, *bandwidth, *resonance);
         }
     }
     synth
+}
+
+/// Applies a swept filter to a buffer of samples.
+fn apply_swept_filter(samples: &mut [f64], filter: &Filter, sample_rate: f64) {
+    use crate::filter::{BiquadCoeffs, BiquadFilter, SweepMode, generate_cutoff_sweep};
+
+    let num_samples = samples.len();
+
+    match filter {
+        Filter::Lowpass { cutoff, resonance, cutoff_end } => {
+            if let Some(end_cutoff) = cutoff_end {
+                // Generate cutoff sweep
+                let cutoffs = generate_cutoff_sweep(*cutoff, *end_cutoff, num_samples, SweepMode::Exponential);
+
+                // Apply time-varying filter
+                let mut filter_state = BiquadFilter::lowpass(*cutoff, *resonance, sample_rate);
+                for (i, sample) in samples.iter_mut().enumerate() {
+                    // Update filter coefficients for this sample
+                    let coeffs = BiquadCoeffs::lowpass(cutoffs[i], *resonance, sample_rate);
+                    filter_state.set_coeffs(coeffs);
+                    *sample = filter_state.process(*sample);
+                }
+            } else {
+                // Static filter
+                let mut filter = BiquadFilter::lowpass(*cutoff, *resonance, sample_rate);
+                filter.process_buffer(samples);
+            }
+        }
+        Filter::Highpass { cutoff, resonance, cutoff_end } => {
+            if let Some(end_cutoff) = cutoff_end {
+                // Generate cutoff sweep
+                let cutoffs = generate_cutoff_sweep(*cutoff, *end_cutoff, num_samples, SweepMode::Exponential);
+
+                // Apply time-varying filter
+                let mut filter_state = BiquadFilter::highpass(*cutoff, *resonance, sample_rate);
+                for (i, sample) in samples.iter_mut().enumerate() {
+                    // Update filter coefficients for this sample
+                    let coeffs = BiquadCoeffs::highpass(cutoffs[i], *resonance, sample_rate);
+                    filter_state.set_coeffs(coeffs);
+                    *sample = filter_state.process(*sample);
+                }
+            } else {
+                // Static filter
+                let mut filter = BiquadFilter::highpass(*cutoff, *resonance, sample_rate);
+                filter.process_buffer(samples);
+            }
+        }
+        Filter::Bandpass { center, bandwidth, resonance, center_end } => {
+            if let Some(end_center) = center_end {
+                // Generate center frequency sweep
+                let centers = generate_cutoff_sweep(*center, *end_center, num_samples, SweepMode::Exponential);
+
+                // Apply time-varying filter
+                // Q = center / bandwidth for bandpass
+                let q = *center / bandwidth;
+                let mut filter_state = BiquadFilter::bandpass(*center, q, sample_rate);
+                for (i, sample) in samples.iter_mut().enumerate() {
+                    // Keep Q constant, which means bandwidth scales with center
+                    let q_at_i = centers[i] / bandwidth;
+                    let coeffs = BiquadCoeffs::bandpass(centers[i], q_at_i, sample_rate);
+                    filter_state.set_coeffs(coeffs);
+                    *sample = filter_state.process(*sample);
+                }
+            } else {
+                // Static filter
+                let q = *center / bandwidth;
+                let mut filter = BiquadFilter::bandpass(*center, q, sample_rate);
+                filter.process_buffer(samples);
+            }
+        }
+    }
 }
 
 /// Generates an ADSR envelope for the given duration.
@@ -276,6 +499,7 @@ mod tests {
         let params = AudioSfxLayeredSynthV1Params {
             duration_seconds: 0.5,
             sample_rate: 44100,
+            master_filter: None,
             layers: vec![AudioLayer {
                 synthesis: Synthesis::FmSynth {
                     carrier_freq: 440.0,
@@ -291,6 +515,7 @@ mod tests {
                 },
                 volume: 0.8,
                 pan: 0.0,
+                delay: None,
             }],
         };
 
@@ -330,6 +555,7 @@ mod tests {
         let params = AudioSfxLayeredSynthV1Params {
             duration_seconds: 0.1,
             sample_rate: 22050,
+            master_filter: None,
             layers: vec![AudioLayer {
                 synthesis: Synthesis::NoiseBurst {
                     noise_type: NoiseType::White,
@@ -338,6 +564,7 @@ mod tests {
                 envelope: Envelope::default(),
                 volume: 1.0,
                 pan: 0.0,
+                delay: None,
             }],
         };
 
@@ -365,26 +592,33 @@ mod tests {
         let params = AudioSfxLayeredSynthV1Params {
             duration_seconds: 0.1,
             sample_rate: 44100,
+            master_filter: None,
             layers: vec![
                 AudioLayer {
                     synthesis: Synthesis::Oscillator {
                         waveform: Waveform::Sine,
                         frequency: 440.0,
                         freq_sweep: None,
+                        detune: None,
+                        duty: None,
                     },
                     envelope: Envelope::default(),
                     volume: 0.5,
                     pan: -0.8, // Left
+                    delay: None,
                 },
                 AudioLayer {
                     synthesis: Synthesis::Oscillator {
                         waveform: Waveform::Sine,
                         frequency: 550.0,
                         freq_sweep: None,
+                        detune: None,
+                        duty: None,
                     },
                     envelope: Envelope::default(),
                     volume: 0.5,
                     pan: 0.8, // Right
+                    delay: None,
                 },
             ],
         };

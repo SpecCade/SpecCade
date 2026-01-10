@@ -41,10 +41,11 @@ impl std::error::Error for DispatchError {}
 /// # Arguments
 /// * `spec` - The validated spec to generate from
 /// * `out_root` - The output root directory
+/// * `spec_path` - Path to the spec file (for resolving relative paths)
 ///
 /// # Returns
 /// A vector of output results on success, or a dispatch error
-pub fn dispatch_generate(spec: &Spec, out_root: &str) -> Result<Vec<OutputResult>, DispatchError> {
+pub fn dispatch_generate(spec: &Spec, out_root: &str, spec_path: &Path) -> Result<Vec<OutputResult>, DispatchError> {
     // Get the recipe kind
     let recipe = spec.recipe.as_ref().ok_or(DispatchError::NoRecipe)?;
     let kind = &recipe.kind;
@@ -53,6 +54,11 @@ pub fn dispatch_generate(spec: &Spec, out_root: &str) -> Result<Vec<OutputResult
     let out_root_path = Path::new(out_root);
     fs::create_dir_all(out_root_path)
         .map_err(|e| DispatchError::BackendError(format!("Failed to create output directory: {}", e)))?;
+
+    // Get spec directory for resolving relative paths
+    let spec_dir = spec_path.parent().ok_or_else(|| {
+        DispatchError::BackendError("Invalid spec path: no parent directory".to_string())
+    })?;
 
     // Dispatch based on recipe kind prefix
     match kind.as_str() {
@@ -68,7 +74,7 @@ pub fn dispatch_generate(spec: &Spec, out_root: &str) -> Result<Vec<OutputResult
 
         // Music backend
         "music.tracker_song_v1" => {
-            generate_music(spec, out_root_path)
+            generate_music(spec, out_root_path, spec_dir)
         }
 
         // Texture material maps backend
@@ -160,12 +166,12 @@ fn generate_audio_instrument(spec: &Spec, out_root: &Path) -> Result<Vec<OutputR
 }
 
 /// Generate music using the music backend
-fn generate_music(spec: &Spec, out_root: &Path) -> Result<Vec<OutputResult>, DispatchError> {
+fn generate_music(spec: &Spec, out_root: &Path, spec_dir: &Path) -> Result<Vec<OutputResult>, DispatchError> {
     let recipe = spec.recipe.as_ref().ok_or(DispatchError::NoRecipe)?;
     let params = recipe.as_music_tracker_song()
         .map_err(|e| DispatchError::BackendError(format!("Invalid music params: {}", e)))?;
 
-    let result = speccade_backend_music::generate_music(&params, spec.seed)
+    let result = speccade_backend_music::generate_music(&params, spec.seed, spec_dir)
         .map_err(|e| DispatchError::BackendError(format!("Music generation failed: {}", e)))?;
 
     // Write tracker module file to the output path from spec
@@ -519,6 +525,8 @@ mod tests {
             maps: vec![TextureMapType::Albedo, TextureMapType::Normal],
             base_material: None,
             layers: vec![],
+            color_ramp: None,
+            palette: None,
         };
 
         let recipe = Recipe::new(
@@ -540,7 +548,8 @@ mod tests {
             .recipe(recipe)
             .build();
 
-        let outputs = dispatch_generate(&spec, tmp.path().to_str().unwrap()).unwrap();
+        let spec_path = tmp.path().join("test.spec.json");
+        let outputs = dispatch_generate(&spec, tmp.path().to_str().unwrap(), &spec_path).unwrap();
         assert_eq!(outputs.len(), 2);
 
         let albedo_path = tmp.path().join("textures/test-tex-01_albedo.png");
@@ -566,6 +575,8 @@ mod tests {
             maps: vec![TextureMapType::Roughness, TextureMapType::Metallic],
             base_material: None,
             layers: vec![],
+            color_ramp: None,
+            palette: None,
         };
 
         let recipe = Recipe::new(
@@ -581,7 +592,8 @@ mod tests {
             .recipe(recipe)
             .build();
 
-        let outputs = dispatch_generate(&spec, tmp.path().to_str().unwrap()).unwrap();
+        let spec_path = tmp.path().join("test.spec.json");
+        let outputs = dispatch_generate(&spec, tmp.path().to_str().unwrap(), &spec_path).unwrap();
         assert_eq!(outputs.len(), 2);
         assert!(tmp.path().join("textures/out1.png").exists());
         assert!(tmp.path().join("textures/out2.png").exists());
@@ -597,6 +609,8 @@ mod tests {
             maps: vec![TextureMapType::Albedo, TextureMapType::Normal],
             base_material: None,
             layers: vec![],
+            color_ramp: None,
+            palette: None,
         };
 
         let recipe = Recipe::new(
@@ -611,7 +625,8 @@ mod tests {
             .recipe(recipe)
             .build();
 
-        let err = dispatch_generate(&spec, tmp.path().to_str().unwrap()).unwrap_err();
+        let spec_path = tmp.path().join("test.spec.json");
+        let err = dispatch_generate(&spec, tmp.path().to_str().unwrap(), &spec_path).unwrap_err();
         assert!(err.to_string().contains("Not enough PNG outputs"));
     }
 }

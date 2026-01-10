@@ -6,6 +6,7 @@ members = [
     "crates/speccade-backend-music",
     "crates/speccade-backend-texture",
     "crates/speccade-backend-blender",
+    "crates/speccade-tests",
 ]
 resolver = "2"
 
@@ -37,6 +38,7 @@ pretty_assertions = "1"
 
 # Workspace crates
 speccade-spec = { path = "crates/speccade-spec" }
+speccade-cli = { path = "crates/speccade-cli" }
 speccade-backend-audio = { path = "crates/speccade-backend-audio" }
 speccade-backend-music = { path = "crates/speccade-backend-music" }
 speccade-backend-texture = { path = "crates/speccade-backend-texture" }

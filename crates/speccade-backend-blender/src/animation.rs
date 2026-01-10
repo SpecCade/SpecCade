@@ -17,6 +17,8 @@ use crate::orchestrator::{GenerationMode, Orchestrator, OrchestratorConfig};
 pub struct AnimationResult {
     /// Path to the generated GLB file.
     pub output_path: std::path::PathBuf,
+    /// Path to the generated .blend file (if save_blend was enabled).
+    pub blend_path: Option<std::path::PathBuf>,
     /// Metrics from the generation.
     pub metrics: BlenderMetrics,
     /// The Blender report.
@@ -86,8 +88,12 @@ pub fn generate_with_config(
     // Validate animation metrics
     validate_animation_metrics(&metrics, &params)?;
 
+    // Get blend path if it was generated
+    let blend_path = report.blend_path.as_ref().map(|p| out_root.join(p));
+
     Ok(AnimationResult {
         output_path,
+        blend_path,
         metrics,
         report,
     })

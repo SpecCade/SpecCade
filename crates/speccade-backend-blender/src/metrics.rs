@@ -297,6 +297,9 @@ pub struct BlenderReport {
     /// Path to the generated output file.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub output_path: Option<String>,
+    /// Path to the generated .blend file (if save_blend was enabled).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub blend_path: Option<String>,
     /// Blender version used.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub blender_version: Option<String>,
@@ -313,6 +316,7 @@ impl BlenderReport {
             error: None,
             metrics: Some(metrics),
             output_path: Some(output_path),
+            blend_path: None,
             blender_version: None,
             duration_ms: None,
         }
@@ -325,6 +329,7 @@ impl BlenderReport {
             error: Some(error.into()),
             metrics: None,
             output_path: None,
+            blend_path: None,
             blender_version: None,
             duration_ms: None,
         }

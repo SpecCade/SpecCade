@@ -8,12 +8,16 @@ mod checker;
 mod wood;
 mod scratches;
 mod edge_wear;
+mod stripes;
+mod gradient;
 
 pub use brick::BrickPattern;
 pub use checker::CheckerPattern;
 pub use wood::WoodGrainPattern;
 pub use scratches::ScratchesPattern;
 pub use edge_wear::EdgeWearPattern;
+pub use stripes::StripesPattern;
+pub use gradient::GradientPattern;
 
 /// Trait for 2D pattern generators.
 ///

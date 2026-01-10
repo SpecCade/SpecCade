@@ -1,0 +1,159 @@
+{
+  "spec_version": 1,
+  "asset_id": "audio-instrument-comprehensive-golden",
+  "asset_type": "audio_instrument",
+  "license": "CC0-1.0",
+  "seed": 999002,
+  "description": "Golden comprehensive test - exercises ALL audio_instrument keys: karplus_strong, fm, subtractive, additive synthesis types, oscillators with detune/duty/phase, FM operators, pitch_envelope with all ADSR, output duration/bit_depth",
+  "style_tags": ["golden", "comprehensive", "test", "instrument"],
+  "engine_targets": ["godot", "unity", "unreal"],
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "audio_instrument_comprehensive.wav"
+    },
+    {
+      "kind": "metadata",
+      "format": "json",
+      "path": "audio_instrument_comprehensive.meta.json"
+    }
+  ],
+  "variants": [
+    {"variant_id": "c3", "seed_offset": 0},
+    {"variant_id": "c4", "seed_offset": 12},
+    {"variant_id": "c5", "seed_offset": 24}
+  ],
+  "recipe": {
+    "kind": "audio_instrument.synth_patch_v1",
+    "params": {
+      "name": "comprehensive_synth",
+      "base_note": "C4",
+      "sample_rate": 44100,
+      "synthesis": {
+        "comment": "FM synthesis with full operator stack",
+        "type": "fm",
+        "operators": [
+          {
+            "comment": "Carrier operator",
+            "ratio": 1.0,
+            "level": 1.0,
+            "envelope": {
+              "attack": 0.01,
+              "decay": 0.2,
+              "sustain": 0.7,
+              "release": 0.5
+            }
+          },
+          {
+            "comment": "Modulator 1 - harmonic",
+            "ratio": 2.0,
+            "level": 0.8,
+            "envelope": {
+              "attack": 0.005,
+              "decay": 0.3,
+              "sustain": 0.4,
+              "release": 0.6
+            }
+          },
+          {
+            "comment": "Modulator 2 - inharmonic bell-like",
+            "ratio": 3.5,
+            "level": 0.5,
+            "envelope": {
+              "attack": 0.001,
+              "decay": 0.5,
+              "sustain": 0.2,
+              "release": 0.8
+            }
+          },
+          {
+            "comment": "Modulator 3 - high partial",
+            "ratio": 5.0,
+            "level": 0.3,
+            "envelope": {
+              "attack": 0.001,
+              "decay": 0.1,
+              "sustain": 0.1,
+              "release": 0.2
+            }
+          }
+        ],
+        "index": 4.0,
+        "index_decay": 3.0,
+        "oscillators": [
+          {
+            "comment": "Primary sawtooth oscillator",
+            "waveform": "saw",
+            "detune": 0,
+            "duty": 0.5,
+            "phase": 0.0
+          },
+          {
+            "comment": "Detuned square for thickness",
+            "waveform": "square",
+            "detune": 7,
+            "duty": 0.4,
+            "phase": 0.25
+          },
+          {
+            "comment": "Opposite detune for chorus",
+            "waveform": "saw",
+            "detune": -7,
+            "duty": 0.5,
+            "phase": 0.5
+          },
+          {
+            "comment": "Sub oscillator sine",
+            "waveform": "sine",
+            "detune": -1200,
+            "duty": 0.5,
+            "phase": 0.0
+          },
+          {
+            "comment": "Triangle oscillator",
+            "waveform": "triangle",
+            "detune": 3,
+            "duty": 0.5,
+            "phase": 0.75
+          }
+        ],
+        "filter": {
+          "type": "lowpass",
+          "cutoff": 4000.0,
+          "cutoff_end": 800.0,
+          "resonance": 2.0
+        },
+        "partials": [
+          [1.0, 1.0],
+          [2.0, 0.5],
+          [3.0, 0.33],
+          [4.0, 0.25],
+          [5.0, 0.2],
+          [6.0, 0.167],
+          [7.0, 0.143],
+          [8.0, 0.125]
+        ],
+        "damping": 0.995,
+        "brightness": 0.8
+      },
+      "envelope": {
+        "attack": 0.01,
+        "decay": 0.15,
+        "sustain": 0.6,
+        "release": 0.4
+      },
+      "pitch_envelope": {
+        "attack": 0.01,
+        "decay": 0.1,
+        "sustain": 0.0,
+        "release": 0.05,
+        "depth": 12.0
+      },
+      "output": {
+        "duration": 2.0,
+        "bit_depth": 16
+      }
+    }
+  }
+}

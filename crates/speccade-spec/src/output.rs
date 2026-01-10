@@ -44,6 +44,8 @@ pub enum OutputFormat {
     Gltf,
     /// JSON metadata format.
     Json,
+    /// Blender project file.
+    Blend,
 }
 
 impl OutputFormat {
@@ -58,6 +60,7 @@ impl OutputFormat {
             OutputFormat::Glb => "glb",
             OutputFormat::Gltf => "gltf",
             OutputFormat::Json => "json",
+            OutputFormat::Blend => "blend",
         }
     }
 

@@ -39,7 +39,7 @@ except ImportError:
 
 def write_report(report_path: Path, ok: bool, error: Optional[str] = None,
                  metrics: Optional[Dict] = None, output_path: Optional[str] = None,
-                 duration_ms: Optional[int] = None) -> None:
+                 blend_path: Optional[str] = None, duration_ms: Optional[int] = None) -> None:
     """Write the generation report JSON."""
     report = {
         "ok": ok,
@@ -50,6 +50,8 @@ def write_report(report_path: Path, ok: bool, error: Optional[str] = None,
         report["metrics"] = metrics
     if output_path:
         report["output_path"] = output_path
+    if blend_path:
+        report["blend_path"] = blend_path
     if duration_ms is not None:
         report["duration_ms"] = duration_ms
     if BLENDER_AVAILABLE:
@@ -247,6 +249,9 @@ def apply_modifier(obj: 'bpy.types.Object', modifier_spec: Dict) -> None:
         mod = obj.modifiers.new(name="Bevel", type='BEVEL')
         mod.width = modifier_spec.get("width", 0.02)
         mod.segments = modifier_spec.get("segments", 2)
+        # Angle limit (in radians in spec, converted to radians in Blender)
+        if "angle_limit" in modifier_spec:
+            mod.angle_limit = modifier_spec["angle_limit"]
 
     elif mod_type == "edge_split":
         mod = obj.modifiers.new(name="EdgeSplit", type='EDGE_SPLIT')
@@ -296,23 +301,43 @@ def apply_all_modifiers(obj: 'bpy.types.Object') -> None:
 # UV Projection
 # =============================================================================
 
-def apply_uv_projection(obj: 'bpy.types.Object', projection: str) -> None:
+def apply_uv_projection(obj: 'bpy.types.Object', projection) -> None:
     """Apply UV projection to an object."""
     bpy.context.view_layer.objects.active = obj
     bpy.ops.object.mode_set(mode='EDIT')
     bpy.ops.mesh.select_all(action='SELECT')
 
-    projection = projection.lower()
+    # Handle both simple string and dict formats
+    if isinstance(projection, str):
+        projection_method = projection.lower()
+        angle_limit = None
+        cube_size = None
+    elif isinstance(projection, dict):
+        projection_method = projection.get("method", "smart").lower()
+        angle_limit = projection.get("angle_limit")
+        cube_size = projection.get("cube_size")
+    else:
+        projection_method = "smart"
+        angle_limit = None
+        cube_size = None
 
-    if projection == "box":
-        bpy.ops.uv.cube_project()
-    elif projection == "cylinder":
+    if projection_method == "box":
+        # Apply cube size if specified
+        if cube_size is not None:
+            bpy.ops.uv.cube_project(cube_size=cube_size)
+        else:
+            bpy.ops.uv.cube_project()
+    elif projection_method == "cylinder":
         bpy.ops.uv.cylinder_project()
-    elif projection == "sphere":
+    elif projection_method == "sphere":
         bpy.ops.uv.sphere_project()
-    elif projection == "smart":
-        bpy.ops.uv.smart_project()
-    elif projection == "lightmap":
+    elif projection_method == "smart":
+        # Apply angle limit if specified (convert degrees to radians)
+        if angle_limit is not None:
+            bpy.ops.uv.smart_project(angle_limit=math.radians(angle_limit))
+        else:
+            bpy.ops.uv.smart_project()
+    elif projection_method == "lightmap":
         bpy.ops.uv.lightmap_pack()
     else:
         # Default to smart project
@@ -483,6 +508,751 @@ def create_body_part(armature: 'bpy.types.Object', part_spec: Dict) -> 'bpy.type
 
 
 # =============================================================================
+# Legacy Part System (ai-studio-core SPEC dict format)
+# =============================================================================
+
+def parse_base_shape(base: str) -> Tuple[str, int]:
+    """
+    Parse a base shape specification like 'hexagon(6)' or 'circle(8)'.
+
+    Returns:
+        Tuple of (shape_type, vertex_count)
+    """
+    import re
+    match = re.match(r'(\w+)\((\d+)\)', base)
+    if match:
+        return match.group(1), int(match.group(2))
+    # Default to circle with 8 vertices
+    return base if base else 'circle', 8
+
+
+def create_base_mesh_profile(shape_type: str, vertex_count: int, radius: float) -> 'bpy.types.Object':
+    """
+    Create a base mesh profile (2D shape) for extrusion.
+
+    Args:
+        shape_type: One of 'circle', 'hexagon', 'square', 'triangle', etc.
+        vertex_count: Number of vertices in the profile.
+        radius: Radius of the profile.
+
+    Returns:
+        A mesh object with the profile as a face.
+    """
+    bpy.ops.mesh.primitive_circle_add(
+        vertices=vertex_count,
+        radius=radius,
+        fill_type='NGON',
+        enter_editmode=False
+    )
+    obj = bpy.context.active_object
+    return obj
+
+
+def get_base_radius_values(base_radius) -> Tuple[float, float]:
+    """
+    Extract bottom and top radius values from a base_radius specification.
+
+    Args:
+        base_radius: Either a float (uniform) or a list [bottom, top] (tapered).
+
+    Returns:
+        Tuple of (bottom_radius, top_radius)
+    """
+    if base_radius is None:
+        return 0.1, 0.1
+    if isinstance(base_radius, (int, float)):
+        return float(base_radius), float(base_radius)
+    if isinstance(base_radius, list) and len(base_radius) >= 2:
+        return float(base_radius[0]), float(base_radius[1])
+    return 0.1, 0.1
+
+
+def get_scale_factors(scale) -> Tuple[float, float]:
+    """
+    Extract X and Y scale factors from a scale specification.
+
+    Args:
+        scale: Either a float (uniform) or a list [X, Y] (per-axis).
+
+    Returns:
+        Tuple of (scale_x, scale_y)
+    """
+    if scale is None:
+        return 1.0, 1.0
+    if isinstance(scale, (int, float)):
+        return float(scale), float(scale)
+    if isinstance(scale, list) and len(scale) >= 2:
+        return float(scale[0]), float(scale[1])
+    return 1.0, 1.0
+
+
+def get_bulge_factors(bulge) -> Tuple[float, float]:
+    """
+    Extract side and forward_back bulge factors.
+
+    Args:
+        bulge: Either a float (uniform) or a list [side, forward_back].
+
+    Returns:
+        Tuple of (side_bulge, forward_back_bulge)
+    """
+    if bulge is None:
+        return 1.0, 1.0
+    if isinstance(bulge, (int, float)):
+        return float(bulge), float(bulge)
+    if isinstance(bulge, list) and len(bulge) >= 2:
+        return float(bulge[0]), float(bulge[1])
+    return 1.0, 1.0
+
+
+def get_tilt_angles(tilt) -> Tuple[float, float]:
+    """
+    Extract X and Y tilt angles in degrees.
+
+    Args:
+        tilt: Either a float (X only) or a list [X, Y].
+
+    Returns:
+        Tuple of (tilt_x, tilt_y) in degrees
+    """
+    if tilt is None:
+        return 0.0, 0.0
+    if isinstance(tilt, (int, float)):
+        return float(tilt), 0.0
+    if isinstance(tilt, list) and len(tilt) >= 2:
+        return float(tilt[0]), float(tilt[1])
+    return 0.0, 0.0
+
+
+def parse_step(step) -> Dict:
+    """
+    Parse a step specification into a standardized dictionary.
+
+    Args:
+        step: Either a string (shorthand extrude distance) or a dict.
+
+    Returns:
+        Dictionary with step parameters.
+    """
+    if isinstance(step, str):
+        # Shorthand: just an extrusion distance
+        try:
+            return {'extrude': float(step)}
+        except ValueError:
+            return {'extrude': 0.1}
+    if isinstance(step, dict):
+        return step
+    return {'extrude': 0.1}
+
+
+def apply_step_to_mesh(obj: 'bpy.types.Object', step: Dict, step_index: int) -> None:
+    """
+    Apply a single extrusion step to a mesh object.
+
+    Args:
+        obj: The mesh object to modify.
+        step: Step specification dictionary.
+        step_index: Index of this step (for debugging).
+    """
+    bpy.context.view_layer.objects.active = obj
+    bpy.ops.object.mode_set(mode='EDIT')
+    bpy.ops.mesh.select_all(action='SELECT')
+
+    # Get step parameters
+    extrude = step.get('extrude', 0.1)
+    scale_x, scale_y = get_scale_factors(step.get('scale'))
+    translate = step.get('translate', [0, 0, 0])
+    rotate = step.get('rotate', 0)
+    bulge_side, bulge_fb = get_bulge_factors(step.get('bulge'))
+    tilt_x, tilt_y = get_tilt_angles(step.get('tilt'))
+
+    # Select only top faces for extrusion
+    bm = bmesh.from_edit_mesh(obj.data)
+    bm.faces.ensure_lookup_table()
+
+    # Find the topmost faces (highest Z average)
+    if bm.faces:
+        max_z = max(sum(v.co.z for v in f.verts) / len(f.verts) for f in bm.faces)
+        for f in bm.faces:
+            avg_z = sum(v.co.z for v in f.verts) / len(f.verts)
+            f.select = abs(avg_z - max_z) < 0.001
+
+    bmesh.update_edit_mesh(obj.data)
+
+    # Extrude
+    if extrude != 0:
+        bpy.ops.mesh.extrude_region_move(
+            TRANSFORM_OT_translate={'value': (0, 0, extrude)}
+        )
+
+    # Apply scale
+    if scale_x != 1.0 or scale_y != 1.0:
+        # Also apply bulge as additional scale modifiers
+        final_scale_x = scale_x * bulge_side
+        final_scale_y = scale_y * bulge_fb
+        bpy.ops.transform.resize(value=(final_scale_x, final_scale_y, 1.0))
+
+    # Apply translation
+    if translate and any(t != 0 for t in translate):
+        bpy.ops.transform.translate(value=tuple(translate))
+
+    # Apply rotation around Z axis
+    if rotate != 0:
+        bpy.ops.transform.rotate(value=math.radians(rotate), orient_axis='Z')
+
+    # Apply tilt (rotation around X and Y axes)
+    if tilt_x != 0:
+        bpy.ops.transform.rotate(value=math.radians(tilt_x), orient_axis='X')
+    if tilt_y != 0:
+        bpy.ops.transform.rotate(value=math.radians(tilt_y), orient_axis='Y')
+
+    bpy.ops.object.mode_set(mode='OBJECT')
+
+
+def create_legacy_part(
+    armature: 'bpy.types.Object',
+    part_name: str,
+    part_spec: Dict,
+    all_parts: Dict[str, Dict]
+) -> Optional['bpy.types.Object']:
+    """
+    Create a mesh part using the legacy ai-studio-core SPEC format.
+
+    Args:
+        armature: The armature object (can be None for standalone parts).
+        part_name: Name of this part.
+        part_spec: Part specification dictionary.
+        all_parts: Dictionary of all parts (for mirror lookups).
+
+    Returns:
+        The created mesh object, or None if creation failed.
+    """
+    # Check for mirror
+    mirror_from = part_spec.get('mirror')
+    if mirror_from:
+        # Get the source part spec and mirror it
+        source_spec = all_parts.get(mirror_from, {})
+        if not source_spec:
+            print(f"Warning: Mirror source '{mirror_from}' not found for part '{part_name}'")
+            return None
+        # Create the source part first if needed, then mirror
+        # For now, we'll create a mirrored version by flipping X coordinates
+        return create_mirrored_part(armature, part_name, part_spec, source_spec, all_parts)
+
+    bone_name = part_spec.get('bone', part_name)
+
+    # Parse base shape
+    base = part_spec.get('base', 'circle(8)')
+    shape_type, vertex_count = parse_base_shape(base)
+
+    # Get base radius
+    bottom_radius, top_radius = get_base_radius_values(part_spec.get('base_radius'))
+
+    # Create base profile mesh
+    obj = create_base_mesh_profile(shape_type, vertex_count, bottom_radius)
+    obj.name = f"part_{part_name}"
+
+    # Position at bone location if armature exists
+    if armature:
+        bone_pos = get_bone_position(armature, bone_name)
+        offset = part_spec.get('offset', [0, 0, 0])
+        obj.location = bone_pos + Vector(offset)
+    else:
+        offset = part_spec.get('offset', [0, 0, 0])
+        obj.location = Vector(offset)
+
+    # Apply initial rotation
+    if 'rotation' in part_spec:
+        rot = part_spec['rotation']
+        obj.rotation_euler = Euler((
+            math.radians(rot[0]),
+            math.radians(rot[1]),
+            math.radians(rot[2])
+        ))
+        bpy.ops.object.transform_apply(rotation=True)
+
+    # Apply extrusion steps
+    steps = part_spec.get('steps', [])
+    for i, step in enumerate(steps):
+        parsed_step = parse_step(step)
+        apply_step_to_mesh(obj, parsed_step, i)
+
+    # Handle caps
+    cap_start = part_spec.get('cap_start', True)
+    cap_end = part_spec.get('cap_end', True)
+
+    bpy.context.view_layer.objects.active = obj
+    bpy.ops.object.mode_set(mode='EDIT')
+    bm = bmesh.from_edit_mesh(obj.data)
+
+    if not cap_start:
+        # Remove bottom face
+        bm.faces.ensure_lookup_table()
+        if bm.faces:
+            min_z = min(sum(v.co.z for v in f.verts) / len(f.verts) for f in bm.faces)
+            for f in list(bm.faces):
+                avg_z = sum(v.co.z for v in f.verts) / len(f.verts)
+                if abs(avg_z - min_z) < 0.001:
+                    bm.faces.remove(f)
+
+    if not cap_end:
+        # Remove top face
+        bm.faces.ensure_lookup_table()
+        if bm.faces:
+            max_z = max(sum(v.co.z for v in f.verts) / len(f.verts) for f in bm.faces)
+            for f in list(bm.faces):
+                avg_z = sum(v.co.z for v in f.verts) / len(f.verts)
+                if abs(avg_z - max_z) < 0.001:
+                    bm.faces.remove(f)
+
+    bmesh.update_edit_mesh(obj.data)
+    bpy.ops.object.mode_set(mode='OBJECT')
+
+    # Handle thumb sub-part
+    thumb_spec = part_spec.get('thumb')
+    if thumb_spec:
+        thumb_objects = create_sub_parts(armature, part_name, thumb_spec, 'thumb', obj)
+        # Join thumb objects with main part
+        for thumb_obj in thumb_objects:
+            join_objects(obj, thumb_obj)
+
+    # Handle finger sub-parts
+    fingers = part_spec.get('fingers', [])
+    for i, finger_spec in enumerate(fingers):
+        finger_objects = create_sub_parts(armature, part_name, finger_spec, f'finger_{i}', obj)
+        for finger_obj in finger_objects:
+            join_objects(obj, finger_obj)
+
+    return obj
+
+
+def create_mirrored_part(
+    armature: 'bpy.types.Object',
+    part_name: str,
+    part_spec: Dict,
+    source_spec: Dict,
+    all_parts: Dict[str, Dict]
+) -> Optional['bpy.types.Object']:
+    """
+    Create a mirrored copy of a part (L->R reflection across X=0).
+
+    Args:
+        armature: The armature object.
+        part_name: Name of the new mirrored part.
+        part_spec: Specification for the mirrored part (may override some values).
+        source_spec: Specification of the source part to mirror from.
+        all_parts: Dictionary of all parts.
+
+    Returns:
+        The created mirrored mesh object.
+    """
+    # Create the source part first (without mirror flag)
+    source_copy = source_spec.copy()
+    source_copy.pop('mirror', None)  # Remove mirror to avoid recursion
+
+    # Use the bone from the mirrored part spec if provided
+    bone_name = part_spec.get('bone', part_name)
+    source_copy['bone'] = bone_name
+
+    # Create the part
+    obj = create_legacy_part(armature, f"{part_name}_temp", source_copy, all_parts)
+    if not obj:
+        return None
+
+    obj.name = f"part_{part_name}"
+
+    # Apply mirror transformation across X axis
+    bpy.context.view_layer.objects.active = obj
+    bpy.ops.object.mode_set(mode='EDIT')
+    bpy.ops.mesh.select_all(action='SELECT')
+    bpy.ops.transform.mirror(orient_type='GLOBAL', constraint_axis=(True, False, False))
+    bpy.ops.object.mode_set(mode='OBJECT')
+
+    # Flip normals to maintain correct facing
+    bpy.ops.object.mode_set(mode='EDIT')
+    bpy.ops.mesh.select_all(action='SELECT')
+    bpy.ops.mesh.flip_normals()
+    bpy.ops.object.mode_set(mode='OBJECT')
+
+    return obj
+
+
+def create_sub_parts(
+    armature: 'bpy.types.Object',
+    parent_name: str,
+    sub_spec,
+    sub_type: str,
+    parent_obj: 'bpy.types.Object'
+) -> List['bpy.types.Object']:
+    """
+    Create sub-parts (thumbs, fingers) for a parent part.
+
+    Args:
+        armature: The armature object.
+        parent_name: Name of the parent part.
+        sub_spec: Sub-part specification (dict or list of dicts).
+        sub_type: Type of sub-part ('thumb', 'finger_0', etc.).
+        parent_obj: The parent mesh object.
+
+    Returns:
+        List of created sub-part mesh objects.
+    """
+    results = []
+
+    # Normalize to list
+    if isinstance(sub_spec, dict):
+        sub_specs = [sub_spec]
+    elif isinstance(sub_spec, list):
+        sub_specs = sub_spec
+    else:
+        return results
+
+    for i, spec in enumerate(sub_specs):
+        sub_name = f"{parent_name}_{sub_type}_{i}"
+        bone_name = spec.get('bone', sub_name)
+
+        # Parse base shape
+        base = spec.get('base', 'circle(4)')
+        shape_type, vertex_count = parse_base_shape(base)
+
+        # Get base radius
+        bottom_radius, top_radius = get_base_radius_values(spec.get('base_radius', 0.02))
+
+        # Create base profile
+        obj = create_base_mesh_profile(shape_type, vertex_count, bottom_radius)
+        obj.name = f"subpart_{sub_name}"
+
+        # Position relative to parent
+        offset = spec.get('offset', [0, 0, 0])
+        if armature:
+            bone_pos = get_bone_position(armature, bone_name)
+            obj.location = bone_pos + Vector(offset)
+        else:
+            # Position relative to parent object
+            obj.location = parent_obj.location + Vector(offset)
+
+        # Apply rotation
+        if 'rotation' in spec:
+            rot = spec['rotation']
+            obj.rotation_euler = Euler((
+                math.radians(rot[0]),
+                math.radians(rot[1]),
+                math.radians(rot[2])
+            ))
+            bpy.ops.object.transform_apply(rotation=True)
+
+        # Apply steps
+        steps = spec.get('steps', [])
+        for j, step in enumerate(steps):
+            parsed_step = parse_step(step)
+            apply_step_to_mesh(obj, parsed_step, j)
+
+        # Handle caps
+        handle_part_caps(obj, spec.get('cap_start', True), spec.get('cap_end', True))
+
+        results.append(obj)
+
+    return results
+
+
+def handle_part_caps(obj: 'bpy.types.Object', cap_start: bool, cap_end: bool) -> None:
+    """Handle cap_start and cap_end for a part."""
+    if cap_start and cap_end:
+        return  # Both capped, nothing to do
+
+    bpy.context.view_layer.objects.active = obj
+    bpy.ops.object.mode_set(mode='EDIT')
+    bm = bmesh.from_edit_mesh(obj.data)
+
+    if not cap_start:
+        bm.faces.ensure_lookup_table()
+        if bm.faces:
+            min_z = min(sum(v.co.z for v in f.verts) / len(f.verts) for f in bm.faces)
+            for f in list(bm.faces):
+                avg_z = sum(v.co.z for v in f.verts) / len(f.verts)
+                if abs(avg_z - min_z) < 0.001:
+                    bm.faces.remove(f)
+
+    if not cap_end:
+        bm.faces.ensure_lookup_table()
+        if bm.faces:
+            max_z = max(sum(v.co.z for v in f.verts) / len(f.verts) for f in bm.faces)
+            for f in list(bm.faces):
+                avg_z = sum(v.co.z for v in f.verts) / len(f.verts)
+                if abs(avg_z - max_z) < 0.001:
+                    bm.faces.remove(f)
+
+    bmesh.update_edit_mesh(obj.data)
+    bpy.ops.object.mode_set(mode='OBJECT')
+
+
+def create_part_instances(
+    base_obj: 'bpy.types.Object',
+    instances: List[Dict]
+) -> List['bpy.types.Object']:
+    """
+    Create instances of a base part at specified positions and rotations.
+
+    Args:
+        base_obj: The base mesh object to duplicate.
+        instances: List of instance specifications with 'position' and 'rotation'.
+
+    Returns:
+        List of instance mesh objects (does not include the base).
+    """
+    results = []
+
+    for i, inst in enumerate(instances):
+        # Duplicate the base object
+        bpy.ops.object.select_all(action='DESELECT')
+        base_obj.select_set(True)
+        bpy.context.view_layer.objects.active = base_obj
+        bpy.ops.object.duplicate(linked=False)
+        inst_obj = bpy.context.active_object
+        inst_obj.name = f"{base_obj.name}_inst_{i}"
+
+        # Apply position
+        position = inst.get('position', [0, 0, 0])
+        if position:
+            inst_obj.location = Vector(position)
+
+        # Apply rotation
+        rotation = inst.get('rotation', [0, 0, 0])
+        if rotation:
+            inst_obj.rotation_euler = Euler((
+                math.radians(rotation[0]),
+                math.radians(rotation[1]),
+                math.radians(rotation[2])
+            ))
+
+        results.append(inst_obj)
+
+    return results
+
+
+def join_objects(target: 'bpy.types.Object', source: 'bpy.types.Object') -> None:
+    """Join source object into target object."""
+    bpy.ops.object.select_all(action='DESELECT')
+    target.select_set(True)
+    source.select_set(True)
+    bpy.context.view_layer.objects.active = target
+    bpy.ops.object.join()
+
+
+# =============================================================================
+# Custom Skeleton Creation
+# =============================================================================
+
+def create_custom_skeleton(skeleton_spec: List[Dict]) -> 'bpy.types.Object':
+    """
+    Create a custom skeleton from a list of bone specifications.
+
+    Args:
+        skeleton_spec: List of bone definitions with 'bone', 'head', 'tail', 'parent', 'mirror'.
+
+    Returns:
+        The created armature object.
+    """
+    # First pass: create all bones without mirroring
+    bones_to_create = {}
+    mirror_bones = {}
+
+    for bone_spec in skeleton_spec:
+        bone_name = bone_spec.get('bone')
+        if not bone_name:
+            continue
+
+        mirror_from = bone_spec.get('mirror')
+        if mirror_from:
+            mirror_bones[bone_name] = bone_spec
+        else:
+            bones_to_create[bone_name] = bone_spec
+
+    # Create armature
+    armature_data = bpy.data.armatures.new("Armature")
+    armature_obj = bpy.data.objects.new("Armature", armature_data)
+    bpy.context.collection.objects.link(armature_obj)
+    bpy.context.view_layer.objects.active = armature_obj
+
+    # Enter edit mode to add bones
+    bpy.ops.object.mode_set(mode='EDIT')
+    edit_bones = armature_data.edit_bones
+    created_bones = {}
+
+    # Create non-mirrored bones
+    for bone_name, bone_spec in bones_to_create.items():
+        head = bone_spec.get('head', [0, 0, 0])
+        tail = bone_spec.get('tail', [0, 0, 0.1])
+
+        bone = edit_bones.new(bone_name)
+        bone.head = Vector(head)
+        bone.tail = Vector(tail)
+        created_bones[bone_name] = bone
+
+    # Set up parent relationships for non-mirrored bones
+    for bone_name, bone_spec in bones_to_create.items():
+        parent_name = bone_spec.get('parent')
+        if parent_name and parent_name in created_bones:
+            created_bones[bone_name].parent = created_bones[parent_name]
+
+    # Create mirrored bones
+    for bone_name, bone_spec in mirror_bones.items():
+        mirror_from = bone_spec.get('mirror')
+        source_bone = created_bones.get(mirror_from)
+
+        if not source_bone:
+            print(f"Warning: Mirror source bone '{mirror_from}' not found for '{bone_name}'")
+            continue
+
+        # Create mirrored bone by flipping X coordinates
+        bone = edit_bones.new(bone_name)
+        bone.head = Vector((-source_bone.head.x, source_bone.head.y, source_bone.head.z))
+        bone.tail = Vector((-source_bone.tail.x, source_bone.tail.y, source_bone.tail.z))
+        created_bones[bone_name] = bone
+
+        # Mirror parent relationship
+        source_spec = bones_to_create.get(mirror_from, {})
+        source_parent = source_spec.get('parent')
+        if source_parent:
+            # Try to find the mirrored parent
+            mirrored_parent = mirror_bone_name(source_parent)
+            if mirrored_parent in created_bones:
+                bone.parent = created_bones[mirrored_parent]
+            elif source_parent in created_bones:
+                bone.parent = created_bones[source_parent]
+
+    bpy.ops.object.mode_set(mode='OBJECT')
+    return armature_obj
+
+
+def mirror_bone_name(name: str) -> str:
+    """
+    Convert a bone name from left to right or vice versa.
+
+    Args:
+        name: Original bone name.
+
+    Returns:
+        Mirrored bone name.
+    """
+    if name.endswith('_l'):
+        return name[:-2] + '_r'
+    elif name.endswith('_L'):
+        return name[:-2] + '_R'
+    elif name.endswith('_r'):
+        return name[:-2] + '_l'
+    elif name.endswith('_R'):
+        return name[:-2] + '_L'
+    elif '_l_' in name:
+        return name.replace('_l_', '_r_')
+    elif '_L_' in name:
+        return name.replace('_L_', '_R_')
+    elif '_r_' in name:
+        return name.replace('_r_', '_l_')
+    elif '_R_' in name:
+        return name.replace('_R_', '_L_')
+    return name
+
+
+# =============================================================================
+# Texturing / UV Mapping
+# =============================================================================
+
+def apply_texturing(obj: 'bpy.types.Object', texturing_spec: Dict) -> None:
+    """
+    Apply texturing/UV settings to a mesh object.
+
+    Args:
+        obj: The mesh object.
+        texturing_spec: Texturing specification with 'uv_mode' and 'regions'.
+    """
+    if not texturing_spec:
+        return
+
+    uv_mode = texturing_spec.get('uv_mode', 'smart_project')
+
+    bpy.context.view_layer.objects.active = obj
+    bpy.ops.object.mode_set(mode='EDIT')
+    bpy.ops.mesh.select_all(action='SELECT')
+
+    # Apply UV projection based on mode
+    if uv_mode == 'smart_project':
+        bpy.ops.uv.smart_project()
+    elif uv_mode == 'region_based':
+        # Region-based UV mapping is handled separately per region
+        bpy.ops.uv.smart_project()  # Fallback to smart project
+    elif uv_mode == 'lightmap_pack':
+        bpy.ops.uv.lightmap_pack()
+    elif uv_mode == 'cube_project':
+        bpy.ops.uv.cube_project()
+    elif uv_mode == 'cylinder_project':
+        bpy.ops.uv.cylinder_project()
+    elif uv_mode == 'sphere_project':
+        bpy.ops.uv.sphere_project()
+    else:
+        bpy.ops.uv.smart_project()
+
+    bpy.ops.object.mode_set(mode='OBJECT')
+
+    # Handle texture regions
+    regions = texturing_spec.get('regions', {})
+    for region_name, region_spec in regions.items():
+        apply_texture_region(obj, region_name, region_spec)
+
+
+def apply_texture_region(obj: 'bpy.types.Object', region_name: str, region_spec: Dict) -> None:
+    """
+    Apply a texture region to specific parts of a mesh.
+
+    Args:
+        obj: The mesh object.
+        region_name: Name of the region.
+        region_spec: Region specification with 'parts', 'material_index', 'color'.
+    """
+    material_index = region_spec.get('material_index')
+    color = region_spec.get('color')
+
+    if material_index is not None and color:
+        # Ensure we have enough material slots
+        while len(obj.data.materials) <= material_index:
+            mat = bpy.data.materials.new(name=f"Region_{region_name}")
+            mat.use_nodes = True
+            obj.data.materials.append(mat)
+
+        # Set material color
+        mat = obj.data.materials[material_index]
+        if mat and mat.use_nodes:
+            principled = mat.node_tree.nodes.get("Principled BSDF")
+            if principled:
+                rgb = parse_region_color(color)
+                principled.inputs["Base Color"].default_value = (*rgb, 1.0)
+
+
+def parse_region_color(color) -> Tuple[float, float, float]:
+    """
+    Parse a region color specification to RGB values.
+
+    Args:
+        color: Color as hex string "#RRGGBB" or RGB list [R, G, B].
+
+    Returns:
+        Tuple of (R, G, B) with values 0-1.
+    """
+    if isinstance(color, str) and color.startswith('#'):
+        # Hex color
+        hex_color = color.lstrip('#')
+        if len(hex_color) == 6:
+            r = int(hex_color[0:2], 16) / 255.0
+            g = int(hex_color[2:4], 16) / 255.0
+            b = int(hex_color[4:6], 16) / 255.0
+            return (r, g, b)
+    elif isinstance(color, list) and len(color) >= 3:
+        return (float(color[0]), float(color[1]), float(color[2]))
+
+    return (1.0, 1.0, 1.0)
+
+
+# =============================================================================
 # Skinning
 # =============================================================================
 
@@ -510,6 +1280,1750 @@ def assign_vertex_group(mesh_obj: 'bpy.types.Object', bone_name: str) -> None:
     # Add all vertices with weight 1.0
     vertex_indices = [v.index for v in mesh_obj.data.vertices]
     vg.add(vertex_indices, 1.0, 'REPLACE')
+
+
+# =============================================================================
+# IK Chain Setup
+# =============================================================================
+
+def setup_ik_chain(
+    armature: 'bpy.types.Object',
+    tip_bone_name: str,
+    chain_length: int,
+    target_name: str,
+    target_position: Optional[List[float]] = None,
+    target_bone: Optional[str] = None,
+    pole_name: Optional[str] = None,
+    pole_position: Optional[List[float]] = None,
+    pole_bone: Optional[str] = None,
+    pole_angle: float = 0.0,
+    influence: float = 1.0
+) -> Dict[str, 'bpy.types.Object']:
+    """
+    Set up an IK chain on an armature.
+
+    Args:
+        armature: The armature object.
+        tip_bone_name: Name of the bone at the end of the IK chain.
+        chain_length: Number of bones in the chain (from tip going up hierarchy).
+        target_name: Name for the IK target bone/empty.
+        target_position: World position for the target (optional).
+        target_bone: Existing bone to use as target (optional).
+        pole_name: Name for the pole target bone/empty (optional).
+        pole_position: World position for the pole target (optional).
+        pole_bone: Existing bone to use as pole target (optional).
+        pole_angle: Pole angle in degrees.
+        influence: IK constraint influence (0.0-1.0).
+
+    Returns:
+        Dictionary with 'target' and optional 'pole' control objects.
+    """
+    result = {}
+
+    # Ensure we're in object mode first
+    if bpy.context.mode != 'OBJECT':
+        bpy.ops.object.mode_set(mode='OBJECT')
+
+    bpy.context.view_layer.objects.active = armature
+
+    # Get the tip bone
+    tip_bone = armature.data.bones.get(tip_bone_name)
+    if not tip_bone:
+        raise ValueError(f"Bone '{tip_bone_name}' not found in armature")
+
+    # Create IK target
+    if target_bone:
+        # Use existing bone as target
+        target_obj = None  # Will reference the bone in the constraint
+        target_subtarget = target_bone
+    else:
+        # Create a new empty as target
+        bpy.ops.object.empty_add(type='PLAIN_AXES', radius=0.1)
+        target_obj = bpy.context.active_object
+        target_obj.name = target_name
+
+        if target_position:
+            target_obj.location = Vector(target_position)
+        else:
+            # Position at tip bone tail
+            target_obj.location = armature.matrix_world @ tip_bone.tail_local
+
+        result['target'] = target_obj
+        target_subtarget = None
+
+    # Create pole target if specified
+    pole_obj = None
+    pole_subtarget = None
+    if pole_name:
+        if pole_bone:
+            pole_subtarget = pole_bone
+        else:
+            bpy.ops.object.empty_add(type='PLAIN_AXES', radius=0.1)
+            pole_obj = bpy.context.active_object
+            pole_obj.name = pole_name
+
+            if pole_position:
+                pole_obj.location = Vector(pole_position)
+            else:
+                # Default position: in front of the middle of the chain
+                # Find the middle bone
+                middle_bone = tip_bone.parent if tip_bone.parent else tip_bone
+                mid_pos = armature.matrix_world @ middle_bone.head_local
+                pole_obj.location = mid_pos + Vector((0, 0.3, 0))
+
+            result['pole'] = pole_obj
+
+    # Enter pose mode to add constraint
+    bpy.context.view_layer.objects.active = armature
+    bpy.ops.object.mode_set(mode='POSE')
+
+    # Get the pose bone
+    pose_bone = armature.pose.bones.get(tip_bone_name)
+    if not pose_bone:
+        raise ValueError(f"Pose bone '{tip_bone_name}' not found")
+
+    # Add IK constraint
+    ik_constraint = pose_bone.constraints.new('IK')
+    ik_constraint.name = f"IK_{target_name}"
+    ik_constraint.chain_count = chain_length
+    ik_constraint.influence = influence
+
+    # Set target
+    if target_obj:
+        ik_constraint.target = target_obj
+    elif target_bone:
+        ik_constraint.target = armature
+        ik_constraint.subtarget = target_subtarget
+
+    # Set pole target if present
+    if pole_obj:
+        ik_constraint.pole_target = pole_obj
+        ik_constraint.pole_angle = math.radians(pole_angle)
+    elif pole_subtarget:
+        ik_constraint.pole_target = armature
+        ik_constraint.pole_subtarget = pole_subtarget
+        ik_constraint.pole_angle = math.radians(pole_angle)
+
+    bpy.ops.object.mode_set(mode='OBJECT')
+
+    return result
+
+
+def setup_ik_preset(armature: 'bpy.types.Object', preset: str) -> Dict[str, Dict]:
+    """
+    Set up IK chains based on a preset configuration.
+
+    Args:
+        armature: The armature object.
+        preset: One of 'humanoid_legs', 'humanoid_arms', 'quadruped_forelegs',
+                'quadruped_hindlegs', 'tentacle', 'tail'.
+
+    Returns:
+        Dictionary mapping chain names to their control objects.
+    """
+    result = {}
+    preset = preset.lower()
+
+    if preset == 'humanoid_legs':
+        # Left leg
+        try:
+            result['ik_leg_l'] = setup_ik_chain(
+                armature,
+                tip_bone_name='lower_leg_l',
+                chain_length=2,
+                target_name='ik_foot_l',
+                target_position=[0.1, 0.0, 0.0],
+                pole_name='pole_knee_l',
+                pole_position=[0.1, 0.3, 0.5]
+            )
+        except ValueError as e:
+            print(f"Warning: Could not set up left leg IK: {e}")
+
+        # Right leg
+        try:
+            result['ik_leg_r'] = setup_ik_chain(
+                armature,
+                tip_bone_name='lower_leg_r',
+                chain_length=2,
+                target_name='ik_foot_r',
+                target_position=[-0.1, 0.0, 0.0],
+                pole_name='pole_knee_r',
+                pole_position=[-0.1, 0.3, 0.5]
+            )
+        except ValueError as e:
+            print(f"Warning: Could not set up right leg IK: {e}")
+
+    elif preset == 'humanoid_arms':
+        # Left arm
+        try:
+            result['ik_arm_l'] = setup_ik_chain(
+                armature,
+                tip_bone_name='lower_arm_l',
+                chain_length=2,
+                target_name='ik_hand_l',
+                target_position=[0.7, 0.0, 1.35],
+                pole_name='pole_elbow_l',
+                pole_position=[0.45, -0.3, 1.35]
+            )
+        except ValueError as e:
+            print(f"Warning: Could not set up left arm IK: {e}")
+
+        # Right arm
+        try:
+            result['ik_arm_r'] = setup_ik_chain(
+                armature,
+                tip_bone_name='lower_arm_r',
+                chain_length=2,
+                target_name='ik_hand_r',
+                target_position=[-0.7, 0.0, 1.35],
+                pole_name='pole_elbow_r',
+                pole_position=[-0.45, -0.3, 1.35]
+            )
+        except ValueError as e:
+            print(f"Warning: Could not set up right arm IK: {e}")
+
+    elif preset == 'quadruped_forelegs':
+        # Left foreleg
+        try:
+            result['ik_foreleg_l'] = setup_ik_chain(
+                armature,
+                tip_bone_name='front_lower_l',
+                chain_length=2,
+                target_name='ik_front_paw_l',
+                pole_name='pole_front_knee_l',
+                pole_position=[0.15, 0.3, 0.0]
+            )
+        except ValueError as e:
+            print(f"Warning: Could not set up left foreleg IK: {e}")
+
+        # Right foreleg
+        try:
+            result['ik_foreleg_r'] = setup_ik_chain(
+                armature,
+                tip_bone_name='front_lower_r',
+                chain_length=2,
+                target_name='ik_front_paw_r',
+                pole_name='pole_front_knee_r',
+                pole_position=[-0.15, 0.3, 0.0]
+            )
+        except ValueError as e:
+            print(f"Warning: Could not set up right foreleg IK: {e}")
+
+    elif preset == 'quadruped_hindlegs':
+        # Left hindleg
+        try:
+            result['ik_hindleg_l'] = setup_ik_chain(
+                armature,
+                tip_bone_name='back_lower_l',
+                chain_length=2,
+                target_name='ik_back_paw_l',
+                pole_name='pole_back_knee_l',
+                pole_position=[0.15, -0.3, 0.0]
+            )
+        except ValueError as e:
+            print(f"Warning: Could not set up left hindleg IK: {e}")
+
+        # Right hindleg
+        try:
+            result['ik_hindleg_r'] = setup_ik_chain(
+                armature,
+                tip_bone_name='back_lower_r',
+                chain_length=2,
+                target_name='ik_back_paw_r',
+                pole_name='pole_back_knee_r',
+                pole_position=[-0.15, -0.3, 0.0]
+            )
+        except ValueError as e:
+            print(f"Warning: Could not set up right hindleg IK: {e}")
+
+    elif preset == 'tentacle':
+        # Find tentacle tip bone
+        tentacle_bones = [b.name for b in armature.data.bones if 'tentacle' in b.name.lower()]
+        if tentacle_bones:
+            # Sort to find the tip (usually the last in a numbered sequence)
+            tentacle_bones.sort()
+            tip_bone = tentacle_bones[-1]
+            try:
+                result['ik_tentacle'] = setup_ik_chain(
+                    armature,
+                    tip_bone_name=tip_bone,
+                    chain_length=min(4, len(tentacle_bones)),
+                    target_name='ik_tentacle_tip'
+                )
+            except ValueError as e:
+                print(f"Warning: Could not set up tentacle IK: {e}")
+
+    elif preset == 'tail':
+        # Find tail tip bone
+        tail_bones = [b.name for b in armature.data.bones if 'tail' in b.name.lower()]
+        if tail_bones:
+            # Sort to find the tip
+            tail_bones.sort()
+            tip_bone = tail_bones[-1]
+            try:
+                result['ik_tail'] = setup_ik_chain(
+                    armature,
+                    tip_bone_name=tip_bone,
+                    chain_length=min(4, len(tail_bones)),
+                    target_name='ik_tail_tip'
+                )
+            except ValueError as e:
+                print(f"Warning: Could not set up tail IK: {e}")
+
+    else:
+        print(f"Warning: Unknown IK preset: {preset}")
+
+    return result
+
+
+def apply_rig_setup(armature: 'bpy.types.Object', rig_setup: Dict) -> Dict[str, Dict]:
+    """
+    Apply a complete rig setup from spec configuration.
+
+    Args:
+        armature: The armature object.
+        rig_setup: Dictionary with 'presets', 'ik_chains', and 'constraints' keys.
+
+    Returns:
+        Dictionary of all created IK control objects.
+    """
+    result = {}
+
+    # Apply presets
+    for preset in rig_setup.get('presets', []):
+        preset_result = setup_ik_preset(armature, preset)
+        result.update(preset_result)
+
+    # Apply custom IK chains
+    for chain_spec in rig_setup.get('ik_chains', []):
+        chain_name = chain_spec.get('name', 'custom_ik')
+        target_config = chain_spec.get('target', {})
+        pole_config = chain_spec.get('pole')
+
+        # Determine tip bone name from chain name or spec
+        # Convention: chain name is "ik_<bone>_<side>" so tip bone is "<bone>_<side>"
+        tip_bone_name = chain_spec.get('tip_bone')
+        if not tip_bone_name:
+            # Try to infer from chain name
+            parts = chain_name.split('_')
+            if len(parts) >= 2:
+                tip_bone_name = '_'.join(parts[1:])  # Remove 'ik_' prefix
+
+        if not tip_bone_name:
+            print(f"Warning: Could not determine tip bone for chain '{chain_name}'")
+            continue
+
+        try:
+            chain_result = setup_ik_chain(
+                armature,
+                tip_bone_name=tip_bone_name,
+                chain_length=chain_spec.get('chain_length', 2),
+                target_name=target_config.get('name', f'{chain_name}_target'),
+                target_position=target_config.get('position'),
+                target_bone=target_config.get('bone'),
+                pole_name=pole_config.get('name') if pole_config else None,
+                pole_position=pole_config.get('position') if pole_config else None,
+                pole_bone=pole_config.get('bone') if pole_config else None,
+                pole_angle=pole_config.get('angle', 0.0) if pole_config else 0.0,
+                influence=chain_spec.get('influence', 1.0)
+            )
+            result[chain_name] = chain_result
+        except ValueError as e:
+            print(f"Warning: Could not set up chain '{chain_name}': {e}")
+
+    # Apply bone constraints
+    constraints_config = rig_setup.get('constraints', {})
+    constraints_list = constraints_config.get('constraints', [])
+    for constraint_spec in constraints_list:
+        try:
+            setup_constraint(armature, constraint_spec)
+        except ValueError as e:
+            print(f"Warning: Could not set up constraint: {e}")
+
+    # Apply foot systems
+    for foot_system in rig_setup.get('foot_systems', []):
+        try:
+            setup_foot_system(armature, foot_system)
+        except ValueError as e:
+            print(f"Warning: Could not set up foot system: {e}")
+
+    # Apply aim constraints
+    for aim_constraint in rig_setup.get('aim_constraints', []):
+        try:
+            setup_aim_constraint(armature, aim_constraint)
+        except ValueError as e:
+            print(f"Warning: Could not set up aim constraint: {e}")
+
+    # Apply twist bones
+    for twist_bone in rig_setup.get('twist_bones', []):
+        try:
+            setup_twist_bone(armature, twist_bone)
+        except ValueError as e:
+            print(f"Warning: Could not set up twist bone: {e}")
+
+    # Apply stretch settings
+    stretch_settings = rig_setup.get('stretch')
+    if stretch_settings and stretch_settings.get('enabled', False):
+        apply_stretch_settings(armature, stretch_settings)
+
+    return result
+
+
+# =============================================================================
+# Bone Constraint Setup
+# =============================================================================
+
+def setup_constraint(
+    armature: 'bpy.types.Object',
+    constraint_spec: Dict
+) -> None:
+    """
+    Set up a bone constraint on an armature.
+
+    Args:
+        armature: The armature object.
+        constraint_spec: Dictionary with constraint configuration.
+            Required keys:
+                - type: One of 'hinge', 'ball', 'planar', 'soft'
+                - bone: Target bone name
+            Type-specific keys:
+                Hinge:
+                    - axis: 'X', 'Y', or 'Z' (default 'X')
+                    - min_angle: Minimum angle in degrees (default 0)
+                    - max_angle: Maximum angle in degrees (default 160)
+                Ball:
+                    - cone_angle: Cone angle in degrees (default 45)
+                    - twist_min: Minimum twist in degrees (default -45)
+                    - twist_max: Maximum twist in degrees (default 45)
+                Planar:
+                    - plane_normal: Locked axis 'X', 'Y', or 'Z' (default 'X')
+                    - min_angle: Minimum angle in degrees (default -30)
+                    - max_angle: Maximum angle in degrees (default 30)
+                Soft:
+                    - stiffness: Stiffness factor 0-1 (default 0.5)
+                    - damping: Damping factor 0-1 (default 0.5)
+    """
+    constraint_type = constraint_spec.get('type', '').lower()
+    bone_name = constraint_spec.get('bone', '')
+
+    if not bone_name:
+        raise ValueError("Constraint requires a 'bone' name")
+
+    if not constraint_type:
+        raise ValueError("Constraint requires a 'type'")
+
+    # Ensure we're in object mode first
+    if bpy.context.mode != 'OBJECT':
+        bpy.ops.object.mode_set(mode='OBJECT')
+
+    bpy.context.view_layer.objects.active = armature
+
+    # Verify bone exists
+    if bone_name not in armature.data.bones:
+        raise ValueError(f"Bone '{bone_name}' not found in armature")
+
+    # Enter pose mode to add constraint
+    bpy.ops.object.mode_set(mode='POSE')
+
+    pose_bone = armature.pose.bones.get(bone_name)
+    if not pose_bone:
+        raise ValueError(f"Pose bone '{bone_name}' not found")
+
+    if constraint_type == 'hinge':
+        _setup_hinge_constraint(pose_bone, constraint_spec)
+    elif constraint_type == 'ball':
+        _setup_ball_constraint(pose_bone, constraint_spec)
+    elif constraint_type == 'planar':
+        _setup_planar_constraint(pose_bone, constraint_spec)
+    elif constraint_type == 'soft':
+        _setup_soft_constraint(pose_bone, constraint_spec)
+    else:
+        raise ValueError(f"Unknown constraint type: {constraint_type}")
+
+    bpy.ops.object.mode_set(mode='OBJECT')
+
+
+def _setup_hinge_constraint(
+    pose_bone: 'bpy.types.PoseBone',
+    constraint_spec: Dict
+) -> None:
+    """
+    Set up a hinge constraint (single-axis rotation limit).
+
+    Maps to LIMIT_ROTATION with only one axis enabled.
+    Ideal for elbows and knees.
+    """
+    axis = constraint_spec.get('axis', 'X').upper()
+    min_angle = constraint_spec.get('min_angle', 0.0)
+    max_angle = constraint_spec.get('max_angle', 160.0)
+
+    # Create limit rotation constraint
+    constraint = pose_bone.constraints.new('LIMIT_ROTATION')
+    constraint.name = f"Hinge_{pose_bone.name}"
+    constraint.owner_space = 'LOCAL'
+
+    # Enable only the specified axis, lock others to zero
+    if axis == 'X':
+        constraint.use_limit_x = True
+        constraint.min_x = math.radians(min_angle)
+        constraint.max_x = math.radians(max_angle)
+        # Lock Y and Z
+        constraint.use_limit_y = True
+        constraint.min_y = 0
+        constraint.max_y = 0
+        constraint.use_limit_z = True
+        constraint.min_z = 0
+        constraint.max_z = 0
+    elif axis == 'Y':
+        constraint.use_limit_y = True
+        constraint.min_y = math.radians(min_angle)
+        constraint.max_y = math.radians(max_angle)
+        # Lock X and Z
+        constraint.use_limit_x = True
+        constraint.min_x = 0
+        constraint.max_x = 0
+        constraint.use_limit_z = True
+        constraint.min_z = 0
+        constraint.max_z = 0
+    elif axis == 'Z':
+        constraint.use_limit_z = True
+        constraint.min_z = math.radians(min_angle)
+        constraint.max_z = math.radians(max_angle)
+        # Lock X and Y
+        constraint.use_limit_x = True
+        constraint.min_x = 0
+        constraint.max_x = 0
+        constraint.use_limit_y = True
+        constraint.min_y = 0
+        constraint.max_y = 0
+
+
+def _setup_ball_constraint(
+    pose_bone: 'bpy.types.PoseBone',
+    constraint_spec: Dict
+) -> None:
+    """
+    Set up a ball constraint (cone-like rotation limit with twist).
+
+    Maps to LIMIT_ROTATION with cone-like limits on two axes and twist on the third.
+    Ideal for shoulders and hips.
+    """
+    cone_angle = constraint_spec.get('cone_angle', 45.0)
+    twist_min = constraint_spec.get('twist_min', -45.0)
+    twist_max = constraint_spec.get('twist_max', 45.0)
+
+    # Create limit rotation constraint
+    constraint = pose_bone.constraints.new('LIMIT_ROTATION')
+    constraint.name = f"Ball_{pose_bone.name}"
+    constraint.owner_space = 'LOCAL'
+
+    # Y axis is the twist axis (along the bone)
+    # X and Z axes form the cone
+    constraint.use_limit_x = True
+    constraint.min_x = math.radians(-cone_angle)
+    constraint.max_x = math.radians(cone_angle)
+
+    constraint.use_limit_y = True
+    constraint.min_y = math.radians(twist_min)
+    constraint.max_y = math.radians(twist_max)
+
+    constraint.use_limit_z = True
+    constraint.min_z = math.radians(-cone_angle)
+    constraint.max_z = math.radians(cone_angle)
+
+
+def _setup_planar_constraint(
+    pose_bone: 'bpy.types.PoseBone',
+    constraint_spec: Dict
+) -> None:
+    """
+    Set up a planar constraint (rotation in a plane, one axis locked).
+
+    Maps to LIMIT_ROTATION with one axis locked to zero.
+    Ideal for wrists and ankles with limited lateral movement.
+    """
+    plane_normal = constraint_spec.get('plane_normal', 'X').upper()
+    min_angle = constraint_spec.get('min_angle', -30.0)
+    max_angle = constraint_spec.get('max_angle', 30.0)
+
+    # Create limit rotation constraint
+    constraint = pose_bone.constraints.new('LIMIT_ROTATION')
+    constraint.name = f"Planar_{pose_bone.name}"
+    constraint.owner_space = 'LOCAL'
+
+    # Lock the plane normal axis, allow rotation on the other two
+    if plane_normal == 'X':
+        # Lock X, allow Y and Z
+        constraint.use_limit_x = True
+        constraint.min_x = 0
+        constraint.max_x = 0
+        constraint.use_limit_y = True
+        constraint.min_y = math.radians(min_angle)
+        constraint.max_y = math.radians(max_angle)
+        constraint.use_limit_z = True
+        constraint.min_z = math.radians(min_angle)
+        constraint.max_z = math.radians(max_angle)
+    elif plane_normal == 'Y':
+        # Lock Y, allow X and Z
+        constraint.use_limit_x = True
+        constraint.min_x = math.radians(min_angle)
+        constraint.max_x = math.radians(max_angle)
+        constraint.use_limit_y = True
+        constraint.min_y = 0
+        constraint.max_y = 0
+        constraint.use_limit_z = True
+        constraint.min_z = math.radians(min_angle)
+        constraint.max_z = math.radians(max_angle)
+    elif plane_normal == 'Z':
+        # Lock Z, allow X and Y
+        constraint.use_limit_x = True
+        constraint.min_x = math.radians(min_angle)
+        constraint.max_x = math.radians(max_angle)
+        constraint.use_limit_y = True
+        constraint.min_y = math.radians(min_angle)
+        constraint.max_y = math.radians(max_angle)
+        constraint.use_limit_z = True
+        constraint.min_z = 0
+        constraint.max_z = 0
+
+
+def _setup_soft_constraint(
+    pose_bone: 'bpy.types.PoseBone',
+    constraint_spec: Dict
+) -> None:
+    """
+    Set up a soft constraint (spring-like resistance with damping).
+
+    Uses COPY_ROTATION with limited influence and a DAMPED_TRACK for damping effect.
+    Ideal for secondary motion like tails and hair.
+
+    Note: True spring dynamics require baking or the use of rigid body physics.
+    This implementation provides a simplified approximation using constraint influence.
+    """
+    stiffness = constraint_spec.get('stiffness', 0.5)
+    damping = constraint_spec.get('damping', 0.5)
+
+    # Clamp values to valid range
+    stiffness = max(0.0, min(1.0, stiffness))
+    damping = max(0.0, min(1.0, damping))
+
+    # For soft constraints, we use a combination approach:
+    # 1. Low stiffness = more freedom (less constraint influence)
+    # 2. High damping = more smoothing (we approximate with limit constraints)
+
+    # If stiffness is 0, we don't add any constraint (fully free)
+    if stiffness <= 0.0:
+        return
+
+    # Create a limit rotation constraint with very wide limits
+    # The stiffness affects how quickly the bone returns to rest
+    constraint = pose_bone.constraints.new('LIMIT_ROTATION')
+    constraint.name = f"Soft_{pose_bone.name}"
+    constraint.owner_space = 'LOCAL'
+
+    # Wide limits scaled by inverse of stiffness (lower stiffness = wider limits)
+    max_angle = 90.0 * (1.0 - stiffness * 0.5)  # 45-90 degrees based on stiffness
+
+    constraint.use_limit_x = True
+    constraint.min_x = math.radians(-max_angle)
+    constraint.max_x = math.radians(max_angle)
+
+    constraint.use_limit_y = True
+    constraint.min_y = math.radians(-max_angle)
+    constraint.max_y = math.radians(max_angle)
+
+    constraint.use_limit_z = True
+    constraint.min_z = math.radians(-max_angle)
+    constraint.max_z = math.radians(max_angle)
+
+    # The influence is inversely related to stiffness
+    # Higher stiffness = more constraint influence
+    constraint.influence = stiffness
+
+    # Add a damped track if damping is significant
+    # This helps smooth out rapid movements
+    if damping > 0.3:
+        # We add a slight copy rotation from parent to simulate damping lag
+        # This is a simplification - true damping requires simulation
+        if pose_bone.parent:
+            damp_constraint = pose_bone.constraints.new('COPY_ROTATION')
+            damp_constraint.name = f"SoftDamp_{pose_bone.name}"
+            damp_constraint.target = pose_bone.id_data  # The armature
+            damp_constraint.subtarget = pose_bone.parent.name
+            damp_constraint.influence = damping * 0.3  # Subtle effect
+            damp_constraint.mix_mode = 'ADD'
+            damp_constraint.owner_space = 'LOCAL'
+            damp_constraint.target_space = 'LOCAL'
+
+
+# =============================================================================
+# Foot System Setup
+# =============================================================================
+
+def setup_foot_system(armature: 'bpy.types.Object', foot_system: Dict) -> None:
+    """
+    Set up an IK foot roll system.
+
+    Creates a reverse foot rig with heel, ball, and toe pivots for natural
+    foot movement during IK animation.
+
+    Args:
+        armature: The armature object.
+        foot_system: Dictionary with foot system configuration:
+            - name: Name of the foot system
+            - ik_target: IK target bone name
+            - heel_bone: Heel pivot bone name
+            - toe_bone: Toe pivot bone name
+            - ball_bone: Optional ball (mid-foot) pivot bone name
+            - roll_limits: [min, max] roll angle limits in degrees
+    """
+    name = foot_system.get('name', 'foot')
+    ik_target = foot_system.get('ik_target', '')
+    heel_bone = foot_system.get('heel_bone', '')
+    toe_bone = foot_system.get('toe_bone', '')
+    ball_bone = foot_system.get('ball_bone')
+    roll_limits = foot_system.get('roll_limits', [-30.0, 60.0])
+
+    if not ik_target or not heel_bone or not toe_bone:
+        raise ValueError(f"Foot system '{name}' requires ik_target, heel_bone, and toe_bone")
+
+    # Ensure we're in object mode first
+    if bpy.context.mode != 'OBJECT':
+        bpy.ops.object.mode_set(mode='OBJECT')
+
+    bpy.context.view_layer.objects.active = armature
+
+    # Verify bones exist
+    for bone_name in [heel_bone, toe_bone] + ([ball_bone] if ball_bone else []):
+        if bone_name not in armature.data.bones:
+            raise ValueError(f"Bone '{bone_name}' not found in armature for foot system '{name}'")
+
+    # Enter pose mode to add constraints
+    bpy.ops.object.mode_set(mode='POSE')
+
+    # Add roll limit constraint to heel
+    heel_pose = armature.pose.bones.get(heel_bone)
+    if heel_pose:
+        constraint = heel_pose.constraints.new('LIMIT_ROTATION')
+        constraint.name = f"FootRoll_{name}_Heel"
+        constraint.owner_space = 'LOCAL'
+        constraint.use_limit_x = True
+        constraint.min_x = math.radians(roll_limits[0])
+        constraint.max_x = math.radians(roll_limits[1])
+
+    # Add roll limit constraint to toe
+    toe_pose = armature.pose.bones.get(toe_bone)
+    if toe_pose:
+        constraint = toe_pose.constraints.new('LIMIT_ROTATION')
+        constraint.name = f"FootRoll_{name}_Toe"
+        constraint.owner_space = 'LOCAL'
+        constraint.use_limit_x = True
+        constraint.min_x = math.radians(0)  # Toe only lifts up
+        constraint.max_x = math.radians(roll_limits[1])
+
+    # Add ball bone constraints if present
+    if ball_bone:
+        ball_pose = armature.pose.bones.get(ball_bone)
+        if ball_pose:
+            constraint = ball_pose.constraints.new('LIMIT_ROTATION')
+            constraint.name = f"FootRoll_{name}_Ball"
+            constraint.owner_space = 'LOCAL'
+            constraint.use_limit_x = True
+            constraint.min_x = math.radians(roll_limits[0] * 0.5)
+            constraint.max_x = math.radians(roll_limits[1] * 0.5)
+
+    bpy.ops.object.mode_set(mode='OBJECT')
+    print(f"Set up foot system: {name}")
+
+
+# =============================================================================
+# Aim Constraint Setup
+# =============================================================================
+
+def setup_aim_constraint(armature: 'bpy.types.Object', aim_spec: Dict) -> None:
+    """
+    Set up an aim (look-at) constraint.
+
+    Makes a bone always point toward a target, useful for eyes,
+    weapons, or tracking systems.
+
+    Args:
+        armature: The armature object.
+        aim_spec: Dictionary with aim constraint configuration:
+            - name: Constraint name
+            - bone: Bone to apply the constraint to
+            - target: Target to aim at (bone name or empty object name)
+            - track_axis: Axis to point at target ('X', '-X', 'Y', '-Y', 'Z', '-Z')
+            - up_axis: Up reference axis ('X', 'Y', 'Z')
+            - influence: Constraint influence (0.0-1.0)
+    """
+    name = aim_spec.get('name', 'aim')
+    bone_name = aim_spec.get('bone', '')
+    target = aim_spec.get('target', '')
+    track_axis = aim_spec.get('track_axis', 'X')
+    up_axis = aim_spec.get('up_axis', 'Z')
+    influence = aim_spec.get('influence', 1.0)
+
+    if not bone_name or not target:
+        raise ValueError(f"Aim constraint '{name}' requires bone and target")
+
+    # Ensure we're in object mode first
+    if bpy.context.mode != 'OBJECT':
+        bpy.ops.object.mode_set(mode='OBJECT')
+
+    bpy.context.view_layer.objects.active = armature
+
+    if bone_name not in armature.data.bones:
+        raise ValueError(f"Bone '{bone_name}' not found in armature")
+
+    bpy.ops.object.mode_set(mode='POSE')
+
+    pose_bone = armature.pose.bones.get(bone_name)
+    if not pose_bone:
+        raise ValueError(f"Pose bone '{bone_name}' not found")
+
+    # Create track to constraint
+    constraint = pose_bone.constraints.new('DAMPED_TRACK')
+    constraint.name = name
+    constraint.influence = max(0.0, min(1.0, influence))
+
+    # Set target (either a bone in this armature or external object)
+    if target in armature.data.bones:
+        constraint.target = armature
+        constraint.subtarget = target
+    else:
+        target_obj = bpy.data.objects.get(target)
+        if target_obj:
+            constraint.target = target_obj
+        else:
+            # Create an empty as the target
+            bpy.ops.object.mode_set(mode='OBJECT')
+            bpy.ops.object.empty_add(type='PLAIN_AXES')
+            target_empty = bpy.context.active_object
+            target_empty.name = target
+            bpy.ops.object.mode_set(mode='POSE')
+            constraint.target = target_empty
+
+    # Map track axis
+    track_axis_map = {
+        'X': 'TRACK_X',
+        '-X': 'TRACK_NEGATIVE_X',
+        'Y': 'TRACK_Y',
+        '-Y': 'TRACK_NEGATIVE_Y',
+        'Z': 'TRACK_Z',
+        '-Z': 'TRACK_NEGATIVE_Z',
+    }
+    constraint.track_axis = track_axis_map.get(track_axis, 'TRACK_X')
+
+    bpy.ops.object.mode_set(mode='OBJECT')
+    print(f"Set up aim constraint: {name}")
+
+
+# =============================================================================
+# Twist Bone Setup
+# =============================================================================
+
+def setup_twist_bone(armature: 'bpy.types.Object', twist_spec: Dict) -> None:
+    """
+    Set up twist bone distribution.
+
+    Distributes rotation from a source bone to a twist bone,
+    useful for preventing candy-wrapper deformation in forearms and thighs.
+
+    Args:
+        armature: The armature object.
+        twist_spec: Dictionary with twist bone configuration:
+            - name: Optional name for this twist setup
+            - source: Source bone to copy rotation from
+            - target: Target twist bone
+            - axis: Axis to copy rotation on ('X', 'Y', 'Z')
+            - influence: Influence factor (0.0-1.0)
+    """
+    name = twist_spec.get('name', 'twist')
+    source = twist_spec.get('source', '')
+    target = twist_spec.get('target', '')
+    axis = twist_spec.get('axis', 'Y').upper()
+    influence = twist_spec.get('influence', 0.5)
+
+    if not source or not target:
+        raise ValueError(f"Twist setup '{name}' requires source and target bones")
+
+    # Ensure we're in object mode first
+    if bpy.context.mode != 'OBJECT':
+        bpy.ops.object.mode_set(mode='OBJECT')
+
+    bpy.context.view_layer.objects.active = armature
+
+    for bone_name in [source, target]:
+        if bone_name not in armature.data.bones:
+            raise ValueError(f"Bone '{bone_name}' not found in armature")
+
+    bpy.ops.object.mode_set(mode='POSE')
+
+    target_pose = armature.pose.bones.get(target)
+    if not target_pose:
+        raise ValueError(f"Pose bone '{target}' not found")
+
+    # Create copy rotation constraint
+    constraint = target_pose.constraints.new('COPY_ROTATION')
+    constraint.name = f"Twist_{name}"
+    constraint.target = armature
+    constraint.subtarget = source
+    constraint.influence = max(0.0, min(1.0, influence))
+    constraint.mix_mode = 'ADD'
+    constraint.owner_space = 'LOCAL'
+    constraint.target_space = 'LOCAL'
+
+    # Only copy the specified axis
+    constraint.use_x = (axis == 'X')
+    constraint.use_y = (axis == 'Y')
+    constraint.use_z = (axis == 'Z')
+
+    bpy.ops.object.mode_set(mode='OBJECT')
+    print(f"Set up twist bone: {target} from {source}")
+
+
+# =============================================================================
+# Stretch Settings
+# =============================================================================
+
+def apply_stretch_settings(armature: 'bpy.types.Object', stretch_settings: Dict) -> None:
+    """
+    Apply stretch settings to IK chains.
+
+    Enables bones to stretch beyond their rest length when IK targets
+    are out of reach.
+
+    Args:
+        armature: The armature object.
+        stretch_settings: Dictionary with stretch configuration:
+            - enabled: Whether stretch is enabled
+            - max_stretch: Maximum stretch factor (1.0 = no stretch, 2.0 = double)
+            - min_stretch: Minimum stretch factor (0.5 = half length)
+            - volume_preservation: 'none', 'uniform', 'x', or 'z'
+    """
+    max_stretch = stretch_settings.get('max_stretch', 1.5)
+    min_stretch = stretch_settings.get('min_stretch', 0.5)
+    volume_mode = stretch_settings.get('volume_preservation', 'none')
+
+    # Ensure we're in object mode first
+    if bpy.context.mode != 'OBJECT':
+        bpy.ops.object.mode_set(mode='OBJECT')
+
+    bpy.context.view_layer.objects.active = armature
+    bpy.ops.object.mode_set(mode='POSE')
+
+    # Find all IK constraints and enable stretch
+    for pose_bone in armature.pose.bones:
+        for constraint in pose_bone.constraints:
+            if constraint.type == 'IK':
+                constraint.use_stretch = True
+                # Note: Blender's IK stretch doesn't have min/max controls directly
+                # We can simulate this with additional constraints if needed
+
+    # Apply volume preservation via scale constraints if needed
+    if volume_mode != 'none':
+        for pose_bone in armature.pose.bones:
+            # Check if this bone is part of an IK chain
+            has_ik = any(c.type == 'IK' for c in pose_bone.constraints)
+            if has_ik or (pose_bone.parent and any(c.type == 'IK' for c in pose_bone.parent.constraints)):
+                constraint = pose_bone.constraints.new('MAINTAIN_VOLUME')
+                constraint.name = f"Stretch_Volume_{pose_bone.name}"
+                constraint.mode = 'STRICT'
+                constraint.owner_space = 'LOCAL'
+
+                if volume_mode == 'uniform':
+                    constraint.free_axis = 'SAMEVOL_Y'  # Volume along bone axis
+                elif volume_mode == 'x':
+                    constraint.free_axis = 'SAMEVOL_X'
+                elif volume_mode == 'z':
+                    constraint.free_axis = 'SAMEVOL_Z'
+
+    bpy.ops.object.mode_set(mode='OBJECT')
+    print(f"Applied stretch settings: max={max_stretch}, min={min_stretch}, volume={volume_mode}")
+
+
+# =============================================================================
+# Procedural Animation Layers
+# =============================================================================
+
+def apply_procedural_layers(
+    armature: 'bpy.types.Object',
+    layers: List[Dict],
+    fps: int,
+    frame_count: int
+) -> None:
+    """
+    Apply procedural animation layers to bones.
+
+    Generates automatic motion overlays like breathing, swaying, bobbing,
+    and noise-based movement.
+
+    Args:
+        armature: The armature object.
+        layers: List of procedural layer configurations.
+        fps: Frames per second.
+        frame_count: Total number of frames.
+    """
+    if not layers:
+        return
+
+    # Ensure we're in object mode first
+    if bpy.context.mode != 'OBJECT':
+        bpy.ops.object.mode_set(mode='OBJECT')
+
+    bpy.context.view_layer.objects.active = armature
+    bpy.ops.object.mode_set(mode='POSE')
+
+    for layer in layers:
+        layer_type = layer.get('type', 'breathing')
+        target = layer.get('target', '')
+        axis = layer.get('axis', 'pitch')
+        period_frames = layer.get('period_frames', 60)
+        amplitude = layer.get('amplitude', 0.01)
+        phase_offset = layer.get('phase_offset', 0.0)
+        frequency = layer.get('frequency', 0.3)
+
+        pose_bone = armature.pose.bones.get(target)
+        if not pose_bone:
+            print(f"Warning: Bone '{target}' not found for procedural layer")
+            continue
+
+        pose_bone.rotation_mode = 'XYZ'
+
+        # Map axis to index
+        axis_map = {'pitch': 0, 'yaw': 1, 'roll': 2}
+        axis_idx = axis_map.get(axis, 0)
+
+        # Generate keyframes based on layer type
+        if layer_type in ('breathing', 'sway', 'bob'):
+            # Sine wave animation
+            for frame in range(1, frame_count + 1):
+                t = (frame - 1) / period_frames
+                value = math.sin((t + phase_offset) * 2 * math.pi) * amplitude
+
+                # Store current rotation and modify the target axis
+                rot = list(pose_bone.rotation_euler)
+                rot[axis_idx] = value
+                pose_bone.rotation_euler = Euler(rot)
+                pose_bone.keyframe_insert(data_path="rotation_euler", frame=frame, index=axis_idx)
+
+        elif layer_type == 'noise':
+            # Noise-based animation using simple pseudo-random
+            import random
+            random.seed(hash(target))
+            for frame in range(1, frame_count + 1):
+                # Smooth noise using interpolated random values
+                noise_val = math.sin(frame * frequency) * random.uniform(-1, 1)
+                value = noise_val * math.radians(amplitude)
+
+                rot = list(pose_bone.rotation_euler)
+                rot[axis_idx] = value
+                pose_bone.rotation_euler = Euler(rot)
+                pose_bone.keyframe_insert(data_path="rotation_euler", frame=frame, index=axis_idx)
+
+    bpy.ops.object.mode_set(mode='OBJECT')
+    print(f"Applied {len(layers)} procedural layers")
+
+
+# =============================================================================
+# Pose and Phase System
+# =============================================================================
+
+def apply_poses_and_phases(
+    armature: 'bpy.types.Object',
+    poses: Dict[str, Dict],
+    phases: List[Dict],
+    fps: int
+) -> None:
+    """
+    Apply named poses and animation phases to an armature.
+
+    Args:
+        armature: The armature object.
+        poses: Dictionary of named pose definitions.
+        phases: List of animation phase configurations.
+        fps: Frames per second.
+    """
+    if not phases:
+        return
+
+    # Ensure we're in object mode first
+    if bpy.context.mode != 'OBJECT':
+        bpy.ops.object.mode_set(mode='OBJECT')
+
+    bpy.context.view_layer.objects.active = armature
+    bpy.ops.object.mode_set(mode='POSE')
+
+    for phase in phases:
+        phase_name = phase.get('name', 'unnamed')
+        start_frame = phase.get('start_frame', 1)
+        end_frame = phase.get('end_frame', 30)
+        curve = phase.get('curve', 'linear')
+        pose_name = phase.get('pose')
+        ik_targets = phase.get('ik_targets', {})
+
+        # Apply pose at start frame if specified
+        if pose_name and pose_name in poses:
+            pose_def = poses[pose_name]
+            bones_data = pose_def.get('bones', {})
+
+            for bone_name, transform in bones_data.items():
+                pose_bone = armature.pose.bones.get(bone_name)
+                if not pose_bone:
+                    continue
+
+                pose_bone.rotation_mode = 'XYZ'
+                pitch = math.radians(transform.get('pitch', 0))
+                yaw = math.radians(transform.get('yaw', 0))
+                roll = math.radians(transform.get('roll', 0))
+
+                pose_bone.rotation_euler = Euler((pitch, yaw, roll))
+                pose_bone.keyframe_insert(data_path="rotation_euler", frame=start_frame)
+
+                # Apply location if present
+                location = transform.get('location')
+                if location:
+                    pose_bone.location = Vector(location)
+                    pose_bone.keyframe_insert(data_path="location", frame=start_frame)
+
+        # Apply IK target keyframes
+        for target_name, target_keyframes in ik_targets.items():
+            target_obj = bpy.data.objects.get(target_name)
+            if not target_obj:
+                print(f"Warning: IK target '{target_name}' not found for phase '{phase_name}'")
+                continue
+
+            for kf in target_keyframes:
+                frame = kf.get('frame', start_frame)
+                location = kf.get('location', [0, 0, 0])
+                ikfk = kf.get('ikfk')
+
+                target_obj.location = Vector(location)
+                target_obj.keyframe_insert(data_path="location", frame=frame)
+
+        # Map curve type to Blender interpolation
+        interp_map = {
+            'linear': 'LINEAR',
+            'ease_in': 'QUAD',
+            'ease_out': 'QUAD',
+            'ease_in_out': 'BEZIER',
+            'exponential_in': 'EXPO',
+            'exponential_out': 'EXPO',
+            'constant': 'CONSTANT',
+        }
+        interp = interp_map.get(curve, 'LINEAR')
+
+        # Set interpolation for all keyframes in this phase range
+        action = armature.animation_data.action if armature.animation_data else None
+        if action:
+            for fcurve in action.fcurves:
+                for kp in fcurve.keyframe_points:
+                    if start_frame <= kp.co[0] <= end_frame:
+                        kp.interpolation = interp
+
+    bpy.ops.object.mode_set(mode='OBJECT')
+    print(f"Applied {len(phases)} animation phases")
+
+
+# =============================================================================
+# Bake Settings
+# =============================================================================
+
+def bake_animation(
+    armature: 'bpy.types.Object',
+    bake_settings: Dict,
+    frame_start: int,
+    frame_end: int
+) -> None:
+    """
+    Bake animation with specified settings.
+
+    Args:
+        armature: The armature object.
+        bake_settings: Dictionary with bake configuration:
+            - simplify: Simplify curves after baking
+            - start_frame: Start frame (optional, uses scene default)
+            - end_frame: End frame (optional, uses scene default)
+            - visual_keying: Use visual transforms
+            - clear_constraints: Clear constraints after baking
+            - frame_step: Frame step for baking
+            - tolerance: Tolerance for curve simplification
+            - remove_ik_bones: Remove IK control bones after baking
+    """
+    simplify = bake_settings.get('simplify', True)
+    bake_start = bake_settings.get('start_frame', frame_start)
+    bake_end = bake_settings.get('end_frame', frame_end)
+    visual_keying = bake_settings.get('visual_keying', True)
+    clear_constraints = bake_settings.get('clear_constraints', True)
+    frame_step = bake_settings.get('frame_step', 1)
+    tolerance = bake_settings.get('tolerance', 0.001)
+    remove_ik = bake_settings.get('remove_ik_bones', True)
+
+    # Ensure we're in object mode first
+    if bpy.context.mode != 'OBJECT':
+        bpy.ops.object.mode_set(mode='OBJECT')
+
+    bpy.context.view_layer.objects.active = armature
+    bpy.ops.object.mode_set(mode='POSE')
+
+    # Select all pose bones
+    bpy.ops.pose.select_all(action='SELECT')
+
+    # Bake the animation
+    bpy.ops.nla.bake(
+        frame_start=bake_start,
+        frame_end=bake_end,
+        step=frame_step,
+        only_selected=False,
+        visual_keying=visual_keying,
+        clear_constraints=clear_constraints,
+        use_current_action=True,
+        bake_types={'POSE'}
+    )
+
+    # Simplify curves if requested
+    if simplify and armature.animation_data and armature.animation_data.action:
+        action = armature.animation_data.action
+        for fcurve in action.fcurves:
+            # Use Blender's keyframe reduction
+            keyframe_count_before = len(fcurve.keyframe_points)
+            # Note: Blender doesn't have a direct "simplify" operator for fcurves
+            # We can use the decimate operator in graph editor or do it manually
+            # For now, we just report the keyframe counts
+            print(f"FCurve {fcurve.data_path}: {keyframe_count_before} keyframes")
+
+    # Remove IK control objects if requested
+    if remove_ik:
+        bpy.ops.object.mode_set(mode='OBJECT')
+        # Find and remove IK target empties
+        objects_to_remove = []
+        for obj in bpy.data.objects:
+            if obj.type == 'EMPTY' and ('_target' in obj.name or '_pole' in obj.name):
+                objects_to_remove.append(obj)
+
+        for obj in objects_to_remove:
+            bpy.data.objects.remove(obj, do_unlink=True)
+
+        if objects_to_remove:
+            print(f"Removed {len(objects_to_remove)} IK control objects")
+    else:
+        bpy.ops.object.mode_set(mode='OBJECT')
+
+    print(f"Baked animation: frames {bake_start}-{bake_end}, visual_keying={visual_keying}")
+
+
+# =============================================================================
+# Animator Rig Configuration
+# =============================================================================
+
+# Widget collection name (hidden from viewport)
+WIDGET_COLLECTION_NAME = "Widgets"
+
+# Standard widget shapes
+WIDGET_SHAPES = {
+    "wire_circle": "WGT_circle",
+    "wire_cube": "WGT_cube",
+    "wire_sphere": "WGT_sphere",
+    "wire_diamond": "WGT_diamond",
+    "custom_mesh": "WGT_custom",
+}
+
+# Standard bone colors (L=blue, R=red, center=yellow)
+BONE_COLORS = {
+    "left": (0.2, 0.4, 1.0),      # Blue
+    "right": (1.0, 0.3, 0.3),     # Red
+    "center": (1.0, 0.9, 0.2),    # Yellow
+}
+
+
+def create_widget_shapes(armature: 'bpy.types.Object') -> Dict[str, 'bpy.types.Object']:
+    """
+    Create the 5 standard widget shapes for bone visualization.
+
+    Widget shapes are created in a hidden collection and can be assigned
+    to bones as custom shapes for better visual feedback during animation.
+
+    Args:
+        armature: The armature object (used to scale widgets appropriately).
+
+    Returns:
+        Dictionary mapping widget style names to their mesh objects.
+    """
+    widgets = {}
+
+    # Create or get the widgets collection
+    widget_collection = bpy.data.collections.get(WIDGET_COLLECTION_NAME)
+    if not widget_collection:
+        widget_collection = bpy.data.collections.new(WIDGET_COLLECTION_NAME)
+        bpy.context.scene.collection.children.link(widget_collection)
+
+    # Hide the widget collection from viewport
+    widget_collection.hide_viewport = True
+    widget_collection.hide_render = True
+
+    # Calculate base scale from armature
+    # Average bone length gives us a reasonable widget scale
+    avg_bone_length = 0.1  # Default
+    if armature.data.bones:
+        total_length = sum(bone.length for bone in armature.data.bones)
+        avg_bone_length = total_length / len(armature.data.bones)
+    widget_scale = avg_bone_length * 0.5
+
+    # Create Wire Circle widget
+    if WIDGET_SHAPES["wire_circle"] not in bpy.data.objects:
+        bpy.ops.mesh.primitive_circle_add(
+            vertices=32,
+            radius=widget_scale,
+            fill_type='NOTHING',
+            enter_editmode=False
+        )
+        circle = bpy.context.active_object
+        circle.name = WIDGET_SHAPES["wire_circle"]
+        circle.display_type = 'WIRE'
+        # Move to widget collection
+        for col in circle.users_collection:
+            col.objects.unlink(circle)
+        widget_collection.objects.link(circle)
+        widgets["wire_circle"] = circle
+    else:
+        widgets["wire_circle"] = bpy.data.objects[WIDGET_SHAPES["wire_circle"]]
+
+    # Create Wire Cube widget
+    if WIDGET_SHAPES["wire_cube"] not in bpy.data.objects:
+        bpy.ops.mesh.primitive_cube_add(size=widget_scale * 2)
+        cube = bpy.context.active_object
+        cube.name = WIDGET_SHAPES["wire_cube"]
+        cube.display_type = 'WIRE'
+        # Move to widget collection
+        for col in cube.users_collection:
+            col.objects.unlink(cube)
+        widget_collection.objects.link(cube)
+        widgets["wire_cube"] = cube
+    else:
+        widgets["wire_cube"] = bpy.data.objects[WIDGET_SHAPES["wire_cube"]]
+
+    # Create Wire Sphere widget
+    # Use lower polygon count for wireframe display (efficiency)
+    if WIDGET_SHAPES["wire_sphere"] not in bpy.data.objects:
+        bpy.ops.mesh.primitive_uv_sphere_add(
+            radius=widget_scale,
+            segments=12,
+            ring_count=6
+        )
+        sphere = bpy.context.active_object
+        sphere.name = WIDGET_SHAPES["wire_sphere"]
+        sphere.display_type = 'WIRE'
+        # Move to widget collection
+        for col in sphere.users_collection:
+            col.objects.unlink(sphere)
+        widget_collection.objects.link(sphere)
+        widgets["wire_sphere"] = sphere
+    else:
+        widgets["wire_sphere"] = bpy.data.objects[WIDGET_SHAPES["wire_sphere"]]
+
+    # Create Wire Diamond widget (octahedron)
+    if WIDGET_SHAPES["wire_diamond"] not in bpy.data.objects:
+        # Create a diamond shape using bmesh
+        mesh = bpy.data.meshes.new(WIDGET_SHAPES["wire_diamond"])
+        diamond = bpy.data.objects.new(WIDGET_SHAPES["wire_diamond"], mesh)
+
+        bm = bmesh.new()
+        # Diamond vertices: top, bottom, and 4 around the middle
+        top = bm.verts.new((0, 0, widget_scale))
+        bottom = bm.verts.new((0, 0, -widget_scale))
+        mid_verts = [
+            bm.verts.new((widget_scale * 0.7, 0, 0)),
+            bm.verts.new((0, widget_scale * 0.7, 0)),
+            bm.verts.new((-widget_scale * 0.7, 0, 0)),
+            bm.verts.new((0, -widget_scale * 0.7, 0)),
+        ]
+        bm.verts.ensure_lookup_table()
+
+        # Create faces
+        for i in range(4):
+            next_i = (i + 1) % 4
+            bm.faces.new([top, mid_verts[i], mid_verts[next_i]])
+            bm.faces.new([bottom, mid_verts[next_i], mid_verts[i]])
+
+        bm.to_mesh(mesh)
+        bm.free()
+
+        diamond.display_type = 'WIRE'
+        widget_collection.objects.link(diamond)
+        widgets["wire_diamond"] = diamond
+    else:
+        widgets["wire_diamond"] = bpy.data.objects[WIDGET_SHAPES["wire_diamond"]]
+
+    # Create Custom Mesh placeholder (empty mesh that can be replaced)
+    if WIDGET_SHAPES["custom_mesh"] not in bpy.data.objects:
+        mesh = bpy.data.meshes.new(WIDGET_SHAPES["custom_mesh"])
+        custom = bpy.data.objects.new(WIDGET_SHAPES["custom_mesh"], mesh)
+        custom.display_type = 'WIRE'
+        widget_collection.objects.link(custom)
+        widgets["custom_mesh"] = custom
+    else:
+        widgets["custom_mesh"] = bpy.data.objects[WIDGET_SHAPES["custom_mesh"]]
+
+    return widgets
+
+
+def organize_bone_collections(
+    armature: 'bpy.types.Object',
+    collections_config: Optional[List[Dict]] = None
+) -> Dict[str, List[str]]:
+    """
+    Organize bones into collections (IK Controls, FK Controls, Deform, Mechanism).
+
+    Bone collections help animators by grouping related bones and allowing
+    them to be shown/hidden as needed.
+
+    Args:
+        armature: The armature object.
+        collections_config: Optional list of collection configurations. Each entry:
+            - name: Collection name
+            - bones: List of bone names
+            - visible: Whether collection is visible (default True)
+            - selectable: Whether bones are selectable (default True)
+
+    Returns:
+        Dictionary mapping collection names to lists of bone names.
+    """
+    # Default collections if none provided
+    if collections_config is None:
+        collections_config = [
+            {
+                "name": "IK Controls",
+                "bones": [],  # Will be auto-populated
+                "visible": True,
+                "selectable": True,
+            },
+            {
+                "name": "FK Controls",
+                "bones": [],  # Will be auto-populated
+                "visible": True,
+                "selectable": True,
+            },
+            {
+                "name": "Deform",
+                "bones": [],  # Will be auto-populated
+                "visible": False,
+                "selectable": False,
+            },
+            {
+                "name": "Mechanism",
+                "bones": [],  # Will be auto-populated
+                "visible": False,
+                "selectable": False,
+            },
+        ]
+
+    # Ensure we're in object mode
+    if bpy.context.mode != 'OBJECT':
+        bpy.ops.object.mode_set(mode='OBJECT')
+
+    bpy.context.view_layer.objects.active = armature
+
+    # Get all bone names
+    all_bones = [bone.name for bone in armature.data.bones]
+
+    # Auto-categorize bones if collections have empty bone lists
+    ik_patterns = ["ik_", "pole_", "target_"]
+    fk_patterns = ["fk_", "ctrl_"]
+    deform_patterns = ["def_", "deform_"]
+    mechanism_patterns = ["mch_", "mechanism_", "helper_"]
+
+    # Track which bones are assigned
+    assigned_bones = set()
+    result = {}
+
+    for config in collections_config:
+        coll_name = config.get("name", "Collection")
+        bones = config.get("bones", [])
+        visible = config.get("visible", True)
+        selectable = config.get("selectable", True)
+
+        # If no bones specified, auto-categorize based on collection name
+        if not bones:
+            if "IK" in coll_name.upper():
+                bones = [b for b in all_bones if any(b.lower().startswith(p) for p in ik_patterns) and b not in assigned_bones]
+            elif "FK" in coll_name.upper():
+                bones = [b for b in all_bones if any(b.lower().startswith(p) for p in fk_patterns) and b not in assigned_bones]
+                # Also include main skeleton bones that aren't IK or mechanism
+                for b in all_bones:
+                    if b not in assigned_bones and b not in bones and not any(b.lower().startswith(p) for p in ik_patterns + mechanism_patterns + deform_patterns):
+                        bones.append(b)
+            elif "DEFORM" in coll_name.upper():
+                bones = [b for b in all_bones if any(b.lower().startswith(p) for p in deform_patterns) and b not in assigned_bones]
+            elif "MECHANISM" in coll_name.upper():
+                bones = [b for b in all_bones if any(b.lower().startswith(p) for p in mechanism_patterns) and b not in assigned_bones]
+
+        # Filter to only existing bones
+        bones = [b for b in bones if b in all_bones]
+        assigned_bones.update(bones)
+
+        # Create bone collection in Blender 4.0+
+        # Note: Blender 4.0 introduced bone collections, replacing bone groups
+        use_bone_collections = hasattr(armature.data, 'collections')
+
+        if use_bone_collections:
+            try:
+                # Blender 4.0+ bone collections API
+                bone_coll = armature.data.collections.get(coll_name)
+                if not bone_coll:
+                    bone_coll = armature.data.collections.new(coll_name)
+
+                # Set visibility
+                bone_coll.is_visible = visible
+
+                # Assign bones to collection
+                for bone_name in bones:
+                    bone = armature.data.bones.get(bone_name)
+                    if bone:
+                        bone_coll.assign(bone)
+
+            except (AttributeError, RuntimeError) as e:
+                print(f"Warning: Failed to create bone collection '{coll_name}': {e}")
+                use_bone_collections = False
+
+        if not use_bone_collections:
+            # Fallback for older Blender versions using bone groups
+            if hasattr(armature.pose, 'bone_groups'):
+                bpy.ops.object.mode_set(mode='POSE')
+
+                # Create bone group
+                bone_group = armature.pose.bone_groups.get(coll_name)
+                if not bone_group:
+                    bone_group = armature.pose.bone_groups.new(name=coll_name)
+
+                # Assign bones to group
+                for bone_name in bones:
+                    pose_bone = armature.pose.bones.get(bone_name)
+                    if pose_bone:
+                        pose_bone.bone_group = bone_group
+
+                bpy.ops.object.mode_set(mode='OBJECT')
+
+        result[coll_name] = bones
+
+    return result
+
+
+def apply_bone_colors(
+    armature: 'bpy.types.Object',
+    color_scheme: str = "standard",
+    custom_colors: Optional[Dict] = None
+) -> None:
+    """
+    Apply color coding to bones (L=blue, R=red, center=yellow).
+
+    Color-coded bones help animators quickly identify left vs right side
+    bones and center bones.
+
+    Args:
+        armature: The armature object.
+        color_scheme: One of "standard", "custom", or "per_bone".
+        custom_colors: For "custom" scheme: dict with "left", "right", "center" colors.
+                      For "per_bone" scheme: dict mapping bone names to (r, g, b) tuples.
+    """
+    if bpy.context.mode != 'OBJECT':
+        bpy.ops.object.mode_set(mode='OBJECT')
+
+    bpy.context.view_layer.objects.active = armature
+
+    def get_bone_color(bone_name: str) -> Tuple[float, float, float]:
+        """Determine color for a bone based on its name and the color scheme."""
+        if color_scheme == "per_bone" and custom_colors:
+            if bone_name in custom_colors:
+                c = custom_colors[bone_name]
+                return (c.get("r", 1.0), c.get("g", 1.0), c.get("b", 1.0))
+            # Fall back to standard for unlisted bones
+            return BONE_COLORS["center"]
+
+        if color_scheme == "custom" and custom_colors:
+            if bone_name.endswith("_l") or bone_name.endswith("_L"):
+                c = custom_colors.get("left", {})
+                return (c.get("r", 0.2), c.get("g", 0.4), c.get("b", 1.0))
+            elif bone_name.endswith("_r") or bone_name.endswith("_R"):
+                c = custom_colors.get("right", {})
+                return (c.get("r", 1.0), c.get("g", 0.3), c.get("b", 0.3))
+            else:
+                c = custom_colors.get("center", {})
+                return (c.get("r", 1.0), c.get("g", 0.9), c.get("b", 0.2))
+
+        # Standard scheme
+        if bone_name.endswith("_l") or bone_name.endswith("_L"):
+            return BONE_COLORS["left"]
+        elif bone_name.endswith("_r") or bone_name.endswith("_R"):
+            return BONE_COLORS["right"]
+        else:
+            return BONE_COLORS["center"]
+
+    # Apply colors to bones
+    # Blender 4.0+ uses bone.color for individual bone colors
+    try:
+        if hasattr(armature.data.bones[0], 'color') if armature.data.bones else False:
+            # Blender 4.0+ bone color API
+            for bone in armature.data.bones:
+                color = get_bone_color(bone.name)
+                bone.color.palette = 'CUSTOM'
+                bone.color.custom.normal = (*color, 1.0)  # RGBA
+                bone.color.custom.select = tuple(min(c + 0.2, 1.0) for c in color) + (1.0,)
+                bone.color.custom.active = tuple(min(c + 0.4, 1.0) for c in color) + (1.0,)
+    except (AttributeError, IndexError):
+        # Fallback for older Blender versions using bone groups with colors
+        if hasattr(armature.pose, 'bone_groups'):
+            bpy.ops.object.mode_set(mode='POSE')
+
+            # Create color groups
+            color_groups = {}
+            for color_name, color_value in BONE_COLORS.items():
+                group = armature.pose.bone_groups.get(f"Color_{color_name}")
+                if not group:
+                    group = armature.pose.bone_groups.new(name=f"Color_{color_name}")
+                group.color_set = 'CUSTOM'
+                # Set theme colors
+                group.colors.normal = color_value
+                group.colors.select = tuple(min(c + 0.2, 1.0) for c in color_value)
+                group.colors.active = tuple(min(c + 0.4, 1.0) for c in color_value)
+                color_groups[color_name] = group
+
+            # Assign bones to color groups
+            for pose_bone in armature.pose.bones:
+                color = get_bone_color(pose_bone.name)
+                if color == BONE_COLORS["left"]:
+                    pose_bone.bone_group = color_groups["left"]
+                elif color == BONE_COLORS["right"]:
+                    pose_bone.bone_group = color_groups["right"]
+                else:
+                    pose_bone.bone_group = color_groups["center"]
+
+            bpy.ops.object.mode_set(mode='OBJECT')
+
+
+def assign_widget_to_bone(
+    armature: 'bpy.types.Object',
+    bone_name: str,
+    widget_style: str,
+    widgets: Dict[str, 'bpy.types.Object']
+) -> bool:
+    """
+    Assign a widget shape to a specific bone.
+
+    Args:
+        armature: The armature object.
+        bone_name: Name of the bone to assign the widget to.
+        widget_style: One of "wire_circle", "wire_cube", "wire_sphere",
+                     "wire_diamond", or "custom_mesh".
+        widgets: Dictionary of created widget objects.
+
+    Returns:
+        True if widget was assigned successfully.
+    """
+    if widget_style not in widgets:
+        print(f"Warning: Unknown widget style '{widget_style}'")
+        return False
+
+    widget = widgets[widget_style]
+    pose_bone = armature.pose.bones.get(bone_name)
+
+    if not pose_bone:
+        print(f"Warning: Bone '{bone_name}' not found in armature")
+        return False
+
+    pose_bone.custom_shape = widget
+    return True
+
+
+def apply_animator_rig_config(
+    armature: 'bpy.types.Object',
+    animator_rig_config: Dict
+) -> Dict[str, Any]:
+    """
+    Apply animator rig configuration to an armature.
+
+    This is the main entry point for setting up visual aids for animators.
+
+    Args:
+        armature: The armature object.
+        animator_rig_config: Configuration dictionary with keys:
+            - collections: bool - Whether to organize bone collections
+            - shapes: bool - Whether to add custom bone shapes
+            - colors: bool - Whether to color-code bones
+            - display: str - Armature display type (OCTAHEDRAL, STICK, etc.)
+            - widget_style: str - Default widget style for control bones
+            - bone_collections: list - Custom bone collection definitions
+            - bone_colors: dict - Bone color scheme configuration
+
+    Returns:
+        Dictionary with results from each operation.
+    """
+    result = {
+        "widgets_created": False,
+        "collections_created": False,
+        "colors_applied": False,
+    }
+
+    # Set armature display type
+    display_type = animator_rig_config.get("display", "OCTAHEDRAL")
+    armature.data.display_type = display_type
+
+    # Create widget shapes if enabled
+    widgets = {}
+    if animator_rig_config.get("shapes", True):
+        widgets = create_widget_shapes(armature)
+        result["widgets_created"] = True
+        widgets_assigned = 0
+        widgets_failed = 0
+
+        # Assign default widget to control bones
+        widget_style = animator_rig_config.get("widget_style", "wire_circle")
+        for bone in armature.data.bones:
+            # Assign widgets to IK targets (diamond) and other controls (specified style)
+            success = False
+            if bone.name.startswith("ik_"):
+                success = assign_widget_to_bone(armature, bone.name, "wire_diamond", widgets)
+            elif bone.name.startswith("pole_"):
+                success = assign_widget_to_bone(armature, bone.name, "wire_sphere", widgets)
+            elif not bone.name.startswith(("def_", "mch_", "deform_", "mechanism_")):
+                success = assign_widget_to_bone(armature, bone.name, widget_style, widgets)
+            else:
+                continue  # Skip deform/mechanism bones, don't count as failure
+
+            if success:
+                widgets_assigned += 1
+            else:
+                widgets_failed += 1
+
+        result["widgets_assigned"] = widgets_assigned
+        if widgets_failed > 0:
+            print(f"Warning: {widgets_failed} widget assignments failed")
+
+    # Organize bone collections if enabled
+    if animator_rig_config.get("collections", True):
+        collections_config = animator_rig_config.get("bone_collections", None)
+        organize_bone_collections(armature, collections_config)
+        result["collections_created"] = True
+
+    # Apply bone colors if enabled
+    if animator_rig_config.get("colors", True):
+        bone_colors = animator_rig_config.get("bone_colors", {})
+        scheme = bone_colors.get("scheme", "standard")
+
+        custom_colors = None
+        if scheme == "custom":
+            custom_colors = {
+                "left": bone_colors.get("left", {}),
+                "right": bone_colors.get("right", {}),
+                "center": bone_colors.get("center", {}),
+            }
+        elif scheme == "per_bone":
+            custom_colors = bone_colors.get("colors", {})
+
+        apply_bone_colors(armature, scheme, custom_colors)
+        result["colors_applied"] = True
+
+    return result
 
 
 # =============================================================================
@@ -602,7 +3116,7 @@ def create_animation(armature: 'bpy.types.Object', params: Dict) -> 'bpy.types.A
 # =============================================================================
 
 def export_glb(output_path: Path, include_armature: bool = True,
-               include_animation: bool = False) -> None:
+               include_animation: bool = False, export_tangents: bool = False) -> None:
     """Export scene to GLB format."""
     export_settings = {
         'filepath': str(output_path),
@@ -611,6 +3125,7 @@ def export_glb(output_path: Path, include_armature: bool = True,
         'export_texcoords': True,
         'export_normals': True,
         'export_colors': True,
+        'export_tangents': export_tangents,
     }
 
     if include_animation:
@@ -676,8 +3191,9 @@ def handle_static_mesh(spec: Dict, out_root: Path, report_path: Path) -> None:
         # Compute metrics before export
         metrics = compute_mesh_metrics(obj)
 
-        # Export
-        export_glb(output_path)
+        # Export with tangents if requested
+        export_tangents = export_settings.get("tangents", False)
+        export_glb(output_path, export_tangents=export_tangents)
 
         duration_ms = int((time.time() - start_time) * 1000)
         write_report(report_path, ok=True, metrics=metrics,
@@ -696,16 +3212,43 @@ def handle_skeletal_mesh(spec: Dict, out_root: Path, report_path: Path) -> None:
         recipe = spec.get("recipe", {})
         params = recipe.get("params", {})
 
-        # Create armature
-        skeleton_preset = params.get("skeleton_preset", "humanoid_basic_v1")
-        armature = create_armature(skeleton_preset)
+        # Create armature - support both preset and custom skeleton
+        skeleton_spec = params.get("skeleton", [])
+        skeleton_preset = params.get("skeleton_preset")
 
-        # Create body parts
-        body_parts = params.get("body_parts", [])
+        if skeleton_spec:
+            # Use custom skeleton definition
+            armature = create_custom_skeleton(skeleton_spec)
+        elif skeleton_preset:
+            # Use preset skeleton
+            armature = create_armature(skeleton_preset)
+        else:
+            # Default to humanoid basic
+            armature = create_armature("humanoid_basic_v1")
+
         mesh_objects = []
+
+        # Create body parts (new format)
+        body_parts = params.get("body_parts", [])
         for part_spec in body_parts:
             mesh_obj = create_body_part(armature, part_spec)
             mesh_objects.append((mesh_obj, part_spec.get("bone")))
+
+        # Create legacy parts (ai-studio-core format)
+        legacy_parts = params.get("parts", {})
+        if legacy_parts:
+            for part_name, part_spec in legacy_parts.items():
+                mesh_obj = create_legacy_part(armature, part_name, part_spec, legacy_parts)
+                if mesh_obj:
+                    bone_name = part_spec.get("bone", part_name)
+                    mesh_objects.append((mesh_obj, bone_name))
+
+                    # Handle instances for this part
+                    instances = part_spec.get("instances", [])
+                    if instances:
+                        instance_objects = create_part_instances(mesh_obj, instances)
+                        for inst_obj in instance_objects:
+                            mesh_objects.append((inst_obj, bone_name))
 
         # Join all meshes into one
         if mesh_objects:
@@ -728,6 +3271,11 @@ def handle_skeletal_mesh(spec: Dict, out_root: Path, report_path: Path) -> None:
             material_slots = params.get("material_slots", [])
             apply_materials(combined_mesh, material_slots)
 
+            # Apply texturing/UV settings
+            texturing = params.get("texturing")
+            if texturing:
+                apply_texturing(combined_mesh, texturing)
+
             # Skin mesh to armature
             skinning = params.get("skinning", {})
             auto_weights = skinning.get("auto_weights", True)
@@ -746,14 +3294,31 @@ def handle_skeletal_mesh(spec: Dict, out_root: Path, report_path: Path) -> None:
             # Compute metrics
             metrics = compute_skeletal_mesh_metrics(combined_mesh, armature)
 
-            # Export
-            export_glb(output_path, include_armature=True)
+            # Add tri_budget validation to metrics
+            tri_budget = params.get("tri_budget")
+            if tri_budget:
+                metrics["tri_budget"] = tri_budget
+                metrics["tri_budget_exceeded"] = metrics.get("triangle_count", 0) > tri_budget
+
+            # Export GLB with tangents if requested
+            export_settings = params.get("export", {})
+            export_tangents = export_settings.get("tangents", False)
+            export_glb(output_path, include_armature=True, export_tangents=export_tangents)
+
+            # Save .blend file if requested
+            blend_rel_path = None
+            export_settings = params.get("export", {})
+            if export_settings.get("save_blend", False):
+                blend_rel_path = output_rel_path.replace(".glb", ".blend")
+                blend_path = out_root / blend_rel_path
+                bpy.ops.wm.save_as_mainfile(filepath=str(blend_path))
 
             duration_ms = int((time.time() - start_time) * 1000)
             write_report(report_path, ok=True, metrics=metrics,
-                         output_path=output_rel_path, duration_ms=duration_ms)
+                         output_path=output_rel_path, blend_path=blend_rel_path,
+                         duration_ms=duration_ms)
         else:
-            raise ValueError("No body parts specified")
+            raise ValueError("No body parts or legacy parts specified")
 
     except Exception as e:
         write_report(report_path, ok=False, error=str(e))
@@ -761,7 +3326,7 @@ def handle_skeletal_mesh(spec: Dict, out_root: Path, report_path: Path) -> None:
 
 
 def handle_animation(spec: Dict, out_root: Path, report_path: Path) -> None:
-    """Handle animation generation."""
+    """Handle animation generation (simple keyframes, no IK)."""
     start_time = time.time()
 
     try:
@@ -788,12 +3353,210 @@ def handle_animation(spec: Dict, out_root: Path, report_path: Path) -> None:
         # Compute metrics
         metrics = compute_animation_metrics(armature, action)
 
-        # Export with animation
-        export_glb(output_path, include_armature=True, include_animation=True)
+        # Export GLB with animation and tangents if requested
+        export_settings = params.get("export", {})
+        export_tangents = export_settings.get("tangents", False)
+        export_glb(output_path, include_armature=True, include_animation=True, export_tangents=export_tangents)
+
+        # Save .blend file if requested
+        blend_rel_path = None
+        export_settings = params.get("export", {})
+        if export_settings.get("save_blend", False):
+            blend_rel_path = output_rel_path.replace(".glb", ".blend")
+            blend_path = out_root / blend_rel_path
+            bpy.ops.wm.save_as_mainfile(filepath=str(blend_path))
 
         duration_ms = int((time.time() - start_time) * 1000)
         write_report(report_path, ok=True, metrics=metrics,
-                     output_path=output_rel_path, duration_ms=duration_ms)
+                     output_path=output_rel_path, blend_path=blend_rel_path,
+                     duration_ms=duration_ms)
+
+    except Exception as e:
+        write_report(report_path, ok=False, error=str(e))
+        raise
+
+
+def handle_rigged_animation(spec: Dict, out_root: Path, report_path: Path) -> None:
+    """Handle rigged animation generation (with IK support)."""
+    start_time = time.time()
+
+    try:
+        recipe = spec.get("recipe", {})
+        params = recipe.get("params", {})
+
+        # Determine armature source: input_armature, character, or skeleton_preset
+        input_armature_path = params.get("input_armature")
+        character_ref = params.get("character")
+        skeleton_preset = params.get("skeleton_preset", "humanoid_basic_v1")
+
+        if input_armature_path:
+            # Import existing armature from file
+            armature_path = out_root / input_armature_path
+            if armature_path.suffix.lower() in ('.glb', '.gltf'):
+                bpy.ops.import_scene.gltf(filepath=str(armature_path))
+            elif armature_path.suffix.lower() == '.blend':
+                # Append from blend file
+                with bpy.data.libraries.load(str(armature_path)) as (data_from, data_to):
+                    data_to.objects = [name for name in data_from.objects if 'Armature' in name or 'armature' in name]
+            # Find the imported armature
+            armature = next((obj for obj in bpy.context.selected_objects if obj.type == 'ARMATURE'), None)
+            if not armature:
+                armature = next((obj for obj in bpy.data.objects if obj.type == 'ARMATURE'), None)
+            if not armature:
+                raise ValueError(f"No armature found in {input_armature_path}")
+            print(f"Imported armature from: {input_armature_path}")
+        elif character_ref:
+            # Character reference - for now treat as preset, extend later for spec references
+            armature = create_armature(character_ref)
+            print(f"Created armature from character reference: {character_ref}")
+        else:
+            # Use skeleton preset
+            armature = create_armature(skeleton_preset)
+
+        # Apply ground offset if specified
+        ground_offset = params.get("ground_offset", 0.0)
+        if ground_offset != 0.0:
+            armature.location.z += ground_offset
+            print(f"Applied ground offset: {ground_offset}")
+
+        # Apply rig setup (IK chains, presets, foot_systems, aim_constraints, etc.)
+        rig_setup = params.get("rig_setup", {})
+        if rig_setup:
+            ik_controls = apply_rig_setup(armature, rig_setup)
+            print(f"Created IK controls: {list(ik_controls.keys())}")
+
+        # Apply animator rig configuration (widgets, collections, colors)
+        animator_rig = params.get("animator_rig")
+        if animator_rig:
+            rig_result = apply_animator_rig_config(armature, animator_rig)
+            print(f"Animator rig config applied: {rig_result}")
+
+        # Calculate frame count from duration_frames or duration_seconds
+        fps = params.get("fps", 30)
+        duration_frames = params.get("duration_frames")
+        duration_seconds = params.get("duration_seconds")
+
+        if duration_frames:
+            frame_count = duration_frames
+        elif duration_seconds:
+            frame_count = int(duration_seconds * fps)
+        else:
+            frame_count = 30  # Default to 1 second at 30fps
+
+        # Set frame range
+        bpy.context.scene.frame_start = 1
+        bpy.context.scene.frame_end = frame_count
+        bpy.context.scene.render.fps = fps
+
+        # Create FK animation from keyframes
+        if params.get("keyframes"):
+            action = create_animation(armature, params)
+        else:
+            # Create empty action for IK-only animation
+            clip_name = params.get("clip_name", "animation")
+            action = bpy.data.actions.new(name=clip_name)
+            armature.animation_data_create()
+            armature.animation_data.action = action
+
+        # Apply poses and phases
+        poses = params.get("poses", {})
+        phases = params.get("phases", [])
+        if phases:
+            apply_poses_and_phases(armature, poses, phases, fps)
+
+        # Apply procedural animation layers
+        procedural_layers = params.get("procedural_layers", [])
+        if procedural_layers:
+            apply_procedural_layers(armature, procedural_layers, fps, frame_count)
+
+        # Apply IK keyframes
+        ik_keyframes = params.get("ik_keyframes", [])
+        for ik_kf in ik_keyframes:
+            time_sec = ik_kf.get("time", 0)
+            frame = 1 + int(time_sec * fps)
+            targets = ik_kf.get("targets", {})
+
+            for target_name, transform in targets.items():
+                # Find the IK target object
+                target_obj = bpy.data.objects.get(target_name)
+                if not target_obj:
+                    print(f"Warning: IK target '{target_name}' not found")
+                    continue
+
+                # Apply position
+                if "position" in transform:
+                    target_obj.location = Vector(transform["position"])
+                    target_obj.keyframe_insert(data_path="location", frame=frame)
+
+                # Apply rotation
+                if "rotation" in transform:
+                    rot = transform["rotation"]
+                    target_obj.rotation_euler = Euler((
+                        math.radians(rot[0]),
+                        math.radians(rot[1]),
+                        math.radians(rot[2])
+                    ))
+                    target_obj.keyframe_insert(data_path="rotation_euler", frame=frame)
+
+        # Get output path
+        outputs = spec.get("outputs", [])
+        primary_output = next((o for o in outputs if o.get("kind") == "primary"), None)
+        if not primary_output:
+            raise ValueError("No primary output specified in spec")
+
+        output_rel_path = primary_output.get("path", "output.glb")
+        output_path = out_root / output_rel_path
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+
+        # Apply bake settings from rig_setup or export settings
+        bake_settings = rig_setup.get("bake")
+        export_settings = params.get("export", {})
+
+        if bake_settings:
+            # Use explicit bake settings
+            bake_animation(armature, bake_settings, 1, frame_count)
+        elif export_settings.get("bake_transforms", True):
+            # Legacy bake behavior
+            bpy.context.view_layer.objects.active = armature
+            bpy.ops.object.mode_set(mode='POSE')
+            bpy.ops.pose.select_all(action='SELECT')
+            bpy.ops.nla.bake(
+                frame_start=1,
+                frame_end=frame_count,
+                only_selected=False,
+                visual_keying=True,
+                clear_constraints=False,
+                use_current_action=True,
+                bake_types={'POSE'}
+            )
+            bpy.ops.object.mode_set(mode='OBJECT')
+
+        # Compute metrics
+        metrics = compute_animation_metrics(armature, action)
+
+        # Add IK-specific metrics
+        metrics["ik_chain_count"] = len(rig_setup.get("presets", [])) + len(rig_setup.get("ik_chains", []))
+        metrics["ik_keyframe_count"] = len(ik_keyframes)
+        metrics["procedural_layer_count"] = len(procedural_layers)
+        metrics["phase_count"] = len(phases)
+        metrics["pose_count"] = len(poses)
+
+        # Export GLB with animation and tangents if requested
+        export_tangents = export_settings.get("tangents", False)
+        export_glb(output_path, include_armature=True, include_animation=True, export_tangents=export_tangents)
+
+        # Save .blend file if requested (from params or export settings)
+        blend_rel_path = None
+        save_blend = params.get("save_blend", False) or export_settings.get("save_blend", False)
+        if save_blend:
+            blend_rel_path = output_rel_path.replace(".glb", ".blend")
+            blend_path = out_root / blend_rel_path
+            bpy.ops.wm.save_as_mainfile(filepath=str(blend_path))
+
+        duration_ms = int((time.time() - start_time) * 1000)
+        write_report(report_path, ok=True, metrics=metrics,
+                     output_path=output_rel_path, blend_path=blend_rel_path,
+                     duration_ms=duration_ms)
 
     except Exception as e:
         write_report(report_path, ok=False, error=str(e))
@@ -814,7 +3577,7 @@ def main() -> int:
 
     parser = argparse.ArgumentParser(description="SpecCade Blender Entrypoint")
     parser.add_argument("--mode", required=True,
-                        choices=["static_mesh", "skeletal_mesh", "animation"],
+                        choices=["static_mesh", "skeletal_mesh", "animation", "rigged_animation"],
                         help="Generation mode")
     parser.add_argument("--spec", required=True, type=Path,
                         help="Path to spec JSON file")
@@ -848,6 +3611,7 @@ def main() -> int:
         "static_mesh": handle_static_mesh,
         "skeletal_mesh": handle_skeletal_mesh,
         "animation": handle_animation,
+        "rigged_animation": handle_rigged_animation,
     }
 
     handler = handlers.get(args.mode)

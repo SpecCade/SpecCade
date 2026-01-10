@@ -1,0 +1,33 @@
+[package]
+name = "speccade-tests"
+version = "0.1.0"
+edition = "2021"
+description = "End-to-end integration tests for SpecCade parity-critical flows"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/SpecCade/SpecCade"
+publish = false
+
+# This is a test-only crate
+[lib]
+path = "src/lib.rs"
+
+[[test]]
+name = "e2e"
+path = "tests/e2e.rs"
+
+[dependencies]
+# We need all the workspace crates for integration testing
+speccade-spec = { workspace = true }
+speccade-backend-audio = { workspace = true }
+speccade-backend-music = { workspace = true }
+speccade-backend-texture = { workspace = true }
+speccade-backend-blender = { workspace = true }
+
+# Test utilities
+tempfile = { workspace = true }
+serde_json = { workspace = true }
+serde = { workspace = true }
+walkdir = { workspace = true }
+
+[dev-dependencies]
+pretty_assertions = { workspace = true }

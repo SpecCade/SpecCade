@@ -79,6 +79,7 @@ mod integration_tests {
         let params = AudioSfxLayeredSynthV1Params {
             duration_seconds: 0.3,
             sample_rate: 44100,
+            master_filter: None,
             layers: vec![AudioLayer {
                 synthesis: Synthesis::FmSynth {
                     carrier_freq: 440.0,
@@ -97,6 +98,7 @@ mod integration_tests {
                 },
                 volume: 0.8,
                 pan: 0.0,
+                delay: None,
             }],
         };
 
@@ -164,6 +166,7 @@ mod integration_tests {
         let params = AudioSfxLayeredSynthV1Params {
             duration_seconds: 0.1,
             sample_rate: 22050,
+            master_filter: None,
             layers: vec![AudioLayer {
                 synthesis: Synthesis::NoiseBurst {
                     noise_type: NoiseType::White,
@@ -172,6 +175,7 @@ mod integration_tests {
                 envelope: Envelope::default(),
                 volume: 1.0,
                 pan: 0.0,
+                delay: None,
             }],
         };
 
@@ -197,7 +201,8 @@ mod integration_tests {
             let params = AudioSfxLayeredSynthV1Params {
                 duration_seconds: 0.1,
                 sample_rate: 22050,
-                layers: vec![AudioLayer {
+                master_filter: None,
+            layers: vec![AudioLayer {
                     synthesis: Synthesis::NoiseBurst {
                         noise_type: NoiseType::White,
                         filter: None,
@@ -205,6 +210,7 @@ mod integration_tests {
                     envelope: Envelope::default(),
                     volume: 1.0,
                     pan: 0.0,
+                    delay: None,
                 }],
             };
 
@@ -234,26 +240,33 @@ mod integration_tests {
         let params = AudioSfxLayeredSynthV1Params {
             duration_seconds: 0.1,
             sample_rate: 44100,
+            master_filter: None,
             layers: vec![
                 AudioLayer {
                     synthesis: Synthesis::Oscillator {
                         waveform: Waveform::Sine,
                         frequency: 440.0,
                         freq_sweep: None,
+                        detune: None,
+                        duty: None,
                     },
                     envelope: Envelope::default(),
                     volume: 0.5,
                     pan: -0.8,
+                    delay: None,
                 },
                 AudioLayer {
                     synthesis: Synthesis::Oscillator {
                         waveform: Waveform::Sine,
                         frequency: 550.0,
                         freq_sweep: None,
+                        detune: None,
+                        duty: None,
                     },
                     envelope: Envelope::default(),
                     volume: 0.5,
                     pan: 0.8,
+                    delay: None,
                 },
             ],
         };
@@ -279,6 +292,7 @@ mod integration_tests {
         let params = AudioSfxLayeredSynthV1Params {
             duration_seconds: 0.5,
             sample_rate: 44100,
+            master_filter: None,
             layers: vec![AudioLayer {
                 synthesis: Synthesis::KarplusStrong {
                     frequency: 220.0,
@@ -293,6 +307,7 @@ mod integration_tests {
                 },
                 volume: 1.0,
                 pan: 0.0,
+                delay: None,
             }],
         };
 
@@ -315,6 +330,7 @@ mod integration_tests {
         let params = AudioSfxLayeredSynthV1Params {
             duration_seconds: 0.3,
             sample_rate: 44100,
+            master_filter: None,
             layers: vec![AudioLayer {
                 synthesis: Synthesis::Additive {
                     base_freq: 440.0,
@@ -323,6 +339,7 @@ mod integration_tests {
                 envelope: Envelope::default(),
                 volume: 0.8,
                 pan: 0.0,
+                delay: None,
             }],
         };
 

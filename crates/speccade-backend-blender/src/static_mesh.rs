@@ -158,14 +158,14 @@ pub fn generate_from_params(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use speccade_spec::recipe::mesh::{MeshPrimitive, UvProjection};
+    use speccade_spec::recipe::mesh::{MeshPrimitive, UvProjection, UvProjectionMethod};
 
     fn create_test_params() -> StaticMeshBlenderPrimitivesV1Params {
         StaticMeshBlenderPrimitivesV1Params {
             base_primitive: MeshPrimitive::Cube,
             dimensions: [1.0, 1.0, 1.0],
             modifiers: vec![],
-            uv_projection: Some(UvProjection::Box),
+            uv_projection: Some(UvProjection::Simple(UvProjectionMethod::Box)),
             material_slots: vec![],
             export: None,
             constraints: Some(MeshConstraints {

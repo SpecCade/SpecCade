@@ -10,7 +10,7 @@ use thiserror::Error;
 
 use speccade_spec::recipe::texture::{
     Texture2dMaterialMapsV1Params, TextureMapType, MaterialType, TextureLayer,
-    NoiseConfig, NoiseAlgorithm,
+    NoiseConfig, NoiseAlgorithm, GradientDirection, StripeDirection,
 };
 
 use crate::color::Color;
@@ -22,7 +22,7 @@ use crate::maps::{
 use crate::noise::{Noise2D, Fbm, PerlinNoise, SimplexNoise, WorleyNoise};
 use crate::pattern::{
     Pattern2D, BrickPattern, WoodGrainPattern,
-    ScratchesPattern, EdgeWearPattern,
+    ScratchesPattern, EdgeWearPattern, StripesPattern, GradientPattern,
 };
 use crate::png::{self, PngConfig, PngError};
 use crate::rng::DeterministicRng;
@@ -380,6 +380,56 @@ fn apply_layer_to_height(
                 }
             }
         }
+        TextureLayer::Gradient { direction, start, end, center, inner, outer, strength, .. } => {
+            let gradient = match direction {
+                GradientDirection::Horizontal => {
+                    let s = start.unwrap_or(0.0);
+                    let e = end.unwrap_or(1.0);
+                    GradientPattern::new_horizontal(width, height, s, e)
+                }
+                GradientDirection::Vertical => {
+                    let s = start.unwrap_or(0.0);
+                    let e = end.unwrap_or(1.0);
+                    GradientPattern::new_vertical(width, height, s, e)
+                }
+                GradientDirection::Radial => {
+                    let c = center.unwrap_or([0.5, 0.5]);
+                    let i = inner.unwrap_or(1.0);
+                    let o = outer.unwrap_or(0.0);
+                    GradientPattern::new_radial(width, height, c, i, o)
+                }
+            };
+
+            for y in 0..height {
+                for x in 0..width {
+                    let gradient_val = gradient.sample(x, y);
+                    let current = height_map.get(x, y);
+                    // Blend gradient with current value
+                    let new_val = current * (1.0 - strength) + gradient_val * strength;
+                    height_map.set(x, y, new_val.clamp(0.0, 1.0));
+                }
+            }
+        }
+        TextureLayer::Stripes { direction, stripe_width, color1, color2, strength, .. } => {
+            let stripes = match direction {
+                StripeDirection::Horizontal => {
+                    StripesPattern::new_horizontal(width, height, *stripe_width, *color1, *color2)
+                }
+                StripeDirection::Vertical => {
+                    StripesPattern::new_vertical(width, height, *stripe_width, *color1, *color2)
+                }
+            };
+
+            for y in 0..height {
+                for x in 0..width {
+                    let stripe_val = stripes.sample(x, y);
+                    let current = height_map.get(x, y);
+                    // Blend stripes with current value
+                    let new_val = current * (1.0 - strength) + stripe_val * strength;
+                    height_map.set(x, y, new_val.clamp(0.0, 1.0));
+                }
+            }
+        }
         _ => {}
     }
 }
@@ -722,8 +772,14 @@ mod tests {
                 metallic: Some(1.0),
             }),
             layers: vec![],
+            palette: None,
+            color_ramp: None,
         }
     }
+
+    // ========================================================================
+    // Determinism Tests
+    // ========================================================================
 
     #[test]
     fn test_generate_material_maps_deterministic() {
@@ -756,6 +812,10 @@ mod tests {
         assert_ne!(hash1, hash2);
     }
 
+    // ========================================================================
+    // Validation Tests
+    // ========================================================================
+
     #[test]
     fn test_generate_material_maps_invalid_resolution() {
         let mut params = make_params();
@@ -780,6 +840,333 @@ mod tests {
         assert!(err.to_string().contains("duplicate"));
     }
 
+    // ========================================================================
+    // Layer Pattern Generation Tests
+    // ========================================================================
+
+    #[test]
+    fn test_layer_noise_pattern_generation() {
+        let mut params = make_params();
+        params.layers = vec![TextureLayer::NoisePattern {
+            noise: NoiseConfig {
+                algorithm: NoiseAlgorithm::Perlin,
+                scale: 0.1,
+                octaves: 4,
+                persistence: 0.5,
+                lacunarity: 2.0,
+            },
+            affects: vec![TextureMapType::Roughness],
+            strength: 0.5,
+        }];
+
+        let result = generate_material_maps(&params, 42).unwrap();
+        assert!(result.maps.contains_key(&TextureMapType::Roughness));
+    }
+
+    #[test]
+    fn test_layer_gradient_horizontal_generation() {
+        let mut params = make_params();
+        params.layers = vec![TextureLayer::Gradient {
+            direction: GradientDirection::Horizontal,
+            start: Some(0.0),
+            end: Some(1.0),
+            center: None,
+            inner: None,
+            outer: None,
+            affects: vec![TextureMapType::Albedo],
+            strength: 0.75,
+        }];
+
+        let result = generate_material_maps(&params, 42).unwrap();
+        assert!(result.maps.contains_key(&TextureMapType::Albedo));
+    }
+
+    #[test]
+    fn test_layer_gradient_vertical_generation() {
+        let mut params = make_params();
+        params.layers = vec![TextureLayer::Gradient {
+            direction: GradientDirection::Vertical,
+            start: Some(0.2),
+            end: Some(0.8),
+            center: None,
+            inner: None,
+            outer: None,
+            affects: vec![TextureMapType::Roughness],
+            strength: 1.0,
+        }];
+
+        let result = generate_material_maps(&params, 42).unwrap();
+        assert!(result.maps.contains_key(&TextureMapType::Roughness));
+    }
+
+    #[test]
+    fn test_layer_gradient_radial_generation() {
+        let mut params = make_params();
+        params.layers = vec![TextureLayer::Gradient {
+            direction: GradientDirection::Radial,
+            start: None,
+            end: None,
+            center: Some([0.5, 0.5]),
+            inner: Some(1.0),
+            outer: Some(0.0),
+            affects: vec![TextureMapType::Albedo],
+            strength: 0.8,
+        }];
+
+        let result = generate_material_maps(&params, 42).unwrap();
+        assert!(result.maps.contains_key(&TextureMapType::Albedo));
+    }
+
+    #[test]
+    fn test_layer_stripes_horizontal_generation() {
+        let mut params = make_params();
+        params.layers = vec![TextureLayer::Stripes {
+            direction: StripeDirection::Horizontal,
+            stripe_width: 4,
+            color1: 0.0,
+            color2: 1.0,
+            affects: vec![TextureMapType::Albedo],
+            strength: 1.0,
+        }];
+
+        let result = generate_material_maps(&params, 42).unwrap();
+        assert!(result.maps.contains_key(&TextureMapType::Albedo));
+    }
+
+    #[test]
+    fn test_layer_stripes_vertical_generation() {
+        let mut params = make_params();
+        params.layers = vec![TextureLayer::Stripes {
+            direction: StripeDirection::Vertical,
+            stripe_width: 8,
+            color1: 0.3,
+            color2: 0.7,
+            affects: vec![TextureMapType::Roughness],
+            strength: 0.5,
+        }];
+
+        let result = generate_material_maps(&params, 42).unwrap();
+        assert!(result.maps.contains_key(&TextureMapType::Roughness));
+    }
+
+    #[test]
+    fn test_layer_scratches_generation() {
+        let mut params = make_params();
+        params.layers = vec![TextureLayer::Scratches {
+            density: 0.2,
+            length_range: [0.1, 0.4],
+            width: 0.002,
+            affects: vec![TextureMapType::Roughness],
+            strength: 0.6,
+        }];
+
+        let result = generate_material_maps(&params, 42).unwrap();
+        assert!(result.maps.contains_key(&TextureMapType::Roughness));
+    }
+
+    #[test]
+    fn test_layer_edge_wear_generation() {
+        let mut params = make_params();
+        params.layers = vec![TextureLayer::EdgeWear {
+            amount: 0.3,
+            affects: vec![TextureMapType::Roughness],
+        }];
+
+        let result = generate_material_maps(&params, 42).unwrap();
+        assert!(result.maps.contains_key(&TextureMapType::Roughness));
+    }
+
+    #[test]
+    fn test_layer_dirt_generation() {
+        let mut params = make_params();
+        params.layers = vec![TextureLayer::Dirt {
+            density: 0.15,
+            color: [0.3, 0.25, 0.2],
+            affects: vec![TextureMapType::Albedo],
+            strength: 0.4,
+        }];
+
+        let result = generate_material_maps(&params, 42).unwrap();
+        assert!(result.maps.contains_key(&TextureMapType::Albedo));
+    }
+
+    #[test]
+    fn test_layer_color_variation_generation() {
+        let mut params = make_params();
+        params.layers = vec![TextureLayer::ColorVariation {
+            hue_range: 10.0,
+            saturation_range: 0.1,
+            value_range: 0.15,
+            noise_scale: 0.05,
+        }];
+
+        let result = generate_material_maps(&params, 42).unwrap();
+        assert!(result.maps.contains_key(&TextureMapType::Albedo));
+    }
+
+    // ========================================================================
+    // Material Type Tests
+    // ========================================================================
+
+    #[test]
+    fn test_material_type_metal_generation() {
+        let mut params = make_params();
+        params.base_material = Some(BaseMaterial {
+            material_type: MaterialType::Metal,
+            base_color: [0.8, 0.8, 0.8],
+            roughness_range: Some([0.2, 0.4]),
+            metallic: Some(1.0),
+        });
+
+        let result = generate_material_maps(&params, 42).unwrap();
+        assert!(result.maps.contains_key(&TextureMapType::Albedo));
+    }
+
+    #[test]
+    fn test_material_type_wood_generation() {
+        let mut params = make_params();
+        params.base_material = Some(BaseMaterial {
+            material_type: MaterialType::Wood,
+            base_color: [0.6, 0.4, 0.2],
+            roughness_range: Some([0.5, 0.8]),
+            metallic: Some(0.0),
+        });
+
+        let result = generate_material_maps(&params, 42).unwrap();
+        assert!(result.maps.contains_key(&TextureMapType::Albedo));
+    }
+
+    #[test]
+    fn test_material_type_brick_generation() {
+        let mut params = make_params();
+        params.base_material = Some(BaseMaterial {
+            material_type: MaterialType::Brick,
+            base_color: [0.7, 0.3, 0.2],
+            roughness_range: Some([0.6, 0.9]),
+            metallic: Some(0.0),
+        });
+
+        let result = generate_material_maps(&params, 42).unwrap();
+        assert!(result.maps.contains_key(&TextureMapType::Albedo));
+    }
+
+    #[test]
+    fn test_all_material_types() {
+        for mat_type in [
+            MaterialType::Metal,
+            MaterialType::Wood,
+            MaterialType::Stone,
+            MaterialType::Fabric,
+            MaterialType::Plastic,
+            MaterialType::Concrete,
+            MaterialType::Brick,
+            MaterialType::Procedural,
+        ] {
+            let mut params = make_params();
+            params.base_material = Some(BaseMaterial {
+                material_type: mat_type,
+                base_color: [0.5, 0.5, 0.5],
+                roughness_range: None,
+                metallic: None,
+            });
+
+            let result = generate_material_maps(&params, 42).unwrap();
+            assert!(result.maps.len() > 0);
+        }
+    }
+
+    // ========================================================================
+    // Noise Algorithm Tests
+    // ========================================================================
+
+    #[test]
+    fn test_noise_algorithm_perlin() {
+        let mut params = make_params();
+        params.layers = vec![TextureLayer::NoisePattern {
+            noise: NoiseConfig {
+                algorithm: NoiseAlgorithm::Perlin,
+                scale: 0.1,
+                octaves: 4,
+                persistence: 0.5,
+                lacunarity: 2.0,
+            },
+            affects: vec![TextureMapType::Roughness],
+            strength: 0.5,
+        }];
+
+        let result = generate_material_maps(&params, 42).unwrap();
+        assert!(result.maps.contains_key(&TextureMapType::Roughness));
+    }
+
+    #[test]
+    fn test_noise_algorithm_simplex() {
+        let mut params = make_params();
+        params.layers = vec![TextureLayer::NoisePattern {
+            noise: NoiseConfig {
+                algorithm: NoiseAlgorithm::Simplex,
+                scale: 0.05,
+                octaves: 6,
+                persistence: 0.6,
+                lacunarity: 2.2,
+            },
+            affects: vec![TextureMapType::Roughness],
+            strength: 0.7,
+        }];
+
+        let result = generate_material_maps(&params, 42).unwrap();
+        assert!(result.maps.contains_key(&TextureMapType::Roughness));
+    }
+
+    #[test]
+    fn test_noise_algorithm_worley() {
+        let mut params = make_params();
+        params.layers = vec![TextureLayer::NoisePattern {
+            noise: NoiseConfig {
+                algorithm: NoiseAlgorithm::Worley,
+                scale: 0.02,
+                octaves: 3,
+                persistence: 0.5,
+                lacunarity: 2.0,
+            },
+            affects: vec![TextureMapType::Roughness],
+            strength: 0.4,
+        }];
+
+        let result = generate_material_maps(&params, 42).unwrap();
+        assert!(result.maps.contains_key(&TextureMapType::Roughness));
+    }
+
+    #[test]
+    fn test_noise_algorithm_all() {
+        for algo in [
+            NoiseAlgorithm::Perlin,
+            NoiseAlgorithm::Simplex,
+            NoiseAlgorithm::Worley,
+            NoiseAlgorithm::Value,
+            NoiseAlgorithm::Fbm,
+        ] {
+            let mut params = make_params();
+            params.layers = vec![TextureLayer::NoisePattern {
+                noise: NoiseConfig {
+                    algorithm: algo,
+                    scale: 0.1,
+                    octaves: 4,
+                    persistence: 0.5,
+                    lacunarity: 2.0,
+                },
+                affects: vec![TextureMapType::Roughness],
+                strength: 0.5,
+            }];
+
+            let result = generate_material_maps(&params, 42).unwrap();
+            assert!(result.maps.len() > 0);
+        }
+    }
+
+    // ========================================================================
+    // File I/O Tests
+    // ========================================================================
+
     #[test]
     fn test_save_texture_result_writes_files() {
         let params = make_params();
@@ -795,5 +1182,94 @@ mod tests {
         for path in paths.values() {
             assert!(std::path::Path::new(path).exists());
         }
+    }
+
+    #[test]
+    fn test_save_all_map_types() {
+        let mut params = make_params();
+        params.maps = vec![
+            TextureMapType::Albedo,
+            TextureMapType::Normal,
+            TextureMapType::Roughness,
+            TextureMapType::Metallic,
+            TextureMapType::Ao,
+            TextureMapType::Emissive,
+            TextureMapType::Height,
+        ];
+
+        let result = generate_material_maps(&params, 42).unwrap();
+        let tmp = tempfile::tempdir().unwrap();
+        let paths = save_texture_result(&result, tmp.path(), "test").unwrap();
+
+        assert_eq!(paths.len(), 7);
+        for map_type in params.maps {
+            assert!(paths.contains_key(&map_type));
+        }
+    }
+
+    // ========================================================================
+    // Multi-Layer Tests
+    // ========================================================================
+
+    #[test]
+    fn test_multiple_layers_combined() {
+        let mut params = make_params();
+        params.layers = vec![
+            TextureLayer::NoisePattern {
+                noise: NoiseConfig {
+                    algorithm: NoiseAlgorithm::Perlin,
+                    scale: 0.1,
+                    octaves: 4,
+                    persistence: 0.5,
+                    lacunarity: 2.0,
+                },
+                affects: vec![TextureMapType::Roughness],
+                strength: 0.3,
+            },
+            TextureLayer::Scratches {
+                density: 0.1,
+                length_range: [0.1, 0.3],
+                width: 0.001,
+                affects: vec![TextureMapType::Roughness],
+                strength: 0.5,
+            },
+            TextureLayer::EdgeWear {
+                amount: 0.2,
+                affects: vec![TextureMapType::Roughness],
+            },
+        ];
+
+        let result = generate_material_maps(&params, 42).unwrap();
+        assert!(result.maps.contains_key(&TextureMapType::Roughness));
+    }
+
+    // ========================================================================
+    // Palette and Color Ramp Tests
+    // ========================================================================
+
+    #[test]
+    fn test_palette_specified() {
+        let mut params = make_params();
+        params.palette = Some(vec![
+            "#FF0000".to_string(),
+            "#00FF00".to_string(),
+            "#0000FF".to_string(),
+        ]);
+
+        let result = generate_material_maps(&params, 42).unwrap();
+        assert!(result.maps.len() > 0);
+    }
+
+    #[test]
+    fn test_color_ramp_specified() {
+        let mut params = make_params();
+        params.color_ramp = Some(vec![
+            "#000000".to_string(),
+            "#808080".to_string(),
+            "#FFFFFF".to_string(),
+        ]);
+
+        let result = generate_material_maps(&params, 42).unwrap();
+        assert!(result.maps.len() > 0);
     }
 }

@@ -1,7 +1,9 @@
 //! Simple test to verify instrument generation works.
 
-use speccade_backend_audio::generate_instrument;
-use speccade_spec::recipe::audio_instrument::{AudioInstrumentSynthPatchV1Params, NoteSpec};
+use speccade_backend_audio::instrument::generate_instrument;
+use speccade_spec::recipe::audio_instrument::{
+    AudioInstrumentSynthPatchV1Params, InstrumentSynthesis, NoteSpec,
+};
 use speccade_spec::recipe::audio_sfx::{Envelope, Synthesis, Waveform};
 
 fn main() {
@@ -11,10 +13,14 @@ fn main() {
     let params = AudioInstrumentSynthPatchV1Params {
         note_duration_seconds: 1.0,
         sample_rate: 44100,
-        synthesis: Synthesis::Oscillator {
-            waveform: Waveform::Sine,
-            frequency: 440.0, // Will be overridden by note
-            freq_sweep: None,
+        synthesis: InstrumentSynthesis::Simple {
+            synthesis: Synthesis::Oscillator {
+                waveform: Waveform::Sine,
+                frequency: 440.0, // Will be overridden by note
+                freq_sweep: None,
+                detune: None,
+                duty: None,
+            },
         },
         envelope: Envelope {
             attack: 0.01,
@@ -22,6 +28,7 @@ fn main() {
             sustain: 0.7,
             release: 0.2,
         },
+        pitch_envelope: None,
         notes: Some(vec![NoteSpec::MidiNote(69)]), // A4
         generate_loop_points: true,
     };

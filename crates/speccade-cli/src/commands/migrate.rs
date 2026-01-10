@@ -13,6 +13,72 @@ use walkdir::WalkDir;
 
 use speccade_spec::{AssetType, OutputFormat, OutputKind, OutputSpec, Spec};
 
+use crate::parity_data::{self, KeyStatus};
+
+/// Migration key status for classification
+/// Maps to parity_data::KeyStatus but adds Unknown for keys not in parity matrix
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum MigrationKeyStatus {
+    Implemented,
+    Partial,
+    NotImplemented,
+    Deprecated,
+    Unknown,
+}
+
+impl From<KeyStatus> for MigrationKeyStatus {
+    fn from(status: KeyStatus) -> Self {
+        match status {
+            KeyStatus::Implemented => MigrationKeyStatus::Implemented,
+            KeyStatus::Partial => MigrationKeyStatus::Partial,
+            KeyStatus::NotImplemented => MigrationKeyStatus::NotImplemented,
+            KeyStatus::Deprecated => MigrationKeyStatus::Deprecated,
+        }
+    }
+}
+
+impl std::fmt::Display for MigrationKeyStatus {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            MigrationKeyStatus::Implemented => write!(f, "Implemented"),
+            MigrationKeyStatus::Partial => write!(f, "Partial"),
+            MigrationKeyStatus::NotImplemented => write!(f, "NotImplemented"),
+            MigrationKeyStatus::Deprecated => write!(f, "Deprecated"),
+            MigrationKeyStatus::Unknown => write!(f, "Unknown"),
+        }
+    }
+}
+
+/// Key classification results for a migrated file
+#[derive(Debug, Default, Clone)]
+struct KeyClassification {
+    implemented: usize,
+    partial: usize,
+    not_implemented: usize,
+    deprecated: usize,
+    unknown: usize,
+    /// Details for each key: (key_name, status)
+    key_details: Vec<(String, MigrationKeyStatus)>,
+}
+
+impl KeyClassification {
+    /// Total number of keys used (excluding deprecated)
+    fn total_used(&self) -> usize {
+        self.implemented + self.partial + self.not_implemented + self.unknown
+    }
+
+    /// Compute gap score: (implemented + 0.5*partial) / (total_used)
+    /// Returns None if total_used is 0
+    fn gap_score(&self) -> Option<f64> {
+        let total = self.total_used();
+        if total == 0 {
+            return None;
+        }
+        let score = (self.implemented as f64 + 0.5 * self.partial as f64) / total as f64;
+        Some(score)
+    }
+}
+
 /// Migration report entry
 #[derive(Debug)]
 struct MigrationEntry {
@@ -21,6 +87,8 @@ struct MigrationEntry {
     success: bool,
     warnings: Vec<String>,
     error: Option<String>,
+    /// Key classification for parity analysis
+    key_classification: KeyClassification,
 }
 
 /// Legacy spec data extracted from .spec.py
@@ -104,6 +172,7 @@ pub fn run(project_path: &str, allow_exec_specs: bool) -> Result<ExitCode> {
                 success: false,
                 warnings: Vec::new(),
                 error: Some(e.to_string()),
+                key_classification: KeyClassification::default(),
             },
         };
 
@@ -131,6 +200,327 @@ pub fn run(project_path: &str, allow_exec_specs: bool) -> Result<ExitCode> {
     } else {
         Ok(ExitCode::from(1))
     }
+}
+
+/// Audit result for a single spec file
+#[derive(Debug)]
+struct AuditEntry {
+    source_path: PathBuf,
+    success: bool,
+    error: Option<String>,
+    key_classification: KeyClassification,
+}
+
+/// Run the audit command (--audit mode)
+///
+/// Scans specs, parses them, collects legacy keys, and reports aggregate completeness.
+///
+/// # Arguments
+/// * `project_path` - Path to the project directory containing legacy specs
+/// * `allow_exec_specs` - Whether to allow Python execution for parsing
+/// * `threshold` - Minimum completeness threshold (0.0-1.0)
+///
+/// # Returns
+/// Exit code: 0 if completeness >= threshold, 1 otherwise
+pub fn run_audit(project_path: &str, allow_exec_specs: bool, threshold: f64) -> Result<ExitCode> {
+    println!(
+        "{} {}",
+        "Audit project:".cyan().bold(),
+        project_path
+    );
+    println!(
+        "{} {:.0}%",
+        "Threshold:".cyan(),
+        threshold * 100.0
+    );
+
+    if allow_exec_specs {
+        println!(
+            "{} {}",
+            "WARNING:".yellow().bold(),
+            "Python execution enabled. Only use with trusted files!".yellow()
+        );
+    }
+
+    // Check if project path exists
+    let path = Path::new(project_path);
+    if !path.exists() {
+        bail!("Project directory does not exist: {}", project_path);
+    }
+
+    if !path.is_dir() {
+        bail!("Path is not a directory: {}", project_path);
+    }
+
+    // Find legacy specs
+    let specs_dir = path.join(".studio").join("specs");
+    if !specs_dir.exists() {
+        bail!(
+            "No .studio/specs directory found in project: {}",
+            project_path
+        );
+    }
+
+    println!(
+        "\n{} {}",
+        "Scanning:".cyan(),
+        specs_dir.display()
+    );
+
+    let spec_files = find_legacy_specs(&specs_dir)?;
+
+    if spec_files.is_empty() {
+        println!("{} No legacy .spec.py files found.", "INFO".yellow().bold());
+        return Ok(ExitCode::SUCCESS);
+    }
+
+    println!(
+        "{} {} legacy spec files found\n",
+        "Found:".cyan(),
+        spec_files.len()
+    );
+
+    // Audit each spec (parse and classify keys, but don't migrate)
+    let mut entries = Vec::new();
+    let mut parse_errors = 0;
+
+    for spec_file in &spec_files {
+        let entry = match audit_spec(spec_file, allow_exec_specs) {
+            Ok(entry) => entry,
+            Err(e) => {
+                parse_errors += 1;
+                AuditEntry {
+                    source_path: spec_file.to_path_buf(),
+                    success: false,
+                    error: Some(e.to_string()),
+                    key_classification: KeyClassification::default(),
+                }
+            }
+        };
+
+        // Print progress
+        if entry.success {
+            print!("{} ", ".".dimmed());
+        } else {
+            print!("{} ", "!".red());
+        }
+
+        entries.push(entry);
+    }
+
+    println!("\n");
+
+    // Generate audit report
+    let completeness = print_audit_report(&entries, threshold);
+
+    // Return appropriate exit code
+    if parse_errors > 0 {
+        // Hard failure: I/O or parse errors
+        Ok(ExitCode::from(1))
+    } else if completeness >= threshold {
+        Ok(ExitCode::SUCCESS)
+    } else {
+        Ok(ExitCode::from(1))
+    }
+}
+
+/// Audit a single spec file (parse and classify keys without migrating)
+fn audit_spec(spec_file: &Path, allow_exec: bool) -> Result<AuditEntry> {
+    // Parse the legacy spec
+    let legacy = if allow_exec {
+        parse_legacy_spec_exec(spec_file)?
+    } else {
+        parse_legacy_spec_static(spec_file)?
+    };
+
+    // Classify legacy keys against parity matrix
+    let key_classification = classify_legacy_keys(&legacy);
+
+    Ok(AuditEntry {
+        source_path: spec_file.to_path_buf(),
+        success: true,
+        error: None,
+        key_classification,
+    })
+}
+
+/// Print audit report and return overall completeness score
+fn print_audit_report(entries: &[AuditEntry], threshold: f64) -> f64 {
+    let total = entries.len();
+    let success = entries.iter().filter(|e| e.success).count();
+    let failed = entries.iter().filter(|e| !e.success).count();
+
+    println!("{}", "Audit Report".cyan().bold());
+    println!("{}", "=".repeat(60).dimmed());
+    println!();
+    println!("{:20} {}", "Total files:", total);
+    println!("{:20} {}", "Parsed:", format!("{}", success).green());
+    println!("{:20} {}", "Failed:", format!("{}", failed).red());
+    println!();
+
+    // Collect all keys across all specs for aggregate analysis
+    let successful_entries: Vec<_> = entries.iter().filter(|e| e.success).collect();
+
+    if successful_entries.is_empty() {
+        println!("{}", "No specs parsed successfully.".red());
+        return 0.0;
+    }
+
+    // Compute aggregate key classification
+    let mut agg = KeyClassification::default();
+    // Track missing keys with frequency: (section, key) -> count
+    let mut missing_keys: HashMap<(String, String), usize> = HashMap::new();
+
+    for entry in &successful_entries {
+        let kc = &entry.key_classification;
+        agg.implemented += kc.implemented;
+        agg.partial += kc.partial;
+        agg.not_implemented += kc.not_implemented;
+        agg.deprecated += kc.deprecated;
+        agg.unknown += kc.unknown;
+
+        // Collect missing keys (not_implemented and unknown)
+        for (key, status) in &kc.key_details {
+            if matches!(status, MigrationKeyStatus::NotImplemented | MigrationKeyStatus::Unknown) {
+                // Get section from the entry path
+                let section = determine_category(&entry.source_path)
+                    .map(|c| category_to_parity_section(&c).to_string())
+                    .unwrap_or_else(|_| "unknown".to_string());
+
+                *missing_keys.entry((section, key.clone())).or_insert(0) += 1;
+            }
+        }
+    }
+
+    // Print aggregate classification
+    println!("{}", "Aggregate Key Classification:".cyan().bold());
+    println!("{}", "-".repeat(60).dimmed());
+    println!(
+        "{:20} {} ({})",
+        "Implemented:",
+        format!("{}", agg.implemented).green(),
+        "fully supported".green()
+    );
+    println!(
+        "{:20} {} ({})",
+        "Partial:",
+        format!("{}", agg.partial).yellow(),
+        "some features missing".yellow()
+    );
+    println!(
+        "{:20} {} ({})",
+        "Not Implemented:",
+        format!("{}", agg.not_implemented).red(),
+        "not yet supported".red()
+    );
+    println!(
+        "{:20} {} ({})",
+        "Unknown:",
+        format!("{}", agg.unknown).dimmed(),
+        "not in parity matrix".dimmed()
+    );
+    if agg.deprecated > 0 {
+        println!(
+            "{:20} {} ({})",
+            "Deprecated:",
+            format!("{}", agg.deprecated).dimmed(),
+            "legacy keys, ignored".dimmed()
+        );
+    }
+    println!();
+
+    // Compute overall completeness score (gap score)
+    let completeness = agg.gap_score().unwrap_or(0.0);
+    let completeness_percent = completeness * 100.0;
+    let threshold_percent = threshold * 100.0;
+
+    let completeness_str = format!("{:.1}%", completeness_percent);
+    let completeness_colored = if completeness >= threshold {
+        completeness_str.green()
+    } else if completeness >= threshold * 0.8 {
+        completeness_str.yellow()
+    } else {
+        completeness_str.red()
+    };
+
+    println!(
+        "{:20} {} (threshold: {:.0}%)",
+        "Completeness:",
+        completeness_colored,
+        threshold_percent
+    );
+    println!(
+        "{:20} {}",
+        "",
+        "(implemented + 0.5*partial) / total_used".dimmed()
+    );
+    println!();
+
+    // Print top missing keys sorted by frequency
+    if !missing_keys.is_empty() {
+        println!("{}", "Top Missing Keys:".cyan().bold());
+        println!("{}", "-".repeat(60).dimmed());
+
+        // Sort by frequency (descending), then by key name
+        let mut sorted_missing: Vec<_> = missing_keys.iter().collect();
+        sorted_missing.sort_by(|a, b| {
+            b.1.cmp(a.1).then_with(|| a.0.cmp(b.0))
+        });
+
+        // Show top 10 missing keys
+        let display_count = sorted_missing.len().min(10);
+        for ((section, key), count) in sorted_missing.iter().take(display_count) {
+            let qualified = format!("{}::{}", section, key);
+            println!(
+                "  {:>4}x  {}",
+                count,
+                qualified.red()
+            );
+        }
+
+        if sorted_missing.len() > display_count {
+            println!(
+                "  {} {} more missing keys...",
+                "...".dimmed(),
+                sorted_missing.len() - display_count
+            );
+        }
+        println!();
+    }
+
+    // Print parse errors if any
+    if failed > 0 {
+        println!("{}", "Parse Errors:".red().bold());
+        for entry in entries {
+            if !entry.success {
+                println!("  {} {}", "!".red(), entry.source_path.display().to_string().dimmed());
+                if let Some(ref error) = entry.error {
+                    println!("    {}", error);
+                }
+            }
+        }
+        println!();
+    }
+
+    // Print result summary
+    println!("{}", "Result:".cyan().bold());
+    if completeness >= threshold {
+        println!(
+            "  {} Completeness {:.1}% meets threshold {:.0}%",
+            "PASS".green().bold(),
+            completeness_percent,
+            threshold_percent
+        );
+    } else {
+        println!(
+            "  {} Completeness {:.1}% below threshold {:.0}%",
+            "FAIL".red().bold(),
+            completeness_percent,
+            threshold_percent
+        );
+    }
+
+    completeness
 }
 
 /// Find all legacy .spec.py files in the specs directory
@@ -169,6 +559,9 @@ fn migrate_spec(
     } else {
         parse_legacy_spec_static(spec_file)?
     };
+
+    // Classify legacy keys against parity matrix
+    let key_classification = classify_legacy_keys(&legacy);
 
     // Determine asset type and recipe kind from category
     let (asset_type, recipe_kind) = map_category_to_type(&legacy.category)?;
@@ -244,6 +637,7 @@ fn migrate_spec(
         success: true,
         warnings,
         error: None,
+        key_classification,
     })
 }
 
@@ -332,21 +726,26 @@ print(json.dumps({}))
 }
 
 /// Parse a Python dict literal to JSON (simple cases only)
+///
+/// This is a simplified parser that handles basic Python dict literals:
+/// - Strings (single-quoted converted to double-quoted)
+/// - Numbers (integers and floats)
+/// - Booleans (True/False -> true/false)
+/// - None -> null
+/// - Lists and nested dicts
+///
+/// Note: This parser has limitations and may fail on complex cases like:
+/// - Strings containing escaped quotes
+/// - Multi-line strings
+/// - Python expressions or function calls
 fn parse_python_dict_literal(dict_str: &str) -> Result<HashMap<String, serde_json::Value>> {
-    // This is a simplified parser for basic Python dict literals
-    // It handles: strings, numbers, bools, None, lists, and nested dicts
-
-    // First, make some simple replacements to convert to JSON
     let mut json_str = dict_str.to_string();
 
-    // Replace None with null
-    json_str = Regex::new(r"\bNone\b")?.replace_all(&json_str, "null").to_string();
-
-    // Replace True with true
-    json_str = Regex::new(r"\bTrue\b")?.replace_all(&json_str, "true").to_string();
-
-    // Replace False with false
-    json_str = Regex::new(r"\bFalse\b")?.replace_all(&json_str, "false").to_string();
+    // Replace Python keywords with JSON equivalents
+    // Note: These regexes are simple and known-valid patterns, unwrap is safe
+    json_str = Regex::new(r"\bNone\b").unwrap().replace_all(&json_str, "null").to_string();
+    json_str = Regex::new(r"\bTrue\b").unwrap().replace_all(&json_str, "true").to_string();
+    json_str = Regex::new(r"\bFalse\b").unwrap().replace_all(&json_str, "false").to_string();
 
     // Replace single quotes with double quotes (simple approach)
     // This won't handle escaped quotes properly, but works for most cases
@@ -412,6 +811,87 @@ fn map_category_to_type(category: &str) -> Result<(AssetType, String)> {
         "animations" => Ok((AssetType::SkeletalAnimation, "skeletal_animation.blender_clip_v1".to_string())),
         _ => bail!("Unknown category: {}", category),
     }
+}
+
+/// Map category to parity matrix section name
+/// The parity matrix uses section names like "SOUND (audio_sfx)"
+fn category_to_parity_section(category: &str) -> &'static str {
+    match category {
+        "sounds" => "SOUND (audio_sfx)",
+        "instruments" => "INSTRUMENT (audio_instrument)",
+        "music" => "SONG (music)",
+        "textures" => "TEXTURE (texture_2d)",
+        "normals" => "NORMAL (normal_map)",
+        "meshes" => "MESH (static_mesh)",
+        "characters" => "SPEC/CHARACTER (skeletal_mesh)",
+        "animations" => "ANIMATION (skeletal_animation)",
+        _ => "",
+    }
+}
+
+/// Classify a single legacy key against the parity matrix
+/// Returns the MigrationKeyStatus for the key
+fn classify_key(section: &str, key: &str) -> MigrationKeyStatus {
+    // Try "Top-Level Keys" table first (most common)
+    if let Some(info) = parity_data::find(section, "Top-Level Keys", key) {
+        return MigrationKeyStatus::from(info.status);
+    }
+
+    // Try other common tables based on section
+    let tables_to_check: &[&str] = match section {
+        "SOUND (audio_sfx)" => &["Layer Keys", "Envelope Keys (ADSR)", "Filter Keys"],
+        "INSTRUMENT (audio_instrument)" => &["Synthesis Keys", "Oscillator Keys (Subtractive)", "Output Keys"],
+        "SONG (music)" => &["Instrument Keys (inline or ref)", "Pattern Keys", "Note Keys (within pattern)", "Arrangement Entry Keys", "Automation Keys", "IT Options Keys"],
+        "TEXTURE (texture_2d)" => &["Layer Keys", "Solid Layer", "Noise Layer", "Gradient Layer", "Checkerboard Layer", "Stripes Layer", "Wood Grain Layer", "Brick Layer"],
+        "NORMAL (normal_map)" => &["Processing Keys", "Pattern Keys", "Bricks Pattern", "Tiles Pattern", "Hexagons Pattern", "Noise Pattern", "Scratches Pattern", "Rivets Pattern", "Weave Pattern"],
+        "MESH (static_mesh)" => &["Cube", "Cylinder", "Sphere (UV)", "Icosphere", "Cone", "Torus", "Modifier Keys", "Bevel Modifier", "Decimate Modifier", "UV Keys", "Export Keys"],
+        "SPEC/CHARACTER (skeletal_mesh)" => &["Skeleton Bone Keys", "Part Keys", "Step Keys", "Instance Keys", "Texturing Keys"],
+        "ANIMATION (skeletal_animation)" => &["Pose Keys (per bone)", "Phase Keys", "IK Target Keyframe Keys", "Procedural Layer Keys", "Rig Setup Keys", "IK Chain Keys", "Constraint Keys", "Twist Bone Keys", "Bake Settings Keys", "Animator Rig Config Keys", "Conventions Keys"],
+        _ => &[],
+    };
+
+    for table in tables_to_check {
+        if let Some(info) = parity_data::find(section, table, key) {
+            return MigrationKeyStatus::from(info.status);
+        }
+    }
+
+    // Key not found in parity matrix
+    MigrationKeyStatus::Unknown
+}
+
+/// Classify all top-level keys in a legacy spec dict
+/// Returns a KeyClassification with counts and details
+fn classify_legacy_keys(legacy: &LegacySpec) -> KeyClassification {
+    let section = category_to_parity_section(&legacy.category);
+    let mut classification = KeyClassification::default();
+
+    for key in legacy.data.keys() {
+        let status = classify_key(section, key);
+        classification.key_details.push((key.clone(), status));
+
+        match status {
+            MigrationKeyStatus::Implemented => classification.implemented += 1,
+            MigrationKeyStatus::Partial => classification.partial += 1,
+            MigrationKeyStatus::NotImplemented => classification.not_implemented += 1,
+            MigrationKeyStatus::Deprecated => classification.deprecated += 1,
+            MigrationKeyStatus::Unknown => classification.unknown += 1,
+        }
+    }
+
+    // Sort key_details by status (for consistent output)
+    classification.key_details.sort_by(|a, b| {
+        let status_order = |s: &MigrationKeyStatus| match s {
+            MigrationKeyStatus::Implemented => 0,
+            MigrationKeyStatus::Partial => 1,
+            MigrationKeyStatus::NotImplemented => 2,
+            MigrationKeyStatus::Unknown => 3,
+            MigrationKeyStatus::Deprecated => 4,
+        };
+        status_order(&a.1).cmp(&status_order(&b.1)).then(a.0.cmp(&b.0))
+    });
+
+    classification
 }
 
 /// Extract asset_id from filename
@@ -550,13 +1030,138 @@ fn print_migration_report(entries: &[MigrationEntry]) {
     let failed = entries.iter().filter(|e| !e.success).count();
 
     println!("{}", "Migration Report".cyan().bold());
-    println!("{}", "=".repeat(50).dimmed());
+    println!("{}", "=".repeat(60).dimmed());
     println!();
     println!("{:20} {}", "Total files:", total);
     println!("{:20} {}", "Converted:", format!("{}", success).green());
     println!("{:20} {}", "With warnings:", format!("{}", with_warnings).yellow());
     println!("{:20} {}", "Failed:", format!("{}", failed).red());
     println!();
+
+    // Print per-file key classification
+    let successful_entries: Vec<_> = entries.iter().filter(|e| e.success).collect();
+    if !successful_entries.is_empty() {
+        println!("{}", "Key Classification (per file):".cyan().bold());
+        println!("{}", "-".repeat(60).dimmed());
+        println!(
+            "{:<40} {:>4} {:>4} {:>4} {:>4} {:>7}",
+            "File", "Impl", "Part", "Miss", "Unkn", "Gap"
+        );
+        println!("{}", "-".repeat(60).dimmed());
+
+        for entry in &successful_entries {
+            let kc = &entry.key_classification;
+            let filename = entry
+                .source_path
+                .file_name()
+                .map(|s| s.to_string_lossy().to_string())
+                .unwrap_or_else(|| "?".to_string());
+            let truncated = if filename.len() > 38 {
+                format!("{}...", &filename[..35])
+            } else {
+                filename
+            };
+
+            let gap_str = match kc.gap_score() {
+                Some(score) => format!("{:.0}%", score * 100.0),
+                None => "-".to_string(),
+            };
+
+            // Color the gap score based on value
+            let gap_colored = match kc.gap_score() {
+                Some(score) if score >= 0.8 => gap_str.green().to_string(),
+                Some(score) if score >= 0.5 => gap_str.yellow().to_string(),
+                Some(_) => gap_str.red().to_string(),
+                None => gap_str.dimmed().to_string(),
+            };
+
+            println!(
+                "{:<40} {:>4} {:>4} {:>4} {:>4} {:>7}",
+                truncated.dimmed(),
+                format!("{}", kc.implemented).green(),
+                format!("{}", kc.partial).yellow(),
+                format!("{}", kc.not_implemented).red(),
+                format!("{}", kc.unknown).dimmed(),
+                gap_colored
+            );
+        }
+        println!();
+
+        // Compute and print overall aggregated stats
+        let mut agg = KeyClassification::default();
+        for entry in &successful_entries {
+            let kc = &entry.key_classification;
+            agg.implemented += kc.implemented;
+            agg.partial += kc.partial;
+            agg.not_implemented += kc.not_implemented;
+            agg.deprecated += kc.deprecated;
+            agg.unknown += kc.unknown;
+        }
+
+        println!("{}", "Overall Key Classification:".cyan().bold());
+        println!("{}", "-".repeat(60).dimmed());
+        println!(
+            "{:20} {} ({})",
+            "Implemented:",
+            format!("{}", agg.implemented).green(),
+            "fully supported".green()
+        );
+        println!(
+            "{:20} {} ({})",
+            "Partial:",
+            format!("{}", agg.partial).yellow(),
+            "some features missing".yellow()
+        );
+        println!(
+            "{:20} {} ({})",
+            "Not Implemented:",
+            format!("{}", agg.not_implemented).red(),
+            "not yet supported".red()
+        );
+        println!(
+            "{:20} {} ({})",
+            "Unknown:",
+            format!("{}", agg.unknown).dimmed(),
+            "not in parity matrix".dimmed()
+        );
+        if agg.deprecated > 0 {
+            println!(
+                "{:20} {} ({})",
+                "Deprecated:",
+                format!("{}", agg.deprecated).dimmed(),
+                "legacy keys, ignored".dimmed()
+            );
+        }
+        println!();
+
+        // Overall gap score
+        if let Some(gap) = agg.gap_score() {
+            let gap_percent = gap * 100.0;
+            let gap_str = format!("{:.1}%", gap_percent);
+            let gap_colored = if gap_percent >= 80.0 {
+                gap_str.green()
+            } else if gap_percent >= 50.0 {
+                gap_str.yellow()
+            } else {
+                gap_str.red()
+            };
+            println!(
+                "{:20} {} ({} keys used, {} deprecated)",
+                "Overall Gap Score:",
+                gap_colored,
+                agg.total_used(),
+                agg.deprecated
+            );
+            println!(
+                "{:20} {}",
+                "",
+                "(implemented + 0.5*partial) / total_used".dimmed()
+            );
+        } else {
+            println!("{:20} {}", "Overall Gap Score:", "-".dimmed());
+        }
+        println!();
+    }
 
     if with_warnings > 0 {
         println!("{}", "Warnings:".yellow().bold());
@@ -687,5 +1292,208 @@ mod tests {
         let outputs = generate_outputs("wall-01", &AssetType::Texture2d, "normals").unwrap();
         assert_eq!(outputs.len(), 1);
         assert!(outputs[0].path.ends_with("_normal.png"));
+    }
+
+    #[test]
+    fn test_category_to_parity_section() {
+        assert_eq!(category_to_parity_section("sounds"), "SOUND (audio_sfx)");
+        assert_eq!(category_to_parity_section("instruments"), "INSTRUMENT (audio_instrument)");
+        assert_eq!(category_to_parity_section("music"), "SONG (music)");
+        assert_eq!(category_to_parity_section("textures"), "TEXTURE (texture_2d)");
+        assert_eq!(category_to_parity_section("normals"), "NORMAL (normal_map)");
+        assert_eq!(category_to_parity_section("meshes"), "MESH (static_mesh)");
+        assert_eq!(category_to_parity_section("characters"), "SPEC/CHARACTER (skeletal_mesh)");
+        assert_eq!(category_to_parity_section("animations"), "ANIMATION (skeletal_animation)");
+        assert_eq!(category_to_parity_section("unknown"), "");
+    }
+
+    #[test]
+    fn test_classify_key_known_implemented() {
+        // "name" is a well-known implemented key in SOUND section
+        let status = classify_key("SOUND (audio_sfx)", "name");
+        assert_eq!(status, MigrationKeyStatus::Implemented);
+    }
+
+    #[test]
+    fn test_classify_key_unknown() {
+        // A completely unknown key should return Unknown
+        let status = classify_key("SOUND (audio_sfx)", "totally_fake_key_that_doesnt_exist");
+        assert_eq!(status, MigrationKeyStatus::Unknown);
+    }
+
+    #[test]
+    fn test_classify_legacy_keys() {
+        let legacy = LegacySpec {
+            dict_name: "SOUND".to_string(),
+            category: "sounds".to_string(),
+            data: HashMap::from([
+                ("name".to_string(), serde_json::json!("test")),
+                ("duration".to_string(), serde_json::json!(1.0)),
+                ("sample_rate".to_string(), serde_json::json!(22050)),
+                ("fake_key".to_string(), serde_json::json!("unknown")),
+            ]),
+        };
+
+        let classification = classify_legacy_keys(&legacy);
+
+        // name, duration, sample_rate are all implemented in SOUND
+        assert!(classification.implemented >= 3);
+        // fake_key should be unknown
+        assert!(classification.unknown >= 1);
+        // Total should match
+        assert_eq!(
+            classification.implemented + classification.partial + classification.not_implemented + classification.deprecated + classification.unknown,
+            4
+        );
+    }
+
+    #[test]
+    fn test_key_classification_gap_score() {
+        // Test gap score calculation
+        let mut kc = KeyClassification::default();
+        kc.implemented = 8;
+        kc.partial = 2;
+        kc.not_implemented = 0;
+        kc.unknown = 0;
+
+        // (8 + 0.5*2) / 10 = 9/10 = 0.9
+        let gap = kc.gap_score().unwrap();
+        assert!((gap - 0.9).abs() < 0.001);
+
+        // Test with mixed values
+        let mut kc2 = KeyClassification::default();
+        kc2.implemented = 4;
+        kc2.partial = 2;
+        kc2.not_implemented = 2;
+        kc2.unknown = 2;
+
+        // (4 + 0.5*2) / (4+2+2+2) = 5/10 = 0.5
+        let gap2 = kc2.gap_score().unwrap();
+        assert!((gap2 - 0.5).abs() < 0.001);
+
+        // Deprecated keys are excluded from denominator
+        kc2.deprecated = 5;
+        // Still (4 + 0.5*2) / (4+2+2+2) = 5/10 = 0.5
+        let gap3 = kc2.gap_score().unwrap();
+        assert!((gap3 - 0.5).abs() < 0.001);
+    }
+
+    #[test]
+    fn test_key_classification_total_used() {
+        let mut kc = KeyClassification::default();
+        kc.implemented = 5;
+        kc.partial = 3;
+        kc.not_implemented = 2;
+        kc.unknown = 1;
+        kc.deprecated = 4;
+
+        // total_used excludes deprecated
+        assert_eq!(kc.total_used(), 5 + 3 + 2 + 1);
+    }
+
+    #[test]
+    fn test_key_classification_gap_score_empty() {
+        let kc = KeyClassification::default();
+        assert!(kc.gap_score().is_none());
+    }
+
+    #[test]
+    fn test_migration_key_status_from_key_status() {
+        assert_eq!(MigrationKeyStatus::from(KeyStatus::Implemented), MigrationKeyStatus::Implemented);
+        assert_eq!(MigrationKeyStatus::from(KeyStatus::Partial), MigrationKeyStatus::Partial);
+        assert_eq!(MigrationKeyStatus::from(KeyStatus::NotImplemented), MigrationKeyStatus::NotImplemented);
+        assert_eq!(MigrationKeyStatus::from(KeyStatus::Deprecated), MigrationKeyStatus::Deprecated);
+    }
+
+    #[test]
+    fn test_migration_key_status_display() {
+        assert_eq!(format!("{}", MigrationKeyStatus::Implemented), "Implemented");
+        assert_eq!(format!("{}", MigrationKeyStatus::Partial), "Partial");
+        assert_eq!(format!("{}", MigrationKeyStatus::NotImplemented), "NotImplemented");
+        assert_eq!(format!("{}", MigrationKeyStatus::Deprecated), "Deprecated");
+        assert_eq!(format!("{}", MigrationKeyStatus::Unknown), "Unknown");
+    }
+
+    #[test]
+    fn test_audit_entry_success() {
+        let entry = AuditEntry {
+            source_path: PathBuf::from("test.spec.py"),
+            success: true,
+            error: None,
+            key_classification: KeyClassification::default(),
+        };
+        assert!(entry.success);
+        assert!(entry.error.is_none());
+    }
+
+    #[test]
+    fn test_audit_entry_failure() {
+        let entry = AuditEntry {
+            source_path: PathBuf::from("test.spec.py"),
+            success: false,
+            error: Some("Parse error".to_string()),
+            key_classification: KeyClassification::default(),
+        };
+        assert!(!entry.success);
+        assert_eq!(entry.error.as_deref(), Some("Parse error"));
+    }
+
+    #[test]
+    fn test_audit_completeness_threshold_pass() {
+        // Create a key classification that passes 90% threshold
+        let mut kc = KeyClassification::default();
+        kc.implemented = 9;
+        kc.partial = 0;
+        kc.not_implemented = 1;
+        kc.unknown = 0;
+
+        // Gap score = (9 + 0*0.5) / (9+0+1+0) = 9/10 = 0.9
+        let gap = kc.gap_score().unwrap();
+        assert!((gap - 0.9).abs() < 0.001);
+        assert!(gap >= 0.90); // Meets threshold
+    }
+
+    #[test]
+    fn test_audit_completeness_threshold_fail() {
+        // Create a key classification that fails 90% threshold
+        let mut kc = KeyClassification::default();
+        kc.implemented = 7;
+        kc.partial = 2;
+        kc.not_implemented = 1;
+        kc.unknown = 0;
+
+        // Gap score = (7 + 2*0.5) / (7+2+1+0) = 8/10 = 0.8
+        let gap = kc.gap_score().unwrap();
+        assert!((gap - 0.8).abs() < 0.001);
+        assert!(gap < 0.90); // Fails threshold
+    }
+
+    #[test]
+    fn test_missing_keys_frequency_counting() {
+        // Simulate collecting missing keys from multiple specs
+        let mut missing_keys: HashMap<(String, String), usize> = HashMap::new();
+
+        // Same key appearing in multiple specs should increase frequency
+        *missing_keys.entry(("SOUND (audio_sfx)".to_string(), "reverb".to_string())).or_insert(0) += 1;
+        *missing_keys.entry(("SOUND (audio_sfx)".to_string(), "reverb".to_string())).or_insert(0) += 1;
+        *missing_keys.entry(("SOUND (audio_sfx)".to_string(), "echo".to_string())).or_insert(0) += 1;
+
+        assert_eq!(missing_keys.get(&("SOUND (audio_sfx)".to_string(), "reverb".to_string())), Some(&2));
+        assert_eq!(missing_keys.get(&("SOUND (audio_sfx)".to_string(), "echo".to_string())), Some(&1));
+    }
+
+    #[test]
+    fn test_missing_keys_sorted_by_frequency() {
+        let mut missing_keys: HashMap<(String, String), usize> = HashMap::new();
+        missing_keys.insert(("A".to_string(), "key1".to_string()), 5);
+        missing_keys.insert(("A".to_string(), "key2".to_string()), 10);
+        missing_keys.insert(("A".to_string(), "key3".to_string()), 1);
+
+        let mut sorted: Vec<_> = missing_keys.iter().collect();
+        sorted.sort_by(|a, b| b.1.cmp(a.1).then_with(|| a.0.cmp(b.0)));
+
+        assert_eq!(sorted[0].0, &("A".to_string(), "key2".to_string()));
+        assert_eq!(sorted[1].0, &("A".to_string(), "key1".to_string()));
+        assert_eq!(sorted[2].0, &("A".to_string(), "key3".to_string()));
     }
 }

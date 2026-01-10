@@ -9,6 +9,7 @@ use speccade_spec::{
     Spec,
 };
 use std::fs;
+use std::path::Path;
 use std::process::ExitCode;
 use std::time::Instant;
 
@@ -98,7 +99,7 @@ pub fn run(spec_path: &str, out_root: Option<&str>) -> Result<ExitCode> {
     // Dispatch to backend
     println!("\n{}", "Dispatching to backend...".dimmed());
 
-    match dispatch_generate(&spec, out_root) {
+    match dispatch_generate(&spec, out_root, Path::new(spec_path)) {
         Ok(outputs) => {
             let duration_ms = start.elapsed().as_millis() as u64;
             let output_count = outputs.len();

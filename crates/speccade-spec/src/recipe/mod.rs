@@ -46,9 +46,12 @@ pub enum RecipeKind {
     /// `skeletal_mesh.blender_rigged_mesh_v1` - Rigged skeletal mesh.
     #[serde(rename = "skeletal_mesh.blender_rigged_mesh_v1")]
     SkeletalMeshBlenderRiggedMeshV1,
-    /// `skeletal_animation.blender_clip_v1` - Skeletal animation clip.
+    /// `skeletal_animation.blender_clip_v1` - Skeletal animation clip (simple keyframes).
     #[serde(rename = "skeletal_animation.blender_clip_v1")]
     SkeletalAnimationBlenderClipV1,
+    /// `skeletal_animation.blender_rigged_v1` - Skeletal animation with IK rigging support.
+    #[serde(rename = "skeletal_animation.blender_rigged_v1")]
+    SkeletalAnimationBlenderRiggedV1,
 }
 
 impl RecipeKind {
@@ -63,6 +66,7 @@ impl RecipeKind {
             RecipeKind::StaticMeshBlenderPrimitivesV1 => "static_mesh.blender_primitives_v1",
             RecipeKind::SkeletalMeshBlenderRiggedMeshV1 => "skeletal_mesh.blender_rigged_mesh_v1",
             RecipeKind::SkeletalAnimationBlenderClipV1 => "skeletal_animation.blender_clip_v1",
+            RecipeKind::SkeletalAnimationBlenderRiggedV1 => "skeletal_animation.blender_rigged_v1",
         }
     }
 
@@ -77,6 +81,7 @@ impl RecipeKind {
             RecipeKind::StaticMeshBlenderPrimitivesV1 => "static_mesh",
             RecipeKind::SkeletalMeshBlenderRiggedMeshV1 => "skeletal_mesh",
             RecipeKind::SkeletalAnimationBlenderClipV1 => "skeletal_animation",
+            RecipeKind::SkeletalAnimationBlenderRiggedV1 => "skeletal_animation",
         }
     }
 
@@ -90,7 +95,8 @@ impl RecipeKind {
             | RecipeKind::Texture2dNormalMapV1 => true,
             RecipeKind::StaticMeshBlenderPrimitivesV1
             | RecipeKind::SkeletalMeshBlenderRiggedMeshV1
-            | RecipeKind::SkeletalAnimationBlenderClipV1 => false,
+            | RecipeKind::SkeletalAnimationBlenderClipV1
+            | RecipeKind::SkeletalAnimationBlenderRiggedV1 => false,
         }
     }
 }
@@ -119,8 +125,10 @@ pub enum RecipeParams {
     StaticMeshBlenderPrimitives(StaticMeshBlenderPrimitivesV1Params),
     /// Skeletal mesh Blender rigged mesh parameters.
     SkeletalMeshBlenderRiggedMesh(SkeletalMeshBlenderRiggedMeshV1Params),
-    /// Skeletal animation Blender clip parameters.
+    /// Skeletal animation Blender clip parameters (simple keyframes).
     SkeletalAnimationBlenderClip(SkeletalAnimationBlenderClipV1Params),
+    /// Skeletal animation Blender rigged parameters (with IK support).
+    SkeletalAnimationBlenderRigged(SkeletalAnimationBlenderRiggedV1Params),
     /// Unknown/generic parameters (stored as raw JSON).
     Unknown(serde_json::Value),
 }
@@ -157,6 +165,9 @@ impl Recipe {
             }
             "skeletal_animation.blender_clip_v1" => {
                 Some(RecipeKind::SkeletalAnimationBlenderClipV1)
+            }
+            "skeletal_animation.blender_rigged_v1" => {
+                Some(RecipeKind::SkeletalAnimationBlenderRiggedV1)
             }
             _ => None,
         }
@@ -216,6 +227,13 @@ impl Recipe {
     pub fn as_skeletal_animation_blender_clip(
         &self,
     ) -> Result<SkeletalAnimationBlenderClipV1Params, serde_json::Error> {
+        serde_json::from_value(self.params.clone())
+    }
+
+    /// Attempts to parse params as skeletal animation Blender rigged params (with IK support).
+    pub fn as_skeletal_animation_blender_rigged(
+        &self,
+    ) -> Result<SkeletalAnimationBlenderRiggedV1Params, serde_json::Error> {
         serde_json::from_value(self.params.clone())
     }
 }

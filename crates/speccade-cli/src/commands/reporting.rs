@@ -38,7 +38,10 @@ mod tests {
     #[test]
     fn test_report_path_sibling_file() {
         let path = report_path("specs/audio/test.json", "laser-blast-01");
-        assert!(path.ends_with("specs/audio/laser-blast-01.report.json"));
+        // Use Path for platform-independent comparison
+        let path = Path::new(&path);
+        let expected = Path::new("specs").join("audio").join("laser-blast-01.report.json");
+        assert_eq!(path, expected);
     }
 
     #[test]

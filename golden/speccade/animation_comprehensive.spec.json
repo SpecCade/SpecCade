@@ -1,0 +1,437 @@
+{
+  "spec_version": 1,
+  "asset_id": "animation-comprehensive-golden",
+  "asset_type": "skeletal_animation",
+  "license": "CC0-1.0",
+  "seed": 999008,
+  "description": "Golden comprehensive test - exercises ALL skeletal_animation/ANIMATION keys: poses with pitch/yaw/roll/location, phases with timing_curve/ik_targets/ikfk_blend, procedural_layers (breathing/sway/bob/noise), rig_setup with presets/ik_chains/foot_systems/aim_constraints/constraints/twist_bones/stretch, animator_rig with collections/shapes/colors/display, bake settings, conventions",
+  "style_tags": ["golden", "comprehensive", "test", "animation", "ik"],
+  "engine_targets": ["godot", "unity", "unreal"],
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "glb",
+      "path": "animation_comprehensive.glb"
+    },
+    {
+      "kind": "metadata",
+      "format": "json",
+      "path": "animation_comprehensive.meta.json"
+    }
+  ],
+  "variants": [
+    {"variant_id": "fast", "seed_offset": 50},
+    {"variant_id": "slow", "seed_offset": 100}
+  ],
+  "recipe": {
+    "kind": "skeletal_animation.blender_clip_v1",
+    "params": {
+      "name": "comprehensive_animation",
+      "skeleton_preset": "humanoid_basic_v1",
+      "clip_name": "comprehensive_action",
+      "input_armature": "character_comprehensive.glb",
+      "character": "comprehensive_character",
+      "duration_seconds": 2.0,
+      "duration_frames": 60,
+      "fps": 30,
+      "loop": true,
+      "ground_offset": 0.05,
+      "interpolation": "bezier",
+      "save_blend": true,
+      "keyframes": [
+        {
+          "frame": 0,
+          "bones": {
+            "spine_01": {"rotation": [0, 0, 0]},
+            "head": {"rotation": [0, 0, 0]}
+          }
+        },
+        {
+          "frame": 30,
+          "bones": {
+            "spine_01": {"rotation": [5, 0, 3]},
+            "head": {"rotation": [-5, 10, 0]}
+          }
+        },
+        {
+          "frame": 60,
+          "bones": {
+            "spine_01": {"rotation": [0, 0, 0]},
+            "head": {"rotation": [0, 0, 0]}
+          }
+        }
+      ],
+      "poses": {
+        "idle": {
+          "comment": "Neutral idle pose",
+          "spine_01": {"pitch": 0, "yaw": 0, "roll": 0},
+          "spine_02": {"pitch": 2, "yaw": 0, "roll": 0},
+          "spine_03": {"pitch": -2, "yaw": 0, "roll": 0},
+          "chest": {"pitch": 3, "yaw": 0, "roll": 0},
+          "neck": {"pitch": -5, "yaw": 0, "roll": 0},
+          "head": {"pitch": 0, "yaw": 0, "roll": 0, "location": [0, 0, 0]},
+          "arm_upper_L": {"pitch": 5, "yaw": 0, "roll": -10},
+          "arm_lower_L": {"pitch": -8, "yaw": 0, "roll": 0},
+          "arm_upper_R": {"pitch": 5, "yaw": 0, "roll": 10},
+          "arm_lower_R": {"pitch": -8, "yaw": 0, "roll": 0},
+          "leg_upper_L": {"pitch": 0, "yaw": 0, "roll": 0},
+          "leg_lower_L": {"pitch": 5, "yaw": 0, "roll": 0},
+          "leg_upper_R": {"pitch": 0, "yaw": 0, "roll": 0},
+          "leg_lower_R": {"pitch": 5, "yaw": 0, "roll": 0}
+        },
+        "reach_forward": {
+          "comment": "Reaching forward pose",
+          "spine_01": {"pitch": 10, "yaw": 0, "roll": 0},
+          "chest": {"pitch": 15, "yaw": 0, "roll": 0},
+          "arm_upper_L": {"pitch": -60, "yaw": 0, "roll": 0},
+          "arm_lower_L": {"pitch": -30, "yaw": 0, "roll": 0},
+          "arm_upper_R": {"pitch": -60, "yaw": 0, "roll": 0},
+          "arm_lower_R": {"pitch": -30, "yaw": 0, "roll": 0}
+        },
+        "crouch": {
+          "comment": "Crouching pose with location offset",
+          "spine_01": {"pitch": 20, "yaw": 0, "roll": 0, "location": [0, 0, -0.2]},
+          "leg_upper_L": {"pitch": 60, "yaw": 0, "roll": 0},
+          "leg_lower_L": {"pitch": -100, "yaw": 0, "roll": 0},
+          "leg_upper_R": {"pitch": 60, "yaw": 0, "roll": 0},
+          "leg_lower_R": {"pitch": -100, "yaw": 0, "roll": 0}
+        },
+        "wave": {
+          "comment": "Waving pose",
+          "arm_upper_R": {"pitch": -120, "yaw": 30, "roll": 20},
+          "arm_lower_R": {"pitch": -45, "yaw": 0, "roll": 0},
+          "hand_R": {"pitch": 0, "yaw": 15, "roll": 0}
+        }
+      },
+      "phases": [
+        {
+          "name": "idle_start",
+          "frames": [0, 15],
+          "pose": "idle",
+          "timing_curve": "ease_in_out"
+        },
+        {
+          "name": "reach",
+          "frames": [15, 30],
+          "pose": "reach_forward",
+          "timing_curve": "ease_in",
+          "ik_targets": {
+            "ik_hand_L": [
+              {"frame": 15, "location": [0.3, 0.4, 0.7], "ikfk": 0.0},
+              {"frame": 22, "location": [0.4, 0.6, 0.8], "ikfk": 0.5},
+              {"frame": 30, "location": [0.5, 0.8, 0.9], "ikfk": 1.0}
+            ],
+            "ik_hand_R": [
+              {"frame": 15, "location": [-0.3, 0.4, 0.7], "ikfk": 0.0},
+              {"frame": 22, "location": [-0.4, 0.6, 0.8], "ikfk": 0.5},
+              {"frame": 30, "location": [-0.5, 0.8, 0.9], "ikfk": 1.0}
+            ]
+          },
+          "ikfk_blend": {
+            "arm_L": [
+              {"frame": 15, "value": 0.0},
+              {"frame": 30, "value": 1.0}
+            ],
+            "arm_R": [
+              {"frame": 15, "value": 0.0},
+              {"frame": 30, "value": 1.0}
+            ]
+          }
+        },
+        {
+          "name": "hold",
+          "frames": [30, 40],
+          "pose": "reach_forward",
+          "timing_curve": "constant"
+        },
+        {
+          "name": "return",
+          "frames": [40, 55],
+          "pose": "idle",
+          "timing_curve": "ease_out"
+        },
+        {
+          "name": "wave_end",
+          "frames": [55, 60],
+          "pose": "wave",
+          "timing_curve": "exponential_in"
+        }
+      ],
+      "procedural_layers": [
+        {
+          "comment": "Breathing on chest",
+          "type": "breathing",
+          "target": "chest",
+          "axis": "pitch",
+          "period_frames": 90,
+          "amplitude": 0.02,
+          "phase_offset": 0.0
+        },
+        {
+          "comment": "Subtle spine sway",
+          "type": "sway",
+          "target": "spine_02",
+          "axis": "roll",
+          "period_frames": 120,
+          "amplitude": 0.015,
+          "phase_offset": 0.5
+        },
+        {
+          "comment": "Head bob",
+          "type": "bob",
+          "target": "head",
+          "axis": "pitch",
+          "period_frames": 45,
+          "amplitude": 0.01,
+          "phase_offset": 0.25
+        },
+        {
+          "comment": "Noise on shoulders",
+          "type": "noise",
+          "target": "shoulder_L",
+          "axis": "yaw",
+          "frequency": 0.5,
+          "amplitude": 2.0,
+          "phase_offset": 0.0
+        },
+        {
+          "comment": "Noise on other shoulder",
+          "type": "noise",
+          "target": "shoulder_R",
+          "axis": "yaw",
+          "frequency": 0.5,
+          "amplitude": 2.0,
+          "phase_offset": 0.3
+        }
+      ],
+      "rig_setup": {
+        "presets": {
+          "humanoid_legs": true,
+          "humanoid_arms": true,
+          "basic_spine": true,
+          "head_look": true
+        },
+        "ik_chains": [
+          {
+            "comment": "Custom left arm IK chain",
+            "name": "arm_L",
+            "bones": ["arm_upper_L", "arm_lower_L", "hand_L"],
+            "target": {
+              "name": "ik_hand_L",
+              "at": "tip"
+            },
+            "pole": {
+              "name": "pole_elbow_L",
+              "offset": [0, -0.3, 0],
+              "auto_place": true,
+              "angle": "auto"
+            },
+            "stretch": {
+              "enabled": true,
+              "max_factor": 1.2
+            },
+            "rotation_limits": {
+              "arm_lower_L": {
+                "x": [-5, 160],
+                "y": [-10, 10],
+                "z": [-10, 10]
+              }
+            }
+          },
+          {
+            "comment": "Custom right arm IK chain",
+            "name": "arm_R",
+            "bones": ["arm_upper_R", "arm_lower_R", "hand_R"],
+            "target": {
+              "name": "ik_hand_R",
+              "at": [0.1, 0, 0]
+            },
+            "pole": {
+              "name": "pole_elbow_R",
+              "offset": [0, -0.3, 0],
+              "auto_place": false,
+              "angle": 0.0
+            },
+            "stretch": {
+              "enabled": false
+            }
+          },
+          {
+            "comment": "Spine IK for flexible torso",
+            "name": "spine",
+            "bones": ["spine_01", "spine_02", "spine_03", "chest"],
+            "target": {
+              "name": "ik_spine_tip",
+              "at": "head"
+            }
+          }
+        ],
+        "foot_systems": [
+          {
+            "comment": "Left foot roll system",
+            "name": "foot_roll_L",
+            "foot_bone": "foot_L",
+            "toe_bone": "toe_L",
+            "heel_offset": [0, -0.05, 0],
+            "toe_offset": [0, 0.1, 0],
+            "bank_inner": -0.03,
+            "bank_outer": 0.03
+          },
+          {
+            "comment": "Right foot roll system",
+            "name": "foot_roll_R",
+            "foot_bone": "foot_R",
+            "toe_bone": "toe_R",
+            "heel_offset": [0, -0.05, 0],
+            "toe_offset": [0, 0.1, 0],
+            "bank_inner": 0.03,
+            "bank_outer": -0.03
+          }
+        ],
+        "aim_constraints": [
+          {
+            "comment": "Head look-at constraint",
+            "name": "head_look",
+            "bone": "head",
+            "target": "look_target",
+            "axis": "Y",
+            "influence": 0.8
+          },
+          {
+            "comment": "Eye tracking (if eyes exist)",
+            "name": "eye_look_L",
+            "bone": "eye_L",
+            "target": "look_target",
+            "axis": "Z",
+            "influence": 1.0
+          }
+        ],
+        "constraints": [
+          {
+            "comment": "Elbow hinge constraint",
+            "bone": "arm_lower_L",
+            "type": "hinge",
+            "axis": "X",
+            "limits": [0, 160]
+          },
+          {
+            "comment": "Elbow hinge right",
+            "bone": "arm_lower_R",
+            "type": "hinge",
+            "axis": "X",
+            "limits": [0, 160]
+          },
+          {
+            "comment": "Knee hinge left",
+            "bone": "leg_lower_L",
+            "type": "hinge",
+            "axis": "X",
+            "limits": [0, 160]
+          },
+          {
+            "comment": "Knee hinge right",
+            "bone": "leg_lower_R",
+            "type": "hinge",
+            "axis": "X",
+            "limits": [0, 160]
+          },
+          {
+            "comment": "Shoulder ball joint",
+            "bone": "arm_upper_L",
+            "type": "ball",
+            "limits": {
+              "x": [-180, 60],
+              "y": [-90, 90],
+              "z": [-90, 90]
+            }
+          },
+          {
+            "comment": "Hip ball joint",
+            "bone": "leg_upper_L",
+            "type": "ball",
+            "limits": {
+              "x": [-30, 120],
+              "y": [-45, 45],
+              "z": [-45, 45]
+            }
+          },
+          {
+            "comment": "Spine planar constraint",
+            "bone": "spine_02",
+            "type": "planar",
+            "axis": "Y",
+            "limits": [-30, 30]
+          },
+          {
+            "comment": "Soft constraint for natural motion",
+            "bone": "chest",
+            "type": "soft",
+            "limits": [-15, 15]
+          }
+        ],
+        "twist_bones": [
+          {
+            "comment": "Upper arm twist for forearm rotation",
+            "name": "arm_twist_L",
+            "source": "arm_lower_L",
+            "target": "arm_upper_L",
+            "axis": "Y",
+            "influence": 0.5
+          },
+          {
+            "comment": "Upper arm twist right",
+            "name": "arm_twist_R",
+            "source": "arm_lower_R",
+            "target": "arm_upper_R",
+            "axis": "Y",
+            "influence": 0.5
+          },
+          {
+            "comment": "Upper leg twist for hip rotation",
+            "name": "leg_twist_L",
+            "source": "leg_lower_L",
+            "target": "leg_upper_L",
+            "axis": "Y",
+            "influence": 0.4
+          },
+          {
+            "comment": "Upper leg twist right",
+            "name": "leg_twist_R",
+            "source": "leg_lower_R",
+            "target": "leg_upper_R",
+            "axis": "Y",
+            "influence": 0.4
+          }
+        ],
+        "stretch": {
+          "enabled": true,
+          "max_factor": 1.1,
+          "bones": ["spine_01", "spine_02", "spine_03"]
+        },
+        "bake": {
+          "simplify": true,
+          "start_frame": 0,
+          "end_frame": 60,
+          "visual_keying": true,
+          "clear_constraints": true,
+          "frame_step": 1,
+          "remove_ik_bones": true,
+          "tolerance": 0.001
+        }
+      },
+      "animator_rig": {
+        "collections": true,
+        "shapes": true,
+        "colors": true,
+        "display": "OCTAHEDRAL"
+      },
+      "conventions": {
+        "strict": false
+      },
+      "export": {
+        "tangents": false,
+        "optimize_animations": true
+      }
+    }
+  }
+}

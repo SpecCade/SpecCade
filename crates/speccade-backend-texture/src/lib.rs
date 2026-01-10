@@ -35,6 +35,8 @@
 //!         metallic: Some(1.0),
 //!     }),
 //!     layers: vec![],
+//!     palette: None,
+//!     color_ramp: None,
 //! };
 //!
 //! let result = generate_material_maps(&params, 42).unwrap();

@@ -1,0 +1,314 @@
+{
+  "spec_version": 1,
+  "asset_id": "audio-sfx-comprehensive-golden",
+  "asset_type": "audio_sfx",
+  "license": "CC0-1.0",
+  "seed": 999001,
+  "description": "Golden comprehensive test - exercises ALL audio_sfx keys from PARITY_MATRIX: oscillator, fm, karplus, noise, pitched_body, metallic, harmonics, all filter types, envelope, delay, duty, master_filter, normalize, peak_db",
+  "style_tags": ["golden", "comprehensive", "test", "sfx"],
+  "engine_targets": ["godot", "unity", "unreal"],
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "audio_sfx_comprehensive.wav"
+    },
+    {
+      "kind": "preview",
+      "format": "ogg",
+      "path": "audio_sfx_comprehensive_preview.ogg"
+    },
+    {
+      "kind": "metadata",
+      "format": "json",
+      "path": "audio_sfx_comprehensive.meta.json"
+    }
+  ],
+  "variants": [
+    {"variant_id": "loud", "seed_offset": 100},
+    {"variant_id": "quiet", "seed_offset": 200}
+  ],
+  "recipe": {
+    "kind": "audio_sfx.layered_synth_v1",
+    "params": {
+      "duration_seconds": 2.0,
+      "sample_rate": 44100,
+      "normalize": true,
+      "peak_db": -0.5,
+      "layers": [
+        {
+          "comment": "Layer 1: Basic oscillator with sine, freq sweep, full envelope",
+          "synthesis": {
+            "type": "oscillator",
+            "waveform": "sine",
+            "frequency": 440.0,
+            "freq_sweep": {
+              "end_freq": 220.0,
+              "curve": "exponential"
+            }
+          },
+          "envelope": {
+            "attack": 0.01,
+            "decay": 0.1,
+            "sustain": 0.7,
+            "release": 0.2
+          },
+          "volume": 0.5,
+          "pan": 0.0,
+          "delay": 0.0
+        },
+        {
+          "comment": "Layer 2: Square wave with duty cycle and lowpass filter",
+          "synthesis": {
+            "type": "oscillator",
+            "waveform": "square",
+            "frequency": 330.0,
+            "duty": 0.25
+          },
+          "filter": {
+            "type": "lowpass",
+            "cutoff": 2000.0,
+            "cutoff_end": 500.0,
+            "resonance": 1.5
+          },
+          "envelope": {
+            "attack": 0.005,
+            "decay": 0.2,
+            "sustain": 0.5,
+            "release": 0.3
+          },
+          "volume": 0.4,
+          "pan": -0.3,
+          "delay": 0.05
+        },
+        {
+          "comment": "Layer 3: Sawtooth oscillator with highpass filter",
+          "synthesis": {
+            "type": "oscillator",
+            "waveform": "saw",
+            "frequency": 220.0,
+            "freq_sweep": {
+              "end_freq": 110.0,
+              "curve": "linear"
+            }
+          },
+          "filter": {
+            "type": "highpass",
+            "cutoff": 500.0,
+            "resonance": 0.7
+          },
+          "envelope": {
+            "attack": 0.02,
+            "decay": 0.15,
+            "sustain": 0.6,
+            "release": 0.25
+          },
+          "volume": 0.35,
+          "pan": 0.3,
+          "delay": 0.1
+        },
+        {
+          "comment": "Layer 4: Triangle oscillator",
+          "synthesis": {
+            "type": "oscillator",
+            "waveform": "triangle",
+            "frequency": 550.0
+          },
+          "envelope": {
+            "attack": 0.001,
+            "decay": 0.3,
+            "sustain": 0.4,
+            "release": 0.4
+          },
+          "volume": 0.3,
+          "pan": 0.0,
+          "delay": 0.0
+        },
+        {
+          "comment": "Layer 5: FM synthesis with all FM params",
+          "synthesis": {
+            "type": "fm_synth",
+            "carrier_freq": 440.0,
+            "mod_ratio": 2.0,
+            "mod_index": 5.0,
+            "index_decay": 3.0
+          },
+          "envelope": {
+            "attack": 0.001,
+            "decay": 0.4,
+            "sustain": 0.2,
+            "release": 0.6
+          },
+          "volume": 0.45,
+          "pan": 0.1,
+          "delay": 0.0
+        },
+        {
+          "comment": "Layer 6: Karplus-Strong plucked string synthesis",
+          "synthesis": {
+            "type": "karplus_strong",
+            "frequency": 196.0,
+            "damping": 0.996,
+            "brightness": 0.7
+          },
+          "envelope": {
+            "attack": 0.001,
+            "decay": 0.5,
+            "sustain": 0.3,
+            "release": 0.8
+          },
+          "volume": 0.5,
+          "pan": -0.2,
+          "delay": 0.2
+        },
+        {
+          "comment": "Layer 7: White noise burst with bandpass filter",
+          "synthesis": {
+            "type": "noise_burst",
+            "noise_type": "white"
+          },
+          "filter": {
+            "type": "bandpass",
+            "cutoff": 2000.0,
+            "cutoff_low": 1000.0,
+            "cutoff_high": 4000.0,
+            "resonance": 1.0
+          },
+          "envelope": {
+            "attack": 0.001,
+            "decay": 0.05,
+            "sustain": 0.0,
+            "release": 0.1
+          },
+          "volume": 0.25,
+          "pan": 0.0,
+          "delay": 0.0
+        },
+        {
+          "comment": "Layer 8: Pink noise burst",
+          "synthesis": {
+            "type": "noise_burst",
+            "noise_type": "pink"
+          },
+          "filter": {
+            "type": "lowpass",
+            "cutoff": 3000.0,
+            "resonance": 0.5
+          },
+          "envelope": {
+            "attack": 0.01,
+            "decay": 0.2,
+            "sustain": 0.1,
+            "release": 0.3
+          },
+          "volume": 0.2,
+          "pan": 0.4,
+          "delay": 0.3
+        },
+        {
+          "comment": "Layer 9: Brown noise burst with filter sweep",
+          "synthesis": {
+            "type": "noise_burst",
+            "noise_type": "brown"
+          },
+          "filter": {
+            "type": "lowpass",
+            "cutoff": 800.0,
+            "cutoff_end": 200.0,
+            "resonance": 1.2
+          },
+          "envelope": {
+            "attack": 0.005,
+            "decay": 0.3,
+            "sustain": 0.2,
+            "release": 0.7
+          },
+          "volume": 0.6,
+          "pan": 0.0,
+          "delay": 0.0
+        },
+        {
+          "comment": "Layer 10: Pitched body (drum-like) with freq sweep",
+          "synthesis": {
+            "type": "pitched_body",
+            "start_freq": 200.0,
+            "end_freq": 50.0
+          },
+          "envelope": {
+            "attack": 0.01,
+            "decay": 0.4,
+            "sustain": 0.1,
+            "release": 0.5
+          },
+          "volume": 0.7,
+          "pan": 0.0,
+          "delay": 0.01
+        },
+        {
+          "comment": "Layer 11: Metallic synthesis with inharmonic partials",
+          "synthesis": {
+            "type": "metallic",
+            "base_freq": 800.0,
+            "num_partials": 6,
+            "inharmonicity": 1.414
+          },
+          "envelope": {
+            "attack": 0.001,
+            "decay": 0.6,
+            "sustain": 0.1,
+            "release": 1.0
+          },
+          "volume": 0.35,
+          "pan": -0.1,
+          "delay": 0.15
+        },
+        {
+          "comment": "Layer 12: Additive harmonics synthesis",
+          "synthesis": {
+            "type": "harmonics",
+            "freqs": [220.0, 440.0, 660.0, 880.0, 1100.0],
+            "amplitudes": [1.0, 0.5, 0.33, 0.25, 0.2]
+          },
+          "envelope": {
+            "attack": 0.02,
+            "decay": 0.3,
+            "sustain": 0.5,
+            "release": 0.4
+          },
+          "volume": 0.4,
+          "pan": 0.2,
+          "delay": 0.0
+        },
+        {
+          "comment": "Layer 13: Per-layer duration override",
+          "synthesis": {
+            "type": "oscillator",
+            "waveform": "sine",
+            "frequency": 1000.0
+          },
+          "duration": 0.5,
+          "envelope": {
+            "attack": 0.001,
+            "decay": 0.1,
+            "sustain": 0.5,
+            "release": 0.2
+          },
+          "volume": 0.2,
+          "pan": 0.0,
+          "delay": 1.0
+        }
+      ],
+      "master_envelope": {
+        "attack": 0.0,
+        "decay": 0.0,
+        "sustain": 1.0,
+        "release": 0.1
+      },
+      "master_filter": {
+        "type": "lowpass",
+        "cutoff": 16000.0,
+        "resonance": 0.707
+      }
+    }
+  }
+}

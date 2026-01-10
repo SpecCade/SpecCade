@@ -8,6 +8,8 @@ use std::process::ExitCode;
 
 mod commands;
 mod dispatch;
+pub mod parity_data;
+pub mod parity_matrix;
 
 /// SpecCade - Declarative Asset Generation System
 #[derive(Parser)]
@@ -66,6 +68,14 @@ enum Commands {
         /// Allow execution of Python specs (UNSAFE: only use with trusted files)
         #[arg(long)]
         allow_exec_specs: bool,
+
+        /// Audit mode: scan specs and report completeness without migrating
+        #[arg(long)]
+        audit: bool,
+
+        /// Minimum completeness threshold for audit mode (0.0-1.0, default 0.90)
+        #[arg(long, default_value = "0.90")]
+        audit_threshold: f64,
     },
 
     /// Format a spec file to canonical style
@@ -88,7 +98,13 @@ fn main() -> ExitCode {
         Commands::Generate { spec, out_root } => commands::generate::run(&spec, out_root.as_deref()),
         Commands::Preview { spec, out_root } => commands::preview::run(&spec, out_root.as_deref()),
         Commands::Doctor => commands::doctor::run(),
-        Commands::Migrate { project, allow_exec_specs } => commands::migrate::run(&project, allow_exec_specs),
+        Commands::Migrate { project, allow_exec_specs, audit, audit_threshold } => {
+            if audit {
+                commands::migrate::run_audit(&project, allow_exec_specs, audit_threshold)
+            } else {
+                commands::migrate::run(&project, allow_exec_specs)
+            }
+        }
         Commands::Fmt { spec, output } => commands::fmt::run(&spec, output.as_deref()),
     };
 
@@ -160,5 +176,90 @@ mod tests {
     fn test_cli_requires_spec_for_generate() {
         let err = Cli::try_parse_from(["speccade", "generate"]).err().unwrap();
         assert!(err.to_string().contains("--spec"));
+    }
+
+    #[test]
+    fn test_cli_parses_migrate_basic() {
+        let cli = Cli::try_parse_from([
+            "speccade",
+            "migrate",
+            "--project",
+            "/path/to/project",
+        ])
+        .unwrap();
+        match cli.command {
+            Commands::Migrate { project, allow_exec_specs, audit, audit_threshold } => {
+                assert_eq!(project, "/path/to/project");
+                assert!(!allow_exec_specs);
+                assert!(!audit);
+                assert!((audit_threshold - 0.90).abs() < 0.001);
+            }
+            _ => panic!("expected migrate command"),
+        }
+    }
+
+    #[test]
+    fn test_cli_parses_migrate_with_audit() {
+        let cli = Cli::try_parse_from([
+            "speccade",
+            "migrate",
+            "--project",
+            "/path/to/project",
+            "--audit",
+        ])
+        .unwrap();
+        match cli.command {
+            Commands::Migrate { project, allow_exec_specs, audit, audit_threshold } => {
+                assert_eq!(project, "/path/to/project");
+                assert!(!allow_exec_specs);
+                assert!(audit);
+                assert!((audit_threshold - 0.90).abs() < 0.001);
+            }
+            _ => panic!("expected migrate command"),
+        }
+    }
+
+    #[test]
+    fn test_cli_parses_migrate_with_audit_threshold() {
+        let cli = Cli::try_parse_from([
+            "speccade",
+            "migrate",
+            "--project",
+            "/path/to/project",
+            "--audit",
+            "--audit-threshold",
+            "0.75",
+        ])
+        .unwrap();
+        match cli.command {
+            Commands::Migrate { project, allow_exec_specs, audit, audit_threshold } => {
+                assert_eq!(project, "/path/to/project");
+                assert!(!allow_exec_specs);
+                assert!(audit);
+                assert!((audit_threshold - 0.75).abs() < 0.001);
+            }
+            _ => panic!("expected migrate command"),
+        }
+    }
+
+    #[test]
+    fn test_cli_parses_migrate_with_exec_specs() {
+        let cli = Cli::try_parse_from([
+            "speccade",
+            "migrate",
+            "--project",
+            "/path/to/project",
+            "--allow-exec-specs",
+        ])
+        .unwrap();
+        match cli.command {
+            Commands::Migrate { project, allow_exec_specs, audit, audit_threshold } => {
+                assert_eq!(project, "/path/to/project");
+                assert!(allow_exec_specs);
+                assert!(!audit);
+                assert!((audit_threshold - 0.90).abs() < 0.001);
+            }
+            _ => panic!("expected migrate command"),
+        }
     }
 }

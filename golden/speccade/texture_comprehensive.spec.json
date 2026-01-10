@@ -1,0 +1,232 @@
+{
+  "spec_version": 1,
+  "asset_id": "texture-comprehensive-golden",
+  "asset_type": "texture_2d",
+  "license": "CC0-1.0",
+  "seed": 999004,
+  "description": "Golden comprehensive test - exercises ALL texture_2d/TEXTURE keys: size, layers with all types (solid, noise, gradient, checkerboard, stripes, wood_grain, brick), blend modes, opacity, palette, color_ramp, all noise params, gradient radial with center/inner/outer, stripes with direction/stripe_width",
+  "style_tags": ["golden", "comprehensive", "test", "texture", "pbr"],
+  "engine_targets": ["godot", "unity", "unreal"],
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "png",
+      "path": "texture_comprehensive_albedo.png"
+    },
+    {
+      "kind": "primary",
+      "format": "png",
+      "path": "texture_comprehensive_roughness.png"
+    },
+    {
+      "kind": "primary",
+      "format": "png",
+      "path": "texture_comprehensive_metallic.png"
+    },
+    {
+      "kind": "primary",
+      "format": "png",
+      "path": "texture_comprehensive_normal.png"
+    },
+    {
+      "kind": "primary",
+      "format": "png",
+      "path": "texture_comprehensive_ao.png"
+    },
+    {
+      "kind": "primary",
+      "format": "png",
+      "path": "texture_comprehensive_emissive.png"
+    },
+    {
+      "kind": "metadata",
+      "format": "json",
+      "path": "texture_comprehensive.meta.json"
+    }
+  ],
+  "variants": [
+    {"variant_id": "512", "seed_offset": 0},
+    {"variant_id": "1024", "seed_offset": 1},
+    {"variant_id": "2048", "seed_offset": 2}
+  ],
+  "recipe": {
+    "kind": "texture_2d.material_maps_v1",
+    "params": {
+      "name": "comprehensive_texture",
+      "size": [512, 512],
+      "output": {
+        "size": [512, 512]
+      },
+      "resolution": [512, 512],
+      "tileable": true,
+      "maps": ["albedo", "normal", "roughness", "metallic", "ao", "emissive"],
+      "base_material": {
+        "type": "metal",
+        "base_color": [0.7, 0.7, 0.75],
+        "roughness_range": [0.3, 0.7],
+        "metallic": 0.9
+      },
+      "layers": [
+        {
+          "comment": "Layer 1: Solid base fill",
+          "type": "solid",
+          "color": 0.5,
+          "blend": "normal",
+          "opacity": 1.0
+        },
+        {
+          "comment": "Layer 2: Perlin noise with all params",
+          "type": "noise",
+          "noise_type": "perlin",
+          "scale": 0.05,
+          "octaves": 6,
+          "seed": 42,
+          "blend": "multiply",
+          "opacity": 0.3
+        },
+        {
+          "comment": "Layer 3: Simplex noise",
+          "type": "noise",
+          "noise_type": "simplex",
+          "scale": 0.1,
+          "octaves": 4,
+          "seed": 123,
+          "blend": "add",
+          "opacity": 0.2
+        },
+        {
+          "comment": "Layer 4: Voronoi noise with jitter",
+          "type": "noise",
+          "noise_type": "voronoi",
+          "scale": 0.08,
+          "octaves": 1,
+          "seed": 456,
+          "jitter": 0.8,
+          "blend": "overlay",
+          "opacity": 0.25
+        },
+        {
+          "comment": "Layer 5: Vertical gradient",
+          "type": "gradient",
+          "direction": "vertical",
+          "start": 0.0,
+          "end": 1.0,
+          "blend": "soft_light",
+          "opacity": 0.2
+        },
+        {
+          "comment": "Layer 6: Horizontal gradient",
+          "type": "gradient",
+          "direction": "horizontal",
+          "start": 0.2,
+          "end": 0.8,
+          "blend": "multiply",
+          "opacity": 0.15
+        },
+        {
+          "comment": "Layer 7: Diagonal gradient",
+          "type": "gradient",
+          "direction": "diagonal",
+          "start": 0.1,
+          "end": 0.9,
+          "blend": "screen",
+          "opacity": 0.1
+        },
+        {
+          "comment": "Layer 8: Radial gradient with center/inner/outer",
+          "type": "gradient",
+          "direction": "radial",
+          "center": [0.5, 0.5],
+          "inner": 1.0,
+          "outer": 0.0,
+          "blend": "overlay",
+          "opacity": 0.3
+        },
+        {
+          "comment": "Layer 9: Radial gradient off-center",
+          "type": "gradient",
+          "direction": "radial",
+          "center": [0.3, 0.7],
+          "inner": 0.8,
+          "outer": 0.2,
+          "blend": "soft_light",
+          "opacity": 0.2
+        },
+        {
+          "comment": "Layer 10: Checkerboard pattern",
+          "type": "checkerboard",
+          "tile_size": 32,
+          "color1": 0.3,
+          "color2": 0.7,
+          "blend": "multiply",
+          "opacity": 0.1
+        },
+        {
+          "comment": "Layer 11: Vertical stripes with all params",
+          "type": "stripes",
+          "direction": "vertical",
+          "stripe_width": 16,
+          "color1": 0.4,
+          "color2": 0.6,
+          "blend": "overlay",
+          "opacity": 0.15
+        },
+        {
+          "comment": "Layer 12: Horizontal stripes",
+          "type": "stripes",
+          "direction": "horizontal",
+          "stripe_width": 8,
+          "color1": 0.45,
+          "color2": 0.55,
+          "blend": "soft_light",
+          "opacity": 0.1
+        },
+        {
+          "comment": "Layer 13: Wood grain pattern with all params",
+          "type": "wood_grain",
+          "ring_count": 12,
+          "distortion": 0.4,
+          "seed": 789,
+          "blend": "multiply",
+          "opacity": 0.2
+        },
+        {
+          "comment": "Layer 14: Brick pattern with all params",
+          "type": "brick",
+          "brick_width": 64,
+          "brick_height": 32,
+          "mortar_width": 4,
+          "mortar_color": 0.2,
+          "brick_color": 0.6,
+          "variation": 0.15,
+          "seed": 999,
+          "blend": "overlay",
+          "opacity": 0.25
+        },
+        {
+          "comment": "Layer 15: Another solid for color tinting",
+          "type": "solid",
+          "color": "#8B4513",
+          "blend": "screen",
+          "opacity": 0.1
+        }
+      ],
+      "palette": [
+        "#1a1a2e",
+        "#16213e",
+        "#0f3460",
+        "#e94560",
+        "#f39c12",
+        "#27ae60"
+      ],
+      "color_ramp": [
+        "#000000",
+        "#1a1a2e",
+        "#4a4a6a",
+        "#8a8aaa",
+        "#cacaea",
+        "#ffffff"
+      ]
+    }
+  }
+}

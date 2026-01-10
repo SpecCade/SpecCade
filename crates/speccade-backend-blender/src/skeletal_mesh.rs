@@ -17,6 +17,8 @@ use crate::orchestrator::{GenerationMode, Orchestrator, OrchestratorConfig};
 pub struct SkeletalMeshResult {
     /// Path to the generated GLB file.
     pub output_path: std::path::PathBuf,
+    /// Path to the generated .blend file (if save_blend was enabled).
+    pub blend_path: Option<std::path::PathBuf>,
     /// Metrics from the generation.
     pub metrics: BlenderMetrics,
     /// The Blender report.
@@ -89,18 +91,24 @@ pub fn generate_with_config(
     }
 
     // Validate bone count matches skeleton preset
-    let expected_bone_count = params.skeleton_preset.bone_count() as u32;
-    if let Some(actual_bone_count) = metrics.bone_count {
-        if actual_bone_count != expected_bone_count {
-            return Err(BlenderError::metrics_validation_failed(format!(
-                "Bone count {} does not match skeleton preset {:?} (expected {})",
-                actual_bone_count, params.skeleton_preset, expected_bone_count
-            )));
+    if let Some(skeleton_preset) = &params.skeleton_preset {
+        let expected_bone_count = skeleton_preset.bone_count() as u32;
+        if let Some(actual_bone_count) = metrics.bone_count {
+            if actual_bone_count != expected_bone_count {
+                return Err(BlenderError::metrics_validation_failed(format!(
+                    "Bone count {} does not match skeleton preset {:?} (expected {})",
+                    actual_bone_count, params.skeleton_preset, expected_bone_count
+                )));
+            }
         }
     }
 
+    // Get blend path if it was generated
+    let blend_path = report.blend_path.as_ref().map(|p| out_root.join(p));
+
     Ok(SkeletalMeshResult {
         output_path,
+        blend_path,
         metrics,
         report,
     })
@@ -177,7 +185,9 @@ mod tests {
 
     fn create_test_params() -> SkeletalMeshBlenderRiggedMeshV1Params {
         SkeletalMeshBlenderRiggedMeshV1Params {
-            skeleton_preset: SkeletonPreset::HumanoidBasicV1,
+            skeleton_preset: Some(SkeletonPreset::HumanoidBasicV1),
+            skeleton: vec![],
+            parts: std::collections::HashMap::new(),
             body_parts: vec![BodyPart {
                 bone: "spine".to_string(),
                 mesh: BodyPartMesh {
@@ -197,6 +207,8 @@ mod tests {
                 max_bones: Some(64),
                 max_materials: Some(4),
             }),
+            tri_budget: None,
+            texturing: None,
         }
     }
 
@@ -249,7 +261,7 @@ mod tests {
         assert!(json.contains("cylinder"));
 
         let parsed: SkeletalMeshBlenderRiggedMeshV1Params = serde_json::from_str(&json).unwrap();
-        assert_eq!(parsed.skeleton_preset, SkeletonPreset::HumanoidBasicV1);
+        assert_eq!(parsed.skeleton_preset, Some(SkeletonPreset::HumanoidBasicV1));
         assert_eq!(parsed.body_parts.len(), 1);
     }
 
