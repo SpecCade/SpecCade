@@ -5,10 +5,64 @@ This document covers tracker module generation in SpecCade.
 ## Overview
 
 **Asset Type:** `music`  
-**Recipe Kinds:** `music.tracker_song_v1`  
+**Recipe Kinds:** `music.tracker_song_v1` (canonical), `music.tracker_song_compose_v1` (draft; see RFC-0003)  
 **Output Formats:** XM, IT
 
 SpecCade generates fully playable tracker modules with embedded instruments and patterns.
+
+## Draft: Recipe `music.tracker_song_compose_v1` (Pattern IR)
+
+Tracker music is dense; fully-expanded note event lists can be thousands of lines and are hard to author (for humans and LLMs). The draft authoring recipe `music.tracker_song_compose_v1` introduces a **JSON Pattern IR** (“macros”) that expands deterministically into the canonical `music.tracker_song_v1` event format before generating XM/IT.
+
+This proposal is specified in `docs/rfcs/RFC-0003-music-pattern-ir.md`.
+
+See also:
+
+- `docs/music-pattern-ir-quickstart.md`
+- `docs/music-pattern-ir-examples.md`
+- `docs/music-pattern-ir-implementation.md`
+
+Minimal example (16th hats + 4-on-the-floor kick, 64-row pattern):
+
+```json
+{
+  "recipe": {
+    "kind": "music.tracker_song_compose_v1",
+    "params": {
+      "format": "xm",
+      "bpm": 150,
+      "speed": 6,
+      "channels": 8,
+      "instruments": [
+        { "name": "kick", "base_note": "C4", "synthesis": { "type": "sine" } },
+        { "name": "hat", "base_note": "C1", "synthesis": { "type": "noise", "periodic": false } }
+      ],
+      "patterns": {
+        "beat": {
+          "rows": 64,
+          "program": {
+            "op": "stack",
+            "merge": "merge_fields",
+            "parts": [
+              {
+                "op": "emit",
+                "at": { "op": "range", "start": 0, "step": 16, "count": 4 },
+                "cell": { "channel": 0, "note": "C4", "inst": 0, "vol": 64 }
+              },
+              {
+                "op": "emit",
+                "at": { "op": "range", "start": 0, "step": 1, "count": 64 },
+                "cell": { "channel": 1, "note": "C1", "inst": 1, "vol": 32 }
+              }
+            ]
+          }
+        }
+      },
+      "arrangement": [{ "pattern": "beat", "repeat": 1 }]
+    }
+  }
+}
+```
 
 ## Outputs
 

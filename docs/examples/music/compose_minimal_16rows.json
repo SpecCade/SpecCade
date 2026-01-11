@@ -1,0 +1,62 @@
+{
+  "spec_version": 1,
+  "asset_id": "compose_minimal_16rows",
+  "asset_type": "music",
+  "license": "CC0-1.0",
+  "seed": 1,
+  "description": "Draft compose-v1 example: 16-row beat + expected expansion snapshot",
+  "outputs": [
+    { "kind": "primary", "format": "xm", "path": "compose_minimal_16rows.xm" },
+    {
+      "kind": "metadata",
+      "format": "json",
+      "path": "compose_minimal_16rows.expanded.params.json"
+    }
+  ],
+  "recipe": {
+    "kind": "music.tracker_song_compose_v1",
+    "params": {
+      "format": "xm",
+      "bpm": 150,
+      "speed": 6,
+      "channels": 4,
+      "loop": false,
+      "instruments": [
+        {
+          "name": "kick",
+          "base_note": "C4",
+          "default_volume": 64,
+          "synthesis": { "type": "sine" }
+        },
+        {
+          "name": "hat",
+          "base_note": "C1",
+          "default_volume": 32,
+          "synthesis": { "type": "noise", "periodic": false }
+        }
+      ],
+      "patterns": {
+        "p0": {
+          "rows": 16,
+          "program": {
+            "op": "stack",
+            "merge": "merge_fields",
+            "parts": [
+              {
+                "op": "emit",
+                "at": { "op": "range", "start": 0, "step": 4, "count": 4 },
+                "cell": { "channel": 0, "note": "C4", "inst": 0, "vol": 64 }
+              },
+              {
+                "op": "emit",
+                "at": { "op": "range", "start": 0, "step": 1, "count": 16 },
+                "cell": { "channel": 1, "note": "C1", "inst": 1, "vol": 32 }
+              }
+            ]
+          }
+        }
+      },
+      "arrangement": [{ "pattern": "p0", "repeat": 1 }]
+    }
+  }
+}

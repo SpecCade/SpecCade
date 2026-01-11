@@ -1,0 +1,105 @@
+{
+  "spec_version": 1,
+  "asset_id": "compose_eurobeat_4bars",
+  "asset_type": "music",
+  "license": "CC0-1.0",
+  "seed": 2024,
+  "description": "Draft compose-v1 example: eurobeat-ish 4 bars (drums + bass + lead + deterministic fill)",
+  "outputs": [{ "kind": "primary", "format": "xm", "path": "compose_eurobeat_4bars.xm" }],
+  "recipe": {
+    "kind": "music.tracker_song_compose_v1",
+    "params": {
+      "format": "xm",
+      "bpm": 150,
+      "speed": 6,
+      "channels": 8,
+      "loop": false,
+      "instruments": [
+        { "name": "kick", "base_note": "C4", "synthesis": { "type": "sine" } },
+        { "name": "snare", "base_note": "D4", "synthesis": { "type": "noise", "periodic": false } },
+        { "name": "hat", "base_note": "C1", "synthesis": { "type": "noise", "periodic": true } },
+        { "name": "bass", "base_note": "C2", "synthesis": { "type": "sawtooth" } },
+        { "name": "lead", "base_note": "C5", "synthesis": { "type": "sawtooth" } }
+      ],
+      "defs": {
+        "kick_4": {
+          "op": "emit",
+          "at": { "op": "range", "start": 0, "step": 16, "count": 4 },
+          "cell": { "channel": 0, "note": "C4", "inst": 0, "vol": 64 }
+        },
+        "snare_2_4": {
+          "op": "emit",
+          "at": { "op": "range", "start": 8, "step": 16, "count": 4 },
+          "cell": { "channel": 1, "note": "D4", "inst": 1, "vol": 56 }
+        },
+        "hat_16": {
+          "op": "emit",
+          "at": { "op": "range", "start": 0, "step": 1, "count": 64 },
+          "cell": { "channel": 5, "note": "C1", "inst": 2, "vol": 32 }
+        },
+        "hat_ghosts": {
+          "op": "prob",
+          "p_permille": 350,
+          "seed_salt": "hat_ghosts",
+          "body": {
+            "op": "emit",
+            "at": { "op": "range", "start": 1, "step": 2, "count": 32 },
+            "cell": { "channel": 5, "note": "C1", "inst": 2, "vol": 16 }
+          }
+        },
+        "bass_ost": {
+          "op": "emit_seq",
+          "at": { "op": "range", "start": 0, "step": 4, "count": 16 },
+          "cell": { "channel": 2, "inst": 3, "vol": 56 },
+          "note_seq": {
+            "mode": "cycle",
+            "values": ["F1", "F1", "C2", "C2", "G1", "G1", "D2", "D2"]
+          }
+        },
+        "lead_riff": {
+          "op": "emit_seq",
+          "at": { "op": "range", "start": 0, "step": 4, "count": 16 },
+          "cell": { "channel": 3, "inst": 4, "vol": 48 },
+          "note_seq": {
+            "mode": "cycle",
+            "values": ["E5", "G5", "B5", "A5", "G5", "E5", "D5", "E5"]
+          }
+        },
+        "fill_none": { "op": "stack", "parts": [] },
+        "fill_snare_roll": {
+          "op": "emit",
+          "at": { "op": "range", "start": 57, "step": 1, "count": 7 },
+          "cell": { "channel": 1, "note": "D4", "inst": 1, "vol": 40 }
+        },
+        "end_fill": {
+          "op": "choose",
+          "seed_salt": "end_fill",
+          "choices": [
+            { "weight": 3, "body": { "op": "ref", "name": "fill_none" } },
+            { "weight": 1, "body": { "op": "ref", "name": "fill_snare_roll" } }
+          ]
+        }
+      },
+      "patterns": {
+        "verse_4bars": {
+          "rows": 64,
+          "program": {
+            "op": "stack",
+            "merge": "error",
+            "parts": [
+              { "op": "ref", "name": "kick_4" },
+              { "op": "ref", "name": "snare_2_4" },
+              { "op": "ref", "name": "hat_16" },
+              { "op": "ref", "name": "hat_ghosts" },
+              { "op": "ref", "name": "bass_ost" },
+              { "op": "ref", "name": "lead_riff" },
+              { "op": "ref", "name": "end_fill" }
+            ]
+          }
+        }
+      },
+      "arrangement": [{ "pattern": "verse_4bars", "repeat": 1 }]
+    }
+  }
+}
+

@@ -1,0 +1,46 @@
+{
+  "format": "xm",
+  "bpm": 150,
+  "speed": 6,
+  "channels": 4,
+  "loop": false,
+  "instruments": [
+    { "name": "kick", "base_note": "C4", "default_volume": 64, "synthesis": { "type": "sine" } },
+    {
+      "name": "hat",
+      "base_note": "C1",
+      "default_volume": 32,
+      "synthesis": { "type": "noise", "periodic": false }
+    }
+  ],
+  "patterns": {
+    "p0": {
+      "rows": 16,
+      "data": [
+        { "row": 0, "channel": 0, "note": "C4", "inst": 0, "vol": 64 },
+        { "row": 0, "channel": 1, "note": "C1", "inst": 1, "vol": 32 },
+        { "row": 1, "channel": 1, "note": "C1", "inst": 1, "vol": 32 },
+        { "row": 2, "channel": 1, "note": "C1", "inst": 1, "vol": 32 },
+        { "row": 3, "channel": 1, "note": "C1", "inst": 1, "vol": 32 },
+        { "row": 4, "channel": 0, "note": "C4", "inst": 0, "vol": 64 },
+        { "row": 4, "channel": 1, "note": "C1", "inst": 1, "vol": 32 },
+        { "row": 5, "channel": 1, "note": "C1", "inst": 1, "vol": 32 },
+        { "row": 6, "channel": 1, "note": "C1", "inst": 1, "vol": 32 },
+        { "row": 7, "channel": 1, "note": "C1", "inst": 1, "vol": 32 },
+        { "row": 8, "channel": 0, "note": "C4", "inst": 0, "vol": 64 },
+        { "row": 8, "channel": 1, "note": "C1", "inst": 1, "vol": 32 },
+        { "row": 9, "channel": 1, "note": "C1", "inst": 1, "vol": 32 },
+        { "row": 10, "channel": 1, "note": "C1", "inst": 1, "vol": 32 },
+        { "row": 11, "channel": 1, "note": "C1", "inst": 1, "vol": 32 },
+        { "row": 12, "channel": 0, "note": "C4", "inst": 0, "vol": 64 },
+        { "row": 12, "channel": 1, "note": "C1", "inst": 1, "vol": 32 },
+        { "row": 13, "channel": 1, "note": "C1", "inst": 1, "vol": 32 },
+        { "row": 14, "channel": 1, "note": "C1", "inst": 1, "vol": 32 },
+        { "row": 15, "channel": 1, "note": "C1", "inst": 1, "vol": 32 }
+      ]
+    }
+  },
+  "arrangement": [{ "pattern": "p0", "repeat": 1 }],
+  "automation": []
+}
+

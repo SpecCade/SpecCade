@@ -158,7 +158,7 @@ Each entry in `outputs[]` declares an expected artifact:
 | Asset Type | Recipe Kinds | Output Formats | Documentation |
 |------------|--------------|----------------|---------------|
 | `audio` | `audio_v1` | WAV | [audio.md](audio.md) |
-| `music` | `music.tracker_song_v1` | XM, IT | [music.md](music.md) |
+| `music` | `music.tracker_song_v1` (canonical), `music.tracker_song_compose_v1` (draft) | XM, IT | [music.md](music.md) |
 | `texture` | `texture.material_v1`, `texture.normal_v1`, `texture.packed_v1` | PNG | [texture.md](texture.md) |
 | `static_mesh` | `static_mesh.blender_primitives_v1` | GLB | See `docs/SPEC_REFERENCE.md` |
 | `skeletal_mesh` | `skeletal_mesh.blender_rigged_mesh_v1` | GLB | See `docs/SPEC_REFERENCE.md` |
