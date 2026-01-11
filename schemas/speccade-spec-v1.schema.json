@@ -36,7 +36,7 @@
     "outputs": {
       "type": "array",
       "minItems": 1,
-      "description": "Declared output artifacts. Generation currently writes `primary` and/or `packed` outputs; other kinds are reserved.",
+      "description": "Declared output artifacts. Generation currently writes `primary` outputs (and `packed` outputs for `texture.packed_v1`).",
       "items": { "$ref": "#/definitions/output_spec" }
     },
     "description": {
@@ -122,7 +122,7 @@
       "properties": {
         "kind": {
           "type": "string",
-          "enum": ["primary", "metadata", "preview"]
+          "enum": ["primary"]
         },
         "format": {
           "type": "string",

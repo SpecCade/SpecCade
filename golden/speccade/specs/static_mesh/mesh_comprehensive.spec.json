@@ -12,11 +12,6 @@
       "kind": "primary",
       "format": "glb",
       "path": "mesh_comprehensive.glb"
-    },
-    {
-      "kind": "metadata",
-      "format": "json",
-      "path": "mesh_comprehensive.meta.json"
     }
   ],
   "variants": [

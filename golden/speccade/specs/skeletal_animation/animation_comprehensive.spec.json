@@ -12,11 +12,6 @@
       "kind": "primary",
       "format": "glb",
       "path": "animation_comprehensive.glb"
-    },
-    {
-      "kind": "metadata",
-      "format": "json",
-      "path": "animation_comprehensive.meta.json"
     }
   ],
   "variants": [

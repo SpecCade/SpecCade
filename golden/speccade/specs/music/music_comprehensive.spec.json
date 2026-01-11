@@ -12,11 +12,6 @@
       "kind": "primary",
       "format": "it",
       "path": "music_comprehensive.it"
-    },
-    {
-      "kind": "metadata",
-      "format": "json",
-      "path": "music_comprehensive.meta.json"
     }
   ],
   "variants": [

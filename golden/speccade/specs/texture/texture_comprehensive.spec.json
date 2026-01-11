@@ -42,11 +42,6 @@
       "kind": "primary",
       "format": "png",
       "path": "texture_comprehensive_height.png"
-    },
-    {
-      "kind": "metadata",
-      "format": "json",
-      "path": "texture_comprehensive.meta.json"
     }
   ],
   "variants": [

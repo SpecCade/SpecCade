@@ -149,6 +149,27 @@ fn validate_outputs(spec: &Spec, result: &mut ValidationResult) {
     // Check for unique paths
     let mut seen_paths: HashSet<&str> = HashSet::new();
     for (i, output) in spec.outputs.iter().enumerate() {
+        // NOTE: `metadata` / `preview` are defined in the enum for forward-compat,
+        // but they are not produced by any current generators. The structured output
+        // for generation/validation is the `${asset_id}.report.json` sibling file.
+        if matches!(output.kind, OutputKind::Metadata | OutputKind::Preview) {
+            let hint = if output.kind == OutputKind::Metadata {
+                format!(
+                    "output kind '{}' is reserved; use '{}' instead",
+                    output.kind,
+                    crate::report::Report::filename(&spec.asset_id)
+                )
+            } else {
+                format!("output kind '{}' is reserved (not generated)", output.kind)
+            };
+
+            result.add_error(ValidationError::with_path(
+                ErrorCode::OutputValidationFailed,
+                hint,
+                format!("outputs[{}].kind", i),
+            ));
+        }
+
         if !seen_paths.insert(&output.path) {
             result.add_error(ValidationError::with_path(
                 ErrorCode::DuplicateOutputPath,
@@ -244,6 +265,16 @@ fn validate_outputs_for_recipe(
 }
 
 fn validate_non_packed_outputs(spec: &Spec, result: &mut ValidationResult) {
+    for (i, output) in spec.outputs.iter().enumerate() {
+        if output.kind == OutputKind::Packed {
+            result.add_error(ValidationError::with_path(
+                ErrorCode::OutputValidationFailed,
+                "outputs with kind 'packed' are only valid for recipe kind 'texture.packed_v1'",
+                format!("outputs[{}].kind", i),
+            ));
+        }
+    }
+
     let has_primary = spec.outputs.iter().any(|o| o.kind == OutputKind::Primary);
     if !has_primary {
         result.add_error(ValidationError::with_path(
@@ -546,6 +577,16 @@ fn validate_texture_packed_outputs(
 
     let available_keys: HashSet<&str> = params.maps.keys().map(|k| k.as_str()).collect();
 
+    for (i, output) in spec.outputs.iter().enumerate() {
+        if output.kind != OutputKind::Packed {
+            result.add_error(ValidationError::with_path(
+                ErrorCode::OutputValidationFailed,
+                "texture.packed_v1 outputs must have kind 'packed'",
+                format!("outputs[{}].kind", i),
+            ));
+        }
+    }
+
     let mut has_any_packed_output = false;
 
     for (i, output) in spec.outputs.iter().enumerate() {
@@ -730,6 +771,7 @@ fn output_path_safety_errors(path: &str) -> Vec<String> {
 mod tests {
     use super::*;
     use crate::output::{OutputFormat, OutputSpec};
+    use crate::recipe::texture::{ChannelSource, PackedChannels};
     use crate::spec::AssetType;
 
     fn make_valid_spec() -> Spec {
@@ -826,6 +868,53 @@ mod tests {
             .errors
             .iter()
             .any(|e| e.code == ErrorCode::NoPrimaryOutput));
+    }
+
+    #[test]
+    fn test_metadata_and_preview_outputs_are_reserved() {
+        let mut spec = make_valid_spec();
+        spec.outputs
+            .push(OutputSpec::metadata("sounds/test.meta.json"));
+        spec.outputs.push(OutputSpec::preview(
+            OutputFormat::Ogg,
+            "sounds/test.preview.ogg",
+        ));
+
+        let result = validate_spec(&spec);
+        assert!(!result.is_ok());
+        assert!(result
+            .errors
+            .iter()
+            .any(|e| e.code == ErrorCode::OutputValidationFailed));
+    }
+
+    #[test]
+    fn test_audio_rejects_packed_outputs() {
+        let mut spec = make_valid_spec();
+        spec.recipe = Some(crate::recipe::Recipe::new(
+            "audio_v1",
+            serde_json::json!({
+                "duration_seconds": 0.1,
+                "layers": []
+            }),
+        ));
+
+        spec.outputs.push(OutputSpec::packed(
+            "textures/not-valid-for-audio.png",
+            PackedChannels {
+                r: ChannelSource::Constant(0.0),
+                g: ChannelSource::Constant(0.0),
+                b: ChannelSource::Constant(0.0),
+                a: None,
+            },
+        ));
+
+        let result = validate_for_generate(&spec);
+        assert!(!result.is_ok());
+        assert!(result
+            .errors
+            .iter()
+            .any(|e| e.code == ErrorCode::OutputValidationFailed));
     }
 
     #[test]
@@ -1093,6 +1182,41 @@ mod tests {
                     "resolution": [64, 64],
                     "tileable": true,
                     "maps": ["albedo", "normal"]
+                }),
+            ))
+            .build();
+
+        let result = validate_for_generate(&spec);
+        assert!(!result.is_ok());
+        assert!(result
+            .errors
+            .iter()
+            .any(|e| e.code == ErrorCode::OutputValidationFailed));
+    }
+
+    #[test]
+    fn test_texture_packed_rejects_primary_outputs() {
+        let spec = Spec::builder("test-packed-01", AssetType::Texture)
+            .license("CC0-1.0")
+            .seed(42)
+            .output(OutputSpec::primary(OutputFormat::Png, "textures/out.png"))
+            .output(OutputSpec::packed(
+                "textures/out-packed.png",
+                PackedChannels {
+                    r: ChannelSource::Constant(0.0),
+                    g: ChannelSource::Constant(0.0),
+                    b: ChannelSource::Constant(0.0),
+                    a: None,
+                },
+            ))
+            .recipe(crate::recipe::Recipe::new(
+                "texture.packed_v1",
+                serde_json::json!({
+                    "resolution": [1, 1],
+                    "tileable": true,
+                    "maps": {
+                        "ao": { "type": "grayscale", "value": 0.0 }
+                    }
                 }),
             ))
             .build();

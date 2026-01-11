@@ -12,11 +12,6 @@
       "kind": "primary",
       "format": "wav",
       "path": "audio_instrument_comprehensive.wav"
-    },
-    {
-      "kind": "metadata",
-      "format": "json",
-      "path": "audio_instrument_comprehensive.meta.json"
     }
   ],
   "variants": [

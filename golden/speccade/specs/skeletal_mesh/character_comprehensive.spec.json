@@ -12,11 +12,6 @@
       "kind": "primary",
       "format": "glb",
       "path": "character_comprehensive.glb"
-    },
-    {
-      "kind": "metadata",
-      "format": "json",
-      "path": "character_comprehensive.meta.json"
     }
   ],
   "variants": [

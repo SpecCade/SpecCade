@@ -10,12 +10,15 @@ This document covers audio generation in SpecCade.
 
 Audio generation uses a unified layered synthesis recipe for both one-shot SFX and pitched instrument samples.
 
+**SSOT:** The authoritative `audio_v1` parameter surface is the Rust type `AudioV1Params` in `crates/speccade-spec/src/recipe/audio/`.
+
 ## Outputs
 
 For `audio_v1`, `speccade generate` writes exactly one `primary` output:
 
 - `outputs[]` must contain **exactly one** entry with `kind: "primary"`.
 - The `primary` output must have `format: "wav"` and a `.wav` path.
+- Other output kinds like `metadata` / `preview` are reserved and currently rejected by validation.
 
 Example:
 
@@ -26,6 +29,8 @@ Example:
   "path": "sounds/laser_shot.wav"
 }
 ```
+
+Note: `speccade validate` and `speccade generate` write a `${asset_id}.report.json` sibling file next to the spec file. This is the structured metadata output today.
 
 ## Recipe: `audio_v1`
 
@@ -38,12 +43,16 @@ Example:
 | `sample_rate` | integer | no | `44100` | Sample rate in Hz |
 | `layers` | array | yes | — | Synthesis layers to combine (can be empty for silence) |
 | `pitch_envelope` | object | no | omitted | Pitch modulation envelope applied to all layers |
-| `generate_loop_points` | boolean | no | `false` | If true, backend attempts to compute a loop point |
+| `generate_loop_points` | boolean | no | `false` | If true, backend sets a loop point (currently `attack + decay` of the first layer envelope) |
 | `master_filter` | object | no | omitted | Filter applied after mixing layers |
 
 ### Base Note Semantics (Music Integration)
 
 `base_note` is primarily used by the music backend when an `audio` spec is referenced from a music instrument `ref`. It describes the pitch the rendered sample represents (so the tracker can transpose correctly).
+
+### Mixing / Normalization
+
+After layers are mixed (and `master_filter` is applied, if present), the backend normalizes the final signal to **-3 dB peak headroom** to prevent clipping. There is currently no per-spec flag to disable this; treat layer `volume` as a relative balance tool, not an absolute loudness guarantee.
 
 ### Audio Layers
 
@@ -71,6 +80,8 @@ Each entry in `layers[]` is an object with:
 ### Synthesis Types
 
 `synthesis` is a tagged union with `type`:
+
+For the authoritative list of synthesis variants/fields, see `crates/speccade-spec/src/recipe/audio/synthesis.rs`.
 
 #### `oscillator`
 

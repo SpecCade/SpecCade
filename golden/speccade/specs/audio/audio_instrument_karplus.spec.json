@@ -12,11 +12,6 @@
       "kind": "primary",
       "format": "wav",
       "path": "audio_instrument_karplus.wav"
-    },
-    {
-      "kind": "metadata",
-      "format": "json",
-      "path": "audio_instrument_karplus.meta.json"
     }
   ],
   "recipe": {

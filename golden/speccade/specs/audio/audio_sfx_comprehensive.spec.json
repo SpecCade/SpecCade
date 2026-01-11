@@ -12,16 +12,6 @@
       "kind": "primary",
       "format": "wav",
       "path": "audio_sfx_comprehensive.wav"
-    },
-    {
-      "kind": "preview",
-      "format": "ogg",
-      "path": "audio_sfx_comprehensive_preview.ogg"
-    },
-    {
-      "kind": "metadata",
-      "format": "json",
-      "path": "audio_sfx_comprehensive.meta.json"
     }
   ],
   "variants": [

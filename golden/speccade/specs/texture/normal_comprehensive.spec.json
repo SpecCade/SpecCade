@@ -12,11 +12,6 @@
       "kind": "primary",
       "format": "png",
       "path": "normal_comprehensive.png"
-    },
-    {
-      "kind": "metadata",
-      "format": "json",
-      "path": "normal_comprehensive.meta.json"
     }
   ],
   "variants": [
