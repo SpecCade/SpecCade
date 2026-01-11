@@ -696,11 +696,12 @@ fn test_sample_loop_points() {
 
     // Loop start is at offset 4-7
     let loop_start = u32::from_le_bytes([buf[4], buf[5], buf[6], buf[7]]);
-    assert_eq!(loop_start, 100);
+    // XM stores loop offsets in bytes; for 16-bit samples each sample is 2 bytes.
+    assert_eq!(loop_start, 200);
 
     // Loop length is at offset 8-11
     let loop_length = u32::from_le_bytes([buf[8], buf[9], buf[10], buf[11]]);
-    assert_eq!(loop_length, 500);
+    assert_eq!(loop_length, 1000);
 
     // Type byte is at offset 14
     let type_byte = buf[14];

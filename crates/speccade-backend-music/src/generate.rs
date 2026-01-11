@@ -14,11 +14,16 @@
 
 use std::path::Path;
 
-use speccade_spec::recipe::music::{
-    InstrumentSynthesis, MusicTrackerSongV1Params, TrackerFormat, TrackerInstrument,
+use speccade_spec::recipe::audio::{
+    AudioLayer, AudioV1Params, NoteSpec as AudioNoteSpec, NoiseType, Synthesis as AudioSynthesis,
+    Waveform,
 };
+use speccade_spec::recipe::music::{InstrumentSynthesis, MusicTrackerSongV1Params, PatternNote, TrackerFormat, TrackerInstrument};
 use speccade_spec::BackendError;
 use thiserror::Error;
+
+use crate::note::{midi_to_freq, DEFAULT_IT_SYNTH_MIDI_NOTE, DEFAULT_SYNTH_MIDI_NOTE};
+use crate::synthesis::{derive_instrument_seed, load_wav_sample};
 
 // Re-export format-specific generators (internal use)
 pub(crate) use crate::it_gen::generate_it;
@@ -123,190 +128,256 @@ pub fn generate_music(
 // Shared utilities used by xm_gen and it_gen
 // ============================================================================
 
-/// Get the synthesis configuration for an instrument, handling ref, wav, or inline synthesis.
-///
-/// This resolves either an inline synthesis definition, a WAV sample path,
-/// or loads from an external reference file.
-pub(crate) fn get_instrument_synthesis(
-    instr: &TrackerInstrument,
-    _spec_dir: &Path,
-) -> Result<InstrumentSynthesis, GenerateError> {
-    if let Some(ref ref_path) = instr.r#ref {
-        // Load external spec file
-        load_instrument_from_ref(ref_path, _spec_dir)
-    } else if let Some(ref wav_path) = instr.wav {
-        // WAV sample at instrument level - convert to Sample synthesis
-        // Use base_note from instrument level if specified
-        Ok(InstrumentSynthesis::Sample {
-            path: wav_path.clone(),
-            base_note: instr.base_note.clone(),
-        })
-    } else if let Some(ref synthesis) = instr.synthesis {
-        // Use inline synthesis
-        Ok(synthesis.clone())
-    } else {
-        // Default to a basic synthesis if neither is provided
-        Err(GenerateError::InstrumentError(format!(
-            "Instrument '{}' must have either 'ref', 'wav', or 'synthesis' defined",
-            instr.name
-        )))
+/// Baked tracker sample data for a `TrackerInstrument`.
+#[derive(Debug, Clone)]
+pub(crate) struct BakedInstrumentSample {
+    /// 16-bit mono PCM bytes (little-endian i16).
+    pub pcm16_mono: Vec<u8>,
+    /// Natural sample rate of the PCM data.
+    pub sample_rate: u32,
+    /// Base MIDI note the sample is tuned to.
+    pub base_midi: u8,
+    /// Optional loop points in samples: (loop_start, loop_end).
+    pub loop_points: Option<(u32, u32)>,
+}
+
+fn neutralize_audio_layer_envelopes(params: &mut AudioV1Params) {
+    for layer in &mut params.layers {
+        layer.envelope.attack = 0.0;
+        layer.envelope.decay = 0.0;
+        layer.envelope.sustain = 1.0;
+        layer.envelope.release = 0.0;
     }
 }
 
-/// Load instrument synthesis from an external spec file.
+/// Bake a tracker instrument into a mono sample.
 ///
-/// This function resolves external instrument references by:
-/// 1. Loading the referenced spec file (relative to spec_dir)
-/// 2. Parsing it as an audio_v1 recipe
-/// 3. Converting the synthesis to an InstrumentSynthesis
-///
-/// Supported external spec formats:
-/// - `audio_v1` recipes with oscillator-based synthesis are converted directly
-/// - Complex synthesis types (FM, Karplus-Strong, etc.) return an error suggesting
-///   to inline the instrument or use a pre-generated WAV sample
-fn load_instrument_from_ref(
-    ref_path: &str,
+/// Sources (exactly one):
+/// - `wav`: load PCM from disk
+/// - `ref`: load an external `audio_v1` spec and render via `speccade-backend-audio`
+/// - `synthesis_audio_v1`: inline `audio_v1` params, rendered via `speccade-backend-audio`
+/// - `synthesis` (legacy): mapped to `audio_v1` oscillator/noise then rendered
+pub(crate) fn bake_instrument_sample(
+    instr: &TrackerInstrument,
+    base_seed: u32,
+    index: u32,
     spec_dir: &Path,
-) -> Result<InstrumentSynthesis, GenerateError> {
-    use speccade_spec::Spec;
+    format: TrackerFormat,
+) -> Result<BakedInstrumentSample, GenerateError> {
+    const MAX_TRACKER_SAMPLE_SECONDS: f64 = 6.0;
 
-    // Resolve the path relative to spec_dir
-    let full_path = spec_dir.join(ref_path);
+    let instr_seed = derive_instrument_seed(base_seed, index);
 
-    // Read the file
-    let json_content = std::fs::read_to_string(&full_path).map_err(|e| {
-        GenerateError::InstrumentError(format!(
-            "Failed to read external instrument spec '{}': {}",
-            ref_path, e
-        ))
-    })?;
+    let mut sources = Vec::new();
+    if instr.r#ref.is_some() {
+        sources.push("ref");
+    }
+    if instr.wav.is_some() {
+        sources.push("wav");
+    }
+    if instr.synthesis_audio_v1.is_some() {
+        sources.push("synthesis_audio_v1");
+    }
+    if instr.synthesis.is_some() {
+        sources.push("synthesis");
+    }
 
-    // Parse as a Spec
-    let spec: Spec = serde_json::from_str(&json_content).map_err(|e| {
-        GenerateError::InstrumentError(format!(
-            "Failed to parse external instrument spec '{}': {}",
-            ref_path, e
-        ))
-    })?;
-
-    // Get the recipe
-    let recipe = spec.recipe.as_ref().ok_or_else(|| {
-        GenerateError::InstrumentError(format!(
-            "External instrument spec '{}' has no recipe",
-            ref_path
-        ))
-    })?;
-
-    // Check recipe kind - must be audio_v1
-    if recipe.kind != "audio_v1" {
+    if sources.is_empty() {
         return Err(GenerateError::InstrumentError(format!(
-            "External instrument spec '{}' has unsupported recipe kind '{}', expected 'audio_v1'",
-            ref_path, recipe.kind
+            "Instrument '{}' must set exactly one of: ref, wav, synthesis_audio_v1, synthesis",
+            instr.name
+        )));
+    }
+    if sources.len() > 1 {
+        return Err(GenerateError::InstrumentError(format!(
+            "Instrument '{}' must set exactly one of: ref, wav, synthesis_audio_v1, synthesis (got: {})",
+            instr.name,
+            sources.join(", ")
         )));
     }
 
-    // Parse as AudioV1Params
-    let audio_params: speccade_spec::recipe::audio::AudioV1Params =
-        serde_json::from_value(recipe.params.clone()).map_err(|e| {
-            GenerateError::InstrumentError(format!(
-                "Failed to parse audio params from '{}': {}",
-                ref_path, e
-            ))
-        })?;
+    // Resolve the base MIDI note for pitch mapping.
+    let default_base_midi = match format {
+        TrackerFormat::Xm => DEFAULT_SYNTH_MIDI_NOTE,
+        TrackerFormat::It => DEFAULT_IT_SYNTH_MIDI_NOTE,
+    };
 
-    // Get the first layer's synthesis (instruments typically have one layer)
-    let layer = audio_params.layers.first().ok_or_else(|| {
+    // Load PCM from WAV files directly.
+    if let Some(ref wav_path) = instr.wav {
+        let sample_path = spec_dir.join(wav_path);
+        let (pcm16_mono, sample_rate) =
+            load_wav_sample(&sample_path).map_err(GenerateError::SampleLoadError)?;
+
+        let base_midi = parse_base_note_midi(
+            instr.base_note.as_deref(),
+            None,
+            None,
+            default_base_midi,
+            &instr.name,
+        )?;
+
+        enforce_max_sample_len(&pcm16_mono, sample_rate, MAX_TRACKER_SAMPLE_SECONDS, &instr.name)?;
+
+        return Ok(BakedInstrumentSample {
+            pcm16_mono,
+            sample_rate,
+            base_midi,
+            loop_points: None,
+        });
+    }
+
+    // Legacy `synthesis: { type: sample }` is equivalent to `wav`.
+    if let Some(InstrumentSynthesis::Sample { path, base_note }) = instr.synthesis.as_ref() {
+        let sample_path = spec_dir.join(path);
+        let (pcm16_mono, sample_rate) =
+            load_wav_sample(&sample_path).map_err(GenerateError::SampleLoadError)?;
+
+        let base_midi = parse_base_note_midi(
+            instr.base_note.as_deref(),
+            base_note.as_deref(),
+            None,
+            default_base_midi,
+            &instr.name,
+        )?;
+
+        enforce_max_sample_len(&pcm16_mono, sample_rate, MAX_TRACKER_SAMPLE_SECONDS, &instr.name)?;
+
+        return Ok(BakedInstrumentSample {
+            pcm16_mono,
+            sample_rate,
+            base_midi,
+            loop_points: None,
+        });
+    }
+
+    // Everything else is baked via audio_v1 -> backend-audio.
+    let mut audio_params = if let Some(ref ref_path) = instr.r#ref {
+        load_audio_v1_params_from_ref(ref_path, spec_dir)?
+    } else if let Some(ref params) = instr.synthesis_audio_v1 {
+        params.clone()
+    } else if let Some(ref legacy) = instr.synthesis {
+        legacy_synthesis_to_audio_v1_params(instr, legacy, format)?
+    } else {
+        return Err(GenerateError::InstrumentError(format!(
+            "Instrument '{}' must set exactly one of: ref, wav, synthesis_audio_v1, synthesis",
+            instr.name
+        )));
+    };
+
+    // Instrument-level overrides / precedence.
+    if let Some(sample_rate) = instr.sample_rate {
+        audio_params.sample_rate = sample_rate;
+    }
+    if let Some(base_note) = instr
+        .base_note
+        .as_deref()
+        .map(str::trim)
+        .filter(|s| !s.is_empty())
+    {
+        audio_params.base_note = Some(AudioNoteSpec::NoteName(base_note.to_string()));
+    }
+
+    // Loop strategy is driven by the tracker envelope: sustained instruments loop, one-shots don't.
+    let want_loop = instr.envelope.sustain > 0.0;
+
+    // Tracker envelopes also apply at playback time in XM/IT. If we baked audio_v1 layer
+    // envelopes into the sample, we'd effectively apply an amplitude envelope twice (once in
+    // the baked PCM, and again in the tracker). This is especially problematic for short,
+    // percussive envelopes where tick quantization can collapse points and mute the sound.
+    //
+    // Rule: for music instruments, tracker envelopes are authoritative; audio_v1 layer envelopes
+    // are neutralized when baking samples.
+    neutralize_audio_layer_envelopes(&mut audio_params);
+
+    // Loop points are derived from the tracker envelope (not the audio_v1 layer envelope).
+    audio_params.generate_loop_points = false;
+
+    // Render via unified audio backend (deterministic by seed).
+    let gen = speccade_backend_audio::generate_from_params(&audio_params, instr_seed).map_err(|e| {
         GenerateError::InstrumentError(format!(
-            "External instrument spec '{}' has no synthesis layers",
-            ref_path
+            "Failed to bake audio_v1 instrument '{}' to tracker sample: {}",
+            instr.name, e
         ))
     })?;
 
-    // Convert audio::Synthesis to music::InstrumentSynthesis
-    convert_audio_synthesis_to_instrument(&layer.synthesis, ref_path)
-}
+    let pcm = speccade_backend_audio::wav::extract_pcm_data(&gen.wav.wav_data).ok_or_else(|| {
+        GenerateError::InstrumentError(format!(
+            "audio_v1 backend returned an invalid WAV buffer for instrument '{}'",
+            instr.name
+        ))
+    })?;
 
-/// Convert an audio::Synthesis to a music::InstrumentSynthesis.
-///
-/// This handles the mapping between the more expressive audio synthesis types
-/// and the simpler tracker instrument synthesis types.
-fn convert_audio_synthesis_to_instrument(
-    synthesis: &speccade_spec::recipe::audio::Synthesis,
-    ref_path: &str,
-) -> Result<InstrumentSynthesis, GenerateError> {
-    use speccade_spec::recipe::audio::{Synthesis, Waveform};
+    let pcm16_mono = if gen.wav.is_stereo {
+        downmix_pcm16_stereo_to_mono(pcm).ok_or_else(|| {
+            GenerateError::InstrumentError(format!(
+                "audio_v1 backend returned invalid stereo PCM for instrument '{}'",
+                instr.name
+            ))
+        })?
+    } else {
+        pcm.to_vec()
+    };
 
-    match synthesis {
-        // Simple oscillator types map directly
-        Synthesis::Oscillator {
-            waveform,
-            duty,
-            ..
-        } => {
-            match waveform {
-                Waveform::Sine => Ok(InstrumentSynthesis::Sine),
-                Waveform::Square => Ok(InstrumentSynthesis::Square),
-                Waveform::Pulse => {
-                    Ok(InstrumentSynthesis::Pulse {
-                        duty_cycle: duty.unwrap_or(0.5),
-                    })
-                }
-                Waveform::Sawtooth => Ok(InstrumentSynthesis::Sawtooth),
-                Waveform::Triangle => Ok(InstrumentSynthesis::Triangle),
-            }
+    // Safety: cap sample length to keep module sizes reasonable.
+    enforce_max_sample_len(
+        &pcm16_mono,
+        gen.wav.sample_rate,
+        MAX_TRACKER_SAMPLE_SECONDS,
+        &instr.name,
+    )?;
+
+    // Resolve base_midi for pitch mapping (tracker-level base_note overrides audio_v1 base_note).
+    let audio_base_note = audio_params.base_note.as_ref();
+    let (audio_base_note_str, audio_base_note_midi) = match audio_base_note {
+        Some(AudioNoteSpec::NoteName(s)) => (Some(s.as_str()), None),
+        Some(AudioNoteSpec::MidiNote(n)) => (None, Some(*n)),
+        None => (None, None),
+    };
+    let base_midi = parse_base_note_midi(
+        instr.base_note.as_deref(),
+        audio_base_note_str,
+        audio_base_note_midi,
+        default_base_midi,
+        &instr.name,
+    )?;
+
+    let sample_rate = gen.wav.sample_rate;
+
+    // Loop points: loop from tracker attack+decay to the end of the sample.
+    //
+    // Trackers will keep looping the sample even after note-off; the instrument volume envelope
+    // handles the release phase by fading volume down.
+    let loop_points = if want_loop {
+        let sample_len = (pcm16_mono.len() / 2) as u32;
+        if sample_len < 2 {
+            return Err(GenerateError::InstrumentError(format!(
+                "Instrument '{}' sample is too short to loop ({} samples)",
+                instr.name, sample_len
+            )));
         }
 
-        // Noise maps to periodic or non-periodic based on filter presence
-        Synthesis::NoiseBurst { filter, .. } => {
-            // If there's a filter, it's more "tonal", so use periodic
-            Ok(InstrumentSynthesis::Noise {
-                periodic: filter.is_some(),
-            })
+        let loop_start = ((instr.envelope.attack + instr.envelope.decay) * sample_rate as f64)
+            .round()
+            .clamp(0.0, (sample_len - 1) as f64) as u32;
+        let loop_end = sample_len;
+        if loop_start + 1 > loop_end {
+            return Err(GenerateError::InstrumentError(format!(
+                "Instrument '{}' has invalid loop region: start={} end={}",
+                instr.name, loop_start, loop_end,
+            )));
         }
 
-        // Complex synthesis types are not directly supported in tracker instruments.
-        // These should be pre-rendered to WAV or inlined with simple synthesis.
-        Synthesis::FmSynth { .. } => Err(GenerateError::InstrumentError(format!(
-            "External instrument '{}' uses FM synthesis which cannot be directly converted. \
-             Please either: 1) Inline a simple synthesis (pulse/saw/sine/etc.) in the music spec, \
-             2) Pre-render the instrument to a WAV file and use 'wav' instead of 'ref', or \
-             3) Use the audio backend to generate a sample first.",
-            ref_path
-        ))),
+        Some((loop_start, loop_end))
+    } else {
+        None
+    };
 
-        Synthesis::KarplusStrong { .. } => Err(GenerateError::InstrumentError(format!(
-            "External instrument '{}' uses Karplus-Strong synthesis which cannot be directly converted. \
-             Please either: 1) Inline a simple synthesis (pulse/saw/sine/etc.) in the music spec, \
-             2) Pre-render the instrument to a WAV file and use 'wav' instead of 'ref', or \
-             3) Use the audio backend to generate a sample first.",
-            ref_path
-        ))),
-
-        Synthesis::Additive { .. } => Err(GenerateError::InstrumentError(format!(
-            "External instrument '{}' uses additive synthesis which cannot be directly converted. \
-             Please either: 1) Inline a simple synthesis in the music spec, or \
-             2) Pre-render the instrument to a WAV file.",
-            ref_path
-        ))),
-
-        Synthesis::MultiOscillator { .. } => Err(GenerateError::InstrumentError(format!(
-            "External instrument '{}' uses multi-oscillator synthesis which cannot be directly converted. \
-             Consider using a single oscillator or pre-rendering to WAV.",
-            ref_path
-        ))),
-
-        Synthesis::PitchedBody { .. } => Err(GenerateError::InstrumentError(format!(
-            "External instrument '{}' uses pitched body synthesis which cannot be directly converted. \
-             Please pre-render to a WAV file.",
-            ref_path
-        ))),
-
-        Synthesis::Metallic { .. } => Err(GenerateError::InstrumentError(format!(
-            "External instrument '{}' uses metallic synthesis which cannot be directly converted. \
-             Please pre-render to a WAV file.",
-            ref_path
-        ))),
-    }
+    Ok(BakedInstrumentSample {
+        pcm16_mono,
+        sample_rate,
+        base_midi,
+        loop_points,
+    })
 }
 
 /// Extract the base_note from an InstrumentSynthesis::Sample, if present.
@@ -336,6 +407,310 @@ pub(crate) fn get_synthesis_base_note(synthesis: &InstrumentSynthesis) -> Option
         InstrumentSynthesis::Sample { base_note, .. } => base_note.as_deref(),
         _ => None, // Other synthesis types don't have base_note in schema yet
     }
+}
+
+/// Resolve an effective note name for a pattern event.
+///
+/// SpecCade treats an *omitted* / empty `note` field as "trigger the instrument at its base note".
+/// That base note is sourced from (in priority order):
+/// 1) `TrackerInstrument.base_note`
+/// 2) `TrackerInstrument.synthesis.type == sample`'s `base_note`
+/// 3) A format-specific default provided by the caller
+///
+/// Explicit `"---"` / `"..."` (no note), `"OFF"` / `"==="` (note off/cut), etc. are preserved
+/// by returning the original `note` string when it is non-empty.
+pub(crate) fn resolve_pattern_note_name<'a>(
+    note: &'a PatternNote,
+    instruments: &'a [TrackerInstrument],
+    default_note: &'static str,
+) -> Result<std::borrow::Cow<'a, str>, GenerateError> {
+    use std::borrow::Cow;
+
+    let trimmed = note.note.trim();
+    if !trimmed.is_empty() {
+        return Ok(Cow::Borrowed(trimmed));
+    }
+
+    let instrument = instruments.get(note.inst as usize).ok_or_else(|| {
+        GenerateError::InvalidParameter(format!(
+            "pattern references instrument {} but only {} instrument(s) are defined",
+            note.inst,
+            instruments.len()
+        ))
+    })?;
+
+    if let Some(base_note) = instrument
+        .base_note
+        .as_deref()
+        .map(str::trim)
+        .filter(|s| !s.is_empty())
+    {
+        return Ok(Cow::Borrowed(base_note));
+    }
+
+    if let Some(InstrumentSynthesis::Sample {
+        base_note: Some(base_note),
+        ..
+    }) = instrument.synthesis.as_ref()
+    {
+        let base_note = base_note.trim();
+        if !base_note.is_empty() {
+            return Ok(Cow::Borrowed(base_note));
+        }
+    }
+
+    if let Some(AudioV1Params {
+        base_note: Some(audio_base),
+        ..
+    }) = instrument.synthesis_audio_v1.as_ref()
+    {
+        match audio_base {
+            AudioNoteSpec::NoteName(name) => {
+                let name = name.trim();
+                if !name.is_empty() {
+                    return Ok(Cow::Borrowed(name));
+                }
+            }
+            AudioNoteSpec::MidiNote(midi) => {
+                return Ok(Cow::Owned(midi_to_note_name(*midi)));
+            }
+        }
+    }
+
+    Ok(Cow::Borrowed(default_note))
+}
+
+fn parse_base_note_midi(
+    instrument_base_note: Option<&str>,
+    fallback_base_note: Option<&str>,
+    fallback_midi: Option<u8>,
+    default_base_midi: u8,
+    instrument_name: &str,
+) -> Result<u8, GenerateError> {
+    let parse_name = |raw: &str| {
+        let cleaned = raw.trim().replace('-', "");
+        speccade_spec::recipe::audio::parse_note_name(&cleaned)
+    };
+
+    if let Some(note) = instrument_base_note.and_then(|s| {
+        let s = s.trim();
+        (!s.is_empty()).then_some(s)
+    }) {
+        return parse_name(note).ok_or_else(|| {
+            GenerateError::InstrumentError(format!(
+                "Instrument '{}' has invalid base_note '{}'",
+                instrument_name, note
+            ))
+        });
+    }
+
+    if let Some(note) = fallback_base_note.and_then(|s| {
+        let s = s.trim();
+        (!s.is_empty()).then_some(s)
+    }) {
+        return parse_name(note).ok_or_else(|| {
+            GenerateError::InstrumentError(format!(
+                "Instrument '{}' has invalid base_note '{}'",
+                instrument_name, note
+            ))
+        });
+    }
+
+    if let Some(midi) = fallback_midi {
+        if midi <= 127 {
+            return Ok(midi);
+        }
+        return Err(GenerateError::InstrumentError(format!(
+            "Instrument '{}' has invalid base_note MIDI value {}",
+            instrument_name, midi
+        )));
+    }
+
+    Ok(default_base_midi)
+}
+
+fn enforce_max_sample_len(
+    pcm16_mono: &[u8],
+    sample_rate: u32,
+    max_seconds: f64,
+    instrument_name: &str,
+) -> Result<(), GenerateError> {
+    let len_samples = pcm16_mono.len() / 2;
+    let max_samples = (sample_rate as f64 * max_seconds).ceil() as usize;
+    if len_samples > max_samples {
+        return Err(GenerateError::InstrumentError(format!(
+            "Instrument '{}' sample is too long ({} samples @ {} Hz). Max is {:.2}s.",
+            instrument_name, len_samples, sample_rate, max_seconds
+        )));
+    }
+    Ok(())
+}
+
+fn load_audio_v1_params_from_ref(ref_path: &str, spec_dir: &Path) -> Result<AudioV1Params, GenerateError> {
+    use speccade_spec::Spec;
+
+    let full_path = spec_dir.join(ref_path);
+    let json_content = std::fs::read_to_string(&full_path).map_err(|e| {
+        GenerateError::InstrumentError(format!(
+            "Failed to read external instrument spec '{}': {}",
+            ref_path, e
+        ))
+    })?;
+
+    let spec: Spec = serde_json::from_str(&json_content).map_err(|e| {
+        GenerateError::InstrumentError(format!(
+            "Failed to parse external instrument spec '{}': {}",
+            ref_path, e
+        ))
+    })?;
+
+    if spec.asset_type != speccade_spec::AssetType::Audio {
+        return Err(GenerateError::InstrumentError(format!(
+            "External instrument spec '{}' has asset_type '{}' (expected 'audio')",
+            ref_path, spec.asset_type
+        )));
+    }
+
+    let recipe = spec.recipe.as_ref().ok_or_else(|| {
+        GenerateError::InstrumentError(format!(
+            "External instrument spec '{}' has no recipe",
+            ref_path
+        ))
+    })?;
+
+    if recipe.kind != "audio_v1" {
+        return Err(GenerateError::InstrumentError(format!(
+            "External instrument spec '{}' has unsupported recipe kind '{}', expected 'audio_v1'",
+            ref_path, recipe.kind
+        )));
+    }
+
+    serde_json::from_value(recipe.params.clone()).map_err(|e| {
+        GenerateError::InstrumentError(format!(
+            "Failed to parse audio_v1 params from '{}': {}",
+            ref_path, e
+        ))
+    })
+}
+
+fn legacy_synthesis_to_audio_v1_params(
+    instr: &TrackerInstrument,
+    synthesis: &InstrumentSynthesis,
+    format: TrackerFormat,
+) -> Result<AudioV1Params, GenerateError> {
+    // Legacy synth is baked as a single-layer audio_v1 oscillator/noise.
+    let default_base_midi = match format {
+        TrackerFormat::Xm => DEFAULT_SYNTH_MIDI_NOTE,
+        TrackerFormat::It => DEFAULT_IT_SYNTH_MIDI_NOTE,
+    };
+    let base_midi =
+        parse_base_note_midi(instr.base_note.as_deref(), None, None, default_base_midi, &instr.name)?;
+
+    let sample_rate = instr.sample_rate.unwrap_or(crate::note::DEFAULT_SAMPLE_RATE);
+    let want_loop = instr.envelope.sustain > 0.0;
+
+    let sustain_pad = 0.25;
+    let duration_seconds = if want_loop {
+        (instr.envelope.attack + instr.envelope.decay + sustain_pad + instr.envelope.release)
+            .clamp(0.05, 2.0)
+    } else {
+        (instr.envelope.attack + instr.envelope.decay + instr.envelope.release)
+            .clamp(0.02, 1.0)
+    };
+
+    let synthesis = match synthesis {
+        InstrumentSynthesis::Pulse { duty_cycle } => AudioSynthesis::Oscillator {
+            waveform: Waveform::Pulse,
+            frequency: midi_to_freq(base_midi),
+            freq_sweep: None,
+            detune: None,
+            duty: Some(*duty_cycle),
+        },
+        InstrumentSynthesis::Square => AudioSynthesis::Oscillator {
+            waveform: Waveform::Square,
+            frequency: midi_to_freq(base_midi),
+            freq_sweep: None,
+            detune: None,
+            duty: None,
+        },
+        InstrumentSynthesis::Triangle => AudioSynthesis::Oscillator {
+            waveform: Waveform::Triangle,
+            frequency: midi_to_freq(base_midi),
+            freq_sweep: None,
+            detune: None,
+            duty: None,
+        },
+        InstrumentSynthesis::Sawtooth => AudioSynthesis::Oscillator {
+            waveform: Waveform::Sawtooth,
+            frequency: midi_to_freq(base_midi),
+            freq_sweep: None,
+            detune: None,
+            duty: None,
+        },
+        InstrumentSynthesis::Sine => AudioSynthesis::Oscillator {
+            waveform: Waveform::Sine,
+            frequency: midi_to_freq(base_midi),
+            freq_sweep: None,
+            detune: None,
+            duty: None,
+        },
+        InstrumentSynthesis::Noise { .. } => AudioSynthesis::NoiseBurst {
+            noise_type: NoiseType::White,
+            filter: None,
+        },
+        InstrumentSynthesis::Sample { .. } => {
+            return Err(GenerateError::InstrumentError(format!(
+                "Instrument '{}' uses legacy 'synthesis: {{ type: sample }}' which should have been handled as wav",
+                instr.name
+            )));
+        }
+    };
+
+    Ok(AudioV1Params {
+        base_note: instr
+            .base_note
+            .as_deref()
+            .map(str::trim)
+            .filter(|s| !s.is_empty())
+            .map(|s| AudioNoteSpec::NoteName(s.to_string())),
+        duration_seconds,
+        sample_rate,
+        layers: vec![AudioLayer {
+            synthesis,
+            envelope: instr.envelope.clone(),
+            volume: 1.0,
+            pan: 0.0,
+            delay: None,
+        }],
+        pitch_envelope: None,
+        generate_loop_points: want_loop,
+        master_filter: None,
+    })
+}
+
+fn downmix_pcm16_stereo_to_mono(pcm: &[u8]) -> Option<Vec<u8>> {
+    if pcm.len() % 4 != 0 {
+        return None;
+    }
+    let mut out = Vec::with_capacity(pcm.len() / 2);
+
+    for frame in pcm.chunks_exact(4) {
+        let l = i16::from_le_bytes([frame[0], frame[1]]) as i32;
+        let r = i16::from_le_bytes([frame[2], frame[3]]) as i32;
+        let mixed = ((l + r) / 2) as i16;
+        out.extend_from_slice(&mixed.to_le_bytes());
+    }
+
+    Some(out)
+}
+
+fn midi_to_note_name(midi: u8) -> String {
+    const NAMES: [&str; 12] = [
+        "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B",
+    ];
+    let note = (midi % 12) as usize;
+    let octave = (midi as i32 / 12) - 1;
+    format!("{}{}", NAMES[note], octave)
 }
 
 /// Extract effect code and parameter from PatternEffect, handling effect_xy nibbles.
@@ -499,6 +874,19 @@ mod tests {
     }
 
     #[test]
+    fn test_different_seeds_same_output_for_pure_oscillator() {
+        // Oscillators are deterministic and should not use RNG; seeds should not affect output.
+        let params = create_test_params();
+        let spec_dir = Path::new(".");
+
+        let result1 = generate_music(&params, 42, spec_dir).unwrap();
+        let result2 = generate_music(&params, 43, spec_dir).unwrap();
+
+        assert_eq!(result1.hash, result2.hash);
+        assert_eq!(result1.data, result2.data);
+    }
+
+    #[test]
     fn test_invalid_channels() {
         let mut params = create_test_params();
         params.channels = 100; // Invalid for XM (max 32)
@@ -515,173 +903,206 @@ mod tests {
     #[test]
     fn test_external_ref_file_not_found() {
         // Test that missing external reference returns a clear error
-        let result = load_instrument_from_ref("nonexistent/file.json", Path::new("."));
-        assert!(result.is_err());
-        let err = result.unwrap_err();
-        assert!(err.to_string().contains("Failed to read"));
+        let instr = TrackerInstrument {
+            name: "Missing".to_string(),
+            r#ref: Some("nonexistent/file.json".to_string()),
+            ..Default::default()
+        };
+
+        let err = bake_instrument_sample(&instr, 42, 0, Path::new("."), TrackerFormat::Xm)
+            .unwrap_err();
+        assert!(err.to_string().contains("Failed to read external instrument spec"));
     }
 
     #[test]
-    fn test_convert_oscillator_synthesis() {
-        use speccade_spec::recipe::audio::{Synthesis, Waveform};
-
-        // Test sine conversion
-        let sine = Synthesis::Oscillator {
-            waveform: Waveform::Sine,
-            frequency: 440.0,
-            freq_sweep: None,
-            detune: None,
-            duty: None,
+    fn test_bake_instrument_sample_rejects_multiple_sources() {
+        let instr = TrackerInstrument {
+            name: "Bad".to_string(),
+            wav: Some("samples/kick.wav".to_string()),
+            synthesis: Some(InstrumentSynthesis::Sine),
+            ..Default::default()
         };
-        let result = convert_audio_synthesis_to_instrument(&sine, "test.json");
-        assert!(result.is_ok());
-        assert!(matches!(result.unwrap(), InstrumentSynthesis::Sine));
 
-        // Test square conversion
-        let square = Synthesis::Oscillator {
-            waveform: Waveform::Square,
-            frequency: 440.0,
-            freq_sweep: None,
-            detune: None,
-            duty: None,
-        };
-        let result = convert_audio_synthesis_to_instrument(&square, "test.json");
-        assert!(result.is_ok());
-        assert!(matches!(result.unwrap(), InstrumentSynthesis::Square));
-
-        // Test sawtooth conversion
-        let saw = Synthesis::Oscillator {
-            waveform: Waveform::Sawtooth,
-            frequency: 440.0,
-            freq_sweep: None,
-            detune: None,
-            duty: None,
-        };
-        let result = convert_audio_synthesis_to_instrument(&saw, "test.json");
-        assert!(result.is_ok());
-        assert!(matches!(result.unwrap(), InstrumentSynthesis::Sawtooth));
-
-        // Test triangle conversion
-        let tri = Synthesis::Oscillator {
-            waveform: Waveform::Triangle,
-            frequency: 440.0,
-            freq_sweep: None,
-            detune: None,
-            duty: None,
-        };
-        let result = convert_audio_synthesis_to_instrument(&tri, "test.json");
-        assert!(result.is_ok());
-        assert!(matches!(result.unwrap(), InstrumentSynthesis::Triangle));
-
-        // Test pulse with duty cycle
-        let pulse = Synthesis::Oscillator {
-            waveform: Waveform::Pulse,
-            frequency: 440.0,
-            freq_sweep: None,
-            detune: None,
-            duty: Some(0.25),
-        };
-        let result = convert_audio_synthesis_to_instrument(&pulse, "test.json");
-        assert!(result.is_ok());
-        if let InstrumentSynthesis::Pulse { duty_cycle } = result.unwrap() {
-            assert!((duty_cycle - 0.25).abs() < 0.001);
-        } else {
-            panic!("Expected Pulse synthesis");
-        }
+        let err =
+            bake_instrument_sample(&instr, 42, 0, Path::new("."), TrackerFormat::Xm).unwrap_err();
+        assert!(err.to_string().contains("exactly one of"));
     }
 
     #[test]
-    fn test_convert_noise_synthesis() {
-        use speccade_spec::recipe::audio::{Filter, NoiseType, Synthesis};
+    fn test_bake_instrument_sample_from_ref_supports_advanced_audio_v1() {
+        let spec_dir =
+            Path::new(env!("CARGO_MANIFEST_DIR")).join("../../golden/speccade/specs/music");
 
-        // Test noise without filter
-        let noise = Synthesis::NoiseBurst {
-            noise_type: NoiseType::White,
-            filter: None,
+        let instr = TrackerInstrument {
+            name: "FM Ref".to_string(),
+            r#ref: Some("../audio/audio_instrument_fm_advanced.spec.json".to_string()),
+            // Sustain > 0 => loopable sample.
+            envelope: Envelope {
+                attack: 0.01,
+                decay: 0.05,
+                sustain: 0.7,
+                release: 0.2,
+            },
+            ..Default::default()
         };
-        let result = convert_audio_synthesis_to_instrument(&noise, "test.json");
-        assert!(result.is_ok());
-        if let InstrumentSynthesis::Noise { periodic } = result.unwrap() {
-            assert!(!periodic);
-        } else {
-            panic!("Expected Noise synthesis");
-        }
 
-        // Test noise with filter (more tonal, so periodic)
-        let noise_filtered = Synthesis::NoiseBurst {
-            noise_type: NoiseType::Pink,
-            filter: Some(Filter::Lowpass {
-                cutoff: 1000.0,
-                resonance: 0.5,
-                cutoff_end: None,
+        let baked = bake_instrument_sample(&instr, 42, 0, &spec_dir, TrackerFormat::Xm).unwrap();
+        assert!(!baked.pcm16_mono.is_empty());
+        assert!(baked.loop_points.is_some(), "sustained instruments should loop");
+    }
+
+    #[test]
+    fn test_bake_instrument_sample_inline_audio_v1_downmixes_stereo() {
+        let instr = TrackerInstrument {
+            name: "Stereo Inline".to_string(),
+            synthesis_audio_v1: Some(AudioV1Params {
+                base_note: Some(AudioNoteSpec::NoteName("A4".to_string())),
+                duration_seconds: 0.1,
+                sample_rate: 22050,
+                layers: vec![
+                    AudioLayer {
+                        synthesis: AudioSynthesis::Oscillator {
+                            waveform: Waveform::Sine,
+                            frequency: 440.0,
+                            freq_sweep: None,
+                            detune: None,
+                            duty: None,
+                        },
+                        envelope: Envelope::default(),
+                        volume: 0.5,
+                        pan: -1.0,
+                        delay: None,
+                    },
+                    AudioLayer {
+                        synthesis: AudioSynthesis::Oscillator {
+                            waveform: Waveform::Sine,
+                            frequency: 440.0,
+                            freq_sweep: None,
+                            detune: None,
+                            duty: None,
+                        },
+                        envelope: Envelope::default(),
+                        volume: 0.5,
+                        pan: 1.0,
+                        delay: None,
+                    },
+                ],
+                pitch_envelope: None,
+                generate_loop_points: false,
+                master_filter: None,
             }),
+            envelope: Envelope {
+                attack: 0.01,
+                decay: 0.05,
+                sustain: 0.0,
+                release: 0.05,
+            },
+            ..Default::default()
         };
-        let result = convert_audio_synthesis_to_instrument(&noise_filtered, "test.json");
-        assert!(result.is_ok());
-        if let InstrumentSynthesis::Noise { periodic } = result.unwrap() {
-            assert!(periodic);
-        } else {
-            panic!("Expected Noise synthesis");
-        }
+
+        let baked = bake_instrument_sample(&instr, 42, 0, Path::new("."), TrackerFormat::Xm)
+            .unwrap();
+        assert!(!baked.pcm16_mono.is_empty());
+
+        // Must be mono 16-bit PCM: duration 0.1s @ 22050 Hz => 2205 samples => 4410 bytes.
+        assert_eq!(baked.pcm16_mono.len(), 2205 * 2);
     }
 
     #[test]
-    fn test_complex_synthesis_returns_error() {
-        use speccade_spec::recipe::audio::Synthesis;
-
-        // FM synthesis should return helpful error
-        let fm = Synthesis::FmSynth {
-            carrier_freq: 440.0,
-            modulator_freq: 880.0,
-            modulation_index: 2.0,
-            freq_sweep: None,
+    fn test_loop_policy_uses_tracker_envelope_sustain() {
+        let audio = AudioV1Params {
+            base_note: Some(AudioNoteSpec::NoteName("A4".to_string())),
+            duration_seconds: 0.2,
+            sample_rate: 22050,
+            layers: vec![AudioLayer {
+                synthesis: AudioSynthesis::Oscillator {
+                    waveform: Waveform::Sine,
+                    frequency: 440.0,
+                    freq_sweep: None,
+                    detune: None,
+                    duty: None,
+                },
+                envelope: Envelope::default(),
+                volume: 1.0,
+                pan: 0.0,
+                delay: None,
+            }],
+            pitch_envelope: None,
+            // Intentionally opposite of the tracker envelope tests below.
+            generate_loop_points: true,
+            master_filter: None,
         };
-        let result = convert_audio_synthesis_to_instrument(&fm, "test.json");
-        assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("FM synthesis"));
 
-        // Karplus-Strong should return helpful error
-        let karplus = Synthesis::KarplusStrong {
-            frequency: 220.0,
-            decay: 0.998,
-            blend: 0.5,
+        let one_shot = TrackerInstrument {
+            name: "One Shot".to_string(),
+            synthesis_audio_v1: Some(audio.clone()),
+            envelope: Envelope {
+                attack: 0.01,
+                decay: 0.05,
+                sustain: 0.0,
+                release: 0.05,
+            },
+            ..Default::default()
         };
-        let result = convert_audio_synthesis_to_instrument(&karplus, "test.json");
-        assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("Karplus-Strong"));
+        let baked = bake_instrument_sample(&one_shot, 42, 0, Path::new("."), TrackerFormat::Xm)
+            .unwrap();
+        assert!(baked.loop_points.is_none());
+
+        let sustained = TrackerInstrument {
+            name: "Sustain".to_string(),
+            synthesis_audio_v1: Some(AudioV1Params {
+                generate_loop_points: false,
+                ..audio
+            }),
+            envelope: Envelope {
+                attack: 0.01,
+                decay: 0.05,
+                sustain: 0.7,
+                release: 0.2,
+            },
+            ..Default::default()
+        };
+        let baked = bake_instrument_sample(&sustained, 42, 0, Path::new("."), TrackerFormat::Xm)
+            .unwrap();
+        assert!(baked.loop_points.is_some());
     }
 
     #[test]
-    fn test_load_external_oscillator_spec() {
-        // Test loading a real external spec file with oscillator synthesis
-        // The saw_lead.json uses oscillator synthesis which should convert successfully
-        let spec_dir =
-            Path::new(env!("CARGO_MANIFEST_DIR")).join("../../golden/speccade/specs/audio");
+    fn test_audio_v1_base_note_midi_note_is_used_for_pitch_mapping() {
+        let instr = TrackerInstrument {
+            name: "Midi Base".to_string(),
+            synthesis_audio_v1: Some(AudioV1Params {
+                base_note: Some(AudioNoteSpec::MidiNote(69)),
+                duration_seconds: 0.1,
+                sample_rate: 22050,
+                layers: vec![AudioLayer {
+                    synthesis: AudioSynthesis::Oscillator {
+                        waveform: Waveform::Sine,
+                        frequency: 440.0,
+                        freq_sweep: None,
+                        detune: None,
+                        duty: None,
+                    },
+                    envelope: Envelope::default(),
+                    volume: 1.0,
+                    pan: 0.0,
+                    delay: None,
+                }],
+                pitch_envelope: None,
+                generate_loop_points: false,
+                master_filter: None,
+            }),
+            envelope: Envelope {
+                attack: 0.01,
+                decay: 0.05,
+                sustain: 0.0,
+                release: 0.05,
+            },
+            ..Default::default()
+        };
 
-        // Check if the file exists (may not exist in all CI environments)
-        let ref_path = "saw_lead.json";
-        let full_path = spec_dir.join(ref_path);
-        if full_path.exists() {
-            let result = load_instrument_from_ref(ref_path, &spec_dir);
-            assert!(result.is_ok(), "Failed to load saw_lead.json: {:?}", result);
-            // Should convert to Sawtooth synthesis
-            assert!(matches!(result.unwrap(), InstrumentSynthesis::Sawtooth));
-        }
-    }
-
-    #[test]
-    fn test_load_external_karplus_spec_returns_error() {
-        // Test loading a spec file with Karplus-Strong synthesis (should fail with helpful error)
-        let spec_dir =
-            Path::new(env!("CARGO_MANIFEST_DIR")).join("../../golden/speccade/specs/audio");
-
-        let ref_path = "bass_pluck.json";
-        let full_path = spec_dir.join(ref_path);
-        if full_path.exists() {
-            let result = load_instrument_from_ref(ref_path, &spec_dir);
-            assert!(result.is_err());
-            let err = result.unwrap_err();
-            assert!(err.to_string().contains("Karplus-Strong"));
-        }
+        let baked = bake_instrument_sample(&instr, 42, 0, Path::new("."), TrackerFormat::Xm)
+            .unwrap();
+        assert_eq!(baked.base_midi, 69);
     }
 }

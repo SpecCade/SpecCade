@@ -35,12 +35,29 @@
       "restart_position": 2,
       "instruments": [
         {
-          "comment": "Instrument 0: Inline synthesis - lead synth",
+          "comment": "Instrument 0: Inline audio_v1 synthesis baked into tracker sample",
           "name": "lead_synth",
           "base_note": "C5",
           "sample_rate": 44100,
-          "synthesis": {
-            "type": "sawtooth"
+          "synthesis_audio_v1": {
+            "base_note": "C5",
+            "duration_seconds": 0.6,
+            "sample_rate": 22050,
+            "layers": [
+              {
+                "synthesis": {
+                  "type": "multi_oscillator",
+                  "frequency": 523.25,
+                  "oscillators": [
+                    { "waveform": "sawtooth", "volume": 0.7, "detune": -6.0 },
+                    { "waveform": "square", "volume": 0.3, "detune": 6.0, "duty": 0.5 }
+                  ]
+                },
+                "envelope": { "attack": 0.01, "decay": 0.1, "sustain": 0.7, "release": 0.3 },
+                "volume": 1.0,
+                "pan": 0.0
+              }
+            ]
           },
           "envelope": {
             "attack": 0.01,
@@ -107,19 +124,10 @@
           }
         },
         {
-          "comment": "Instrument 5: Pluck bass (inline synthesis replacing external ref)",
+          "comment": "Instrument 5: External audio_v1 ref baked into tracker sample (advanced synthesis)",
           "name": "bass_pluck",
-          "base_note": "C2",
-          "sample_rate": 44100,
-          "synthesis": {
-            "type": "sawtooth"
-          },
-          "envelope": {
-            "attack": 0.001,
-            "decay": 0.2,
-            "sustain": 0.3,
-            "release": 0.4
-          }
+          "ref": "../audio/audio_instrument_fm_advanced.spec.json",
+          "envelope": { "attack": 0.001, "decay": 0.2, "sustain": 0.3, "release": 0.4 }
         },
         {
           "comment": "Instrument 6: Kick drum (inline noise synthesis replacing WAV sample)",

@@ -2,7 +2,7 @@
 
 use serde::{Deserialize, Serialize};
 
-use crate::recipe::audio::Envelope;
+use crate::recipe::audio::{AudioV1Params, Envelope};
 
 /// Instrument definition for tracker modules.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
@@ -17,7 +17,18 @@ pub struct TrackerInstrument {
     /// Reference to external spec file (mutually exclusive with synthesis and wav).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub r#ref: Option<String>,
+    /// Inline `audio_v1` synthesis params (mutually exclusive with `ref`, `wav`, and legacy
+    /// `synthesis`).
+    ///
+    /// When set, this instrument is baked to a tracker sample by running the unified audio
+    /// backend. Use this for advanced synthesis types (FM, Karplus-Strong, additive,
+    /// filters/sweeps, etc.).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub synthesis_audio_v1: Option<AudioV1Params>,
     /// Synthesis configuration (mutually exclusive with ref and wav).
+    ///
+    /// Legacy field: prefer `synthesis_audio_v1` (or `ref` to an `audio_v1` spec) for new
+    /// content.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub synthesis: Option<InstrumentSynthesis>,
     /// Path to WAV sample file (mutually exclusive with ref and synthesis).

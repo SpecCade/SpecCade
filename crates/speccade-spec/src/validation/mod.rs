@@ -327,12 +327,132 @@ fn validate_music_outputs(
         }
     };
 
+    validate_non_packed_outputs(spec, result);
+
+    // Validate instrument sources are well-formed (matches backend behavior).
+    for (idx, instrument) in params.instruments.iter().enumerate() {
+        let mut sources = Vec::new();
+        if instrument.r#ref.is_some() {
+            sources.push("ref");
+        }
+        if instrument.wav.is_some() {
+            sources.push("wav");
+        }
+        if instrument.synthesis_audio_v1.is_some() {
+            sources.push("synthesis_audio_v1");
+        }
+        if instrument.synthesis.is_some() {
+            sources.push("synthesis");
+        }
+
+        if sources.len() != 1 {
+            result.add_error(ValidationError::with_path(
+                ErrorCode::InvalidRecipeParams,
+                format!(
+                    "music instrument must set exactly one of: ref, wav, synthesis_audio_v1, synthesis (got: {})",
+                    if sources.is_empty() {
+                        "none".to_string()
+                    } else {
+                        sources.join(", ")
+                    }
+                ),
+                format!("recipe.params.instruments[{}]", idx),
+            ));
+        }
+    }
+
     let expected_format = match params.format {
         crate::recipe::music::TrackerFormat::Xm => OutputFormat::Xm,
         crate::recipe::music::TrackerFormat::It => OutputFormat::It,
     };
 
-    validate_single_primary_output_format(spec, expected_format, result);
+    let primary_outputs: Vec<(usize, &crate::output::OutputSpec)> = spec
+        .outputs
+        .iter()
+        .enumerate()
+        .filter(|(_, o)| o.kind == OutputKind::Primary)
+        .collect();
+
+    if primary_outputs.is_empty() {
+        return;
+    }
+
+    if primary_outputs.len() == 1 {
+        let (index, output) = primary_outputs[0];
+        if output.format != expected_format {
+            result.add_error(ValidationError::with_path(
+                ErrorCode::OutputValidationFailed,
+                format!(
+                    "primary output format must be '{}' for this recipe, got '{}'",
+                    expected_format, output.format
+                ),
+                format!("outputs[{}].format", index),
+            ));
+        }
+        return;
+    }
+
+    // Multi-output mode: allow at most one XM and one IT primary output.
+    let mut seen_xm = false;
+    let mut seen_it = false;
+
+    for (index, output) in &primary_outputs {
+        match output.format {
+            OutputFormat::Xm => {
+                if seen_xm {
+                    result.add_error(ValidationError::with_path(
+                        ErrorCode::OutputValidationFailed,
+                        "duplicate primary output format 'xm' for music.tracker_song_v1",
+                        format!("outputs[{}].format", index),
+                    ));
+                }
+                seen_xm = true;
+            }
+            OutputFormat::It => {
+                if seen_it {
+                    result.add_error(ValidationError::with_path(
+                        ErrorCode::OutputValidationFailed,
+                        "duplicate primary output format 'it' for music.tracker_song_v1",
+                        format!("outputs[{}].format", index),
+                    ));
+                }
+                seen_it = true;
+            }
+            _ => {
+                result.add_error(ValidationError::with_path(
+                    ErrorCode::OutputValidationFailed,
+                    "music.tracker_song_v1 primary outputs must have format 'xm' or 'it'",
+                    format!("outputs[{}].format", index),
+                ));
+            }
+        }
+    }
+
+    if primary_outputs.len() > 2 {
+        result.add_error(ValidationError::with_path(
+            ErrorCode::OutputValidationFailed,
+            format!(
+                "music.tracker_song_v1 supports at most 2 primary outputs (xm + it), got {}",
+                primary_outputs.len()
+            ),
+            "outputs",
+        ));
+    }
+
+    // Defensive: ensure the recipe's declared format is among the requested outputs.
+    if !primary_outputs
+        .iter()
+        .any(|(_, o)| o.format == expected_format)
+    {
+        result.add_error(ValidationError::with_path(
+            ErrorCode::OutputValidationFailed,
+            format!(
+                "recipe.params.format '{}' must match one of the primary output formats",
+                expected_format
+            ),
+            "recipe.params.format",
+        ));
+    }
 }
 
 fn validate_texture_normal_outputs(
@@ -816,6 +936,107 @@ mod tests {
                 "music.tracker_song_v1",
                 serde_json::json!({
                     "format": "it",
+                    "bpm": 120,
+                    "speed": 6,
+                    "channels": 4
+                }),
+            ))
+            .build();
+
+        let result = validate_for_generate(&spec);
+        assert!(!result.is_ok());
+        assert!(result
+            .errors
+            .iter()
+            .any(|e| e.code == ErrorCode::OutputValidationFailed));
+    }
+
+    #[test]
+    fn test_music_allows_dual_xm_it_primary_outputs() {
+        let spec = Spec::builder("test-song-02", AssetType::Music)
+            .license("CC0-1.0")
+            .seed(42)
+            .output(OutputSpec::primary(OutputFormat::Xm, "songs/test.xm"))
+            .output(OutputSpec::primary(OutputFormat::It, "songs/test.it"))
+            .recipe(crate::recipe::Recipe::new(
+                "music.tracker_song_v1",
+                serde_json::json!({
+                    "format": "xm",
+                    "bpm": 120,
+                    "speed": 6,
+                    "channels": 4
+                }),
+            ))
+            .build();
+
+        let result = validate_for_generate(&spec);
+        assert!(result.is_ok(), "{:?}", result.errors);
+    }
+
+    #[test]
+    fn test_music_instrument_requires_exactly_one_source() {
+        let missing_source = Spec::builder("test-song-04", AssetType::Music)
+            .license("CC0-1.0")
+            .seed(42)
+            .output(OutputSpec::primary(OutputFormat::Xm, "songs/test.xm"))
+            .recipe(crate::recipe::Recipe::new(
+                "music.tracker_song_v1",
+                serde_json::json!({
+                    "format": "xm",
+                    "bpm": 120,
+                    "speed": 6,
+                    "channels": 4,
+                    "instruments": [
+                        { "name": "bad" }
+                    ]
+                }),
+            ))
+            .build();
+
+        let result = validate_for_generate(&missing_source);
+        assert!(!result.is_ok());
+        assert!(result
+            .errors
+            .iter()
+            .any(|e| e.code == ErrorCode::InvalidRecipeParams));
+
+        let multiple_sources = Spec::builder("test-song-05", AssetType::Music)
+            .license("CC0-1.0")
+            .seed(42)
+            .output(OutputSpec::primary(OutputFormat::Xm, "songs/test.xm"))
+            .recipe(crate::recipe::Recipe::new(
+                "music.tracker_song_v1",
+                serde_json::json!({
+                    "format": "xm",
+                    "bpm": 120,
+                    "speed": 6,
+                    "channels": 4,
+                    "instruments": [
+                        { "name": "bad", "synthesis": { "type": "sine" }, "wav": "x.wav" }
+                    ]
+                }),
+            ))
+            .build();
+
+        let result = validate_for_generate(&multiple_sources);
+        assert!(!result.is_ok());
+        assert!(result
+            .errors
+            .iter()
+            .any(|e| e.code == ErrorCode::InvalidRecipeParams));
+    }
+
+    #[test]
+    fn test_music_dual_outputs_rejects_duplicate_primary_format() {
+        let spec = Spec::builder("test-song-03", AssetType::Music)
+            .license("CC0-1.0")
+            .seed(42)
+            .output(OutputSpec::primary(OutputFormat::Xm, "songs/test1.xm"))
+            .output(OutputSpec::primary(OutputFormat::Xm, "songs/test2.xm"))
+            .recipe(crate::recipe::Recipe::new(
+                "music.tracker_song_v1",
+                serde_json::json!({
+                    "format": "xm",
                     "bpm": 120,
                     "speed": 6,
                     "channels": 4

@@ -10,21 +10,23 @@ use std::collections::HashMap;
 use std::path::Path;
 
 use speccade_spec::recipe::music::{
-    AutomationEntry, InstrumentSynthesis, ItOptions, MusicTrackerSongV1Params, TrackerInstrument,
+    AutomationEntry, ItOptions, MusicTrackerSongV1Params, TrackerFormat, TrackerInstrument,
     TrackerPattern,
 };
+#[cfg(test)]
+use speccade_spec::recipe::music::InstrumentSynthesis;
 
 use crate::envelope::convert_envelope_to_it;
-use crate::generate::{get_instrument_synthesis, GenerateError, GenerateResult};
+use crate::generate::{
+    bake_instrument_sample, resolve_pattern_note_name, GenerateError, GenerateResult,
+};
 use crate::it::{
     effect_name_to_code as it_effect_name_to_code, ItInstrument, ItModule, ItNote, ItPattern,
     ItSample,
 };
-use crate::note::{
-    calculate_c5_speed_for_base_note, note_name_to_it, note_name_to_midi,
-    DEFAULT_IT_SYNTH_MIDI_NOTE, DEFAULT_SAMPLE_RATE,
-};
-use crate::synthesis::{derive_instrument_seed, generate_loopable_sample, load_wav_sample};
+use crate::note::calculate_c5_speed_for_base_note;
+#[cfg(test)]
+use crate::note::note_name_to_it;
 
 /// Generate an IT module from params.
 ///
@@ -80,7 +82,7 @@ pub fn generate_it(
             .patterns
             .get(name)
             .ok_or_else(|| GenerateError::PatternNotFound(name.clone()))?;
-        let mut it_pattern = convert_pattern_to_it(pattern, params.channels)?;
+        let mut it_pattern = convert_pattern_to_it(pattern, params.channels, &params.instruments)?;
 
         // Apply automation to this pattern
         apply_automation_to_pattern(&mut it_pattern, name, &params.automation, params.channels)?;
@@ -164,79 +166,16 @@ fn generate_it_instrument(
     index: u32,
     spec_dir: &Path,
 ) -> Result<(ItInstrument, ItSample), GenerateError> {
-    let instr_seed = derive_instrument_seed(base_seed, index);
+    let baked = bake_instrument_sample(instr, base_seed, index, spec_dir, TrackerFormat::It)?;
 
-    // Handle ref or inline synthesis
-    let synthesis = get_instrument_synthesis(instr, spec_dir)?;
+    // IT samples store "C-5 speed" (playback rate for note C-5), not the sample's native rate.
+    let c5_speed = calculate_c5_speed_for_base_note(baked.sample_rate, baked.base_midi);
 
-    // Generate sample data and determine sample rate based on synthesis type
-    let (sample_data, sample_rate) = match &synthesis {
-        InstrumentSynthesis::Sample { path, base_note } => {
-            // Load WAV sample - preserves original sample rate
-            let sample_path = spec_dir.join(path);
-            let (data, actual_sample_rate) =
-                load_wav_sample(&sample_path).map_err(GenerateError::SampleLoadError)?;
+    let mut sample = ItSample::new(&instr.name, baked.pcm16_mono, c5_speed);
 
-            // Calculate C-5 speed (IT's pitch reference) based on actual sample rate and base_note
-            let c5_speed = if let Some(note_name) = base_note {
-                // Parse the base note to get IT note number
-                let it_note = note_name_to_it(note_name);
-                if it_note > 119 {
-                    return Err(GenerateError::SampleLoadError(format!(
-                        "Invalid base_note '{}' for sample instrument '{}'",
-                        note_name, instr.name
-                    )));
-                }
-
-                // In IT, C-5 (note 60) should play at the C-5 speed (sample rate)
-                // If the sample is recorded at a different note, we need to adjust the C-5 speed
-                // C-5 speed = sample_rate * 2^((60 - base_note) / 12)
-                let semitone_diff = 60 - it_note as i32;
-                let speed_multiplier = 2.0_f64.powf(semitone_diff as f64 / 12.0);
-                (actual_sample_rate as f64 * speed_multiplier) as u32
-            } else {
-                // No base note specified, assume the sample is at C-5
-                actual_sample_rate
-            };
-
-            (data, c5_speed)
-        }
-        synth => {
-            // Synthesize sample
-            //
-            // Use base_note from instrument level if specified, otherwise default to IT's C-5 (MIDI 72)
-            // IT's reference pitch is C-5 (IT note 60 = MIDI 72 = 523.25 Hz)
-            // When no base_note is specified, we assume the sample contains C-5 audio.
-            let base_midi = instr
-                .base_note
-                .as_ref()
-                .map(|n| note_name_to_midi(n))
-                .unwrap_or(DEFAULT_IT_SYNTH_MIDI_NOTE);
-
-            // Use sample_rate from instrument level if specified, otherwise default
-            let synth_sample_rate = instr.sample_rate.unwrap_or(DEFAULT_SAMPLE_RATE);
-
-            let (data, _loop_start, _loop_length) =
-                generate_loopable_sample(synth, base_midi, synth_sample_rate, 4, instr_seed);
-
-            // Calculate c5_speed based on the base note
-            // This ensures the sample plays at the correct pitch when the tracker plays C-5
-            let c5_speed = calculate_c5_speed_for_base_note(synth_sample_rate, base_midi);
-
-            (data, c5_speed)
-        }
-    };
-
-    // Create sample with the calculated sample rate (C-5 speed)
-    let sample = ItSample::new(&instr.name, sample_data, sample_rate);
-    let sample_length = sample.length_samples();
-
-    // Set loop if needed
-    let mut sample = if !matches!(synthesis, InstrumentSynthesis::Sample { .. }) {
-        sample.with_loop(0, sample_length, false)
-    } else {
-        sample
-    };
+    if let Some((loop_begin, loop_end)) = baked.loop_points {
+        sample = sample.with_loop(loop_begin, loop_end, false);
+    }
 
     // Set default volume
     sample.default_volume = instr.default_volume.unwrap_or(64).min(64);
@@ -257,6 +196,7 @@ fn generate_it_instrument(
 fn convert_pattern_to_it(
     pattern: &TrackerPattern,
     num_channels: u8,
+    instruments: &[TrackerInstrument],
 ) -> Result<ItPattern, GenerateError> {
     let mut it_pattern = ItPattern::empty(pattern.rows, num_channels);
 
@@ -266,15 +206,16 @@ fn convert_pattern_to_it(
             continue;
         }
 
-        let it_note = if note.note == "---" || note.note == "..." {
-            ItNote::empty()
-        } else if note.note == "OFF" || note.note == "^^^" {
+        let note_name = resolve_pattern_note_name(note, instruments, "C5")?;
+        let note_name = note_name.as_ref();
+
+        let it_note = if note_name == "OFF" || note_name == "^^^" {
             ItNote::note_off()
-        } else if note.note == "===" {
+        } else if note_name == "===" {
             ItNote::note_cut()
         } else {
             let mut n = ItNote::from_name(
-                &note.note,
+                note_name,
                 note.inst + 1, // IT instruments are 1-indexed
                 note.vol.unwrap_or(64),
             );
@@ -416,6 +357,7 @@ fn apply_tempo_change_it(pattern: &mut ItPattern, row: u16, bpm: u8) -> Result<(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::it::sample_flags;
     use speccade_spec::recipe::audio::Envelope;
     use speccade_spec::recipe::music::{ArrangementEntry, PatternNote, TrackerFormat};
 
@@ -513,6 +455,150 @@ mod tests {
         assert_eq!(note_end.volume, 0);
     }
 
+    // =========================================================================
+    // Tests for resolving omitted pattern notes (trigger default/base note)
+    // =========================================================================
+
+    #[test]
+    fn test_it_pattern_note_omitted_triggers_default_note() {
+        let instruments = vec![TrackerInstrument {
+            name: "Kick".to_string(),
+            synthesis: Some(InstrumentSynthesis::Sine),
+            ..Default::default()
+        }];
+
+        let pattern = TrackerPattern {
+            rows: 1,
+            data: Some(vec![PatternNote {
+                row: 0,
+                channel: Some(0),
+                // note omitted (empty) should trigger the default IT note (C5)
+                inst: 0,
+                vol: Some(64),
+                ..Default::default()
+            }]),
+            ..Default::default()
+        };
+
+        let it = convert_pattern_to_it(&pattern, 1, &instruments).unwrap();
+        let cell = it.get_note(0, 0).unwrap();
+        assert_eq!(cell.note, note_name_to_it("C5"));
+        assert_eq!(cell.instrument, 1);
+        assert_eq!(cell.volume, 64);
+    }
+
+    #[test]
+    fn test_it_pattern_note_omitted_uses_instrument_base_note() {
+        let instruments = vec![TrackerInstrument {
+            name: "Lead".to_string(),
+            synthesis: Some(InstrumentSynthesis::Triangle),
+            base_note: Some("C4".to_string()),
+            ..Default::default()
+        }];
+
+        let pattern = TrackerPattern {
+            rows: 1,
+            data: Some(vec![PatternNote {
+                row: 0,
+                channel: Some(0),
+                inst: 0,
+                vol: Some(32),
+                ..Default::default()
+            }]),
+            ..Default::default()
+        };
+
+        let it = convert_pattern_to_it(&pattern, 1, &instruments).unwrap();
+        let cell = it.get_note(0, 0).unwrap();
+        assert_eq!(cell.note, note_name_to_it("C4"));
+    }
+
+    #[test]
+    fn test_it_pattern_note_omitted_uses_sample_synth_base_note_when_instrument_base_note_missing()
+    {
+        let instruments = vec![TrackerInstrument {
+            name: "Sampled".to_string(),
+            synthesis: Some(InstrumentSynthesis::Sample {
+                path: "samples/test.wav".to_string(),
+                base_note: Some("D4".to_string()),
+            }),
+            ..Default::default()
+        }];
+
+        let pattern = TrackerPattern {
+            rows: 1,
+            data: Some(vec![PatternNote {
+                row: 0,
+                channel: Some(0),
+                inst: 0,
+                vol: Some(32),
+                ..Default::default()
+            }]),
+            ..Default::default()
+        };
+
+        let it = convert_pattern_to_it(&pattern, 1, &instruments).unwrap();
+        let cell = it.get_note(0, 0).unwrap();
+        assert_eq!(cell.note, note_name_to_it("D4"));
+    }
+
+    #[test]
+    fn test_it_pattern_explicit_note_overrides_instrument_base_note() {
+        let instruments = vec![TrackerInstrument {
+            name: "Lead".to_string(),
+            synthesis: Some(InstrumentSynthesis::Triangle),
+            base_note: Some("C5".to_string()),
+            ..Default::default()
+        }];
+
+        let pattern = TrackerPattern {
+            rows: 1,
+            data: Some(vec![PatternNote {
+                row: 0,
+                channel: Some(0),
+                note: "C4".to_string(),
+                inst: 0,
+                vol: Some(32),
+                ..Default::default()
+            }]),
+            ..Default::default()
+        };
+
+        let it = convert_pattern_to_it(&pattern, 1, &instruments).unwrap();
+        let cell = it.get_note(0, 0).unwrap();
+        assert_eq!(cell.note, note_name_to_it("C4"));
+    }
+
+    #[test]
+    fn test_it_pattern_no_note_marker_preserves_instrument_column() {
+        let instruments = vec![TrackerInstrument {
+            name: "Kick".to_string(),
+            synthesis: Some(InstrumentSynthesis::Sine),
+            ..Default::default()
+        }];
+
+        let pattern = TrackerPattern {
+            rows: 1,
+            data: Some(vec![PatternNote {
+                row: 0,
+                channel: Some(0),
+                note: "...".to_string(),
+                inst: 0,
+                vol: Some(64),
+                ..Default::default()
+            }]),
+            ..Default::default()
+        };
+
+        let it = convert_pattern_to_it(&pattern, 1, &instruments).unwrap();
+        let cell = it.get_note(0, 0).unwrap();
+        assert_eq!(cell.note, 0, "No-note marker should not trigger a note");
+        assert_eq!(
+            cell.instrument, 1,
+            "No-note marker should still allow instrument-only events"
+        );
+    }
+
     #[test]
     fn test_tempo_change_it() {
         let mut pattern = ItPattern::empty(16, 4);
@@ -522,6 +608,30 @@ mod tests {
         let note = pattern.get_note(4, 0).unwrap();
         assert_eq!(note.effect, 0x14);
         assert_eq!(note.effect_param, 140);
+    }
+
+    #[test]
+    fn test_it_non_periodic_noise_one_shot_does_not_loop() {
+        let instrument = TrackerInstrument {
+            name: "Hihat".to_string(),
+            synthesis: Some(InstrumentSynthesis::Noise { periodic: false }),
+            envelope: Envelope {
+                attack: 0.001,
+                decay: 0.02,
+                sustain: 0.0,
+                release: 0.015,
+            },
+            ..Default::default()
+        };
+
+        let spec_dir = Path::new(".");
+        let (_it_instr, it_sample) = generate_it_instrument(&instrument, 42, 0, spec_dir).unwrap();
+        assert_eq!(
+            it_sample.flags & sample_flags::LOOP,
+            0,
+            "Non-periodic noise one-shots should not loop (ringing/pitch artifacts)"
+        );
+        assert!(it_sample.length_samples() > 0);
     }
 
     // Tests for IT c5_speed calculation with synthesized instruments

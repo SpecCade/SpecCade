@@ -1,0 +1,55 @@
+{
+  "spec_version": 1,
+  "asset_id": "music-audio-inline-metallic-golden",
+  "asset_type": "music",
+  "license": "CC0-1.0",
+  "seed": 999021,
+  "description": "Golden test: inlines advanced audio_v1 metallic synthesis into music and bakes to XM+IT.",
+  "style_tags": ["golden", "music", "audio_v1", "inline", "metallic"],
+  "outputs": [
+    { "kind": "primary", "format": "xm", "path": "music_audio_inline_metallic.xm" },
+    { "kind": "primary", "format": "it", "path": "music_audio_inline_metallic.it" }
+  ],
+  "recipe": {
+    "kind": "music.tracker_song_v1",
+    "params": {
+      "format": "xm",
+      "bpm": 120,
+      "speed": 6,
+      "channels": 2,
+      "loop": true,
+      "instruments": [
+        {
+          "name": "metallic_inline",
+          "synthesis_audio_v1": {
+            "base_note": "C5",
+            "duration_seconds": 1.0,
+            "sample_rate": 22050,
+            "layers": [
+              {
+                "synthesis": { "type": "metallic", "base_freq": 800.0, "num_partials": 8, "inharmonicity": 1.414 },
+                "envelope": { "attack": 0.001, "decay": 0.2, "sustain": 0.0, "release": 0.5 },
+                "volume": 1.0,
+                "pan": 0.0
+              }
+            ]
+          },
+          "envelope": { "attack": 0.001, "decay": 0.05, "sustain": 0.0, "release": 0.2 },
+          "default_volume": 64
+        }
+      ],
+      "patterns": {
+        "hits": {
+          "rows": 32,
+          "data": [
+            { "row": 0, "channel": 0, "instrument": 0, "volume": 64 },
+            { "row": 8, "channel": 0, "instrument": 0, "volume": 56 },
+            { "row": 16, "channel": 0, "instrument": 0, "volume": 64 },
+            { "row": 24, "channel": 0, "instrument": 0, "volume": 56 }
+          ]
+        }
+      },
+      "arrangement": [{ "pattern": "hits", "repeat": 4 }]
+    }
+  }
+}

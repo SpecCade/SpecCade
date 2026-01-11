@@ -87,14 +87,14 @@ fn generate_from_unified_params(params: &AudioV1Params, seed: u32) -> AudioResul
     let sample_rate = params.sample_rate as f64;
     let num_samples = (params.duration_seconds * sample_rate).ceil() as usize;
 
-    // Get base note as MIDI note number (None means tracker uses default)
+    // Get base note as MIDI note number (None means tracker uses a format default)
     use speccade_spec::recipe::audio::NoteSpec as UnifiedNoteSpec;
     let base_note_midi: Option<u8> = match &params.base_note {
         Some(UnifiedNoteSpec::MidiNote(n)) => Some(*n),
         Some(UnifiedNoteSpec::NoteName(name)) => {
             speccade_spec::recipe::audio::parse_note_name(name)
         }
-        None => None, // Tracker uses native default (C3 for IT, C4 for XM)
+        None => None, // Tracker uses native default (IT: C5, XM: C4)
     };
 
     let mut mixer = Mixer::new(num_samples, sample_rate);

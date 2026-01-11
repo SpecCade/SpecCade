@@ -340,6 +340,46 @@ pub fn generate_loopable_sample(
     (bytes, 0, total_samples as u32)
 }
 
+/// Generate a fixed-length sample for tracker playback.
+///
+/// This is used for one-shot / percussive instruments where looping would create
+/// obvious repetition (especially for noise).
+///
+/// For periodic waveforms, this repeats a single cycle to fill `duration_samples`.
+/// For non-periodic noise, this generates unique random samples for the full duration.
+pub fn generate_fixed_length_sample(
+    synthesis: &InstrumentSynthesis,
+    base_note_midi: u8,
+    sample_rate: u32,
+    duration_samples: usize,
+    seed: u32,
+) -> Vec<u8> {
+    if duration_samples == 0 {
+        return Vec::new();
+    }
+
+    let samples: Vec<f64> = match synthesis {
+        InstrumentSynthesis::Noise { .. } => {
+            // One-shot noise: do NOT repeat, or it will sound pitched / ringing.
+            generate_single_cycle(synthesis, duration_samples, seed)
+        }
+        InstrumentSynthesis::Sample { .. } => vec![0.0; duration_samples],
+        _ => {
+            let freq = midi_to_freq(base_note_midi);
+            let samples_per_cycle = (sample_rate as f64 / freq).round().max(1.0) as usize;
+            let cycle = generate_single_cycle(synthesis, samples_per_cycle, seed);
+            cycle
+                .iter()
+                .cycle()
+                .take(duration_samples)
+                .copied()
+                .collect()
+        }
+    };
+
+    samples_to_bytes(&samples)
+}
+
 /// Load a WAV file and return 16-bit PCM bytes (little-endian i16), mono.
 ///
 /// This function:

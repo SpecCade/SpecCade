@@ -167,42 +167,114 @@ fn generate_music(
         .as_music_tracker_song()
         .map_err(|e| DispatchError::BackendError(format!("Invalid music params: {}", e)))?;
 
-    let result = speccade_backend_music::generate_music(&params, spec.seed, spec_dir)
-        .map_err(|e| DispatchError::BackendError(format!("Music generation failed: {}", e)))?;
+    let primary_outputs: Vec<&speccade_spec::OutputSpec> = spec
+        .outputs
+        .iter()
+        .filter(|o| o.kind == OutputKind::Primary)
+        .collect();
 
-    // Write tracker module file to the output path from spec
-    let primary_output = get_primary_output(spec)?;
+    if primary_outputs.is_empty() {
+        return Err(DispatchError::BackendError(
+            "No primary output specified".to_string(),
+        ));
+    }
+
     // Keep a defensive check even though validate_for_generate enforces this.
     let expected = match params.format {
         TrackerFormat::Xm => OutputFormat::Xm,
         TrackerFormat::It => OutputFormat::It,
     };
-    if primary_output.format != expected {
-        return Err(DispatchError::BackendError(format!(
-            "music.tracker_song_v1 requires primary output format '{}', got '{}'",
-            expected, primary_output.format
-        )));
-    }
-    write_output_bytes(out_root, &primary_output.path, &result.data)?;
 
-    // Determine format based on extension
-    let format = match result.extension {
-        "xm" => OutputFormat::Xm,
-        "it" => OutputFormat::It,
-        _ => {
+    // Single-output mode (legacy behavior).
+    if primary_outputs.len() == 1 {
+        let primary_output = primary_outputs[0];
+        if primary_output.format != expected {
             return Err(DispatchError::BackendError(format!(
-                "Unknown music format: {}",
-                result.extension
-            )))
+                "music.tracker_song_v1 requires primary output format '{}', got '{}'",
+                expected, primary_output.format
+            )));
         }
-    };
 
-    Ok(vec![OutputResult::tier1(
-        OutputKind::Primary,
-        format,
-        PathBuf::from(&primary_output.path),
-        result.hash,
-    )])
+        let result = speccade_backend_music::generate_music(&params, spec.seed, spec_dir)
+            .map_err(|e| DispatchError::BackendError(format!("Music generation failed: {}", e)))?;
+
+        write_output_bytes(out_root, &primary_output.path, &result.data)?;
+
+        return Ok(vec![OutputResult::tier1(
+            OutputKind::Primary,
+            primary_output.format,
+            PathBuf::from(&primary_output.path),
+            result.hash,
+        )]);
+    }
+
+    // Multi-output mode: one XM and/or one IT primary output.
+    let mut seen_xm = false;
+    let mut seen_it = false;
+    let mut results = Vec::new();
+
+    for output in primary_outputs {
+        let format = match output.format {
+            OutputFormat::Xm => {
+                if seen_xm {
+                    return Err(DispatchError::BackendError(
+                        "Duplicate primary output format 'xm' for music.tracker_song_v1".to_string(),
+                    ));
+                }
+                seen_xm = true;
+                TrackerFormat::Xm
+            }
+            OutputFormat::It => {
+                if seen_it {
+                    return Err(DispatchError::BackendError(
+                        "Duplicate primary output format 'it' for music.tracker_song_v1".to_string(),
+                    ));
+                }
+                seen_it = true;
+                TrackerFormat::It
+            }
+            _ => {
+                return Err(DispatchError::BackendError(format!(
+                    "music.tracker_song_v1 primary outputs must have format 'xm' or 'it', got '{}'",
+                    output.format
+                )))
+            }
+        };
+
+        let mut per_output_params = params.clone();
+        per_output_params.format = format;
+
+        let gen = speccade_backend_music::generate_music(&per_output_params, spec.seed, spec_dir)
+            .map_err(|e| DispatchError::BackendError(format!("Music generation failed: {}", e)))?;
+
+        // Defensive: ensure backend output matches requested format.
+        let actual_format = match gen.extension {
+            "xm" => OutputFormat::Xm,
+            "it" => OutputFormat::It,
+            _ => {
+                return Err(DispatchError::BackendError(format!(
+                    "Unknown music format: {}",
+                    gen.extension
+                )))
+            }
+        };
+        if actual_format != output.format {
+            return Err(DispatchError::BackendError(format!(
+                "Music backend returned '{}' but output was declared as '{}'",
+                actual_format, output.format
+            )));
+        }
+
+        write_output_bytes(out_root, &output.path, &gen.data)?;
+        results.push(OutputResult::tier1(
+            OutputKind::Primary,
+            output.format,
+            PathBuf::from(&output.path),
+            gen.hash,
+        ));
+    }
+
+    Ok(results)
 }
 
 /// Generate texture material maps using the texture backend

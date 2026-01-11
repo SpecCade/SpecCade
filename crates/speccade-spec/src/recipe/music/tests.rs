@@ -1,7 +1,7 @@
 //! Tests for music/tracker recipe types - basic serialization.
 
 use super::*;
-use crate::recipe::audio::Envelope;
+use crate::recipe::audio::{AudioLayer, AudioV1Params, Envelope, Synthesis, Waveform};
 use std::collections::HashMap;
 
 // ==================== Top-Level Keys Tests ====================
@@ -205,6 +205,43 @@ fn test_instrument_ref_serialization() {
     let json = serde_json::to_string(&instr).unwrap();
     let parsed: TrackerInstrument = serde_json::from_str(&json).unwrap();
     assert_eq!(parsed.r#ref, Some("instruments/lead.spec.py".to_string()));
+}
+
+#[test]
+fn test_instrument_synthesis_audio_v1_serialization() {
+    let instr = TrackerInstrument {
+        name: "Inline AudioV1".to_string(),
+        synthesis_audio_v1: Some(AudioV1Params {
+            base_note: Some(crate::recipe::audio::NoteSpec::NoteName("A4".to_string())),
+            duration_seconds: 0.25,
+            sample_rate: 44100,
+            layers: vec![AudioLayer {
+                synthesis: Synthesis::Oscillator {
+                    waveform: Waveform::Sine,
+                    frequency: 440.0,
+                    freq_sweep: None,
+                    detune: None,
+                    duty: None,
+                },
+                envelope: Envelope::default(),
+                volume: 1.0,
+                pan: 0.0,
+                delay: None,
+            }],
+            pitch_envelope: None,
+            generate_loop_points: false,
+            master_filter: None,
+        }),
+        ..Default::default()
+    };
+
+    let json = serde_json::to_string(&instr).unwrap();
+    assert!(json.contains("synthesis_audio_v1"));
+
+    let parsed: TrackerInstrument = serde_json::from_str(&json).unwrap();
+    assert_eq!(parsed.name, instr.name);
+    assert!(parsed.synthesis_audio_v1.is_some());
+    assert!(parsed.synthesis.is_none());
 }
 
 #[test]

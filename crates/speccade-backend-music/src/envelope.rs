@@ -16,6 +16,14 @@ use crate::xm::{XmEnvelope, XmEnvelopePoint};
 /// This value approximates typical tracker timing at default tempo.
 const TICKS_PER_SEC: f64 = 50.0;
 
+fn seconds_to_ticks(seconds: f64) -> u16 {
+    if seconds <= 0.0 {
+        return 0;
+    }
+    let ticks = (seconds * TICKS_PER_SEC).round();
+    ticks.clamp(0.0, u16::MAX as f64) as u16
+}
+
 /// Trait for envelope point types that can be constructed from tick and value.
 ///
 /// This enables generic ADSR envelope calculation across different tracker formats.
@@ -54,27 +62,55 @@ impl EnvelopePoint for ItEnvelopePoint {
 /// # Returns
 /// A tuple of (points, sustain_value) where points is a Vec of envelope points
 fn calculate_adsr_points<P: EnvelopePoint>(envelope: &Envelope) -> Vec<P> {
-    let attack_ticks = (envelope.attack * TICKS_PER_SEC) as u16;
-    let decay_ticks = (envelope.decay * TICKS_PER_SEC) as u16;
-    let release_ticks = (envelope.release * TICKS_PER_SEC) as u16;
-    let sustain_value = (envelope.sustain * 64.0) as u16;
+    // Trackers operate on relatively coarse time units (frames/ticks). If we directly truncate
+    // (or allow 0-length segments), very short envelopes can collapse to duplicate points, which
+    // some players interpret as silence. We round to the nearest tick and ensure that point times
+    // are strictly increasing.
+    //
+    // Special case: if `attack` rounds to 0 ticks, starting at 0 volume would effectively mute the
+    // first tick in many players. For percussive instruments this can make the sound inaudible, so
+    // we start at full volume at tick 0 when attack is 0 ticks.
+    let attack_ticks = seconds_to_ticks(envelope.attack);
+    let decay_ticks = seconds_to_ticks(envelope.decay);
+    let release_ticks = seconds_to_ticks(envelope.release);
+    let sustain_value = (envelope.sustain * 64.0).round().clamp(0.0, 64.0) as u16;
 
     let mut points = Vec::new();
 
-    // Attack: 0 -> 64
-    points.push(P::new(0, 0));
-    points.push(P::new(attack_ticks.max(1), 64));
+    let mut current_tick: u16 = 0;
+
+    if attack_ticks == 0 {
+        // Immediate attack: start at full volume at tick 0.
+        points.push(P::new(0, 64));
+    } else {
+        // Attack: 0 -> 64
+        points.push(P::new(0, 0));
+        points.push(P::new(attack_ticks, 64));
+        current_tick = attack_ticks;
+    }
+
+    // If sustain is 0, treat this as a one-shot envelope (AD) where `release` extends the tail.
+    // This matches common expectations for percussive instruments in trackers (no explicit note-off).
+    if envelope.sustain <= 0.0 {
+        let tail_ticks = decay_ticks.saturating_add(release_ticks);
+        let end = current_tick
+            .saturating_add(tail_ticks.max(1))
+            .max(current_tick.saturating_add(1));
+        points.push(P::new(end, 0));
+        return points;
+    }
 
     // Decay: 64 -> sustain
-    let decay_end = attack_ticks + decay_ticks;
-    points.push(P::new(decay_end.max(attack_ticks + 1), sustain_value));
+    let decay_end = current_tick
+        .saturating_add(decay_ticks.max(1))
+        .max(current_tick.saturating_add(1));
+    points.push(P::new(decay_end, sustain_value));
 
-    // Sustain hold point
-    let sustain_end = decay_end + 100;
-    points.push(P::new(sustain_end, sustain_value));
-
-    // Release: sustain -> 0
-    points.push(P::new(sustain_end + release_ticks, 0));
+    // Release: sustain -> 0 (after note-off)
+    let release_end = decay_end
+        .saturating_add(release_ticks.max(1))
+        .max(decay_end.saturating_add(1));
+    points.push(P::new(release_end, 0));
 
     points
 }
@@ -90,13 +126,21 @@ fn calculate_adsr_points<P: EnvelopePoint>(envelope: &Envelope) -> Vec<P> {
 /// # Returns
 /// XM-formatted envelope with points, sustain, and loop settings
 pub fn convert_envelope_to_xm(envelope: &Envelope) -> XmEnvelope {
+    let sustain_enabled = envelope.sustain > 0.0;
+    let points: Vec<XmEnvelopePoint> = calculate_adsr_points(envelope);
+    let sustain_point = if sustain_enabled {
+        // Sustain at the last non-zero point (the decay end).
+        (points.len().saturating_sub(2)) as u8
+    } else {
+        0
+    };
     XmEnvelope {
-        points: calculate_adsr_points(envelope),
-        sustain_point: 2,
+        points,
+        sustain_point,
         loop_start: 0,
         loop_end: 0,
         enabled: true,
-        sustain_enabled: true,
+        sustain_enabled,
         loop_enabled: false,
     }
 }
@@ -112,13 +156,27 @@ pub fn convert_envelope_to_xm(envelope: &Envelope) -> XmEnvelope {
 /// # Returns
 /// IT-formatted envelope with points, sustain loop, and flags
 pub fn convert_envelope_to_it(envelope: &Envelope) -> ItEnvelope {
+    let sustain_enabled = envelope.sustain > 0.0;
+    let flags = if sustain_enabled {
+        env_flags::ENABLED | env_flags::SUSTAIN_LOOP
+    } else {
+        env_flags::ENABLED
+    };
+
+    let points: Vec<ItEnvelopePoint> = calculate_adsr_points(envelope);
+    let sustain_point = if sustain_enabled {
+        (points.len().saturating_sub(2)) as u8
+    } else {
+        0
+    };
+
     ItEnvelope {
-        flags: env_flags::ENABLED | env_flags::SUSTAIN_LOOP,
-        points: calculate_adsr_points(envelope),
+        flags,
+        points,
         loop_begin: 0,
         loop_end: 0,
-        sustain_begin: 2,
-        sustain_end: 3,
+        sustain_begin: sustain_point,
+        sustain_end: sustain_point,
     }
 }
 
@@ -143,7 +201,7 @@ mod tests {
         assert!(xm_env.enabled);
         assert!(xm_env.sustain_enabled);
         assert!(!xm_env.loop_enabled);
-        assert_eq!(xm_env.points.len(), 5);
+        assert_eq!(xm_env.points.len(), 4);
         assert_eq!(xm_env.sustain_point, 2);
 
         // Check attack starts at 0
@@ -163,9 +221,9 @@ mod tests {
         let it_env = convert_envelope_to_it(&env);
 
         assert_eq!(it_env.flags, env_flags::ENABLED | env_flags::SUSTAIN_LOOP);
-        assert_eq!(it_env.points.len(), 5);
+        assert_eq!(it_env.points.len(), 4);
         assert_eq!(it_env.sustain_begin, 2);
-        assert_eq!(it_env.sustain_end, 3);
+        assert_eq!(it_env.sustain_end, 2);
 
         // Check attack starts at 0
         assert_eq!(it_env.points[0].tick, 0);
@@ -188,10 +246,37 @@ mod tests {
         };
 
         let xm_env = convert_envelope_to_xm(&env);
-        // Attack should be clamped to at least 1 tick
-        assert!(xm_env.points[1].frame >= 1);
+        // Immediate attack should start at full volume
+        assert_eq!(xm_env.points[0].frame, 0);
+        assert_eq!(xm_env.points[0].value, 64);
 
         let it_env = convert_envelope_to_it(&env);
-        assert!(it_env.points[1].tick >= 1);
+        assert_eq!(it_env.points[0].tick, 0);
+        assert_eq!(it_env.points[0].value, 64);
+    }
+
+    #[test]
+    fn test_one_shot_envelope_disables_sustain_and_is_monotonic() {
+        let env = Envelope {
+            attack: 0.001,
+            decay: 0.02,
+            sustain: 0.0,
+            release: 0.015,
+        };
+
+        let xm_env = convert_envelope_to_xm(&env);
+        assert!(xm_env.enabled);
+        assert!(!xm_env.sustain_enabled);
+        assert!(xm_env.points.len() >= 2);
+        for w in xm_env.points.windows(2) {
+            assert!(w[0].frame < w[1].frame);
+        }
+
+        let it_env = convert_envelope_to_it(&env);
+        assert_eq!(it_env.flags, env_flags::ENABLED);
+        assert!(it_env.points.len() >= 2);
+        for w in it_env.points.windows(2) {
+            assert!(w[0].tick < w[1].tick);
+        }
     }
 }

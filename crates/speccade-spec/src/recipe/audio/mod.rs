@@ -46,7 +46,7 @@ pub struct AudioLayer {
 /// The `base_note` field tells the tracker what pitch this sample is recorded at.
 /// The tracker uses this for transposition when playing pattern notes:
 ///
-/// - `base_note: None`, pattern note: None → play tracker's native base (C3 for IT, C4 for XM)
+/// - `base_note: None`, pattern note: None → play tracker's native base (C5 for IT, C4 for XM)
 /// - `base_note: Some(note)`, pattern note: None → play the sample's base note
 /// - `base_note: None`, pattern note: Some → play tracker's native base
 /// - `base_note: Some(note)`, pattern note: Some → play the pattern note (transposed relative to base)
@@ -54,7 +54,7 @@ pub struct AudioLayer {
 #[serde(deny_unknown_fields)]
 pub struct AudioV1Params {
     /// Base note this sample is tuned to (MIDI note or note name like "C4").
-    /// If None, the tracker uses its native default (C3 for IT, C4 for XM).
+    /// If None, the tracker uses its native default (C5 for IT, C4 for XM).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub base_note: Option<NoteSpec>,
     /// Duration of the audio in seconds.

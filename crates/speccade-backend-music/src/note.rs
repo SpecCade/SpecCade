@@ -903,4 +903,72 @@ mod tests {
         // XM: Note that maps to effective pitch 48 = base pitch
         // The relationship holds because both account for sample_rate and base_note
     }
+
+    #[test]
+    fn test_xm_pitch_correction_produces_expected_playback_rate_for_base_note() {
+        // Verify that (finetune, relative_note) make the base note play back at the
+        // sample's natural sample_rate. If the math is reversed, this will be far off.
+        let cases = [
+            (22050u32, 33u8), // A1 (low note)
+            (22050u32, 60u8), // C4 (middle C)
+            (22050u32, 72u8), // C5
+            (44100u32, 33u8), // A1 at higher sample rate
+            (44100u32, 60u8), // C4 at higher sample rate
+        ];
+
+        for (sample_rate, base_midi) in cases {
+            let (finetune, relative_note) = calculate_xm_pitch_correction(sample_rate, base_midi);
+
+            // XM 0-indexed note number for this MIDI base note.
+            let base_xm_note_0indexed = base_midi as i32 - 12;
+
+            // XM reference: C-4 (0-indexed note 48) at XM_BASE_FREQ.
+            let semitones = (base_xm_note_0indexed as f64 + relative_note as f64 - 48.0)
+                + (finetune as f64 / 128.0);
+            let playback_rate = XM_BASE_FREQ * 2.0_f64.powf(semitones / 12.0);
+
+            let rel_err = (playback_rate - sample_rate as f64).abs() / sample_rate as f64;
+            assert!(
+                rel_err < 0.01,
+                "XM pitch correction mismatch: sample_rate={}, base_midi={}, finetune={}, relative_note={}, playback_rate={:.2} (rel_err={:.5})",
+                sample_rate,
+                base_midi,
+                finetune,
+                relative_note,
+                playback_rate,
+                rel_err
+            );
+        }
+    }
+
+    #[test]
+    fn test_it_c5_speed_produces_expected_playback_rate_for_base_note() {
+        // Verify that c5_speed makes the base note play back at the sample's natural
+        // sample_rate. This checks the direction/sign of the semitone adjustment.
+        let cases = [
+            (22050u32, 33u8), // A1
+            (22050u32, 72u8), // C5 (IT reference base)
+            (44100u32, 60u8), // C4
+        ];
+
+        for (sample_rate, base_midi) in cases {
+            let c5_speed = calculate_c5_speed_for_base_note(sample_rate, base_midi);
+
+            // IT note number: it_note = midi - 12. Reference is C-5 (note 60).
+            let base_it_note = base_midi as i32 - 12;
+            let playback_rate =
+                c5_speed as f64 * 2.0_f64.powf((base_it_note - 60) as f64 / 12.0);
+
+            let rel_err = (playback_rate - sample_rate as f64).abs() / sample_rate as f64;
+            assert!(
+                rel_err < 0.01,
+                "IT c5_speed mismatch: sample_rate={}, base_midi={}, c5_speed={}, playback_rate={:.2} (rel_err={:.5})",
+                sample_rate,
+                base_midi,
+                c5_speed,
+                playback_rate,
+                rel_err
+            );
+        }
+    }
 }

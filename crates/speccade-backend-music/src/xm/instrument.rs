@@ -310,11 +310,21 @@ impl XmSample {
         // Sample length (in bytes for 8-bit, in samples*2 for 16-bit)
         writer.write_u32::<LittleEndian>(self.data.len() as u32)?;
 
-        // Loop start (in samples)
-        writer.write_u32::<LittleEndian>(self.loop_start)?;
+        // Loop start (XM stores these offsets in bytes; for 16-bit samples each sample is 2 bytes).
+        let loop_start_bytes = if self.is_16bit {
+            self.loop_start.saturating_mul(2)
+        } else {
+            self.loop_start
+        };
+        writer.write_u32::<LittleEndian>(loop_start_bytes)?;
 
-        // Loop length (in samples)
-        writer.write_u32::<LittleEndian>(self.loop_length)?;
+        // Loop length (in bytes; for 16-bit samples each sample is 2 bytes).
+        let loop_length_bytes = if self.is_16bit {
+            self.loop_length.saturating_mul(2)
+        } else {
+            self.loop_length
+        };
+        writer.write_u32::<LittleEndian>(loop_length_bytes)?;
 
         // Volume
         writer.write_u8(self.volume)?;

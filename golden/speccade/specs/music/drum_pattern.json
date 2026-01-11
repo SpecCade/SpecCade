@@ -23,40 +23,32 @@
       "instruments": [
         {
           "name": "kick",
-          "synthesis": {
-            "type": "sine"
-          },
+          "ref": "../audio/kick_drum.json",
           "envelope": {
-            "attack": 0.001,
+            "attack": 0.0,
             "decay": 0.15,
             "sustain": 0.0,
-            "release": 0.1
+            "release": 0.15
           }
         },
         {
           "name": "snare",
-          "synthesis": {
-            "type": "noise",
-            "periodic": false
-          },
+          "ref": "../audio/snare_hit.json",
           "envelope": {
-            "attack": 0.001,
-            "decay": 0.1,
+            "attack": 0.0,
+            "decay": 0.08,
             "sustain": 0.0,
-            "release": 0.08
+            "release": 0.12
           }
         },
         {
           "name": "hihat",
-          "synthesis": {
-            "type": "noise",
-            "periodic": false
-          },
+          "ref": "../audio/hihat_closed.json",
           "envelope": {
-            "attack": 0.001,
+            "attack": 0.0,
             "decay": 0.02,
             "sustain": 0.0,
-            "release": 0.015
+            "release": 0.04
           }
         }
       ],
@@ -72,22 +64,22 @@
             {"row": 24, "channel": 1, "instrument": 1, "volume": 56},
             {"row": 40, "channel": 1, "instrument": 1, "volume": 56},
             {"row": 56, "channel": 1, "instrument": 1, "volume": 56},
-            {"row": 0, "channel": 2, "instrument": 2, "volume": 32},
-            {"row": 4, "channel": 2, "instrument": 2, "volume": 24},
-            {"row": 8, "channel": 2, "instrument": 2, "volume": 32},
-            {"row": 12, "channel": 2, "instrument": 2, "volume": 24},
-            {"row": 16, "channel": 2, "instrument": 2, "volume": 32},
-            {"row": 20, "channel": 2, "instrument": 2, "volume": 24},
-            {"row": 24, "channel": 2, "instrument": 2, "volume": 32},
-            {"row": 28, "channel": 2, "instrument": 2, "volume": 24},
-            {"row": 32, "channel": 2, "instrument": 2, "volume": 32},
-            {"row": 36, "channel": 2, "instrument": 2, "volume": 24},
-            {"row": 40, "channel": 2, "instrument": 2, "volume": 32},
-            {"row": 44, "channel": 2, "instrument": 2, "volume": 24},
-            {"row": 48, "channel": 2, "instrument": 2, "volume": 32},
-            {"row": 52, "channel": 2, "instrument": 2, "volume": 24},
-            {"row": 56, "channel": 2, "instrument": 2, "volume": 32},
-            {"row": 60, "channel": 2, "instrument": 2, "volume": 24}
+            {"row": 0, "channel": 2, "instrument": 2, "volume": 48},
+            {"row": 4, "channel": 2, "instrument": 2, "volume": 40},
+            {"row": 8, "channel": 2, "instrument": 2, "volume": 48},
+            {"row": 12, "channel": 2, "instrument": 2, "volume": 40},
+            {"row": 16, "channel": 2, "instrument": 2, "volume": 48},
+            {"row": 20, "channel": 2, "instrument": 2, "volume": 40},
+            {"row": 24, "channel": 2, "instrument": 2, "volume": 48},
+            {"row": 28, "channel": 2, "instrument": 2, "volume": 40},
+            {"row": 32, "channel": 2, "instrument": 2, "volume": 48},
+            {"row": 36, "channel": 2, "instrument": 2, "volume": 40},
+            {"row": 40, "channel": 2, "instrument": 2, "volume": 48},
+            {"row": 44, "channel": 2, "instrument": 2, "volume": 40},
+            {"row": 48, "channel": 2, "instrument": 2, "volume": 48},
+            {"row": 52, "channel": 2, "instrument": 2, "volume": 40},
+            {"row": 56, "channel": 2, "instrument": 2, "volume": 48},
+            {"row": 60, "channel": 2, "instrument": 2, "volume": 40}
           ]
         }
       },

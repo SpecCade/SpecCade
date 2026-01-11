@@ -9,17 +9,18 @@ use std::collections::HashMap;
 use std::path::Path;
 
 use speccade_spec::recipe::music::{
-    AutomationEntry, InstrumentSynthesis, MusicTrackerSongV1Params, TrackerInstrument,
-    TrackerPattern,
+    AutomationEntry, MusicTrackerSongV1Params, TrackerFormat, TrackerInstrument, TrackerPattern,
 };
+#[cfg(test)]
+use speccade_spec::recipe::music::InstrumentSynthesis;
 
 use crate::envelope::convert_envelope_to_xm;
-use crate::generate::{get_instrument_synthesis, GenerateError, GenerateResult};
-use crate::note::{
-    calculate_pitch_correction, calculate_xm_pitch_correction, note_name_to_midi, note_name_to_xm,
-    DEFAULT_SAMPLE_RATE, DEFAULT_SYNTH_MIDI_NOTE,
+use crate::generate::{
+    bake_instrument_sample, resolve_pattern_note_name, GenerateError, GenerateResult,
 };
-use crate::synthesis::{derive_instrument_seed, generate_loopable_sample, load_wav_sample};
+use crate::note::calculate_xm_pitch_correction;
+#[cfg(test)]
+use crate::note::note_name_to_xm;
 use crate::xm::{
     effect_name_to_code as xm_effect_name_to_code, XmInstrument, XmModule, XmNote, XmPattern,
     XmSample,
@@ -68,7 +69,7 @@ pub fn generate_xm(
             .patterns
             .get(name)
             .ok_or_else(|| GenerateError::PatternNotFound(name.clone()))?;
-        let mut xm_pattern = convert_pattern_to_xm(pattern, params.channels)?;
+        let mut xm_pattern = convert_pattern_to_xm(pattern, params.channels, &params.instruments)?;
 
         // Apply automation to this pattern
         apply_automation_to_xm_pattern(&mut xm_pattern, name, &params.automation, params.channels)?;
@@ -164,80 +165,19 @@ fn generate_xm_instrument(
     index: u32,
     spec_dir: &Path,
 ) -> Result<XmInstrument, GenerateError> {
-    let instr_seed = derive_instrument_seed(base_seed, index);
+    let baked = bake_instrument_sample(instr, base_seed, index, spec_dir, TrackerFormat::Xm)?;
 
-    // Handle ref or inline synthesis
-    let synthesis = get_instrument_synthesis(instr, spec_dir)?;
-
-    // Generate sample data and pitch correction based on synthesis type
-    let (sample_data, finetune, relative_note) = match &synthesis {
-        InstrumentSynthesis::Sample { path, base_note } => {
-            // Load WAV sample - preserves original sample rate
-            let sample_path = spec_dir.join(path);
-            let (data, actual_sample_rate) =
-                load_wav_sample(&sample_path).map_err(GenerateError::SampleLoadError)?;
-
-            // Calculate pitch correction based on actual sample rate and base_note
-            let (ft, rn) = if let Some(note_name) = base_note {
-                // Parse the base note to get MIDI number
-                let xm_note = note_name_to_xm(note_name);
-                if xm_note == 0 || xm_note == 97 {
-                    return Err(GenerateError::SampleLoadError(format!(
-                        "Invalid base_note '{}' for sample instrument '{}'",
-                        note_name, instr.name
-                    )));
-                }
-                // XM notes are 1-indexed, so xm_note=1 is C-0 (note 0 in frequency calc)
-                // The relative_note offset should be set so that when the tracker plays
-                // the base note, it plays at the sample's natural pitch (sample_rate Hz)
-                let base_note_index = (xm_note - 1) as i8; // 0-indexed note (C-4 = 48)
-                                                           // calculate_pitch_correction gives the offset needed for a sample at sample_rate
-                                                           // to play at the correct pitch when triggered at C-4 (note 48)
-                let (ft, rn) = calculate_pitch_correction(actual_sample_rate);
-                // For a sample containing base_note, we want:
-                //   base_note + relative_note = 48 + rn (the RealNote for sample_rate playback)
-                // Therefore: relative_note = 48 + rn - base_note
-                (ft, 48 + rn - base_note_index)
-            } else {
-                // No base note specified, assume sample contains C-4 (note 48)
-                // This is the default XM reference pitch, so just apply sample rate correction
-                calculate_pitch_correction(actual_sample_rate)
-            };
-
-            (data, ft, rn)
-        }
-        synth => {
-            // Synthesize sample
-            //
-            // Use base_note from instrument level if specified, otherwise default to C4 (MIDI 60)
-            let base_midi = instr
-                .base_note
-                .as_ref()
-                .map(|n| note_name_to_midi(n))
-                .unwrap_or(DEFAULT_SYNTH_MIDI_NOTE);
-
-            // Use sample_rate from instrument level if specified, otherwise default
-            let synth_sample_rate = instr.sample_rate.unwrap_or(DEFAULT_SAMPLE_RATE);
-
-            let (data, _loop_start, _loop_length) =
-                generate_loopable_sample(synth, base_midi, synth_sample_rate, 4, instr_seed);
-
-            // Calculate pitch correction for both sample rate AND base note
-            let (ft, rn) = calculate_xm_pitch_correction(synth_sample_rate, base_midi);
-            (data, ft, rn)
-        }
-    };
+    let (finetune, relative_note) = calculate_xm_pitch_correction(baked.sample_rate, baked.base_midi);
 
     // Create sample
-    let mut sample = XmSample::new(&instr.name, sample_data, true);
+    let mut sample = XmSample::new(&instr.name, baked.pcm16_mono, true);
     sample.finetune = finetune;
     sample.relative_note = relative_note;
 
-    // Set loop if needed (for sustained instruments)
-    if !matches!(synthesis, InstrumentSynthesis::Sample { .. }) {
+    if let Some((loop_start, loop_end)) = baked.loop_points {
         sample.loop_type = 1; // Forward loop
-        sample.loop_start = 0;
-        sample.loop_length = sample.length_samples();
+        sample.loop_start = loop_start;
+        sample.loop_length = loop_end.saturating_sub(loop_start);
     }
 
     // Set default volume
@@ -256,6 +196,7 @@ fn generate_xm_instrument(
 fn convert_pattern_to_xm(
     pattern: &TrackerPattern,
     num_channels: u8,
+    instruments: &[TrackerInstrument],
 ) -> Result<XmPattern, GenerateError> {
     let mut xm_pattern = XmPattern::empty(pattern.rows, num_channels);
 
@@ -265,13 +206,14 @@ fn convert_pattern_to_xm(
             continue;
         }
 
-        let xm_note = if note.note == "---" || note.note == "..." {
-            XmNote::empty()
-        } else if note.note == "OFF" || note.note == "===" {
+        let note_name = resolve_pattern_note_name(note, instruments, "C4")?;
+        let note_name = note_name.as_ref();
+
+        let xm_note = if note_name == "OFF" || note_name == "===" {
             XmNote::note_off()
         } else {
             let mut n = XmNote::from_name(
-                &note.note,
+                note_name,
                 note.inst + 1, // XM instruments are 1-indexed
                 note.vol,
             );
@@ -492,6 +434,176 @@ mod tests {
 
         let note_end = pattern.get_note(8, 0).unwrap();
         assert_eq!(note_end.volume, 0x10);
+    }
+
+    // =========================================================================
+    // Tests for resolving omitted pattern notes (trigger default/base note)
+    // =========================================================================
+
+    #[test]
+    fn test_xm_pattern_note_omitted_triggers_default_note() {
+        let instruments = vec![TrackerInstrument {
+            name: "Kick".to_string(),
+            synthesis: Some(InstrumentSynthesis::Sine),
+            ..Default::default()
+        }];
+
+        let pattern = TrackerPattern {
+            rows: 1,
+            data: Some(vec![PatternNote {
+                row: 0,
+                channel: Some(0),
+                // note omitted (empty) should trigger the default XM note (C4)
+                inst: 0,
+                vol: Some(64),
+                ..Default::default()
+            }]),
+            ..Default::default()
+        };
+
+        let xm = convert_pattern_to_xm(&pattern, 1, &instruments).unwrap();
+        let cell = xm.get_note(0, 0).unwrap();
+        assert_eq!(cell.note, note_name_to_xm("C4"));
+        assert_eq!(cell.instrument, 1);
+        assert_eq!(cell.volume, 0x10 + 64);
+    }
+
+    #[test]
+    fn test_xm_pattern_note_omitted_uses_instrument_base_note() {
+        let instruments = vec![TrackerInstrument {
+            name: "Lead".to_string(),
+            synthesis: Some(InstrumentSynthesis::Triangle),
+            base_note: Some("C5".to_string()),
+            ..Default::default()
+        }];
+
+        let pattern = TrackerPattern {
+            rows: 1,
+            data: Some(vec![PatternNote {
+                row: 0,
+                channel: Some(0),
+                inst: 0,
+                vol: Some(32),
+                ..Default::default()
+            }]),
+            ..Default::default()
+        };
+
+        let xm = convert_pattern_to_xm(&pattern, 1, &instruments).unwrap();
+        let cell = xm.get_note(0, 0).unwrap();
+        assert_eq!(cell.note, note_name_to_xm("C5"));
+    }
+
+    #[test]
+    fn test_xm_pattern_note_omitted_uses_sample_synth_base_note_when_instrument_base_note_missing()
+    {
+        let instruments = vec![TrackerInstrument {
+            name: "Sampled".to_string(),
+            synthesis: Some(InstrumentSynthesis::Sample {
+                path: "samples/test.wav".to_string(),
+                base_note: Some("D4".to_string()),
+            }),
+            ..Default::default()
+        }];
+
+        let pattern = TrackerPattern {
+            rows: 1,
+            data: Some(vec![PatternNote {
+                row: 0,
+                channel: Some(0),
+                inst: 0,
+                vol: Some(32),
+                ..Default::default()
+            }]),
+            ..Default::default()
+        };
+
+        let xm = convert_pattern_to_xm(&pattern, 1, &instruments).unwrap();
+        let cell = xm.get_note(0, 0).unwrap();
+        assert_eq!(cell.note, note_name_to_xm("D4"));
+    }
+
+    #[test]
+    fn test_xm_pattern_explicit_note_overrides_instrument_base_note() {
+        let instruments = vec![TrackerInstrument {
+            name: "Lead".to_string(),
+            synthesis: Some(InstrumentSynthesis::Triangle),
+            base_note: Some("C5".to_string()),
+            ..Default::default()
+        }];
+
+        let pattern = TrackerPattern {
+            rows: 1,
+            data: Some(vec![PatternNote {
+                row: 0,
+                channel: Some(0),
+                note: "C4".to_string(),
+                inst: 0,
+                vol: Some(32),
+                ..Default::default()
+            }]),
+            ..Default::default()
+        };
+
+        let xm = convert_pattern_to_xm(&pattern, 1, &instruments).unwrap();
+        let cell = xm.get_note(0, 0).unwrap();
+        assert_eq!(cell.note, note_name_to_xm("C4"));
+    }
+
+    #[test]
+    fn test_xm_pattern_no_note_marker_preserves_instrument_column() {
+        let instruments = vec![TrackerInstrument {
+            name: "Kick".to_string(),
+            synthesis: Some(InstrumentSynthesis::Sine),
+            ..Default::default()
+        }];
+
+        let pattern = TrackerPattern {
+            rows: 1,
+            data: Some(vec![PatternNote {
+                row: 0,
+                channel: Some(0),
+                note: "...".to_string(),
+                inst: 0,
+                vol: Some(64),
+                ..Default::default()
+            }]),
+            ..Default::default()
+        };
+
+        let xm = convert_pattern_to_xm(&pattern, 1, &instruments).unwrap();
+        let cell = xm.get_note(0, 0).unwrap();
+        assert_eq!(cell.note, 0, "No-note marker should not trigger a note");
+        assert_eq!(
+            cell.instrument, 1,
+            "No-note marker should still allow instrument-only events"
+        );
+    }
+
+    #[test]
+    fn test_xm_non_periodic_noise_one_shot_does_not_loop() {
+        let instrument = TrackerInstrument {
+            name: "Hihat".to_string(),
+            synthesis: Some(InstrumentSynthesis::Noise { periodic: false }),
+            envelope: Envelope {
+                attack: 0.001,
+                decay: 0.02,
+                sustain: 0.0,
+                release: 0.015,
+            },
+            ..Default::default()
+        };
+
+        let spec_dir = Path::new(".");
+        let xm_instr = generate_xm_instrument(&instrument, 42, 0, spec_dir).unwrap();
+        assert_eq!(
+            xm_instr.sample.loop_type, 0,
+            "Non-periodic noise one-shots should not loop (ringing/pitch artifacts)"
+        );
+        assert!(
+            xm_instr.sample.length_samples() > 0,
+            "One-shot sample should have non-zero length"
+        );
     }
 
     // =========================================================================

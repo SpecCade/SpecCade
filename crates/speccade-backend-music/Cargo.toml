@@ -10,6 +10,7 @@ categories = ["multimedia::audio", "game-development"]
 
 [dependencies]
 speccade-spec.workspace = true
+speccade-backend-audio.workspace = true
 rand_pcg.workspace = true
 rand.workspace = true
 blake3.workspace = true
