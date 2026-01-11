@@ -3,6 +3,7 @@
 These examples are written against the proposed `music.tracker_song_compose_v1` recipe kind from:
 
 - `docs/rfcs/RFC-0003-music-pattern-ir.md`
+- `docs/rfcs/RFC-0004-music-compose-musical-helpers.md` (optional)
 
 They are intended to be used as:
 
@@ -68,10 +69,24 @@ What this example demonstrates:
 - `emit` for regular grids (hats, backbeat snare)
 - `emit_seq` for bass/lead motifs
 - `choose` for an end-of-phrase fill
-- “fieldwise merge” to layer volume-only cells without clobbering notes
+- nested `stack` with `merge: "last_wins"` for intentional overrides (e.g., ghost hats overriding volume)
 
 Suggested tests for this example (once implemented):
 
 - Expand and ensure no merge conflicts with `merge: "error"` at top-level.
 - Generate XM from compose spec and compare bytes to XM from the expanded spec.
 
+---
+
+## Example 4: Harmony + Chord Tones + Octave Bass (Draft)
+
+Compose spec:
+
+- `docs/examples/music/compose_harmony_octave_bass_4bars.json`
+
+What this example demonstrates:
+
+- `timebase` + pattern length in bars
+- `channel_ids` / `instrument_ids` aliases
+- `harmony` chord progression
+- chord-tone authoring + octave doubling via transposition

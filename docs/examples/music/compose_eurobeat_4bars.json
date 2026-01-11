@@ -47,6 +47,14 @@
             "cell": { "channel": 5, "note": "C1", "inst": 2, "vol": 16 }
           }
         },
+        "hat_layer": {
+          "op": "stack",
+          "merge": "last_wins",
+          "parts": [
+            { "op": "ref", "name": "hat_16" },
+            { "op": "ref", "name": "hat_ghosts" }
+          ]
+        },
         "bass_ost": {
           "op": "emit_seq",
           "at": { "op": "range", "start": 0, "step": 4, "count": 16 },
@@ -89,8 +97,7 @@
             "parts": [
               { "op": "ref", "name": "kick_4" },
               { "op": "ref", "name": "snare_2_4" },
-              { "op": "ref", "name": "hat_16" },
-              { "op": "ref", "name": "hat_ghosts" },
+              { "op": "ref", "name": "hat_layer" },
               { "op": "ref", "name": "bass_ost" },
               { "op": "ref", "name": "lead_riff" },
               { "op": "ref", "name": "end_fill" }
@@ -102,4 +109,3 @@
     }
   }
 }
-

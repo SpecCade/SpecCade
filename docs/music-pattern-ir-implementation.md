@@ -3,6 +3,7 @@
 This document is a “build guide” for implementing `music.tracker_song_compose_v1` as specified in:
 
 - `docs/rfcs/RFC-0003-music-pattern-ir.md`
+- `docs/rfcs/RFC-0004-music-compose-musical-helpers.md` (optional)
 
 It is written so an implementation agent can follow it end-to-end and land a working system with tests.
 
@@ -51,9 +52,17 @@ Add supporting structs/enums (all `#[serde(deny_unknown_fields)]`):
 - `Seq<T> { mode, values }` for `emit_seq`
 - `MergePolicy` enum (`error`, `merge_fields`, `last_wins`)
 
+Optional (RFC-0004) additions:
+
+- `ChannelRef` / `InstrumentRef` (untagged: `u8 | String`) + alias maps in params
+- `TimeBase { beats_per_bar, rows_per_beat }` + `ComposePattern.bars`
+- `BeatPos { bar, beat, sub }` + `BeatDelta { beats, sub }` + `TimeExpr::beat_range`, `TimeExpr::beat_list`
+- `Harmony { key, chords[] }` + `ChordSpec` (see `docs/music-chord-spec.md`)
+- `PitchSeq` for `emit_seq` (`scale_degree` / `chord_tone`)
+
 Recommendation: keep the operator set minimal for v1:
 
-- structural: `stack`, `repeat`, `shift`, `slice`, `ref`
+- structural: `stack`, `concat`, `repeat`, `shift`, `slice`, `ref`
 - emit: `emit`, `emit_seq`
 - time: `range`, `list`, `euclid`, `pattern`
 - variation: `prob`, `choose`
@@ -106,13 +115,13 @@ Then modify the existing entrypoint:
 Implement a cell type internally:
 
 - key: `(row: u16, channel: u8)`
-- value: `Cell { note?, inst?, vol?, effect?, param?, effect_name?, effect_xy? }`
+- value: `Cell { note, inst, vol?, effect?, param?, effect_name?, effect_xy? }`
 
 Merging:
 
-- `merge_fields`: fill missing fields; error on conflicting non-empty fields
+- `merge_fields`: fieldwise merge; error on conflicts (see RFC-0003)
 - `last_wins`: deterministic by evaluation order (documented)
-- `error`: error on any double-write to the same field
+- `error`: error on any double-write to the same cell
 
 Expansion should produce a `TrackerPattern { rows, data: Some(Vec<PatternNote>) }` with:
 
@@ -124,7 +133,9 @@ Expansion should produce a `TrackerPattern { rows, data: Some(Vec<PatternNote>) 
 Use PCG32 seeded via RFC-0001’s derivation style:
 
 - base: `spec.seed`
-- include: pattern name + `seed_salt` + stable node path bytes
+- include: pattern name + `seed_salt` (required for `prob` / `choose`)
+
+Recommendation: derive a per-node seed via `truncate_u32(BLAKE3(spec_seed || pattern_name || seed_salt))` and initialize a fresh PCG32 stream from that seed.
 
 Avoid floating-point probabilities:
 
@@ -216,4 +227,3 @@ Once compose is implemented and stable:
 3) CLI dispatch + `speccade expand` (`speccade-cli`)
 4) Integration tests (`speccade-tests`)
 5) Docs polish + golden corpus
-

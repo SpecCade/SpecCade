@@ -4,14 +4,9 @@
   "asset_type": "music",
   "license": "CC0-1.0",
   "seed": 1,
-  "description": "Draft compose-v1 example: 16-row beat + expected expansion snapshot",
+  "description": "Draft compose-v1 example: 16-row beat (expected expansion snapshot lives next to this file)",
   "outputs": [
-    { "kind": "primary", "format": "xm", "path": "compose_minimal_16rows.xm" },
-    {
-      "kind": "metadata",
-      "format": "json",
-      "path": "compose_minimal_16rows.expanded.params.json"
-    }
+    { "kind": "primary", "format": "xm", "path": "compose_minimal_16rows.xm" }
   ],
   "recipe": {
     "kind": "music.tracker_song_compose_v1",

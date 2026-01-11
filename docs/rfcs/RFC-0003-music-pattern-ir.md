@@ -123,7 +123,7 @@ Rationale: keep the canonical format stable while allowing iteration on authorin
 }
 ```
 
-**Expansion rule:** `program` expands first; then `data`/`notes` are merged **on top** (explicit overrides).
+**Expansion rule:** `program` expands first; then `data`/`notes` are merged **on top** as explicit overrides (equivalent to `merge: "last_wins"` with hand-authored cells applied last).
 
 ---
 
@@ -165,15 +165,25 @@ Rules:
 
 - `channel` is required for `emit` / `emit_seq`.
 - `note` may be omitted or empty to mean “trigger instrument base note” (mirrors `music.tracker_song_v1` behavior).
-- `inst` is required for note triggers; but may be omitted for “volume/effect-only” cells.
+- `inst` is required for emitted cells in v1 (mirrors `music.tracker_song_v1` today).
 - Special tracker tokens like `"---"`, `"..."`, `"OFF"` are preserved as-is.
 
 ### 5.3 Merge / Conflict Policy
 
-When multiple sources target the same `(row, channel)`:
+When multiple sources target the same `(row, channel)`, merge is defined **fieldwise**:
 
-- default: **error** on conflicting non-empty fields
-- allowed: “fieldwise merge” when one source sets only e.g. `vol` or only `effect`
+- `merge_fields`: for each field, if both sides set a value:
+  - if values are equal → OK
+  - if values differ → error
+  - if only one side sets a value → take it
+- `last_wins`: same as `merge_fields`, except conflicts are resolved by taking the later writer’s value.
+- `error`: error on any double-write to the same cell (even if fields would have merged).
+
+Notes:
+
+- In canonical `music.tracker_song_v1`, `note` and `inst` are always present on `PatternNote` (even if they default), so most “layering” in v1 should use either:
+  - non-overlapping `(row, channel)` targets, or
+  - `merge: "last_wins"` for explicit overrides (e.g., velocity shaping).
 
 Operators that combine patterns (`stack`, `concat`, post-merge overrides) accept:
 
@@ -181,7 +191,7 @@ Operators that combine patterns (`stack`, `concat`, post-merge overrides) accept
 { "merge": "error" | "last_wins" | "merge_fields" }
 ```
 
-Recommended default: `merge_fields` for internal layering + `error` at the top-level to surface mistakes early.
+Recommended default: `merge_fields` for internal layering + `error` at the top-level to surface mistakes early, with `last_wins` reserved for intentionally-overlapping override layers.
 
 ---
 
@@ -238,6 +248,20 @@ Keep only events in `[start, start+len)`.
 ```json
 { "op": "slice", "start": 0, "len": 32, "body": { /* PatternExpr */ } }
 ```
+
+#### 6.1.6 `ref`
+
+Reference a reusable fragment from `params.defs`.
+
+```json
+{ "op": "ref", "name": "four_on_floor" }
+```
+
+Rules:
+
+- `name` must exist in `defs` (otherwise error).
+- `ref` may point to another `ref` (nesting allowed).
+- Cycles are errors (e.g., `a -> b -> a`).
 
 ---
 
@@ -382,14 +406,15 @@ Choose one branch deterministically based on RNG.
 
 ## 7. Determinism and RNG
 
-All randomness uses PCG32 per RFC-0001. To ensure stable outputs when ASTs evolve, RNG seeding is derived from:
+All randomness uses PCG32 per RFC-0001.
+
+For v1, `prob` and `choose` MUST include a stable `seed_salt`. RNG seeding is derived from:
 
 - `spec.seed`
 - `pattern_name`
 - `seed_salt` (required for `prob` / `choose`)
-- a stable “node path” (e.g. preorder index)
 
-Recommendation: implement a helper `derive_u32(spec_seed, pattern_name, seed_salt, node_path_bytes)` using BLAKE3 truncation.
+Recommendation: implement a helper `derive_u32(spec_seed, pattern_name, seed_salt)` using BLAKE3 truncation.
 
 ---
 
@@ -455,6 +480,7 @@ Errors should report enough context to locate the failing node (pattern name + n
 
 ## 12. Future Extensions (Non-blocking)
 
+- Musical authoring helpers (named channels/instruments, bars/beats timebase, chord/degree pitch helpers): see RFC-0004.
 - Scale/key-aware `degree_seq` and chord helpers
 - “Swing” mapped to XM/IT delay effects when available
 - Phrase libraries (“genre kits”) implemented as data packages, not code
