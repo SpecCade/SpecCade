@@ -11,8 +11,8 @@
 RFC-0003 defines a small JSON Pattern IR that expands deterministically into canonical `music.tracker_song_v1` tracker
 events.
 
-This RFC proposes **authoring helpers** on top of that IR so humans and LLMs can write *musical structure* (beats, bars,
-keys, chords) without:
+This RFC proposes **authoring helpers** on top of that IR so authors can write *musical structure* (beats, bars, keys,
+chords) without:
 
 - counting raw rows everywhere
 - juggling channel/instrument indices
@@ -38,7 +38,7 @@ All helpers compile away during expansion; the canonical output remains `music.t
   - “4 bars”
   - “kick on beats 1–4”
   - “bass plays chord tones”
-- Improve cheap-model success rates by reducing:
+- Reduce authoring errors by reducing:
   - token volume
   - numeric bookkeeping
   - pitch spelling mistakes
@@ -55,8 +55,7 @@ All helpers compile away during expansion; the canonical output remains `music.t
 
 ### 2.1 Motivation
 
-Channel and instrument indices are a major source of mistakes for both humans and LLMs (off-by-one, refactor churn,
-misrouting parts).
+Channel and instrument indices are a major source of mistakes (off-by-one, refactor churn, misrouting parts).
 
 ### 2.2 Proposal
 
@@ -204,7 +203,7 @@ The convention is explicit in the spec and compiles to concrete rows.
 
 ### 4.1 Motivation
 
-Cheaper models frequently produce out-of-key pitches when forced to emit many absolute note names.
+Out-of-key pitches are a common failure mode when authoring many absolute note names.
 
 Musicians often think in:
 
@@ -334,7 +333,7 @@ The authoring API should be explicit about the chosen strategy to preserve deter
 
 ## 6. Documentation / Workflow Requirements
 
-To keep this system reviewable and LLM-friendly:
+To keep this system reviewable:
 
 1) Provide `speccade expand <spec.json>` to show the fully expanded `music.tracker_song_v1` params.
 2) Keep examples for:

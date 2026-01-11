@@ -9,7 +9,7 @@ They are intended to be used as:
 
 - implementation targets (unit tests + integration tests)
 - “golden” inputs for future corpus expansion
-- templates for humans and LLMs
+- templates for authors
 
 ---
 

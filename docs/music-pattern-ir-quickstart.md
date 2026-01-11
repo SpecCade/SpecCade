@@ -5,7 +5,7 @@ This quickstart describes the proposed JSON “Pattern IR” authoring layer for
 - `docs/rfcs/RFC-0003-music-pattern-ir.md`
 - `docs/rfcs/RFC-0004-music-compose-musical-helpers.md` (optional: names/beats/harmony)
 
-The goal is to keep `music.tracker_song_v1` as the canonical, fully-expanded event format, while providing a compact, safe, deterministic way to author patterns (for humans and LLMs).
+The goal is to keep `music.tracker_song_v1` as the canonical, fully-expanded event format, while providing a compact, safe, deterministic way to author patterns.
 
 ## Mental Model
 
@@ -37,7 +37,7 @@ Recommended PR workflow:
 
 - reviewers look at both the compact compose spec and the expanded JSON snapshot
 
-## Authoring Tips (Human + LLM)
+## Authoring Tips
 
 - Prefer `defs` for drum layers and common riffs.
 - Prefer `emit_seq` for pitched material (bass/lead) and keep sequences short + cyclic.
@@ -47,9 +47,9 @@ Recommended PR workflow:
 - When you *intentionally* overlap (e.g., “ghost notes” that override volume), use a nested `stack` with `merge: "last_wins"` for that layer.
 - Use deterministic randomness (`choose`, `prob`) only for *small* variations (ghost notes, fills), not core structure.
 
-## LLM Workflow (Recommended)
+## Workflow (Recommended)
 
-1) Keep instruments stable: ask the model to edit **patterns/defs only** unless sound design is the goal.
+1) Keep instruments stable: prefer editing **patterns/defs only** unless sound design is the goal.
 2) Work in small chunks:
    - one pattern (e.g., 2–8 bars) at a time
    - one role at a time (drums, then bass, then lead)

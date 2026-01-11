@@ -10,7 +10,7 @@
 
 This RFC proposes a safe, deterministic, JSON-based **authoring layer** for tracker music. Instead of writing large, fully-expanded pattern event lists directly, spec authors write compact **Pattern IR** (a small JSON AST) that is expanded deterministically into the existing `music.tracker_song_v1` event format before XM/IT generation.
 
-The intent is to make “assets-as-code” practical for dense symbolic assets like music, especially for LLM- and human-authored content, without executing untrusted code.
+The intent is to make “assets-as-code” practical for dense symbolic assets like music, without executing untrusted code.
 
 **Design principles:**
 
@@ -26,7 +26,7 @@ The intent is to make “assets-as-code” practical for dense symbolic assets l
 Tracker music is “dense”: a 60-second song often contains hundreds to thousands of note events. Fully-expanded JSON (e.g. one object per hit) becomes:
 
 - hard for humans to read/write/review
-- expensive and failure-prone for LLMs to emit reliably
+- expensive and failure-prone to produce reliably
 - noisy in diffs (small musical changes → large line churn)
 
 Previous “foreign Python” approaches offered expressiveness (loops, `%`, helper functions) but introduce high security and maintainability risks.
@@ -48,7 +48,7 @@ This RFC aims to capture the *useful parts* of “code” (reuse, repetition, va
 
 - A general-purpose programming language (no unbounded loops, recursion, IO, or user-defined functions).
 - Micro-timing beyond tracker capabilities (future work may map “swing” to format-specific delay effects).
-- Automatic “good taste” composition by itself; this is an authoring substrate, not an AI model.
+- Automatic “good taste” composition by itself; this is an authoring substrate, not an automatic composition system.
 
 ---
 

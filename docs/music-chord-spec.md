@@ -8,14 +8,14 @@ runtime feature of XM/IT.
 ## Design Goals
 
 - **Deterministic:** chord parsing must be unambiguous and stable.
-- **LLM-friendly:** common chord symbols should work (`Am`, `F#m7b5`, `Cmaj7#11/G`).
+- **Practical:** common chord symbols should work (`Am`, `F#m7b5`, `Cmaj7#11/G`).
 - **Complete escape hatch:** any chord must be representable even if a symbol is not supported.
 
 ## ChordSpec
 
 Chord specs should accept one of:
 
-1) **Symbol form** (recommended for humans/LLMs):
+1) **Symbol form** (recommended):
 
 ```json
 { "symbol": "Cmaj7#11/G" }

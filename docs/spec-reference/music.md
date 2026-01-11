@@ -12,7 +12,7 @@ SpecCade generates fully playable tracker modules with embedded instruments and 
 
 ## Draft: Recipe `music.tracker_song_compose_v1` (Pattern IR)
 
-Tracker music is dense; fully-expanded note event lists can be thousands of lines and are hard to author (for humans and LLMs). The draft authoring recipe `music.tracker_song_compose_v1` introduces a **JSON Pattern IR** (“macros”) that expands deterministically into the canonical `music.tracker_song_v1` event format before generating XM/IT.
+Tracker music is dense; fully-expanded note event lists can be thousands of lines and are hard to author and review. The draft authoring recipe `music.tracker_song_compose_v1` introduces a **JSON Pattern IR** (“macros”) that expands deterministically into the canonical `music.tracker_song_v1` event format before generating XM/IT.
 
 This proposal is specified in:
 
@@ -25,6 +25,8 @@ See also:
 - `docs/music-pattern-ir-examples.md`
 - `docs/music-pattern-ir-implementation.md`
 - `docs/music-chord-spec.md`
+- `docs/music-genre-kits-master-list.md`
+- `docs/music-genre-kits-audit.md`
 
 Minimal example (16th hats + 4-on-the-floor kick, 64-row pattern):
 
@@ -72,7 +74,7 @@ Minimal example (16th hats + 4-on-the-floor kick, 64-row pattern):
 
 The compose recipe may also add musical authoring helpers that compile away during expansion:
 
-- `channel_ids` / `instrument_ids`: alias maps so patterns can refer to channels/instruments by name (LLM-friendly).
+- `channel_ids` / `instrument_ids`: alias maps so patterns can refer to channels/instruments by name.
 - `timebase` + pattern `bars`: author rhythms in bars/beats instead of raw row indices.
 - `harmony` + chord spec: author pitched parts as scale degrees / chord tones (defaults avoid accidental dissonance).
 
