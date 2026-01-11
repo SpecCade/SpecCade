@@ -158,7 +158,10 @@ pub fn extract_asset_id(spec_file: &Path) -> Result<String> {
 
 /// Generate seed from filename hash
 pub fn generate_seed_from_filename(spec_file: &Path) -> u32 {
-    let filename = spec_file.file_name().unwrap().to_string_lossy();
+    let filename = spec_file
+        .file_name()
+        .map(|name| name.to_string_lossy().into_owned())
+        .unwrap_or_default();
     let hash = blake3::hash(filename.as_bytes());
     let bytes = hash.as_bytes();
 

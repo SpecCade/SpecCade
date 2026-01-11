@@ -60,21 +60,28 @@ pub fn generate_xm(
     // Convert patterns (with automation).
     //
     // Determinism: `patterns` is a HashMap, so we must iterate in a stable order.
-    let mut pattern_names: Vec<&String> = params.patterns.keys().collect();
+    let mut pattern_names: Vec<String> = params.patterns.keys().cloned().collect();
     pattern_names.sort();
 
-    for (pattern_idx, name) in pattern_names.into_iter().enumerate() {
+    for (pattern_idx, name) in pattern_names.iter().enumerate() {
         let pattern = params
             .patterns
             .get(name)
-            .expect("pattern name came from patterns.keys()");
+            .ok_or_else(|| GenerateError::PatternNotFound(name.clone()))?;
         let mut xm_pattern = convert_pattern_to_xm(pattern, params.channels)?;
 
         // Apply automation to this pattern
         apply_automation_to_xm_pattern(&mut xm_pattern, name, &params.automation, params.channels)?;
 
+        let pattern_idx_u8 = u8::try_from(pattern_idx).map_err(|_| {
+            GenerateError::InvalidParameter(format!(
+                "patterns must be <= {}, got {}",
+                u8::MAX,
+                pattern_names.len()
+            ))
+        })?;
         module.add_pattern(xm_pattern);
-        pattern_index_map.insert(name.clone(), pattern_idx as u8);
+        pattern_index_map.insert(name.clone(), pattern_idx_u8);
     }
 
     // Build order table from arrangement
@@ -138,6 +145,13 @@ fn validate_xm_params(params: &MusicTrackerSongV1Params) -> Result<(), GenerateE
         return Err(GenerateError::InvalidParameter(format!(
             "speed must be 1-31, got {}",
             params.speed
+        )));
+    }
+    if params.patterns.len() > u8::MAX as usize {
+        return Err(GenerateError::InvalidParameter(format!(
+            "patterns must be <= {}, got {}",
+            u8::MAX,
+            params.patterns.len()
         )));
     }
     Ok(())

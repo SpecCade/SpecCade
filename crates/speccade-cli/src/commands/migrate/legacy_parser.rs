@@ -56,7 +56,14 @@ pub fn parse_legacy_spec_static(spec_file: &Path) -> Result<LegacySpec> {
     let re = Regex::new(&pattern)?;
 
     if let Some(caps) = re.captures(&content) {
-        let dict_str = caps.get(1).unwrap().as_str();
+        let dict_match = caps.get(1).ok_or_else(|| {
+            anyhow::anyhow!(
+                "Failed to capture {} dict contents in {}",
+                dict_name,
+                spec_file.display()
+            )
+        })?;
+        let dict_str = dict_match.as_str();
 
         // Try to parse as Python dict literal
         match parse_python_dict_literal(dict_str) {
@@ -88,6 +95,13 @@ pub fn parse_legacy_spec_exec(spec_file: &Path) -> Result<LegacySpec> {
     let dict_name = category_to_dict_name(&category);
 
     // Create a temporary Python script to extract the dict
+    let parent = spec_file
+        .parent()
+        .ok_or_else(|| anyhow::anyhow!("Spec file has no parent dir: {}", spec_file.display()))?;
+    let stem = spec_file
+        .file_stem()
+        .and_then(|s| s.to_str())
+        .ok_or_else(|| anyhow::anyhow!("Spec file has invalid stem: {}", spec_file.display()))?;
     let script = format!(
         r#"
 import sys
@@ -96,8 +110,8 @@ sys.path.insert(0, str('{}'))
 from {} import {}
 print(json.dumps({}))
 "#,
-        spec_file.parent().unwrap().display(),
-        spec_file.file_stem().unwrap().to_string_lossy(),
+        parent.display(),
+        stem,
         dict_name,
         dict_name
     );
@@ -168,27 +182,40 @@ pub fn parse_python_dict_literal(dict_str: &str) -> Result<HashMap<String, serde
 
 /// Determine category from file path
 pub fn determine_category(spec_file: &Path) -> Result<String> {
-    let path_str = spec_file.to_string_lossy();
+    const CATEGORIES: [&str; 8] = [
+        "sounds",
+        "instruments",
+        "music",
+        "textures",
+        "normals",
+        "meshes",
+        "characters",
+        "animations",
+    ];
 
-    if path_str.contains("/sounds/") || path_str.contains("\\sounds\\") {
-        Ok("sounds".to_string())
-    } else if path_str.contains("/instruments/") || path_str.contains("\\instruments\\") {
-        Ok("instruments".to_string())
-    } else if path_str.contains("/music/") || path_str.contains("\\music\\") {
-        Ok("music".to_string())
-    } else if path_str.contains("/textures/") || path_str.contains("\\textures\\") {
-        Ok("textures".to_string())
-    } else if path_str.contains("/normals/") || path_str.contains("\\normals\\") {
-        Ok("normals".to_string())
-    } else if path_str.contains("/meshes/") || path_str.contains("\\meshes\\") {
-        Ok("meshes".to_string())
-    } else if path_str.contains("/characters/") || path_str.contains("\\characters\\") {
-        Ok("characters".to_string())
-    } else if path_str.contains("/animations/") || path_str.contains("\\animations\\") {
-        Ok("animations".to_string())
-    } else {
-        bail!("Could not determine category from path: {}", path_str);
+    let components: Vec<&str> = spec_file
+        .components()
+        .filter_map(|c| c.as_os_str().to_str())
+        .collect();
+
+    if let Some(specs_idx) = components.iter().position(|c| *c == "specs") {
+        if let Some(category) = components.get(specs_idx + 1) {
+            if CATEGORIES.contains(category) {
+                return Ok((*category).to_string());
+            }
+        }
     }
+
+    for component in &components {
+        if CATEGORIES.contains(component) {
+            return Ok((*component).to_string());
+        }
+    }
+
+    bail!(
+        "Could not determine category from path: {}",
+        spec_file.display()
+    );
 }
 
 /// Map category to dict name
