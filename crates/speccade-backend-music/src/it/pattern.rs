@@ -92,7 +92,7 @@ impl ItNote {
 pub struct ItPattern {
     /// Number of rows in this pattern.
     pub num_rows: u16,
-    /// Note data: notes[row][channel].
+    /// Note data: `notes[row][channel]`.
     pub notes: Vec<Vec<ItNote>>,
 }
 

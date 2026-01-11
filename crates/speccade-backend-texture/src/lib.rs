@@ -16,11 +16,11 @@
 //! ```no_run
 //! use speccade_backend_texture::generate::{generate_material_maps, save_texture_result};
 //! use speccade_spec::recipe::texture::{
-//!     Texture2dMaterialMapsV1Params, TextureMapType, BaseMaterial, MaterialType,
+//!     TextureMaterialV1Params, TextureMapType, BaseMaterial, MaterialType,
 //! };
 //! use std::path::Path;
 //!
-//! let params = Texture2dMaterialMapsV1Params {
+//! let params = TextureMaterialV1Params {
 //!     resolution: [256, 256],
 //!     tileable: true,
 //!     maps: vec![

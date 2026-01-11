@@ -3,7 +3,7 @@
 //! This module handles converting SpecCade ADSR envelopes to format-specific
 //! envelope representations (XM and IT).
 //!
-//! The conversion uses a generic approach with the [`EnvelopePoint`] trait,
+//! The conversion uses a generic approach with the `EnvelopePoint` trait,
 //! allowing shared ADSR calculation logic for both XM and IT formats.
 
 use speccade_spec::recipe::audio::Envelope;

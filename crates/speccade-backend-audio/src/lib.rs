@@ -38,7 +38,7 @@
 //!
 //! # Crate Structure
 //!
-//! - [`generate`] - Main entry point for audio generation (SFX and instruments)
+//! - [`generate()`] - Main entry point for audio generation (SFX and instruments)
 //! - [`envelope`] - ADSR envelope generators
 //! - [`filter`] - Biquad filter implementations
 //! - [`mixer`] - Layer mixing with volume/pan

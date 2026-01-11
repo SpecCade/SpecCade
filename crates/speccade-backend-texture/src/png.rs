@@ -205,7 +205,7 @@ pub fn hash_png(data: &[u8]) -> String {
     blake3::hash(data).to_hex().to_string()
 }
 
-/// Write to a Vec<u8> and return the hash.
+/// Write to a `Vec<u8>` and return the hash.
 pub fn write_rgba_to_vec_with_hash(
     buffer: &TextureBuffer,
     config: &PngConfig,
@@ -216,7 +216,7 @@ pub fn write_rgba_to_vec_with_hash(
     Ok((data, hash))
 }
 
-/// Write to a Vec<u8> and return the hash.
+/// Write to a `Vec<u8>` and return the hash.
 pub fn write_grayscale_to_vec_with_hash(
     buffer: &GrayscaleBuffer,
     config: &PngConfig,
@@ -227,7 +227,7 @@ pub fn write_grayscale_to_vec_with_hash(
     Ok((data, hash))
 }
 
-/// Write RGB to a Vec<u8> and return the hash.
+/// Write RGB to a `Vec<u8>` and return the hash.
 pub fn write_rgb_to_vec_with_hash(
     buffer: &TextureBuffer,
     config: &PngConfig,

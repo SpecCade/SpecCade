@@ -783,7 +783,7 @@ macro_rules! test_determinism {
     };
 }
 
-/// Helper to verify determinism of a closure returning Vec<u8>.
+/// Helper to verify determinism of a closure returning `Vec<u8>`.
 ///
 /// This is useful when you want to verify determinism without the macro,
 /// or when you need to capture variables in a closure.

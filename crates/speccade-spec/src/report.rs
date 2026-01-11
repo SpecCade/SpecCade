@@ -80,7 +80,7 @@ pub struct ReportError {
     pub code: String,
     /// Human-readable error message.
     pub message: String,
-    /// JSON path to the problematic field (e.g., "outputs[0].path").
+    /// JSON path to the problematic field (e.g., "outputs\[0\].path").
     #[serde(skip_serializing_if = "Option::is_none")]
     pub path: Option<String>,
 }

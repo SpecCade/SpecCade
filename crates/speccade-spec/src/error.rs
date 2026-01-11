@@ -121,7 +121,7 @@ pub struct ValidationError {
     pub code: ErrorCode,
     /// Human-readable error message.
     pub message: String,
-    /// JSON path to the problematic field (e.g., "outputs[0].path").
+    /// JSON path to the problematic field (e.g., "outputs\[0\].path").
     pub path: Option<String>,
 }
 
