@@ -6,6 +6,7 @@
 
 use crate::error::{ValidationError, ValidationWarning};
 use crate::output::{OutputFormat, OutputKind};
+use crate::spec::{AssetType, Spec};
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
@@ -20,6 +21,30 @@ pub struct Report {
     pub report_version: u32,
     /// Hex-encoded BLAKE3 hash of the canonicalized spec.
     pub spec_hash: String,
+    /// Optional hash of the *unexpanded* spec (when generating a derived variant).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub base_spec_hash: Option<String>,
+    /// Variant identifier for this run (if the spec was expanded as a variant).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub variant_id: Option<String>,
+    /// Asset ID from the spec (convenience/provenance).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub asset_id: Option<String>,
+    /// Asset type from the spec (convenience/provenance).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub asset_type: Option<AssetType>,
+    /// License identifier from the spec (convenience/provenance).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub license: Option<String>,
+    /// Seed used for this run (convenience/provenance).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub seed: Option<u32>,
+    /// Recipe kind from the spec (if present).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub recipe_kind: Option<String>,
+    /// Canonical hash of the recipe (kind + params), if present.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub recipe_hash: Option<String>,
     /// Whether the operation succeeded without errors.
     pub ok: bool,
     /// List of errors that occurred.
@@ -331,6 +356,14 @@ impl BoundingBox {
 /// Builder for creating reports ergonomically.
 pub struct ReportBuilder {
     spec_hash: String,
+    base_spec_hash: Option<String>,
+    variant_id: Option<String>,
+    asset_id: Option<String>,
+    asset_type: Option<AssetType>,
+    license: Option<String>,
+    seed: Option<u32>,
+    recipe_kind: Option<String>,
+    recipe_hash: Option<String>,
     ok: bool,
     errors: Vec<ReportError>,
     warnings: Vec<ReportWarning>,
@@ -364,6 +397,14 @@ impl ReportBuilder {
     pub fn new(spec_hash: String, backend_version: String) -> Self {
         Self {
             spec_hash,
+            base_spec_hash: None,
+            variant_id: None,
+            asset_id: None,
+            asset_type: None,
+            license: None,
+            seed: None,
+            recipe_kind: None,
+            recipe_hash: None,
             ok: true,
             errors: Vec::new(),
             warnings: Vec::new(),
@@ -377,6 +418,29 @@ impl ReportBuilder {
     /// Sets the ok status.
     pub fn ok(mut self, ok: bool) -> Self {
         self.ok = ok;
+        self
+    }
+
+    /// Adds provenance metadata from a spec.
+    pub fn spec_metadata(mut self, spec: &Spec) -> Self {
+        self.asset_id = Some(spec.asset_id.clone());
+        self.asset_type = Some(spec.asset_type);
+        self.license = Some(spec.license.clone());
+        self.seed = Some(spec.seed);
+        self.recipe_kind = spec.recipe.as_ref().map(|r| r.kind.clone());
+        self
+    }
+
+    /// Sets the recipe hash (kind + params).
+    pub fn recipe_hash(mut self, hash: impl Into<String>) -> Self {
+        self.recipe_hash = Some(hash.into());
+        self
+    }
+
+    /// Marks this report as being for a derived variant run.
+    pub fn variant(mut self, base_spec_hash: impl Into<String>, variant_id: impl Into<String>) -> Self {
+        self.base_spec_hash = Some(base_spec_hash.into());
+        self.variant_id = Some(variant_id.into());
         self
     }
 
@@ -454,6 +518,14 @@ impl ReportBuilder {
         Report {
             report_version: REPORT_VERSION,
             spec_hash: self.spec_hash,
+            base_spec_hash: self.base_spec_hash,
+            variant_id: self.variant_id,
+            asset_id: self.asset_id,
+            asset_type: self.asset_type,
+            license: self.license,
+            seed: self.seed,
+            recipe_kind: self.recipe_kind,
+            recipe_hash: self.recipe_hash,
             ok: self.ok,
             errors: self.errors,
             warnings: self.warnings,

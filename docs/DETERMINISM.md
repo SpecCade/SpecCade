@@ -140,20 +140,22 @@ layer_seed = u32::from_le_bytes(hash[0..4])
 When generating variants from a single spec, each variant receives a derived seed:
 
 ```
-variant_seed = truncate_u32(BLAKE3(base_seed || variant_id))
+variant_seed = truncate_u32(BLAKE3(base_seed || seed_offset || variant_id))
 ```
 
 Where:
 - `base_seed` is encoded as 4 little-endian bytes
+- `seed_offset` is encoded as 4 little-endian bytes
 - `variant_id` is the UTF-8 encoded variant identifier string
 
 **Example:**
 
 ```
 base_seed = 42
+seed_offset = 0
 variant_id = "soft"
 
-input = [42, 0, 0, 0] || b"soft"  # 8 bytes total
+input = [42, 0, 0, 0] || [0, 0, 0, 0] || b"soft"  # 12 bytes total
 hash = BLAKE3(input)              # 32 bytes
 variant_seed = u32::from_le_bytes(hash[0..4])
 ```
@@ -563,7 +565,7 @@ pub fn derive_layer_seed(base_seed: u32, layer_index: u32) -> u32 {
 
 ### derive_variant_seed
 
-Derives a deterministic seed for a specific variant.
+Derives a deterministic seed for an arbitrary string identifier (used for named sub-seeds like map keys or logical variant labels).
 
 ```rust
 /// Derives a seed for a specific variant from the base seed.
@@ -592,6 +594,26 @@ pub fn derive_variant_seed(base_seed: u32, variant_id: &str) -> u32 {
     let hash = blake3::hash(&input);
 
     // Truncate to u32 (first 4 bytes, little-endian)
+    let bytes: [u8; 4] = hash.as_bytes()[0..4].try_into().unwrap();
+    u32::from_le_bytes(bytes)
+}
+```
+
+### derive_variant_spec_seed
+
+Derives a deterministic seed for expanding `Spec.variants[]` using both `seed_offset` and `variant_id`.
+
+```rust
+/// Derives a seed for a specific *spec variant* from the base seed, variant id, and seed offset.
+///
+/// Intended for expanding `Spec.variants[]` in the CLI and tooling.
+pub fn derive_variant_spec_seed(base_seed: u32, seed_offset: u32, variant_id: &str) -> u32 {
+    let mut input = Vec::with_capacity(8 + variant_id.len());
+    input.extend_from_slice(&base_seed.to_le_bytes());
+    input.extend_from_slice(&seed_offset.to_le_bytes());
+    input.extend_from_slice(variant_id.as_bytes());
+
+    let hash = blake3::hash(&input);
     let bytes: [u8; 4] = hash.as_bytes()[0..4].try_into().unwrap();
     u32::from_le_bytes(bytes)
 }

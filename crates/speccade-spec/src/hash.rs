@@ -6,6 +6,7 @@
 //! - Seed derivation for layers and variants
 
 use crate::error::SpecError;
+use crate::recipe::Recipe;
 use crate::spec::Spec;
 
 /// Computes the canonical BLAKE3 hash of a spec.
@@ -39,6 +40,15 @@ use crate::spec::Spec;
 /// ```
 pub fn canonical_spec_hash(spec: &Spec) -> Result<String, SpecError> {
     let value = spec.to_value()?;
+    canonical_value_hash(&value)
+}
+
+/// Computes the canonical BLAKE3 hash of a recipe.
+///
+/// This is useful for caching and provenance: it fingerprints only the generator inputs
+/// (recipe kind + params), independent of contract-only fields like description/tags.
+pub fn canonical_recipe_hash(recipe: &Recipe) -> Result<String, SpecError> {
+    let value = serde_json::to_value(recipe)?;
     canonical_value_hash(&value)
 }
 
@@ -237,6 +247,31 @@ pub fn derive_variant_seed(base_seed: u32, variant_id: &str) -> u32 {
     u32::from_le_bytes(bytes)
 }
 
+/// Derives a seed for a specific *spec variant* from the base seed, variant id, and seed offset.
+///
+/// This is intended for expanding `Spec.variants[]` in the CLI and other tooling.
+/// It incorporates both the human-readable `variant_id` and the numeric `seed_offset`
+/// into the derived seed to support both named variants and deterministic seed sweeps.
+///
+/// ```text
+/// variant_seed = truncate_u32(BLAKE3(base_seed || seed_offset || variant_id))
+/// ```
+///
+/// Where:
+/// - `base_seed` is encoded as 4 little-endian bytes
+/// - `seed_offset` is encoded as 4 little-endian bytes
+/// - `variant_id` is the UTF-8 encoded variant identifier string
+pub fn derive_variant_spec_seed(base_seed: u32, seed_offset: u32, variant_id: &str) -> u32 {
+    let mut input = Vec::with_capacity(8 + variant_id.len());
+    input.extend_from_slice(&base_seed.to_le_bytes());
+    input.extend_from_slice(&seed_offset.to_le_bytes());
+    input.extend_from_slice(variant_id.as_bytes());
+
+    let hash = blake3::hash(&input);
+    let bytes: [u8; 4] = hash.as_bytes()[0..4].try_into().unwrap();
+    u32::from_le_bytes(bytes)
+}
+
 /// Computes a BLAKE3 hash of arbitrary data.
 ///
 /// # Arguments
@@ -418,6 +453,21 @@ mod tests {
 
         // Different base seeds should produce different variant seeds
         assert_ne!(seed_42_soft, seed_43_soft);
+    }
+
+    #[test]
+    fn test_derive_variant_spec_seed() {
+        let base_seed = 42u32;
+
+        let a0 = derive_variant_spec_seed(base_seed, 0, "a");
+        let a1 = derive_variant_spec_seed(base_seed, 1, "a");
+        let b0 = derive_variant_spec_seed(base_seed, 0, "b");
+
+        assert_ne!(a0, a1, "different offsets should produce different seeds");
+        assert_ne!(a0, b0, "different ids should produce different seeds");
+
+        // Determinism
+        assert_eq!(a0, derive_variant_spec_seed(base_seed, 0, "a"));
     }
 
     #[test]

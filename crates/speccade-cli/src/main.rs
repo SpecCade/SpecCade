@@ -43,6 +43,10 @@ enum Commands {
         /// Output root directory (default: current directory)
         #[arg(short, long)]
         out_root: Option<String>,
+
+        /// Expand `variants[]` into separate generation runs under `{out_root}/variants/{variant_id}/`
+        #[arg(long)]
+        expand_variants: bool,
     },
 
     /// Generate all assets from a directory of spec files
@@ -121,9 +125,11 @@ fn main() -> ExitCode {
 
     let result = match cli.command {
         Commands::Validate { spec, artifacts } => commands::validate::run(&spec, artifacts),
-        Commands::Generate { spec, out_root } => {
-            commands::generate::run(&spec, out_root.as_deref())
-        }
+        Commands::Generate {
+            spec,
+            out_root,
+            expand_variants,
+        } => commands::generate::run(&spec, out_root.as_deref(), expand_variants),
         Commands::GenerateAll {
             spec_dir,
             out_root,
@@ -204,9 +210,14 @@ mod tests {
         ])
         .unwrap();
         match cli.command {
-            Commands::Generate { spec, out_root } => {
+            Commands::Generate {
+                spec,
+                out_root,
+                expand_variants,
+            } => {
                 assert_eq!(spec, "spec.json");
                 assert_eq!(out_root.as_deref(), Some("out"));
+                assert!(!expand_variants);
             }
             _ => panic!("expected generate command"),
         }

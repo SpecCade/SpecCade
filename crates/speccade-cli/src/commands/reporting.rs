@@ -23,6 +23,14 @@ pub(crate) fn report_path(spec_path: &str, asset_id: &str) -> String {
         .to_string()
 }
 
+pub(crate) fn report_path_variant(spec_path: &str, asset_id: &str, variant_id: &str) -> String {
+    let spec_dir = Path::new(spec_path).parent().unwrap_or(Path::new("."));
+    spec_dir
+        .join(format!("{}__{}.report.json", asset_id, variant_id))
+        .to_string_lossy()
+        .to_string()
+}
+
 pub(crate) fn write_report(report: &speccade_spec::Report, path: &str) -> Result<()> {
     let json = serde_json::to_string_pretty(report).context("Failed to serialize report")?;
     fs::write(path, json).with_context(|| format!("Failed to write report to: {}", path))?;
@@ -45,6 +53,16 @@ mod tests {
         let expected = Path::new("specs")
             .join("audio")
             .join("laser-blast-01.report.json");
+        assert_eq!(path, expected);
+    }
+
+    #[test]
+    fn test_report_path_variant_sibling_file() {
+        let path = report_path_variant("specs/audio/test.json", "laser-blast-01", "soft");
+        let path = Path::new(&path);
+        let expected = Path::new("specs")
+            .join("audio")
+            .join("laser-blast-01__soft.report.json");
         assert_eq!(path, expected);
     }
 

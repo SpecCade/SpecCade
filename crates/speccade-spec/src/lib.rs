@@ -59,7 +59,10 @@ pub use error::{
     BackendError, ErrorCode, GenerationError, SpecError, ValidationError, ValidationResult,
     ValidationWarning, WarningCode,
 };
-pub use hash::{canonical_spec_hash, derive_layer_seed, derive_variant_seed};
+pub use hash::{
+    canonical_recipe_hash, canonical_spec_hash, derive_layer_seed, derive_variant_seed,
+    derive_variant_spec_seed,
+};
 pub use output::{EngineTarget, OutputFormat, OutputKind, OutputSpec, VariantSpec};
 pub use recipe::Recipe;
 pub use report::{

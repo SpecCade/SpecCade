@@ -179,7 +179,8 @@ Commit specs to version control. Generate assets as part of your CI/CD pipeline.
 
 ### Procedural Variation
 
-The `variants` field is reserved metadata for future variant-expansion workflows (the CLI does not currently expand variants during generation).
+The `variants` field can be expanded by the CLI during generation with `speccade generate --expand-variants`.
+Variants are generated under `{out_root}/variants/{variant_id}/` using derived seeds.
 
 ```json
 {

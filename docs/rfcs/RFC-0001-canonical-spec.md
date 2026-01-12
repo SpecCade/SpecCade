@@ -81,7 +81,7 @@ Validation rejects them; use the `${asset_id}.report.json` sibling file instead.
 
 Variants are a contract field intended to allow a single spec to produce multiple related outputs with derived seeds.
 
-**Implementation note:** As of this RFC’s draft date, the CLI does not automatically expand `variants` during generation. Treat it as reserved metadata unless/until a variant-expansion workflow is defined.
+**Implementation note:** The CLI can expand `variants` during generation with `speccade generate --expand-variants`.
 
 ```json
 {

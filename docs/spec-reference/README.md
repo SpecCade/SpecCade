@@ -82,7 +82,7 @@ The `seed` field controls RNG initialization for procedural generation:
 
 - Must be a non-negative integer less than 2^32 (0 to 4,294,967,295)
 - Same seed + same spec = identical output (within documented tolerances)
-- `variants` is currently reserved metadata (the CLI does not expand variants during generation yet)
+- `variants` can be expanded by the CLI with `speccade generate --expand-variants`
 
 ```json
 {
@@ -93,7 +93,7 @@ The `seed` field controls RNG initialization for procedural generation:
   ]
 }
 ```
-When variant expansion is implemented, `seed_offset` will be used to derive related seeds deterministically.
+When variant expansion is enabled, each variant is generated under `{out_root}/variants/{variant_id}/` using a derived seed.
 
 ### Determinism Tiers
 

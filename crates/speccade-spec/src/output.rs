@@ -165,7 +165,7 @@ impl OutputSpec {
 pub struct VariantSpec {
     /// Identifier for the variant.
     pub variant_id: String,
-    /// Offset added to base seed for this variant.
+    /// Numeric seed offset used for deterministic seed derivation.
     pub seed_offset: u32,
 }
 

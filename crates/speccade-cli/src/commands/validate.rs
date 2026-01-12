@@ -5,7 +5,8 @@
 use anyhow::{Context, Result};
 use colored::Colorize;
 use speccade_spec::{
-    canonical_spec_hash, validate_for_generate, validate_spec, ReportBuilder, Spec,
+    canonical_recipe_hash, canonical_spec_hash, validate_for_generate, validate_spec, ReportBuilder,
+    Spec,
 };
 use std::fs;
 use std::process::ExitCode;
@@ -36,6 +37,10 @@ pub fn run(spec_path: &str, artifacts: bool) -> Result<ExitCode> {
 
     // Compute spec hash
     let spec_hash = canonical_spec_hash(&spec).unwrap_or_else(|_| "unknown".to_string());
+    let recipe_hash = spec
+        .recipe
+        .as_ref()
+        .and_then(|r| canonical_recipe_hash(r).ok());
 
     // Run validation
     let validation_result = if artifacts {
@@ -51,7 +56,12 @@ pub fn run(spec_path: &str, artifacts: bool) -> Result<ExitCode> {
     // Build report
     let backend_version = format!("speccade-cli v{}", env!("CARGO_PKG_VERSION"));
     let mut report_builder =
-        ReportBuilder::new(spec_hash.clone(), backend_version).duration_ms(duration_ms);
+        ReportBuilder::new(spec_hash.clone(), backend_version)
+            .spec_metadata(&spec)
+            .duration_ms(duration_ms);
+    if let Some(hash) = recipe_hash {
+        report_builder = report_builder.recipe_hash(hash);
+    }
 
     report_builder = reporting::apply_validation_messages(report_builder, &validation_result);
 
