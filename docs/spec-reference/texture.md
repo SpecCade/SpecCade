@@ -205,12 +205,17 @@ You can declare multiple packed outputs in the same spec (each with its own `cha
   - `{ "type": "grayscale", "from_height": true }`
   - `{ "type": "grayscale", "from_height": true, "ao_strength": 0.5 }`
 - `pattern`:
-  - `{ "type": "pattern", "pattern": "perlin", "octaves": 4 }`
+  - `{ "type": "pattern", "pattern": "noise", "noise_type": "fbm", "octaves": 4 }`
 
-Note: packed-texture map generation is currently limited:
+Notes:
 
-- `type: "pattern"` is not implemented (generation fails).
-- `type: "grayscale"` with `from_height: true` currently produces a flat mid-gray map (the `ao_strength` field is currently ignored).
+- If any map uses `from_height: true`, you must define a `height` map in `maps`.
+- `from_height` uses the shared `height` map:
+  - If `ao_strength` is set, AO is generated from height.
+  - Otherwise the raw height map values are used as the grayscale output.
+- `pattern` is restricted to `"noise"` in v1.
+- `noise_type` must be `"perlin"`, `"simplex"`, `"fbm"`, or `"worley"`.
+- `octaves` is only valid when `noise_type: "fbm"`.
 
 ### Channel Sources (`channels`)
 

@@ -27,7 +27,7 @@ use speccade_spec::recipe::music::{
 use speccade_spec::recipe::texture::{
     NormalMapPattern, TextureMapType, TextureMaterialV1Params, TextureNormalV1Params,
 };
-use speccade_spec::{AssetType, OutputFormat, OutputSpec, Recipe, Spec};
+use speccade_spec::{AssetType, OutputFormat, OutputKind, OutputSpec, Recipe, Spec};
 use speccade_tests::fixtures::{GoldenFixtures, LegacyProjectFixture};
 use speccade_tests::harness::{
     is_blender_available, parse_spec_file, should_run_blender_tests, validate_png_file,
@@ -570,6 +570,117 @@ mod generation_tier1 {
                         result.err()
                     );
                 }
+            } else if recipe.kind == "texture.packed_v1" {
+                let params = recipe.as_texture_packed();
+                if let Ok(params) = params {
+                    let maps =
+                        speccade_backend_texture::generate_packed_maps(&params, spec.seed);
+                    assert!(
+                        maps.is_ok(),
+                        "Failed to generate packed maps {:?}: {:?}",
+                        spec_path,
+                        maps.err()
+                    );
+
+                    let maps = maps.unwrap();
+                    let [width, height] = params.resolution;
+                    let config = speccade_backend_texture::PngConfig::default();
+
+                    for output in spec.outputs.iter().filter(|o| o.kind == OutputKind::Packed) {
+                        let channels = output
+                            .channels
+                            .as_ref()
+                            .expect("packed output missing channels");
+                        let packed =
+                            speccade_backend_texture::pack_channels(channels, &maps, width, height);
+                        assert!(
+                            packed.is_ok(),
+                            "Failed to pack channels {:?}: {:?}",
+                            spec_path,
+                            packed.err()
+                        );
+
+                        let packed = packed.unwrap();
+                        let encoded = speccade_backend_texture::png::write_rgba_to_vec_with_hash(
+                            &packed, &config,
+                        );
+                        assert!(
+                            encoded.is_ok(),
+                            "Failed to encode packed PNG {:?}: {:?}",
+                            spec_path,
+                            encoded.err()
+                        );
+                    }
+                }
+            }
+        }
+    }
+
+    /// Test that packed texture goldens match expected PNG outputs.
+    #[test]
+    fn test_packed_texture_goldens_match_expected() {
+        if !GoldenFixtures::exists() {
+            println!("Golden fixtures not found, skipping test");
+            return;
+        }
+
+        let specs_dir = GoldenFixtures::speccade_specs_dir().join("texture");
+        let expected_dir = GoldenFixtures::expected_hashes_dir()
+            .parent()
+            .unwrap()
+            .join("texture");
+
+        if !expected_dir.exists() {
+            println!("Expected packed texture outputs not found, skipping test");
+            return;
+        }
+
+        let specs = [
+            specs_dir.join("packed_orm.json"),
+            specs_dir.join("packed_mre.json"),
+            specs_dir.join("packed_smoothness.json"),
+        ];
+
+        for spec_path in specs {
+            let spec = parse_spec_file(&spec_path).expect("Failed to parse spec");
+            let recipe = spec.recipe.as_ref().expect("Packed spec missing recipe");
+            let params = recipe
+                .as_texture_packed()
+                .expect("Invalid packed params");
+
+            let maps = speccade_backend_texture::generate_packed_maps(&params, spec.seed)
+                .expect("Failed to generate packed maps");
+            let [width, height] = params.resolution;
+            let config = speccade_backend_texture::PngConfig::default();
+
+            for output in spec.outputs.iter().filter(|o| o.kind == OutputKind::Packed) {
+                let channels = output.channels.as_ref().expect("Missing packed channels");
+                let packed = speccade_backend_texture::pack_channels(channels, &maps, width, height)
+                    .expect("Failed to pack channels");
+                let (data, hash) =
+                    speccade_backend_texture::png::write_rgba_to_vec_with_hash(&packed, &config)
+                        .expect("Failed to encode PNG");
+
+                let expected_path = expected_dir.join(&output.path);
+                if !expected_path.exists() {
+                    println!(
+                        "Expected packed texture output missing: {:?}; skipping test",
+                        expected_path
+                    );
+                    return;
+                }
+                let expected = fs::read(&expected_path).expect("Missing expected PNG output");
+                let expected_hash = speccade_backend_texture::png::hash_png(&expected);
+
+                assert_eq!(
+                    hash, expected_hash,
+                    "Packed texture hash mismatch for {:?}",
+                    spec_path
+                );
+
+                // Sanity check: generated PNG is non-empty and decodes.
+                assert!(!data.is_empty(), "Generated PNG is empty");
+                assert!(validate_png_file(&expected_path).is_ok());
             }
         }
     }

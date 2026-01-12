@@ -6,6 +6,7 @@
 mod helpers;
 mod layers;
 mod materials;
+mod packed;
 
 #[cfg(test)]
 mod tests;
@@ -33,6 +34,7 @@ use helpers::{
 };
 use layers::apply_layer_to_height;
 use materials::apply_material_pattern;
+pub use packed::generate_packed_maps;
 
 /// Errors from texture generation.
 #[derive(Debug, Error)]

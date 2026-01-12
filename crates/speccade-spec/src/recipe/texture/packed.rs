@@ -24,12 +24,12 @@ pub enum MapDefinition {
     },
     /// A procedural pattern.
     Pattern {
-        /// The pattern type.
+        /// The pattern type (v1: only "noise").
         pattern: String,
         /// Noise type for noise patterns.
         #[serde(default)]
         noise_type: Option<String>,
-        /// Number of octaves for FBM noise.
+        /// Number of octaves for FBM noise (only valid for noise_type="fbm").
         #[serde(default)]
         octaves: Option<u32>,
     },

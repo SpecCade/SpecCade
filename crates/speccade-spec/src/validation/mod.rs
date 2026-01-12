@@ -9,6 +9,7 @@ use regex::Regex;
 
 use crate::error::{ErrorCode, ValidationError, ValidationResult, ValidationWarning, WarningCode};
 use crate::output::{OutputFormat, OutputKind};
+use crate::recipe::texture::MapDefinition;
 use crate::spec::{Spec, SPEC_VERSION};
 
 // Re-export common validation utilities for convenience
@@ -141,7 +142,7 @@ fn validate_outputs(spec: &Spec, result: &mut ValidationResult) {
     if !has_asset_output {
         result.add_error(ValidationError::with_path(
             ErrorCode::NoPrimaryOutput,
-            "at least one output must have kind 'primary' or 'packed'",
+            "No primary or packed output declared.",
             "outputs",
         ));
     }
@@ -248,6 +249,7 @@ fn validate_outputs_for_recipe(
     match recipe.kind.as_str() {
         "audio_v1" => validate_audio_outputs(spec, recipe, result),
         "music.tracker_song_v1" => validate_music_outputs(spec, recipe, result),
+        "music.tracker_song_compose_v1" => validate_music_compose_outputs(spec, recipe, result),
         "texture.material_v1" => validate_texture_material_outputs(spec, recipe, result),
         "texture.normal_v1" => validate_texture_normal_outputs(spec, recipe, result),
         "texture.packed_v1" => validate_texture_packed_outputs(spec, recipe, result),
@@ -468,10 +470,52 @@ fn validate_music_outputs(
         }
     };
 
+    validate_music_outputs_common(
+        spec,
+        &recipe.kind,
+        params.format,
+        &params.instruments,
+        result,
+    );
+}
+
+fn validate_music_compose_outputs(
+    spec: &Spec,
+    recipe: &crate::recipe::Recipe,
+    result: &mut ValidationResult,
+) {
+    let params = match recipe.as_music_tracker_song_compose() {
+        Ok(params) => params,
+        Err(e) => {
+            result.add_error(ValidationError::with_path(
+                ErrorCode::InvalidRecipeParams,
+                format!("invalid params for {}: {}", recipe.kind, e),
+                "recipe.params",
+            ));
+            return;
+        }
+    };
+
+    validate_music_outputs_common(
+        spec,
+        &recipe.kind,
+        params.format,
+        &params.instruments,
+        result,
+    );
+}
+
+fn validate_music_outputs_common(
+    spec: &Spec,
+    recipe_kind: &str,
+    format: crate::recipe::music::TrackerFormat,
+    instruments: &[crate::recipe::music::TrackerInstrument],
+    result: &mut ValidationResult,
+) {
     validate_non_packed_outputs(spec, result);
 
     // Validate instrument sources are well-formed (matches backend behavior).
-    for (idx, instrument) in params.instruments.iter().enumerate() {
+    for (idx, instrument) in instruments.iter().enumerate() {
         let mut sources = Vec::new();
         if instrument.r#ref.is_some() {
             sources.push("ref");
@@ -502,7 +546,7 @@ fn validate_music_outputs(
         }
     }
 
-    let expected_format = match params.format {
+    let expected_format = match format {
         crate::recipe::music::TrackerFormat::Xm => OutputFormat::Xm,
         crate::recipe::music::TrackerFormat::It => OutputFormat::It,
     };
@@ -543,7 +587,10 @@ fn validate_music_outputs(
                 if seen_xm {
                     result.add_error(ValidationError::with_path(
                         ErrorCode::OutputValidationFailed,
-                        "duplicate primary output format 'xm' for music.tracker_song_v1",
+                        format!(
+                            "duplicate primary output format 'xm' for {}",
+                            recipe_kind
+                        ),
                         format!("outputs[{}].format", index),
                     ));
                 }
@@ -553,7 +600,10 @@ fn validate_music_outputs(
                 if seen_it {
                     result.add_error(ValidationError::with_path(
                         ErrorCode::OutputValidationFailed,
-                        "duplicate primary output format 'it' for music.tracker_song_v1",
+                        format!(
+                            "duplicate primary output format 'it' for {}",
+                            recipe_kind
+                        ),
                         format!("outputs[{}].format", index),
                     ));
                 }
@@ -562,7 +612,10 @@ fn validate_music_outputs(
             _ => {
                 result.add_error(ValidationError::with_path(
                     ErrorCode::OutputValidationFailed,
-                    "music.tracker_song_v1 primary outputs must have format 'xm' or 'it'",
+                    format!(
+                        "{} primary outputs must have format 'xm' or 'it'",
+                        recipe_kind
+                    ),
                     format!("outputs[{}].format", index),
                 ));
             }
@@ -573,7 +626,8 @@ fn validate_music_outputs(
         result.add_error(ValidationError::with_path(
             ErrorCode::OutputValidationFailed,
             format!(
-                "music.tracker_song_v1 supports at most 2 primary outputs (xm + it), got {}",
+                "{} supports at most 2 primary outputs (xm + it), got {}",
+                recipe_kind,
                 primary_outputs.len()
             ),
             "outputs",
@@ -686,6 +740,129 @@ fn validate_texture_packed_outputs(
     };
 
     let available_keys: HashSet<&str> = params.maps.keys().map(|k| k.as_str()).collect();
+
+    // Validate packed map definitions.
+    let mut needs_height = false;
+    let has_height = params.maps.contains_key("height");
+
+    for (key, def) in &params.maps {
+        match def {
+            MapDefinition::Grayscale {
+                value,
+                from_height,
+                ao_strength,
+            } => {
+                let uses_from_height = from_height.unwrap_or(false);
+                if uses_from_height {
+                    needs_height = true;
+                }
+
+                if uses_from_height && value.is_some() {
+                    result.add_error(ValidationError::with_path(
+                        ErrorCode::InvalidRecipeParams,
+                        format!("maps.{} cannot set both value and from_height", key),
+                        format!("recipe.params.maps.{}", key),
+                    ));
+                }
+
+                if !uses_from_height && ao_strength.is_some() {
+                    result.add_error(ValidationError::with_path(
+                        ErrorCode::InvalidRecipeParams,
+                        format!("maps.{} sets ao_strength without from_height", key),
+                        format!("recipe.params.maps.{}", key),
+                    ));
+                }
+
+                if key == "height" && uses_from_height {
+                    result.add_error(ValidationError::with_path(
+                        ErrorCode::InvalidRecipeParams,
+                        "maps.height cannot set from_height (height map is the source)".to_string(),
+                        "recipe.params.maps.height",
+                    ));
+                }
+
+                if let Some(value) = value {
+                    if let Err(e) = validate_unit_interval(&format!("maps.{}.value", key), *value)
+                    {
+                        result.add_error(ValidationError::with_path(
+                            ErrorCode::InvalidRecipeParams,
+                            e.to_string(),
+                            format!("recipe.params.maps.{}.value", key),
+                        ));
+                    }
+                }
+
+                if let Some(strength) = ao_strength {
+                    if let Err(e) =
+                        validate_unit_interval(&format!("maps.{}.ao_strength", key), *strength)
+                    {
+                        result.add_error(ValidationError::with_path(
+                            ErrorCode::InvalidRecipeParams,
+                            e.to_string(),
+                            format!("recipe.params.maps.{}.ao_strength", key),
+                        ));
+                    }
+                }
+            }
+            MapDefinition::Pattern {
+                pattern,
+                noise_type,
+                octaves,
+            } => {
+                if pattern != "noise" {
+                    result.add_error(ValidationError::with_path(
+                        ErrorCode::InvalidRecipeParams,
+                        format!("maps.{} pattern '{}' is not supported", key, pattern),
+                        format!("recipe.params.maps.{}.pattern", key),
+                    ));
+                }
+
+                let noise = noise_type
+                    .as_deref()
+                    .unwrap_or("perlin")
+                    .to_lowercase();
+
+                let is_fbm = noise == "fbm";
+
+                if !matches!(
+                    noise.as_str(),
+                    "perlin" | "simplex" | "fbm" | "worley"
+                ) {
+                    result.add_error(ValidationError::with_path(
+                        ErrorCode::InvalidRecipeParams,
+                        format!("maps.{} noise_type '{}' is not supported", key, noise),
+                        format!("recipe.params.maps.{}.noise_type", key),
+                    ));
+                }
+
+                if !is_fbm && octaves.is_some() {
+                    result.add_error(ValidationError::with_path(
+                        ErrorCode::InvalidRecipeParams,
+                        format!("maps.{} octaves is only valid for noise_type 'fbm'", key),
+                        format!("recipe.params.maps.{}.octaves", key),
+                    ));
+                }
+
+                if is_fbm {
+                    if let Some(0) = octaves {
+                        result.add_error(ValidationError::with_path(
+                            ErrorCode::InvalidRecipeParams,
+                            format!("maps.{} octaves must be >= 1", key),
+                            format!("recipe.params.maps.{}.octaves", key),
+                        ));
+                    }
+                }
+            }
+        }
+    }
+
+    if needs_height && !has_height {
+        result.add_error(ValidationError::with_path(
+            ErrorCode::InvalidRecipeParams,
+            "maps.height is required when any map uses from_height".to_string(),
+            "recipe.params.maps",
+        ));
+    }
 
     for (i, output) in spec.outputs.iter().enumerate() {
         if output.kind != OutputKind::Packed {
@@ -816,6 +993,7 @@ pub fn validate_for_generate(spec: &Spec) -> ValidationResult {
         const SUPPORTED: &[&str] = &[
             "audio_v1",
             "music.tracker_song_v1",
+            "music.tracker_song_compose_v1",
             "texture.material_v1",
             "texture.normal_v1",
             "texture.packed_v1",
@@ -1014,8 +1192,8 @@ mod tests {
         spec.outputs
             .push(OutputSpec::metadata("sounds/test.meta.json"));
         spec.outputs.push(OutputSpec::preview(
-            OutputFormat::Ogg,
-            "sounds/test.preview.ogg",
+            OutputFormat::Wav,
+            "sounds/test.preview.wav",
         ));
 
         let result = validate_spec(&spec);
@@ -1156,7 +1334,7 @@ mod tests {
     #[test]
     fn test_audio_requires_wav_primary_output() {
         let mut spec = make_valid_spec();
-        spec.outputs = vec![OutputSpec::primary(OutputFormat::Ogg, "sounds/test.ogg")];
+        spec.outputs = vec![OutputSpec::primary(OutputFormat::Xm, "sounds/test.xm")];
         spec.recipe = Some(crate::recipe::Recipe::new(
             "audio_v1",
             serde_json::json!({
@@ -1186,6 +1364,32 @@ mod tests {
                     "bpm": 120,
                     "speed": 6,
                     "channels": 4
+                }),
+            ))
+            .build();
+
+        let result = validate_for_generate(&spec);
+        assert!(!result.is_ok());
+        assert!(result
+            .errors
+            .iter()
+            .any(|e| e.code == ErrorCode::OutputValidationFailed));
+    }
+
+    #[test]
+    fn test_music_compose_requires_primary_format_matches_recipe_format() {
+        let spec = Spec::builder("test-song-compose-01", AssetType::Music)
+            .license("CC0-1.0")
+            .seed(42)
+            .output(OutputSpec::primary(OutputFormat::Xm, "songs/test.xm"))
+            .recipe(crate::recipe::Recipe::new(
+                "music.tracker_song_compose_v1",
+                serde_json::json!({
+                    "format": "it",
+                    "bpm": 120,
+                    "speed": 6,
+                    "channels": 4,
+                    "patterns": {}
                 }),
             ))
             .build();
@@ -1386,6 +1590,116 @@ mod tests {
             .errors
             .iter()
             .any(|e| e.code == ErrorCode::OutputValidationFailed));
+    }
+
+    #[test]
+    fn test_texture_packed_requires_height_map_for_from_height() {
+        let spec = Spec::builder("test-packed-height-01", AssetType::Texture)
+            .license("CC0-1.0")
+            .seed(42)
+            .output(OutputSpec::packed(
+                OutputFormat::Png,
+                "textures/out-packed.png",
+                PackedChannels {
+                    r: ChannelSource::constant(0.0),
+                    g: ChannelSource::constant(0.0),
+                    b: ChannelSource::constant(0.0),
+                    a: None,
+                },
+            ))
+            .recipe(crate::recipe::Recipe::new(
+                "texture.packed_v1",
+                serde_json::json!({
+                    "resolution": [4, 4],
+                    "tileable": true,
+                    "maps": {
+                        "roughness": { "type": "grayscale", "from_height": true }
+                    }
+                }),
+            ))
+            .build();
+
+        let result = validate_for_generate(&spec);
+        assert!(!result.is_ok());
+        assert!(result
+            .errors
+            .iter()
+            .any(|e| e.code == ErrorCode::InvalidRecipeParams));
+    }
+
+    #[test]
+    fn test_texture_packed_rejects_unknown_noise_type() {
+        let spec = Spec::builder("test-packed-noise-01", AssetType::Texture)
+            .license("CC0-1.0")
+            .seed(42)
+            .output(OutputSpec::packed(
+                OutputFormat::Png,
+                "textures/out-packed.png",
+                PackedChannels {
+                    r: ChannelSource::constant(0.0),
+                    g: ChannelSource::constant(0.0),
+                    b: ChannelSource::constant(0.0),
+                    a: None,
+                },
+            ))
+            .recipe(crate::recipe::Recipe::new(
+                "texture.packed_v1",
+                serde_json::json!({
+                    "resolution": [4, 4],
+                    "tileable": true,
+                    "maps": {
+                        "height": { "type": "pattern", "pattern": "noise", "noise_type": "value" }
+                    }
+                }),
+            ))
+            .build();
+
+        let result = validate_for_generate(&spec);
+        assert!(!result.is_ok());
+        assert!(result
+            .errors
+            .iter()
+            .any(|e| e.code == ErrorCode::InvalidRecipeParams));
+    }
+
+    #[test]
+    fn test_texture_packed_rejects_octaves_for_non_fbm() {
+        let spec = Spec::builder("test-packed-octaves-01", AssetType::Texture)
+            .license("CC0-1.0")
+            .seed(42)
+            .output(OutputSpec::packed(
+                OutputFormat::Png,
+                "textures/out-packed.png",
+                PackedChannels {
+                    r: ChannelSource::constant(0.0),
+                    g: ChannelSource::constant(0.0),
+                    b: ChannelSource::constant(0.0),
+                    a: None,
+                },
+            ))
+            .recipe(crate::recipe::Recipe::new(
+                "texture.packed_v1",
+                serde_json::json!({
+                    "resolution": [4, 4],
+                    "tileable": true,
+                    "maps": {
+                        "height": {
+                            "type": "pattern",
+                            "pattern": "noise",
+                            "noise_type": "perlin",
+                            "octaves": 3
+                        }
+                    }
+                }),
+            ))
+            .build();
+
+        let result = validate_for_generate(&spec);
+        assert!(!result.is_ok());
+        assert!(result
+            .errors
+            .iter()
+            .any(|e| e.code == ErrorCode::InvalidRecipeParams));
     }
 
     #[test]

@@ -71,7 +71,8 @@ pub mod shared;
 // Re-export main types for convenience
 pub use color::{BlendMode, Color};
 pub use generate::{
-    generate_material_maps, save_texture_result, GenerateError, MapResult, TextureResult,
+    generate_material_maps, generate_packed_maps, save_texture_result, GenerateError, MapResult,
+    TextureResult,
 };
 pub use maps::{GrayscaleBuffer, TextureBuffer};
 pub use noise::{Fbm, Noise2D, PerlinNoise, SimplexNoise, WorleyNoise};

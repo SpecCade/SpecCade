@@ -335,7 +335,7 @@ The authoring API should be explicit about the chosen strategy to preserve deter
 
 To keep this system reviewable:
 
-1) Provide `speccade expand <spec.json>` to show the fully expanded `music.tracker_song_v1` params.
+1) Provide `speccade expand --spec <spec.json>` to show the fully expanded `music.tracker_song_v1` params.
 2) Keep examples for:
    - named channels/instruments
    - beat-range rhythms

@@ -2,6 +2,7 @@
 
 mod arrangement;
 mod common;
+mod compose;
 mod effects;
 mod instrument;
 mod pattern;
@@ -12,6 +13,7 @@ mod tests_advanced;
 
 pub use arrangement::*;
 pub use common::*;
+pub use compose::*;
 pub use effects::*;
 pub use instrument::*;
 pub use pattern::*;

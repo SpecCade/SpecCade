@@ -367,6 +367,9 @@ mod tests {
     fn test_asset_type_is_compatible_recipe() {
         assert!(AssetType::Audio.is_compatible_recipe("audio_v1"));
         assert!(!AssetType::Audio.is_compatible_recipe("music.tracker_song_v1"));
+        assert!(AssetType::Music.is_compatible_recipe(
+            "music.tracker_song_compose_v1"
+        ));
         assert!(AssetType::Texture.is_compatible_recipe("texture.material_v1"));
         assert!(AssetType::Texture.is_compatible_recipe("texture.normal_v1"));
     }

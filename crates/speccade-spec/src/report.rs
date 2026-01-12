@@ -168,7 +168,7 @@ impl ReportWarning {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct OutputResult {
-    /// The kind of output (primary, metadata, preview).
+    /// The kind of output (primary, metadata, preview, packed).
     pub kind: OutputKind,
     /// The file format.
     pub format: OutputFormat,

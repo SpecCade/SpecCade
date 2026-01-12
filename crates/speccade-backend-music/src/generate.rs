@@ -19,13 +19,15 @@ use speccade_spec::recipe::audio::{
     Waveform,
 };
 use speccade_spec::recipe::music::{
-    InstrumentSynthesis, MusicTrackerSongV1Params, PatternNote, TrackerFormat, TrackerInstrument,
+    InstrumentSynthesis, MusicTrackerSongComposeV1Params, MusicTrackerSongV1Params, PatternNote,
+    TrackerFormat, TrackerInstrument,
 };
 use speccade_spec::BackendError;
 use thiserror::Error;
 
 use crate::note::{midi_to_freq, DEFAULT_IT_SYNTH_MIDI_NOTE, DEFAULT_SYNTH_MIDI_NOTE};
 use crate::synthesis::{derive_instrument_seed, load_wav_sample};
+use crate::compose::expand_compose;
 
 // Re-export format-specific generators (internal use)
 pub(crate) use crate::it_gen::generate_it;
@@ -61,6 +63,10 @@ pub enum GenerateError {
     /// Automation error.
     #[error("Automation error: {0}")]
     AutomationError(String),
+
+    /// Compose expansion error.
+    #[error("Compose expansion error: {0}")]
+    ComposeExpand(#[from] crate::compose::ExpandError),
 }
 
 impl BackendError for GenerateError {
@@ -73,6 +79,7 @@ impl BackendError for GenerateError {
             GenerateError::SampleLoadError(_) => "MUSIC_005",
             GenerateError::InstrumentError(_) => "MUSIC_006",
             GenerateError::AutomationError(_) => "MUSIC_007",
+            GenerateError::ComposeExpand(err) => err.code(),
         }
     }
 
@@ -124,6 +131,16 @@ pub fn generate_music(
         TrackerFormat::Xm => generate_xm(params, seed, spec_dir),
         TrackerFormat::It => generate_it(params, seed, spec_dir),
     }
+}
+
+/// Generate a tracker module from compose (Pattern IR) params.
+pub fn generate_music_compose(
+    params: &MusicTrackerSongComposeV1Params,
+    seed: u32,
+    spec_dir: &Path,
+) -> Result<GenerateResult, GenerateError> {
+    let expanded = expand_compose(params, seed)?;
+    generate_music(&expanded, seed, spec_dir)
 }
 
 // ============================================================================

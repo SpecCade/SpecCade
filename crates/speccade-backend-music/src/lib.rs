@@ -57,6 +57,7 @@
 //! - [`generate`]: Main generation entry point
 
 pub mod envelope;
+pub mod compose;
 pub mod generate;
 pub mod it;
 pub mod it_gen;
@@ -66,7 +67,8 @@ pub mod xm;
 pub mod xm_gen;
 
 // Re-export main types
-pub use generate::{generate_music, GenerateError, GenerateResult};
+pub use compose::{expand_compose, ExpandError};
+pub use generate::{generate_music, generate_music_compose, GenerateError, GenerateResult};
 pub use note::{
     calculate_pitch_correction, freq_to_midi, it_note_to_name, midi_to_freq, note_name_to_it,
     note_name_to_xm, xm_note_to_name, DEFAULT_SAMPLE_RATE,

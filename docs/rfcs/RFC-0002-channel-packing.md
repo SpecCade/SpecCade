@@ -1,10 +1,11 @@
 # RFC-0002: Unopinionated Channel Packing for Textures
 
-- **Status:** Draft
+- **Status:** Implemented
 - **Author:** SpecCade Team
 - **Created:** 2026-01-10
 - **Target Version:** SpecCade v1.x
 - **Dependencies:** RFC-0001 (Canonical Spec Architecture)
+- **Last reviewed:** 2026-01-12
 
 ## Summary
 
@@ -60,6 +61,7 @@ The `maps` object defines named grayscale source maps:
 ```json
 {
   "maps": {
+    "height": { "type": "pattern", "pattern": "noise", "noise_type": "fbm", "octaves": 4 },
     "ao": { "type": "grayscale", "from_height": true, "ao_strength": 0.5 },
     "roughness": { "type": "grayscale", "from_height": true },
     "metallic": { "type": "grayscale", "value": 1.0 },
@@ -73,13 +75,30 @@ The `maps` object defines named grayscale source maps:
 | Type | Description | Parameters |
 |------|-------------|------------|
 | `grayscale` | Solid or derived grayscale | `value`, `from_height`, `ao_strength` |
-| `pattern` | Procedural pattern | `pattern`, `noise_type`, `octaves`, etc. |
+| `pattern` | Procedural pattern (noise only in v1) | `pattern`, `noise_type`, `octaves` |
 
 **Grayscale parameters:**
 
 - `value` (float 0.0-1.0): Constant grayscale value
-- `from_height` (bool): Derive from height/base map
-- `ao_strength` (float): Ambient occlusion computation strength
+- `from_height` (bool): Derive from the shared `height` map
+- `ao_strength` (float): Ambient occlusion computation strength (only valid with `from_height`)
+
+**`from_height` behavior:**
+
+- If `from_height: true` **and** `ao_strength` is set, the backend generates AO from the height map
+  (strength is clamped to `[0, 1]`).
+- Otherwise, the raw height map values (0..1) are used as the grayscale output.
+
+**Height source requirement:**
+
+- If any map uses `from_height: true`, the `maps` object **must** include a `height` key.
+- The `height` map is the shared source for all `from_height` maps.
+
+**Pattern maps (v1):**
+
+- `pattern` is restricted to `"noise"`.
+- `noise_type` must be one of: `"perlin"`, `"simplex"`, `"fbm"`, `"worley"`.
+- `octaves` is only valid when `noise_type: "fbm"`.
 
 ### 2.3 Output Channel Specification
 
@@ -87,6 +106,17 @@ The `outputs` array declares packed textures with explicit channel mappings:
 
 ```json
 {
+  "recipe": {
+    "kind": "texture.packed_v1",
+    "params": {
+      "resolution": [256, 256],
+      "tileable": true,
+      "maps": {
+        "height": { "type": "pattern", "pattern": "noise", "noise_type": "fbm", "octaves": 4 },
+        "rough": { "type": "grayscale", "from_height": true }
+      }
+    }
+  },
   "outputs": [
     {
       "kind": "packed",
@@ -155,6 +185,7 @@ The `outputs` array declares packed textures with explicit channel mappings:
       "resolution": [512, 512],
       "tileable": true,
       "maps": {
+        "height": { "type": "pattern", "pattern": "noise", "noise_type": "fbm", "octaves": 4 },
         "ao": { "type": "grayscale", "from_height": true, "ao_strength": 0.5 },
         "roughness": { "type": "grayscale", "from_height": true },
         "metallic": { "type": "grayscale", "value": 1.0 }

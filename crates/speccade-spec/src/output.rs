@@ -35,8 +35,6 @@ impl std::fmt::Display for OutputKind {
 pub enum OutputFormat {
     /// WAV audio format.
     Wav,
-    /// OGG Vorbis audio format.
-    Ogg,
     /// FastTracker II Extended Module.
     Xm,
     /// Impulse Tracker module.
@@ -49,8 +47,6 @@ pub enum OutputFormat {
     Gltf,
     /// JSON metadata format.
     Json,
-    /// Blender project file.
-    Blend,
 }
 
 impl OutputFormat {
@@ -58,20 +54,18 @@ impl OutputFormat {
     pub fn extension(&self) -> &'static str {
         match self {
             OutputFormat::Wav => "wav",
-            OutputFormat::Ogg => "ogg",
             OutputFormat::Xm => "xm",
             OutputFormat::It => "it",
             OutputFormat::Png => "png",
             OutputFormat::Glb => "glb",
             OutputFormat::Gltf => "gltf",
             OutputFormat::Json => "json",
-            OutputFormat::Blend => "blend",
         }
     }
 
     /// Checks if this format is an audio format.
     pub fn is_audio(&self) -> bool {
-        matches!(self, OutputFormat::Wav | OutputFormat::Ogg)
+        matches!(self, OutputFormat::Wav)
     }
 
     /// Checks if this format is a music/tracker format.
@@ -221,7 +215,6 @@ mod tests {
     #[test]
     fn test_output_format_categories() {
         assert!(OutputFormat::Wav.is_audio());
-        assert!(OutputFormat::Ogg.is_audio());
         assert!(!OutputFormat::Png.is_audio());
 
         assert!(OutputFormat::Xm.is_music());

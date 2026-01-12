@@ -3,7 +3,7 @@
 ## Music (Compose / RFC-0003)
 
 - Implement `music.tracker_song_compose_v1` end-to-end (spec types + schema + backend expander + CLI dispatch).
-- Add `speccade expand <spec.json>` for compose specs (prints expanded `music.tracker_song_v1` params JSON for review/tests).
+- Add `speccade expand --spec <spec.json>` for compose specs (prints expanded `music.tracker_song_v1` params JSON for review/tests).
 - Implement Pattern IR operators + limits per RFC-0003:
   - structural: `stack`, `concat`, `repeat`, `shift`, `slice`, `ref`
   - emit: `emit`, `emit_seq`
@@ -28,13 +28,6 @@
 - Add a higher-quality drum example (filtered noise / metallic synthesis and/or WAV drum samples) and tune it by ear so kick/snare/hat sound correct in common XM/IT players.
 - Add a small “XM vs IT parity” listening checklist and automate basic structural checks (loop flags/envelope flags) in tests.
 - Add “genre kits” as data packages: curated compose `defs` + instrument refs + timebase/harmony defaults (with docs/workflows that focus edits on patterns, not instruments).
-
-## Texture
-
-- Fix `texture.packed_v1` so it matches the spec reference:
-  - implement `maps.*.type: "pattern"` generation (or remove from docs/schema if intentionally unsupported)
-  - implement `from_height` AO/derived-map behavior and honor `ao_strength`
-- Add golden tests for packed textures (deterministic bytes + channel correctness).
 
 ## Audio
 

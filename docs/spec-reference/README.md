@@ -119,7 +119,7 @@ Each entry in `outputs[]` declares an expected artifact:
 | Field | Type | Description | Values |
 |-------|------|-------------|--------|
 | `kind` | string | Output category | See output kinds below |
-| `format` | string | File format | `"wav"`, `"ogg"`, `"xm"`, `"it"`, `"png"`, `"glb"`, `"gltf"`, `"json"`, `"blend"` |
+| `format` | string | File format | `"wav"`, `"xm"`, `"it"`, `"png"`, `"glb"`, `"gltf"`, `"json"` |
 | `path` | string | Relative output path | Must be safe (see constraints) |
 
 ### Output Kinds

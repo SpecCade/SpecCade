@@ -107,6 +107,7 @@ pub fn run() -> Result<ExitCode> {
     let recipe_kinds = [
         "audio_v1",
         "music.tracker_song_v1",
+        "music.tracker_song_compose_v1",
         "texture.material_v1",
         "texture.normal_v1",
         "texture.packed_v1",

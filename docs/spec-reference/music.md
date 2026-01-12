@@ -70,6 +70,12 @@ Minimal example (16th hats + 4-on-the-floor kick, 64-row pattern):
 }
 ```
 
+To inspect the fully expanded tracker params, run:
+
+```
+speccade expand --spec <path-to-spec.json>
+```
+
 ### Optional (RFC-0004): Names, Beats, Harmony
 
 The compose recipe may also add musical authoring helpers that compile away during expansion:

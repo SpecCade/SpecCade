@@ -78,6 +78,13 @@ enum Commands {
     /// Check system dependencies and configuration
     Doctor,
 
+    /// Expand compose specs into canonical tracker params JSON
+    Expand {
+        /// Path to the spec JSON file
+        #[arg(short, long)]
+        spec: String,
+    },
+
     /// Migrate legacy .spec.py files to canonical JSON format
     Migrate {
         /// Path to the project directory containing legacy specs
@@ -130,6 +137,7 @@ fn main() -> ExitCode {
         ),
         Commands::Preview { spec, out_root } => commands::preview::run(&spec, out_root.as_deref()),
         Commands::Doctor => commands::doctor::run(),
+        Commands::Expand { spec } => commands::expand::run(&spec),
         Commands::Migrate {
             project,
             allow_exec_specs,
@@ -201,6 +209,17 @@ mod tests {
                 assert_eq!(out_root.as_deref(), Some("out"));
             }
             _ => panic!("expected generate command"),
+        }
+    }
+
+    #[test]
+    fn test_cli_parses_expand() {
+        let cli = Cli::try_parse_from(["speccade", "expand", "--spec", "spec.json"]).unwrap();
+        match cli.command {
+            Commands::Expand { spec } => {
+                assert_eq!(spec, "spec.json");
+            }
+            _ => panic!("expected expand command"),
         }
     }
 

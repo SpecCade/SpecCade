@@ -94,6 +94,7 @@
           "enum": [
             "audio_v1",
             "music.tracker_song_v1",
+            "music.tracker_song_compose_v1",
             "texture.material_v1",
             "texture.normal_v1",
             "texture.packed_v1",
@@ -126,7 +127,7 @@
         },
         "format": {
           "type": "string",
-          "enum": ["wav", "ogg", "xm", "it", "png", "glb", "gltf", "json", "blend"]
+          "enum": ["wav", "xm", "it", "png", "glb", "gltf", "json"]
         },
         "path": { "$ref": "#/definitions/output_path" },
         "channels": false

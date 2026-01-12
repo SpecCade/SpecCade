@@ -29,6 +29,9 @@ pub enum RecipeKind {
     /// `music.tracker_song_v1` - Tracker module song.
     #[serde(rename = "music.tracker_song_v1")]
     MusicTrackerSongV1,
+    /// `music.tracker_song_compose_v1` - Tracker module song (Pattern IR).
+    #[serde(rename = "music.tracker_song_compose_v1")]
+    MusicTrackerSongComposeV1,
     /// `texture.material_v1` - PBR material maps.
     #[serde(rename = "texture.material_v1")]
     TextureMaterialV1,
@@ -58,6 +61,7 @@ impl RecipeKind {
         match self {
             RecipeKind::AudioV1 => "audio_v1",
             RecipeKind::MusicTrackerSongV1 => "music.tracker_song_v1",
+            RecipeKind::MusicTrackerSongComposeV1 => "music.tracker_song_compose_v1",
             RecipeKind::TextureMaterialV1 => "texture.material_v1",
             RecipeKind::TextureNormalV1 => "texture.normal_v1",
             RecipeKind::TexturePackedV1 => "texture.packed_v1",
@@ -73,6 +77,7 @@ impl RecipeKind {
         match self {
             RecipeKind::AudioV1 => "audio",
             RecipeKind::MusicTrackerSongV1 => "music",
+            RecipeKind::MusicTrackerSongComposeV1 => "music",
             RecipeKind::TextureMaterialV1 => "texture",
             RecipeKind::TextureNormalV1 => "texture",
             RecipeKind::TexturePackedV1 => "texture",
@@ -88,6 +93,7 @@ impl RecipeKind {
         match self {
             RecipeKind::AudioV1
             | RecipeKind::MusicTrackerSongV1
+            | RecipeKind::MusicTrackerSongComposeV1
             | RecipeKind::TextureMaterialV1
             | RecipeKind::TextureNormalV1
             | RecipeKind::TexturePackedV1 => true,
@@ -129,6 +135,7 @@ impl Recipe {
         match self.kind.as_str() {
             "audio_v1" => Some(RecipeKind::AudioV1),
             "music.tracker_song_v1" => Some(RecipeKind::MusicTrackerSongV1),
+            "music.tracker_song_compose_v1" => Some(RecipeKind::MusicTrackerSongComposeV1),
             "texture.material_v1" => Some(RecipeKind::TextureMaterialV1),
             "texture.normal_v1" => Some(RecipeKind::TextureNormalV1),
             "texture.packed_v1" => Some(RecipeKind::TexturePackedV1),
@@ -165,6 +172,13 @@ impl Recipe {
 
     /// Attempts to parse params as music tracker song params.
     pub fn as_music_tracker_song(&self) -> Result<MusicTrackerSongV1Params, serde_json::Error> {
+        serde_json::from_value(self.params.clone())
+    }
+
+    /// Attempts to parse params as music tracker compose params.
+    pub fn as_music_tracker_song_compose(
+        &self,
+    ) -> Result<MusicTrackerSongComposeV1Params, serde_json::Error> {
         serde_json::from_value(self.params.clone())
     }
 
@@ -229,6 +243,7 @@ mod tests {
     #[test]
     fn test_recipe_kind_asset_type_prefix() {
         assert_eq!(RecipeKind::AudioV1.asset_type_prefix(), "audio");
+        assert_eq!(RecipeKind::MusicTrackerSongComposeV1.asset_type_prefix(), "music");
         assert_eq!(RecipeKind::TextureMaterialV1.asset_type_prefix(), "texture");
         assert_eq!(RecipeKind::TextureNormalV1.asset_type_prefix(), "texture");
         assert_eq!(
@@ -241,6 +256,7 @@ mod tests {
     fn test_recipe_kind_tier() {
         assert!(RecipeKind::AudioV1.is_tier1());
         assert!(RecipeKind::MusicTrackerSongV1.is_tier1());
+        assert!(RecipeKind::MusicTrackerSongComposeV1.is_tier1());
         assert!(!RecipeKind::StaticMeshBlenderPrimitivesV1.is_tier1());
         assert!(!RecipeKind::SkeletalAnimationBlenderClipV1.is_tier1());
     }
@@ -250,5 +266,15 @@ mod tests {
         let recipe = Recipe::new("audio_v1", serde_json::json!({"duration_seconds": 0.5}));
         assert_eq!(recipe.parse_kind(), Some(RecipeKind::AudioV1));
         assert_eq!(recipe.asset_type_prefix(), Some("audio"));
+
+        let recipe = Recipe::new(
+            "music.tracker_song_compose_v1",
+            serde_json::json!({"format": "xm", "bpm": 120, "speed": 6, "channels": 4}),
+        );
+        assert_eq!(
+            recipe.parse_kind(),
+            Some(RecipeKind::MusicTrackerSongComposeV1)
+        );
+        assert_eq!(recipe.asset_type_prefix(), Some("music"));
     }
 }

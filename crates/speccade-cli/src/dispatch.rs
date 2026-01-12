@@ -2,8 +2,8 @@
 //!
 //! Dispatches generation requests to the appropriate backend based on recipe.kind.
 
-use speccade_spec::recipe::music::TrackerFormat;
-use speccade_spec::recipe::texture::{MapDefinition, TextureMapType};
+use speccade_spec::recipe::music::{MusicTrackerSongV1Params, TrackerFormat};
+use speccade_spec::recipe::texture::TextureMapType;
 use speccade_spec::{BackendError, OutputFormat, OutputKind, OutputResult, Spec};
 use std::collections::{HashMap, HashSet};
 use std::fmt;
@@ -87,6 +87,7 @@ pub fn dispatch_generate(
 
         // Music backend
         "music.tracker_song_v1" => generate_music(spec, out_root_path, spec_dir),
+        "music.tracker_song_compose_v1" => generate_music_compose(spec, out_root_path, spec_dir),
 
         // Texture material maps backend
         "texture.material_v1" => generate_texture_material_maps(spec, out_root_path),
@@ -167,6 +168,32 @@ fn generate_music(
         .as_music_tracker_song()
         .map_err(|e| DispatchError::BackendError(format!("Invalid music params: {}", e)))?;
 
+    generate_music_from_params(&params, &recipe.kind, spec, out_root, spec_dir)
+}
+
+fn generate_music_compose(
+    spec: &Spec,
+    out_root: &Path,
+    spec_dir: &Path,
+) -> Result<Vec<OutputResult>, DispatchError> {
+    let recipe = spec.recipe.as_ref().ok_or(DispatchError::NoRecipe)?;
+    let params = recipe.as_music_tracker_song_compose().map_err(|e| {
+        DispatchError::BackendError(format!("Invalid music compose params: {}", e))
+    })?;
+    let expanded = speccade_backend_music::expand_compose(&params, spec.seed).map_err(|e| {
+        DispatchError::BackendError(format!("Compose expansion failed: {}", e))
+    })?;
+
+    generate_music_from_params(&expanded, &recipe.kind, spec, out_root, spec_dir)
+}
+
+fn generate_music_from_params(
+    params: &MusicTrackerSongV1Params,
+    recipe_kind: &str,
+    spec: &Spec,
+    out_root: &Path,
+    spec_dir: &Path,
+) -> Result<Vec<OutputResult>, DispatchError> {
     let primary_outputs: Vec<&speccade_spec::OutputSpec> = spec
         .outputs
         .iter()
@@ -190,12 +217,12 @@ fn generate_music(
         let primary_output = primary_outputs[0];
         if primary_output.format != expected {
             return Err(DispatchError::BackendError(format!(
-                "music.tracker_song_v1 requires primary output format '{}', got '{}'",
-                expected, primary_output.format
+                "{} requires primary output format '{}', got '{}'",
+                recipe_kind, expected, primary_output.format
             )));
         }
 
-        let result = speccade_backend_music::generate_music(&params, spec.seed, spec_dir)
+        let result = speccade_backend_music::generate_music(params, spec.seed, spec_dir)
             .map_err(|e| DispatchError::BackendError(format!("Music generation failed: {}", e)))?;
 
         write_output_bytes(out_root, &primary_output.path, &result.data)?;
@@ -217,28 +244,28 @@ fn generate_music(
         let format = match output.format {
             OutputFormat::Xm => {
                 if seen_xm {
-                    return Err(DispatchError::BackendError(
-                        "Duplicate primary output format 'xm' for music.tracker_song_v1"
-                            .to_string(),
-                    ));
+                    return Err(DispatchError::BackendError(format!(
+                        "Duplicate primary output format 'xm' for {}",
+                        recipe_kind
+                    )));
                 }
                 seen_xm = true;
                 TrackerFormat::Xm
             }
             OutputFormat::It => {
                 if seen_it {
-                    return Err(DispatchError::BackendError(
-                        "Duplicate primary output format 'it' for music.tracker_song_v1"
-                            .to_string(),
-                    ));
+                    return Err(DispatchError::BackendError(format!(
+                        "Duplicate primary output format 'it' for {}",
+                        recipe_kind
+                    )));
                 }
                 seen_it = true;
                 TrackerFormat::It
             }
             _ => {
                 return Err(DispatchError::BackendError(format!(
-                    "music.tracker_song_v1 primary outputs must have format 'xm' or 'it', got '{}'",
-                    output.format
+                    "{} primary outputs must have format 'xm' or 'it', got '{}'",
+                    recipe_kind, output.format
                 )))
             }
         };
@@ -418,7 +445,7 @@ fn generate_texture_packed(
     spec: &Spec,
     out_root: &Path,
 ) -> Result<Vec<OutputResult>, DispatchError> {
-    use speccade_backend_texture::{PngConfig, TextureBuffer};
+    use speccade_backend_texture::PngConfig;
 
     let recipe = spec.recipe.as_ref().ok_or(DispatchError::NoRecipe)?;
     let params = recipe.as_texture_packed().map_err(|e| {
@@ -428,12 +455,9 @@ fn generate_texture_packed(
     let [width, height] = params.resolution;
 
     // Generate a TextureBuffer for each map definition
-    let mut map_buffers: HashMap<String, TextureBuffer> = HashMap::new();
-
-    for (key, map_def) in &params.maps {
-        let buffer = generate_map_buffer(map_def, width, height)?;
-        map_buffers.insert(key.clone(), buffer);
-    }
+    let map_buffers = speccade_backend_texture::generate_packed_maps(&params, spec.seed).map_err(
+        |e| DispatchError::BackendError(format!("Packed map generation failed: {}", e)),
+    )?;
 
     // Find all packed outputs.
     let packed_outputs: Vec<(usize, &speccade_spec::OutputSpec)> = spec
@@ -491,42 +515,6 @@ fn generate_texture_packed(
     }
 
     Ok(outputs)
-}
-
-/// Generate a TextureBuffer from a MapDefinition
-fn generate_map_buffer(
-    map_def: &MapDefinition,
-    width: u32,
-    height: u32,
-) -> Result<speccade_backend_texture::TextureBuffer, DispatchError> {
-    use speccade_backend_texture::{Color, TextureBuffer};
-
-    match map_def {
-        MapDefinition::Grayscale {
-            value,
-            from_height,
-            ao_strength: _,
-        } => {
-            // For now, only handle constant grayscale values
-            // from_height and ao_strength would require more complex generation
-            if from_height == &Some(true) {
-                // For from_height, we generate a simple mid-gray buffer for now
-                // A full implementation would generate procedural noise/height
-                let gray = 0.5;
-                Ok(TextureBuffer::new(width, height, Color::gray(gray)))
-            } else {
-                let gray = value.unwrap_or(0.5);
-                Ok(TextureBuffer::new(width, height, Color::gray(gray)))
-            }
-        }
-        MapDefinition::Pattern { pattern, .. } => {
-            // For now, pattern generation is not implemented
-            Err(DispatchError::BackendError(format!(
-                "Pattern type '{}' not yet implemented for packed textures",
-                pattern
-            )))
-        }
-    }
 }
 
 /// Generate static mesh using the Blender backend
@@ -679,6 +667,7 @@ pub fn is_backend_available(kind: &str) -> bool {
         kind,
         "audio_v1"
             | "music.tracker_song_v1"
+            | "music.tracker_song_compose_v1"
             | "texture.material_v1"
             | "texture.normal_v1"
             | "texture.packed_v1"
@@ -747,6 +736,7 @@ mod tests {
         // Tier 1 - Rust backends
         assert_eq!(get_backend_tier("audio_v1"), Some(1));
         assert_eq!(get_backend_tier("music.tracker_song_v1"), Some(1));
+        assert_eq!(get_backend_tier("music.tracker_song_compose_v1"), Some(1));
         assert_eq!(get_backend_tier("texture.material_v1"), Some(1));
 
         // Tier 2 - Blender backends
@@ -772,6 +762,7 @@ mod tests {
         // All implemented backends should be available
         assert!(is_backend_available("audio_v1"));
         assert!(is_backend_available("music.tracker_song_v1"));
+        assert!(is_backend_available("music.tracker_song_compose_v1"));
         assert!(is_backend_available("texture.material_v1"));
         assert!(is_backend_available("texture.normal_v1"));
         assert!(is_backend_available("texture.packed_v1"));

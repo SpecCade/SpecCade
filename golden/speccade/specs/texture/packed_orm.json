@@ -23,6 +23,12 @@
       "resolution": [512, 512],
       "tileable": true,
       "maps": {
+        "height": {
+          "type": "pattern",
+          "pattern": "noise",
+          "noise_type": "fbm",
+          "octaves": 4
+        },
         "ao": {
           "type": "grayscale",
           "from_height": true,

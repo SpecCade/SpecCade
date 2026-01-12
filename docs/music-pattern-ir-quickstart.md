@@ -31,7 +31,7 @@ The goal is to keep `music.tracker_song_v1` as the canonical, fully-expanded eve
 
 To keep this system “reviewable”, implement at least one expansion view:
 
-- `speccade expand <spec.json>` → prints expanded `music.tracker_song_v1` params JSON
+- `speccade expand --spec <spec.json>` → prints expanded `music.tracker_song_v1` params JSON
 
 Recommended PR workflow:
 
@@ -58,7 +58,7 @@ Recommended PR workflow:
    - `timebase` + pattern `bars` + `beat_range` to avoid row math
    - `harmony` + `pitch_seq` to avoid out-of-key note spelling
 4) Always review the expanded output:
-   - run `speccade expand <spec.json>` and sanity-check density, collisions, and note ranges
+   - run `speccade expand --spec <spec.json>` and sanity-check density, collisions, and note ranges
 
 ## Reference Examples
 

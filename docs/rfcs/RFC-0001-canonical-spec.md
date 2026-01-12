@@ -1,9 +1,10 @@
 # RFC-0001: Canonical Spec Architecture
 
-- **Status:** Draft
+- **Status:** Implemented
 - **Author:** SpecCade Team
 - **Created:** 2026-01-10
 - **Target Version:** SpecCade v1.0
+- **Last reviewed:** 2026-01-12
 
 ## Summary
 
@@ -60,7 +61,7 @@ Each entry in `outputs[]` declares an expected artifact:
 | Field | Type | Values |
 |-------|------|--------|
 | `kind` | enum | `"primary"`, `"metadata"`, `"preview"`, `"packed"` |
-| `format` | enum | `"wav"`, `"ogg"`, `"xm"`, `"it"`, `"png"`, `"glb"`, `"gltf"`, `"json"` |
+| `format` | enum | `"wav"`, `"xm"`, `"it"`, `"png"`, `"glb"`, `"gltf"`, `"json"` |
 | `path` | string | Relative path under output root |
 
 **Path constraints:**
@@ -72,6 +73,9 @@ Each entry in `outputs[]` declares an expected artifact:
 - Must be unique within the spec
 
 **At least one output with `kind: "primary"` or `kind: "packed"` is required.**
+
+**Reserved kinds:** `metadata` and `preview` are reserved for future use and are **invalid** in v1.
+Validation rejects them; use the `${asset_id}.report.json` sibling file instead.
 
 ### 1.4 Variant Specification
 
@@ -305,7 +309,9 @@ Every `speccade generate` or `speccade validate` invocation produces a report:
   "uv_island_count": 4,
   "bone_count": 22,
   "material_slot_count": 2,
-  "max_bone_influences": 4
+  "max_bone_influences": 4,
+  "animation_frame_count": 60,
+  "animation_duration_seconds": 2.0
 }
 ```
 
@@ -874,10 +880,11 @@ The `speccade migrate` command (v0.3+) converts legacy `.spec.py` files to canon
 | `asset_type` must be a known type | E003 | Unknown asset type |
 | `seed` must be in range `0..2^32-1` | E004 | Seed out of range |
 | `outputs` must have at least one entry | E005 | No outputs declared |
-| `outputs` must have at least one `kind: "primary"` | E006 | No primary output |
+| `outputs` must have at least one `kind: "primary"` or `kind: "packed"` | E006 | No primary or packed output |
 | `outputs[].path` must be unique | E007 | Duplicate output path |
 | `outputs[].path` must be safe (relative, no `..`) | E008 | Unsafe output path |
 | `outputs[].path` extension must match format | E009 | Path/format mismatch |
+| `outputs[].kind` must not be `metadata` or `preview` (reserved) | E015 | Output validation failed |
 
 ### 7.2 Recipe Validation
 
@@ -1006,7 +1013,7 @@ Bone naming follows Blender/glTF conventions with `_l`/`_r` suffixes for left/ri
 | E003 | Contract | Unknown asset_type |
 | E004 | Contract | Seed out of valid range |
 | E005 | Contract | No outputs declared |
-| E006 | Contract | No primary output declared |
+| E006 | Contract | No primary or packed output declared |
 | E007 | Contract | Duplicate output path |
 | E008 | Contract | Unsafe output path (traversal) |
 | E009 | Contract | Output path extension does not match format |

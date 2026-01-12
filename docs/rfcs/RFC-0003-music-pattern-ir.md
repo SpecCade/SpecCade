@@ -435,7 +435,7 @@ On violation: return a typed error with a stable error code.
 
 Add at least one of:
 
-1) `speccade expand <spec.json>` → prints expanded `music.tracker_song_v1` params JSON
+1) `speccade expand --spec <spec.json>` → prints expanded `music.tracker_song_v1` params JSON
 2) `speccade generate --emit-expanded-json <path>` → writes expanded params as metadata output
 
 Expanded JSON is intended for:

@@ -16,7 +16,7 @@ pub enum ErrorCode {
     SeedOutOfRange,
     /// E005: No outputs declared
     NoOutputs,
-    /// E006: No primary output declared
+    /// E006: No primary or packed output declared
     NoPrimaryOutput,
     /// E007: Duplicate output path
     DuplicateOutputPath,

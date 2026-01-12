@@ -14,7 +14,7 @@ It is written so an implementation agent can follow it end-to-end and land a wor
 1) A spec with `recipe.kind: "music.tracker_song_compose_v1"` expands deterministically into a valid `music.tracker_song_v1` params JSON.
 2) `speccade generate` can generate XM/IT from compose specs.
 3) An expansion view exists:
-   - `speccade expand <spec.json>` → prints expanded `music.tracker_song_v1` params JSON
+   - `speccade expand --spec <spec.json>` → prints expanded `music.tracker_song_v1` params JSON
 4) Unit tests cover expansion correctness + determinism.
 5) Integration tests confirm generating from compose == generating from expanded (byte-identical XM/IT).
 
@@ -169,7 +169,7 @@ Implementation path:
 
 Add a new CLI subcommand:
 
-- `speccade expand <spec.json>`
+- `speccade expand --spec <spec.json>`
 
 Behavior:
 
