@@ -214,11 +214,10 @@ mod tests {
     }
 
     #[test]
-    fn generate_reports_backend_errors_as_generation_failed() {
+    fn generate_reports_validation_errors_for_invalid_params() {
         let tmp = tempfile::tempdir().unwrap();
 
-        // NOTE: validate_for_generate doesn't validate audio params; this spec passes validation
-        // but fails in the backend due to invalid sample_rate.
+        // Invalid sample_rate is caught during validation (E012)
         let invalid_params = serde_json::json!({
             "duration_seconds": 0.1,
             "sample_rate": 12345,
@@ -240,13 +239,13 @@ mod tests {
             Some(tmp.path().to_str().unwrap()),
         )
         .unwrap();
-        assert_eq!(code, ExitCode::from(2));
+        assert_eq!(code, ExitCode::from(1));
 
         let report_path = reporting::report_path(spec_path.to_str().unwrap(), &spec.asset_id);
         let json = std::fs::read_to_string(&report_path).unwrap();
         let report: speccade_spec::Report = serde_json::from_str(&json).unwrap();
         assert!(!report.ok);
-        assert!(report.errors.iter().any(|e| e.code == "DISPATCH_003"));
+        assert!(report.errors.iter().any(|e| e.code == "E012"));
     }
 
     #[test]

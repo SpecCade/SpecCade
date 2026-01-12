@@ -155,8 +155,8 @@ impl BoneConstraint {
     pub fn soft(bone: impl Into<String>, stiffness: f64, damping: f64) -> Self {
         BoneConstraint::Soft {
             bone: bone.into(),
-            stiffness: stiffness.clamp(0.0, 1.0),
-            damping: damping.clamp(0.0, 1.0),
+            stiffness,
+            damping,
         }
     }
 
