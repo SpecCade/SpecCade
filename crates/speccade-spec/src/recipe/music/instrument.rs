@@ -44,9 +44,35 @@ pub struct TrackerInstrument {
     /// ADSR envelope.
     #[serde(default = "default_envelope")]
     pub envelope: Envelope,
+    /// Optional tracker sample loop override.
+    ///
+    /// By default, Speccade loops sustained instruments (envelope `sustain > 0`) and leaves
+    /// one-shots unlooped. This field can override that behavior per instrument.
+    ///
+    /// - `auto` (default): choose the best loop mode automatically.
+    /// - `forward`: force a forward loop (Speccade may bake a crossfade into the sample tail).
+    /// - `pingpong`: force a ping-pong loop.
+    /// - `none`: disable looping even for sustained instruments.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub loop_mode: Option<TrackerLoopMode>,
     /// Optional volume (0-64).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub default_volume: Option<u8>,
+}
+
+/// Loop mode override for tracker samples.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum TrackerLoopMode {
+    /// Default behavior: loop sustained instruments and choose the best loop mode.
+    Auto,
+    /// Disable looping.
+    None,
+    /// Forward loop.
+    Forward,
+    /// Ping-pong loop.
+    #[serde(rename = "pingpong")]
+    PingPong,
 }
 
 pub(crate) fn default_envelope() -> Envelope {

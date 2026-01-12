@@ -1,0 +1,33 @@
+{
+  "spec_version": 1,
+  "asset_id": "preset_lead_1",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 10008,
+  "description": "Classic synth lead - detuned sawtooths (loop-safe)",
+  "outputs": [{ "kind": "primary", "format": "wav", "path": "lead_1.wav" }],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "base_note": "C4",
+      "duration_seconds": 1.0,
+      "sample_rate": 44100,
+      "layers": [
+        {
+          "synthesis": {
+            "type": "multi_oscillator",
+            "frequency": 261.63,
+            "oscillators": [
+              { "waveform": "sawtooth", "volume": 1.0, "detune": 0.0 },
+              { "waveform": "sawtooth", "volume": 0.8, "detune": 7.0 },
+              { "waveform": "sawtooth", "volume": 0.8, "detune": -7.0 }
+            ]
+          },
+          "envelope": { "attack": 0.01, "decay": 0.1, "sustain": 1.0, "release": 0.1 },
+          "volume": 1.0,
+          "pan": 0.0
+        }
+      ]
+    }
+  }
+}

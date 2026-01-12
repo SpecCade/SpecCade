@@ -17,6 +17,7 @@ use speccade_spec::recipe::music::{
 use crate::envelope::convert_envelope_to_xm;
 use crate::generate::{
     bake_instrument_sample, resolve_pattern_note_name, GenerateError, GenerateResult,
+    MusicInstrumentLoopReport, MusicLoopReport,
 };
 use crate::note::calculate_xm_pitch_correction;
 #[cfg(test)]
@@ -50,9 +51,11 @@ pub fn generate_xm(
     let mut module = XmModule::new("SpecCade Song", params.channels, params.speed, params.bpm);
 
     // Generate instruments
+    let mut instrument_loop_reports = Vec::with_capacity(params.instruments.len());
     for (idx, instr) in params.instruments.iter().enumerate() {
-        let xm_instrument = generate_xm_instrument(instr, seed, idx as u32, spec_dir)?;
+        let (xm_instrument, loop_report) = generate_xm_instrument(instr, seed, idx as u32, spec_dir)?;
         module.add_instrument(xm_instrument);
+        instrument_loop_reports.push(loop_report);
     }
 
     // Build pattern index map
@@ -125,6 +128,10 @@ pub fn generate_xm(
         data,
         hash,
         extension: "xm",
+        loop_report: Some(MusicLoopReport {
+            extension: "xm".to_string(),
+            instruments: instrument_loop_reports,
+        }),
     })
 }
 
@@ -164,8 +171,9 @@ fn generate_xm_instrument(
     base_seed: u32,
     index: u32,
     spec_dir: &Path,
-) -> Result<XmInstrument, GenerateError> {
-    let baked = bake_instrument_sample(instr, base_seed, index, spec_dir, TrackerFormat::Xm)?;
+) -> Result<(XmInstrument, MusicInstrumentLoopReport), GenerateError> {
+    let (baked, loop_report) =
+        bake_instrument_sample(instr, base_seed, index, spec_dir, TrackerFormat::Xm)?;
 
     let (finetune, relative_note) =
         calculate_xm_pitch_correction(baked.sample_rate, baked.base_midi);
@@ -175,10 +183,13 @@ fn generate_xm_instrument(
     sample.finetune = finetune;
     sample.relative_note = relative_note;
 
-    if let Some((loop_start, loop_end)) = baked.loop_points {
-        sample.loop_type = 1; // Forward loop
-        sample.loop_start = loop_start;
-        sample.loop_length = loop_end.saturating_sub(loop_start);
+    if let Some(loop_region) = baked.loop_region {
+        sample.loop_type = match loop_region.mode {
+            crate::generate::LoopMode::Forward => 1,
+            crate::generate::LoopMode::PingPong => 2,
+        };
+        sample.loop_start = loop_region.start;
+        sample.loop_length = loop_region.end.saturating_sub(loop_region.start);
     }
 
     // Set default volume
@@ -190,7 +201,7 @@ fn generate_xm_instrument(
     // Convert envelope to XM envelope
     xm_instr.volume_envelope = convert_envelope_to_xm(&instr.envelope);
 
-    Ok(xm_instr)
+    Ok((xm_instr, loop_report))
 }
 
 /// Convert a pattern from spec to XM format.
@@ -596,7 +607,7 @@ mod tests {
         };
 
         let spec_dir = Path::new(".");
-        let xm_instr = generate_xm_instrument(&instrument, 42, 0, spec_dir).unwrap();
+        let (xm_instr, _) = generate_xm_instrument(&instrument, 42, 0, spec_dir).unwrap();
         assert_eq!(
             xm_instr.sample.loop_type, 0,
             "Non-periodic noise one-shots should not loop (ringing/pitch artifacts)"
@@ -630,7 +641,7 @@ mod tests {
         let instr = create_test_instrument(InstrumentSynthesis::Pulse { duty_cycle: 0.5 });
         let spec_dir = Path::new(".");
 
-        let xm_instr = generate_xm_instrument(&instr, 42, 0, spec_dir).unwrap();
+        let (xm_instr, _) = generate_xm_instrument(&instr, 42, 0, spec_dir).unwrap();
 
         // Access the sample's relative_note (XmInstrument has a single sample)
         assert_eq!(
@@ -646,7 +657,7 @@ mod tests {
         let instr = create_test_instrument(InstrumentSynthesis::Sine);
         let spec_dir = Path::new(".");
 
-        let xm_instr = generate_xm_instrument(&instr, 42, 0, spec_dir).unwrap();
+        let (xm_instr, _) = generate_xm_instrument(&instr, 42, 0, spec_dir).unwrap();
 
         assert_eq!(
             xm_instr.sample.relative_note, 16,
@@ -661,7 +672,7 @@ mod tests {
         let instr = create_test_instrument(InstrumentSynthesis::Noise { periodic: false });
         let spec_dir = Path::new(".");
 
-        let xm_instr = generate_xm_instrument(&instr, 42, 0, spec_dir).unwrap();
+        let (xm_instr, _) = generate_xm_instrument(&instr, 42, 0, spec_dir).unwrap();
 
         assert_eq!(
             xm_instr.sample.relative_note, 16,
@@ -676,7 +687,7 @@ mod tests {
         let instr = create_test_instrument(InstrumentSynthesis::Triangle);
         let spec_dir = Path::new(".");
 
-        let xm_instr = generate_xm_instrument(&instr, 42, 0, spec_dir).unwrap();
+        let (xm_instr, _) = generate_xm_instrument(&instr, 42, 0, spec_dir).unwrap();
 
         assert_eq!(
             xm_instr.sample.relative_note, 16,
@@ -691,7 +702,7 @@ mod tests {
         let instr = create_test_instrument(InstrumentSynthesis::Sawtooth);
         let spec_dir = Path::new(".");
 
-        let xm_instr = generate_xm_instrument(&instr, 42, 0, spec_dir).unwrap();
+        let (xm_instr, _) = generate_xm_instrument(&instr, 42, 0, spec_dir).unwrap();
 
         assert_eq!(
             xm_instr.sample.relative_note, 16,
@@ -706,7 +717,7 @@ mod tests {
         let instr = create_test_instrument(InstrumentSynthesis::Pulse { duty_cycle: 0.5 });
         let spec_dir = Path::new(".");
 
-        let xm_instr = generate_xm_instrument(&instr, 42, 0, spec_dir).unwrap();
+        let (xm_instr, _) = generate_xm_instrument(&instr, 42, 0, spec_dir).unwrap();
 
         let finetune = xm_instr.sample.finetune;
         assert!(
@@ -750,7 +761,7 @@ mod tests {
         };
 
         let spec_dir = Path::new(".");
-        let xm_instr = generate_xm_instrument(&instrument, 42, 0, spec_dir).unwrap();
+        let (xm_instr, _) = generate_xm_instrument(&instrument, 42, 0, spec_dir).unwrap();
 
         // relative_note should be 16 (sample rate compensation only, since base is at reference)
         // rate_correction: 12 * log2(22050/8363) = 12 * 1.399 = 16.79, floor = 16
@@ -792,7 +803,7 @@ mod tests {
         };
 
         let spec_dir = Path::new(".");
-        let xm_instr = generate_xm_instrument(&instrument, 42, 0, spec_dir).unwrap();
+        let (xm_instr, _) = generate_xm_instrument(&instrument, 42, 0, spec_dir).unwrap();
 
         // relative_note should still be 16 - pattern note doesn't affect this
         assert_eq!(
@@ -820,7 +831,7 @@ mod tests {
         };
 
         let spec_dir = Path::new(".");
-        let xm_instr = generate_xm_instrument(&instrument, 42, 0, spec_dir).unwrap();
+        let (xm_instr, _) = generate_xm_instrument(&instrument, 42, 0, spec_dir).unwrap();
 
         // With base_note = "C5" (MIDI 72 = XM note 60, 0-indexed):
         // rate_correction = 16 (same as before, from 22050/8363 ratio)
@@ -854,7 +865,7 @@ mod tests {
         };
 
         let spec_dir = Path::new(".");
-        let xm_instr = generate_xm_instrument(&instrument, 42, 0, spec_dir).unwrap();
+        let (xm_instr, _) = generate_xm_instrument(&instrument, 42, 0, spec_dir).unwrap();
 
         // relative_note is 4 (configured for C5 base note)
         assert_eq!(xm_instr.sample.relative_note, 4);
@@ -897,7 +908,7 @@ mod tests {
         };
 
         let spec_dir = Path::new(".");
-        let xm_instr = generate_xm_instrument(&instrument, 42, 0, spec_dir).unwrap();
+        let (xm_instr, _) = generate_xm_instrument(&instrument, 42, 0, spec_dir).unwrap();
 
         // Sample at MIDI 69 (A4) = XM note 57 (0-indexed)
         // rate_correction = 16
@@ -927,7 +938,7 @@ mod tests {
         };
 
         let spec_dir = Path::new(".");
-        let xm_instr = generate_xm_instrument(&instrument, 42, 0, spec_dir).unwrap();
+        let (xm_instr, _) = generate_xm_instrument(&instrument, 42, 0, spec_dir).unwrap();
 
         // Sample at MIDI 48 (C3) = XM note 36 (0-indexed)
         // rate_correction = 16
@@ -958,7 +969,7 @@ mod tests {
         };
 
         let spec_dir = Path::new(".");
-        let xm_instr = generate_xm_instrument(&instrument, 42, 0, spec_dir).unwrap();
+        let (xm_instr, _) = generate_xm_instrument(&instrument, 42, 0, spec_dir).unwrap();
 
         // Sample at MIDI 84 (C6) = XM note 72 (0-indexed)
         // rate_correction = 16
@@ -992,7 +1003,7 @@ mod tests {
                 ..Default::default()
             };
 
-            let xm_instr = generate_xm_instrument(&instrument, 42, 0, spec_dir).unwrap();
+            let (xm_instr, _) = generate_xm_instrument(&instrument, 42, 0, spec_dir).unwrap();
             relative_notes.push(xm_instr.sample.relative_note);
         }
 
@@ -1034,7 +1045,7 @@ mod tests {
                 ..Default::default()
             };
 
-            let xm_instr = generate_xm_instrument(&instrument, 42, 0, spec_dir).unwrap();
+            let (xm_instr, _) = generate_xm_instrument(&instrument, 42, 0, spec_dir).unwrap();
             finetunes.push(xm_instr.sample.finetune);
         }
 

@@ -1,0 +1,39 @@
+{
+  "spec_version": 1,
+  "asset_id": "preset_kick_909",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 10102,
+  "description": "Classic 909 kick - punchy with click transient",
+  "outputs": [{ "kind": "primary", "format": "wav", "path": "kick_909.wav" }],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "duration_seconds": 0.35,
+      "sample_rate": 44100,
+      "layers": [
+        {
+          "synthesis": {
+            "type": "oscillator",
+            "waveform": "sine",
+            "frequency": 180.0,
+            "freq_sweep": { "end_freq": 50.0, "curve": "exponential" }
+          },
+          "envelope": { "attack": 0.001, "decay": 0.12, "sustain": 0.0, "release": 0.15 },
+          "volume": 1.0,
+          "pan": 0.0
+        },
+        {
+          "synthesis": {
+            "type": "noise_burst",
+            "noise_type": "white",
+            "filter": { "type": "bandpass", "center": 5000.0, "resonance": 0.8 }
+          },
+          "envelope": { "attack": 0.0, "decay": 0.01, "sustain": 0.0, "release": 0.01 },
+          "volume": 0.35,
+          "pan": 0.0
+        }
+      ]
+    }
+  }
+}

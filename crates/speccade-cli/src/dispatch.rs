@@ -5,7 +5,7 @@
 use speccade_spec::recipe::music::{MusicTrackerSongV1Params, TrackerFormat};
 use speccade_spec::recipe::texture::TextureMapType;
 use speccade_spec::{BackendError, OutputFormat, OutputKind, OutputResult, Spec};
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 use std::fmt;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -227,12 +227,32 @@ fn generate_music_from_params(
 
         write_output_bytes(out_root, &primary_output.path, &result.data)?;
 
-        return Ok(vec![OutputResult::tier1(
+        let mut outputs = vec![OutputResult::tier1(
             OutputKind::Primary,
             primary_output.format,
             PathBuf::from(&primary_output.path),
             result.hash,
-        )]);
+        )];
+
+        if let Some(loop_report) = result.loop_report.as_ref() {
+            let loop_path = format!("{}.loops.json", primary_output.path);
+            let bytes = serde_json::to_vec_pretty(loop_report).map_err(|e| {
+                DispatchError::BackendError(format!(
+                    "Failed to serialize music loop report JSON: {}",
+                    e
+                ))
+            })?;
+            write_output_bytes(out_root, &loop_path, &bytes)?;
+            let hash = blake3::hash(&bytes).to_hex().to_string();
+            outputs.push(OutputResult::tier1(
+                OutputKind::Metadata,
+                OutputFormat::Json,
+                PathBuf::from(&loop_path),
+                hash,
+            ));
+        }
+
+        return Ok(outputs);
     }
 
     // Multi-output mode: one XM and/or one IT primary output.
@@ -303,6 +323,24 @@ fn generate_music_from_params(
             PathBuf::from(&output.path),
             gen.hash,
         ));
+
+        if let Some(loop_report) = gen.loop_report.as_ref() {
+            let loop_path = format!("{}.loops.json", output.path);
+            let bytes = serde_json::to_vec_pretty(loop_report).map_err(|e| {
+                DispatchError::BackendError(format!(
+                    "Failed to serialize music loop report JSON: {}",
+                    e
+                ))
+            })?;
+            write_output_bytes(out_root, &loop_path, &bytes)?;
+            let hash = blake3::hash(&bytes).to_hex().to_string();
+            results.push(OutputResult::tier1(
+                OutputKind::Metadata,
+                OutputFormat::Json,
+                PathBuf::from(&loop_path),
+                hash,
+            ));
+        }
     }
 
     Ok(results)
@@ -900,7 +938,7 @@ mod tests {
     #[test]
     fn test_dispatch_texture_packed_with_constant_maps() {
         use speccade_spec::recipe::texture::{
-            ChannelSource, PackedChannels, TexturePackedV1Params,
+            ChannelSource, MapDefinition, PackedChannels, TexturePackedV1Params,
         };
         use std::collections::HashMap;
 

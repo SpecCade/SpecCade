@@ -19,6 +19,7 @@ use speccade_spec::recipe::music::{
 use crate::envelope::convert_envelope_to_it;
 use crate::generate::{
     bake_instrument_sample, resolve_pattern_note_name, GenerateError, GenerateResult,
+    MusicInstrumentLoopReport, MusicLoopReport,
 };
 use crate::it::{
     effect_name_to_code as it_effect_name_to_code, ItInstrument, ItModule, ItNote, ItPattern,
@@ -62,10 +63,13 @@ pub fn generate_it(
     }
 
     // Generate instruments and samples
+    let mut instrument_loop_reports = Vec::with_capacity(params.instruments.len());
     for (idx, instr) in params.instruments.iter().enumerate() {
-        let (it_instrument, it_sample) = generate_it_instrument(instr, seed, idx as u32, spec_dir)?;
+        let (it_instrument, it_sample, loop_report) =
+            generate_it_instrument(instr, seed, idx as u32, spec_dir)?;
         module.add_instrument(it_instrument);
         module.add_sample(it_sample);
+        instrument_loop_reports.push(loop_report);
     }
 
     // Build pattern index map
@@ -123,6 +127,10 @@ pub fn generate_it(
         data,
         hash,
         extension: "it",
+        loop_report: Some(MusicLoopReport {
+            extension: "it".to_string(),
+            instruments: instrument_loop_reports,
+        }),
     })
 }
 
@@ -165,16 +173,18 @@ fn generate_it_instrument(
     base_seed: u32,
     index: u32,
     spec_dir: &Path,
-) -> Result<(ItInstrument, ItSample), GenerateError> {
-    let baked = bake_instrument_sample(instr, base_seed, index, spec_dir, TrackerFormat::It)?;
+) -> Result<(ItInstrument, ItSample, MusicInstrumentLoopReport), GenerateError> {
+    let (baked, loop_report) =
+        bake_instrument_sample(instr, base_seed, index, spec_dir, TrackerFormat::It)?;
 
     // IT samples store "C-5 speed" (playback rate for note C-5), not the sample's native rate.
     let c5_speed = calculate_c5_speed_for_base_note(baked.sample_rate, baked.base_midi);
 
     let mut sample = ItSample::new(&instr.name, baked.pcm16_mono, c5_speed);
 
-    if let Some((loop_begin, loop_end)) = baked.loop_points {
-        sample = sample.with_loop(loop_begin, loop_end, false);
+    if let Some(loop_region) = baked.loop_region {
+        let pingpong = loop_region.mode == crate::generate::LoopMode::PingPong;
+        sample = sample.with_loop(loop_region.start, loop_region.end, pingpong);
     }
 
     // Set default volume
@@ -189,7 +199,7 @@ fn generate_it_instrument(
     // Convert envelope
     it_instr.volume_envelope = convert_envelope_to_it(&instr.envelope);
 
-    Ok((it_instr, sample))
+    Ok((it_instr, sample, loop_report))
 }
 
 /// Convert a pattern from spec to IT format.
@@ -625,7 +635,8 @@ mod tests {
         };
 
         let spec_dir = Path::new(".");
-        let (_it_instr, it_sample) = generate_it_instrument(&instrument, 42, 0, spec_dir).unwrap();
+        let (_it_instr, it_sample, _) =
+            generate_it_instrument(&instrument, 42, 0, spec_dir).unwrap();
         assert_eq!(
             it_sample.flags & sample_flags::LOOP,
             0,
@@ -651,7 +662,8 @@ mod tests {
         };
 
         let spec_dir = Path::new(".");
-        let (_it_instr, it_sample) = generate_it_instrument(&instrument, 42, 0, spec_dir).unwrap();
+        let (_it_instr, it_sample, _) =
+            generate_it_instrument(&instrument, 42, 0, spec_dir).unwrap();
 
         // c5_speed should be 22050 (sample rate) for MIDI 72 base note (IT's default)
         assert_eq!(it_sample.c5_speed, 22050);
@@ -668,7 +680,8 @@ mod tests {
         };
 
         let spec_dir = Path::new(".");
-        let (_it_instr, it_sample) = generate_it_instrument(&instrument, 42, 0, spec_dir).unwrap();
+        let (_it_instr, it_sample, _) =
+            generate_it_instrument(&instrument, 42, 0, spec_dir).unwrap();
 
         assert_eq!(it_sample.c5_speed, 22050);
     }
@@ -684,7 +697,8 @@ mod tests {
         };
 
         let spec_dir = Path::new(".");
-        let (_it_instr, it_sample) = generate_it_instrument(&instrument, 42, 0, spec_dir).unwrap();
+        let (_it_instr, it_sample, _) =
+            generate_it_instrument(&instrument, 42, 0, spec_dir).unwrap();
 
         assert_eq!(it_sample.c5_speed, 22050);
     }
@@ -700,7 +714,8 @@ mod tests {
         };
 
         let spec_dir = Path::new(".");
-        let (_it_instr, it_sample) = generate_it_instrument(&instrument, 42, 0, spec_dir).unwrap();
+        let (_it_instr, it_sample, _) =
+            generate_it_instrument(&instrument, 42, 0, spec_dir).unwrap();
 
         assert_eq!(it_sample.c5_speed, 22050);
     }
@@ -716,7 +731,8 @@ mod tests {
         };
 
         let spec_dir = Path::new(".");
-        let (_it_instr, it_sample) = generate_it_instrument(&instrument, 42, 0, spec_dir).unwrap();
+        let (_it_instr, it_sample, _) =
+            generate_it_instrument(&instrument, 42, 0, spec_dir).unwrap();
 
         assert_eq!(it_sample.c5_speed, 22050);
     }
@@ -769,7 +785,8 @@ mod tests {
         };
 
         let spec_dir = Path::new(".");
-        let (_it_instr, it_sample) = generate_it_instrument(&instrument, 42, 0, spec_dir).unwrap();
+        let (_it_instr, it_sample, _) =
+            generate_it_instrument(&instrument, 42, 0, spec_dir).unwrap();
 
         // c5_speed should be 22050 (sample rate)
         // because: sample at MIDI 72 (C5), IT reference at MIDI 72 (C5)
@@ -805,7 +822,8 @@ mod tests {
         };
 
         let spec_dir = Path::new(".");
-        let (_it_instr, it_sample) = generate_it_instrument(&instrument, 42, 0, spec_dir).unwrap();
+        let (_it_instr, it_sample, _) =
+            generate_it_instrument(&instrument, 42, 0, spec_dir).unwrap();
 
         // c5_speed should be 22050 - the pattern note doesn't affect this
         // Pattern note only determines which tracker note triggers the sample
@@ -835,7 +853,8 @@ mod tests {
         };
 
         let spec_dir = Path::new(".");
-        let (_it_instr, it_sample) = generate_it_instrument(&instrument, 42, 0, spec_dir).unwrap();
+        let (_it_instr, it_sample, _) =
+            generate_it_instrument(&instrument, 42, 0, spec_dir).unwrap();
 
         // With base_note = "C5" (MIDI 72 = IT note 60), the sample is at the IT reference pitch.
         // c5_speed = sample_rate because sample is already at C-5
@@ -871,7 +890,8 @@ mod tests {
         };
 
         let spec_dir = Path::new(".");
-        let (_it_instr, it_sample) = generate_it_instrument(&instrument, 42, 0, spec_dir).unwrap();
+        let (_it_instr, it_sample, _) =
+            generate_it_instrument(&instrument, 42, 0, spec_dir).unwrap();
 
         // c5_speed is 22050 (configured for C5 base note)
         assert_eq!(it_sample.c5_speed, 22050);
@@ -914,7 +934,8 @@ mod tests {
         };
 
         let spec_dir = Path::new(".");
-        let (_it_instr, it_sample) = generate_it_instrument(&instrument, 42, 0, spec_dir).unwrap();
+        let (_it_instr, it_sample, _) =
+            generate_it_instrument(&instrument, 42, 0, spec_dir).unwrap();
 
         // Sample at MIDI 69 (A4) = IT note 57 (A-4)
         // IT reference is note 60 (C-5)
@@ -944,7 +965,8 @@ mod tests {
         };
 
         let spec_dir = Path::new(".");
-        let (_it_instr, it_sample) = generate_it_instrument(&instrument, 42, 0, spec_dir).unwrap();
+        let (_it_instr, it_sample, _) =
+            generate_it_instrument(&instrument, 42, 0, spec_dir).unwrap();
 
         // Sample at MIDI 48 (C3) = IT note 36 (C-3)
         // IT reference is note 60 (C-5)

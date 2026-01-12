@@ -624,6 +624,7 @@ dependencies = [
  "pretty_assertions",
  "rand",
  "rand_pcg",
+ "serde",
  "serde_json",
  "speccade-backend-audio",
  "speccade-spec",
