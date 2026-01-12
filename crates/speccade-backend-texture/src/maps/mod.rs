@@ -196,3 +196,91 @@ impl GrayscaleBuffer {
         TextureBuffer::from_grayscale(&self.data, self.width, self.height)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn approx_eq(a: f64, b: f64) -> bool {
+        (a - b).abs() < 1e-9
+    }
+
+    #[test]
+    fn texture_buffer_get_set_and_wrapping() {
+        let mut buf = TextureBuffer::new_black(2, 2);
+        buf.set(0, 0, Color::rgb(1.0, 0.0, 0.0));
+        buf.set(1, 0, Color::rgb(0.0, 1.0, 0.0));
+        buf.set(0, 1, Color::rgb(0.0, 0.0, 1.0));
+        buf.set(1, 1, Color::rgb(1.0, 1.0, 1.0));
+
+        assert_eq!(buf.get(0, 0), Color::rgb(1.0, 0.0, 0.0));
+        assert_eq!(buf.get(1, 0), Color::rgb(0.0, 1.0, 0.0));
+        assert_eq!(buf.get(0, 1), Color::rgb(0.0, 0.0, 1.0));
+        assert_eq!(buf.get(1, 1), Color::rgb(1.0, 1.0, 1.0));
+
+        // Negative wrap
+        assert_eq!(buf.get_wrapped(-1, -1), Color::rgb(1.0, 1.0, 1.0));
+        assert_eq!(buf.get_wrapped(-2, 0), Color::rgb(1.0, 0.0, 0.0));
+        // Positive wrap
+        assert_eq!(buf.get_wrapped(2, 0), Color::rgb(1.0, 0.0, 0.0));
+        assert_eq!(buf.get_wrapped(2, 1), Color::rgb(0.0, 0.0, 1.0));
+    }
+
+    #[test]
+    fn texture_buffer_sample_bilinear_center_is_average() {
+        // 2x2 grayscale gradient:
+        // 0 1
+        // 1 0
+        let mut buf = TextureBuffer::new_black(2, 2);
+        buf.set(0, 0, Color::gray(0.0));
+        buf.set(1, 0, Color::gray(1.0));
+        buf.set(0, 1, Color::gray(1.0));
+        buf.set(1, 1, Color::gray(0.0));
+
+        let c = buf.sample_bilinear(0.5, 0.5);
+        assert!(approx_eq(c.r, 0.5), "expected 0.5, got {}", c.r);
+        assert!(approx_eq(c.g, 0.5), "expected 0.5, got {}", c.g);
+        assert!(approx_eq(c.b, 0.5), "expected 0.5, got {}", c.b);
+        assert!(approx_eq(c.a, 1.0));
+    }
+
+    fn colors_approx_eq(a: Color, b: Color) -> bool {
+        approx_eq(a.r, b.r) && approx_eq(a.g, b.g) && approx_eq(a.b, b.b) && approx_eq(a.a, b.a)
+    }
+
+    #[test]
+    fn texture_buffer_grayscale_round_trip() {
+        let mut buf = TextureBuffer::new_black(2, 2);
+        buf.set(0, 0, Color::gray(0.0));
+        buf.set(1, 0, Color::gray(0.25));
+        buf.set(0, 1, Color::gray(0.5));
+        buf.set(1, 1, Color::gray(1.0));
+
+        let gray = buf.to_grayscale();
+        assert_eq!(gray.len(), 4);
+        let rebuilt = TextureBuffer::from_grayscale(&gray, 2, 2);
+        assert!(colors_approx_eq(rebuilt.get(0, 0), Color::gray(0.0)));
+        assert!(colors_approx_eq(rebuilt.get(1, 0), Color::gray(0.25)));
+        assert!(colors_approx_eq(rebuilt.get(0, 1), Color::gray(0.5)));
+        assert!(colors_approx_eq(rebuilt.get(1, 1), Color::gray(1.0)));
+    }
+
+    #[test]
+    fn grayscale_buffer_wrapping_and_bytes() {
+        let mut buf = GrayscaleBuffer::new(2, 2, 0.0);
+        buf.set(0, 0, 0.0);
+        buf.set(1, 0, 0.5);
+        buf.set(0, 1, 1.0);
+        buf.set(1, 1, -1.0);
+
+        assert!(approx_eq(buf.get_wrapped(-1, -1), -1.0));
+        assert!(approx_eq(buf.get_wrapped(2, 0), 0.0));
+
+        let bytes = buf.to_bytes();
+        assert_eq!(bytes.len(), 4);
+        assert_eq!(bytes[0], 0);
+        assert_eq!(bytes[1], 128);
+        assert_eq!(bytes[2], 255);
+        assert_eq!(bytes[3], 0);
+    }
+}

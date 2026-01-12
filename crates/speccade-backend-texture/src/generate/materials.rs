@@ -72,3 +72,65 @@ pub fn apply_material_pattern(
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn base_material(material_type: MaterialType) -> BaseMaterial {
+        BaseMaterial {
+            material_type,
+            base_color: [0.5, 0.5, 0.5],
+            roughness_range: None,
+            metallic: None,
+            brick_pattern: None,
+            normal_params: None,
+        }
+    }
+
+    fn assert_modified_and_deterministic(material: &BaseMaterial) {
+        let (w, h) = (32u32, 32u32);
+
+        let mut a = GrayscaleBuffer::new(w, h, 0.5);
+        let mut b = GrayscaleBuffer::new(w, h, 0.5);
+
+        apply_material_pattern(&mut a, material, w, h, 123);
+        apply_material_pattern(&mut b, material, w, h, 123);
+
+        assert_eq!(
+            a.data, b.data,
+            "material {:?} not deterministic",
+            material.material_type
+        );
+        assert!(
+            a.data.iter().any(|&v| (v - 0.5).abs() > 1e-9),
+            "material {:?} did not modify buffer",
+            material.material_type
+        );
+        assert!(
+            a.data.iter().all(|&v| (0.0..=1.0).contains(&v)),
+            "material {:?} produced out-of-range values",
+            material.material_type
+        );
+    }
+
+    #[test]
+    fn apply_material_pattern_brick_is_deterministic_and_nontrivial() {
+        assert_modified_and_deterministic(&base_material(MaterialType::Brick));
+    }
+
+    #[test]
+    fn apply_material_pattern_wood_is_deterministic_and_nontrivial() {
+        assert_modified_and_deterministic(&base_material(MaterialType::Wood));
+    }
+
+    #[test]
+    fn apply_material_pattern_metal_is_deterministic_and_nontrivial() {
+        assert_modified_and_deterministic(&base_material(MaterialType::Metal));
+    }
+
+    #[test]
+    fn apply_material_pattern_procedural_is_deterministic_and_nontrivial() {
+        assert_modified_and_deterministic(&base_material(MaterialType::Procedural));
+    }
+}

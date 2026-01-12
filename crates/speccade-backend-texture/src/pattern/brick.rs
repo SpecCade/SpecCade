@@ -195,7 +195,7 @@ impl DetailedPattern2D for BrickPattern {
         };
 
         PatternSample {
-            height: (1.0 + variation) * bevel,
+            height: ((1.0 + variation) * bevel).clamp(0.0, 1.0),
             mask: 1.0,                            // Brick mask
             secondary: (col + row * 1000) as f64, // Brick ID for per-brick effects
         }
@@ -245,8 +245,8 @@ mod tests {
 
         // They should be slightly different due to variation
         // (unless they happen to be the same brick)
-        // Just verify both are valid
-        assert!((0.0..=1.5).contains(&v1));
-        assert!((0.0..=1.5).contains(&v2));
+        // Just verify both are valid (clamped to [0, 1])
+        assert!((0.0..=1.0).contains(&v1));
+        assert!((0.0..=1.0).contains(&v2));
     }
 }

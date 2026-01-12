@@ -378,3 +378,75 @@ pub fn print_migration_report(entries: &[MigrationEntry]) {
     println!("  3. Review and address any warnings");
     println!("  4. Test with: speccade validate --spec specs/<type>/<asset>.json");
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{print_audit_report, print_migration_report, AuditEntry, KeyClassification};
+    use super::{MigrationEntry, MigrationKeyStatus};
+    use std::path::PathBuf;
+
+    #[test]
+    fn print_audit_report_returns_zero_when_no_specs_parsed() {
+        let score = print_audit_report(&[], 0.8);
+        assert_eq!(score, 0.0);
+    }
+
+    #[test]
+    fn print_audit_report_computes_expected_gap_score() {
+        let key_classification = KeyClassification {
+            implemented: 1,
+            partial: 1,
+            not_implemented: 1,
+            deprecated: 0,
+            unknown: 1,
+            key_details: vec![
+                ("ok".to_string(), MigrationKeyStatus::Implemented),
+                ("partial".to_string(), MigrationKeyStatus::Partial),
+                ("missing".to_string(), MigrationKeyStatus::NotImplemented),
+                ("unknown".to_string(), MigrationKeyStatus::Unknown),
+            ],
+        };
+
+        let entries = vec![AuditEntry {
+            source_path: PathBuf::from("specs/sounds/laser.spec.py"),
+            success: true,
+            error: None,
+            key_classification,
+        }];
+
+        let score = print_audit_report(&entries, 0.8);
+        assert!((score - 0.375).abs() < 1e-9, "score={score}");
+    }
+
+    #[test]
+    fn print_migration_report_smoke() {
+        let ok = MigrationEntry {
+            source_path: PathBuf::from("specs/sounds/laser.spec.py"),
+            target_path: Some(PathBuf::from("specs/audio/laser.json")),
+            success: true,
+            warnings: vec!["manual review".to_string()],
+            error: None,
+            key_classification: KeyClassification::default(),
+        };
+
+        let ok_no_warnings = MigrationEntry {
+            source_path: PathBuf::from("specs/textures/metal.spec.py"),
+            target_path: Some(PathBuf::from("specs/texture/metal.json")),
+            success: true,
+            warnings: vec![],
+            error: None,
+            key_classification: KeyClassification::default(),
+        };
+
+        let failed = MigrationEntry {
+            source_path: PathBuf::from("specs/music/broken.spec.py"),
+            target_path: None,
+            success: false,
+            warnings: vec![],
+            error: Some("parse error".to_string()),
+            key_classification: KeyClassification::default(),
+        };
+
+        print_migration_report(&[ok, ok_no_warnings, failed]);
+    }
+}

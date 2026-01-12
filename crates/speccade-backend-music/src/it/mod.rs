@@ -45,3 +45,29 @@ pub use pattern::*;
 pub use sample::*;
 pub use validator::{ItErrorCategory, ItFormatError, ItValidationReport, ItValidator};
 pub use writer::*;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn validator_rejects_too_small_files() {
+        let err = ItValidator::validate(&[0u8; 10]).unwrap_err();
+        assert_eq!(err.category, ItErrorCategory::Structure);
+        assert!(err.to_string().contains("File too small"));
+    }
+
+    #[test]
+    fn validator_accepts_writer_output() {
+        let mut module = ItModule::new("Test", 4, 6, 125);
+        module.add_pattern(ItPattern::empty(64, 4));
+        module.add_instrument(ItInstrument::new("Inst1"));
+        module.add_sample(ItSample::new("Sample1", vec![0u8; 100], 22050));
+        module.set_orders(&[0]);
+
+        let bytes = module.to_bytes().unwrap();
+        let report = ItValidator::validate(&bytes).unwrap();
+        assert!(report.is_valid, "errors: {:?}", report.errors);
+        assert!(report.header.is_some());
+    }
+}

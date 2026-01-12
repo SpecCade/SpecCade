@@ -46,3 +46,29 @@ pub use pattern::*;
 pub use sample::*;
 pub use validator::*;
 pub use writer::*;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn validator_rejects_too_small_files() {
+        let err = XmValidator::validate(&[]).unwrap_err();
+        match err {
+            XmFormatError::FileTooSmall { .. } => {}
+            other => panic!("expected FileTooSmall, got {:?}", other),
+        }
+    }
+
+    #[test]
+    fn validator_accepts_writer_output() {
+        let mut module = XmModule::new("Test", 4, 6, 125);
+        module.add_pattern(XmPattern::empty(64, 4));
+        module.set_order_table(&[0]);
+        let bytes = module.to_bytes().unwrap();
+
+        let report = XmValidator::validate(&bytes).unwrap();
+        assert!(report.valid, "errors: {:?}", report.errors);
+        assert!(report.header.is_some());
+    }
+}

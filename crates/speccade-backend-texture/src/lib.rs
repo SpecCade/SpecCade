@@ -85,3 +85,29 @@ pub use pattern::{
 };
 pub use png::{PngConfig, PngError};
 pub use rng::DeterministicRng;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use speccade_spec::recipe::texture::{TextureMaterialV1Params, TextureMapType};
+
+    #[test]
+    fn crate_root_reexports_generate_material_maps() {
+        let params = TextureMaterialV1Params {
+            resolution: [16, 16],
+            tileable: true,
+            maps: vec![TextureMapType::Albedo],
+            base_material: None,
+            layers: vec![],
+            palette: None,
+            color_ramp: None,
+        };
+
+        let result = generate_material_maps(&params, 42).unwrap();
+        assert!(result.maps.contains_key(&TextureMapType::Albedo));
+        let m = result.maps.get(&TextureMapType::Albedo).unwrap();
+        assert!(!m.data.is_empty());
+        assert_eq!(m.width, 16);
+        assert_eq!(m.height, 16);
+    }
+}

@@ -61,3 +61,46 @@ pub trait DetailedPattern2D {
     /// Sample the pattern at a given pixel coordinate.
     fn sample_detailed(&self, x: u32, y: u32) -> PatternSample;
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    struct EchoPattern;
+
+    impl Pattern2D for EchoPattern {
+        fn sample(&self, x: u32, y: u32) -> f64 {
+            (x * 1000 + y) as f64
+        }
+    }
+
+    #[test]
+    fn sample_normalized_clamps_to_last_pixel() {
+        let p = EchoPattern;
+        let width = 4;
+        let height = 3;
+
+        // u/v at exactly 1.0 would otherwise compute x=width, y=height.
+        let v = p.sample_normalized(1.0, 1.0, width, height);
+        assert_eq!(v, ((width - 1) * 1000 + (height - 1)) as f64);
+    }
+
+    #[test]
+    fn sample_normalized_uses_floor() {
+        let p = EchoPattern;
+        let width = 4;
+        let height = 4;
+
+        // u=0.49 -> floor(0.49*4)=1
+        let v = p.sample_normalized(0.49, 0.0, width, height);
+        assert_eq!(v, (1 * 1000 + 0) as f64);
+    }
+
+    #[test]
+    fn pattern_sample_default_is_sane() {
+        let s = PatternSample::default();
+        assert_eq!(s.height, 0.5);
+        assert_eq!(s.mask, 1.0);
+        assert_eq!(s.secondary, 0.0);
+    }
+}

@@ -124,3 +124,106 @@ pub fn apply_layer_to_height(height_map: &mut GrayscaleBuffer, layer: &TextureLa
         _ => {}
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use speccade_spec::recipe::texture::{NoiseAlgorithm, NoiseConfig, TextureMapType};
+
+    fn make_height_map() -> GrayscaleBuffer {
+        GrayscaleBuffer::new(32, 32, 0.5)
+    }
+
+    #[test]
+    fn noise_pattern_strength_zero_is_noop() {
+        let mut buf = make_height_map();
+        let before = buf.data.clone();
+
+        let layer = TextureLayer::NoisePattern {
+            noise: NoiseConfig {
+                algorithm: NoiseAlgorithm::Perlin,
+                scale: 0.1,
+                octaves: 4,
+                persistence: 0.5,
+                lacunarity: 2.0,
+            },
+            affects: vec![TextureMapType::Roughness],
+            strength: 0.0,
+        };
+
+        apply_layer_to_height(&mut buf, &layer, 123);
+        assert_eq!(buf.data, before);
+    }
+
+    #[test]
+    fn gradient_strength_zero_is_noop() {
+        let mut buf = make_height_map();
+        let before = buf.data.clone();
+
+        let layer = TextureLayer::Gradient {
+            direction: GradientDirection::Horizontal,
+            start: Some(0.0),
+            end: Some(1.0),
+            center: None,
+            inner: None,
+            outer: None,
+            affects: vec![TextureMapType::Albedo],
+            strength: 0.0,
+        };
+
+        apply_layer_to_height(&mut buf, &layer, 0);
+        assert_eq!(buf.data, before);
+    }
+
+    #[test]
+    fn scratches_density_zero_is_noop() {
+        let mut buf = make_height_map();
+        let before = buf.data.clone();
+
+        let layer = TextureLayer::Scratches {
+            density: 0.0,
+            length_range: [0.1, 0.2],
+            width: 0.01,
+            affects: vec![TextureMapType::Roughness],
+            strength: 1.0,
+        };
+
+        apply_layer_to_height(&mut buf, &layer, 999);
+        assert_eq!(buf.data, before);
+    }
+
+    #[test]
+    fn edge_wear_amount_zero_is_noop() {
+        let mut buf = make_height_map();
+        let before = buf.data.clone();
+
+        let layer = TextureLayer::EdgeWear {
+            amount: 0.0,
+            affects: vec![TextureMapType::Roughness],
+        };
+
+        apply_layer_to_height(&mut buf, &layer, 999);
+        assert_eq!(buf.data, before);
+    }
+
+    #[test]
+    fn noise_pattern_is_deterministic_for_same_seed() {
+        let layer = TextureLayer::NoisePattern {
+            noise: NoiseConfig {
+                algorithm: NoiseAlgorithm::Perlin,
+                scale: 0.05,
+                octaves: 3,
+                persistence: 0.5,
+                lacunarity: 2.0,
+            },
+            affects: vec![TextureMapType::Height],
+            strength: 0.8,
+        };
+
+        let mut a = make_height_map();
+        let mut b = make_height_map();
+        apply_layer_to_height(&mut a, &layer, 42);
+        apply_layer_to_height(&mut b, &layer, 42);
+        assert_eq!(a.data, b.data);
+    }
+}

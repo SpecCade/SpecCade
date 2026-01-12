@@ -441,6 +441,22 @@ mod tests {
         assert_eq!(noise.lacunarity, common::default_lacunarity());
     }
 
+    #[test]
+    fn test_noise_config_serde_defaults_when_omitted() {
+        let json = r#"{"algorithm":"perlin","scale":0.1}"#;
+        let noise: NoiseConfig = serde_json::from_str(json).unwrap();
+        assert_eq!(noise.octaves, common::default_octaves());
+        assert_eq!(noise.persistence, common::default_persistence());
+        assert_eq!(noise.lacunarity, common::default_lacunarity());
+    }
+
+    #[test]
+    fn test_noise_config_denies_unknown_fields() {
+        let json = r#"{"algorithm":"perlin","scale":0.1,"nope":123}"#;
+        let result: Result<NoiseConfig, _> = serde_json::from_str(json);
+        assert!(result.is_err());
+    }
+
     // ========================================================================
     // NORMAL Map Tests
     // ========================================================================
@@ -671,6 +687,21 @@ mod tests {
             let parsed: BaseMaterial = serde_json::from_str(&json).unwrap();
             assert_eq!(parsed.material_type, mat_type);
         }
+    }
+
+    #[test]
+    fn test_brick_pattern_params_default_offset() {
+        let json = r#"{"brick_width":64,"brick_height":32,"mortar_width":4}"#;
+        let params: BrickPatternParams = serde_json::from_str(json).unwrap();
+        assert_eq!(params.offset, 0.5);
+    }
+
+    #[test]
+    fn test_normal_params_defaults() {
+        let json = r#"{}"#;
+        let params: NormalParams = serde_json::from_str(json).unwrap();
+        assert_eq!(params.bump_strength, 1.0);
+        assert_eq!(params.mortar_depth, 0.3);
     }
 
     // ========================================================================

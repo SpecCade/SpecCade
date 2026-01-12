@@ -125,6 +125,70 @@ fn test_patterns_serialization() {
 }
 
 #[test]
+fn test_tracker_pattern_flat_notes_merges_and_sorts() {
+    let mut notes = HashMap::new();
+    notes.insert(
+        "2".to_string(),
+        vec![PatternNote {
+            row: 10,
+            note: "C4".to_string(),
+            inst: 1,
+            ..Default::default()
+        }],
+    );
+    notes.insert(
+        "1".to_string(),
+        vec![PatternNote {
+            row: 5,
+            note: "D4".to_string(),
+            inst: 1,
+            ..Default::default()
+        }],
+    );
+    // Invalid channel key should be ignored (not panic).
+    notes.insert(
+        "x".to_string(),
+        vec![PatternNote {
+            row: 1,
+            note: "E4".to_string(),
+            inst: 1,
+            ..Default::default()
+        }],
+    );
+
+    let pattern = TrackerPattern {
+        rows: 64,
+        notes: Some(notes),
+        data: Some(vec![PatternNote {
+            row: 0,
+            channel: Some(3),
+            note: "G4".to_string(),
+            inst: 1,
+            ..Default::default()
+        }]),
+    };
+
+    let flat = pattern.flat_notes();
+    let rows_and_channels: Vec<(u16, u8)> = flat.iter().map(|(ch, note)| (note.row, *ch)).collect();
+    assert_eq!(rows_and_channels, vec![(0, 3), (5, 1), (10, 2)]);
+}
+
+#[test]
+fn test_pattern_note_deserializes_midi_note_number() {
+    let json = r#"{"row":0,"note":60,"inst":1}"#;
+    let note: PatternNote = serde_json::from_str(json).unwrap();
+    assert_eq!(note.note, "C4");
+}
+
+#[test]
+fn test_pattern_note_alias_fields() {
+    let json = r#"{"row":0,"note":"C4","instrument":2,"volume":10}"#;
+    let note: PatternNote = serde_json::from_str(json).unwrap();
+    assert_eq!(note.inst, 2);
+    assert_eq!(note.vol, Some(10));
+}
+
+#[test]
 fn test_arrangement_serialization() {
     let arrangement = vec![
         ArrangementEntry {
@@ -140,6 +204,13 @@ fn test_arrangement_serialization() {
     let json = serde_json::to_string(&arrangement).unwrap();
     let parsed: Vec<ArrangementEntry> = serde_json::from_str(&json).unwrap();
     assert_eq!(parsed.len(), 2);
+}
+
+#[test]
+fn test_arrangement_entry_default_repeat_is_one() {
+    let json = r#"{"pattern":"intro"}"#;
+    let entry: ArrangementEntry = serde_json::from_str(json).unwrap();
+    assert_eq!(entry.repeat, 1);
 }
 
 #[test]

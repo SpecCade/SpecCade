@@ -122,3 +122,61 @@ fn print_validation_results(result: &speccade_spec::ValidationResult, report_pat
 
     println!("\n{} {}", "Report written to:".dimmed(), report_path);
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use speccade_spec::{AssetType, OutputFormat, OutputSpec, Spec};
+
+    fn write_spec(dir: &tempfile::TempDir, filename: &str, spec: &Spec) -> std::path::PathBuf {
+        let path = dir.path().join(filename);
+        std::fs::write(&path, spec.to_json_pretty().unwrap()).unwrap();
+        path
+    }
+
+    #[test]
+    fn validate_contract_only_allows_missing_recipe_and_writes_report() {
+        let tmp = tempfile::tempdir().unwrap();
+
+        let spec = Spec::builder("test-asset-01", AssetType::Audio)
+            .license("CC0-1.0")
+            .seed(42)
+            .description("test asset")
+            .output(OutputSpec::primary(OutputFormat::Wav, "test.wav"))
+            .build();
+
+        let spec_path = write_spec(&tmp, "spec.json", &spec);
+
+        let code = run(spec_path.to_str().unwrap(), false).unwrap();
+        assert_eq!(code, ExitCode::SUCCESS);
+
+        let report_path = reporting::report_path(spec_path.to_str().unwrap(), &spec.asset_id);
+        let json = std::fs::read_to_string(&report_path).unwrap();
+        let report: speccade_spec::Report = serde_json::from_str(&json).unwrap();
+        assert!(report.ok);
+        assert!(report.errors.is_empty());
+    }
+
+    #[test]
+    fn validate_artifacts_requires_recipe_and_reports_missing_recipe() {
+        let tmp = tempfile::tempdir().unwrap();
+
+        let spec = Spec::builder("test-asset-01", AssetType::Audio)
+            .license("CC0-1.0")
+            .seed(42)
+            .description("test asset")
+            .output(OutputSpec::primary(OutputFormat::Wav, "test.wav"))
+            .build();
+
+        let spec_path = write_spec(&tmp, "spec.json", &spec);
+
+        let code = run(spec_path.to_str().unwrap(), true).unwrap();
+        assert_eq!(code, ExitCode::from(1));
+
+        let report_path = reporting::report_path(spec_path.to_str().unwrap(), &spec.asset_id);
+        let json = std::fs::read_to_string(&report_path).unwrap();
+        let report: speccade_spec::Report = serde_json::from_str(&json).unwrap();
+        assert!(!report.ok);
+        assert!(report.errors.iter().any(|e| e.code == "E010"));
+    }
+}

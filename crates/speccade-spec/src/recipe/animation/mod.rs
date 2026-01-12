@@ -341,6 +341,60 @@ mod tests {
     }
 
     #[test]
+    fn test_hinge_constraint_serde_defaults() {
+        // Exercise serde defaults in `constraints.rs` (axis/min/max).
+        let json = r#"{"type":"hinge","bone":"knee_l"}"#;
+        let parsed: BoneConstraint = serde_json::from_str(json).unwrap();
+        match parsed {
+            BoneConstraint::Hinge {
+                bone,
+                axis,
+                min_angle,
+                max_angle,
+            } => {
+                assert_eq!(bone, "knee_l");
+                assert_eq!(axis, ConstraintAxis::X);
+                assert_eq!(min_angle, 0.0);
+                assert_eq!(max_angle, 160.0);
+            }
+            _ => panic!("Expected Hinge constraint"),
+        }
+    }
+
+    #[test]
+    fn test_bone_constraint_validation_errors() {
+        let empty = BoneConstraint::hinge("", ConstraintAxis::X, 0.0, 160.0);
+        assert_eq!(empty.validate(), Err(BoneConstraintError::EmptyBoneName));
+
+        let bad_range = BoneConstraint::ball("upper_arm_l", 45.0, 10.0, 0.0);
+        assert_eq!(
+            bad_range.validate(),
+            Err(BoneConstraintError::InvalidAngleRange {
+                min: 10.0,
+                max: 0.0
+            })
+        );
+
+        let bad_cone = BoneConstraint::ball("upper_arm_l", 200.0, -45.0, 45.0);
+        assert_eq!(
+            bad_cone.validate(),
+            Err(BoneConstraintError::InvalidConeAngle(200.0))
+        );
+
+        let bad_stiffness = BoneConstraint::soft("tail", 1.1, 0.5);
+        assert_eq!(
+            bad_stiffness.validate(),
+            Err(BoneConstraintError::InvalidStiffness(1.1))
+        );
+
+        let bad_damping = BoneConstraint::soft("tail", 0.5, -0.1);
+        assert_eq!(
+            bad_damping.validate(),
+            Err(BoneConstraintError::InvalidDamping(-0.1))
+        );
+    }
+
+    #[test]
     fn test_constraint_config_serde() {
         let config = ConstraintConfig::new()
             .with_constraint(BoneConstraint::hinge(
@@ -428,6 +482,15 @@ mod tests {
         let parsed: FootSystem = serde_json::from_str(&json).unwrap();
         assert_eq!(parsed.name, "foot_l");
         assert!(parsed.ball_bone.is_some());
+    }
+
+    #[test]
+    fn test_foot_system_roll_limits_serde_default() {
+        // If roll_limits is omitted, the default should still be applied.
+        let json =
+            r#"{"name":"foot_l","ik_target":"ik_foot_l","heel_bone":"heel_l","toe_bone":"toe_l"}"#;
+        let foot: FootSystem = serde_json::from_str(json).unwrap();
+        assert_eq!(foot.roll_limits, [-30.0, 60.0]);
     }
 
     // =========================================================================

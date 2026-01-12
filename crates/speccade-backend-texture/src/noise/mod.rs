@@ -48,3 +48,56 @@ pub fn quintic(t: f64) -> f64 {
 pub fn lerp(a: f64, b: f64, t: f64) -> f64 {
     a + t * (b - a)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn approx_eq(a: f64, b: f64) -> bool {
+        (a - b).abs() < 1e-12
+    }
+
+    struct ConstNoise(f64);
+
+    impl Noise2D for ConstNoise {
+        fn sample(&self, _x: f64, _y: f64) -> f64 {
+            self.0
+        }
+    }
+
+    #[test]
+    fn noise2d_sample_01_maps_minus1_to_0_and_plus1_to_1() {
+        assert!(approx_eq(ConstNoise(-1.0).sample_01(0.0, 0.0), 0.0));
+        assert!(approx_eq(ConstNoise(1.0).sample_01(0.0, 0.0), 1.0));
+        assert!(approx_eq(ConstNoise(0.0).sample_01(0.0, 0.0), 0.5));
+    }
+
+    #[test]
+    fn tile_coord_wraps_into_period() {
+        assert!(approx_eq(tile_coord(0.0, 4.0), 0.0));
+        assert!(approx_eq(tile_coord(3.9, 4.0), 3.9));
+        assert!(approx_eq(tile_coord(4.0, 4.0), 0.0));
+        assert!(approx_eq(tile_coord(-0.1, 4.0), 3.9));
+        assert!(approx_eq(tile_coord(-4.0, 4.0), 0.0));
+    }
+
+    #[test]
+    fn smoothstep_endpoints_and_midpoint() {
+        assert!(approx_eq(smoothstep(0.0), 0.0));
+        assert!(approx_eq(smoothstep(1.0), 1.0));
+        assert!(approx_eq(smoothstep(0.5), 0.5));
+    }
+
+    #[test]
+    fn quintic_endpoints() {
+        assert!(approx_eq(quintic(0.0), 0.0));
+        assert!(approx_eq(quintic(1.0), 1.0));
+    }
+
+    #[test]
+    fn lerp_endpoints() {
+        assert!(approx_eq(lerp(10.0, 20.0, 0.0), 10.0));
+        assert!(approx_eq(lerp(10.0, 20.0, 1.0), 20.0));
+        assert!(approx_eq(lerp(10.0, 20.0, 0.5), 15.0));
+    }
+}

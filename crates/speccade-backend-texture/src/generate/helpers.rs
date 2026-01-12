@@ -106,3 +106,89 @@ pub fn get_default_metallic(material_type: &MaterialType) -> f64 {
         _ => 0.0,
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use speccade_spec::recipe::texture::{BaseMaterial, TextureLayer};
+
+    fn make_params(base_material: Option<BaseMaterial>) -> TextureMaterialV1Params {
+        TextureMaterialV1Params {
+            resolution: [32, 32],
+            tileable: true,
+            maps: vec![TextureMapType::Albedo],
+            base_material,
+            layers: Vec::<TextureLayer>::new(),
+            palette: None,
+            color_ramp: None,
+        }
+    }
+
+    #[test]
+    fn validate_base_material_rejects_base_color_out_of_range() {
+        let params = make_params(Some(BaseMaterial {
+            material_type: MaterialType::Metal,
+            base_color: [1.5, 0.0, 0.0],
+            roughness_range: None,
+            metallic: None,
+            brick_pattern: None,
+            normal_params: None,
+        }));
+
+        let err = validate_base_material(&params).unwrap_err();
+        assert!(
+            err.to_string().contains("base_material.base_color"),
+            "unexpected error: {}",
+            err
+        );
+    }
+
+    #[test]
+    fn validate_base_material_rejects_roughness_range_min_greater_than_max() {
+        let params = make_params(Some(BaseMaterial {
+            material_type: MaterialType::Metal,
+            base_color: [0.5, 0.5, 0.5],
+            roughness_range: Some([0.8, 0.2]),
+            metallic: None,
+            brick_pattern: None,
+            normal_params: None,
+        }));
+
+        let err = validate_base_material(&params).unwrap_err();
+        assert!(
+            err.to_string().contains("roughness_range") && err.to_string().contains("min <= max"),
+            "unexpected error: {}",
+            err
+        );
+    }
+
+    #[test]
+    fn validate_base_material_rejects_metallic_out_of_range() {
+        let params = make_params(Some(BaseMaterial {
+            material_type: MaterialType::Metal,
+            base_color: [0.5, 0.5, 0.5],
+            roughness_range: None,
+            metallic: Some(1.1),
+            brick_pattern: None,
+            normal_params: None,
+        }));
+
+        let err = validate_base_material(&params).unwrap_err();
+        assert!(
+            err.to_string().contains("base_material.metallic")
+                && err.to_string().contains("[0, 1]"),
+            "unexpected error: {}",
+            err
+        );
+    }
+
+    #[test]
+    fn defaults_match_expected_material_conventions() {
+        assert_eq!(get_default_metallic(&MaterialType::Metal), 1.0);
+        assert_eq!(get_default_metallic(&MaterialType::Brick), 0.0);
+        assert_eq!(
+            get_default_roughness_range(&MaterialType::Metal),
+            [0.2, 0.5]
+        );
+    }
+}
