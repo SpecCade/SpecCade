@@ -25,7 +25,7 @@ pub enum ErrorCode {
     /// E009: Output path extension does not match format
     PathFormatMismatch,
 
-    // Recipe errors (E010-E015)
+    // Recipe errors (E010-E016)
     /// E010: Recipe required for generate command
     MissingRecipe,
     /// E011: Recipe kind incompatible with asset type
@@ -38,6 +38,8 @@ pub enum ErrorCode {
     BackendExecutionFailed,
     /// E015: Output validation failed
     OutputValidationFailed,
+    /// E016: Recipe kind is not supported by this generator version
+    UnsupportedRecipeKind,
 
     // Packed output errors (E020-E023)
     /// E020: Packed output channel references an unknown map key
@@ -69,6 +71,7 @@ impl ErrorCode {
             ErrorCode::BackendNotAvailable => "E013",
             ErrorCode::BackendExecutionFailed => "E014",
             ErrorCode::OutputValidationFailed => "E015",
+            ErrorCode::UnsupportedRecipeKind => "E016",
             ErrorCode::PackedChannelsUnknownMapKey => "E020",
             ErrorCode::PackedOutputMissingChannels => "E021",
             ErrorCode::PackedOutputInvalidFormat => "E022",

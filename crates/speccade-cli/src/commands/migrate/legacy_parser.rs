@@ -94,33 +94,40 @@ pub fn parse_legacy_spec_exec(spec_file: &Path) -> Result<LegacySpec> {
     let category = determine_category(spec_file)?;
     let dict_name = category_to_dict_name(&category);
 
-    // Create a temporary Python script to extract the dict
-    let parent = spec_file
-        .parent()
-        .ok_or_else(|| anyhow::anyhow!("Spec file has no parent dir: {}", spec_file.display()))?;
-    let stem = spec_file
-        .file_stem()
-        .and_then(|s| s.to_str())
-        .ok_or_else(|| anyhow::anyhow!("Spec file has invalid stem: {}", spec_file.display()))?;
-    let script = format!(
-        r#"
-import sys
+    // Execute the spec file by path (NOT import-by-stem).
+    //
+    // Legacy specs are commonly named like `laser_shot.spec.py`, where `file_stem()`
+    // returns `laser_shot.spec` (invalid module name). `runpy.run_path()` avoids that
+    // entire class of bugs.
+    let script = r#"
 import json
-sys.path.insert(0, str('{}'))
-from {} import {}
-print(json.dumps({}))
-"#,
-        parent.display(),
-        stem,
-        dict_name,
-        dict_name
-    );
+import pathlib
+import runpy
+import sys
 
-    let output = Command::new("python3")
+spec_path = sys.argv[1]
+dict_name = sys.argv[2]
+
+spec_parent = str(pathlib.Path(spec_path).resolve().parent)
+sys.path.insert(0, spec_parent)
+
+ns = runpy.run_path(spec_path)
+if dict_name not in ns:
+    raise SystemExit(f"Missing '{dict_name}' in {spec_path}")
+
+print(json.dumps(ns[dict_name]))
+"#;
+
+    // Use "python" on Windows, "python3" on Unix-like systems
+    let python_cmd = if cfg!(windows) { "python" } else { "python3" };
+
+    let output = Command::new(python_cmd)
         .arg("-c")
-        .arg(&script)
+        .arg(script)
+        .arg(spec_file)
+        .arg(&dict_name)
         .output()
-        .with_context(|| "Failed to execute python3")?;
+        .with_context(|| format!("Failed to execute {}", python_cmd))?;
 
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
@@ -136,6 +143,54 @@ print(json.dumps({}))
         category,
         data,
     })
+}
+
+#[cfg(test)]
+mod exec_tests {
+    use super::*;
+
+    #[test]
+    fn test_parse_legacy_spec_exec_handles_dot_in_filename() {
+        // Use "python" on Windows, "python3" on Unix-like systems
+        let python_cmd = if cfg!(windows) { "python" } else { "python3" };
+
+        // Skip if python isn't available in the test environment.
+        if Command::new(python_cmd)
+            .arg("-c")
+            .arg("print('ok')")
+            .output()
+            .is_err()
+        {
+            eprintln!("{} not available; skipping exec-parse test", python_cmd);
+            return;
+        }
+
+        let root = std::env::temp_dir().join(format!(
+            "speccade_legacy_exec_test_{}_{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap_or_default()
+                .as_nanos()
+        ));
+        let spec_dir = root.join("specs").join("sounds");
+        fs::create_dir_all(&spec_dir).unwrap();
+
+        // `.spec.py` is the legacy filename format and includes a dot in the stem.
+        let spec_file = spec_dir.join("test_sound.spec.py");
+        fs::write(
+            &spec_file,
+            r#"SOUND = {"name": "beep", "duration": 0.1, "layers": []}"#,
+        )
+        .unwrap();
+
+        let parsed = parse_legacy_spec_exec(&spec_file).unwrap();
+        assert_eq!(parsed.category, "sounds");
+        assert_eq!(parsed.dict_name, "SOUND");
+        assert!(parsed.data.contains_key("name"));
+        assert!(parsed.data.contains_key("duration"));
+        assert!(parsed.data.contains_key("layers"));
+    }
 }
 
 /// Parse a Python dict literal to JSON (simple cases only)

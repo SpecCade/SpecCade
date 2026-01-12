@@ -47,6 +47,11 @@ impl std::error::Error for CommonValidationError {}
 /// assert!(validate_resolution(0, 100).is_err());
 /// ```
 pub fn validate_resolution(width: u32, height: u32) -> Result<(), CommonValidationError> {
+    // Practical cap: these generators allocate multiple `width * height` buffers in memory.
+    // Keeping this bounded prevents accidental OOMs from malformed specs.
+    const MAX_DIMENSION: u32 = 4096;
+    const MAX_PIXELS: u64 = (MAX_DIMENSION as u64) * (MAX_DIMENSION as u64);
+
     if width == 0 || height == 0 {
         return Err(CommonValidationError::new(format!(
             "resolution must be at least 1x1, got [{}, {}]",
@@ -54,9 +59,20 @@ pub fn validate_resolution(width: u32, height: u32) -> Result<(), CommonValidati
         )));
     }
 
-    (width as usize)
-        .checked_mul(height as usize)
-        .ok_or_else(|| CommonValidationError::new("resolution is too large".to_string()))?;
+    if width > MAX_DIMENSION || height > MAX_DIMENSION {
+        return Err(CommonValidationError::new(format!(
+            "resolution is too large: max is {}x{}, got [{}, {}]",
+            MAX_DIMENSION, MAX_DIMENSION, width, height
+        )));
+    }
+
+    let pixels = (width as u64) * (height as u64);
+    if pixels > MAX_PIXELS {
+        return Err(CommonValidationError::new(format!(
+            "resolution is too large: max is {} pixels, got {}",
+            MAX_PIXELS, pixels
+        )));
+    }
 
     Ok(())
 }
@@ -229,17 +245,18 @@ mod tests {
     #[test]
     #[cfg(target_pointer_width = "32")]
     fn test_validate_resolution_overflow() {
-        // On 32-bit systems, u32::MAX * u32::MAX would overflow usize
+        // Reject absurd resolutions even if they fit in `usize`.
         let err = validate_resolution(u32::MAX, u32::MAX).unwrap_err();
         assert!(err.message.contains("too large"));
     }
 
     #[test]
-    #[cfg(target_pointer_width = "64")]
-    fn test_validate_resolution_overflow() {
-        // On 64-bit systems, u32::MAX * u32::MAX fits in usize, so this should succeed
-        // We test that very large (but not overflowing) resolutions are allowed
-        assert!(validate_resolution(u32::MAX, u32::MAX).is_ok());
+    fn test_validate_resolution_max_dimension() {
+        assert!(validate_resolution(4096, 4096).is_ok());
+        assert!(validate_resolution(4096, 1).is_ok());
+
+        let err = validate_resolution(4097, 4096).unwrap_err();
+        assert!(err.message.contains("max is"));
     }
 
     #[test]

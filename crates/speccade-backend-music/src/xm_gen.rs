@@ -8,11 +8,11 @@
 use std::collections::HashMap;
 use std::path::Path;
 
+#[cfg(test)]
+use speccade_spec::recipe::music::InstrumentSynthesis;
 use speccade_spec::recipe::music::{
     AutomationEntry, MusicTrackerSongV1Params, TrackerFormat, TrackerInstrument, TrackerPattern,
 };
-#[cfg(test)]
-use speccade_spec::recipe::music::InstrumentSynthesis;
 
 use crate::envelope::convert_envelope_to_xm;
 use crate::generate::{
@@ -167,7 +167,8 @@ fn generate_xm_instrument(
 ) -> Result<XmInstrument, GenerateError> {
     let baked = bake_instrument_sample(instr, base_seed, index, spec_dir, TrackerFormat::Xm)?;
 
-    let (finetune, relative_note) = calculate_xm_pitch_correction(baked.sample_rate, baked.base_midi);
+    let (finetune, relative_note) =
+        calculate_xm_pitch_correction(baked.sample_rate, baked.base_midi);
 
     // Create sample
     let mut sample = XmSample::new(&instr.name, baked.pcm16_mono, true);

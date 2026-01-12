@@ -84,8 +84,56 @@ pub fn generate_from_params(params: &AudioV1Params, seed: u32) -> AudioResult<Ge
 /// # Returns
 /// Generated WAV file and metadata
 fn generate_from_unified_params(params: &AudioV1Params, seed: u32) -> AudioResult<GenerateResult> {
+    const MAX_AUDIO_DURATION_SECONDS: f64 = 30.0;
+    const MAX_AUDIO_LAYERS: usize = 32;
+    const MAX_NUM_SAMPLES: usize = (MAX_AUDIO_DURATION_SECONDS as usize) * 48_000;
+
+    match params.sample_rate {
+        22050 | 44100 | 48000 => {}
+        other => return Err(AudioError::InvalidSampleRate { rate: other }),
+    }
+    if !params.duration_seconds.is_finite() || params.duration_seconds <= 0.0 {
+        return Err(AudioError::InvalidDuration {
+            duration: params.duration_seconds,
+        });
+    }
+    if params.duration_seconds > MAX_AUDIO_DURATION_SECONDS {
+        return Err(AudioError::invalid_param(
+            "duration_seconds",
+            format!(
+                "must be <= {} seconds, got {}",
+                MAX_AUDIO_DURATION_SECONDS, params.duration_seconds
+            ),
+        ));
+    }
+    if params.layers.len() > MAX_AUDIO_LAYERS {
+        return Err(AudioError::invalid_param(
+            "layers",
+            format!(
+                "must have at most {} entries, got {}",
+                MAX_AUDIO_LAYERS,
+                params.layers.len()
+            ),
+        ));
+    }
+
     let sample_rate = params.sample_rate as f64;
-    let num_samples = (params.duration_seconds * sample_rate).ceil() as usize;
+    let num_samples_f = params.duration_seconds * sample_rate;
+    if !num_samples_f.is_finite() || num_samples_f <= 0.0 {
+        return Err(AudioError::InvalidDuration {
+            duration: params.duration_seconds,
+        });
+    }
+    let num_samples = num_samples_f.ceil() as usize;
+    if num_samples == 0 || num_samples > MAX_NUM_SAMPLES {
+        return Err(AudioError::invalid_param(
+            "duration_seconds",
+            format!(
+                "produces too many samples ({} > max {})",
+                num_samples, MAX_NUM_SAMPLES
+            ),
+        ));
+    }
 
     // Get base note as MIDI note number (None means tracker uses a format default)
     use speccade_spec::recipe::audio::NoteSpec as UnifiedNoteSpec;
@@ -102,13 +150,15 @@ fn generate_from_unified_params(params: &AudioV1Params, seed: u32) -> AudioResul
     // Process each layer
     for (layer_idx, layer) in params.layers.iter().enumerate() {
         let layer_seed = crate::rng::derive_layer_seed(seed, layer_idx as u32);
-        let mut layer_samples = generate_layer(layer, num_samples, sample_rate, layer_seed)?;
+        let mut layer_samples =
+            generate_layer(layer, layer_idx, num_samples, sample_rate, layer_seed)?;
 
         // Apply pitch envelope if specified
         if let Some(ref pitch_env) = params.pitch_envelope {
             let pitch_curve = generate_pitch_envelope_curve(pitch_env, sample_rate, num_samples);
             layer_samples = apply_pitch_envelope_to_layer_samples(
                 layer,
+                layer_idx,
                 &pitch_curve,
                 num_samples,
                 sample_rate,
@@ -169,6 +219,7 @@ fn generate_from_unified_params(params: &AudioV1Params, seed: u32) -> AudioResul
 /// Generates a single audio layer.
 fn generate_layer(
     layer: &AudioLayer,
+    layer_idx: usize,
     num_samples: usize,
     sample_rate: f64,
     seed: u32,
@@ -176,7 +227,35 @@ fn generate_layer(
     let mut rng = create_rng(seed);
 
     // Calculate delay padding
-    let delay_samples = layer.delay.map(|d| (d * sample_rate) as usize).unwrap_or(0);
+    let delay_samples = match layer.delay {
+        Some(delay) => {
+            if !delay.is_finite() || delay < 0.0 {
+                return Err(AudioError::invalid_param(
+                    format!("layers[{}].delay", layer_idx),
+                    format!("must be finite and non-negative, got {}", delay),
+                ));
+            }
+            let delay_samples_f = delay * sample_rate;
+            if !delay_samples_f.is_finite() || delay_samples_f < 0.0 {
+                return Err(AudioError::invalid_param(
+                    format!("layers[{}].delay", layer_idx),
+                    "produced an invalid sample count",
+                ));
+            }
+            let delay_samples = delay_samples_f.floor() as usize;
+            if delay_samples > num_samples {
+                return Err(AudioError::invalid_param(
+                    format!("layers[{}].delay", layer_idx),
+                    format!(
+                        "delay exceeds duration ({} samples > {} total)",
+                        delay_samples, num_samples
+                    ),
+                ));
+            }
+            delay_samples
+        }
+        None => 0,
+    };
     let synthesis_samples = num_samples.saturating_sub(delay_samples);
 
     // Generate base synthesis
@@ -654,6 +733,7 @@ fn generate_pitch_envelope_curve(
 /// This regenerates the layer with pitch modulation applied.
 fn apply_pitch_envelope_to_layer_samples(
     layer: &AudioLayer,
+    layer_idx: usize,
     pitch_curve: &[f64],
     num_samples: usize,
     sample_rate: f64,
@@ -737,7 +817,7 @@ fn apply_pitch_envelope_to_layer_samples(
         }
         _ => {
             // For other synthesis types, regenerate without pitch modulation
-            return generate_layer(layer, num_samples, sample_rate, seed);
+            return generate_layer(layer, layer_idx, num_samples, sample_rate, seed);
         }
     }
 

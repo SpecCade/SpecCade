@@ -3,13 +3,18 @@
 //! This module handles spawning Blender as a subprocess and managing
 //! communication via JSON files.
 
-use std::io::Read;
+use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 use std::process::{Child, Command, ExitStatus, Stdio};
 use std::time::{Duration, Instant};
 
 use crate::error::{BlenderError, BlenderResult};
 use crate::metrics::BlenderReport;
+
+const EMBEDDED_ENTRYPOINT_PY: &str = include_str!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/../../blender/entrypoint.py"
+));
 
 /// Default timeout for Blender execution (5 minutes).
 pub const DEFAULT_TIMEOUT_SECS: u64 = 300;
@@ -93,6 +98,11 @@ pub struct Orchestrator {
     config: OrchestratorConfig,
 }
 
+struct ResolvedEntrypoint {
+    path: PathBuf,
+    _tempfile: Option<tempfile::NamedTempFile>,
+}
+
 impl Orchestrator {
     /// Creates a new orchestrator with default configuration.
     pub fn new() -> Self {
@@ -166,6 +176,43 @@ impl Orchestrator {
         Err(BlenderError::BlenderNotFound)
     }
 
+    fn resolve_entrypoint(&self) -> BlenderResult<ResolvedEntrypoint> {
+        // Config override first.
+        if self.config.entrypoint_path.exists() {
+            return Ok(ResolvedEntrypoint {
+                path: self.config.entrypoint_path.clone(),
+                _tempfile: None,
+            });
+        }
+
+        // Environment override (fallback).
+        if let Ok(path) = std::env::var("SPECCADE_BLENDER_ENTRYPOINT") {
+            let path = PathBuf::from(path);
+            if path.exists() {
+                return Ok(ResolvedEntrypoint {
+                    path,
+                    _tempfile: None,
+                });
+            }
+            return Err(BlenderError::EntrypointNotFound { path });
+        }
+
+        // Last resort: write embedded entrypoint to a temp file.
+        let mut file = tempfile::Builder::new()
+            .prefix("speccade_blender_entrypoint_")
+            .suffix(".py")
+            .tempfile()
+            .map_err(BlenderError::Io)?;
+        file.write_all(EMBEDDED_ENTRYPOINT_PY.as_bytes())
+            .map_err(BlenderError::Io)?;
+        file.flush().map_err(BlenderError::Io)?;
+
+        Ok(ResolvedEntrypoint {
+            path: file.path().to_path_buf(),
+            _tempfile: Some(file),
+        })
+    }
+
     /// Runs Blender to generate an asset.
     ///
     /// # Arguments
@@ -183,12 +230,7 @@ impl Orchestrator {
     ) -> BlenderResult<BlenderReport> {
         let blender_path = self.find_blender()?;
 
-        // Verify entrypoint exists
-        if !self.config.entrypoint_path.exists() {
-            return Err(BlenderError::EntrypointNotFound {
-                path: self.config.entrypoint_path.clone(),
-            });
-        }
+        let entrypoint = self.resolve_entrypoint()?;
 
         // Build the command
         // blender --background --factory-startup --python entrypoint.py -- --mode <mode> --spec <path> --out-root <path> --report <path>
@@ -196,7 +238,7 @@ impl Orchestrator {
         cmd.arg("--background")
             .arg("--factory-startup")
             .arg("--python")
-            .arg(&self.config.entrypoint_path)
+            .arg(&entrypoint.path)
             .arg("--")
             .arg("--mode")
             .arg(mode.as_str())
@@ -380,5 +422,23 @@ mod tests {
         let (status, stderr) = wait_with_timeout(child, Duration::from_secs(2), true).unwrap();
         assert!(status.success());
         assert!(stderr.to_lowercase().contains("hello"));
+    }
+
+    #[test]
+    fn test_resolve_entrypoint_falls_back_to_embedded() {
+        // If the user has configured an environment override, don't stomp it.
+        if std::env::var_os("SPECCADE_BLENDER_ENTRYPOINT").is_some() {
+            eprintln!("SPECCADE_BLENDER_ENTRYPOINT is set; skipping embedded entrypoint test");
+            return;
+        }
+
+        let config = OrchestratorConfig::with_entrypoint("this/does/not/exist.py");
+        let orchestrator = Orchestrator::with_config(config);
+
+        let entrypoint = orchestrator.resolve_entrypoint().unwrap();
+        assert!(entrypoint.path.exists());
+
+        let content = std::fs::read_to_string(&entrypoint.path).unwrap();
+        assert!(content.contains("SpecCade Blender Entrypoint"));
     }
 }

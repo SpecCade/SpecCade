@@ -956,8 +956,7 @@ mod tests {
 
             // IT note number: it_note = midi - 12. Reference is C-5 (note 60).
             let base_it_note = base_midi as i32 - 12;
-            let playback_rate =
-                c5_speed as f64 * 2.0_f64.powf((base_it_note - 60) as f64 / 12.0);
+            let playback_rate = c5_speed as f64 * 2.0_f64.powf((base_it_note - 60) as f64 / 12.0);
 
             let rel_err = (playback_rate - sample_rate as f64).abs() / sample_rate as f64;
             assert!(

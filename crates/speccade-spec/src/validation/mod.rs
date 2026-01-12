@@ -329,13 +329,123 @@ fn validate_audio_outputs(
     recipe: &crate::recipe::Recipe,
     result: &mut ValidationResult,
 ) {
-    if let Err(e) = recipe.as_audio() {
+    const MAX_AUDIO_DURATION_SECONDS: f64 = 30.0;
+    const MAX_AUDIO_LAYERS: usize = 32;
+
+    let params = match recipe.as_audio() {
+        Ok(params) => params,
+        Err(e) => {
+            result.add_error(ValidationError::with_path(
+                ErrorCode::InvalidRecipeParams,
+                format!("invalid params for {}: {}", recipe.kind, e),
+                "recipe.params",
+            ));
+            return;
+        }
+    };
+
+    if let Err(e) = validate_positive("duration_seconds", params.duration_seconds) {
         result.add_error(ValidationError::with_path(
             ErrorCode::InvalidRecipeParams,
-            format!("invalid params for {}: {}", recipe.kind, e),
-            "recipe.params",
+            e.to_string(),
+            "recipe.params.duration_seconds",
         ));
-        return;
+    } else if params.duration_seconds > MAX_AUDIO_DURATION_SECONDS {
+        result.add_error(ValidationError::with_path(
+            ErrorCode::InvalidRecipeParams,
+            format!(
+                "duration_seconds must be <= {}, got {}",
+                MAX_AUDIO_DURATION_SECONDS, params.duration_seconds
+            ),
+            "recipe.params.duration_seconds",
+        ));
+    }
+
+    match params.sample_rate {
+        22050 | 44100 | 48000 => {}
+        other => {
+            result.add_error(ValidationError::with_path(
+                ErrorCode::InvalidRecipeParams,
+                format!("sample_rate must be 22050, 44100, or 48000, got {}", other),
+                "recipe.params.sample_rate",
+            ));
+        }
+    }
+
+    if params.layers.len() > MAX_AUDIO_LAYERS {
+        result.add_error(ValidationError::with_path(
+            ErrorCode::InvalidRecipeParams,
+            format!(
+                "layers must have at most {} entries, got {}",
+                MAX_AUDIO_LAYERS,
+                params.layers.len()
+            ),
+            "recipe.params.layers",
+        ));
+    }
+
+    for (i, layer) in params.layers.iter().enumerate() {
+        if let Err(e) = validate_unit_interval("volume", layer.volume) {
+            result.add_error(ValidationError::with_path(
+                ErrorCode::InvalidRecipeParams,
+                e.to_string(),
+                format!("recipe.params.layers[{}].volume", i),
+            ));
+        }
+        if let Err(e) = validate_range("pan", layer.pan, -1.0, 1.0) {
+            result.add_error(ValidationError::with_path(
+                ErrorCode::InvalidRecipeParams,
+                e.to_string(),
+                format!("recipe.params.layers[{}].pan", i),
+            ));
+        }
+        if let Some(delay) = layer.delay {
+            if let Err(e) = validate_non_negative("delay", delay) {
+                result.add_error(ValidationError::with_path(
+                    ErrorCode::InvalidRecipeParams,
+                    e.to_string(),
+                    format!("recipe.params.layers[{}].delay", i),
+                ));
+            } else if delay > params.duration_seconds {
+                result.add_error(ValidationError::with_path(
+                    ErrorCode::InvalidRecipeParams,
+                    format!(
+                        "delay must be <= duration_seconds ({}), got {}",
+                        params.duration_seconds, delay
+                    ),
+                    format!("recipe.params.layers[{}].delay", i),
+                ));
+            }
+        }
+
+        if let Err(e) = validate_non_negative("attack", layer.envelope.attack) {
+            result.add_error(ValidationError::with_path(
+                ErrorCode::InvalidRecipeParams,
+                e.to_string(),
+                format!("recipe.params.layers[{}].envelope.attack", i),
+            ));
+        }
+        if let Err(e) = validate_non_negative("decay", layer.envelope.decay) {
+            result.add_error(ValidationError::with_path(
+                ErrorCode::InvalidRecipeParams,
+                e.to_string(),
+                format!("recipe.params.layers[{}].envelope.decay", i),
+            ));
+        }
+        if let Err(e) = validate_unit_interval("sustain", layer.envelope.sustain) {
+            result.add_error(ValidationError::with_path(
+                ErrorCode::InvalidRecipeParams,
+                e.to_string(),
+                format!("recipe.params.layers[{}].envelope.sustain", i),
+            ));
+        }
+        if let Err(e) = validate_non_negative("release", layer.envelope.release) {
+            result.add_error(ValidationError::with_path(
+                ErrorCode::InvalidRecipeParams,
+                e.to_string(),
+                format!("recipe.params.layers[{}].envelope.release", i),
+            ));
+        }
     }
 
     validate_single_primary_output_format(spec, OutputFormat::Wav, result);
@@ -698,6 +808,34 @@ pub fn validate_for_generate(spec: &Spec) -> ValidationResult {
         ));
     }
 
+    // Reject recipe kinds that this generator version doesn't implement.
+    //
+    // `validate_spec()` intentionally doesn't enforce this so specs can be parsed/validated
+    // in other contexts (e.g. editors) without needing a backend.
+    if let Some(recipe) = &spec.recipe {
+        const SUPPORTED: &[&str] = &[
+            "audio_v1",
+            "music.tracker_song_v1",
+            "texture.material_v1",
+            "texture.normal_v1",
+            "texture.packed_v1",
+            "static_mesh.blender_primitives_v1",
+            "skeletal_mesh.blender_rigged_mesh_v1",
+            "skeletal_animation.blender_clip_v1",
+        ];
+
+        if !SUPPORTED.contains(&recipe.kind.as_str()) {
+            result.add_error(ValidationError::with_path(
+                ErrorCode::UnsupportedRecipeKind,
+                format!(
+                    "recipe kind '{}' is not supported by this generator version",
+                    recipe.kind
+                ),
+                "recipe.kind",
+            ));
+        }
+    }
+
     result
 }
 
@@ -900,11 +1038,12 @@ mod tests {
         ));
 
         spec.outputs.push(OutputSpec::packed(
+            OutputFormat::Png,
             "textures/not-valid-for-audio.png",
             PackedChannels {
-                r: ChannelSource::Constant(0.0),
-                g: ChannelSource::Constant(0.0),
-                b: ChannelSource::Constant(0.0),
+                r: ChannelSource::constant(0.0),
+                g: ChannelSource::constant(0.0),
+                b: ChannelSource::constant(0.0),
                 a: None,
             },
         ));
@@ -993,6 +1132,25 @@ mod tests {
             .errors
             .iter()
             .any(|e| e.code == ErrorCode::MissingRecipe));
+    }
+
+    #[test]
+    fn test_unsupported_recipe_kind_for_generate() {
+        let mut spec = make_valid_spec();
+        spec.recipe = Some(crate::recipe::Recipe::new(
+            "audio_v999",
+            serde_json::json!({
+                "duration_seconds": 0.1,
+                "layers": []
+            }),
+        ));
+
+        let result = validate_for_generate(&spec);
+        assert!(!result.is_ok());
+        assert!(result
+            .errors
+            .iter()
+            .any(|e| e.code == ErrorCode::UnsupportedRecipeKind));
     }
 
     #[test]
@@ -1201,11 +1359,12 @@ mod tests {
             .seed(42)
             .output(OutputSpec::primary(OutputFormat::Png, "textures/out.png"))
             .output(OutputSpec::packed(
+                OutputFormat::Png,
                 "textures/out-packed.png",
                 PackedChannels {
-                    r: ChannelSource::Constant(0.0),
-                    g: ChannelSource::Constant(0.0),
-                    b: ChannelSource::Constant(0.0),
+                    r: ChannelSource::constant(0.0),
+                    g: ChannelSource::constant(0.0),
+                    b: ChannelSource::constant(0.0),
                     a: None,
                 },
             ))

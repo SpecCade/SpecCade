@@ -8,7 +8,7 @@ use tempfile::TempDir;
 
 use speccade_spec::{OutputFormat, Spec};
 
-use crate::format_validators::{self, GlbInfo, ItInfo, PngInfo, WavInfo, XmInfo};
+use crate::format_validators::{self, GlbInfo, GltfInfo, ItInfo, PngInfo, WavInfo, XmInfo};
 
 // Re-export FormatError for convenience
 pub use crate::format_validators::FormatError;
@@ -245,6 +245,20 @@ pub fn validate_glb_file_info(path: &Path) -> Result<GlbInfo, String> {
     format_validators::validate_glb(&data).map_err(|e| e.to_string())
 }
 
+/// Validate a glTF (JSON) file is properly formed.
+pub fn validate_gltf_file(path: &Path) -> Result<(), String> {
+    let data = fs::read(path).map_err(|e| format!("Failed to read file: {}", e))?;
+    format_validators::validate_gltf(&data)
+        .map(|_| ())
+        .map_err(|e| e.to_string())
+}
+
+/// Validate a glTF file and return detailed information.
+pub fn validate_gltf_file_info(path: &Path) -> Result<GltfInfo, String> {
+    let data = fs::read(path).map_err(|e| format!("Failed to read file: {}", e))?;
+    format_validators::validate_gltf(&data).map_err(|e| e.to_string())
+}
+
 /// Validate an output file based on its format.
 pub fn validate_output_format(path: &Path, format: OutputFormat) -> Result<(), String> {
     if !path.exists() {
@@ -257,10 +271,10 @@ pub fn validate_output_format(path: &Path, format: OutputFormat) -> Result<(), S
         OutputFormat::Xm => validate_xm_file(path),
         OutputFormat::It => validate_it_file(path),
         OutputFormat::Glb => validate_glb_file(path),
-        OutputFormat::Gltf => validate_glb_file(path), // Same validation as GLB
-        OutputFormat::Ogg => Ok(()),                   // TODO: Implement OGG validation
-        OutputFormat::Json => Ok(()),                  // JSON is text, no binary validation needed
-        OutputFormat::Blend => Ok(()),                 // Blender files are opaque
+        OutputFormat::Gltf => validate_gltf_file(path),
+        OutputFormat::Ogg => Ok(()),   // TODO: Implement OGG validation
+        OutputFormat::Json => Ok(()),  // JSON is text, no binary validation needed
+        OutputFormat::Blend => Ok(()), // Blender files are opaque
     }
 }
 

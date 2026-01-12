@@ -471,34 +471,42 @@ fn extract_asset_type(path: &Path) -> Option<String> {
     None
 }
 
-/// Generate a simple ISO 8601 timestamp without external dependencies
+/// Generate a UTC RFC3339 timestamp without external dependencies.
 fn chrono_lite_timestamp() -> String {
     use std::time::{SystemTime, UNIX_EPOCH};
 
     let now = SystemTime::now()
         .duration_since(UNIX_EPOCH)
-        .unwrap_or_default()
-        .as_secs();
+        .unwrap_or_default();
+    let seconds_since_epoch = now.as_secs() as i64;
 
-    // Simple conversion (not accounting for leap seconds, etc.)
-    let secs_per_minute = 60;
-    let secs_per_hour = 3600;
-    let secs_per_day = 86400;
+    const SECS_PER_DAY: i64 = 86_400;
 
-    let days = now / secs_per_day;
-    let remaining = now % secs_per_day;
-    let hours = remaining / secs_per_hour;
-    let remaining = remaining % secs_per_hour;
-    let minutes = remaining / secs_per_minute;
-    let seconds = remaining % secs_per_minute;
+    // Split into date and time-of-day.
+    let days = seconds_since_epoch.div_euclid(SECS_PER_DAY);
+    let secs_of_day = seconds_since_epoch.rem_euclid(SECS_PER_DAY);
+    let hours = secs_of_day / 3600;
+    let minutes = (secs_of_day % 3600) / 60;
+    let seconds = secs_of_day % 60;
 
-    // Calculate year, month, day from days since epoch
-    // This is a simplified calculation that assumes no leap years for simplicity
-    // In production, you'd want to use chrono or time crates
-    let year = 1970 + (days / 365);
-    let day_of_year = days % 365;
-    let month = (day_of_year / 30) + 1;
-    let day = (day_of_year % 30) + 1;
+    // Convert days since 1970-01-01 to YYYY-MM-DD using the proleptic Gregorian calendar.
+    //
+    // Based on Howard Hinnant's "civil_from_days" algorithm.
+    fn civil_from_days(days: i64) -> (i32, u32, u32) {
+        let z = days + 719_468;
+        let era = if z >= 0 { z } else { z - 146_096 }.div_euclid(146_097);
+        let doe = z - era * 146_097; // [0, 146096]
+        let yoe = (doe - doe / 1460 + doe / 36_524 - doe / 146_096).div_euclid(365); // [0, 399]
+        let y = yoe + era * 400;
+        let doy = doe - (365 * yoe + yoe / 4 - yoe / 100); // [0, 365]
+        let mp = (5 * doy + 2).div_euclid(153); // [0, 11]
+        let day = doy - (153 * mp + 2).div_euclid(5) + 1; // [1, 31]
+        let month = mp + if mp < 10 { 3 } else { -9 }; // [1, 12]
+        let year = y + if month <= 2 { 1 } else { 0 };
+        (year as i32, month as u32, day as u32)
+    }
+
+    let (year, month, day) = civil_from_days(days);
 
     format!(
         "{:04}-{:02}-{:02}T{:02}:{:02}:{:02}Z",
@@ -533,6 +541,15 @@ mod tests {
         assert!(ts.ends_with('Z'));
         assert!(ts.contains('T'));
         assert_eq!(ts.len(), 20); // YYYY-MM-DDTHH:MM:SSZ
+
+        // Quick sanity check on the date portion.
+        let (date, _) = ts.split_once('T').unwrap();
+        let parts: Vec<_> = date.split('-').collect();
+        assert_eq!(parts.len(), 3);
+        let month: u32 = parts[1].parse().unwrap();
+        let day: u32 = parts[2].parse().unwrap();
+        assert!((1..=12).contains(&month));
+        assert!((1..=31).contains(&day));
     }
 
     #[test]

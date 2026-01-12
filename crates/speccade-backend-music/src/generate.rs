@@ -15,10 +15,12 @@
 use std::path::Path;
 
 use speccade_spec::recipe::audio::{
-    AudioLayer, AudioV1Params, NoteSpec as AudioNoteSpec, NoiseType, Synthesis as AudioSynthesis,
+    AudioLayer, AudioV1Params, NoiseType, NoteSpec as AudioNoteSpec, Synthesis as AudioSynthesis,
     Waveform,
 };
-use speccade_spec::recipe::music::{InstrumentSynthesis, MusicTrackerSongV1Params, PatternNote, TrackerFormat, TrackerInstrument};
+use speccade_spec::recipe::music::{
+    InstrumentSynthesis, MusicTrackerSongV1Params, PatternNote, TrackerFormat, TrackerInstrument,
+};
 use speccade_spec::BackendError;
 use thiserror::Error;
 
@@ -216,7 +218,12 @@ pub(crate) fn bake_instrument_sample(
             &instr.name,
         )?;
 
-        enforce_max_sample_len(&pcm16_mono, sample_rate, MAX_TRACKER_SAMPLE_SECONDS, &instr.name)?;
+        enforce_max_sample_len(
+            &pcm16_mono,
+            sample_rate,
+            MAX_TRACKER_SAMPLE_SECONDS,
+            &instr.name,
+        )?;
 
         return Ok(BakedInstrumentSample {
             pcm16_mono,
@@ -240,7 +247,12 @@ pub(crate) fn bake_instrument_sample(
             &instr.name,
         )?;
 
-        enforce_max_sample_len(&pcm16_mono, sample_rate, MAX_TRACKER_SAMPLE_SECONDS, &instr.name)?;
+        enforce_max_sample_len(
+            &pcm16_mono,
+            sample_rate,
+            MAX_TRACKER_SAMPLE_SECONDS,
+            &instr.name,
+        )?;
 
         return Ok(BakedInstrumentSample {
             pcm16_mono,
@@ -293,19 +305,21 @@ pub(crate) fn bake_instrument_sample(
     audio_params.generate_loop_points = false;
 
     // Render via unified audio backend (deterministic by seed).
-    let gen = speccade_backend_audio::generate_from_params(&audio_params, instr_seed).map_err(|e| {
-        GenerateError::InstrumentError(format!(
-            "Failed to bake audio_v1 instrument '{}' to tracker sample: {}",
-            instr.name, e
-        ))
-    })?;
+    let gen =
+        speccade_backend_audio::generate_from_params(&audio_params, instr_seed).map_err(|e| {
+            GenerateError::InstrumentError(format!(
+                "Failed to bake audio_v1 instrument '{}' to tracker sample: {}",
+                instr.name, e
+            ))
+        })?;
 
-    let pcm = speccade_backend_audio::wav::extract_pcm_data(&gen.wav.wav_data).ok_or_else(|| {
-        GenerateError::InstrumentError(format!(
-            "audio_v1 backend returned an invalid WAV buffer for instrument '{}'",
-            instr.name
-        ))
-    })?;
+    let pcm =
+        speccade_backend_audio::wav::extract_pcm_data(&gen.wav.wav_data).ok_or_else(|| {
+            GenerateError::InstrumentError(format!(
+                "audio_v1 backend returned an invalid WAV buffer for instrument '{}'",
+                instr.name
+            ))
+        })?;
 
     let pcm16_mono = if gen.wav.is_stereo {
         downmix_pcm16_stereo_to_mono(pcm).ok_or_else(|| {
@@ -546,7 +560,10 @@ fn enforce_max_sample_len(
     Ok(())
 }
 
-fn load_audio_v1_params_from_ref(ref_path: &str, spec_dir: &Path) -> Result<AudioV1Params, GenerateError> {
+fn load_audio_v1_params_from_ref(
+    ref_path: &str,
+    spec_dir: &Path,
+) -> Result<AudioV1Params, GenerateError> {
     use speccade_spec::Spec;
 
     let full_path = spec_dir.join(ref_path);
@@ -603,10 +620,17 @@ fn legacy_synthesis_to_audio_v1_params(
         TrackerFormat::Xm => DEFAULT_SYNTH_MIDI_NOTE,
         TrackerFormat::It => DEFAULT_IT_SYNTH_MIDI_NOTE,
     };
-    let base_midi =
-        parse_base_note_midi(instr.base_note.as_deref(), None, None, default_base_midi, &instr.name)?;
+    let base_midi = parse_base_note_midi(
+        instr.base_note.as_deref(),
+        None,
+        None,
+        default_base_midi,
+        &instr.name,
+    )?;
 
-    let sample_rate = instr.sample_rate.unwrap_or(crate::note::DEFAULT_SAMPLE_RATE);
+    let sample_rate = instr
+        .sample_rate
+        .unwrap_or(crate::note::DEFAULT_SAMPLE_RATE);
     let want_loop = instr.envelope.sustain > 0.0;
 
     let sustain_pad = 0.25;
@@ -614,8 +638,7 @@ fn legacy_synthesis_to_audio_v1_params(
         (instr.envelope.attack + instr.envelope.decay + sustain_pad + instr.envelope.release)
             .clamp(0.05, 2.0)
     } else {
-        (instr.envelope.attack + instr.envelope.decay + instr.envelope.release)
-            .clamp(0.02, 1.0)
+        (instr.envelope.attack + instr.envelope.decay + instr.envelope.release).clamp(0.02, 1.0)
     };
 
     let synthesis = match synthesis {
@@ -689,7 +712,7 @@ fn legacy_synthesis_to_audio_v1_params(
 }
 
 fn downmix_pcm16_stereo_to_mono(pcm: &[u8]) -> Option<Vec<u8>> {
-    if pcm.len() % 4 != 0 {
+    if !pcm.len().is_multiple_of(4) {
         return None;
     }
     let mut out = Vec::with_capacity(pcm.len() / 2);
@@ -909,9 +932,11 @@ mod tests {
             ..Default::default()
         };
 
-        let err = bake_instrument_sample(&instr, 42, 0, Path::new("."), TrackerFormat::Xm)
-            .unwrap_err();
-        assert!(err.to_string().contains("Failed to read external instrument spec"));
+        let err =
+            bake_instrument_sample(&instr, 42, 0, Path::new("."), TrackerFormat::Xm).unwrap_err();
+        assert!(err
+            .to_string()
+            .contains("Failed to read external instrument spec"));
     }
 
     #[test]
@@ -948,7 +973,10 @@ mod tests {
 
         let baked = bake_instrument_sample(&instr, 42, 0, &spec_dir, TrackerFormat::Xm).unwrap();
         assert!(!baked.pcm16_mono.is_empty());
-        assert!(baked.loop_points.is_some(), "sustained instruments should loop");
+        assert!(
+            baked.loop_points.is_some(),
+            "sustained instruments should loop"
+        );
     }
 
     #[test]
@@ -1000,8 +1028,8 @@ mod tests {
             ..Default::default()
         };
 
-        let baked = bake_instrument_sample(&instr, 42, 0, Path::new("."), TrackerFormat::Xm)
-            .unwrap();
+        let baked =
+            bake_instrument_sample(&instr, 42, 0, Path::new("."), TrackerFormat::Xm).unwrap();
         assert!(!baked.pcm16_mono.is_empty());
 
         // Must be mono 16-bit PCM: duration 0.1s @ 22050 Hz => 2205 samples => 4410 bytes.
@@ -1044,8 +1072,8 @@ mod tests {
             },
             ..Default::default()
         };
-        let baked = bake_instrument_sample(&one_shot, 42, 0, Path::new("."), TrackerFormat::Xm)
-            .unwrap();
+        let baked =
+            bake_instrument_sample(&one_shot, 42, 0, Path::new("."), TrackerFormat::Xm).unwrap();
         assert!(baked.loop_points.is_none());
 
         let sustained = TrackerInstrument {
@@ -1062,8 +1090,8 @@ mod tests {
             },
             ..Default::default()
         };
-        let baked = bake_instrument_sample(&sustained, 42, 0, Path::new("."), TrackerFormat::Xm)
-            .unwrap();
+        let baked =
+            bake_instrument_sample(&sustained, 42, 0, Path::new("."), TrackerFormat::Xm).unwrap();
         assert!(baked.loop_points.is_some());
     }
 
@@ -1101,8 +1129,8 @@ mod tests {
             ..Default::default()
         };
 
-        let baked = bake_instrument_sample(&instr, 42, 0, Path::new("."), TrackerFormat::Xm)
-            .unwrap();
+        let baked =
+            bake_instrument_sample(&instr, 42, 0, Path::new("."), TrackerFormat::Xm).unwrap();
         assert_eq!(baked.base_midi, 69);
     }
 }

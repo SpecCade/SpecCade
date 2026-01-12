@@ -9,12 +9,12 @@
 use std::collections::HashMap;
 use std::path::Path;
 
+#[cfg(test)]
+use speccade_spec::recipe::music::InstrumentSynthesis;
 use speccade_spec::recipe::music::{
     AutomationEntry, ItOptions, MusicTrackerSongV1Params, TrackerFormat, TrackerInstrument,
     TrackerPattern,
 };
-#[cfg(test)]
-use speccade_spec::recipe::music::InstrumentSynthesis;
 
 use crate::envelope::convert_envelope_to_it;
 use crate::generate::{

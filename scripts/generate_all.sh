@@ -69,15 +69,50 @@ fi
 # Helper: count outputs in a spec file
 count_outputs() {
     local spec_file="$1"
-    # Count the number of output entries in the spec's "outputs" array
-    grep -o '"path"[[:space:]]*:' "$spec_file" | wc -l | tr -d ' '
+    # Count the number of entries in the spec's "outputs" array.
+    #
+    # Grepping `"path":` is brittle because other objects may also contain `"path"` keys.
+    if command -v python3 >/dev/null 2>&1; then
+        python3 - "$spec_file" <<'PY'
+import json
+import sys
+
+with open(sys.argv[1], "r", encoding="utf-8") as f:
+    data = json.load(f)
+
+outputs = data.get("outputs") or []
+print(len(outputs))
+PY
+    else
+        grep -o '"path"[[:space:]]*:' "$spec_file" | wc -l | tr -d ' '
+    fi
 }
 
 # Helper: get the extension from the first output path
 get_output_extension() {
     local spec_file="$1"
-    # Extract the first path value and get its extension
-    grep -o '"path"[[:space:]]*:[[:space:]]*"[^"]*"' "$spec_file" | head -1 | sed 's/.*"\([^"]*\)".*/\1/' | sed 's/.*\.//'
+    # Extract the first output path and return its file extension.
+    if command -v python3 >/dev/null 2>&1; then
+        python3 - "$spec_file" <<'PY'
+import json
+import os
+import sys
+
+with open(sys.argv[1], "r", encoding="utf-8") as f:
+    data = json.load(f)
+
+outputs = data.get("outputs") or []
+if not outputs:
+    print("")
+    raise SystemExit(0)
+
+path = outputs[0].get("path") or ""
+_, ext = os.path.splitext(path)
+print(ext.lstrip("."))
+PY
+    else
+        grep -o '"path"[[:space:]]*:[[:space:]]*"[^"]*"' "$spec_file" | head -1 | sed 's/.*"\([^"]*\)".*/\1/' | sed 's/.*\.//'
+    fi
 }
 
 # Statistics

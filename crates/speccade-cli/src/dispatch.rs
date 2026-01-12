@@ -218,7 +218,8 @@ fn generate_music(
             OutputFormat::Xm => {
                 if seen_xm {
                     return Err(DispatchError::BackendError(
-                        "Duplicate primary output format 'xm' for music.tracker_song_v1".to_string(),
+                        "Duplicate primary output format 'xm' for music.tracker_song_v1"
+                            .to_string(),
                     ));
                 }
                 seen_xm = true;
@@ -227,7 +228,8 @@ fn generate_music(
             OutputFormat::It => {
                 if seen_it {
                     return Err(DispatchError::BackendError(
-                        "Duplicate primary output format 'it' for music.tracker_song_v1".to_string(),
+                        "Duplicate primary output format 'it' for music.tracker_song_v1"
+                            .to_string(),
                     ));
                 }
                 seen_it = true;
@@ -245,7 +247,9 @@ fn generate_music(
         per_output_params.format = format;
 
         let gen = speccade_backend_music::generate_music(&per_output_params, spec.seed, spec_dir)
-            .map_err(|e| DispatchError::BackendError(format!("Music generation failed: {}", e)))?;
+            .map_err(|e| {
+            DispatchError::BackendError(format!("Music generation failed: {}", e))
+        })?;
 
         // Defensive: ensure backend output matches requested format.
         let actual_format = match gen.extension {

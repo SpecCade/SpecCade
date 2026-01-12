@@ -6,6 +6,8 @@
 
 use std::fmt;
 
+use serde_json::Value;
+
 /// Error type for format validation failures.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct FormatError {
@@ -640,6 +642,36 @@ pub struct GlbInfo {
     pub bin_chunk_length: Option<u32>,
     /// Number of chunks in the file.
     pub num_chunks: u32,
+}
+
+/// Information extracted from a glTF JSON file.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct GltfInfo {
+    /// The glTF asset version string (e.g., "2.0").
+    pub version: String,
+}
+
+/// Validate glTF (JSON) file format and extract basic information.
+pub fn validate_gltf(data: &[u8]) -> Result<GltfInfo, FormatError> {
+    let text = std::str::from_utf8(data)
+        .map_err(|e| FormatError::new("glTF", format!("Invalid UTF-8: {}", e)))?;
+
+    let json: Value =
+        serde_json::from_str(text).map_err(|e| FormatError::new("glTF", e.to_string()))?;
+
+    let asset = json
+        .get("asset")
+        .and_then(|v| v.as_object())
+        .ok_or_else(|| FormatError::new("glTF", "Missing or invalid 'asset' object"))?;
+
+    let version = asset
+        .get("version")
+        .and_then(|v| v.as_str())
+        .ok_or_else(|| FormatError::new("glTF", "Missing or invalid 'asset.version'"))?;
+
+    Ok(GltfInfo {
+        version: version.to_string(),
+    })
 }
 
 /// Validate GLB (glTF Binary) file format and extract header information.
