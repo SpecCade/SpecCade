@@ -65,6 +65,9 @@ audio/
 | `clap_vinyl` | Vinyl-style clap |
 | `finger_snap` | Finger snap |
 | `rimshot` | Rim shot / side stick |
+| `snare_march` | Marching snare drum |
+| `snare_heavy` | Heavy rock/metal snare |
+| `snare_rim` | Rim-focused snare |
 
 ### 1.3 Hats (`drums/hats/`)
 
@@ -85,6 +88,7 @@ audio/
 | `crash` | Crash cymbal |
 | `ride` | Ride cymbal |
 | `china` | China/trash cymbal |
+| `cym_swell` | Cymbal swell/crescendo |
 
 ### 1.5 Toms (`drums/toms/`)
 
@@ -95,6 +99,7 @@ audio/
 | `tom_low` | Low tom |
 | `tom_floor` | Floor tom |
 | `electronic_tom` | Electronic/synth tom |
+| `toms` | Multi-tom hit |
 
 ### 1.6 Percussion (`drums/percussion/`)
 
@@ -118,6 +123,19 @@ audio/
 | `tabla_high` | Tabla (high) |
 | `tabla_low` | Tabla (low) |
 | `taiko` | Taiko drum |
+| `frame_drum` | Frame drum (bodhrán-style) |
+| `big_drum` | Big orchestral bass drum |
+| `timp_hit` | Timpani hit |
+| `perc_1` | Generic percussion hit 1 |
+| `perc_break_layer` | Breakbeat percussion layer |
+| `perc_click` | Sharp percussion click |
+| `perc_clack` | Woody clack sound |
+| `perc_shaker` | Shaker variant |
+| `perc_metal` | Metallic percussion hit |
+| `perc_glitch` | Glitchy digital percussion |
+| `perc_conga` | Alternative conga |
+| `darbuka` | Middle Eastern goblet drum |
+| `clacks` | Double wooden clack |
 
 ---
 
@@ -146,6 +164,8 @@ audio/
 | `bass_fm` | FM synthesis bass |
 | `bass_dx7` | DX7-style FM bass |
 | `bass_opl` | OPL/AdLib style bass |
+| `bass_808` | TR-808 style sub bass |
+| `bass_dub` | Dub reggae bass |
 
 ---
 
@@ -164,6 +184,10 @@ audio/
 | `vibes` | Vibraphone |
 | `mallet` | Mallet instrument |
 | `celesta` | Celesta |
+| `dx7_ep` | DX7-style FM electric piano |
+| `dx7_marimba` | DX7-style FM marimba |
+| `fm_keys` | FM synthesis keyboard |
+| `harmonium_keys` | Harmonium keyboard |
 
 ---
 
@@ -178,6 +202,7 @@ audio/
 | `fm_bell` | FM synthesis bell |
 | `dx7_bell` | DX7-style FM bell |
 | `music_box` | Music box |
+| `opl_bell` | OPL/AdLib FM bell |
 
 ---
 
@@ -206,6 +231,10 @@ audio/
 | `fm_lead` | FM synthesis lead |
 | `opl_lead` | OPL/AdLib lead |
 | `brass_swell` | Brass swell |
+| `opl_brass` | OPL/AdLib FM brass |
+| `lead_whistle` | Synth whistle lead |
+| `sax_lead` | Synth saxophone lead |
+| `dx7_lead` | DX7-style FM lead |
 
 ### 5.2 Acoustic Leads (`leads/acoustic/`)
 
@@ -219,6 +248,11 @@ audio/
 | `harmonica` | Harmonica |
 | `accordion_lead` | Accordion lead |
 | `bagpipe_chanter` | Bagpipe chanter |
+| `fiddle_lead` | Folk fiddle/violin lead |
+| `woodwind_lead` | Generic woodwind lead |
+| `shakuhachi_lead` | Japanese shakuhachi flute |
+| `ney_lead` | Middle Eastern ney flute |
+| `bansuri_lead` | Indian bansuri flute |
 
 ---
 
@@ -242,6 +276,12 @@ audio/
 | `choir_ethereal` | Ethereal choir |
 | `chord_stab` | Chord stab |
 | `atmosphere` | Atmospheric pad |
+| `pad` | Basic neutral pad |
+| `pad_cold` | Cold, icy pad |
+| `pad_dark` | Dark, ominous pad |
+| `string_pad` | Lush string ensemble pad |
+| `string_stacc` | Staccato string hits |
+| `choir_pad` | Vocal choir pad |
 
 ---
 
@@ -261,6 +301,29 @@ audio/
 | `stab` | Synth stab |
 | `stab_dark` | Dark stab |
 | `stab_rave` | Rave stab |
+| `arp` | Basic arp pluck |
+| `pluck_bright` | Bright shimmering pluck |
+| `chord_pluck` | Full chord pluck |
+| `chord_pluck_muted` | Muted chord pluck |
+| `brass_low` | Low brass stab |
+| `brass_stab` | Brass section stab |
+| `stacked_saw_chords` | Supersaw chord stab |
+| `rave_stab` | 90s rave stab |
+| `power_chord_stab` | Heavy power chord |
+| `harp` | Harp pluck |
+| `lute_pluck` | Medieval lute pluck |
+| `koto_pluck` | Japanese koto pluck |
+| `oud_pluck` | Middle Eastern oud |
+| `sitar_pluck` | Indian sitar pluck |
+| `accordion` | Accordion reed instrument |
+| `concertina` | Concertina reed instrument |
+| `guitar_rhythm` | Strummed acoustic guitar |
+| `guitar_lead` | Electric lead guitar |
+| `guitar_pluck` | Clean guitar pluck |
+| `guitar_twang` | Twangy country guitar |
+| `guitar_skank` | Reggae skank guitar |
+| `guitar_chops` | Funky guitar chops |
+| `tanpura_drone` | Indian tanpura drone |
 
 ---
 
@@ -276,6 +339,10 @@ audio/
 | `texture_digital` | Digital texture |
 | `texture_organic` | Organic texture |
 | `texture_vinyl` | Vinyl texture |
+| `drone` | Basic sustained drone |
+| `drone_soft` | Soft filtered drone |
+| `texture_noise` | Noise texture |
+| `texture_bubbles` | Bubble texture |
 
 ---
 
@@ -300,55 +367,17 @@ audio/
 | `swell_brass` | Brass swell |
 | `swell_strings` | String swell |
 | `transition_sweep` | Transition sweep |
+| `stinger_soft` | Soft musical stinger |
+| `stinger_horror` | Horror stinger |
+| `downlifter_soft` | Soft downlifter |
+| `downlifter_tension` | Tension downlifter |
+| `whoosh_soft` | Soft whoosh |
+| `swell` | Musical swell/crescendo |
+| `glitch` | Digital glitch effect |
 
 ---
 
-## Presets Not Yet Implemented
+## All Presets Implemented
 
-The following presets are referenced by genre kits but not yet created:
+All 176+ presets have been implemented and are ready for use.
 
-### Drums
-- `snare_march`, `snare_heavy`, `snare_rim`
-- `frame_drum`, `big_drum`, `timp_hit`
-- `perc_1`, `perc_break_layer`, `perc_click`, `perc_clack`, `perc_shaker`, `perc_metal`, `perc_glitch`, `perc_conga`
-- `darbuka`, `clacks`, `toms` (multi-tom)
-- `cym_swell`
-
-### Bass
-- `bass_808`, `bass_dub`
-
-### Keys / Harmony
-- `dx7_ep`, `dx7_marimba`, `fm_keys`
-- `opl_bell`, `opl_brass`
-- `harmonium_keys`
-
-### Leads
-- `lead_whistle`, `sax_lead`
-- `fiddle_lead`, `woodwind_lead`
-- `shakuhachi_lead`, `ney_lead`, `bansuri_lead`
-- `dx7_lead`
-
-### Pads
-- `pad`, `pad_cold`, `pad_dark`
-- `string_pad`, `string_stacc`, `choir_pad`
-
-### Plucks / Chords
-- `arp`, `pluck_bright`
-- `chord_pluck`, `chord_pluck_muted`
-- `brass_low`, `brass_stab`
-- `stacked_saw_chords`, `rave_stab`, `power_chord_stab`
-- `harp`, `lute_pluck`, `koto_pluck`, `oud_pluck`, `sitar_pluck`
-- `accordion`, `concertina`
-- `guitar_rhythm`, `guitar_lead`, `guitar_pluck`, `guitar_twang`, `guitar_skank`, `guitar_chops`
-- `tanpura_drone`
-
-### Textures
-- `drone`, `drone_soft`
-- `texture_noise`, `texture_bubbles`
-
-### FX
-- `stinger_soft`, `stinger_horror`
-- `downlifter_soft`, `downlifter_tension`
-- `whoosh_soft`
-- `swell`
-- `glitch`

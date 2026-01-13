@@ -18,9 +18,11 @@ use serde::{Deserialize, Serialize};
 
 // Re-export synthesis types
 pub use synthesis::{
-    midi_to_frequency, parse_note_name, Envelope, Filter, FreqSweep, GranularSource, LfoConfig,
-    LfoModulation, ModulationTarget, NoiseType, NoteSpec, OscillatorConfig, PitchEnvelope,
-    PositionSweep, SweepCurve, Synthesis, Waveform, WavetableSource,
+    midi_to_frequency, parse_note_name, Envelope, Filter, FormantConfig, FormantVowel, FreqSweep,
+    GranularSource, LfoConfig, LfoModulation, ModalExcitation, ModalMode, ModulationTarget,
+    NoiseType, NoteSpec, OscillatorConfig, PdWaveform, PitchEnvelope, PositionSweep, SweepCurve,
+    Synthesis, VectorPathPoint, VectorSource, VectorSourceType, VocoderBand, VocoderBandSpacing,
+    VocoderCarrierType, Waveform, WavetableSource,
 };
 
 // Re-export effect types

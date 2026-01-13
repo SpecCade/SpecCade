@@ -1,0 +1,81 @@
+{
+  "spec_version": 1,
+  "asset_id": "preset_dx7_lead",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 20034,
+  "description": "DX7-style FM lead - classic 80s FM synth lead with bright, cutting tone",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/leads/synth/dx7_lead.wav"
+    }
+  ],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "base_note": "C4",
+      "duration_seconds": 1.5,
+      "sample_rate": 44100,
+      "layers": [
+        {
+          "synthesis": {
+            "type": "fm_synth",
+            "carrier_freq": 261.63,
+            "modulator_freq": 523.26,
+            "modulation_index": 4.5
+          },
+          "envelope": {
+            "attack": 0.05,
+            "decay": 0.15,
+            "sustain": 0.7,
+            "release": 0.3
+          },
+          "filter": {
+            "type": "lowpass",
+            "cutoff": 8000,
+            "resonance": 0.3
+          },
+          "lfo": {
+            "config": {
+              "waveform": "sine",
+              "rate": 5.5,
+              "depth": 0.25
+            },
+            "target": {
+              "target": "pitch",
+              "semitones": 0.15
+            }
+          },
+          "volume": 0.75,
+          "pan": 0
+        },
+        {
+          "synthesis": {
+            "type": "fm_synth",
+            "carrier_freq": 261.63,
+            "modulator_freq": 785.0,
+            "modulation_index": 3.2
+          },
+          "envelope": {
+            "attack": 0.08,
+            "decay": 0.2,
+            "sustain": 0.65,
+            "release": 0.35
+          },
+          "volume": 0.45,
+          "pan": 0
+        }
+      ],
+      "effects": [
+        {
+          "type": "delay",
+          "time_ms": 200.0,
+          "feedback": 0.2,
+          "wet": 0.15
+        }
+      ]
+    }
+  }
+}

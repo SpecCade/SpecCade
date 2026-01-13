@@ -1,0 +1,100 @@
+{
+    "spec_version": 1,
+    "asset_id": "rave_stab",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 20048,
+    "description": "Rave stab - classic 90s rave chord stab sound",
+    "outputs": [
+        {
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/plucks/rave_stab.wav"
+        }
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "duration_seconds": 0.6,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "multi_oscillator",
+                        "frequency": 261.63,
+                        "oscillators": [
+                            {
+                                "waveform": "sawtooth",
+                                "volume": 1.0,
+                                "detune": 0.0
+                            },
+                            {
+                                "waveform": "sawtooth",
+                                "volume": 0.98,
+                                "detune": 12.0
+                            },
+                            {
+                                "waveform": "sawtooth",
+                                "volume": 0.98,
+                                "detune": -12.0
+                            },
+                            {
+                                "waveform": "sawtooth",
+                                "volume": 0.92,
+                                "detune": 22.0
+                            },
+                            {
+                                "waveform": "sawtooth",
+                                "volume": 0.92,
+                                "detune": -22.0
+                            },
+                            {
+                                "waveform": "square",
+                                "volume": 0.65,
+                                "detune": 7.0
+                            }
+                        ]
+                    },
+                    "envelope": {
+                        "attack": 0.002,
+                        "decay": 0.08,
+                        "sustain": 0.25,
+                        "release": 0.15
+                    },
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 2200.0,
+                        "resonance": 0.9
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "triangle",
+                            "rate": 8.0,
+                            "depth": 0.6
+                        },
+                        "target": {
+                            "target": "filter_cutoff",
+                            "amount": 1800.0
+                        }
+                    },
+                    "volume": 1.0,
+                    "pan": 0.0
+                }
+            ],
+            "effects": [
+                {
+                    "type": "waveshaper",
+                    "drive": 1.5,
+                    "curve": "tanh",
+                    "wet": 0.2
+                },
+                {
+                    "type": "chorus",
+                    "rate": 2.5,
+                    "depth": 0.45,
+                    "wet": 0.35
+                }
+            ]
+        }
+    }
+}

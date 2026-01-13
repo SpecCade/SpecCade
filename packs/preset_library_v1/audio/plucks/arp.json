@@ -1,0 +1,40 @@
+{
+  "spec_version": 1,
+  "asset_id": "arp",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 20041,
+  "description": "Basic arp - simple arpeggiator-friendly pluck sound",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/plucks/arp.wav"
+    }
+  ],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "duration_seconds": 0.6,
+      "sample_rate": 44100,
+      "layers": [
+        {
+          "synthesis": {
+            "type": "karplus_strong",
+            "frequency": 440.0,
+            "decay": 0.993,
+            "blend": 0.4
+          },
+          "envelope": {
+            "attack": 0.002,
+            "decay": 0.08,
+            "sustain": 0.5,
+            "release": 0.2
+          },
+          "volume": 1.0,
+          "pan": 0.0
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,76 @@
+{
+  "spec_version": 1,
+  "asset_id": "texture_noise",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 20066,
+  "description": "Noise texture - filtered noise for atmospheric layers",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/textures/texture_noise.wav"
+    }
+  ],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "duration_seconds": 4.0,
+      "sample_rate": 44100,
+      "layers": [
+        {
+          "synthesis": {
+            "type": "granular",
+            "source": {
+              "type": "noise",
+              "noise_type": "white"
+            },
+            "grain_size_ms": 80.0,
+            "grain_density": 12.0,
+            "pitch_spread": 0.15,
+            "position_spread": 0.3,
+            "pan_spread": 0.6
+          },
+          "envelope": {
+            "attack": 1.0,
+            "decay": 0.3,
+            "sustain": 0.85,
+            "release": 1.2
+          },
+          "volume": 0.4,
+          "pan": -0.2
+        },
+        {
+          "synthesis": {
+            "type": "granular",
+            "source": {
+              "type": "noise",
+              "noise_type": "pink"
+            },
+            "grain_size_ms": 100.0,
+            "grain_density": 10.0,
+            "pitch_spread": 0.1,
+            "position_spread": 0.25,
+            "pan_spread": 0.55
+          },
+          "envelope": {
+            "attack": 1.2,
+            "decay": 0.2,
+            "sustain": 0.8,
+            "release": 1.4
+          },
+          "volume": 0.35,
+          "pan": 0.2
+        }
+      ],
+      "effects": [
+        {
+          "type": "reverb",
+          "room_size": 0.7,
+          "damping": 0.6,
+          "wet": 0.4
+        }
+      ]
+    }
+  }
+}

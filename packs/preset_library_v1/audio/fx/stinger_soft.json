@@ -1,0 +1,56 @@
+{
+    "spec_version": 1,
+    "asset_id": "preset_stinger_soft",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 20068,
+    "description": "Soft stinger - gentle musical accent/stinger",
+    "outputs": [
+        {
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/fx/stinger_soft.wav"
+        }
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "base_note": "C5",
+            "duration_seconds": 0.9,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "metallic",
+                        "base_freq": 900,
+                        "num_partials": 4,
+                        "inharmonicity": 1.1
+                    },
+                    "envelope": {
+                        "attack": 0.015,
+                        "decay": 0.3,
+                        "sustain": 0,
+                        "release": 0.5
+                    },
+                    "volume": 0.5,
+                    "pan": 0
+                },
+                {
+                    "synthesis": {
+                        "type": "oscillator",
+                        "waveform": "sine",
+                        "frequency": 523.25
+                    },
+                    "envelope": {
+                        "attack": 0.01,
+                        "decay": 0.2,
+                        "sustain": 0,
+                        "release": 0.4
+                    },
+                    "volume": 0.4,
+                    "pan": 0
+                }
+            ]
+        }
+    }
+}

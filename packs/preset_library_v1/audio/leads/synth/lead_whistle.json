@@ -1,0 +1,86 @@
+{
+  "spec_version": 1,
+  "asset_id": "preset_lead_whistle",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 20027,
+  "description": "Synth whistle lead - pure, airy whistle-like lead sound",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/leads/synth/lead_whistle.wav"
+    }
+  ],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "base_note": "C5",
+      "duration_seconds": 2.0,
+      "sample_rate": 44100,
+      "layers": [
+        {
+          "synthesis": {
+            "type": "multi_oscillator",
+            "frequency": 523.25,
+            "oscillators": [
+              {
+                "waveform": "sine",
+                "volume": 0.85,
+                "detune": 0.0
+              },
+              {
+                "waveform": "triangle",
+                "volume": 0.25,
+                "detune": 0.0
+              }
+            ]
+          },
+          "envelope": {
+            "attack": 0.08,
+            "decay": 0.1,
+            "sustain": 0.85,
+            "release": 0.15
+          },
+          "filter": {
+            "type": "highpass",
+            "cutoff": 800.0,
+            "resonance": 0.3
+          },
+          "lfo": {
+            "config": {
+              "waveform": "sine",
+              "rate": 5.5,
+              "depth": 0.5
+            },
+            "target": {
+              "target": "pitch",
+              "semitones": 0.35
+            }
+          },
+          "volume": 0.9,
+          "pan": 0.0
+        },
+        {
+          "synthesis": {
+            "type": "noise_burst",
+            "noise_type": "white",
+            "filter": {
+              "type": "highpass",
+              "cutoff": 4000.0,
+              "resonance": 0.4
+            }
+          },
+          "envelope": {
+            "attack": 0.005,
+            "decay": 0.015,
+            "sustain": 0.08,
+            "release": 0.05
+          },
+          "volume": 0.05,
+          "pan": 0.0
+        }
+      ]
+    }
+  }
+}

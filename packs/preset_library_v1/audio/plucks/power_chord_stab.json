@@ -1,0 +1,108 @@
+{
+    "spec_version": 1,
+    "asset_id": "power_chord_stab",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 20049,
+    "description": "Power chord stab - heavy guitar-like power chord hit",
+    "outputs": [
+        {
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/plucks/power_chord_stab.wav"
+        }
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "duration_seconds": 0.6,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "multi_oscillator",
+                        "frequency": 130.81,
+                        "oscillators": [
+                            {
+                                "waveform": "sawtooth",
+                                "volume": 1.0,
+                                "detune": -10.0
+                            },
+                            {
+                                "waveform": "sawtooth",
+                                "volume": 1.0,
+                                "detune": 10.0
+                            },
+                            {
+                                "waveform": "sawtooth",
+                                "volume": 0.85,
+                                "detune": 0.0
+                            },
+                            {
+                                "waveform": "square",
+                                "volume": 0.4,
+                                "detune": 0.0
+                            }
+                        ]
+                    },
+                    "envelope": {
+                        "attack": 0.003,
+                        "decay": 0.18,
+                        "sustain": 0.0,
+                        "release": 0.12
+                    },
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 2400.0,
+                        "resonance": 0.7
+                    },
+                    "volume": 0.9,
+                    "pan": 0.0
+                },
+                {
+                    "synthesis": {
+                        "type": "multi_oscillator",
+                        "frequency": 196.0,
+                        "oscillators": [
+                            {
+                                "waveform": "sawtooth",
+                                "volume": 0.9,
+                                "detune": -7.0
+                            },
+                            {
+                                "waveform": "sawtooth",
+                                "volume": 0.9,
+                                "detune": 7.0
+                            },
+                            {
+                                "waveform": "sawtooth",
+                                "volume": 0.75,
+                                "detune": 0.0
+                            }
+                        ]
+                    },
+                    "envelope": {
+                        "attack": 0.003,
+                        "decay": 0.18,
+                        "sustain": 0.0,
+                        "release": 0.12
+                    },
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 2600.0,
+                        "resonance": 0.65
+                    },
+                    "volume": 0.75,
+                    "pan": 0.0
+                }
+            ],
+            "effects": [
+                {
+                    "type": "waveshaper",
+                    "drive": 2.8,
+                    "wet": 0.6
+                }
+            ]
+        }
+    }
+}

@@ -1,0 +1,115 @@
+{
+  "spec_version": 1,
+  "asset_id": "downlifter_tension",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 20071,
+  "description": "Tension downlifter - dramatic descending sweep that builds unease",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/fx/downlifter_tension.wav"
+    }
+  ],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "duration_seconds": 2.5,
+      "sample_rate": 44100,
+      "layers": [
+        {
+          "synthesis": {
+            "type": "noise_burst",
+            "noise_type": "white",
+            "filter": {
+              "type": "lowpass",
+              "cutoff": 8000,
+              "resonance": 0.75,
+              "cutoff_end": 200
+            }
+          },
+          "envelope": {
+            "attack": 0.02,
+            "decay": 0,
+            "sustain": 1,
+            "release": 0.5
+          },
+          "volume": 0.7,
+          "pan": 0
+        },
+        {
+          "synthesis": {
+            "type": "oscillator",
+            "waveform": "sawtooth",
+            "frequency": 600,
+            "freq_sweep": {
+              "end_freq": 60,
+              "curve": "exponential"
+            }
+          },
+          "envelope": {
+            "attack": 0.05,
+            "decay": 0,
+            "sustain": 0.9,
+            "release": 0.4
+          },
+          "volume": 0.5,
+          "pan": -0.2
+        },
+        {
+          "synthesis": {
+            "type": "oscillator",
+            "waveform": "triangle",
+            "frequency": 457,
+            "freq_sweep": {
+              "end_freq": 45,
+              "curve": "exponential"
+            }
+          },
+          "envelope": {
+            "attack": 0.08,
+            "decay": 0,
+            "sustain": 0.85,
+            "release": 0.4
+          },
+          "volume": 0.35,
+          "pan": 0.2
+        },
+        {
+          "synthesis": {
+            "type": "oscillator",
+            "waveform": "square",
+            "frequency": 300,
+            "freq_sweep": {
+              "end_freq": 30,
+              "curve": "exponential"
+            }
+          },
+          "envelope": {
+            "attack": 0.1,
+            "decay": 0,
+            "sustain": 0.7,
+            "release": 0.6
+          },
+          "volume": 0.25,
+          "pan": 0
+        }
+      ],
+      "effects": [
+        {
+          "type": "reverb",
+          "room_size": 0.75,
+          "damping": 0.35,
+          "wet": 0.35
+        },
+        {
+          "type": "delay",
+          "time_ms": 180,
+          "feedback": 0.25,
+          "wet": 0.2
+        }
+      ]
+    }
+  }
+}

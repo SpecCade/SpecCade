@@ -1,0 +1,45 @@
+{
+  "spec_version": 1,
+  "asset_id": "preset_fx_vocoder_robot",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 30400,
+  "description": "Classic robot voice vocoder with animated formant patterns - multi-band vocoder effect creating synthetic voice-like textures",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/fx/vocoder_robot.wav"
+    }
+  ],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "duration_seconds": 2.0,
+      "sample_rate": 44100,
+      "layers": [
+        {
+          "synthesis": {
+            "type": "vocoder",
+            "carrier_freq": 110.0,
+            "carrier_type": "sawtooth",
+            "num_bands": 16,
+            "band_spacing": "logarithmic",
+            "envelope_attack": 0.01,
+            "envelope_release": 0.05,
+            "formant_rate": 2.0,
+            "bands": []
+          },
+          "envelope": {
+            "attack": 0.05,
+            "decay": 0.3,
+            "sustain": 0.7,
+            "release": 0.3
+          },
+          "volume": 0.8,
+          "pan": 0
+        }
+      ]
+    }
+  }
+}

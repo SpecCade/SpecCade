@@ -1,0 +1,123 @@
+{
+  "spec_version": 1,
+  "asset_id": "preset_clacks",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 20018,
+  "description": "Clacks - double wooden click/clack sound like castanets or stick clicks",
+  "outputs": [{
+    "kind": "primary",
+    "format": "wav",
+    "path": "test-outputs/preset_library_v1/audio/drums/percussion/clacks.wav"
+  }],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "duration_seconds": 0.15,
+      "sample_rate": 44100,
+      "layers": [
+        {
+          "synthesis": {
+            "type": "oscillator",
+            "waveform": "triangle",
+            "frequency": 1200.0
+          },
+          "envelope": {
+            "attack": 0.001,
+            "decay": 0.03,
+            "sustain": 0.0,
+            "release": 0.01
+          },
+          "volume": 0.5,
+          "pan": 0.0
+        },
+        {
+          "synthesis": {
+            "type": "oscillator",
+            "waveform": "triangle",
+            "frequency": 900.0
+          },
+          "envelope": {
+            "attack": 0.001,
+            "decay": 0.025,
+            "sustain": 0.0,
+            "release": 0.008
+          },
+          "volume": 0.4,
+          "pan": 0.0
+        },
+        {
+          "synthesis": {
+            "type": "oscillator",
+            "waveform": "triangle",
+            "frequency": 1200.0
+          },
+          "envelope": {
+            "attack": 0.001,
+            "decay": 0.03,
+            "sustain": 0.0,
+            "release": 0.01
+          },
+          "volume": 0.45,
+          "pan": 0.0,
+          "delay": 0.04
+        },
+        {
+          "synthesis": {
+            "type": "oscillator",
+            "waveform": "triangle",
+            "frequency": 900.0
+          },
+          "envelope": {
+            "attack": 0.001,
+            "decay": 0.025,
+            "sustain": 0.0,
+            "release": 0.008
+          },
+          "volume": 0.35,
+          "pan": 0.0,
+          "delay": 0.04
+        },
+        {
+          "synthesis": {
+            "type": "noise_burst",
+            "noise_type": "white",
+            "filter": {
+              "type": "highpass",
+              "cutoff": 1500.0,
+              "resonance": 0.3
+            }
+          },
+          "envelope": {
+            "attack": 0.001,
+            "decay": 0.015,
+            "sustain": 0.0,
+            "release": 0.005
+          },
+          "volume": 0.15,
+          "pan": 0.0
+        },
+        {
+          "synthesis": {
+            "type": "noise_burst",
+            "noise_type": "white",
+            "filter": {
+              "type": "highpass",
+              "cutoff": 1500.0,
+              "resonance": 0.3
+            }
+          },
+          "envelope": {
+            "attack": 0.001,
+            "decay": 0.015,
+            "sustain": 0.0,
+            "release": 0.005
+          },
+          "volume": 0.12,
+          "pan": 0.0,
+          "delay": 0.04
+        }
+      ]
+    }
+  }
+}

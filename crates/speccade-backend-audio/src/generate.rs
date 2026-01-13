@@ -3,8 +3,9 @@
 //! This module takes a spec and generates a WAV file deterministically.
 
 use speccade_spec::recipe::audio::{
-    AudioLayer, AudioV1Params, Envelope, Filter, FreqSweep, ModulationTarget, NoiseType,
-    OscillatorConfig, PitchEnvelope, SweepCurve, Synthesis, Waveform,
+    AudioLayer, AudioV1Params, Envelope, Filter, FormantVowel, FreqSweep, ModalExcitation,
+    ModulationTarget, NoiseType, OscillatorConfig, PdWaveform, PitchEnvelope, SweepCurve,
+    Synthesis, VectorSourceType, VocoderBandSpacing, VocoderCarrierType, Waveform,
 };
 use speccade_spec::Spec;
 
@@ -12,14 +13,29 @@ use crate::envelope::{AdsrEnvelope, AdsrParams};
 use crate::error::{AudioError, AudioResult};
 use crate::mixer::{Layer, Mixer, MixerOutput};
 use crate::rng::create_rng;
+use crate::synthesis::am::AmSynth;
 use crate::synthesis::fm::FmSynth;
+use crate::synthesis::formant::{
+    Formant as FormantImpl, FormantSynth, VowelPreset as FormantVowelPresetImpl,
+};
 use crate::synthesis::granular::GranularSynth;
 use crate::synthesis::harmonics::HarmonicSynth;
 use crate::synthesis::karplus::KarplusStrong;
 use crate::synthesis::metallic::MetallicSynth;
+use crate::synthesis::modal::{Excitation as ModalExcitationImpl, Mode, ModalSynth};
 use crate::synthesis::noise::{NoiseColor, NoiseSynth};
 use crate::synthesis::oscillators::{SawSynth, SineSynth, SquareSynth, TriangleSynth};
+use crate::synthesis::phase_distortion::{PdWaveform as PdWaveformImpl, PhaseDistortionSynth};
 use crate::synthesis::pitched_body::PitchedBody;
+use crate::synthesis::ring_mod::RingModSynth;
+use crate::synthesis::vector::{
+    VectorPath, VectorPathPoint as VectorPathPointImpl, VectorPosition,
+    VectorSource as VectorSourceImpl, VectorSourceType as VectorSourceTypeImpl, VectorSynth,
+};
+use crate::synthesis::vocoder::{
+    BandSpacing as VocoderBandSpacingImpl, CarrierType as VocoderCarrierTypeImpl,
+    VocoderBand as VocoderBandImpl, VocoderSynth,
+};
 use crate::synthesis::wavetable::{PositionSweep as WavetablePositionSweep, WavetableSynth};
 use crate::synthesis::{FrequencySweep, Synthesizer};
 use crate::wav::WavResult;
@@ -283,6 +299,38 @@ fn generate_layer(
             synth.synthesize(synthesis_samples, sample_rate, &mut rng)
         }
 
+        Synthesis::AmSynth {
+            carrier_freq,
+            modulator_freq,
+            modulation_depth,
+            freq_sweep,
+        } => {
+            let mut synth = AmSynth::new(*carrier_freq, *modulator_freq, *modulation_depth);
+
+            if let Some(sweep) = freq_sweep {
+                let curve = convert_sweep_curve(&sweep.curve);
+                synth = synth.with_sweep(FrequencySweep::new(*carrier_freq, sweep.end_freq, curve));
+            }
+
+            synth.synthesize(synthesis_samples, sample_rate, &mut rng)
+        }
+
+        Synthesis::RingModSynth {
+            carrier_freq,
+            modulator_freq,
+            mix,
+            freq_sweep,
+        } => {
+            let mut synth = RingModSynth::new(*carrier_freq, *modulator_freq, *mix);
+
+            if let Some(sweep) = freq_sweep {
+                let curve = convert_sweep_curve(&sweep.curve);
+                synth = synth.with_sweep(FrequencySweep::new(*carrier_freq, sweep.end_freq, curve));
+            }
+
+            synth.synthesize(synthesis_samples, sample_rate, &mut rng)
+        }
+
         Synthesis::KarplusStrong {
             frequency,
             decay,
@@ -431,6 +479,159 @@ fn generate_layer(
             });
 
             let synth = WavetableSynth::new(*table, *frequency, *position, sweep, *voices, *detune);
+            synth.synthesize(synthesis_samples, sample_rate, &mut rng)
+        }
+
+        Synthesis::PdSynth {
+            frequency,
+            distortion,
+            distortion_decay,
+            waveform,
+            freq_sweep,
+        } => {
+            let pd_waveform = convert_pd_waveform(waveform);
+            let mut synth =
+                PhaseDistortionSynth::new(*frequency, *distortion, pd_waveform)
+                    .with_distortion_decay(*distortion_decay);
+
+            if let Some(sweep) = freq_sweep {
+                let curve = convert_sweep_curve(&sweep.curve);
+                synth = synth.with_sweep(FrequencySweep::new(*frequency, sweep.end_freq, curve));
+            }
+
+            synth.synthesize(synthesis_samples, sample_rate, &mut rng)
+        }
+
+        Synthesis::Modal {
+            frequency,
+            modes,
+            excitation,
+            freq_sweep,
+        } => {
+            let modal_modes: Vec<Mode> = modes
+                .iter()
+                .map(|m| Mode::new(m.freq_ratio, m.amplitude, m.decay_time))
+                .collect();
+            let modal_excitation = convert_modal_excitation(excitation);
+            let mut synth = ModalSynth::new(*frequency, modal_modes, modal_excitation);
+
+            if let Some(sweep) = freq_sweep {
+                let curve = convert_sweep_curve(&sweep.curve);
+                synth = synth.with_sweep(FrequencySweep::new(*frequency, sweep.end_freq, curve));
+            }
+
+            synth.synthesize(synthesis_samples, sample_rate, &mut rng)
+        }
+
+        Synthesis::Vocoder {
+            carrier_freq,
+            carrier_type,
+            num_bands,
+            band_spacing,
+            envelope_attack,
+            envelope_release,
+            formant_rate,
+            bands,
+        } => {
+            let carrier_type_impl = convert_vocoder_carrier_type(carrier_type);
+            let band_spacing_impl = convert_vocoder_band_spacing(band_spacing);
+
+            let mut synth = VocoderSynth::new(
+                *carrier_freq,
+                carrier_type_impl,
+                *num_bands,
+                band_spacing_impl,
+                *envelope_attack,
+                *envelope_release,
+            )
+            .with_formant_rate(*formant_rate);
+
+            if !bands.is_empty() {
+                let bands_impl: Vec<VocoderBandImpl> = bands
+                    .iter()
+                    .map(|b| {
+                        VocoderBandImpl::new(
+                            b.center_freq,
+                            b.bandwidth,
+                            b.envelope_pattern.clone(),
+                        )
+                    })
+                    .collect();
+                synth = synth.with_bands(bands_impl);
+            }
+
+            synth.synthesize(synthesis_samples, sample_rate, &mut rng)
+        }
+
+        Synthesis::Formant {
+            frequency,
+            formants,
+            vowel,
+            vowel_morph,
+            morph_amount,
+            breathiness,
+        } => {
+            let synth = if !formants.is_empty() {
+                // Use custom formants
+                let formants_impl: Vec<FormantImpl> = formants
+                    .iter()
+                    .map(|f| FormantImpl::new(f.frequency, f.amplitude, f.bandwidth))
+                    .collect();
+                FormantSynth::new(*frequency, formants_impl).with_breathiness(*breathiness)
+            } else if let Some(vowel_preset) = vowel {
+                // Use vowel preset
+                let vowel_impl = convert_formant_vowel(vowel_preset);
+                let mut synth =
+                    FormantSynth::with_vowel(*frequency, vowel_impl).with_breathiness(*breathiness);
+
+                // Apply vowel morph if specified
+                if let Some(morph_vowel) = vowel_morph {
+                    let morph_impl = convert_formant_vowel(morph_vowel);
+                    synth = synth.with_vowel_morph(morph_impl, *morph_amount);
+                }
+
+                synth
+            } else {
+                // Default to vowel A
+                FormantSynth::vowel_a(*frequency).with_breathiness(*breathiness)
+            };
+
+            synth.synthesize(synthesis_samples, sample_rate, &mut rng)
+        }
+
+        Synthesis::Vector {
+            frequency,
+            sources,
+            position_x,
+            position_y,
+            path,
+            path_loop,
+            path_curve,
+        } => {
+            // Convert sources to internal representation
+            let sources_impl: [VectorSourceImpl; 4] = [
+                convert_vector_source(&sources[0]),
+                convert_vector_source(&sources[1]),
+                convert_vector_source(&sources[2]),
+                convert_vector_source(&sources[3]),
+            ];
+
+            let mut synth = VectorSynth::new(*frequency, sources_impl)
+                .with_position(VectorPosition::new(*position_x, *position_y));
+
+            // Add path if specified
+            if !path.is_empty() {
+                let path_points: Vec<VectorPathPointImpl> = path
+                    .iter()
+                    .map(|p| {
+                        VectorPathPointImpl::new(VectorPosition::new(p.x, p.y), p.duration)
+                    })
+                    .collect();
+                let path_impl = VectorPath::new(path_points)
+                    .with_curve(convert_sweep_curve(path_curve));
+                synth = synth.with_path(path_impl, *path_loop);
+            }
+
             synth.synthesize(synthesis_samples, sample_rate, &mut rng)
         }
     };
@@ -674,6 +875,72 @@ fn convert_noise_type(noise_type: &NoiseType) -> NoiseColor {
         NoiseType::Pink => NoiseColor::Pink,
         NoiseType::Brown => NoiseColor::Brown,
     }
+}
+
+/// Converts spec PD waveform to internal representation.
+fn convert_pd_waveform(waveform: &PdWaveform) -> PdWaveformImpl {
+    match waveform {
+        PdWaveform::Resonant => PdWaveformImpl::Resonant,
+        PdWaveform::Sawtooth => PdWaveformImpl::Sawtooth,
+        PdWaveform::Pulse => PdWaveformImpl::Pulse,
+    }
+}
+
+/// Converts spec modal excitation to internal representation.
+fn convert_modal_excitation(excitation: &ModalExcitation) -> ModalExcitationImpl {
+    match excitation {
+        ModalExcitation::Impulse => ModalExcitationImpl::Impulse,
+        ModalExcitation::Noise => ModalExcitationImpl::Noise,
+        ModalExcitation::Pluck => ModalExcitationImpl::Pluck,
+    }
+}
+
+/// Converts spec vocoder carrier type to internal representation.
+fn convert_vocoder_carrier_type(carrier_type: &VocoderCarrierType) -> VocoderCarrierTypeImpl {
+    match carrier_type {
+        VocoderCarrierType::Sawtooth => VocoderCarrierTypeImpl::Sawtooth,
+        VocoderCarrierType::Pulse => VocoderCarrierTypeImpl::Pulse,
+        VocoderCarrierType::Noise => VocoderCarrierTypeImpl::Noise,
+    }
+}
+
+/// Converts spec vocoder band spacing to internal representation.
+fn convert_vocoder_band_spacing(band_spacing: &VocoderBandSpacing) -> VocoderBandSpacingImpl {
+    match band_spacing {
+        VocoderBandSpacing::Linear => VocoderBandSpacingImpl::Linear,
+        VocoderBandSpacing::Logarithmic => VocoderBandSpacingImpl::Logarithmic,
+    }
+}
+
+/// Converts spec formant vowel to internal representation.
+fn convert_formant_vowel(vowel: &FormantVowel) -> FormantVowelPresetImpl {
+    match vowel {
+        FormantVowel::A => FormantVowelPresetImpl::A,
+        FormantVowel::I => FormantVowelPresetImpl::I,
+        FormantVowel::U => FormantVowelPresetImpl::U,
+        FormantVowel::E => FormantVowelPresetImpl::E,
+        FormantVowel::O => FormantVowelPresetImpl::O,
+    }
+}
+
+/// Converts spec vector source type to internal representation.
+fn convert_vector_source_type(source_type: &VectorSourceType) -> VectorSourceTypeImpl {
+    match source_type {
+        VectorSourceType::Sine => VectorSourceTypeImpl::Sine,
+        VectorSourceType::Saw => VectorSourceTypeImpl::Saw,
+        VectorSourceType::Square => VectorSourceTypeImpl::Square,
+        VectorSourceType::Triangle => VectorSourceTypeImpl::Triangle,
+        VectorSourceType::Noise => VectorSourceTypeImpl::Noise,
+        VectorSourceType::Wavetable => VectorSourceTypeImpl::Wavetable,
+    }
+}
+
+/// Converts spec vector source to internal representation.
+fn convert_vector_source(source: &speccade_spec::recipe::audio::VectorSource) -> VectorSourceImpl {
+    VectorSourceImpl::new(
+        convert_vector_source_type(&source.source_type),
+        source.frequency_ratio,
+    )
 }
 
 /// Applies filter configuration to noise synthesizer.

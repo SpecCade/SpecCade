@@ -1,25 +1,29 @@
-# Missing Audio Synthesis Methods
+# Audio Synthesis Methods Status
 
-SSOT for synthesis methods NOT yet implemented. Minimal descriptions—research as needed.
+Status of synthesis methods implementation. Updated: 2026-01-14
 
 ---
 
 ## Low Complexity
 
-- **AM** — amplitude modulation between oscillators
-- **Ring Modulation** — multiply two signals, sum/difference frequencies
-- **Phase Distortion** — warp waveform phase over time (Casio CZ)
+- **AM (Amplitude Modulation)** — DONE
+- **Ring Modulation** — DONE
+- **Phase Distortion** — DONE
 
 ---
 
 ## Medium Complexity
 
-- **Modal** — resonant filter bank for struck/bowed objects (bells, chimes, metal)
-- **Vocoder** — spectral envelope transfer (carrier/modulator)
+- **Modal** — DONE
+- **Vocoder** — DONE
 
 ---
 
 ## High Complexity
 
-- **Formant** — vowel/voice synthesis via resonant filter banks (creature sounds)
-- **Vector** — 2D/3D crossfade between multiple sources (evolving textures)
+- **Formant** — DONE
+- **Vector** — DONE
+
+---
+
+**All 7 synthesis methods have been implemented.**

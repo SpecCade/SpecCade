@@ -1,0 +1,68 @@
+{
+  "spec_version": 1,
+  "asset_id": "preset_perc_metal",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 20014,
+  "description": "Metallic percussion - high-frequency metallic hit with shimmer",
+  "outputs": [{
+    "kind": "primary",
+    "format": "wav",
+    "path": "test-outputs/preset_library_v1/audio/drums/percussion/perc_metal.wav"
+  }],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "duration_seconds": 0.5,
+      "sample_rate": 44100,
+      "layers": [
+        {
+          "synthesis": {
+            "type": "metallic",
+            "base_freq": 2000.0,
+            "num_partials": 8,
+            "inharmonicity": 2.1
+          },
+          "envelope": {
+            "attack": 0.001,
+            "decay": 0.3,
+            "sustain": 0.0,
+            "release": 0.15
+          },
+          "volume": 0.7,
+          "pan": 0.0
+        },
+        {
+          "synthesis": {
+            "type": "oscillator",
+            "waveform": "sine",
+            "frequency": 4200
+          },
+          "envelope": {
+            "attack": 0.001,
+            "decay": 0.2,
+            "sustain": 0.0,
+            "release": 0.1
+          },
+          "volume": 0.4,
+          "pan": -0.1
+        },
+        {
+          "synthesis": {
+            "type": "oscillator",
+            "waveform": "sine",
+            "frequency": 7800
+          },
+          "envelope": {
+            "attack": 0.001,
+            "decay": 0.15,
+            "sustain": 0.0,
+            "release": 0.08
+          },
+          "volume": 0.3,
+          "pan": 0.1
+        }
+      ]
+    }
+  }
+}

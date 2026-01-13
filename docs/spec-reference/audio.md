@@ -143,6 +143,60 @@ For the authoritative list of synthesis variants/fields, see `crates/speccade-sp
 }
 ```
 
+#### `am_synth`
+
+AM (Amplitude Modulation) synthesis modulates the amplitude of a carrier oscillator with a modulator oscillator. Produces tremolo effects and sidebands at (carrier +/- modulator) frequencies. Common uses include tremolo guitar, broadcast-style AM, and siren sounds.
+
+```json
+{
+  "type": "am_synth",
+  "carrier_freq": 440.0,
+  "modulator_freq": 5.0,
+  "modulation_depth": 0.8,
+  "freq_sweep": { "end_freq": 220.0, "curve": "exponential" }
+}
+```
+
+| Param | Type | Required | Notes |
+|------:|------|:--------:|-------|
+| `carrier_freq` | number | yes | Carrier frequency in Hz |
+| `modulator_freq` | number | yes | Modulator frequency in Hz (typically lower for tremolo) |
+| `modulation_depth` | number | yes | Modulation depth (0.0-1.0, where 1.0 = 100% modulation) |
+| `freq_sweep` | object | no | Optional frequency sweep for carrier |
+
+**Common Presets:**
+- Tremolo: Low modulator frequency (4-8 Hz) for pulsing amplitude
+- Broadcast AM: Moderate modulator frequency for radio-style modulation
+- Siren: Higher modulator frequency (10-15 Hz) for warbling effects
+
+#### `ring_mod_synth`
+
+Ring Modulation synthesis multiplies two oscillators together to create sum and difference frequencies. Produces metallic timbres, robotic sounds, and bell-like tones. Unlike AM synthesis (which preserves the carrier), ring modulation produces only sidebands, resulting in more complex and inharmonic spectra.
+
+```json
+{
+  "type": "ring_mod_synth",
+  "carrier_freq": 440.0,
+  "modulator_freq": 150.0,
+  "mix": 0.8,
+  "freq_sweep": { "end_freq": 220.0, "curve": "exponential" }
+}
+```
+
+| Param | Type | Required | Notes |
+|------:|------|:--------:|-------|
+| `carrier_freq` | number | yes | Carrier frequency in Hz |
+| `modulator_freq` | number | yes | Modulator frequency in Hz |
+| `mix` | number | yes | Wet/dry mix (0.0 = dry carrier, 1.0 = full ring mod) |
+| `freq_sweep` | object | no | Optional frequency sweep for carrier |
+
+**Common Presets:**
+- Metallic: Carrier 440 Hz, modulator 150 Hz for shimmering metallic tones
+- Robotic: Carrier 220 Hz, modulator 80 Hz for robotic voice effects
+- Bell: Carrier 880 Hz, modulator 220 Hz for bell-like timbres
+- Dissonant: Close frequency ratios (e.g., carrier 440 Hz, modulator 430 Hz) for harsh dissonance
+- Sci-Fi: Carrier 330 Hz, modulator 100 Hz for retro sci-fi effects
+
 #### `karplus_strong`
 
 ```json
@@ -220,6 +274,190 @@ Wavetable synthesis generates sound from pre-computed waveform frames that can b
 - `formant` — Vocal-like formant synthesis
 - `organ` — Drawbar organ harmonics (9 simulated drawbars)
 
+#### `pd_synth`
+
+Phase Distortion synthesis (Casio CZ style). Creates complex timbres by warping the phase of a waveform non-linearly. The distortion amount typically decays over time, creating sounds that start bright and evolve to pure tones. Ideal for classic 80s synth sounds and evolving timbres.
+
+```json
+{
+  "type": "pd_synth",
+  "frequency": 220.0,
+  "distortion": 4.0,
+  "distortion_decay": 6.0,
+  "waveform": "resonant",
+  "freq_sweep": { "end_freq": 110.0, "curve": "exponential" }
+}
+```
+
+| Param | Type | Required | Notes |
+|------:|------|:--------:|-------|
+| `frequency` | number | yes | Base frequency in Hz |
+| `distortion` | number | yes | Initial distortion amount (0.0 = pure sine, higher = more harmonics). Typical range: 0.0-10.0 |
+| `distortion_decay` | number | no | Distortion decay rate (higher = faster decay to pure sine). Default: 0.0 |
+| `waveform` | string | yes | Distortion curve: `resonant`, `sawtooth`, or `pulse` |
+| `freq_sweep` | object | no | Optional frequency sweep |
+
+**Waveform Types:**
+- `resonant` — Resonant filter-like tones using power curve distortion
+- `sawtooth` — Asymmetric distortion creating saw-like harmonics
+- `pulse` — Sharp phase transition creating square/pulse wave characteristics
+
+**Common Presets:**
+- Bass: `distortion: 4.0`, `distortion_decay: 6.0`, `waveform: "resonant"` (40-120 Hz)
+- Organ: `distortion: 2.5`, `distortion_decay: 0.5`, `waveform: "sawtooth"` (200-800 Hz)
+- Strings: `distortion: 3.0`, `distortion_decay: 2.0`, `waveform: "pulse"` (200-600 Hz)
+
+#### `modal`
+
+Modal synthesis simulates struck or bowed objects (bells, chimes, marimbas, xylophones) by modeling their resonant modes. Each mode is a decaying sine wave at a specific frequency ratio with its own amplitude and decay time. Ideal for metallic percussion, wooden bars, and bell-like tones.
+
+```json
+{
+  "type": "modal",
+  "frequency": 440.0,
+  "modes": [
+    { "freq_ratio": 1.0, "amplitude": 1.0, "decay_time": 2.0 },
+    { "freq_ratio": 2.4, "amplitude": 0.6, "decay_time": 1.5 },
+    { "freq_ratio": 4.0, "amplitude": 0.4, "decay_time": 1.0 }
+  ],
+  "excitation": "impulse",
+  "freq_sweep": { "end_freq": 220.0, "curve": "exponential" }
+}
+```
+
+| Param | Type | Required | Notes |
+|------:|------|:--------:|-------|
+| `frequency` | number | yes | Base frequency in Hz |
+| `modes` | array | yes | Array of Mode objects defining resonant frequencies |
+| `excitation` | string | yes | Excitation type: `impulse`, `noise`, or `pluck` |
+| `freq_sweep` | object | no | Optional frequency sweep for all modes |
+
+**Mode Parameters:**
+| Param | Type | Required | Notes |
+|------:|------|:--------:|-------|
+| `freq_ratio` | number | yes | Frequency ratio relative to fundamental (1.0 = fundamental) |
+| `amplitude` | number | yes | Amplitude of this mode (0.0-1.0) |
+| `decay_time` | number | yes | Decay time in seconds |
+
+**Excitation Types:**
+- `impulse` — Single impulse (sharp attack, like a hard mallet striking)
+- `noise` — Noise burst (softer, more complex attack)
+- `pluck` — Pluck-like excitation (quick attack with harmonic content)
+
+**Common Presets:**
+- Bell: Inharmonic partials (1.0, 2.0, 2.4, 3.0, 4.0) with long decay (3-4s)
+- Chime: Tubular bell partials (1.0, 2.76, 5.4, 8.93) with medium decay (2-3s)
+- Marimba: Warm wooden tone with near-harmonic partials (1.0, 4.0, 9.0) and short decay (1-1.5s)
+- Glockenspiel: Bright metal bar tone with strong high partials (1.0, 2.71, 5.28, 8.65, 12.81) and long decay (2-2.5s)
+- Vibraphone: Pure sustained tone (1.0, 4.0, 10.0) with very long decay (3.5s)
+- Xylophone: Dry bright tone with short decay (1.0, 3.0, 6.0, 10.0) and attack transients (0.5-0.8s)
+
+#### `vocoder`
+
+Vocoder synthesis transfers spectral envelopes through a filter bank to create robot voices, vocal textures, and talking synths. The vocoder splits a carrier signal into frequency bands and applies time-varying amplitude envelopes (simulating formant patterns) to each band.
+
+```json
+{
+  "type": "vocoder",
+  "carrier_freq": 220.0,
+  "carrier_type": "sawtooth",
+  "num_bands": 16,
+  "band_spacing": "logarithmic",
+  "envelope_attack": 0.005,
+  "envelope_release": 0.020,
+  "formant_rate": 3.0,
+  "bands": []
+}
+```
+
+| Param | Type | Required | Notes |
+|------:|------|:--------:|-------|
+| `carrier_freq` | number | yes | Base frequency of carrier in Hz |
+| `carrier_type` | string | yes | Carrier waveform: `sawtooth`, `pulse`, or `noise` |
+| `num_bands` | integer | yes | Number of filter bands (8-32 typical) |
+| `band_spacing` | string | yes | Band spacing: `linear` or `logarithmic` |
+| `envelope_attack` | number | yes | Envelope attack time in seconds (how fast bands respond) |
+| `envelope_release` | number | yes | Envelope release time in seconds (how fast bands decay) |
+| `formant_rate` | number | no | Formant animation rate in Hz (default 2.0) |
+| `bands` | array | no | Optional custom band configurations (overrides num_bands) |
+
+**Carrier Types:**
+- `sawtooth` — Rich in harmonics, classic vocoder sound
+- `pulse` — Hollow, more synthetic sound
+- `noise` — Whispery, unvoiced consonant-like sound
+
+**Band Spacing:**
+- `linear` — Equal Hz between band centers
+- `logarithmic` — Equal ratio between bands (more perceptually uniform)
+
+**Custom Bands:**
+Each band object has:
+- `center_freq` — Center frequency in Hz
+- `bandwidth` — Q factor for the band filter
+- `envelope_pattern` — Optional amplitude envelope values (0.0-1.0)
+
+**Common Presets:**
+- Robot Voice: `carrier_type: "sawtooth"`, 16 bands, logarithmic spacing, fast envelopes (5ms/20ms), `formant_rate: 3.0`
+- Choir: `carrier_type: "noise"`, 24 bands, logarithmic spacing, slow envelopes (50ms/100ms), `formant_rate: 0.5`
+- Strings Through Vocoder: `carrier_type: "pulse"`, 20 bands, logarithmic spacing, medium envelopes (30ms/80ms), `formant_rate: 1.0`
+
+#### `formant`
+
+Formant synthesis creates vowel and voice sounds using resonant filter banks tuned to formant frequencies. Human vowels are characterized by formant frequencies (F1, F2, F3, etc.) - resonant peaks in the spectrum. Ideal for vocal synthesis, creature sounds, and choir textures.
+
+```json
+{
+  "type": "formant",
+  "frequency": 110.0,
+  "vowel": "a",
+  "vowel_morph": "i",
+  "morph_amount": 0.5,
+  "breathiness": 0.15,
+  "formants": []
+}
+```
+
+| Param | Type | Required | Notes |
+|------:|------|:--------:|-------|
+| `frequency` | number | yes | Base pitch frequency of the voice in Hz |
+| `formants` | array | no | Custom formant configurations (overrides vowel preset if provided) |
+| `vowel` | string | no | Vowel preset: `a`, `i`, `u`, `e`, or `o` (default: `a` if formants not provided) |
+| `vowel_morph` | string | no | Second vowel for morphing transitions |
+| `morph_amount` | number | no | Morph blend between vowels (0.0 = first vowel, 1.0 = second vowel, default 0.0) |
+| `breathiness` | number | no | Noise amount for breathiness (0.0-1.0, default 0.0) |
+
+**Vowel Presets:**
+- `a` — /a/ (ah) as in "father" (F1: 800 Hz, F2: 1200 Hz, F3: 2800 Hz)
+- `i` — /i/ (ee) as in "feet" (F1: 280 Hz, F2: 2250 Hz, F3: 2890 Hz)
+- `u` — /u/ (oo) as in "boot" (F1: 310 Hz, F2: 870 Hz, F3: 2250 Hz)
+- `e` — /e/ (eh) as in "bed" (F1: 530 Hz, F2: 1840 Hz, F3: 2480 Hz)
+- `o` — /o/ (oh) as in "boat" (F1: 500 Hz, F2: 1000 Hz, F3: 2800 Hz)
+
+**Custom Formants:**
+Each formant object has:
+- `frequency` — Center frequency in Hz (20-20000)
+- `amplitude` — Amplitude/gain (0.0-1.0)
+- `bandwidth` — Bandwidth/Q factor (0.5-20.0)
+
+```json
+{
+  "type": "formant",
+  "frequency": 110.0,
+  "formants": [
+    { "frequency": 400.0, "amplitude": 1.0, "bandwidth": 5.0 },
+    { "frequency": 1000.0, "amplitude": 0.7, "bandwidth": 6.0 },
+    { "frequency": 2500.0, "amplitude": 0.5, "bandwidth": 7.0 }
+  ]
+}
+```
+
+**Common Presets:**
+- Vowel A: `vowel: "a"`, `breathiness: 0.0` (pure vowel sound)
+- Vowel I: `vowel: "i"`, `breathiness: 0.0` (bright, forward vowel)
+- Choir Ah: `vowel: "a"`, `breathiness: 0.15` (warm, resonant choir vowel)
+- Creature Growl: Custom low formants at 300/600/1200/2000 Hz, `breathiness: 0.4` (guttural growl)
+- Vowel Morph: `vowel: "a"`, `vowel_morph: "i"`, `morph_amount: 0.5` (smooth vowel transition)
+
 #### `granular`
 
 Granular synthesis generates sound by combining many short audio fragments called "grains". Produces evolving, textured sounds with natural irregularity.
@@ -249,6 +487,63 @@ Granular synthesis generates sound by combining many short audio fragments calle
 - `{ "type": "noise", "noise_type": "white" }` — White, pink, or brown noise grains
 - `{ "type": "tone", "waveform": "sine", "frequency": 440.0 }` — Pitched waveform grains
 - `{ "type": "formant", "frequency": 220.0, "formant_freq": 800.0 }` — Formant-based grains
+
+#### `vector`
+
+Vector synthesis creates evolving textures by crossfading between 4 sources in 2D space. The sources are positioned at the corners of a square: top-left (0,0), top-right (1,0), bottom-left (0,1), and bottom-right (1,1). A position (position_x, position_y) moves within this space, smoothly blending between sources. Ideal for morphing pads, animated textures, and evolving soundscapes.
+
+```json
+{
+  "type": "vector",
+  "frequency": 220.0,
+  "sources": [
+    { "type": "sine" },
+    { "type": "saw" },
+    { "type": "square", "duty": 0.5 },
+    { "type": "triangle" }
+  ],
+  "position_x": 0.5,
+  "position_y": 0.5,
+  "path": [
+    { "x": 0.0, "y": 0.0, "duration": 1.0 },
+    { "x": 1.0, "y": 0.0, "duration": 1.0 },
+    { "x": 1.0, "y": 1.0, "duration": 1.0 },
+    { "x": 0.0, "y": 1.0, "duration": 1.0 }
+  ],
+  "path_loop": true,
+  "path_curve": "linear"
+}
+```
+
+| Param | Type | Required | Notes |
+|------:|------|:--------:|-------|
+| `frequency` | number | yes | Base frequency in Hz |
+| `sources` | array | yes | Array of exactly 4 source objects (see below) |
+| `position_x` | number | no | X position in vector space (0.0-1.0, default 0.5). Only used if no path specified |
+| `position_y` | number | no | Y position in vector space (0.0-1.0, default 0.5). Only used if no path specified |
+| `path` | array | no | Array of path points for animating position over time |
+| `path_loop` | boolean | no | Loop the path (default false) |
+| `path_curve` | string | no | Interpolation curve: `linear`, `ease_in_out`, `exponential` (default linear) |
+
+**Vector Sources:**
+Each source is one of:
+- `{ "type": "sine" }` — Pure sine wave
+- `{ "type": "saw" }` — Sawtooth wave
+- `{ "type": "square", "duty": 0.5 }` — Square/pulse wave with duty cycle (0.0-1.0)
+- `{ "type": "triangle" }` — Triangle wave
+- `{ "type": "noise", "noise_type": "white" }` — Noise source (white, pink, or brown)
+- `{ "type": "wavetable", "table": "basic", "position": 0.5 }` — Wavetable source (same tables as wavetable synthesis)
+
+**Path Points:**
+Each path point has:
+- `x` — X position (0.0-1.0)
+- `y` — Y position (0.0-1.0)
+- `duration` — Time to reach this point from previous point in seconds
+
+**Common Presets:**
+- Evolving Pad: Static sources (sine, saw, square, triangle), path sweeping all corners over 8 seconds with ease_in_out curve
+- Morph Texture: Mix of tonal and noise sources (sine, noise, triangle, wavetable), medium-speed path with exponential curve
+- Sweep Corners: 4 distinct wavetables at different positions, fast circular path with linear interpolation
 
 ### Filters
 

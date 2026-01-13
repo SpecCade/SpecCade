@@ -1,0 +1,119 @@
+{
+  "spec_version": 1,
+  "asset_id": "preset_toms",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 20019,
+  "description": "Multi-tom hit - layered tom sound covering multiple frequency ranges",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/drums/toms/toms.wav"
+    }
+  ],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "duration_seconds": 0.6,
+      "sample_rate": 44100,
+      "layers": [
+        {
+          "synthesis": {
+            "type": "oscillator",
+            "waveform": "sine",
+            "frequency": 300,
+            "freq_sweep": {
+              "end_freq": 150,
+              "curve": "exponential"
+            }
+          },
+          "envelope": {
+            "attack": 0.002,
+            "decay": 0.28,
+            "sustain": 0,
+            "release": 0.15
+          },
+          "volume": 0.5,
+          "pan": 0.3
+        },
+        {
+          "synthesis": {
+            "type": "oscillator",
+            "waveform": "sine",
+            "frequency": 180,
+            "freq_sweep": {
+              "end_freq": 90,
+              "curve": "exponential"
+            }
+          },
+          "envelope": {
+            "attack": 0.002,
+            "decay": 0.32,
+            "sustain": 0,
+            "release": 0.18
+          },
+          "volume": 0.6,
+          "pan": 0
+        },
+        {
+          "synthesis": {
+            "type": "oscillator",
+            "waveform": "sine",
+            "frequency": 110,
+            "freq_sweep": {
+              "end_freq": 55,
+              "curve": "exponential"
+            }
+          },
+          "envelope": {
+            "attack": 0.002,
+            "decay": 0.36,
+            "sustain": 0,
+            "release": 0.22
+          },
+          "volume": 0.7,
+          "pan": -0.3
+        },
+        {
+          "synthesis": {
+            "type": "oscillator",
+            "waveform": "triangle",
+            "frequency": 180,
+            "freq_sweep": {
+              "end_freq": 90,
+              "curve": "exponential"
+            }
+          },
+          "envelope": {
+            "attack": 0.002,
+            "decay": 0.25,
+            "sustain": 0,
+            "release": 0.15
+          },
+          "volume": 0.3,
+          "pan": 0
+        },
+        {
+          "synthesis": {
+            "type": "noise_burst",
+            "noise_type": "white"
+          },
+          "envelope": {
+            "attack": 0.001,
+            "decay": 0.015,
+            "sustain": 0,
+            "release": 0.01
+          },
+          "filter": {
+            "type": "lowpass",
+            "cutoff": 2500,
+            "resonance": 0.707
+          },
+          "volume": 0.15,
+          "pan": 0
+        }
+      ]
+    }
+  }
+}

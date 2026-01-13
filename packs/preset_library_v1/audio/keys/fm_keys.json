@@ -1,0 +1,86 @@
+{
+    "spec_version": 1,
+    "asset_id": "preset_fm_keys",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 20023,
+    "description": "FM keyboard - general purpose FM synthesis keyboard sound",
+    "outputs": [
+        {
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/keys/fm_keys.wav"
+        }
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "base_note": "C4",
+            "duration_seconds": 2.0,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "fm_synth",
+                        "carrier_freq": 261.63,
+                        "modulator_freq": 523.26,
+                        "modulation_index": 2.5
+                    },
+                    "envelope": {
+                        "attack": 0.005,
+                        "decay": 0.4,
+                        "sustain": 0.6,
+                        "release": 0.5
+                    },
+                    "volume": 0.8,
+                    "pan": 0.0
+                },
+                {
+                    "synthesis": {
+                        "type": "fm_synth",
+                        "carrier_freq": 261.63,
+                        "modulator_freq": 785.0,
+                        "modulation_index": 1.8
+                    },
+                    "envelope": {
+                        "attack": 0.008,
+                        "decay": 0.5,
+                        "sustain": 0.55,
+                        "release": 0.6
+                    },
+                    "volume": 0.45,
+                    "pan": -0.15
+                },
+                {
+                    "synthesis": {
+                        "type": "fm_synth",
+                        "carrier_freq": 263.5,
+                        "modulator_freq": 527.0,
+                        "modulation_index": 2.2
+                    },
+                    "envelope": {
+                        "attack": 0.006,
+                        "decay": 0.45,
+                        "sustain": 0.58,
+                        "release": 0.55
+                    },
+                    "volume": 0.4,
+                    "pan": 0.15
+                }
+            ],
+            "effects": [
+                {
+                    "type": "chorus",
+                    "rate": 0.5,
+                    "depth": 0.15,
+                    "wet": 0.15
+                }
+            ],
+            "master_filter": {
+                "type": "lowpass",
+                "cutoff": 6500,
+                "resonance": 0.15
+            }
+        }
+    }
+}

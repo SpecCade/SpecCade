@@ -1,0 +1,60 @@
+{
+  "spec_version": 1,
+  "asset_id": "preset_perc_click",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 20011,
+  "description": "Percussion click - sharp, high-frequency transient for rhythmic accents",
+  "outputs": [{
+    "kind": "primary",
+    "format": "wav",
+    "path": "test-outputs/preset_library_v1/audio/drums/percussion/perc_click.wav"
+  }],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "duration_seconds": 0.1,
+      "sample_rate": 44100,
+      "layers": [
+        {
+          "synthesis": {
+            "type": "oscillator",
+            "waveform": "triangle",
+            "frequency": 3500,
+            "freq_sweep": {
+              "end_freq": 2800,
+              "curve": "exponential"
+            }
+          },
+          "envelope": {
+            "attack": 0.001,
+            "decay": 0.02,
+            "sustain": 0,
+            "release": 0.01
+          },
+          "volume": 0.7,
+          "pan": 0
+        },
+        {
+          "synthesis": {
+            "type": "oscillator",
+            "waveform": "sine",
+            "frequency": 2200,
+            "freq_sweep": {
+              "end_freq": 1800,
+              "curve": "exponential"
+            }
+          },
+          "envelope": {
+            "attack": 0.001,
+            "decay": 0.015,
+            "sustain": 0,
+            "release": 0.008
+          },
+          "volume": 0.4,
+          "pan": 0
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,113 @@
+{
+  "spec_version": 1,
+  "asset_id": "preset_perc_glitch",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 20015,
+  "description": "Glitchy percussion - digital/electronic glitch percussion with artifacts",
+  "outputs": [{
+    "kind": "primary",
+    "format": "wav",
+    "path": "test-outputs/preset_library_v1/audio/drums/percussion/perc_glitch.wav"
+  }],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "duration_seconds": 0.15,
+      "sample_rate": 44100,
+      "layers": [
+        {
+          "synthesis": {
+            "type": "oscillator",
+            "waveform": "square",
+            "frequency": 1800,
+            "freq_sweep": {
+              "end_freq": 540,
+              "curve": "exponential"
+            }
+          },
+          "envelope": {
+            "attack": 0.001,
+            "decay": 0.02,
+            "sustain": 0.0,
+            "release": 0.01
+          },
+          "volume": 0.4,
+          "pan": 0
+        },
+        {
+          "synthesis": {
+            "type": "oscillator",
+            "waveform": "pulse",
+            "frequency": 3200,
+            "freq_sweep": {
+              "end_freq": 1600,
+              "curve": "linear"
+            }
+          },
+          "envelope": {
+            "attack": 0.0,
+            "decay": 0.015,
+            "sustain": 0.0,
+            "release": 0.005
+          },
+          "volume": 0.3,
+          "pan": 0
+        },
+        {
+          "synthesis": {
+            "type": "noise_burst",
+            "noise_type": "white",
+            "filter": {
+              "type": "bandpass",
+              "center": 4500,
+              "resonance": 2.5
+            }
+          },
+          "envelope": {
+            "attack": 0.0,
+            "decay": 0.01,
+            "sustain": 0.0,
+            "release": 0.008
+          },
+          "volume": 0.35,
+          "pan": 0
+        },
+        {
+          "synthesis": {
+            "type": "oscillator",
+            "waveform": "square",
+            "frequency": 900,
+            "freq_sweep": {
+              "end_freq": 180,
+              "curve": "exponential"
+            }
+          },
+          "envelope": {
+            "attack": 0.003,
+            "decay": 0.025,
+            "sustain": 0.0,
+            "release": 0.012
+          },
+          "volume": 0.25,
+          "pan": 0
+        },
+        {
+          "synthesis": {
+            "type": "oscillator",
+            "waveform": "pulse",
+            "frequency": 6000
+          },
+          "envelope": {
+            "attack": 0.0,
+            "decay": 0.008,
+            "sustain": 0.0,
+            "release": 0.003
+          },
+          "volume": 0.2,
+          "pan": 0
+        }
+      ]
+    }
+  }
+}

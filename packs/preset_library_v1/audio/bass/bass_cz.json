@@ -1,0 +1,42 @@
+{
+  "spec_version": 1,
+  "asset_id": "preset_bass_cz",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 30250,
+  "description": "Casio CZ-style bass with resonant phase distortion and envelope decay",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/bass/bass_cz.wav"
+    }
+  ],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "base_note": "C2",
+      "duration_seconds": 1.5,
+      "sample_rate": 44100,
+      "layers": [
+        {
+          "synthesis": {
+            "type": "pd_synth",
+            "frequency": 65.41,
+            "distortion": 3.0,
+            "distortion_decay": 4.0,
+            "waveform": "resonant"
+          },
+          "envelope": {
+            "attack": 0.005,
+            "decay": 0.3,
+            "sustain": 0.4,
+            "release": 0.2
+          },
+          "volume": 0.9,
+          "pan": 0
+        }
+      ]
+    }
+  }
+}

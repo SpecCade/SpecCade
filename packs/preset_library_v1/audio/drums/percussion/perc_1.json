@@ -1,0 +1,60 @@
+{
+  "spec_version": 1,
+  "asset_id": "preset_perc_1",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 20009,
+  "description": "Generic percussion hit 1 - versatile mid-frequency percussion with quick decay",
+  "outputs": [{
+    "kind": "primary",
+    "format": "wav",
+    "path": "test-outputs/preset_library_v1/audio/drums/percussion/perc_1.wav"
+  }],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "duration_seconds": 0.3,
+      "sample_rate": 44100,
+      "layers": [
+        {
+          "synthesis": {
+            "type": "oscillator",
+            "waveform": "triangle",
+            "frequency": 380,
+            "freq_sweep": {
+              "end_freq": 220,
+              "curve": "exponential"
+            }
+          },
+          "envelope": {
+            "attack": 0.001,
+            "decay": 0.12,
+            "sustain": 0,
+            "release": 0.05
+          },
+          "volume": 0.75,
+          "pan": 0
+        },
+        {
+          "synthesis": {
+            "type": "noise_burst",
+            "noise_type": "white",
+            "filter": {
+              "type": "bandpass",
+              "center": 800,
+              "resonance": 2.0
+            }
+          },
+          "envelope": {
+            "attack": 0.001,
+            "decay": 0.08,
+            "sustain": 0,
+            "release": 0.03
+          },
+          "volume": 0.25,
+          "pan": 0
+        }
+      ]
+    }
+  }
+}

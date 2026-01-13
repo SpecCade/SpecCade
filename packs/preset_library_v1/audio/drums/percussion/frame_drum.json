@@ -1,0 +1,79 @@
+{
+  "spec_version": 1,
+  "asset_id": "preset_frame_drum",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 20006,
+  "description": "Frame drum - deep resonant hand drum with warm body and natural decay",
+  "outputs": [{
+    "kind": "primary",
+    "format": "wav",
+    "path": "test-outputs/preset_library_v1/audio/drums/percussion/frame_drum.wav"
+  }],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "duration_seconds": 0.8,
+      "sample_rate": 44100,
+      "layers": [
+        {
+          "synthesis": {
+            "type": "oscillator",
+            "waveform": "sine",
+            "frequency": 95,
+            "freq_sweep": {
+              "end_freq": 65,
+              "curve": "exponential"
+            }
+          },
+          "envelope": {
+            "attack": 0.008,
+            "decay": 0.45,
+            "sustain": 0.08,
+            "release": 0.25
+          },
+          "volume": 0.9,
+          "pan": 0
+        },
+        {
+          "synthesis": {
+            "type": "oscillator",
+            "waveform": "triangle",
+            "frequency": 180,
+            "freq_sweep": {
+              "end_freq": 120,
+              "curve": "exponential"
+            }
+          },
+          "envelope": {
+            "attack": 0.005,
+            "decay": 0.35,
+            "sustain": 0.05,
+            "release": 0.2
+          },
+          "volume": 0.4,
+          "pan": 0
+        },
+        {
+          "synthesis": {
+            "type": "noise_burst",
+            "noise_type": "white",
+            "filter": {
+              "type": "lowpass",
+              "cutoff": 800,
+              "resonance": 0.3
+            }
+          },
+          "envelope": {
+            "attack": 0.001,
+            "decay": 0.08,
+            "sustain": 0.0,
+            "release": 0.05
+          },
+          "volume": 0.15,
+          "pan": 0
+        }
+      ]
+    }
+  }
+}

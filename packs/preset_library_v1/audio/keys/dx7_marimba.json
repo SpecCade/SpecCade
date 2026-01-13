@@ -1,0 +1,60 @@
+{
+  "spec_version": 1,
+  "asset_id": "preset_dx7_marimba",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 20022,
+  "description": "DX7-style FM marimba - warm wooden mallet FM sound",
+  "outputs": [{
+    "kind": "primary",
+    "format": "wav",
+    "path": "test-outputs/preset_library_v1/audio/keys/dx7_marimba.wav"
+  }],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "base_note": "C4",
+      "duration_seconds": 1.5,
+      "sample_rate": 44100,
+      "layers": [
+        {
+          "synthesis": {
+            "type": "fm_synth",
+            "carrier_freq": 261.63,
+            "modulator_freq": 1046.5,
+            "modulation_index": 2.2
+          },
+          "envelope": {
+            "attack": 0.005,
+            "decay": 0.3,
+            "sustain": 0.2,
+            "release": 0.6
+          },
+          "volume": 0.7,
+          "pan": 0.0
+        },
+        {
+          "synthesis": {
+            "type": "fm_synth",
+            "carrier_freq": 130.81,
+            "modulator_freq": 261.63,
+            "modulation_index": 1.8
+          },
+          "envelope": {
+            "attack": 0.008,
+            "decay": 0.35,
+            "sustain": 0.15,
+            "release": 0.65
+          },
+          "volume": 0.3,
+          "pan": 0.0
+        }
+      ],
+      "master_filter": {
+        "type": "lowpass",
+        "cutoff": 3500,
+        "resonance": 0.3
+      }
+    }
+  }
+}

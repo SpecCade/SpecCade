@@ -1,0 +1,74 @@
+{
+  "spec_version": 1,
+  "asset_id": "preset_pad_cold",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 20036,
+  "description": "Cold pad - icy, ethereal pad with high-frequency shimmer",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/pads/pad_cold.wav"
+    }
+  ],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "base_note": "C4",
+      "duration_seconds": 2,
+      "sample_rate": 44100,
+      "layers": [
+        {
+          "synthesis": {
+            "type": "multi_oscillator",
+            "frequency": 261.63,
+            "oscillators": [
+              {
+                "waveform": "triangle",
+                "volume": 0.8,
+                "detune": 0
+              },
+              {
+                "waveform": "sine",
+                "volume": 0.7,
+                "detune": 1200
+              },
+              {
+                "waveform": "triangle",
+                "volume": 0.5,
+                "detune": 1203
+              },
+              {
+                "waveform": "sine",
+                "volume": 0.4,
+                "detune": 2400
+              }
+            ]
+          },
+          "envelope": {
+            "attack": 0.3,
+            "decay": 0.3,
+            "sustain": 0.85,
+            "release": 0.4
+          },
+          "volume": 0.8,
+          "pan": 0
+        }
+      ],
+      "master_filter": {
+        "type": "highpass",
+        "cutoff": 400,
+        "resonance": 0.2
+      },
+      "effects": [
+        {
+          "type": "reverb",
+          "room_size": 0.85,
+          "damping": 0.2,
+          "wet": 0.5
+        }
+      ]
+    }
+  }
+}

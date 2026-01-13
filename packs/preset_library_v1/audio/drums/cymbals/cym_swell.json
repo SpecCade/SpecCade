@@ -1,0 +1,105 @@
+{
+  "spec_version": 1,
+  "asset_id": "preset_cym_swell",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 20020,
+  "description": "Cymbal swell - building cymbal wash that crescendos",
+  "outputs": [{
+    "kind": "primary",
+    "format": "wav",
+    "path": "test-outputs/preset_library_v1/audio/drums/cymbals/cym_swell.wav"
+  }],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "duration_seconds": 2.0,
+      "sample_rate": 44100,
+      "layers": [
+        {
+          "synthesis": {
+            "type": "noise_burst",
+            "noise_type": "pink"
+          },
+          "envelope": {
+            "attack": 0.8,
+            "decay": 0.0,
+            "sustain": 1.0,
+            "release": 0.5
+          },
+          "volume": 0.35,
+          "pan": 0.0,
+          "filter": {
+            "type": "highpass",
+            "cutoff": 3000.0,
+            "resonance": 0.3
+          }
+        },
+        {
+          "synthesis": {
+            "type": "noise_burst",
+            "noise_type": "white"
+          },
+          "envelope": {
+            "attack": 1.0,
+            "decay": 0.0,
+            "sustain": 1.0,
+            "release": 0.4
+          },
+          "volume": 0.25,
+          "pan": 0.0,
+          "filter": {
+            "type": "highpass",
+            "cutoff": 6000.0,
+            "resonance": 0.2
+          }
+        },
+        {
+          "synthesis": {
+            "type": "oscillator",
+            "waveform": "sine",
+            "frequency": 4200.0
+          },
+          "envelope": {
+            "attack": 0.7,
+            "decay": 0.0,
+            "sustain": 0.8,
+            "release": 0.5
+          },
+          "volume": 0.08,
+          "pan": 0.0
+        },
+        {
+          "synthesis": {
+            "type": "oscillator",
+            "waveform": "sine",
+            "frequency": 7800.0
+          },
+          "envelope": {
+            "attack": 0.9,
+            "decay": 0.0,
+            "sustain": 0.7,
+            "release": 0.4
+          },
+          "volume": 0.06,
+          "pan": 0.0
+        },
+        {
+          "synthesis": {
+            "type": "oscillator",
+            "waveform": "sine",
+            "frequency": 11500.0
+          },
+          "envelope": {
+            "attack": 1.1,
+            "decay": 0.0,
+            "sustain": 0.6,
+            "release": 0.3
+          },
+          "volume": 0.04,
+          "pan": 0.0
+        }
+      ]
+    }
+  }
+}

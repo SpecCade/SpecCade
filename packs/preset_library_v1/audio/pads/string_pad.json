@@ -1,0 +1,144 @@
+{
+  "spec_version": 1,
+  "asset_id": "preset_string_pad",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 20038,
+  "description": "String pad - lush string ensemble pad for sustained chords",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/pads/string_pad.wav"
+    }
+  ],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "base_note": "C4",
+      "duration_seconds": 3.0,
+      "sample_rate": 44100,
+      "layers": [
+        {
+          "synthesis": {
+            "type": "multi_oscillator",
+            "frequency": 261.63,
+            "oscillators": [
+              {
+                "waveform": "sawtooth",
+                "volume": 1.0,
+                "detune": 0.0
+              },
+              {
+                "waveform": "sawtooth",
+                "volume": 0.95,
+                "detune": 6.0
+              },
+              {
+                "waveform": "sawtooth",
+                "volume": 0.95,
+                "detune": -6.0
+              },
+              {
+                "waveform": "sawtooth",
+                "volume": 0.85,
+                "detune": 12.0
+              },
+              {
+                "waveform": "sawtooth",
+                "volume": 0.85,
+                "detune": -12.0
+              },
+              {
+                "waveform": "sawtooth",
+                "volume": 0.7,
+                "detune": 18.0
+              },
+              {
+                "waveform": "sawtooth",
+                "volume": 0.7,
+                "detune": -18.0
+              }
+            ]
+          },
+          "envelope": {
+            "attack": 0.3,
+            "decay": 0.4,
+            "sustain": 0.9,
+            "release": 0.5
+          },
+          "filter": {
+            "type": "lowpass",
+            "cutoff": 3200.0,
+            "resonance": 0.3
+          },
+          "lfo": {
+            "config": {
+              "waveform": "sine",
+              "rate": 0.25,
+              "depth": 0.3
+            },
+            "target": {
+              "target": "filter_cutoff",
+              "amount": 400.0
+            }
+          },
+          "volume": 0.75,
+          "pan": 0.0
+        },
+        {
+          "synthesis": {
+            "type": "multi_oscillator",
+            "frequency": 261.63,
+            "oscillators": [
+              {
+                "waveform": "sawtooth",
+                "volume": 1.0,
+                "detune": 4.0
+              },
+              {
+                "waveform": "sawtooth",
+                "volume": 0.9,
+                "detune": -4.0
+              },
+              {
+                "waveform": "sawtooth",
+                "volume": 0.8,
+                "detune": 10.0
+              },
+              {
+                "waveform": "sawtooth",
+                "volume": 0.8,
+                "detune": -10.0
+              }
+            ]
+          },
+          "envelope": {
+            "attack": 0.35,
+            "decay": 0.45,
+            "sustain": 0.88,
+            "release": 0.55
+          },
+          "filter": {
+            "type": "lowpass",
+            "cutoff": 2900.0,
+            "resonance": 0.25
+          },
+          "lfo": {
+            "config": {
+              "waveform": "sine",
+              "rate": 6.0,
+              "depth": 0.2
+            },
+            "target": {
+              "target": "pitch",
+              "semitones": 0.1
+            }
+          },
+          "volume": 0.55,
+          "pan": 0.0
+        }
+      ]
+    }
+  }
+}

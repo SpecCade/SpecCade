@@ -7,21 +7,35 @@
 //! - `triangle` - Triangle wave
 //! - `noise` - White/pink/brown noise with optional filter
 //! - `fm` - FM synthesis (carrier + modulator)
+//! - `am` - AM synthesis (amplitude modulation)
+//! - `ring_mod` - Ring modulation synthesis (carrier * modulator)
 //! - `karplus` - Karplus-Strong plucked string synthesis
 //! - `pitched_body` - Frequency sweep for impact sounds
 //! - `metallic` - Inharmonic partials for metallic sounds
 //! - `harmonics` - Additive synthesis with multiple harmonics
 //! - `granular` - Granular synthesis with grain processing
 //! - `wavetable` - Wavetable synthesis with morphing
+//! - `phase_distortion` - Phase distortion (Casio CZ style) synthesis
+//! - `modal` - Modal synthesis for struck/bowed objects (bells, chimes, bars)
+//! - `vocoder` - Vocoder synthesis with filter bank and formant animation
+//! - `formant` - Formant synthesis for vowel and voice sounds
+//! - `vector` - Vector synthesis with 2D crossfading between multiple sources
 
+pub mod am;
 pub mod fm;
+pub mod formant;
 pub mod granular;
 pub mod harmonics;
 pub mod karplus;
 pub mod metallic;
+pub mod modal;
 pub mod noise;
 pub mod oscillators;
+pub mod phase_distortion;
 pub mod pitched_body;
+pub mod ring_mod;
+pub mod vector;
+pub mod vocoder;
 pub mod wavetable;
 
 use rand_pcg::Pcg32;

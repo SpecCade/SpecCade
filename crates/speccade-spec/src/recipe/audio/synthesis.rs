@@ -261,6 +261,33 @@ pub enum Synthesis {
         #[serde(skip_serializing_if = "Option::is_none")]
         freq_sweep: Option<FreqSweep>,
     },
+    /// AM (Amplitude Modulation) synthesis.
+    AmSynth {
+        /// Carrier frequency in Hz.
+        carrier_freq: f64,
+        /// Modulator frequency in Hz.
+        modulator_freq: f64,
+        /// Modulation depth (0.0 to 1.0).
+        modulation_depth: f64,
+        /// Optional frequency sweep.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        freq_sweep: Option<FreqSweep>,
+    },
+    /// Ring Modulation synthesis.
+    ///
+    /// Multiplies carrier and modulator directly (no DC offset),
+    /// producing sum and difference frequencies for metallic/robotic timbres.
+    RingModSynth {
+        /// Carrier frequency in Hz.
+        carrier_freq: f64,
+        /// Modulator frequency in Hz.
+        modulator_freq: f64,
+        /// Wet/dry mix (0.0 = pure carrier, 1.0 = pure ring modulation).
+        mix: f64,
+        /// Optional frequency sweep.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        freq_sweep: Option<FreqSweep>,
+    },
     /// Karplus-Strong plucked string synthesis.
     KarplusStrong {
         /// Base frequency in Hz.
@@ -364,6 +391,201 @@ pub enum Synthesis {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         detune: Option<f64>,
     },
+    /// Phase Distortion synthesis (Casio CZ style).
+    ///
+    /// Creates complex timbres by warping the phase of a waveform non-linearly.
+    /// The distortion amount typically decays over time, creating sounds that
+    /// start bright and evolve to pure tones.
+    PdSynth {
+        /// Base frequency in Hz.
+        frequency: f64,
+        /// Initial distortion amount (0.0 = pure sine, higher = more harmonics).
+        /// Typical range: 0.0 to 10.0
+        distortion: f64,
+        /// Distortion decay rate (higher = faster decay to pure sine).
+        #[serde(default)]
+        distortion_decay: f64,
+        /// Waveform shape determining the distortion curve.
+        waveform: PdWaveform,
+        /// Optional frequency sweep.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        freq_sweep: Option<FreqSweep>,
+    },
+    /// Modal synthesis for struck/bowed physical objects.
+    ///
+    /// Simulates bells, chimes, marimbas, and other resonant objects by modeling
+    /// their resonant modes. Each mode is a decaying sine wave at a specific
+    /// frequency ratio with its own amplitude and decay time.
+    Modal {
+        /// Base frequency in Hz.
+        frequency: f64,
+        /// Bank of resonant modes defining the timbre.
+        modes: Vec<ModalMode>,
+        /// Excitation type (how the object is struck/excited).
+        excitation: ModalExcitation,
+        /// Optional frequency sweep applied to all modes.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        freq_sweep: Option<FreqSweep>,
+    },
+    /// Vocoder synthesis with filter bank and formant animation.
+    ///
+    /// A vocoder transfers the spectral envelope from a modulator signal to a carrier.
+    /// Since we're generating from scratch, we create procedural formant patterns
+    /// that simulate speech-like envelope movements across frequency bands.
+    Vocoder {
+        /// Base frequency of carrier in Hz.
+        carrier_freq: f64,
+        /// Type of carrier waveform (sawtooth, pulse, or noise).
+        carrier_type: VocoderCarrierType,
+        /// Number of filter bands (8-32 typical).
+        num_bands: usize,
+        /// Band spacing mode (linear or logarithmic).
+        band_spacing: VocoderBandSpacing,
+        /// Envelope attack time in seconds (how fast bands respond).
+        envelope_attack: f64,
+        /// Envelope release time in seconds (how fast bands decay).
+        envelope_release: f64,
+        /// Formant animation rate in Hz (cycles per second for envelope patterns).
+        #[serde(default = "default_formant_rate")]
+        formant_rate: f64,
+        /// Optional custom band configurations (overrides num_bands if provided).
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        bands: Vec<VocoderBand>,
+    },
+    /// Formant synthesis for vowel and voice sounds.
+    ///
+    /// Creates vowel and voice sounds using resonant filter banks tuned to formant
+    /// frequencies. Human vowels are characterized by formant frequencies
+    /// (F1, F2, F3, etc.) - resonant peaks in the spectrum.
+    Formant {
+        /// Base pitch frequency of the voice in Hz.
+        frequency: f64,
+        /// Optional custom formant configurations (overrides vowel preset if provided).
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        formants: Vec<FormantConfig>,
+        /// Vowel preset to use (if formants not provided).
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        vowel: Option<FormantVowel>,
+        /// Optional second vowel for morphing transitions.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        vowel_morph: Option<FormantVowel>,
+        /// Morph amount between vowels (0.0 = first vowel, 1.0 = second vowel).
+        #[serde(default)]
+        morph_amount: f64,
+        /// Amount of noise mixed in for breathiness (0.0-1.0).
+        #[serde(default)]
+        breathiness: f64,
+    },
+    /// Vector synthesis with 2D crossfading between multiple sound sources.
+    ///
+    /// Places 2-4 sound sources at corners of a 2D space and crossfades between
+    /// them based on position. The position can be animated over time to create
+    /// evolving, morphing textures. Classic examples: Prophet VS, Korg Wavestation.
+    Vector {
+        /// Base frequency in Hz.
+        frequency: f64,
+        /// Four sources at corners: [A (top-left), B (top-right), C (bottom-left), D (bottom-right)].
+        sources: [VectorSource; 4],
+        /// Static X position (0.0-1.0, used if path is empty).
+        #[serde(default = "default_vector_position")]
+        position_x: f64,
+        /// Static Y position (0.0-1.0, used if path is empty).
+        #[serde(default = "default_vector_position")]
+        position_y: f64,
+        /// Optional animated path (sequence of positions with durations).
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        path: Vec<VectorPathPoint>,
+        /// Whether the path should loop.
+        #[serde(default)]
+        path_loop: bool,
+        /// Interpolation curve for path animation.
+        #[serde(default = "default_linear_curve")]
+        path_curve: SweepCurve,
+    },
+}
+
+/// Phase distortion waveform shape.
+///
+/// Different distortion curves produce different timbral characteristics
+/// in Phase Distortion synthesis.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum PdWaveform {
+    /// Resonant-like tone using power curve distortion.
+    /// Creates resonant filter-like tones.
+    Resonant,
+    /// Sawtooth-like asymmetric distortion.
+    /// Compresses one half of the waveform, creating saw-like harmonics.
+    Sawtooth,
+    /// Pulse-like distortion with sharp phase transition.
+    /// Creates square/pulse wave characteristics.
+    Pulse,
+}
+
+/// A single resonant mode in modal synthesis.
+///
+/// Modal synthesis simulates physical objects by modeling their resonant modes.
+/// Each mode represents a frequency at which the object naturally vibrates.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ModalMode {
+    /// Frequency ratio relative to the fundamental (1.0 = fundamental).
+    pub freq_ratio: f64,
+    /// Amplitude of this mode (0.0 to 1.0).
+    pub amplitude: f64,
+    /// Decay time in seconds.
+    pub decay_time: f64,
+}
+
+/// Excitation type for modal synthesis.
+///
+/// The excitation determines how the resonant modes are initially excited,
+/// affecting the attack character of the sound.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ModalExcitation {
+    /// Single impulse excitation (sharp attack, like striking with a hard mallet).
+    Impulse,
+    /// Noise burst excitation (softer, more complex attack).
+    Noise,
+    /// Pluck-like excitation (quick attack with some harmonic content).
+    Pluck,
+}
+
+/// Band spacing mode for vocoder filter bank.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum VocoderBandSpacing {
+    /// Linear spacing between bands (equal Hz between centers).
+    Linear,
+    /// Logarithmic spacing (equal ratio between bands, more perceptually uniform).
+    Logarithmic,
+}
+
+/// Carrier waveform type for vocoder synthesis.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum VocoderCarrierType {
+    /// Sawtooth wave - rich in harmonics, classic vocoder sound.
+    Sawtooth,
+    /// Pulse wave - hollow, more synthetic sound.
+    Pulse,
+    /// White noise - whispery, unvoiced consonant-like sound.
+    Noise,
+}
+
+/// A single vocoder band configuration.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct VocoderBand {
+    /// Center frequency of the band in Hz.
+    pub center_freq: f64,
+    /// Bandwidth (Q factor) of the band filter.
+    pub bandwidth: f64,
+    /// Envelope pattern for this band (amplitude values over time, 0.0-1.0).
+    /// If empty, a default formant animation is used.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub envelope_pattern: Vec<f64>,
 }
 
 /// Granular synthesis source material.
@@ -409,6 +631,87 @@ pub struct PositionSweep {
 
 fn default_linear_curve() -> SweepCurve {
     SweepCurve::Linear
+}
+
+fn default_formant_rate() -> f64 {
+    2.0
+}
+
+fn default_vector_position() -> f64 {
+    0.5
+}
+
+/// Configuration for a single formant in formant synthesis.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct FormantConfig {
+    /// Center frequency of the formant in Hz.
+    pub frequency: f64,
+    /// Amplitude/gain of this formant (0.0-1.0).
+    pub amplitude: f64,
+    /// Bandwidth (Q factor) of the resonant filter.
+    pub bandwidth: f64,
+}
+
+/// Vowel preset for formant synthesis.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum FormantVowel {
+    /// /a/ (ah) as in "father".
+    A,
+    /// /i/ (ee) as in "feet".
+    I,
+    /// /u/ (oo) as in "boot".
+    U,
+    /// /e/ (eh) as in "bed".
+    E,
+    /// /o/ (oh) as in "boat".
+    O,
+}
+
+/// Source waveform type for vector synthesis corners.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum VectorSourceType {
+    /// Sine wave.
+    Sine,
+    /// Sawtooth wave.
+    Saw,
+    /// Square wave with 50% duty cycle.
+    Square,
+    /// Triangle wave.
+    Triangle,
+    /// White noise.
+    Noise,
+    /// Wavetable-based source (uses additive harmonics for variety).
+    Wavetable,
+}
+
+/// A single source in the vector synthesis grid.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct VectorSource {
+    /// Type of waveform for this source.
+    pub source_type: VectorSourceType,
+    /// Frequency ratio relative to the base frequency (1.0 = unison).
+    #[serde(default = "default_freq_ratio")]
+    pub frequency_ratio: f64,
+}
+
+fn default_freq_ratio() -> f64 {
+    1.0
+}
+
+/// A point in a vector path animation.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct VectorPathPoint {
+    /// X position (0.0-1.0).
+    pub x: f64,
+    /// Y position (0.0-1.0).
+    pub y: f64,
+    /// Duration in seconds to reach this position from the previous point.
+    pub duration: f64,
 }
 
 /// LFO (Low Frequency Oscillator) configuration.

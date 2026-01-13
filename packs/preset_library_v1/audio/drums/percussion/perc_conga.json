@@ -1,0 +1,94 @@
+{
+  "spec_version": 1,
+  "asset_id": "preset_perc_conga",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 20016,
+  "description": "Alternative conga - mid-range pitched hand drum with Latin character",
+  "outputs": [{
+    "kind": "primary",
+    "format": "wav",
+    "path": "test-outputs/preset_library_v1/audio/drums/percussion/perc_conga.wav"
+  }],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "duration_seconds": 0.5,
+      "sample_rate": 44100,
+      "layers": [
+        {
+          "synthesis": {
+            "type": "oscillator",
+            "waveform": "sine",
+            "frequency": 275.0,
+            "freq_sweep": {
+              "end_freq": 265.0,
+              "curve": "exponential"
+            }
+          },
+          "envelope": {
+            "attack": 0.005,
+            "decay": 0.12,
+            "sustain": 0.3,
+            "release": 0.15
+          },
+          "volume": 0.65,
+          "pan": 0
+        },
+        {
+          "synthesis": {
+            "type": "oscillator",
+            "waveform": "triangle",
+            "frequency": 137.5
+          },
+          "envelope": {
+            "attack": 0.005,
+            "decay": 0.14,
+            "sustain": 0.25,
+            "release": 0.18
+          },
+          "volume": 0.35,
+          "pan": 0
+        },
+        {
+          "synthesis": {
+            "type": "noise_burst",
+            "noise_type": "white",
+            "filter": {
+              "type": "bandpass",
+              "center": 2800.0,
+              "resonance": 1.8
+            }
+          },
+          "envelope": {
+            "attack": 0.001,
+            "decay": 0.04,
+            "sustain": 0.0,
+            "release": 0.02
+          },
+          "volume": 0.18,
+          "pan": 0
+        },
+        {
+          "synthesis": {
+            "type": "noise_burst",
+            "noise_type": "pink",
+            "filter": {
+              "type": "highpass",
+              "cutoff": 1500.0,
+              "resonance": 0.8
+            }
+          },
+          "envelope": {
+            "attack": 0.003,
+            "decay": 0.08,
+            "sustain": 0.1,
+            "release": 0.06
+          },
+          "volume": 0.12,
+          "pan": 0
+        }
+      ]
+    }
+  }
+}

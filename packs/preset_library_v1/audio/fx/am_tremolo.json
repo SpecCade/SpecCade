@@ -1,0 +1,40 @@
+{
+  "spec_version": 1,
+  "asset_id": "preset_fx_am_tremolo",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 30001,
+  "description": "AM tremolo effect - pulsating amplitude modulation creating rhythmic volume fluctuation",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/fx/am_tremolo.wav"
+    }
+  ],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "duration_seconds": 1.5,
+      "sample_rate": 44100,
+      "layers": [
+        {
+          "synthesis": {
+            "type": "am_synth",
+            "carrier_freq": 440.0,
+            "modulator_freq": 6.0,
+            "modulation_depth": 0.7
+          },
+          "envelope": {
+            "attack": 0.05,
+            "decay": 0.2,
+            "sustain": 0.7,
+            "release": 0.3
+          },
+          "volume": 0.8,
+          "pan": 0
+        }
+      ]
+    }
+  }
+}

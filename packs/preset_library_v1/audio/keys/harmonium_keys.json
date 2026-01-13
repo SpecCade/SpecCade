@@ -1,0 +1,94 @@
+{
+  "spec_version": 1,
+  "asset_id": "harmonium_keys",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 20026,
+  "description": "Harmonium keyboard variant - reed organ with rich, breathy character",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/keys/harmonium_keys.wav"
+    }
+  ],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "duration_seconds": 3.0,
+      "sample_rate": 44100,
+      "base_note": "C4",
+      "layers": [
+        {
+          "synthesis": {
+            "type": "wavetable",
+            "table": "analog",
+            "frequency": 261.63,
+            "position": 0.4,
+            "voices": 4,
+            "detune": 12.0
+          },
+          "envelope": {
+            "attack": 0.12,
+            "decay": 0.15,
+            "sustain": 0.85,
+            "release": 0.45
+          },
+          "volume": 0.5,
+          "pan": 0.0
+        },
+        {
+          "synthesis": {
+            "type": "wavetable",
+            "table": "pwm",
+            "frequency": 261.63,
+            "position": 0.35,
+            "voices": 3,
+            "detune": 8.0
+          },
+          "envelope": {
+            "attack": 0.13,
+            "decay": 0.18,
+            "sustain": 0.82,
+            "release": 0.42
+          },
+          "volume": 0.35,
+          "pan": 0.0
+        },
+        {
+          "synthesis": {
+            "type": "wavetable",
+            "table": "organ",
+            "frequency": 261.63,
+            "position": 0.25,
+            "voices": 2,
+            "detune": 6.0
+          },
+          "envelope": {
+            "attack": 0.14,
+            "decay": 0.2,
+            "sustain": 0.8,
+            "release": 0.4
+          },
+          "volume": 0.3,
+          "pan": 0.0
+        }
+      ],
+      "effects": [
+        {
+          "type": "chorus",
+          "rate": 4.2,
+          "depth": 0.28,
+          "wet": 0.4
+        },
+        {
+          "type": "phaser",
+          "rate": 0.45,
+          "depth": 0.5,
+          "stages": 4,
+          "wet": 0.25
+        }
+      ]
+    }
+  }
+}
