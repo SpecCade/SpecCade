@@ -61,7 +61,6 @@ Legend (informal triage tags used below):
   - Candidate recipe: `texture.trimsheet_v1`
 - `[I]` Decals: RGBA decal + optional normal/roughness + placement metadata
   - Candidate recipe: `texture.decal_v1`
-- `[I]` Expand `texture.packed_v1` sources beyond noise-only patterns (stripes, grids, gradients, worley edges)
 - `[G]` Terrain splat sets: albedo/normal/roughness + splat masks + macro variation
   - Candidate recipe: `texture.splat_set_v1`
 - `[G]` Stylized hand-painted helpers: edge highlights + ambient shading ramp + hue drift (big throughput win)
@@ -134,13 +133,7 @@ Legend (informal triage tags used below):
 
 ## Pipeline “Powerhouse” Features
 
-- `[Q]` Implement `variants[]` expansion in CLI (reserved in spec docs) for seed sweeps/sets
-  - Implemented (2026-01-12): `speccade generate --expand-variants` generates each variant under `{out_root}/variants/{variant_id}/` and writes a sibling report `${asset_id}__${variant_id}.report.json`
-- `[Q]` Output manifests per asset: hash, metrics, license, recipe hash, toolchain/backend versions
-  - Implemented (2026-01-12): `${asset_id}.report.json` now includes `recipe_hash` plus core provenance fields (`asset_id`, `asset_type`, `license`, `seed`, `recipe_kind`) alongside existing `spec_hash`, `backend_version`, and `target_triple`
 - `[I]` Incremental builds: content-addressed cache keyed by canonical JSON + toolchain/backend versions
-- `[I]` Provenance + licensing: embed recipe + seed + commit hash into metadata, SPDX-like tagging
-  - Partially implemented (2026-01-12): reports now include recipe + seed + license metadata; commit hash embedding is still TODO
 - `[I]` CI gates: `fmt`, `clippy`, determinism checks, golden hashes, performance budgets
 - `[I]` Quality controls: perceptual diffing (image SSIM/ΔE; audio loudness/spectral), duplicate detection
 - `[I]` Preset registry: stable preset IDs + “preset + overrides” across audio/texture/modifier stacks

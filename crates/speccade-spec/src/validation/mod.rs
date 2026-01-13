@@ -808,47 +808,287 @@ fn validate_texture_packed_outputs(
                 pattern,
                 noise_type,
                 octaves,
+                axis,
+                frequency,
+                duty_cycle,
+                phase,
+                cells,
+                line_width,
+                start,
+                end,
+                jitter,
+                distance_fn,
             } => {
-                if pattern != "noise" {
-                    result.add_error(ValidationError::with_path(
-                        ErrorCode::InvalidRecipeParams,
-                        format!("maps.{} pattern '{}' is not supported", key, pattern),
-                        format!("recipe.params.maps.{}.pattern", key),
-                    ));
-                }
+                match pattern.as_str() {
+                    "noise" => {
+                        if axis.is_some()
+                            || frequency.is_some()
+                            || duty_cycle.is_some()
+                            || phase.is_some()
+                            || cells.is_some()
+                            || line_width.is_some()
+                            || start.is_some()
+                            || end.is_some()
+                            || jitter.is_some()
+                            || distance_fn.is_some()
+                        {
+                            result.add_error(ValidationError::with_path(
+                                ErrorCode::InvalidRecipeParams,
+                                format!(
+                                    "maps.{} pattern 'noise' does not accept non-noise parameters",
+                                    key
+                                ),
+                                format!("recipe.params.maps.{}", key),
+                            ));
+                        }
 
-                let noise = noise_type
-                    .as_deref()
-                    .unwrap_or("perlin")
-                    .to_lowercase();
+                        let noise = noise_type
+                            .as_deref()
+                            .unwrap_or("perlin")
+                            .to_lowercase();
 
-                let is_fbm = noise == "fbm";
+                        let is_fbm = noise == "fbm";
 
-                if !matches!(
-                    noise.as_str(),
-                    "perlin" | "simplex" | "fbm" | "worley"
-                ) {
-                    result.add_error(ValidationError::with_path(
-                        ErrorCode::InvalidRecipeParams,
-                        format!("maps.{} noise_type '{}' is not supported", key, noise),
-                        format!("recipe.params.maps.{}.noise_type", key),
-                    ));
-                }
+                        if !matches!(
+                            noise.as_str(),
+                            "perlin" | "simplex" | "fbm" | "worley"
+                        ) {
+                            result.add_error(ValidationError::with_path(
+                                ErrorCode::InvalidRecipeParams,
+                                format!("maps.{} noise_type '{}' is not supported", key, noise),
+                                format!("recipe.params.maps.{}.noise_type", key),
+                            ));
+                        }
 
-                if !is_fbm && octaves.is_some() {
-                    result.add_error(ValidationError::with_path(
-                        ErrorCode::InvalidRecipeParams,
-                        format!("maps.{} octaves is only valid for noise_type 'fbm'", key),
-                        format!("recipe.params.maps.{}.octaves", key),
-                    ));
-                }
+                        if !is_fbm && octaves.is_some() {
+                            result.add_error(ValidationError::with_path(
+                                ErrorCode::InvalidRecipeParams,
+                                format!("maps.{} octaves is only valid for noise_type 'fbm'", key),
+                                format!("recipe.params.maps.{}.octaves", key),
+                            ));
+                        }
 
-                if is_fbm {
-                    if let Some(0) = octaves {
+                        if is_fbm {
+                            if matches!(*octaves, Some(0)) {
+                                result.add_error(ValidationError::with_path(
+                                    ErrorCode::InvalidRecipeParams,
+                                    format!("maps.{} octaves must be >= 1", key),
+                                    format!("recipe.params.maps.{}.octaves", key),
+                                ));
+                            }
+                        }
+                    }
+                    "worley_edges" => {
+                        if noise_type.is_some()
+                            || octaves.is_some()
+                            || axis.is_some()
+                            || frequency.is_some()
+                            || duty_cycle.is_some()
+                            || phase.is_some()
+                            || cells.is_some()
+                            || line_width.is_some()
+                            || start.is_some()
+                            || end.is_some()
+                        {
+                            result.add_error(ValidationError::with_path(
+                                ErrorCode::InvalidRecipeParams,
+                                format!(
+                                    "maps.{} pattern 'worley_edges' only supports jitter/distance_fn",
+                                    key
+                                ),
+                                format!("recipe.params.maps.{}", key),
+                            ));
+                        }
+
+                        if let Some(jitter) = *jitter {
+                            if let Err(e) =
+                                validate_unit_interval(&format!("maps.{}.jitter", key), jitter)
+                            {
+                                result.add_error(ValidationError::with_path(
+                                    ErrorCode::InvalidRecipeParams,
+                                    e.to_string(),
+                                    format!("recipe.params.maps.{}.jitter", key),
+                                ));
+                            }
+                        }
+
+                        if let Some(raw) = distance_fn.as_deref() {
+                            let normalized = raw.to_lowercase();
+                            if !matches!(
+                                normalized.as_str(),
+                                "euclidean" | "manhattan" | "chebyshev"
+                            ) {
+                                result.add_error(ValidationError::with_path(
+                                    ErrorCode::InvalidRecipeParams,
+                                    format!(
+                                        "maps.{} distance_fn '{}' is not supported",
+                                        key, raw
+                                    ),
+                                    format!("recipe.params.maps.{}.distance_fn", key),
+                                ));
+                            }
+                        }
+                    }
+                    "stripes" => {
+                        if noise_type.is_some()
+                            || octaves.is_some()
+                            || cells.is_some()
+                            || line_width.is_some()
+                            || start.is_some()
+                            || end.is_some()
+                            || jitter.is_some()
+                            || distance_fn.is_some()
+                        {
+                            result.add_error(ValidationError::with_path(
+                                ErrorCode::InvalidRecipeParams,
+                                format!(
+                                    "maps.{} pattern 'stripes' does not accept noise/grid/gradient parameters",
+                                    key
+                                ),
+                                format!("recipe.params.maps.{}", key),
+                            ));
+                        }
+
+                        if let Some(axis) = axis.as_deref() {
+                            if !matches!(axis, "x" | "y") {
+                                result.add_error(ValidationError::with_path(
+                                    ErrorCode::InvalidRecipeParams,
+                                    format!(
+                                        "maps.{} axis '{}' is not supported (expected 'x' or 'y')",
+                                        key, axis
+                                    ),
+                                    format!("recipe.params.maps.{}.axis", key),
+                                ));
+                            }
+                        }
+
+                        if matches!(*frequency, Some(0)) {
+                            result.add_error(ValidationError::with_path(
+                                ErrorCode::InvalidRecipeParams,
+                                format!("maps.{} frequency must be >= 1", key),
+                                format!("recipe.params.maps.{}.frequency", key),
+                            ));
+                        }
+
+                        if let Some(duty) = *duty_cycle {
+                            if let Err(e) = validate_unit_interval(
+                                &format!("maps.{}.duty_cycle", key),
+                                duty,
+                            ) {
+                                result.add_error(ValidationError::with_path(
+                                    ErrorCode::InvalidRecipeParams,
+                                    e.to_string(),
+                                    format!("recipe.params.maps.{}.duty_cycle", key),
+                                ));
+                            }
+                        }
+                    }
+                    "grid" => {
+                        if noise_type.is_some()
+                            || octaves.is_some()
+                            || axis.is_some()
+                            || frequency.is_some()
+                            || duty_cycle.is_some()
+                            || start.is_some()
+                            || end.is_some()
+                            || jitter.is_some()
+                            || distance_fn.is_some()
+                        {
+                            result.add_error(ValidationError::with_path(
+                                ErrorCode::InvalidRecipeParams,
+                                format!(
+                                    "maps.{} pattern 'grid' only supports cells/line_width/phase",
+                                    key
+                                ),
+                                format!("recipe.params.maps.{}", key),
+                            ));
+                        }
+
+                        if let Some([cx, cy]) = *cells {
+                            if cx == 0 || cy == 0 {
+                                result.add_error(ValidationError::with_path(
+                                    ErrorCode::InvalidRecipeParams,
+                                    format!("maps.{} cells must be >= 1", key),
+                                    format!("recipe.params.maps.{}.cells", key),
+                                ));
+                            }
+                        }
+
+                        if let Some(width) = *line_width {
+                            if !(width >= 0.0 && width <= 0.5) {
+                                result.add_error(ValidationError::with_path(
+                                    ErrorCode::InvalidRecipeParams,
+                                    format!(
+                                        "maps.{} line_width must be in range [0, 0.5]",
+                                        key
+                                    ),
+                                    format!("recipe.params.maps.{}.line_width", key),
+                                ));
+                            }
+                        }
+                    }
+                    "gradient" => {
+                        if noise_type.is_some()
+                            || octaves.is_some()
+                            || frequency.is_some()
+                            || duty_cycle.is_some()
+                            || cells.is_some()
+                            || line_width.is_some()
+                            || jitter.is_some()
+                            || distance_fn.is_some()
+                        {
+                            result.add_error(ValidationError::with_path(
+                                ErrorCode::InvalidRecipeParams,
+                                format!(
+                                    "maps.{} pattern 'gradient' does not accept noise/grid/stripes parameters",
+                                    key
+                                ),
+                                format!("recipe.params.maps.{}", key),
+                            ));
+                        }
+
+                        if let Some(axis) = axis.as_deref() {
+                            if !matches!(axis, "x" | "y") {
+                                result.add_error(ValidationError::with_path(
+                                    ErrorCode::InvalidRecipeParams,
+                                    format!(
+                                        "maps.{} axis '{}' is not supported (expected 'x' or 'y')",
+                                        key, axis
+                                    ),
+                                    format!("recipe.params.maps.{}.axis", key),
+                                ));
+                            }
+                        }
+
+                        if let Some(start) = *start {
+                            if let Err(e) =
+                                validate_unit_interval(&format!("maps.{}.start", key), start)
+                            {
+                                result.add_error(ValidationError::with_path(
+                                    ErrorCode::InvalidRecipeParams,
+                                    e.to_string(),
+                                    format!("recipe.params.maps.{}.start", key),
+                                ));
+                            }
+                        }
+
+                        if let Some(end) = *end {
+                            if let Err(e) =
+                                validate_unit_interval(&format!("maps.{}.end", key), end)
+                            {
+                                result.add_error(ValidationError::with_path(
+                                    ErrorCode::InvalidRecipeParams,
+                                    e.to_string(),
+                                    format!("recipe.params.maps.{}.end", key),
+                                ));
+                            }
+                        }
+                    }
+                    _ => {
                         result.add_error(ValidationError::with_path(
                             ErrorCode::InvalidRecipeParams,
-                            format!("maps.{} octaves must be >= 1", key),
-                            format!("recipe.params.maps.{}.octaves", key),
+                            format!("maps.{} pattern '{}' is not supported", key, pattern),
+                            format!("recipe.params.maps.{}.pattern", key),
                         ));
                     }
                 }
@@ -1689,6 +1929,75 @@ mod tests {
                             "noise_type": "perlin",
                             "octaves": 3
                         }
+                    }
+                }),
+            ))
+            .build();
+
+        let result = validate_for_generate(&spec);
+        assert!(!result.is_ok());
+        assert!(result
+            .errors
+            .iter()
+            .any(|e| e.code == ErrorCode::InvalidRecipeParams));
+    }
+
+    #[test]
+    fn test_texture_packed_accepts_non_noise_patterns() {
+        let spec = Spec::builder("test-packed-patterns-01", AssetType::Texture)
+            .license("CC0-1.0")
+            .seed(42)
+            .output(OutputSpec::packed(
+                OutputFormat::Png,
+                "textures/patterns.png",
+                PackedChannels {
+                    r: ChannelSource::key("stripes"),
+                    g: ChannelSource::key("grid"),
+                    b: ChannelSource::key("gradient"),
+                    a: Some(ChannelSource::key("edges")),
+                },
+            ))
+            .recipe(crate::recipe::Recipe::new(
+                "texture.packed_v1",
+                serde_json::json!({
+                    "resolution": [16, 16],
+                    "tileable": true,
+                    "maps": {
+                        "stripes": { "type": "pattern", "pattern": "stripes", "axis": "x", "frequency": 4, "duty_cycle": 0.25, "phase": 0.0 },
+                        "grid": { "type": "pattern", "pattern": "grid", "cells": [4, 4], "line_width": 0.1, "phase": 0.0 },
+                        "gradient": { "type": "pattern", "pattern": "gradient", "axis": "y", "start": 0.0, "end": 1.0, "phase": 0.0 },
+                        "edges": { "type": "pattern", "pattern": "worley_edges", "jitter": 1.0, "distance_fn": "euclidean" }
+                    }
+                }),
+            ))
+            .build();
+
+        let result = validate_for_generate(&spec);
+        assert!(result.is_ok(), "errors: {:?}", result.errors);
+    }
+
+    #[test]
+    fn test_texture_packed_rejects_noise_with_non_noise_params() {
+        let spec = Spec::builder("test-packed-noise-params-01", AssetType::Texture)
+            .license("CC0-1.0")
+            .seed(42)
+            .output(OutputSpec::packed(
+                OutputFormat::Png,
+                "textures/out-packed.png",
+                PackedChannels {
+                    r: ChannelSource::constant(0.0),
+                    g: ChannelSource::constant(0.0),
+                    b: ChannelSource::constant(0.0),
+                    a: None,
+                },
+            ))
+            .recipe(crate::recipe::Recipe::new(
+                "texture.packed_v1",
+                serde_json::json!({
+                    "resolution": [4, 4],
+                    "tileable": true,
+                    "maps": {
+                        "height": { "type": "pattern", "pattern": "noise", "noise_type": "perlin", "frequency": 4 }
                     }
                 }),
             ))

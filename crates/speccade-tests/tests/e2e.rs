@@ -616,7 +616,7 @@ mod generation_tier1 {
         }
     }
 
-    /// Test that packed texture goldens match expected PNG outputs.
+    /// Test that packed texture goldens match expected output hashes.
     #[test]
     fn test_packed_texture_goldens_match_expected() {
         if !GoldenFixtures::exists() {
@@ -625,13 +625,21 @@ mod generation_tier1 {
         }
 
         let specs_dir = GoldenFixtures::speccade_specs_dir().join("texture");
+        let target_triple = speccade_spec::ReportBuilder::new(
+            "hash".to_string(),
+            "speccade-tests".to_string(),
+        )
+        .build()
+        .target_triple;
         let expected_dir = GoldenFixtures::expected_hashes_dir()
-            .parent()
-            .unwrap()
-            .join("texture");
+            .join("texture")
+            .join(&target_triple);
 
         if !expected_dir.exists() {
-            println!("Expected packed texture outputs not found, skipping test");
+            println!(
+                "Expected packed texture hashes not found for target '{}', skipping test",
+                target_triple
+            );
             return;
         }
 
@@ -639,6 +647,7 @@ mod generation_tier1 {
             specs_dir.join("packed_orm.json"),
             specs_dir.join("packed_mre.json"),
             specs_dir.join("packed_smoothness.json"),
+            specs_dir.join("packed_patterns.json"),
         ];
 
         for spec_path in specs {
@@ -661,16 +670,20 @@ mod generation_tier1 {
                     speccade_backend_texture::png::write_rgba_to_vec_with_hash(&packed, &config)
                         .expect("Failed to encode PNG");
 
-                let expected_path = expected_dir.join(&output.path);
+                let expected_path = expected_dir
+                    .join(&spec.asset_id)
+                    .join(format!("{}.blake3", output.path));
                 if !expected_path.exists() {
                     println!(
-                        "Expected packed texture output missing: {:?}; skipping test",
+                        "Expected packed texture hash missing: {:?}; skipping test",
                         expected_path
                     );
                     return;
                 }
-                let expected = fs::read(&expected_path).expect("Missing expected PNG output");
-                let expected_hash = speccade_backend_texture::png::hash_png(&expected);
+                let expected_hash = fs::read_to_string(&expected_path)
+                    .expect("Missing expected hash file")
+                    .trim()
+                    .to_string();
 
                 assert_eq!(
                     hash, expected_hash,
@@ -678,9 +691,8 @@ mod generation_tier1 {
                     spec_path
                 );
 
-                // Sanity check: generated PNG is non-empty and decodes.
+                // Sanity check: generated PNG is non-empty.
                 assert!(!data.is_empty(), "Generated PNG is empty");
-                assert!(validate_png_file(&expected_path).is_ok());
             }
         }
     }

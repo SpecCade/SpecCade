@@ -58,13 +58,23 @@ pub fn run(spec_path: &str, out_root: Option<&str>, expand_variants: bool) -> Re
     let validation_result = validate_for_generate(&spec);
 
     let backend_version = format!("speccade-cli v{}", env!("CARGO_PKG_VERSION"));
+    let git_commit = option_env!("SPECCADE_GIT_SHA").map(|s| s.to_string());
+    let git_dirty = matches!(option_env!("SPECCADE_GIT_DIRTY"), Some("1"));
+
+    let with_git = |builder: ReportBuilder| -> ReportBuilder {
+        if let Some(commit) = git_commit.as_ref() {
+            builder.git_metadata(commit.clone(), git_dirty)
+        } else {
+            builder
+        }
+    };
 
     if !validation_result.is_ok() {
         let duration_ms = start.elapsed().as_millis() as u64;
 
         // Build error report
         let mut report_builder =
-            ReportBuilder::new(spec_hash, backend_version)
+            with_git(ReportBuilder::new(spec_hash, backend_version))
                 .spec_metadata(&spec)
                 .duration_ms(duration_ms);
         if let Some(hash) = recipe_hash {
@@ -121,7 +131,10 @@ pub fn run(spec_path: &str, out_root: Option<&str>, expand_variants: bool) -> Re
             let output_count = outputs.len();
 
             // Build success report
-            let mut report_builder = ReportBuilder::new(spec_hash.clone(), backend_version.clone())
+            let mut report_builder = with_git(ReportBuilder::new(
+                spec_hash.clone(),
+                backend_version.clone(),
+            ))
                 .spec_metadata(&spec)
                 .duration_ms(base_duration_ms);
             if let Some(hash) = recipe_hash.clone() {
@@ -150,7 +163,10 @@ pub fn run(spec_path: &str, out_root: Option<&str>, expand_variants: bool) -> Re
             any_generation_failed = true;
 
             // Build error report
-            let mut report_builder = ReportBuilder::new(spec_hash.clone(), backend_version.clone())
+            let mut report_builder = with_git(ReportBuilder::new(
+                spec_hash.clone(),
+                backend_version.clone(),
+            ))
                 .spec_metadata(&spec)
                 .duration_ms(base_duration_ms);
             if let Some(hash) = recipe_hash.clone() {
@@ -210,7 +226,10 @@ pub fn run(spec_path: &str, out_root: Option<&str>, expand_variants: bool) -> Re
                     Ok(outputs) => {
                         let output_count = outputs.len();
                         let mut report_builder =
-                            ReportBuilder::new(variant_spec_hash, backend_version.clone())
+                            with_git(ReportBuilder::new(
+                                variant_spec_hash,
+                                backend_version.clone(),
+                            ))
                                 .spec_metadata(&variant_spec)
                                 .variant(spec_hash.clone(), variant_id.to_string())
                                 .duration_ms(variant_duration_ms);
@@ -240,7 +259,10 @@ pub fn run(spec_path: &str, out_root: Option<&str>, expand_variants: bool) -> Re
                         any_generation_failed = true;
 
                         let mut report_builder =
-                            ReportBuilder::new(variant_spec_hash, backend_version.clone())
+                            with_git(ReportBuilder::new(
+                                variant_spec_hash,
+                                backend_version.clone(),
+                            ))
                                 .spec_metadata(&variant_spec)
                                 .variant(spec_hash.clone(), variant_id.to_string())
                                 .duration_ms(variant_duration_ms);

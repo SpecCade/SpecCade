@@ -59,6 +59,12 @@ pub struct Report {
     pub backend_version: String,
     /// Rust target triple (e.g., "x86_64-pc-windows-msvc").
     pub target_triple: String,
+    /// Git commit hash of the toolchain/backend producing this report (if available).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub git_commit: Option<String>,
+    /// Whether the toolchain/backend had uncommitted changes when built (if available).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub git_dirty: Option<bool>,
 }
 
 impl Report {
@@ -371,6 +377,8 @@ pub struct ReportBuilder {
     duration_ms: u64,
     backend_version: String,
     target_triple: String,
+    git_commit: Option<String>,
+    git_dirty: Option<bool>,
 }
 
 impl ReportBuilder {
@@ -412,6 +420,8 @@ impl ReportBuilder {
             duration_ms: 0,
             backend_version,
             target_triple: Self::detect_target_triple(),
+            git_commit: None,
+            git_dirty: None,
         }
     }
 
@@ -513,6 +523,13 @@ impl ReportBuilder {
         self
     }
 
+    /// Sets git provenance metadata.
+    pub fn git_metadata(mut self, commit: impl Into<String>, dirty: bool) -> Self {
+        self.git_commit = Some(commit.into());
+        self.git_dirty = Some(dirty);
+        self
+    }
+
     /// Builds the final report.
     pub fn build(self) -> Report {
         Report {
@@ -533,6 +550,8 @@ impl ReportBuilder {
             duration_ms: self.duration_ms,
             backend_version: self.backend_version,
             target_triple: self.target_triple,
+            git_commit: self.git_commit,
+            git_dirty: self.git_dirty,
         }
     }
 

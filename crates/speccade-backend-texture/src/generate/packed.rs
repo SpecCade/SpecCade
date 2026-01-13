@@ -5,7 +5,10 @@ use std::collections::HashMap;
 use speccade_spec::recipe::texture::{MapDefinition, TexturePackedV1Params};
 
 use crate::maps::{AoGenerator, GrayscaleBuffer, TextureBuffer};
-use crate::noise::{tile_coord, Fbm, Noise2D, PerlinNoise, SimplexNoise, WorleyNoise};
+use crate::noise::{
+    tile_coord, DistanceFunction, Fbm, Noise2D, PerlinNoise, SimplexNoise, WorleyNoise,
+    WorleyReturn,
+};
 use crate::rng::DeterministicRng;
 
 use super::helpers::{validate_resolution, validate_unit_interval};
@@ -149,53 +152,348 @@ fn generate_grayscale_map(
             pattern,
             noise_type,
             octaves,
+            axis,
+            frequency,
+            duty_cycle,
+            phase,
+            cells,
+            line_width,
+            start,
+            end,
+            jitter,
+            distance_fn,
         } => {
-            if pattern != "noise" {
-                return Err(GenerateError::InvalidParameter(format!(
-                    "map '{}' has unsupported pattern '{}'",
-                    key, pattern
-                )));
-            }
-
-            let noise_kind = parse_noise_type(noise_type.as_deref())?;
-            let octaves = match noise_kind {
-                NoiseKind::Fbm => match octaves {
-                    Some(0) => {
+            match pattern.as_str() {
+                "noise" => {
+                    if axis.is_some()
+                        || frequency.is_some()
+                        || duty_cycle.is_some()
+                        || phase.is_some()
+                        || cells.is_some()
+                        || line_width.is_some()
+                        || start.is_some()
+                        || end.is_some()
+                        || jitter.is_some()
+                        || distance_fn.is_some()
+                    {
                         return Err(GenerateError::InvalidParameter(format!(
-                            "map '{}' has invalid octaves=0",
-                            key
-                        )))
-                    }
-                    Some(value) => u8::try_from(*value).map_err(|_| {
-                        GenerateError::InvalidParameter(format!(
-                            "map '{}' has too many octaves ({})",
-                            key, value
-                        ))
-                    })?,
-                    None => DEFAULT_FBM_OCTAVES,
-                },
-                _ => {
-                    if octaves.is_some() {
-                        return Err(GenerateError::InvalidParameter(format!(
-                            "map '{}' sets octaves for non-fbm noise",
+                            "map '{}' pattern 'noise' does not accept non-noise parameters",
                             key
                         )));
                     }
-                    DEFAULT_FBM_OCTAVES
-                }
-            };
 
-            let map_seed = DeterministicRng::derive_variant_seed(seed, key);
-            let noise = build_noise(noise_kind, map_seed, octaves);
-            Ok(generate_noise_map(
-                width,
-                height,
-                tileable,
-                DEFAULT_NOISE_SCALE,
-                noise.as_ref(),
-            ))
+                    let noise_kind = parse_noise_type(noise_type.as_deref())?;
+                    let octaves = match noise_kind {
+                        NoiseKind::Fbm => match octaves {
+                            Some(0) => {
+                                return Err(GenerateError::InvalidParameter(format!(
+                                    "map '{}' has invalid octaves=0",
+                                    key
+                                )))
+                            }
+                            Some(value) => u8::try_from(*value).map_err(|_| {
+                                GenerateError::InvalidParameter(format!(
+                                    "map '{}' has too many octaves ({})",
+                                    key, value
+                                ))
+                            })?,
+                            None => DEFAULT_FBM_OCTAVES,
+                        },
+                        _ => {
+                            if octaves.is_some() {
+                                return Err(GenerateError::InvalidParameter(format!(
+                                    "map '{}' sets octaves for non-fbm noise",
+                                    key
+                                )));
+                            }
+                            DEFAULT_FBM_OCTAVES
+                        }
+                    };
+
+                    let map_seed = DeterministicRng::derive_variant_seed(seed, key);
+                    let noise = build_noise(noise_kind, map_seed, octaves);
+                    Ok(generate_noise_map(
+                        width,
+                        height,
+                        tileable,
+                        DEFAULT_NOISE_SCALE,
+                        noise.as_ref(),
+                    ))
+                }
+                "worley_edges" => {
+                    if noise_type.is_some()
+                        || octaves.is_some()
+                        || axis.is_some()
+                        || frequency.is_some()
+                        || duty_cycle.is_some()
+                        || phase.is_some()
+                        || cells.is_some()
+                        || line_width.is_some()
+                        || start.is_some()
+                        || end.is_some()
+                    {
+                        return Err(GenerateError::InvalidParameter(format!(
+                            "map '{}' pattern 'worley_edges' only supports jitter/distance_fn",
+                            key
+                        )));
+                    }
+
+                    if let Some(value) = *jitter {
+                        validate_unit_interval(&format!("maps.{}.jitter", key), value)?;
+                    }
+
+                    let distance_fn = parse_worley_distance_fn(distance_fn.as_deref())?;
+
+                    let map_seed = DeterministicRng::derive_variant_seed(seed, key);
+                    let mut noise =
+                        WorleyNoise::new(map_seed).with_return_type(WorleyReturn::F2MinusF1);
+                    noise = noise.with_distance_function(distance_fn);
+                    if let Some(value) = *jitter {
+                        noise = noise.with_jitter(value);
+                    }
+
+                    Ok(generate_noise_map(
+                        width,
+                        height,
+                        tileable,
+                        DEFAULT_NOISE_SCALE,
+                        &noise,
+                    ))
+                }
+                "stripes" => {
+                    if noise_type.is_some()
+                        || octaves.is_some()
+                        || cells.is_some()
+                        || line_width.is_some()
+                        || start.is_some()
+                        || end.is_some()
+                        || jitter.is_some()
+                        || distance_fn.is_some()
+                    {
+                        return Err(GenerateError::InvalidParameter(format!(
+                            "map '{}' pattern 'stripes' only supports axis/frequency/duty_cycle/phase",
+                            key
+                        )));
+                    }
+
+                    let axis = parse_axis(axis.as_deref()).map_err(|msg| {
+                        GenerateError::InvalidParameter(format!("map '{}' {}", key, msg))
+                    })?;
+                    let frequency = frequency.unwrap_or(8);
+                    if frequency == 0 {
+                        return Err(GenerateError::InvalidParameter(format!(
+                            "map '{}' has invalid frequency=0",
+                            key
+                        )));
+                    }
+                    let duty = duty_cycle.unwrap_or(0.5);
+                    validate_unit_interval(&format!("maps.{}.duty_cycle", key), duty)?;
+
+                    let phase = phase.unwrap_or(0.0);
+                    Ok(generate_stripes_map(width, height, axis, frequency, duty, phase))
+                }
+                "grid" => {
+                    if noise_type.is_some()
+                        || octaves.is_some()
+                        || axis.is_some()
+                        || frequency.is_some()
+                        || duty_cycle.is_some()
+                        || start.is_some()
+                        || end.is_some()
+                        || jitter.is_some()
+                        || distance_fn.is_some()
+                    {
+                        return Err(GenerateError::InvalidParameter(format!(
+                            "map '{}' pattern 'grid' only supports cells/line_width/phase",
+                            key
+                        )));
+                    }
+
+                    let cells = cells.unwrap_or([8, 8]);
+                    if cells[0] == 0 || cells[1] == 0 {
+                        return Err(GenerateError::InvalidParameter(format!(
+                            "map '{}' has invalid cells={:?}",
+                            key, cells
+                        )));
+                    }
+
+                    let line_width = line_width.unwrap_or(0.1);
+                    if !(line_width >= 0.0 && line_width <= 0.5) {
+                        return Err(GenerateError::InvalidParameter(format!(
+                            "map '{}' has invalid line_width={}",
+                            key, line_width
+                        )));
+                    }
+
+                    let phase = phase.unwrap_or(0.0);
+                    Ok(generate_grid_map(width, height, cells, line_width, phase))
+                }
+                "gradient" => {
+                    if noise_type.is_some()
+                        || octaves.is_some()
+                        || frequency.is_some()
+                        || duty_cycle.is_some()
+                        || cells.is_some()
+                        || line_width.is_some()
+                        || jitter.is_some()
+                        || distance_fn.is_some()
+                    {
+                        return Err(GenerateError::InvalidParameter(format!(
+                            "map '{}' pattern 'gradient' only supports axis/start/end/phase",
+                            key
+                        )));
+                    }
+
+                    let axis = parse_axis(axis.as_deref()).map_err(|msg| {
+                        GenerateError::InvalidParameter(format!("map '{}' {}", key, msg))
+                    })?;
+                    let start = start.unwrap_or(0.0);
+                    let end = end.unwrap_or(1.0);
+                    validate_unit_interval(&format!("maps.{}.start", key), start)?;
+                    validate_unit_interval(&format!("maps.{}.end", key), end)?;
+
+                    let phase = phase.unwrap_or(0.0);
+                    Ok(generate_gradient_map(
+                        width,
+                        height,
+                        axis,
+                        start,
+                        end,
+                        phase,
+                        tileable,
+                    ))
+                }
+                other => Err(GenerateError::InvalidParameter(format!(
+                    "map '{}' has unsupported pattern '{}'",
+                    key, other
+                ))),
+            }
         }
     }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Axis {
+    X,
+    Y,
+}
+
+fn parse_axis(axis: Option<&str>) -> Result<Axis, &'static str> {
+    match axis.unwrap_or("x") {
+        "x" => Ok(Axis::X),
+        "y" => Ok(Axis::Y),
+        _ => Err("has invalid axis (expected 'x' or 'y')"),
+    }
+}
+
+fn parse_worley_distance_fn(value: Option<&str>) -> Result<DistanceFunction, GenerateError> {
+    let Some(raw) = value else {
+        return Ok(DistanceFunction::Euclidean);
+    };
+
+    match raw.trim().to_lowercase().as_str() {
+        "euclidean" => Ok(DistanceFunction::Euclidean),
+        "manhattan" => Ok(DistanceFunction::Manhattan),
+        "chebyshev" => Ok(DistanceFunction::Chebyshev),
+        _ => Err(GenerateError::InvalidParameter(format!(
+            "unsupported distance_fn '{}'",
+            raw
+        ))),
+    }
+}
+
+#[inline]
+fn fract01(value: f64) -> f64 {
+    value.rem_euclid(1.0)
+}
+
+fn generate_stripes_map(
+    width: u32,
+    height: u32,
+    axis: Axis,
+    frequency: u32,
+    duty_cycle: f64,
+    phase: f64,
+) -> GrayscaleBuffer {
+    let mut buffer = GrayscaleBuffer::new(width, height, 0.0);
+    let freq = frequency as f64;
+
+    for y in 0..height {
+        for x in 0..width {
+            let coord = match axis {
+                Axis::X => x as f64 / width as f64,
+                Axis::Y => y as f64 / height as f64,
+            };
+            let t = coord * freq + phase;
+            let stripe = fract01(t) < duty_cycle;
+            buffer.set(x, y, if stripe { 1.0 } else { 0.0 });
+        }
+    }
+
+    buffer
+}
+
+fn generate_grid_map(
+    width: u32,
+    height: u32,
+    cells: [u32; 2],
+    line_width: f64,
+    phase: f64,
+) -> GrayscaleBuffer {
+    let mut buffer = GrayscaleBuffer::new(width, height, 0.0);
+
+    let cells_x = cells[0] as f64;
+    let cells_y = cells[1] as f64;
+
+    for y in 0..height {
+        for x in 0..width {
+            let u = x as f64 / width as f64;
+            let v = y as f64 / height as f64;
+            let fx = fract01(u * cells_x + phase);
+            let fy = fract01(v * cells_y + phase);
+
+            let is_line = fx < line_width
+                || fx > 1.0 - line_width
+                || fy < line_width
+                || fy > 1.0 - line_width;
+            buffer.set(x, y, if is_line { 1.0 } else { 0.0 });
+        }
+    }
+
+    buffer
+}
+
+fn generate_gradient_map(
+    width: u32,
+    height: u32,
+    axis: Axis,
+    start: f64,
+    end: f64,
+    phase: f64,
+    tileable: bool,
+) -> GrayscaleBuffer {
+    let mut buffer = GrayscaleBuffer::new(width, height, 0.0);
+
+    for y in 0..height {
+        for x in 0..width {
+            let coord = match axis {
+                Axis::X => x as f64 / width as f64,
+                Axis::Y => y as f64 / height as f64,
+            };
+
+            let t = if tileable {
+                let wrapped = fract01(coord + phase);
+                1.0 - (wrapped * 2.0 - 1.0).abs()
+            } else {
+                (coord + phase).clamp(0.0, 1.0)
+            };
+
+            let value = start + (end - start) * t;
+            buffer.set(x, y, value.clamp(0.0, 1.0));
+        }
+    }
+
+    buffer
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -281,6 +579,16 @@ mod tests {
                 pattern: "noise".to_string(),
                 noise_type: Some("fbm".to_string()),
                 octaves: Some(4),
+                axis: None,
+                frequency: None,
+                duty_cycle: None,
+                phase: None,
+                cells: None,
+                line_width: None,
+                start: None,
+                end: None,
+                jitter: None,
+                distance_fn: None,
             },
         );
         maps.insert(
@@ -390,6 +698,16 @@ mod tests {
                 pattern: "noise".to_string(),
                 noise_type: Some("fbm".to_string()),
                 octaves: Some(4),
+                axis: None,
+                frequency: None,
+                duty_cycle: None,
+                phase: None,
+                cells: None,
+                line_width: None,
+                start: None,
+                end: None,
+                jitter: None,
+                distance_fn: None,
             },
         );
         maps.insert(
@@ -439,5 +757,196 @@ mod tests {
                 y
             );
         }
+    }
+
+    #[test]
+    fn stripes_pattern_generates_expected_pixels() {
+        let mut maps = HashMap::new();
+        maps.insert(
+            "stripes".to_string(),
+            MapDefinition::Pattern {
+                pattern: "stripes".to_string(),
+                noise_type: None,
+                octaves: None,
+                axis: Some("x".to_string()),
+                frequency: Some(2),
+                duty_cycle: Some(0.5),
+                phase: Some(0.0),
+                cells: None,
+                line_width: None,
+                start: None,
+                end: None,
+                jitter: None,
+                distance_fn: None,
+            },
+        );
+
+        let params = TexturePackedV1Params {
+            resolution: [8, 1],
+            tileable: true,
+            maps,
+        };
+
+        let maps = generate_packed_maps(&params, 0).unwrap();
+        let stripes = maps.get("stripes").unwrap();
+
+        let expected = [1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0];
+        for (x, expected) in expected.into_iter().enumerate() {
+            let actual = stripes.get(x as u32, 0).r;
+            assert!(
+                (actual - expected).abs() < 1e-12,
+                "stripes mismatch at x={}: expected {}, got {}",
+                x,
+                expected,
+                actual
+            );
+        }
+    }
+
+    #[test]
+    fn grid_pattern_generates_expected_lines() {
+        let mut maps = HashMap::new();
+        maps.insert(
+            "grid".to_string(),
+            MapDefinition::Pattern {
+                pattern: "grid".to_string(),
+                noise_type: None,
+                octaves: None,
+                axis: None,
+                frequency: None,
+                duty_cycle: None,
+                phase: Some(0.0),
+                cells: Some([2, 2]),
+                line_width: Some(0.25),
+                start: None,
+                end: None,
+                jitter: None,
+                distance_fn: None,
+            },
+        );
+
+        let params = TexturePackedV1Params {
+            resolution: [8, 8],
+            tileable: true,
+            maps,
+        };
+
+        let maps = generate_packed_maps(&params, 0).unwrap();
+        let grid = maps.get("grid").unwrap();
+
+        assert!((grid.get(0, 0).r - 1.0).abs() < 1e-12);
+        assert!((grid.get(1, 0).r - 1.0).abs() < 1e-12);
+        assert!((grid.get(0, 1).r - 1.0).abs() < 1e-12);
+        assert!((grid.get(1, 1).r - 0.0).abs() < 1e-12);
+        assert!((grid.get(2, 2).r - 0.0).abs() < 1e-12);
+        assert!((grid.get(4, 4).r - 1.0).abs() < 1e-12);
+    }
+
+    #[test]
+    fn gradient_pattern_generates_expected_ramp() {
+        let mut maps = HashMap::new();
+        maps.insert(
+            "gradient".to_string(),
+            MapDefinition::Pattern {
+                pattern: "gradient".to_string(),
+                noise_type: None,
+                octaves: None,
+                axis: Some("x".to_string()),
+                frequency: None,
+                duty_cycle: None,
+                phase: Some(0.0),
+                cells: None,
+                line_width: None,
+                start: Some(0.0),
+                end: Some(1.0),
+                jitter: None,
+                distance_fn: None,
+            },
+        );
+
+        let params = TexturePackedV1Params {
+            resolution: [8, 1],
+            tileable: true,
+            maps,
+        };
+
+        let maps = generate_packed_maps(&params, 0).unwrap();
+        let gradient = maps.get("gradient").unwrap();
+
+        assert!((gradient.get(0, 0).r - 0.0).abs() < 1e-12);
+        assert!((gradient.get(4, 0).r - 1.0).abs() < 1e-12);
+        assert!((gradient.get(7, 0).r - 0.25).abs() < 1e-12);
+    }
+
+    #[test]
+    fn worley_edges_pattern_is_deterministic() {
+        let mut maps = HashMap::new();
+        maps.insert(
+            "edges".to_string(),
+            MapDefinition::Pattern {
+                pattern: "worley_edges".to_string(),
+                noise_type: None,
+                octaves: None,
+                axis: None,
+                frequency: None,
+                duty_cycle: None,
+                phase: None,
+                cells: None,
+                line_width: None,
+                start: None,
+                end: None,
+                jitter: Some(1.0),
+                distance_fn: Some("manhattan".to_string()),
+            },
+        );
+
+        let params = TexturePackedV1Params {
+            resolution: [16, 16],
+            tileable: true,
+            maps,
+        };
+
+        let maps_a = generate_packed_maps(&params, 123).unwrap();
+        let maps_b = generate_packed_maps(&params, 123).unwrap();
+
+        let config = crate::png::PngConfig::default();
+        let (_, hash_a) = png::write_rgba_to_vec_with_hash(maps_a.get("edges").unwrap(), &config)
+            .unwrap();
+        let (_, hash_b) = png::write_rgba_to_vec_with_hash(maps_b.get("edges").unwrap(), &config)
+            .unwrap();
+
+        assert_eq!(hash_a, hash_b);
+    }
+
+    #[test]
+    fn noise_pattern_rejects_non_noise_params() {
+        let mut maps = HashMap::new();
+        maps.insert(
+            "height".to_string(),
+            MapDefinition::Pattern {
+                pattern: "noise".to_string(),
+                noise_type: Some("perlin".to_string()),
+                octaves: None,
+                axis: None,
+                frequency: Some(4),
+                duty_cycle: None,
+                phase: None,
+                cells: None,
+                line_width: None,
+                start: None,
+                end: None,
+                jitter: None,
+                distance_fn: None,
+            },
+        );
+
+        let params = TexturePackedV1Params {
+            resolution: [8, 8],
+            tileable: true,
+            maps,
+        };
+
+        let err = generate_packed_maps(&params, 0).unwrap_err();
+        assert!(err.to_string().contains("does not accept"));
     }
 }

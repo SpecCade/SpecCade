@@ -13,25 +13,66 @@ pub enum MapDefinition {
     /// A solid grayscale value.
     Grayscale {
         /// The grayscale value (0.0 to 1.0).
-        #[serde(default)]
+        #[serde(default, skip_serializing_if = "Option::is_none")]
         value: Option<f64>,
         /// Whether to generate from height map (for procedural variation).
-        #[serde(default)]
+        #[serde(default, skip_serializing_if = "Option::is_none")]
         from_height: Option<bool>,
         /// AO strength when generating from height (0.0 to 1.0).
-        #[serde(default)]
+        #[serde(default, skip_serializing_if = "Option::is_none")]
         ao_strength: Option<f64>,
     },
     /// A procedural pattern.
     Pattern {
-        /// The pattern type (v1: only "noise").
+        /// The pattern type.
+        ///
+        /// Supported values:
+        /// - `noise`
+        /// - `worley_edges`
+        /// - `stripes`
+        /// - `grid`
+        /// - `gradient`
         pattern: String,
         /// Noise type for noise patterns.
-        #[serde(default)]
+        #[serde(default, skip_serializing_if = "Option::is_none")]
         noise_type: Option<String>,
         /// Number of octaves for FBM noise (only valid for noise_type="fbm").
-        #[serde(default)]
+        #[serde(default, skip_serializing_if = "Option::is_none")]
         octaves: Option<u32>,
+
+        /// Axis selector for `stripes`/`gradient` (`x` or `y`).
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        axis: Option<String>,
+        /// Stripe frequency for `stripes` (count across the selected axis).
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        frequency: Option<u32>,
+        /// Stripe duty cycle for `stripes` (0.0..=1.0).
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        duty_cycle: Option<f64>,
+        /// Phase offset for periodic patterns (`stripes`, `grid`, `gradient`).
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        phase: Option<f64>,
+
+        /// Cell counts for `grid` as `[cells_x, cells_y]`.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        cells: Option<[u32; 2]>,
+        /// Line width for `grid` as a fraction of cell size (0.0..=0.5).
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        line_width: Option<f64>,
+
+        /// Start value for `gradient` (0.0..=1.0).
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        start: Option<f64>,
+        /// End value for `gradient` (0.0..=1.0).
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        end: Option<f64>,
+
+        /// Jitter for `worley_edges` (0.0..=1.0).
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        jitter: Option<f64>,
+        /// Distance function for `worley_edges` (`euclidean`, `manhattan`, `chebyshev`).
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        distance_fn: Option<String>,
     },
 }
 

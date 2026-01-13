@@ -1,0 +1,59 @@
+{
+  "spec_version": 1,
+  "asset_id": "packed_patterns",
+  "asset_type": "texture",
+  "license": "CC0-1.0",
+  "seed": 1337,
+  "description": "Packed texture demonstrating non-noise pattern sources (stripes/grid/gradient/worley_edges).",
+  "outputs": [
+    {
+      "kind": "packed",
+      "format": "png",
+      "path": "patterns.png",
+      "channels": {
+        "r": "stripes",
+        "g": "grid",
+        "b": "gradient",
+        "a": "edges"
+      }
+    }
+  ],
+  "recipe": {
+    "kind": "texture.packed_v1",
+    "params": {
+      "resolution": [64, 64],
+      "tileable": true,
+      "maps": {
+        "stripes": {
+          "type": "pattern",
+          "pattern": "stripes",
+          "axis": "x",
+          "frequency": 8,
+          "duty_cycle": 0.25,
+          "phase": 0.0
+        },
+        "grid": {
+          "type": "pattern",
+          "pattern": "grid",
+          "cells": [8, 8],
+          "line_width": 0.1,
+          "phase": 0.0
+        },
+        "gradient": {
+          "type": "pattern",
+          "pattern": "gradient",
+          "axis": "y",
+          "start": 0.0,
+          "end": 1.0,
+          "phase": 0.0
+        },
+        "edges": {
+          "type": "pattern",
+          "pattern": "worley_edges",
+          "jitter": 1.0,
+          "distance_fn": "euclidean"
+        }
+      }
+    }
+  }
+}
