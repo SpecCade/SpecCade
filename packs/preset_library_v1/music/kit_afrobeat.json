@@ -1,0 +1,83 @@
+{
+  "spec_version": 1,
+  "asset_id": "kit_afrobeat",
+  "asset_type": "music_kit",
+  "license": "CC0-1.0",
+  "description": "African/Afrobeat kit with rich polyrhythmic percussion, deep bass, and organ-like keys for groovy, danceable productions",
+  "kit": {
+    "name": "Afrobeat",
+    "genre": "world",
+    "subgenre": "afrobeat",
+    "bpm_range": [100, 130],
+    "time_signature": [4, 4],
+    "instruments": {
+      "djembe": {
+        "preset": "drums/percussion/djembe",
+        "role": "percussion",
+        "description": "Djembe for lead percussion patterns"
+      },
+      "shaker": {
+        "preset": "drums/percussion/shaker",
+        "role": "percussion",
+        "description": "Shaker for steady rhythmic texture"
+      },
+      "cowbell": {
+        "preset": "drums/percussion/cowbell",
+        "role": "percussion",
+        "description": "Cowbell for accent patterns"
+      },
+      "conga_high": {
+        "preset": "drums/percussion/conga_high",
+        "role": "percussion",
+        "description": "High conga for melodic percussion"
+      },
+      "conga_low": {
+        "preset": "drums/percussion/conga_low",
+        "role": "percussion",
+        "description": "Low conga for bass percussion tones"
+      },
+      "bongo_high": {
+        "preset": "drums/percussion/bongo_high",
+        "role": "percussion",
+        "description": "High bongo for crisp accents"
+      },
+      "bongo_low": {
+        "preset": "drums/percussion/bongo_low",
+        "role": "percussion",
+        "description": "Low bongo for deeper tones"
+      },
+      "bass": {
+        "preset": "bass/bass_round",
+        "role": "bass",
+        "description": "Round bass for warm, groovy bass lines"
+      },
+      "bass_mid": {
+        "preset": "bass/bass_mid",
+        "role": "bass",
+        "description": "Mid-focused bass for punchy lines"
+      },
+      "organ": {
+        "preset": "keys/keys_ep",
+        "role": "keys",
+        "description": "Electric piano for organ-like comping and stabs"
+      },
+      "organ_full": {
+        "preset": "keys/keys_organ_full",
+        "role": "keys",
+        "description": "Full organ for rich harmonic layers"
+      }
+    },
+    "tags": [
+      "world",
+      "afrobeat",
+      "african",
+      "funk",
+      "polyrhythm",
+      "percussion",
+      "groove",
+      "regional",
+      "ethnic",
+      "dance"
+    ]
+  }
+}

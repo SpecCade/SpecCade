@@ -1,0 +1,86 @@
+{
+    "spec_version":  1,
+    "asset_id":  "preset_celesta",
+    "asset_type":  "audio",
+    "license":  "CC0-1.0",
+    "seed":  10207,
+    "description":  "Celesta/music box - high metallic synthesis with crystalline bell-like quality",
+    "outputs":  [
+                    {
+                        "kind":  "primary",
+                        "format":  "wav",
+                        "path":  "test-outputs/preset_library_v1/audio/keys/celesta.wav"
+                    }
+                ],
+    "recipe":  {
+                   "kind":  "audio_v1",
+                   "params":  {
+                                  "base_note":  "C5",
+                                  "duration_seconds":  1.8,
+                                  "sample_rate":  44100,
+                                  "layers":  [
+                                                 {
+                                                     "synthesis":  {
+                                                                       "type":  "metallic",
+                                                                       "base_freq":  523.25,
+                                                                       "num_partials":  8,
+                                                                       "inharmonicity":  1.25
+                                                                   },
+                                                     "envelope":  {
+                                                                      "attack":  0.0008,
+                                                                      "decay":  0.6,
+                                                                      "sustain":  0.08,
+                                                                      "release":  0.8
+                                                                  },
+                                                     "volume":  0.85,
+                                                     "pan":  0.0
+                                                 },
+                                                 {
+                                                     "synthesis":  {
+                                                                       "type":  "metallic",
+                                                                       "base_freq":  1046.5,
+                                                                       "num_partials":  6,
+                                                                       "inharmonicity":  1.35
+                                                                   },
+                                                     "envelope":  {
+                                                                      "attack":  0.0005,
+                                                                      "decay":  0.35,
+                                                                      "sustain":  0.02,
+                                                                      "release":  0.4
+                                                                  },
+                                                     "volume":  0.4,
+                                                     "pan":  0.0
+                                                 },
+                                                 {
+                                                     "synthesis":  {
+                                                                       "type":  "fm_synth",
+                                                                       "carrier_freq":  523.25,
+                                                                       "modulator_freq":  2093.0,
+                                                                       "modulation_index":  2.5
+                                                                   },
+                                                     "envelope":  {
+                                                                      "attack":  0.0003,
+                                                                      "decay":  0.2,
+                                                                      "sustain":  0.0,
+                                                                      "release":  0.15
+                                                                  },
+                                                     "volume":  0.25,
+                                                     "pan":  0.0
+                                                 }
+                                             ],
+                                  "effects":  [
+                                                  {
+                                                      "type":  "reverb",
+                                                      "room_size":  0.5,
+                                                      "damping":  0.3,
+                                                      "wet":  0.25
+                                                  }
+                                              ],
+                                  "master_filter":  {
+                                                        "type":  "highpass",
+                                                        "cutoff":  300,
+                                                        "resonance":  0.1
+                                                    }
+                              }
+               }
+}

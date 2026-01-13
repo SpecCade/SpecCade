@@ -1,0 +1,68 @@
+{
+  "spec_version": 1,
+  "asset_id": "kit_south_asian",
+  "asset_type": "music_kit",
+  "license": "CC0-1.0",
+  "description": "South Asian/Indian music kit featuring tabla drums, sitar-like plucks, tanpura drones, and bansuri-like flute for classical and film music styles",
+  "kit": {
+    "name": "South Asian / Indian",
+    "genre": "world",
+    "subgenre": "south_asian",
+    "bpm_range": [60, 120],
+    "time_signature": [4, 4],
+    "instruments": {
+      "tabla_high": {
+        "preset": "drums/percussion/tabla_high",
+        "role": "percussion",
+        "description": "High tabla (dayan) for intricate rhythmic patterns"
+      },
+      "tabla_low": {
+        "preset": "drums/percussion/tabla_low",
+        "role": "percussion",
+        "description": "Low tabla (bayan) for bass tones"
+      },
+      "sitar": {
+        "preset": "plucks/pluck",
+        "role": "pluck",
+        "description": "Plucked string for sitar-like melodic phrases"
+      },
+      "sitar_steel": {
+        "preset": "plucks/pluck_steel",
+        "role": "pluck",
+        "description": "Bright steel pluck for sitar twang"
+      },
+      "tanpura": {
+        "preset": "textures/drone_dark",
+        "role": "drone",
+        "description": "Dark drone for tanpura foundation"
+      },
+      "tanpura_light": {
+        "preset": "textures/drone_light",
+        "role": "drone",
+        "description": "Light drone for brighter tanpura shimmer"
+      },
+      "bansuri": {
+        "preset": "leads/acoustic/flute_pan",
+        "role": "lead",
+        "description": "Pan flute for bansuri-like breathy melodies"
+      },
+      "harmonium": {
+        "preset": "keys/harmonium",
+        "role": "keys",
+        "description": "Harmonium for devotional and classical accompaniment"
+      }
+    },
+    "tags": [
+      "world",
+      "south_asian",
+      "indian",
+      "bollywood",
+      "classical",
+      "raga",
+      "tabla",
+      "sitar",
+      "regional",
+      "ethnic"
+    ]
+  }
+}

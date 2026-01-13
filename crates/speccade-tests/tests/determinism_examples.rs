@@ -30,6 +30,7 @@ mod audio {
             master_filter: None,
             pitch_envelope: None,
             generate_loop_points: false,
+            effects: vec![],
             layers: vec![AudioLayer {
                 synthesis: Synthesis::Oscillator {
                     waveform: Waveform::Sine,
@@ -42,6 +43,8 @@ mod audio {
                 volume: 0.8,
                 pan: 0.0,
                 delay: None,
+                filter: None,
+                lfo: None,
             }],
         }
     }
@@ -54,6 +57,7 @@ mod audio {
             master_filter: None,
             pitch_envelope: None,
             generate_loop_points: false,
+            effects: vec![],
             layers: vec![AudioLayer {
                 synthesis: Synthesis::NoiseBurst {
                     noise_type: NoiseType::White,
@@ -63,6 +67,8 @@ mod audio {
                 volume: 0.8,
                 pan: 0.0,
                 delay: None,
+                filter: None,
+                lfo: None,
             }],
         }
     }
@@ -75,6 +81,7 @@ mod audio {
             master_filter: None,
             pitch_envelope: None,
             generate_loop_points: false,
+            effects: vec![],
             layers: vec![AudioLayer {
                 synthesis: Synthesis::FmSynth {
                     carrier_freq: 440.0,
@@ -91,6 +98,8 @@ mod audio {
                 volume: 0.7,
                 pan: 0.0,
                 delay: None,
+                filter: None,
+                lfo: None,
             }],
         }
     }
@@ -160,6 +169,7 @@ mod audio {
             master_filter: None,
             pitch_envelope: None,
             generate_loop_points: false,
+            effects: vec![],
             layers: vec![AudioLayer {
                 synthesis: Synthesis::Oscillator {
                     waveform: Waveform::Square,
@@ -172,6 +182,8 @@ mod audio {
                 volume: 0.5,
                 pan: 0.0,
                 delay: None,
+                filter: None,
+                lfo: None,
             }],
         };
         generate_from_params(&params, 42)
@@ -187,6 +199,7 @@ mod audio {
             master_filter: None,
             pitch_envelope: None,
             generate_loop_points: false,
+            effects: vec![],
             layers: vec![AudioLayer {
                 synthesis: Synthesis::NoiseBurst {
                     noise_type: NoiseType::Pink,
@@ -196,6 +209,8 @@ mod audio {
                 volume: 0.5,
                 pan: 0.0,
                 delay: None,
+                filter: None,
+                lfo: None,
             }],
         };
         generate_from_params(&params, 777)

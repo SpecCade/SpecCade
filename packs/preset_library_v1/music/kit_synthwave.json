@@ -1,0 +1,29 @@
+{
+  "spec_version": 1,
+  "asset_id": "kit_synthwave",
+  "asset_type": "music_kit",
+  "license": "CC0-1.0",
+  "description": "Synthwave and retrowave production kit with 80s-inspired sounds, gated reverb, and lush pads",
+  "kit": {
+    "name": "Synthwave",
+    "genre": "electronic",
+    "subgenre": "synthwave",
+    "bpm_range": [100, 120],
+    "time_signature": [4, 4],
+    "instruments": {
+      "kick": "drums/kicks/kick",
+      "snare": "drums/snares/gated_snare",
+      "hihat_closed": "drums/hats/hat_closed",
+      "hihat_open": "drums/hats/hat_open",
+      "tom_high": "drums/toms/tom_high",
+      "tom_mid": "drums/toms/tom_mid",
+      "bass": "bass/bass_sub",
+      "bass_mid": "bass/bass_mid",
+      "pad": "pads/poly_pad",
+      "pad_supersaw": "pads/supersaw_pad",
+      "lead": "leads/synth/lead_bright",
+      "arp": "plucks/arp_bright"
+    },
+    "tags": ["edm", "synthwave", "retrowave", "80s", "retro", "neon", "outrun"]
+  }
+}

@@ -1,0 +1,95 @@
+{
+  "spec_version": 1,
+  "asset_id": "preset_bass_dubstep",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 10117,
+  "description": "Fast aggressive dubstep bass - detuned sawtooths with rapid LFO and waveshaper for gritty character",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/bass/bass_dubstep.wav"
+    }
+  ],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "base_note": "A1",
+      "duration_seconds": 2.0,
+      "sample_rate": 44100,
+      "layers": [
+        {
+          "synthesis": {
+            "type": "multi_oscillator",
+            "frequency": 55.0,
+            "oscillators": [
+              {
+                "waveform": "sawtooth",
+                "volume": 1.0,
+                "detune": 0.0
+              },
+              {
+                "waveform": "sawtooth",
+                "volume": 0.9,
+                "detune": 10.0
+              },
+              {
+                "waveform": "sawtooth",
+                "volume": 0.9,
+                "detune": -10.0
+              }
+            ]
+          },
+          "envelope": {
+            "attack": 0.005,
+            "decay": 0.1,
+            "sustain": 0.9,
+            "release": 0.15
+          },
+          "filter": {
+            "type": "lowpass",
+            "cutoff": 2500.0,
+            "resonance": 0.8
+          },
+          "lfo": {
+            "config": {
+              "waveform": "sine",
+              "rate": 7.0,
+              "depth": 0.85
+            },
+            "target": {
+              "target": "filter_cutoff",
+              "amount": 2200.0
+            }
+          },
+          "volume": 0.7,
+          "pan": 0.0
+        },
+        {
+          "synthesis": {
+            "type": "oscillator",
+            "waveform": "sine",
+            "frequency": 55.0
+          },
+          "envelope": {
+            "attack": 0.01,
+            "decay": 0.08,
+            "sustain": 0.95,
+            "release": 0.1
+          },
+          "volume": 0.35,
+          "pan": 0.0
+        }
+      ],
+      "effects": [
+        {
+          "type": "waveshaper",
+          "drive": 2.5,
+          "curve": "tanh",
+          "wet": 0.5
+        }
+      ]
+    }
+  }
+}

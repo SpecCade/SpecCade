@@ -1,0 +1,62 @@
+{
+    "spec_version":  1,
+    "asset_id":  "preset_snare_brush",
+    "asset_type":  "audio",
+    "license":  "CC0-1.0",
+    "seed":  10029,
+    "description":  "Brush snare - noise-based with longer envelope, swishing character",
+    "outputs":  [
+                    {
+                        "kind":  "primary",
+                        "format":  "wav",
+                        "path":  "test-outputs/preset_library_v1/audio/drums/snares/snare_brush.wav"
+                    }
+                ],
+    "recipe":  {
+                   "kind":  "audio_v1",
+                   "params":  {
+                                  "duration_seconds":  0.45,
+                                  "sample_rate":  44100,
+                                  "layers":  [
+                                                 {
+                                                     "synthesis":  {
+                                                                       "type":  "noise_burst",
+                                                                       "noise_type":  "pink",
+                                                                       "filter":  {
+                                                                                      "type":  "bandpass",
+                                                                                      "center":  3000,
+                                                                                      "resonance":  0.6
+                                                                                  }
+                                                                   },
+                                                     "envelope":  {
+                                                                      "attack":  0.008,
+                                                                      "decay":  0.2,
+                                                                      "sustain":  0.1,
+                                                                      "release":  0.2
+                                                                  },
+                                                     "volume":  0.5,
+                                                     "pan":  0
+                                                 },
+                                                 {
+                                                     "synthesis":  {
+                                                                       "type":  "noise_burst",
+                                                                       "noise_type":  "pink",
+                                                                       "filter":  {
+                                                                                      "type":  "highpass",
+                                                                                      "cutoff":  2500,
+                                                                                      "resonance":  0.4
+                                                                                  }
+                                                                   },
+                                                     "envelope":  {
+                                                                      "attack":  0.01,
+                                                                      "decay":  0.18,
+                                                                      "sustain":  0.08,
+                                                                      "release":  0.18
+                                                                  },
+                                                     "volume":  0.4,
+                                                     "pan":  0
+                                                 }
+                                             ]
+                              }
+               }
+}

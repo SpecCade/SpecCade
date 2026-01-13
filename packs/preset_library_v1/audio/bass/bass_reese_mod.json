@@ -1,0 +1,92 @@
+{
+  "spec_version": 1,
+  "asset_id": "preset_bass_reese_mod",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 10118,
+  "description": "Modulated Reese bass - 4 detuned sawtooths with slow filter LFO for evolving DnB movement",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/bass/bass_reese_mod.wav"
+    }
+  ],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "base_note": "C2",
+      "duration_seconds": 2.5,
+      "sample_rate": 44100,
+      "layers": [
+        {
+          "synthesis": {
+            "type": "multi_oscillator",
+            "frequency": 65.41,
+            "oscillators": [
+              {
+                "waveform": "sawtooth",
+                "volume": 1.0,
+                "detune": 0.0
+              },
+              {
+                "waveform": "sawtooth",
+                "volume": 0.9,
+                "detune": 12.0
+              },
+              {
+                "waveform": "sawtooth",
+                "volume": 0.9,
+                "detune": -12.0
+              },
+              {
+                "waveform": "sawtooth",
+                "volume": 0.85,
+                "detune": 7.0
+              }
+            ]
+          },
+          "envelope": {
+            "attack": 0.02,
+            "decay": 0.2,
+            "sustain": 0.85,
+            "release": 0.25
+          },
+          "filter": {
+            "type": "lowpass",
+            "cutoff": 1400.0,
+            "resonance": 0.4
+          },
+          "lfo": {
+            "config": {
+              "waveform": "sine",
+              "rate": 0.5,
+              "depth": 0.7
+            },
+            "target": {
+              "target": "filter_cutoff",
+              "amount": 800.0
+            }
+          },
+          "volume": 0.7,
+          "pan": 0.0
+        },
+        {
+          "synthesis": {
+            "type": "oscillator",
+            "waveform": "sine",
+            "frequency": 65.41
+          },
+          "envelope": {
+            "attack": 0.01,
+            "decay": 0.1,
+            "sustain": 0.9,
+            "release": 0.15
+          },
+          "volume": 0.4,
+          "pan": 0.0
+        }
+      ]
+    }
+  }
+}

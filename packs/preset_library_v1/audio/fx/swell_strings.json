@@ -1,0 +1,77 @@
+{
+  "spec_version": 1,
+  "asset_id": "swell_strings",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 10554,
+  "description": "Orchestral string swell - multi-oscillator saw stack with long attack and reverb",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/fx/swell_strings.wav"
+    }
+  ],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "duration_seconds": 3.0,
+      "sample_rate": 44100,
+      "layers": [
+        {
+          "synthesis": {
+            "type": "oscillator",
+            "waveform": "sawtooth",
+            "frequency": 220
+          },
+          "envelope": {
+            "attack": 1.2,
+            "decay": 0.3,
+            "sustain": 0.8,
+            "release": 0.8
+          },
+          "volume": 0.6,
+          "pan": -0.2
+        },
+        {
+          "synthesis": {
+            "type": "oscillator",
+            "waveform": "sawtooth",
+            "frequency": 330
+          },
+          "envelope": {
+            "attack": 1.15,
+            "decay": 0.3,
+            "sustain": 0.8,
+            "release": 0.8
+          },
+          "volume": 0.55,
+          "pan": 0.2
+        },
+        {
+          "synthesis": {
+            "type": "oscillator",
+            "waveform": "sawtooth",
+            "frequency": 440
+          },
+          "envelope": {
+            "attack": 1.1,
+            "decay": 0.3,
+            "sustain": 0.8,
+            "release": 0.8
+          },
+          "volume": 0.5,
+          "pan": 0
+        }
+      ],
+      "effects": [
+        {
+          "type": "reverb",
+          "room_size": 0.9,
+          "damping": 0.35,
+          "wet": 0.5
+        }
+      ]
+    }
+  }
+}

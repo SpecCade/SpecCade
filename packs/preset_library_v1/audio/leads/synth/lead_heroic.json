@@ -1,0 +1,101 @@
+{
+    "spec_version":  1,
+    "asset_id":  "preset_lead_heroic",
+    "asset_type":  "audio",
+    "license":  "CC0-1.0",
+    "seed":  10306,
+    "description":  "Heroic epic lead - thick detuned saw stack with chorus for triumphant themes",
+    "outputs":  [
+                    {
+                        "kind":  "primary",
+                        "format":  "wav",
+                        "path":  "test-outputs/preset_library_v1/audio/leads/synth/lead_heroic.wav"
+                    }
+                ],
+    "recipe":  {
+                   "kind":  "audio_v1",
+                   "params":  {
+                                  "base_note":  "A4",
+                                  "duration_seconds":  2.0,
+                                  "sample_rate":  44100,
+                                  "layers":  [
+                                                 {
+                                                     "synthesis":  {
+                                                                       "type":  "multi_oscillator",
+                                                                       "frequency":  440.0,
+                                                                       "oscillators":  [
+                                                                                           {
+                                                                                               "waveform":  "sawtooth",
+                                                                                               "volume":  1.0,
+                                                                                               "detune":  0
+                                                                                           },
+                                                                                           {
+                                                                                               "waveform":  "sawtooth",
+                                                                                               "volume":  0.9,
+                                                                                               "detune":  10
+                                                                                           },
+                                                                                           {
+                                                                                               "waveform":  "sawtooth",
+                                                                                               "volume":  0.9,
+                                                                                               "detune":  -10
+                                                                                           },
+                                                                                           {
+                                                                                               "waveform":  "sawtooth",
+                                                                                               "volume":  0.75,
+                                                                                               "detune":  15
+                                                                                           },
+                                                                                           {
+                                                                                               "waveform":  "sawtooth",
+                                                                                               "volume":  0.75,
+                                                                                               "detune":  -15
+                                                                                           },
+                                                                                           {
+                                                                                               "waveform":  "square",
+                                                                                               "volume":  0.4,
+                                                                                               "detune":  0
+                                                                                           }
+                                                                                       ]
+                                                                   },
+                                                     "envelope":  {
+                                                                      "attack":  0.03,
+                                                                      "decay":  0.2,
+                                                                      "sustain":  0.9,
+                                                                      "release":  0.4
+                                                                  },
+                                                     "filter":  {
+                                                                    "type":  "lowpass",
+                                                                    "cutoff":  4500,
+                                                                    "resonance":  0.35
+                                                                },
+                                                     "lfo":  {
+                                                                 "config":  {
+                                                                                "waveform":  "sine",
+                                                                                "rate":  5.2,
+                                                                                "depth":  0.3
+                                                                            },
+                                                                 "target":  {
+                                                                                "target":  "pitch",
+                                                                                "semitones":  0.25
+                                                                            }
+                                                             },
+                                                     "volume":  0.85,
+                                                     "pan":  0
+                                                 }
+                                             ],
+                                  "effects":  [
+                                                  {
+                                                      "type":  "chorus",
+                                                      "rate":  1.2,
+                                                      "depth":  0.4,
+                                                      "wet":  0.3
+                                                  },
+                                                  {
+                                                      "type":  "reverb",
+                                                      "room_size":  0.5,
+                                                      "damping":  0.4,
+                                                      "wet":  0.2
+                                                  }
+                                              ]
+                              }
+               }
+}

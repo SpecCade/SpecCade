@@ -1,0 +1,84 @@
+{
+    "spec_version":  1,
+    "asset_id":  "preset_mallet",
+    "asset_type":  "audio",
+    "license":  "CC0-1.0",
+    "seed":  10206,
+    "description":  "Generic mallet instrument - Karplus-Strong with clear tone and medium decay",
+    "outputs":  [
+                    {
+                        "kind":  "primary",
+                        "format":  "wav",
+                        "path":  "test-outputs/preset_library_v1/audio/keys/mallet.wav"
+                    }
+                ],
+    "recipe":  {
+                   "kind":  "audio_v1",
+                   "params":  {
+                                  "base_note":  "C4",
+                                  "duration_seconds":  1.5,
+                                  "sample_rate":  44100,
+                                  "layers":  [
+                                                 {
+                                                     "synthesis":  {
+                                                                       "type":  "karplus_strong",
+                                                                       "frequency":  261.63,
+                                                                       "decay":  0.994,
+                                                                       "blend":  0.6
+                                                                   },
+                                                     "envelope":  {
+                                                                      "attack":  0.001,
+                                                                      "decay":  0.5,
+                                                                      "sustain":  0.2,
+                                                                      "release":  0.4
+                                                                  },
+                                                     "volume":  0.9,
+                                                     "pan":  0.0
+                                                 },
+                                                 {
+                                                     "synthesis":  {
+                                                                       "type":  "metallic",
+                                                                       "base_freq":  261.63,
+                                                                       "num_partials":  4,
+                                                                       "inharmonicity":  1.02
+                                                                   },
+                                                     "envelope":  {
+                                                                      "attack":  0.0008,
+                                                                      "decay":  0.3,
+                                                                      "sustain":  0.1,
+                                                                      "release":  0.25
+                                                                  },
+                                                     "volume":  0.3,
+                                                     "pan":  0.0
+                                                 },
+                                                 {
+                                                     "synthesis":  {
+                                                                       "type":  "noise_burst",
+                                                                       "noise_type":  "white",
+                                                                       "filter":  {
+                                                                                      "type":  "bandpass",
+                                                                                      "center":  2500.0,
+                                                                                      "resonance":  0.4
+                                                                                  }
+                                                                   },
+                                                     "envelope":  {
+                                                                      "attack":  0.0005,
+                                                                      "decay":  0.01,
+                                                                      "sustain":  0.0,
+                                                                      "release":  0.008
+                                                                  },
+                                                     "volume":  0.18,
+                                                     "pan":  0.0
+                                                 }
+                                             ],
+                                  "effects":  [
+                                                  {
+                                                      "type":  "reverb",
+                                                      "room_size":  0.4,
+                                                      "damping":  0.5,
+                                                      "wet":  0.2
+                                                  }
+                                              ]
+                              }
+               }
+}

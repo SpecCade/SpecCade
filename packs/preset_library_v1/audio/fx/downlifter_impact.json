@@ -1,0 +1,68 @@
+{
+  "spec_version": 1,
+  "asset_id": "downlifter_impact",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 10553,
+  "description": "Downlifter with impact finish - falling noise sweep with delayed hit at the end",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/fx/downlifter_impact.wav"
+    }
+  ],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "duration_seconds": 1.0,
+      "sample_rate": 44100,
+      "layers": [
+        {
+          "synthesis": {
+            "type": "noise_burst",
+            "noise_type": "white",
+            "filter": {
+              "type": "lowpass",
+              "cutoff": 7000,
+              "resonance": 0.65,
+              "cutoff_end": 300
+            }
+          },
+          "envelope": {
+            "attack": 0.02,
+            "decay": 0.7,
+            "sustain": 0,
+            "release": 0.2
+          },
+          "volume": 0.8,
+          "pan": 0
+        },
+        {
+          "synthesis": {
+            "type": "pitched_body",
+            "start_freq": 180,
+            "end_freq": 50
+          },
+          "envelope": {
+            "attack": 0.001,
+            "decay": 0.15,
+            "sustain": 0,
+            "release": 0.2
+          },
+          "volume": 1,
+          "pan": 0,
+          "delay": 0.75
+        }
+      ],
+      "effects": [
+        {
+          "type": "reverb",
+          "room_size": 0.65,
+          "damping": 0.4,
+          "wet": 0.3
+        }
+      ]
+    }
+  }
+}

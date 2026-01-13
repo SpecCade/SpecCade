@@ -1,0 +1,52 @@
+{
+  "spec_version": 1,
+  "asset_id": "riser_white",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 10551,
+  "description": "Classic white noise riser - bandpass sweep upward for tension build",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/fx/riser_white.wav"
+    }
+  ],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "duration_seconds": 1.5,
+      "sample_rate": 44100,
+      "layers": [
+        {
+          "synthesis": {
+            "type": "noise_burst",
+            "noise_type": "white",
+            "filter": {
+              "type": "bandpass",
+              "center": 300,
+              "resonance": 0.7,
+              "center_end": 6000
+            }
+          },
+          "envelope": {
+            "attack": 0.05,
+            "decay": 0,
+            "sustain": 1,
+            "release": 0.2
+          },
+          "volume": 1,
+          "pan": 0
+        }
+      ],
+      "effects": [
+        {
+          "type": "reverb",
+          "room_size": 0.75,
+          "damping": 0.35,
+          "wet": 0.4
+        }
+      ]
+    }
+  }
+}

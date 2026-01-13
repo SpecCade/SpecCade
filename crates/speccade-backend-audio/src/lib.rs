@@ -47,11 +47,13 @@
 //! - [`synthesis`] - Synthesis algorithm implementations
 //! - [`wav`] - Deterministic WAV file writer
 
+pub mod effects;
 pub mod envelope;
 pub mod error;
 pub mod filter;
 pub mod generate;
 pub mod mixer;
+pub mod modulation;
 pub mod oscillator;
 pub mod rng;
 pub mod synthesis;
@@ -95,10 +97,13 @@ mod integration_tests {
                 volume: 0.8,
                 pan: 0.0,
                 delay: None,
+                filter: None,
+                lfo: None,
             }],
             pitch_envelope: None,
             base_note: None,
             generate_loop_points: false,
+            effects: vec![],
         };
 
         Spec::builder("laser-blast-01", AssetType::Audio)
@@ -175,10 +180,13 @@ mod integration_tests {
                 volume: 1.0,
                 pan: 0.0,
                 delay: None,
+                filter: None,
+                lfo: None,
             }],
             pitch_envelope: None,
             base_note: None,
             generate_loop_points: false,
+            effects: vec![],
         };
 
         let spec = Spec::builder("noise-test", AssetType::Audio)
@@ -213,10 +221,13 @@ mod integration_tests {
                     volume: 1.0,
                     pan: 0.0,
                     delay: None,
+                    filter: None,
+                    lfo: None,
                 }],
                 pitch_envelope: None,
                 base_note: None,
                 generate_loop_points: false,
+                effects: vec![],
             };
 
             Spec::builder("noise-test", AssetType::Audio)
@@ -262,6 +273,8 @@ mod integration_tests {
                     volume: 0.5,
                     pan: -0.8,
                     delay: None,
+                    filter: None,
+                    lfo: None,
                 },
                 AudioLayer {
                     synthesis: Synthesis::Oscillator {
@@ -275,8 +288,11 @@ mod integration_tests {
                     volume: 0.5,
                     pan: 0.8,
                     delay: None,
+                    filter: None,
+                    lfo: None,
                 },
             ],
+            effects: vec![],
         };
 
         let spec = Spec::builder("stereo-test", AssetType::Audio)
@@ -316,10 +332,13 @@ mod integration_tests {
                 volume: 1.0,
                 pan: 0.0,
                 delay: None,
+                filter: None,
+                lfo: None,
             }],
             pitch_envelope: None,
             base_note: None,
             generate_loop_points: false,
+            effects: vec![],
         };
 
         let spec = Spec::builder("pluck-test", AssetType::Audio)
@@ -351,10 +370,13 @@ mod integration_tests {
                 volume: 0.8,
                 pan: 0.0,
                 delay: None,
+                filter: None,
+                lfo: None,
             }],
             pitch_envelope: None,
             base_note: None,
             generate_loop_points: false,
+            effects: vec![],
         };
 
         let spec = Spec::builder("additive-test", AssetType::Audio)

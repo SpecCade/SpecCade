@@ -1,0 +1,76 @@
+{
+    "spec_version":  1,
+    "asset_id":  "preset_lead_cute",
+    "asset_type":  "audio",
+    "license":  "CC0-1.0",
+    "seed":  10305,
+    "description":  "Cute playful lead - soft triangle and pulse for charming melodies",
+    "outputs":  [
+                    {
+                        "kind":  "primary",
+                        "format":  "wav",
+                        "path":  "test-outputs/preset_library_v1/audio/leads/synth/lead_cute.wav"
+                    }
+                ],
+    "recipe":  {
+                   "kind":  "audio_v1",
+                   "params":  {
+                                  "base_note":  "C5",
+                                  "duration_seconds":  1.2,
+                                  "sample_rate":  44100,
+                                  "layers":  [
+                                                 {
+                                                     "synthesis":  {
+                                                                       "type":  "multi_oscillator",
+                                                                       "frequency":  523.25,
+                                                                       "oscillators":  [
+                                                                                           {
+                                                                                               "waveform":  "triangle",
+                                                                                               "volume":  1.0,
+                                                                                               "detune":  0
+                                                                                           },
+                                                                                           {
+                                                                                               "waveform":  "pulse",
+                                                                                               "volume":  0.4,
+                                                                                               "detune":  5,
+                                                                                               "duty":  0.35
+                                                                                           }
+                                                                                       ]
+                                                                   },
+                                                     "envelope":  {
+                                                                      "attack":  0.01,
+                                                                      "decay":  0.12,
+                                                                      "sustain":  0.6,
+                                                                      "release":  0.2
+                                                                  },
+                                                     "filter":  {
+                                                                    "type":  "lowpass",
+                                                                    "cutoff":  3000,
+                                                                    "resonance":  0.35
+                                                                },
+                                                     "lfo":  {
+                                                                 "config":  {
+                                                                                "waveform":  "sine",
+                                                                                "rate":  6.0,
+                                                                                "depth":  0.4
+                                                                            },
+                                                                 "target":  {
+                                                                                "target":  "pitch",
+                                                                                "semitones":  0.35
+                                                                            }
+                                                             },
+                                                     "volume":  0.85,
+                                                     "pan":  0
+                                                 }
+                                             ],
+                                  "effects":  [
+                                                  {
+                                                      "type":  "chorus",
+                                                      "rate":  2.0,
+                                                      "depth":  0.2,
+                                                      "wet":  0.15
+                                                  }
+                                              ]
+                              }
+               }
+}

@@ -1,0 +1,58 @@
+{
+    "spec_version":  1,
+    "asset_id":  "preset_tambourine",
+    "asset_type":  "audio",
+    "license":  "CC0-1.0",
+    "seed":  10081,
+    "description":  "Tambourine - metallic jingles with noise shake",
+    "outputs":  [
+                    {
+                        "kind":  "primary",
+                        "format":  "wav",
+                        "path":  "test-outputs/preset_library_v1/audio/drums/percussion/tambourine.wav"
+                    }
+                ],
+    "recipe":  {
+                   "kind":  "audio_v1",
+                   "params":  {
+                                  "duration_seconds":  0.3,
+                                  "sample_rate":  44100,
+                                  "layers":  [
+                                                 {
+                                                     "synthesis":  {
+                                                                       "type":  "noise_burst",
+                                                                       "noise_type":  "white",
+                                                                       "filter":  {
+                                                                                      "type":  "bandpass",
+                                                                                      "center":  6000,
+                                                                                      "resonance":  0.8
+                                                                                  }
+                                                                   },
+                                                     "envelope":  {
+                                                                      "attack":  0.001,
+                                                                      "decay":  0.15,
+                                                                      "sustain":  0.05,
+                                                                      "release":  0.12
+                                                                  },
+                                                     "volume":  0.7,
+                                                     "pan":  0
+                                                 },
+                                                 {
+                                                     "synthesis":  {
+                                                                       "type":  "oscillator",
+                                                                       "waveform":  "sine",
+                                                                       "frequency":  3000
+                                                                   },
+                                                     "envelope":  {
+                                                                      "attack":  0.001,
+                                                                      "decay":  0.08,
+                                                                      "sustain":  0,
+                                                                      "release":  0.06
+                                                                  },
+                                                     "volume":  0.3,
+                                                     "pan":  0
+                                                 }
+                                             ]
+                              }
+               }
+}

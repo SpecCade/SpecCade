@@ -1,0 +1,44 @@
+{
+    "spec_version":  1,
+    "asset_id":  "preset_whoosh",
+    "asset_type":  "audio",
+    "license":  "CC0-1.0",
+    "seed":  10203,
+    "description":  "Whoosh sweep - filtered noise passing through",
+    "outputs":  [
+                    {
+                        "kind":  "primary",
+                        "format":  "wav",
+                        "path":  "test-outputs/preset_library_v1/audio/fx/whoosh.wav"
+                    }
+                ],
+    "recipe":  {
+                   "kind":  "audio_v1",
+                   "params":  {
+                                  "duration_seconds":  0.6,
+                                  "sample_rate":  44100,
+                                  "layers":  [
+                                                 {
+                                                     "synthesis":  {
+                                                                       "type":  "noise_burst",
+                                                                       "noise_type":  "pink",
+                                                                       "filter":  {
+                                                                                      "type":  "bandpass",
+                                                                                      "center":  800,
+                                                                                      "resonance":  1.2,
+                                                                                      "center_end":  4000
+                                                                                  }
+                                                                   },
+                                                     "envelope":  {
+                                                                      "attack":  0.1,
+                                                                      "decay":  0.2,
+                                                                      "sustain":  0.3,
+                                                                      "release":  0.2
+                                                                  },
+                                                     "volume":  0.85,
+                                                     "pan":  0
+                                                 }
+                                             ]
+                              }
+               }
+}

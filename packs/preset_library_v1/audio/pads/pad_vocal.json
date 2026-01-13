@@ -1,0 +1,55 @@
+{
+  "spec_version": 1,
+  "asset_id": "pad_vocal",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 10403,
+  "description": "Choir-like vocal pad using formant wavetable for vowel-based texture",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/pads/pad_vocal.wav"
+    }
+  ],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "duration_seconds": 3.0,
+      "sample_rate": 44100,
+      "base_note": "C4",
+      "layers": [
+        {
+          "synthesis": {
+            "type": "wavetable",
+            "table": "formant",
+            "frequency": 261.63,
+            "position": 0.3,
+            "position_sweep": {
+              "end_position": 0.7,
+              "curve": "linear"
+            },
+            "voices": 4,
+            "detune": 8.0
+          },
+          "envelope": {
+            "attack": 0.7,
+            "decay": 0.3,
+            "sustain": 0.8,
+            "release": 0.9
+          },
+          "volume": 0.7,
+          "pan": 0.0
+        }
+      ],
+      "effects": [
+        {
+          "type": "reverb",
+          "room_size": 0.8,
+          "damping": 0.6,
+          "wet": 0.35
+        }
+      ]
+    }
+  }
+}

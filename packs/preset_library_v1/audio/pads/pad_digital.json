@@ -1,0 +1,51 @@
+{
+  "spec_version": 1,
+  "asset_id": "pad_digital",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 10402,
+  "description": "Bright harsh digital pad with cutting high-frequency character",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/pads/pad_digital.wav"
+    }
+  ],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "duration_seconds": 3.0,
+      "sample_rate": 44100,
+      "base_note": "C4",
+      "layers": [
+        {
+          "synthesis": {
+            "type": "wavetable",
+            "table": "digital",
+            "frequency": 261.63,
+            "position": 0.7,
+            "voices": 3,
+            "detune": 14.0
+          },
+          "envelope": {
+            "attack": 0.4,
+            "decay": 0.25,
+            "sustain": 0.75,
+            "release": 0.6
+          },
+          "volume": 0.7,
+          "pan": 0.0
+        }
+      ],
+      "effects": [
+        {
+          "type": "reverb",
+          "room_size": 0.6,
+          "damping": 0.4,
+          "wet": 0.25
+        }
+      ]
+    }
+  }
+}

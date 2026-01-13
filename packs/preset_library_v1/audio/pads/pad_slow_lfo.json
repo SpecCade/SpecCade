@@ -1,0 +1,77 @@
+{
+  "spec_version": 1,
+  "asset_id": "preset_pad_slow_lfo",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 10121,
+  "description": "Evolving pad - warm detuned oscillators with very slow filter LFO for breathing, ambient movement",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/pads/pad_slow_lfo.wav"
+    }
+  ],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "base_note": "C4",
+      "duration_seconds": 4.0,
+      "sample_rate": 44100,
+      "layers": [
+        {
+          "synthesis": {
+            "type": "multi_oscillator",
+            "frequency": 261.63,
+            "oscillators": [
+              {
+                "waveform": "sawtooth",
+                "volume": 1.0,
+                "detune": 0.0
+              },
+              {
+                "waveform": "sawtooth",
+                "volume": 0.85,
+                "detune": 6.0
+              },
+              {
+                "waveform": "sawtooth",
+                "volume": 0.85,
+                "detune": -6.0
+              },
+              {
+                "waveform": "triangle",
+                "volume": 0.5,
+                "detune": -1200.0
+              }
+            ]
+          },
+          "envelope": {
+            "attack": 0.3,
+            "decay": 0.5,
+            "sustain": 0.9,
+            "release": 0.5
+          },
+          "filter": {
+            "type": "lowpass",
+            "cutoff": 2000.0,
+            "resonance": 0.35
+          },
+          "lfo": {
+            "config": {
+              "waveform": "sine",
+              "rate": 0.2,
+              "depth": 0.7
+            },
+            "target": {
+              "target": "filter_cutoff",
+              "amount": 1000.0
+            }
+          },
+          "volume": 0.8,
+          "pan": 0.0
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,41 @@
+{
+    "spec_version":  1,
+    "asset_id":  "preset_bass_fm",
+    "asset_type":  "audio",
+    "license":  "CC0-1.0",
+    "seed":  10110,
+    "description":  "FM bass - 2-operator FM synthesis with 1:1 ratio for punchy, percussive bass with metallic attack",
+    "outputs":  [
+                    {
+                        "kind":  "primary",
+                        "format":  "wav",
+                        "path":  "test-outputs/preset_library_v1/audio/bass/bass_fm.wav"
+                    }
+                ],
+    "recipe":  {
+                   "kind":  "audio_v1",
+                   "params":  {
+                                  "base_note":  "C2",
+                                  "duration_seconds":  1.0,
+                                  "sample_rate":  44100,
+                                  "layers":  [
+                                                 {
+                                                     "synthesis":  {
+                                                                       "type":  "fm_synth",
+                                                                       "carrier_freq":  65.41,
+                                                                       "modulator_freq":  65.41,
+                                                                       "modulation_index":  2.5
+                                                                   },
+                                                     "envelope":  {
+                                                                      "attack":  0.005,
+                                                                      "decay":  0.2,
+                                                                      "sustain":  0.6,
+                                                                      "release":  0.15
+                                                                  },
+                                                     "volume":  0.9,
+                                                     "pan":  0
+                                                 }
+                                             ]
+                              }
+               }
+}

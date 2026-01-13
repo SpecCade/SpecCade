@@ -28,8 +28,11 @@ fn main() {
             volume: 1.0,
             pan: 0.0,
             delay: None,
+            filter: None,
+            lfo: None,
         }],
         master_filter: None,
+        effects: vec![],
         pitch_envelope: None,
         base_note: Some(NoteSpec::MidiNote(69)), // A4
         generate_loop_points: true,

@@ -110,10 +110,6 @@ Legend (informal triage tags used below):
 ## Audio/Music Expansion
 
 - Audio (`audio_v1`):
-  - `[Q]` Wavetable oscillator (tables + interpolation + detune/unison)
-  - `[Q]` Granular synth (grain size/rate/jitter/window) using generated buffers (no external samples required)
-  - `[Q]` Modulators: LFOs for pitch/amp/filter + envelope curve types (linear/exp/log)
-  - `[I]` Effect chain (deterministic DSP): delay, reverb (algo), chorus, phaser, bitcrush, waveshaper, compressor
   - `[I]` Loudness targets (LUFS) + true-peak limiter (production-ready loudness control)
   - `[I]` Better loop point generation: zero-crossing search + crossfade loops for sustained instruments
   - `[I]` One-shot + loop pairing (transient + loopable sustain from the same recipe)
@@ -121,6 +117,7 @@ Legend (informal triage tags used below):
   - `[G]` Convolution reverb IR generation + apply as effect (big realism jump)
   - `[G]` Impulse/decay modeling (room/plate/spring style) for more realistic tails without hand-tuning
   - `[G]` Batch SFX variation sets: seed sweeps + constraints + sample set export
+  - For additional synthesis methods, see `docs/audio_synthesis_methods.md`
 - Music (tracker + compose IR):
   - `[Q]` Expand `effect_name` support + validation (arp, porta, vibrato, retrig, vol slide, etc.)
   - `[Q]` Deterministic swing/humanize macros in Pattern IR (timing + velocity ranges)

@@ -1,0 +1,25 @@
+{
+  "spec_version": 1,
+  "asset_id": "kit_house_techno",
+  "asset_type": "music_kit",
+  "license": "CC0-1.0",
+  "description": "House and techno production kit with classic four-on-floor drums, tight bass, and melodic elements",
+  "kit": {
+    "name": "House / Techno",
+    "genre": "electronic",
+    "subgenre": "house",
+    "bpm_range": [120, 130],
+    "time_signature": [4, 4],
+    "instruments": {
+      "kick": "drums/kicks/kick_4",
+      "snare": "drums/snares/clap",
+      "hihat_closed": "drums/hats/hat_closed",
+      "hihat_open": "drums/hats/hat_open",
+      "bass": "bass/bass_sub",
+      "lead": "leads/synth/lead_1",
+      "pad": "pads/pad_warm",
+      "chord": "plucks/stab"
+    },
+    "tags": ["edm", "dance", "club", "four-on-floor", "techno", "house"]
+  }
+}

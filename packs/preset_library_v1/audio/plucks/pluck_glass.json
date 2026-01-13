@@ -1,0 +1,48 @@
+{
+    "spec_version":  1,
+    "asset_id":  "pluck_glass",
+    "asset_type":  "audio",
+    "license":  "CC0-1.0",
+    "seed":  10152,
+    "description":  "Bright crystalline glass pluck with low blend and short decay - shimmering character with subtle reverb",
+    "outputs":  [
+                    {
+                        "kind":  "primary",
+                        "format":  "wav",
+                        "path":  "test-outputs/preset_library_v1/audio/plucks/pluck_glass.wav"
+                    }
+                ],
+    "recipe":  {
+                   "kind":  "audio_v1",
+                   "params":  {
+                                  "duration_seconds":  0.7,
+                                  "sample_rate":  44100,
+                                  "layers":  [
+                                                 {
+                                                     "synthesis":  {
+                                                                       "type":  "karplus_strong",
+                                                                       "frequency":  880.0,
+                                                                       "decay":  0.993,
+                                                                       "blend":  0.2
+                                                                   },
+                                                     "envelope":  {
+                                                                      "attack":  0.001,
+                                                                      "decay":  0.05,
+                                                                      "sustain":  0.5,
+                                                                      "release":  0.25
+                                                                  },
+                                                     "volume":  1.0,
+                                                     "pan":  0.0
+                                                 }
+                                             ],
+                                  "effects":  [
+                                                  {
+                                                      "type":  "reverb",
+                                                      "room_size":  0.4,
+                                                      "damping":  0.6,
+                                                      "wet":  0.15
+                                                  }
+                                              ]
+                              }
+               }
+}

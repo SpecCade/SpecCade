@@ -1,0 +1,62 @@
+{
+    "spec_version":  1,
+    "asset_id":  "preset_snare_soft",
+    "asset_type":  "audio",
+    "license":  "CC0-1.0",
+    "seed":  10020,
+    "description":  "Soft snare - gentle, brushed character with filtered highs",
+    "outputs":  [
+                    {
+                        "kind":  "primary",
+                        "format":  "wav",
+                        "path":  "test-outputs/preset_library_v1/audio/drums/snares/snare_soft.wav"
+                    }
+                ],
+    "recipe":  {
+                   "kind":  "audio_v1",
+                   "params":  {
+                                  "duration_seconds":  0.4,
+                                  "sample_rate":  44100,
+                                  "layers":  [
+                                                 {
+                                                     "synthesis":  {
+                                                                       "type":  "oscillator",
+                                                                       "waveform":  "sine",
+                                                                       "frequency":  200,
+                                                                       "freq_sweep":  {
+                                                                                          "end_freq":  120,
+                                                                                          "curve":  "exponential"
+                                                                                      }
+                                                                   },
+                                                     "envelope":  {
+                                                                      "attack":  0.003,
+                                                                      "decay":  0.12,
+                                                                      "sustain":  0,
+                                                                      "release":  0.08
+                                                                  },
+                                                     "volume":  0.5,
+                                                     "pan":  0
+                                                 },
+                                                 {
+                                                     "synthesis":  {
+                                                                       "type":  "noise_burst",
+                                                                       "noise_type":  "pink",
+                                                                       "filter":  {
+                                                                                      "type":  "lowpass",
+                                                                                      "cutoff":  3500,
+                                                                                      "resonance":  0.4
+                                                                                  }
+                                                                   },
+                                                     "envelope":  {
+                                                                      "attack":  0.005,
+                                                                      "decay":  0.15,
+                                                                      "sustain":  0.05,
+                                                                      "release":  0.15
+                                                                  },
+                                                     "volume":  0.4,
+                                                     "pan":  0
+                                                 }
+                                             ]
+                              }
+               }
+}

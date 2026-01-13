@@ -12,7 +12,7 @@
 
 | Category | Done | Total | Progress |
 |----------|------|-------|----------|
-| Engine Enhancements | 0 | 11 | 0% |
+| Engine Enhancements | 4 | 11 | 36% |
 | Music/Compose Enhancements | 0 | 9 | 0% |
 | Audio Presets | 19 | 173 | 11% |
 | Genre Kits | 0 | 42 | 0% |
@@ -73,10 +73,10 @@ These engine features unlock new synthesis capabilities. Many presets depend on 
 
 | Status | Priority | Feature | Enables Presets |
 |:------:|:--------:|---------|-----------------|
-| [ ] | Q | Wavetable oscillator (tables + interpolation + detune/unison) | pad_shimmer, poly_pad, complex leads |
-| [ ] | Q | Granular synth (grain size/rate/jitter/window) | textures, atmospheric sounds, drones |
-| [ ] | Q | Modulators: LFOs for pitch/amp/filter + envelope curve types | bass_wobble, vibrato, tremolo effects |
-| [ ] | I | Effect chain: delay, reverb, chorus, phaser, bitcrush, waveshaper, compressor | pads, ambient sounds, spatial FX |
+| [x] | Q | Wavetable oscillator (tables + interpolation + detune/unison) | pad_shimmer, poly_pad, complex leads |
+| [x] | Q | Granular synth (grain size/rate/jitter/window) | textures, atmospheric sounds, drones |
+| [x] | Q | Modulators: LFOs for pitch/amp/filter + envelope curve types | bass_wobble, vibrato, tremolo effects |
+| [x] | I | Effect chain: delay, reverb, chorus, phaser, bitcrush, waveshaper, compressor | pads, ambient sounds, spatial FX |
 | [ ] | I | Loudness targets (LUFS) + true-peak limiter | All presets (consistent loudness) |
 | [ ] | I | Better loop point generation (zero-crossing search + crossfade) | All looping presets |
 | [ ] | I | One-shot + loop pairing from same recipe | Instrument variants |

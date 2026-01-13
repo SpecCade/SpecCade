@@ -1,0 +1,24 @@
+{
+  "spec_version": 1,
+  "asset_id": "kit_opl_dos",
+  "asset_type": "music_kit",
+  "license": "CC0-1.0",
+  "description": "OPL/AdLib PC style kit for classic DOS game music using Yamaha FM synthesis",
+  "kit": {
+    "name": "OPL DOS",
+    "genre": "retro",
+    "subgenre": "dos",
+    "bpm_range": [100, 140],
+    "time_signature": [4, 4],
+    "instruments": {
+      "kick": "drums/kicks/kick",
+      "snare": "drums/snares/snare",
+      "hat": "drums/hats/hat_closed",
+      "bass": "bass/bass_opl",
+      "lead": "leads/synth/opl_lead",
+      "keys": "keys/keys_ep",
+      "bell": "bells/dx7_bell"
+    },
+    "tags": ["opl", "adlib", "dos", "pc", "yamaha", "soundblaster"]
+  }
+}

@@ -7,6 +7,7 @@ Cargo.lock
 
 # Test outputs
 test_output/
+test_outputs/
 test_spec.json
 *.report.json
 

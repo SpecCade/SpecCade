@@ -1,0 +1,62 @@
+{
+    "spec_version":  1,
+    "asset_id":  "preset_toy_kick",
+    "asset_type":  "audio",
+    "license":  "CC0-1.0",
+    "seed":  10005,
+    "description":  "Toy kick drum - playful cute plastic sound, chiptune-adjacent with bright tone",
+    "outputs":  [
+                    {
+                        "kind":  "primary",
+                        "format":  "wav",
+                        "path":  "test-outputs/preset_library_v1/audio/drums/kicks/toy_kick.wav"
+                    }
+                ],
+    "recipe":  {
+                   "kind":  "audio_v1",
+                   "params":  {
+                                  "duration_seconds":  0.2,
+                                  "sample_rate":  44100,
+                                  "layers":  [
+                                                 {
+                                                     "synthesis":  {
+                                                                       "type":  "oscillator",
+                                                                       "waveform":  "sine",
+                                                                       "frequency":  200,
+                                                                       "freq_sweep":  {
+                                                                                          "end_freq":  80,
+                                                                                          "curve":  "exponential"
+                                                                                      }
+                                                                   },
+                                                     "envelope":  {
+                                                                      "attack":  0.001,
+                                                                      "decay":  0.1,
+                                                                      "sustain":  0,
+                                                                      "release":  0.08
+                                                                  },
+                                                     "volume":  1,
+                                                     "pan":  0
+                                                 },
+                                                 {
+                                                     "synthesis":  {
+                                                                       "type":  "noise_burst",
+                                                                       "noise_type":  "white",
+                                                                       "filter":  {
+                                                                                      "type":  "bandpass",
+                                                                                      "center":  3000,
+                                                                                      "resonance":  0.7
+                                                                                  }
+                                                                   },
+                                                     "envelope":  {
+                                                                      "attack":  0,
+                                                                      "decay":  0.01,
+                                                                      "sustain":  0,
+                                                                      "release":  0.008
+                                                                  },
+                                                     "volume":  0.2,
+                                                     "pan":  0
+                                                 }
+                                             ]
+                              }
+               }
+}

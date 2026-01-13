@@ -1,0 +1,58 @@
+{
+  "spec_version": 1,
+  "asset_id": "downlifter",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 10552,
+  "description": "Downlifter - falling noise sweep for descending energy and tension release",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/fx/downlifter.wav"
+    }
+  ],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "duration_seconds": 1.5,
+      "sample_rate": 44100,
+      "layers": [
+        {
+          "synthesis": {
+            "type": "noise_burst",
+            "noise_type": "white",
+            "filter": {
+              "type": "lowpass",
+              "cutoff": 8000,
+              "resonance": 0.6,
+              "cutoff_end": 200
+            }
+          },
+          "envelope": {
+            "attack": 0.02,
+            "decay": 0,
+            "sustain": 1,
+            "release": 0.25
+          },
+          "volume": 1,
+          "pan": 0
+        }
+      ],
+      "effects": [
+        {
+          "type": "reverb",
+          "room_size": 0.7,
+          "damping": 0.4,
+          "wet": 0.35
+        },
+        {
+          "type": "delay",
+          "time_ms": 150,
+          "feedback": 0.3,
+          "wet": 0.2
+        }
+      ]
+    }
+  }
+}

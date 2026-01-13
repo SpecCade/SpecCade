@@ -1,0 +1,26 @@
+{
+  "spec_version": 1,
+  "asset_id": "kit_trap_808",
+  "asset_type": "music_kit",
+  "license": "CC0-1.0",
+  "description": "Trap and hip-hop production kit featuring 808 bass, rolling hi-hats, and modern urban sounds",
+  "kit": {
+    "name": "Trap / 808",
+    "genre": "electronic",
+    "subgenre": "trap",
+    "bpm_range": [130, 150],
+    "time_signature": [4, 4],
+    "instruments": {
+      "kick": "drums/kicks/kick_808",
+      "snare": "drums/snares/snare",
+      "clap": "drums/snares/clap",
+      "hihat_closed": "drums/hats/hat_closed",
+      "hihat_tick": "drums/hats/hat_tick",
+      "bass": "bass/bass_sub",
+      "lead": "leads/synth/lead_muted",
+      "pad": "pads/pad_warm",
+      "pluck": "plucks/pluck"
+    },
+    "tags": ["edm", "trap", "hip-hop", "808", "urban", "rolls"]
+  }
+}

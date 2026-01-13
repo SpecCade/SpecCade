@@ -1,0 +1,23 @@
+{
+  "spec_version": 1,
+  "asset_id": "kit_chiptune_8bit",
+  "asset_type": "music_kit",
+  "license": "CC0-1.0",
+  "description": "Classic 8-bit NES/Game Boy style chiptune kit with pure waveforms and digital percussion",
+  "kit": {
+    "name": "Chiptune 8-bit",
+    "genre": "retro",
+    "subgenre": "chiptune",
+    "bpm_range": [120, 150],
+    "time_signature": [4, 4],
+    "instruments": {
+      "kick": "drums/kicks/toy_kick",
+      "snare": "drums/snares/toy_snare",
+      "hat": "drums/hats/noise_hat",
+      "bass": "bass/bass_triangle",
+      "lead": "leads/synth/pulse_lead",
+      "arp": "plucks/arp_bright"
+    },
+    "tags": ["chiptune", "8bit", "retro", "nintendo", "gameboy", "nes"]
+  }
+}

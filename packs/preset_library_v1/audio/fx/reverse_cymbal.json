@@ -1,0 +1,67 @@
+{
+  "spec_version": 1,
+  "asset_id": "reverse_cymbal",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 10556,
+  "description": "Classic reverse cymbal build - metallic synthesis with slow attack and quick release",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/fx/reverse_cymbal.wav"
+    }
+  ],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "duration_seconds": 1.0,
+      "sample_rate": 44100,
+      "layers": [
+        {
+          "synthesis": {
+            "type": "metallic",
+            "base_freq": 800,
+            "num_partials": 15,
+            "inharmonicity": 0.75
+          },
+          "envelope": {
+            "attack": 0.8,
+            "decay": 0.05,
+            "sustain": 0,
+            "release": 0.12
+          },
+          "volume": 1,
+          "pan": 0
+        },
+        {
+          "synthesis": {
+            "type": "noise_burst",
+            "noise_type": "white",
+            "filter": {
+              "type": "highpass",
+              "cutoff": 4000,
+              "resonance": 0.3
+            }
+          },
+          "envelope": {
+            "attack": 0.75,
+            "decay": 0.08,
+            "sustain": 0,
+            "release": 0.1
+          },
+          "volume": 0.4,
+          "pan": 0
+        }
+      ],
+      "effects": [
+        {
+          "type": "reverb",
+          "room_size": 0.8,
+          "damping": 0.3,
+          "wet": 0.4
+        }
+      ]
+    }
+  }
+}

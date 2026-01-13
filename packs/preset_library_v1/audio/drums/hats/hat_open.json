@@ -1,0 +1,59 @@
+{
+    "spec_version":  1,
+    "asset_id":  "preset_hat_open",
+    "asset_type":  "audio",
+    "license":  "CC0-1.0",
+    "seed":  10005,
+    "description":  "Open hi-hat - longer decay metallic sound",
+    "outputs":  [
+                    {
+                        "kind":  "primary",
+                        "format":  "wav",
+                        "path":  "test-outputs/preset_library_v1/audio/drums/hats/hat_open.wav"
+                    }
+                ],
+    "recipe":  {
+                   "kind":  "audio_v1",
+                   "params":  {
+                                  "duration_seconds":  0.5,
+                                  "sample_rate":  44100,
+                                  "layers":  [
+                                                 {
+                                                     "synthesis":  {
+                                                                       "type":  "metallic",
+                                                                       "base_freq":  7000,
+                                                                       "num_partials":  8,
+                                                                       "inharmonicity":  2
+                                                                   },
+                                                     "envelope":  {
+                                                                      "attack":  0.001,
+                                                                      "decay":  0.25,
+                                                                      "sustain":  0.1,
+                                                                      "release":  0.2
+                                                                  },
+                                                     "volume":  0.5,
+                                                     "pan":  0
+                                                 },
+                                                 {
+                                                     "synthesis":  {
+                                                                       "type":  "noise_burst",
+                                                                       "noise_type":  "white",
+                                                                       "filter":  {
+                                                                                      "type":  "highpass",
+                                                                                      "cutoff":  7000,
+                                                                                      "resonance":  0.5
+                                                                                  }
+                                                                   },
+                                                     "envelope":  {
+                                                                      "attack":  0.001,
+                                                                      "decay":  0.2,
+                                                                      "sustain":  0.1,
+                                                                      "release":  0.18
+                                                                  },
+                                                     "volume":  0.45,
+                                                     "pan":  0
+                                                 }
+                                             ]
+                              }
+               }
+}

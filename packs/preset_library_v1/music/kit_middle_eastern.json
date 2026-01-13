@@ -1,0 +1,72 @@
+{
+  "spec_version": 1,
+  "asset_id": "kit_middle_eastern",
+  "asset_type": "music_kit",
+  "license": "CC0-1.0",
+  "description": "Middle Eastern music kit featuring ney-like flutes, oud-like plucked strings, tabla percussion, and tanpura-style drones for authentic regional sounds",
+  "kit": {
+    "name": "Middle Eastern",
+    "genre": "world",
+    "subgenre": "middle_eastern",
+    "bpm_range": [80, 130],
+    "time_signature": [4, 4],
+    "instruments": {
+      "ney": {
+        "preset": "leads/acoustic/flute",
+        "role": "lead",
+        "description": "Breathy flute for ney-like melodic lines"
+      },
+      "ney_alt": {
+        "preset": "leads/acoustic/ocarina",
+        "role": "lead",
+        "description": "Ocarina for softer ney-like tones"
+      },
+      "oud": {
+        "preset": "plucks/pluck",
+        "role": "pluck",
+        "description": "Plucked string for oud-like sound"
+      },
+      "oud_soft": {
+        "preset": "plucks/pluck_nylon",
+        "role": "pluck",
+        "description": "Soft nylon pluck for gentle oud passages"
+      },
+      "tabla_high": {
+        "preset": "drums/percussion/tabla_high",
+        "role": "percussion",
+        "description": "High tabla drum (dayan)"
+      },
+      "tabla_low": {
+        "preset": "drums/percussion/tabla_low",
+        "role": "percussion",
+        "description": "Low tabla drum (bayan)"
+      },
+      "djembe": {
+        "preset": "drums/percussion/djembe",
+        "role": "percussion",
+        "description": "Djembe for additional percussion color"
+      },
+      "drone": {
+        "preset": "textures/drone_dark",
+        "role": "drone",
+        "description": "Dark drone for tanpura-like sustained tones"
+      },
+      "drone_light": {
+        "preset": "textures/drone_light",
+        "role": "drone",
+        "description": "Light drone for brighter tanpura character"
+      }
+    },
+    "tags": [
+      "world",
+      "middle_eastern",
+      "arabic",
+      "persian",
+      "oud",
+      "ney",
+      "tabla",
+      "regional",
+      "ethnic"
+    ]
+  }
+}

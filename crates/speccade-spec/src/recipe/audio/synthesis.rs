@@ -327,6 +327,133 @@ pub enum Synthesis {
         /// Inharmonicity factor (1.0 = harmonic, >1.0 = increasingly inharmonic).
         inharmonicity: f64,
     },
+    /// Granular synthesis.
+    Granular {
+        /// Source material for grains.
+        source: GranularSource,
+        /// Grain size in milliseconds (10-500ms).
+        grain_size_ms: f64,
+        /// Grains per second (1-100).
+        grain_density: f64,
+        /// Random pitch variation in semitones.
+        #[serde(default)]
+        pitch_spread: f64,
+        /// Random position jitter (0.0-1.0).
+        #[serde(default)]
+        position_spread: f64,
+        /// Stereo spread (0.0-1.0).
+        #[serde(default)]
+        pan_spread: f64,
+    },
+    /// Wavetable synthesis with morphing.
+    Wavetable {
+        /// Wavetable source.
+        table: WavetableSource,
+        /// Base frequency in Hz.
+        frequency: f64,
+        /// Position in wavetable (0.0-1.0).
+        #[serde(default)]
+        position: f64,
+        /// Optional position sweep over duration.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        position_sweep: Option<PositionSweep>,
+        /// Number of unison voices (1-8).
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        voices: Option<u8>,
+        /// Detune amount in cents for unison.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        detune: Option<f64>,
+    },
+}
+
+/// Granular synthesis source material.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "type", rename_all = "snake_case")]
+pub enum GranularSource {
+    /// Noise-based grains.
+    Noise { noise_type: NoiseType },
+    /// Tone-based grains.
+    Tone { waveform: Waveform, frequency: f64 },
+    /// Formant-based grains.
+    Formant { frequency: f64, formant_freq: f64 },
+}
+
+/// Wavetable source for wavetable synthesis.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum WavetableSource {
+    /// sine -> saw -> square -> pulse morphing
+    Basic,
+    /// Classic analog-style waves
+    Analog,
+    /// Harsh digital tones
+    Digital,
+    /// Pulse width modulation table
+    Pwm,
+    /// Vocal formant-like
+    Formant,
+    /// Drawbar organ harmonics
+    Organ,
+}
+
+/// Position sweep for wavetable synthesis.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct PositionSweep {
+    /// Target position at end of sweep (0.0-1.0).
+    pub end_position: f64,
+    /// Sweep curve type.
+    #[serde(default = "default_linear_curve")]
+    pub curve: SweepCurve,
+}
+
+fn default_linear_curve() -> SweepCurve {
+    SweepCurve::Linear
+}
+
+/// LFO (Low Frequency Oscillator) configuration.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct LfoConfig {
+    /// Waveform type for the LFO.
+    pub waveform: Waveform,
+    /// LFO rate in Hz (typically 0.1-20 Hz).
+    pub rate: f64,
+    /// Modulation depth (0.0-1.0).
+    pub depth: f64,
+    /// Initial phase offset (0.0-1.0, optional).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub phase: Option<f64>,
+}
+
+/// Modulation target specification.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "target", rename_all = "snake_case")]
+pub enum ModulationTarget {
+    /// Modulate pitch (vibrato).
+    Pitch {
+        /// Maximum pitch deviation in semitones.
+        semitones: f64,
+    },
+    /// Modulate volume (tremolo).
+    Volume,
+    /// Modulate filter cutoff frequency.
+    FilterCutoff {
+        /// Maximum cutoff frequency change in Hz.
+        amount: f64,
+    },
+    /// Modulate stereo pan.
+    Pan,
+}
+
+/// LFO modulation configuration.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct LfoModulation {
+    /// LFO configuration.
+    pub config: LfoConfig,
+    /// Modulation target.
+    pub target: ModulationTarget,
 }
 
 #[cfg(test)]

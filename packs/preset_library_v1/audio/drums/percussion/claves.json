@@ -1,0 +1,58 @@
+{
+    "spec_version":  1,
+    "asset_id":  "preset_claves",
+    "asset_type":  "audio",
+    "license":  "CC0-1.0",
+    "seed":  10085,
+    "description":  "Claves - bright hard wood click",
+    "outputs":  [
+                    {
+                        "kind":  "primary",
+                        "format":  "wav",
+                        "path":  "test-outputs/preset_library_v1/audio/drums/percussion/claves.wav"
+                    }
+                ],
+    "recipe":  {
+                   "kind":  "audio_v1",
+                   "params":  {
+                                  "duration_seconds":  0.1,
+                                  "sample_rate":  44100,
+                                  "layers":  [
+                                                 {
+                                                     "synthesis":  {
+                                                                       "type":  "oscillator",
+                                                                       "waveform":  "square",
+                                                                       "frequency":  2500
+                                                                   },
+                                                     "envelope":  {
+                                                                      "attack":  0,
+                                                                      "decay":  0.05,
+                                                                      "sustain":  0,
+                                                                      "release":  0.03
+                                                                  },
+                                                     "volume":  0.6,
+                                                     "pan":  0
+                                                 },
+                                                 {
+                                                     "synthesis":  {
+                                                                       "type":  "noise_burst",
+                                                                       "noise_type":  "white",
+                                                                       "filter":  {
+                                                                                      "type":  "highpass",
+                                                                                      "cutoff":  3500,
+                                                                                      "resonance":  0.5
+                                                                                  }
+                                                                   },
+                                                     "envelope":  {
+                                                                      "attack":  0,
+                                                                      "decay":  0.01,
+                                                                      "sustain":  0,
+                                                                      "release":  0.005
+                                                                  },
+                                                     "volume":  0.5,
+                                                     "pan":  0
+                                                 }
+                                             ]
+                              }
+               }
+}

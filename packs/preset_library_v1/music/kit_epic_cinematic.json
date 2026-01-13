@@ -1,0 +1,27 @@
+{
+  "spec_version": 1,
+  "asset_id": "kit_epic_cinematic",
+  "asset_type": "music_kit",
+  "license": "CC0-1.0",
+  "description": "Epic trailer and cinematic kit with massive impacts, risers, orchestral swells, and dramatic percussion",
+  "kit": {
+    "name": "Epic Cinematic",
+    "genre": "cinematic",
+    "subgenre": "epic",
+    "bpm_range": [80, 140],
+    "time_signature": [4, 4],
+    "instruments": {
+      "impact_sub": "fx/impact_sub",
+      "impact_metal": "fx/impact_metal",
+      "riser": "fx/riser_tension",
+      "swell_strings": "fx/swell_strings",
+      "swell_brass": "fx/swell_brass",
+      "taiko": "drums/percussion/taiko",
+      "crash": "drums/cymbals/crash",
+      "drone": "textures/drone_dark",
+      "strings": "pads/strings_ensemble",
+      "bell": "bells/bell_tubular"
+    },
+    "tags": ["epic", "cinematic", "trailer", "orchestral"]
+  }
+}

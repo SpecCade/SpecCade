@@ -1,0 +1,49 @@
+{
+    "spec_version":  1,
+    "asset_id":  "preset_dx7_bell",
+    "asset_type":  "audio",
+    "license":  "CC0-1.0",
+    "seed":  10254,
+    "description":  "DX7 bell - classic FM synthesis bell with high modulation index and 1:1 ratio",
+    "outputs":  [
+                    {
+                        "kind":  "primary",
+                        "format":  "wav",
+                        "path":  "test-outputs/preset_library_v1/audio/bells/dx7_bell.wav"
+                    }
+                ],
+    "recipe":  {
+                   "kind":  "audio_v1",
+                   "params":  {
+                                  "duration_seconds":  2.0,
+                                  "sample_rate":  44100,
+                                  "base_note":  "A5",
+                                  "layers":  [
+                                                 {
+                                                     "synthesis":  {
+                                                                       "type":  "fm_synth",
+                                                                       "carrier_freq":  880.0,
+                                                                       "modulator_freq":  880.0,
+                                                                       "modulation_index":  5.0
+                                                                   },
+                                                     "envelope":  {
+                                                                      "attack":  0.001,
+                                                                      "decay":  0.6,
+                                                                      "sustain":  0.15,
+                                                                      "release":  1.2
+                                                                  },
+                                                     "volume":  0.85,
+                                                     "pan":  0.0
+                                                 }
+                                             ],
+                                  "effects":  [
+                                                  {
+                                                      "type":  "reverb",
+                                                      "room_size":  0.6,
+                                                      "damping":  0.4,
+                                                      "wet":  0.3
+                                                  }
+                                              ]
+                              }
+               }
+}

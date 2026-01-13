@@ -1,0 +1,24 @@
+{
+  "spec_version": 1,
+  "asset_id": "kit_chiptune_16bit",
+  "asset_type": "music_kit",
+  "license": "CC0-1.0",
+  "description": "16-bit SNES/Genesis style chiptune kit with richer harmonics and standard drums",
+  "kit": {
+    "name": "Chiptune 16-bit",
+    "genre": "retro",
+    "subgenre": "chiptune",
+    "bpm_range": [120, 150],
+    "time_signature": [4, 4],
+    "instruments": {
+      "kick": "drums/kicks/kick",
+      "snare": "drums/snares/snare",
+      "hat_closed": "drums/hats/hat_closed",
+      "hat_open": "drums/hats/hat_open",
+      "bass": "bass/bass_saw",
+      "lead": "leads/synth/lead_2",
+      "pad": "pads/pad_warm"
+    },
+    "tags": ["16bit", "retro", "snes", "genesis", "megadrive"]
+  }
+}

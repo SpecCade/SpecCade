@@ -1,0 +1,28 @@
+{
+  "spec_version": 1,
+  "asset_id": "kit_celtic_medieval",
+  "asset_type": "music_kit",
+  "license": "CC0-1.0",
+  "description": "Celtic and medieval music kit with breathy woodwinds, harp-like plucks, bodhran-style drums, and bagpipe drones",
+  "kit": {
+    "name": "Celtic / Medieval",
+    "genre": "world",
+    "subgenre": "celtic",
+    "bpm_range": [80, 120],
+    "time_signature": [4, 4],
+    "instruments": {
+      "lead_flute": "leads/acoustic/flute",
+      "lead_pan_flute": "leads/acoustic/flute_pan",
+      "lead_recorder": "leads/acoustic/recorder",
+      "lead_whistle": "leads/acoustic/whistle",
+      "harp": "plucks/pluck_soft",
+      "harp_bright": "plucks/pluck",
+      "bodhran": "drums/toms/tom_floor",
+      "frame_drum": "drums/percussion/djembe",
+      "drone": "textures/drone_light",
+      "drone_dark": "textures/drone_dark",
+      "bagpipe_chanter": "leads/acoustic/bagpipe_chanter"
+    },
+    "tags": ["celtic", "medieval", "folk", "irish", "scottish", "regional", "acoustic"]
+  }
+}

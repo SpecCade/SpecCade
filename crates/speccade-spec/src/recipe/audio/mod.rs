@@ -5,20 +5,26 @@
 //! ## Structure
 //!
 //! - `synthesis` - Shared synthesis types (waveforms, envelopes, filters, etc.)
+//! - `effects` - Audio effect types for effect chain
 //!
 //! ## Recipe Kind
 //!
 //! - `audio_v1` - Unified audio recipe with layered synthesis
 
+pub mod effects;
 pub mod synthesis;
 
 use serde::{Deserialize, Serialize};
 
 // Re-export synthesis types
 pub use synthesis::{
-    midi_to_frequency, parse_note_name, Envelope, Filter, FreqSweep, NoiseType, NoteSpec,
-    OscillatorConfig, PitchEnvelope, SweepCurve, Synthesis, Waveform,
+    midi_to_frequency, parse_note_name, Envelope, Filter, FreqSweep, GranularSource, LfoConfig,
+    LfoModulation, ModulationTarget, NoiseType, NoteSpec, OscillatorConfig, PitchEnvelope,
+    PositionSweep, SweepCurve, Synthesis, Waveform, WavetableSource,
 };
+
+// Re-export effect types
+pub use effects::{Effect, WaveshaperCurve};
 
 /// A single synthesis layer in an audio recipe.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -35,6 +41,12 @@ pub struct AudioLayer {
     /// Layer start delay in seconds (default: 0.0).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub delay: Option<f64>,
+    /// Optional filter applied to this layer.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub filter: Option<Filter>,
+    /// Optional LFO modulation applied to this layer.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub lfo: Option<LfoModulation>,
 }
 
 /// Parameters for the `audio_v1` unified audio recipe.
@@ -73,6 +85,9 @@ pub struct AudioV1Params {
     /// Optional master filter applied after mixing all layers.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub master_filter: Option<Filter>,
+    /// Effect chain applied after mixing all layers.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub effects: Vec<Effect>,
 }
 
 fn default_sample_rate() -> u32 {
@@ -106,6 +121,8 @@ mod tests {
             volume: 0.75,
             pan: -0.5,
             delay: Some(0.25),
+            filter: None,
+            lfo: None,
         };
 
         let json = serde_json::to_string(&layer).unwrap();
@@ -127,6 +144,8 @@ mod tests {
             volume: 1.0,
             pan: 0.0,
             delay: None,
+            filter: None,
+            lfo: None,
         };
 
         let json = serde_json::to_string(&layer).unwrap();
@@ -149,6 +168,7 @@ mod tests {
             pitch_envelope: None,
             generate_loop_points: false,
             master_filter: None,
+            effects: vec![],
         };
 
         assert_eq!(params.base_note, None);
@@ -174,10 +194,13 @@ mod tests {
                 volume: 0.8,
                 pan: 0.0,
                 delay: Some(0.1),
+                filter: None,
+                lfo: None,
             }],
             pitch_envelope: None,
             generate_loop_points: false,
             master_filter: None,
+            effects: vec![],
         };
 
         let json = serde_json::to_string(&params).unwrap();
@@ -197,6 +220,7 @@ mod tests {
             pitch_envelope: None,
             generate_loop_points: false,
             master_filter: None,
+            effects: vec![],
         };
 
         let json = serde_json::to_string(&params).unwrap();
@@ -221,6 +245,8 @@ mod tests {
                 volume: 1.0,
                 pan: 0.0,
                 delay: None,
+                filter: None,
+                lfo: None,
             }],
             pitch_envelope: Some(PitchEnvelope {
                 attack: 0.01,
@@ -231,6 +257,7 @@ mod tests {
             }),
             generate_loop_points: true,
             master_filter: None,
+            effects: vec![],
         };
 
         let json = serde_json::to_string(&params).unwrap();
@@ -254,6 +281,7 @@ mod tests {
                 resonance: 0.707,
                 cutoff_end: None,
             }),
+            effects: vec![],
         };
 
         let json = serde_json::to_string(&params).unwrap();
@@ -289,6 +317,8 @@ mod tests {
                     volume: 0.8,
                     pan: -0.3,
                     delay: None,
+                    filter: None,
+                    lfo: None,
                 },
                 AudioLayer {
                     synthesis: Synthesis::NoiseBurst {
@@ -308,6 +338,8 @@ mod tests {
                     volume: 0.4,
                     pan: 0.0,
                     delay: Some(0.05),
+                    filter: None,
+                    lfo: None,
                 },
             ],
             pitch_envelope: Some(PitchEnvelope {
@@ -323,6 +355,7 @@ mod tests {
                 resonance: 0.5,
                 cutoff_end: None,
             }),
+            effects: vec![],
         };
 
         let json = serde_json::to_string_pretty(&params).unwrap();
@@ -366,10 +399,13 @@ mod tests {
                 volume: 1.0,
                 pan: 0.0,
                 delay: None,
+                filter: None,
+                lfo: None,
             }],
             pitch_envelope: None,
             generate_loop_points: true,
             master_filter: None,
+            effects: vec![],
         };
 
         let json = serde_json::to_string_pretty(&params).unwrap();

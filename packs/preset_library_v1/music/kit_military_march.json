@@ -1,0 +1,25 @@
+{
+  "spec_version": 1,
+  "asset_id": "kit_military_march",
+  "asset_type": "music_kit",
+  "license": "CC0-1.0",
+  "description": "Military and march style kit with snare rolls, brass swells, and ceremonial percussion",
+  "kit": {
+    "name": "Military March",
+    "genre": "cinematic",
+    "subgenre": "march",
+    "bpm_range": [100, 140],
+    "time_signature": [4, 4],
+    "instruments": {
+      "kick": "drums/kicks/kick",
+      "snare": "drums/snares/snare",
+      "crash": "drums/cymbals/cymbal",
+      "timpani": "drums/toms/tom_floor",
+      "brass": "leads/synth/brass_swell",
+      "lead_bagpipe": "leads/acoustic/bagpipe_chanter",
+      "lead_accordion": "leads/acoustic/accordion_lead",
+      "strings": "pads/strings_ensemble"
+    },
+    "tags": ["military", "march", "patriotic", "ceremonial"]
+  }
+}

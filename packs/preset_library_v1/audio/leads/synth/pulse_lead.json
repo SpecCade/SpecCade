@@ -1,0 +1,75 @@
+{
+    "spec_version":  1,
+    "asset_id":  "preset_pulse_lead",
+    "asset_type":  "audio",
+    "license":  "CC0-1.0",
+    "seed":  10310,
+    "description":  "Pulse wave lead - classic PWM character with narrow duty cycle for nasal tone",
+    "outputs":  [
+                    {
+                        "kind":  "primary",
+                        "format":  "wav",
+                        "path":  "test-outputs/preset_library_v1/audio/leads/synth/pulse_lead.wav"
+                    }
+                ],
+    "recipe":  {
+                   "kind":  "audio_v1",
+                   "params":  {
+                                  "base_note":  "A4",
+                                  "duration_seconds":  1.5,
+                                  "sample_rate":  44100,
+                                  "layers":  [
+                                                 {
+                                                     "synthesis":  {
+                                                                       "type":  "multi_oscillator",
+                                                                       "frequency":  440.0,
+                                                                       "oscillators":  [
+                                                                                           {
+                                                                                               "waveform":  "pulse",
+                                                                                               "volume":  1.0,
+                                                                                               "detune":  0,
+                                                                                               "duty":  0.3
+                                                                                           },
+                                                                                           {
+                                                                                               "waveform":  "pulse",
+                                                                                               "volume":  0.8,
+                                                                                               "detune":  8,
+                                                                                               "duty":  0.35
+                                                                                           },
+                                                                                           {
+                                                                                               "waveform":  "pulse",
+                                                                                               "volume":  0.8,
+                                                                                               "detune":  -8,
+                                                                                               "duty":  0.25
+                                                                                           }
+                                                                                       ]
+                                                                   },
+                                                     "envelope":  {
+                                                                      "attack":  0.008,
+                                                                      "decay":  0.12,
+                                                                      "sustain":  0.85,
+                                                                      "release":  0.15
+                                                                  },
+                                                     "filter":  {
+                                                                    "type":  "lowpass",
+                                                                    "cutoff":  4000,
+                                                                    "resonance":  0.4
+                                                                },
+                                                     "lfo":  {
+                                                                 "config":  {
+                                                                                "waveform":  "sine",
+                                                                                "rate":  5.5,
+                                                                                "depth":  0.3
+                                                                            },
+                                                                 "target":  {
+                                                                                "target":  "pitch",
+                                                                                "semitones":  0.3
+                                                                            }
+                                                             },
+                                                     "volume":  0.85,
+                                                     "pan":  0
+                                                 }
+                                             ]
+                              }
+               }
+}

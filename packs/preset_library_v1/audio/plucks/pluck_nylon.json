@@ -1,0 +1,40 @@
+{
+    "spec_version":  1,
+    "asset_id":  "pluck_nylon",
+    "asset_type":  "audio",
+    "license":  "CC0-1.0",
+    "seed":  10153,
+    "description":  "Warm nylon string pluck with medium-long decay - classic acoustic guitar character",
+    "outputs":  [
+                    {
+                        "kind":  "primary",
+                        "format":  "wav",
+                        "path":  "test-outputs/preset_library_v1/audio/plucks/pluck_nylon.wav"
+                    }
+                ],
+    "recipe":  {
+                   "kind":  "audio_v1",
+                   "params":  {
+                                  "duration_seconds":  1.0,
+                                  "sample_rate":  44100,
+                                  "layers":  [
+                                                 {
+                                                     "synthesis":  {
+                                                                       "type":  "karplus_strong",
+                                                                       "frequency":  261.63,
+                                                                       "decay":  0.997,
+                                                                       "blend":  0.6
+                                                                   },
+                                                     "envelope":  {
+                                                                      "attack":  0.001,
+                                                                      "decay":  0.12,
+                                                                      "sustain":  0.75,
+                                                                      "release":  0.35
+                                                                  },
+                                                     "volume":  1.0,
+                                                     "pan":  0.0
+                                                 }
+                                             ]
+                              }
+               }
+}

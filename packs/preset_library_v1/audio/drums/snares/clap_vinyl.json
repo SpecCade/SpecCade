@@ -1,0 +1,83 @@
+{
+    "spec_version":  1,
+    "asset_id":  "preset_clap_vinyl",
+    "asset_type":  "audio",
+    "license":  "CC0-1.0",
+    "seed":  10027,
+    "description":  "Vinyl clap - warmer, filtered clap with lo-fi character",
+    "outputs":  [
+                    {
+                        "kind":  "primary",
+                        "format":  "wav",
+                        "path":  "test-outputs/preset_library_v1/audio/drums/snares/clap_vinyl.wav"
+                    }
+                ],
+    "recipe":  {
+                   "kind":  "audio_v1",
+                   "params":  {
+                                  "duration_seconds":  0.28,
+                                  "sample_rate":  44100,
+                                  "layers":  [
+                                                 {
+                                                     "synthesis":  {
+                                                                       "type":  "noise_burst",
+                                                                       "noise_type":  "pink",
+                                                                       "filter":  {
+                                                                                      "type":  "lowpass",
+                                                                                      "cutoff":  2500,
+                                                                                      "resonance":  0.6
+                                                                                  }
+                                                                   },
+                                                     "envelope":  {
+                                                                      "attack":  0.002,
+                                                                      "decay":  0.03,
+                                                                      "sustain":  0,
+                                                                      "release":  0.03
+                                                                  },
+                                                     "volume":  0.65,
+                                                     "pan":  0
+                                                 },
+                                                 {
+                                                     "synthesis":  {
+                                                                       "type":  "noise_burst",
+                                                                       "noise_type":  "pink",
+                                                                       "filter":  {
+                                                                                      "type":  "lowpass",
+                                                                                      "cutoff":  2000,
+                                                                                      "resonance":  0.7
+                                                                                  }
+                                                                   },
+                                                     "envelope":  {
+                                                                      "attack":  0.002,
+                                                                      "decay":  0.04,
+                                                                      "sustain":  0,
+                                                                      "release":  0.04
+                                                                  },
+                                                     "volume":  0.6,
+                                                     "pan":  0,
+                                                     "delay":  0.015
+                                                 },
+                                                 {
+                                                     "synthesis":  {
+                                                                       "type":  "noise_burst",
+                                                                       "noise_type":  "pink",
+                                                                       "filter":  {
+                                                                                      "type":  "lowpass",
+                                                                                      "cutoff":  1800,
+                                                                                      "resonance":  0.5
+                                                                                  }
+                                                                   },
+                                                     "envelope":  {
+                                                                      "attack":  0.002,
+                                                                      "decay":  0.08,
+                                                                      "sustain":  0.03,
+                                                                      "release":  0.12
+                                                                  },
+                                                     "volume":  0.7,
+                                                     "pan":  0,
+                                                     "delay":  0.028
+                                                 }
+                                             ]
+                              }
+               }
+}

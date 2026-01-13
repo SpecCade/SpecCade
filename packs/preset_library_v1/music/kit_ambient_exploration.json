@@ -1,0 +1,55 @@
+{
+  "spec_version": 1,
+  "asset_id": "kit_ambient_exploration",
+  "asset_type": "music_kit",
+  "license": "CC0-1.0",
+  "description": "Ambient exploration and discovery kit with wavetable pads and atmospheric textures for calm game moments",
+  "kit": {
+    "name": "Ambient Exploration",
+    "genre": "ambient",
+    "subgenre": "exploration",
+    "bpm_range": [60, 90],
+    "time_signature": [4, 4],
+    "instruments": {
+      "pad": {
+        "preset": "pads/pad_evolving",
+        "role": "pad",
+        "description": "Evolving wavetable pad with morphing character"
+      },
+      "texture": {
+        "preset": "textures/texture_air",
+        "role": "texture",
+        "description": "Airy atmospheric texture"
+      },
+      "drone": {
+        "preset": "textures/drone_light",
+        "role": "drone",
+        "description": "Light sustaining drone"
+      },
+      "bell": {
+        "preset": "bells/bell_soft",
+        "role": "bell",
+        "description": "Soft bell tones for melodic accents"
+      },
+      "pluck": {
+        "preset": "plucks/pluck_soft",
+        "role": "pluck",
+        "description": "Gentle plucked notes"
+      },
+      "atmosphere": {
+        "preset": "pads/atmosphere",
+        "role": "atmosphere",
+        "description": "Deep atmospheric pad layer"
+      }
+    },
+    "tags": [
+      "ambient",
+      "exploration",
+      "calm",
+      "peaceful",
+      "atmospheric",
+      "discovery",
+      "open-world"
+    ]
+  }
+}

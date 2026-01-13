@@ -1,0 +1,51 @@
+{
+  "spec_version": 1,
+  "asset_id": "texture_vinyl",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 10601,
+  "description": "Vinyl crackle / lo-fi character - pink noise with tiny grains and position randomization",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/textures/texture_vinyl.wav"
+    }
+  ],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "duration_seconds": 4.0,
+      "sample_rate": 44100,
+      "layers": [
+        {
+          "synthesis": {
+            "type": "granular",
+            "source": {
+              "type": "noise",
+              "noise_type": "pink"
+            },
+            "grain_size_ms": 15.0,
+            "grain_density": 35.0,
+            "pitch_spread": 0.1,
+            "position_spread": 0.7,
+            "pan_spread": 0.4
+          },
+          "envelope": {
+            "attack": 0.8,
+            "decay": 0.2,
+            "sustain": 0.8,
+            "release": 0.8
+          },
+          "volume": 0.4,
+          "pan": 0.0
+        }
+      ],
+      "master_filter": {
+        "type": "lowpass",
+        "cutoff": 4000.0,
+        "resonance": 0.2
+      }
+    }
+  }
+}

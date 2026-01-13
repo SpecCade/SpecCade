@@ -1,0 +1,54 @@
+{
+  "spec_version": 1,
+  "asset_id": "texture_air",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 10600,
+  "description": "Airy, breathy texture - white noise with small grains and wide stereo spread",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/textures/texture_air.wav"
+    }
+  ],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "duration_seconds": 4.0,
+      "sample_rate": 44100,
+      "layers": [
+        {
+          "synthesis": {
+            "type": "granular",
+            "source": {
+              "type": "noise",
+              "noise_type": "white"
+            },
+            "grain_size_ms": 25.0,
+            "grain_density": 8.0,
+            "pitch_spread": 0.2,
+            "position_spread": 0.4,
+            "pan_spread": 0.95
+          },
+          "envelope": {
+            "attack": 1.5,
+            "decay": 0.3,
+            "sustain": 0.6,
+            "release": 1.5
+          },
+          "volume": 0.5,
+          "pan": 0.0
+        }
+      ],
+      "effects": [
+        {
+          "type": "reverb",
+          "room_size": 0.8,
+          "damping": 0.5,
+          "wet": 0.5
+        }
+      ]
+    }
+  }
+}

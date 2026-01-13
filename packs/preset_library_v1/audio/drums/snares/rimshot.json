@@ -1,0 +1,62 @@
+{
+    "spec_version":  1,
+    "asset_id":  "preset_rimshot",
+    "asset_type":  "audio",
+    "license":  "CC0-1.0",
+    "seed":  10024,
+    "description":  "Rimshot - short, bright, metallic click with high-pitched body",
+    "outputs":  [
+                    {
+                        "kind":  "primary",
+                        "format":  "wav",
+                        "path":  "test-outputs/preset_library_v1/audio/drums/snares/rimshot.wav"
+                    }
+                ],
+    "recipe":  {
+                   "kind":  "audio_v1",
+                   "params":  {
+                                  "duration_seconds":  0.08,
+                                  "sample_rate":  44100,
+                                  "layers":  [
+                                                 {
+                                                     "synthesis":  {
+                                                                       "type":  "oscillator",
+                                                                       "waveform":  "sine",
+                                                                       "frequency":  500,
+                                                                       "freq_sweep":  {
+                                                                                          "end_freq":  350,
+                                                                                          "curve":  "exponential"
+                                                                                      }
+                                                                   },
+                                                     "envelope":  {
+                                                                      "attack":  0.001,
+                                                                      "decay":  0.03,
+                                                                      "sustain":  0,
+                                                                      "release":  0.02
+                                                                  },
+                                                     "volume":  0.6,
+                                                     "pan":  0
+                                                 },
+                                                 {
+                                                     "synthesis":  {
+                                                                       "type":  "noise_burst",
+                                                                       "noise_type":  "white",
+                                                                       "filter":  {
+                                                                                      "type":  "highpass",
+                                                                                      "cutoff":  4000,
+                                                                                      "resonance":  0.8
+                                                                                  }
+                                                                   },
+                                                     "envelope":  {
+                                                                      "attack":  0.0005,
+                                                                      "decay":  0.02,
+                                                                      "sustain":  0,
+                                                                      "release":  0.01
+                                                                  },
+                                                     "volume":  0.7,
+                                                     "pan":  0
+                                                 }
+                                             ]
+                              }
+               }
+}

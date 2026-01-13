@@ -298,10 +298,13 @@ fn test_instrument_synthesis_audio_v1_serialization() {
                 volume: 1.0,
                 pan: 0.0,
                 delay: None,
+                filter: None,
+                lfo: None,
             }],
             pitch_envelope: None,
             generate_loop_points: false,
             master_filter: None,
+            effects: vec![],
         }),
         ..Default::default()
     };

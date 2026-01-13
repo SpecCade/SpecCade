@@ -1,0 +1,46 @@
+{
+    "spec_version":  1,
+    "asset_id":  "preset_bass_acid",
+    "asset_type":  "audio",
+    "license":  "CC0-1.0",
+    "seed":  10108,
+    "description":  "Acid bass - TB-303 style with high resonance lowpass filter and dramatic envelope sweep for squelchy acid character",
+    "outputs":  [
+                    {
+                        "kind":  "primary",
+                        "format":  "wav",
+                        "path":  "test-outputs/preset_library_v1/audio/bass/bass_acid.wav"
+                    }
+                ],
+    "recipe":  {
+                   "kind":  "audio_v1",
+                   "params":  {
+                                  "base_note":  "C2",
+                                  "duration_seconds":  1.0,
+                                  "sample_rate":  44100,
+                                  "layers":  [
+                                                 {
+                                                     "synthesis":  {
+                                                                       "type":  "oscillator",
+                                                                       "waveform":  "sawtooth",
+                                                                       "frequency":  65.41
+                                                                   },
+                                                     "filter":  {
+                                                                    "type":  "lowpass",
+                                                                    "cutoff":  2500.0,
+                                                                    "resonance":  0.88,
+                                                                    "cutoff_end":  300.0
+                                                                },
+                                                     "envelope":  {
+                                                                      "attack":  0.003,
+                                                                      "decay":  0.25,
+                                                                      "sustain":  0.5,
+                                                                      "release":  0.12
+                                                                  },
+                                                     "volume":  0.85,
+                                                     "pan":  0
+                                                 }
+                                             ]
+                              }
+               }
+}

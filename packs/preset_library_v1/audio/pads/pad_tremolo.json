@@ -1,0 +1,71 @@
+{
+  "spec_version": 1,
+  "asset_id": "preset_pad_tremolo",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 10122,
+  "description": "Pulsing tremolo pad - warm pad with volume LFO for rhythmic, organic pulsing character",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/pads/pad_tremolo.wav"
+    }
+  ],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "base_note": "C4",
+      "duration_seconds": 2.0,
+      "sample_rate": 44100,
+      "layers": [
+        {
+          "synthesis": {
+            "type": "multi_oscillator",
+            "frequency": 261.63,
+            "oscillators": [
+              {
+                "waveform": "sawtooth",
+                "volume": 1.0,
+                "detune": 0.0
+              },
+              {
+                "waveform": "sawtooth",
+                "volume": 0.8,
+                "detune": 4.0
+              },
+              {
+                "waveform": "sawtooth",
+                "volume": 0.8,
+                "detune": -4.0
+              }
+            ]
+          },
+          "envelope": {
+            "attack": 0.1,
+            "decay": 0.2,
+            "sustain": 0.85,
+            "release": 0.3
+          },
+          "filter": {
+            "type": "lowpass",
+            "cutoff": 2500.0,
+            "resonance": 0.3
+          },
+          "lfo": {
+            "config": {
+              "waveform": "sine",
+              "rate": 4.0,
+              "depth": 0.4
+            },
+            "target": {
+              "target": "volume"
+            }
+          },
+          "volume": 0.85,
+          "pan": 0.0
+        }
+      ]
+    }
+  }
+}

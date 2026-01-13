@@ -1,0 +1,32 @@
+{
+  "spec_version": 1,
+  "asset_id": "kit_metal",
+  "asset_type": "music_kit",
+  "license": "CC0-1.0",
+  "description": "Heavy metal kit with double kick drums, aggressive snares, china cymbals, distorted bass, and heroic leads for intense rock and metal tracks",
+  "kit": {
+    "name": "Heavy Metal",
+    "genre": "cinematic",
+    "subgenre": "action",
+    "bpm_range": [120, 200],
+    "time_signature": [4, 4],
+    "instruments": {
+      "kick": "drums/kicks/kick",
+      "kick_double": "drums/kicks/kick_dist",
+      "snare": "drums/snares/snare",
+      "snare_heavy": "drums/snares/snare_dist",
+      "hat": "drums/hats/hat_closed",
+      "china": "drums/cymbals/china",
+      "crash": "drums/cymbals/crash",
+      "tom_low": "drums/toms/tom_low",
+      "tom_high": "drums/toms/tom_high",
+      "bass": "bass/bass_aggressive",
+      "bass_dist": "bass/bass_dist",
+      "lead": "leads/synth/lead_heroic",
+      "lead_bright": "leads/synth/lead_bright",
+      "rhythm": "plucks/stab",
+      "impact": "fx/impact_metal"
+    },
+    "tags": ["metal", "heavy", "action", "rock", "aggressive", "double-kick"]
+  }
+}

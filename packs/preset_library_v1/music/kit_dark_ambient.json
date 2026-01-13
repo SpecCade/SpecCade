@@ -1,0 +1,55 @@
+{
+  "spec_version": 1,
+  "asset_id": "kit_dark_ambient",
+  "asset_type": "music_kit",
+  "license": "CC0-1.0",
+  "description": "Dark ominous atmosphere kit with heavy drones and digital textures for horror and tension game moments",
+  "kit": {
+    "name": "Dark Ambient",
+    "genre": "ambient",
+    "subgenre": "dark",
+    "bpm_range": [50, 90],
+    "time_signature": [4, 4],
+    "instruments": {
+      "drone": {
+        "preset": "textures/drone_dark",
+        "role": "drone",
+        "description": "Dark menacing drone"
+      },
+      "texture": {
+        "preset": "textures/texture_digital",
+        "role": "texture",
+        "description": "Digital harsh texture"
+      },
+      "rumble": {
+        "preset": "textures/sub_rumble",
+        "role": "rumble",
+        "description": "Deep sub-bass rumble"
+      },
+      "impact": {
+        "preset": "fx/impact_sub",
+        "role": "impact",
+        "description": "Sub-frequency impact hit"
+      },
+      "pad": {
+        "preset": "pads/pad_granular",
+        "role": "pad",
+        "description": "Granular atmospheric pad"
+      },
+      "bell": {
+        "preset": "bells/bell_tubular",
+        "role": "bell",
+        "description": "Tubular bell for ominous tones"
+      }
+    },
+    "tags": [
+      "dark",
+      "horror",
+      "tension",
+      "ominous",
+      "atmospheric",
+      "dread",
+      "suspense"
+    ]
+  }
+}

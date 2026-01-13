@@ -1,0 +1,77 @@
+{
+  "spec_version": 1,
+  "asset_id": "preset_brass_swell",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 10124,
+  "description": "Swelling brass lead - sawtooth stack with filter LFO for breathing, dynamic brass character",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/leads/synth/brass_swell.wav"
+    }
+  ],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "base_note": "C4",
+      "duration_seconds": 2.0,
+      "sample_rate": 44100,
+      "layers": [
+        {
+          "synthesis": {
+            "type": "multi_oscillator",
+            "frequency": 261.63,
+            "oscillators": [
+              {
+                "waveform": "sawtooth",
+                "volume": 1.0,
+                "detune": 0.0
+              },
+              {
+                "waveform": "sawtooth",
+                "volume": 0.95,
+                "detune": 3.0
+              },
+              {
+                "waveform": "sawtooth",
+                "volume": 0.95,
+                "detune": -3.0
+              },
+              {
+                "waveform": "square",
+                "volume": 0.5,
+                "detune": 0.0
+              }
+            ]
+          },
+          "envelope": {
+            "attack": 0.08,
+            "decay": 0.2,
+            "sustain": 0.8,
+            "release": 0.3
+          },
+          "filter": {
+            "type": "lowpass",
+            "cutoff": 2800.0,
+            "resonance": 0.45
+          },
+          "lfo": {
+            "config": {
+              "waveform": "sine",
+              "rate": 0.8,
+              "depth": 0.6
+            },
+            "target": {
+              "target": "filter_cutoff",
+              "amount": 1200.0
+            }
+          },
+          "volume": 0.85,
+          "pan": 0.0
+        }
+      ]
+    }
+  }
+}

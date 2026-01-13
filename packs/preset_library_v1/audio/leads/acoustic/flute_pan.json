@@ -1,0 +1,70 @@
+{
+    "spec_version":  1,
+    "asset_id":  "preset_flute_pan",
+    "asset_type":  "audio",
+    "license":  "CC0-1.0",
+    "seed":  10351,
+    "description":  "Pan flute - airy character with prominent breath noise",
+    "outputs":  [
+                    {
+                        "kind":  "primary",
+                        "format":  "wav",
+                        "path":  "test-outputs/preset_library_v1/audio/leads/acoustic/flute_pan.wav"
+                    }
+                ],
+    "recipe":  {
+                   "kind":  "audio_v1",
+                   "params":  {
+                                  "base_note":  "G4",
+                                  "duration_seconds":  2.0,
+                                  "sample_rate":  44100,
+                                  "layers":  [
+                                                 {
+                                                     "synthesis":  {
+                                                                       "type":  "oscillator",
+                                                                       "waveform":  "sine",
+                                                                       "frequency":  392.0
+                                                                   },
+                                                     "envelope":  {
+                                                                      "attack":  0.08,
+                                                                      "decay":  0.15,
+                                                                      "sustain":  0.85,
+                                                                      "release":  0.2
+                                                                  },
+                                                     "lfo":  {
+                                                                 "config":  {
+                                                                                "waveform":  "sine",
+                                                                                "rate":  4.5,
+                                                                                "depth":  0.35
+                                                                            },
+                                                                 "target":  {
+                                                                                "target":  "pitch",
+                                                                                "semitones":  0.2
+                                                                            }
+                                                             },
+                                                     "volume":  0.65,
+                                                     "pan":  0
+                                                 },
+                                                 {
+                                                     "synthesis":  {
+                                                                       "type":  "noise_burst",
+                                                                       "noise_type":  "white",
+                                                                       "filter":  {
+                                                                                      "type":  "bandpass",
+                                                                                      "center":  3500.0,
+                                                                                      "resonance":  0.4
+                                                                                  }
+                                                                   },
+                                                     "envelope":  {
+                                                                      "attack":  0.05,
+                                                                      "decay":  0.12,
+                                                                      "sustain":  0.5,
+                                                                      "release":  0.15
+                                                                  },
+                                                     "volume":  0.25,
+                                                     "pan":  0
+                                                 }
+                                             ]
+                              }
+               }
+}

@@ -1,0 +1,55 @@
+{
+  "spec_version": 1,
+  "asset_id": "pad_sweep",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 10404,
+  "description": "Trance-style sweep pad with fast position modulation for rhythmic movement",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/pads/pad_sweep.wav"
+    }
+  ],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "duration_seconds": 3.0,
+      "sample_rate": 44100,
+      "base_note": "C4",
+      "layers": [
+        {
+          "synthesis": {
+            "type": "wavetable",
+            "table": "basic",
+            "frequency": 261.63,
+            "position": 0.1,
+            "position_sweep": {
+              "end_position": 0.9,
+              "curve": "linear"
+            },
+            "voices": 4,
+            "detune": 16.0
+          },
+          "envelope": {
+            "attack": 0.3,
+            "decay": 0.2,
+            "sustain": 0.7,
+            "release": 0.5
+          },
+          "volume": 0.75,
+          "pan": 0.0
+        }
+      ],
+      "effects": [
+        {
+          "type": "chorus",
+          "rate": 1.2,
+          "depth": 0.35,
+          "wet": 0.3
+        }
+      ]
+    }
+  }
+}

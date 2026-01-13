@@ -1,0 +1,75 @@
+{
+    "spec_version":  1,
+    "asset_id":  "preset_hat_metallic",
+    "asset_type":  "audio",
+    "license":  "CC0-1.0",
+    "seed":  10052,
+    "description":  "Metallic hi-hat - emphasizes inharmonic partials for pronounced metal character",
+    "outputs":  [
+                    {
+                        "kind":  "primary",
+                        "format":  "wav",
+                        "path":  "test-outputs/preset_library_v1/audio/drums/hats/hat_metallic.wav"
+                    }
+                ],
+    "recipe":  {
+                   "kind":  "audio_v1",
+                   "params":  {
+                                  "duration_seconds":  0.2,
+                                  "sample_rate":  44100,
+                                  "layers":  [
+                                                 {
+                                                     "synthesis":  {
+                                                                       "type":  "metallic",
+                                                                       "base_freq":  8000,
+                                                                       "num_partials":  10,
+                                                                       "inharmonicity":  2.8
+                                                                   },
+                                                     "envelope":  {
+                                                                      "attack":  0.001,
+                                                                      "decay":  0.08,
+                                                                      "sustain":  0,
+                                                                      "release":  0.1
+                                                                  },
+                                                     "volume":  0.6,
+                                                     "pan":  0
+                                                 },
+                                                 {
+                                                     "synthesis":  {
+                                                                       "type":  "metallic",
+                                                                       "base_freq":  6000,
+                                                                       "num_partials":  8,
+                                                                       "inharmonicity":  3.2
+                                                                   },
+                                                     "envelope":  {
+                                                                      "attack":  0.002,
+                                                                      "decay":  0.06,
+                                                                      "sustain":  0,
+                                                                      "release":  0.08
+                                                                  },
+                                                     "volume":  0.4,
+                                                     "pan":  0
+                                                 },
+                                                 {
+                                                     "synthesis":  {
+                                                                       "type":  "noise_burst",
+                                                                       "noise_type":  "white",
+                                                                       "filter":  {
+                                                                                      "type":  "highpass",
+                                                                                      "cutoff":  7500,
+                                                                                      "resonance":  0.6
+                                                                                  }
+                                                                   },
+                                                     "envelope":  {
+                                                                      "attack":  0.001,
+                                                                      "decay":  0.05,
+                                                                      "sustain":  0,
+                                                                      "release":  0.07
+                                                                  },
+                                                     "volume":  0.35,
+                                                     "pan":  0
+                                                 }
+                                             ]
+                              }
+               }
+}

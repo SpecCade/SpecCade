@@ -1,0 +1,40 @@
+{
+    "spec_version":  1,
+    "asset_id":  "pluck_soft",
+    "asset_type":  "audio",
+    "license":  "CC0-1.0",
+    "seed":  10151,
+    "description":  "Soft mellow pluck with high blend and longer decay - warm nylon-like character",
+    "outputs":  [
+                    {
+                        "kind":  "primary",
+                        "format":  "wav",
+                        "path":  "test-outputs/preset_library_v1/audio/plucks/pluck_soft.wav"
+                    }
+                ],
+    "recipe":  {
+                   "kind":  "audio_v1",
+                   "params":  {
+                                  "duration_seconds":  1.0,
+                                  "sample_rate":  44100,
+                                  "layers":  [
+                                                 {
+                                                     "synthesis":  {
+                                                                       "type":  "karplus_strong",
+                                                                       "frequency":  440.0,
+                                                                       "decay":  0.998,
+                                                                       "blend":  0.7
+                                                                   },
+                                                     "envelope":  {
+                                                                      "attack":  0.002,
+                                                                      "decay":  0.15,
+                                                                      "sustain":  0.8,
+                                                                      "release":  0.4
+                                                                  },
+                                                     "volume":  1.0,
+                                                     "pan":  0.0
+                                                 }
+                                             ]
+                              }
+               }
+}

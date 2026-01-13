@@ -1,0 +1,114 @@
+{
+  "spec_version": 1,
+  "asset_id": "preset_pad_breathing",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 10126,
+  "description": "Breathing meditation pad - soft pad with very slow combined volume and filter modulation for calming, ambient character",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/pads/pad_breathing.wav"
+    }
+  ],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "base_note": "C4",
+      "duration_seconds": 5.0,
+      "sample_rate": 44100,
+      "layers": [
+        {
+          "synthesis": {
+            "type": "multi_oscillator",
+            "frequency": 261.63,
+            "oscillators": [
+              {
+                "waveform": "triangle",
+                "volume": 1.0,
+                "detune": 0.0
+              },
+              {
+                "waveform": "sine",
+                "volume": 0.8,
+                "detune": 3.0
+              },
+              {
+                "waveform": "sine",
+                "volume": 0.8,
+                "detune": -3.0
+              }
+            ]
+          },
+          "envelope": {
+            "attack": 0.5,
+            "decay": 0.5,
+            "sustain": 0.95,
+            "release": 0.8
+          },
+          "filter": {
+            "type": "lowpass",
+            "cutoff": 2000.0,
+            "resonance": 0.2
+          },
+          "lfo": {
+            "config": {
+              "waveform": "sine",
+              "rate": 0.15,
+              "depth": 0.35
+            },
+            "target": {
+              "target": "volume"
+            }
+          },
+          "volume": 0.85,
+          "pan": 0.0
+        },
+        {
+          "synthesis": {
+            "type": "multi_oscillator",
+            "frequency": 261.63,
+            "oscillators": [
+              {
+                "waveform": "sawtooth",
+                "volume": 1.0,
+                "detune": 5.0
+              },
+              {
+                "waveform": "sawtooth",
+                "volume": 0.9,
+                "detune": -5.0
+              }
+            ]
+          },
+          "envelope": {
+            "attack": 0.6,
+            "decay": 0.4,
+            "sustain": 0.9,
+            "release": 0.7
+          },
+          "filter": {
+            "type": "lowpass",
+            "cutoff": 1500.0,
+            "resonance": 0.25
+          },
+          "lfo": {
+            "config": {
+              "waveform": "sine",
+              "rate": 0.15,
+              "depth": 0.6,
+              "phase": 0.25
+            },
+            "target": {
+              "target": "filter_cutoff",
+              "amount": 800.0
+            }
+          },
+          "volume": 0.5,
+          "pan": 0.0
+        }
+      ]
+    }
+  }
+}

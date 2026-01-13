@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(target/release/speccade-cli generate:*)",
+      "Bash(./target/release/speccade.exe generate:*)"
+    ]
+  }
+}

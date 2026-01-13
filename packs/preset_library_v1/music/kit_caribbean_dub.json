@@ -1,0 +1,78 @@
+{
+  "spec_version": 1,
+  "asset_id": "kit_caribbean_dub",
+  "asset_type": "music_kit",
+  "license": "CC0-1.0",
+  "description": "Caribbean/Reggae/Dub kit with one-drop rhythm drums, deep sub bass, skank chord keys, and steel drum-like bells for laid-back island vibes",
+  "kit": {
+    "name": "Caribbean / Reggae / Dub",
+    "genre": "world",
+    "subgenre": "caribbean",
+    "bpm_range": [60, 90],
+    "time_signature": [4, 4],
+    "instruments": {
+      "kick": {
+        "preset": "drums/kicks/kick_soft",
+        "role": "kick",
+        "description": "Soft kick for relaxed one-drop rhythm"
+      },
+      "rimshot": {
+        "preset": "drums/snares/rimshot",
+        "role": "snare",
+        "description": "Rimshot for classic reggae backbeat"
+      },
+      "sidestick": {
+        "preset": "drums/percussion/sidestick",
+        "role": "percussion",
+        "description": "Sidestick for subtle accent variations"
+      },
+      "bass_sub": {
+        "preset": "bass/bass_sub",
+        "role": "bass",
+        "description": "Deep sub bass for heavy dub weight"
+      },
+      "bass_round": {
+        "preset": "bass/bass_round",
+        "role": "bass",
+        "description": "Round bass for melodic bass lines"
+      },
+      "keys_skank": {
+        "preset": "keys/keys_ep",
+        "role": "keys",
+        "description": "Electric piano for reggae skank chords"
+      },
+      "piano": {
+        "preset": "keys/piano",
+        "role": "keys",
+        "description": "Piano for additional chord voicings"
+      },
+      "steelpan": {
+        "preset": "bells/bell",
+        "role": "bells",
+        "description": "Bell for steel drum-like melodic phrases"
+      },
+      "steelpan_soft": {
+        "preset": "bells/bell_soft",
+        "role": "bells",
+        "description": "Soft bell for gentler steel pan sounds"
+      },
+      "hat": {
+        "preset": "drums/hats/hat_closed",
+        "role": "hat",
+        "description": "Closed hi-hat for steady pulse"
+      }
+    },
+    "tags": [
+      "world",
+      "caribbean",
+      "reggae",
+      "dub",
+      "ska",
+      "one-drop",
+      "island",
+      "steelpan",
+      "regional",
+      "relaxed"
+    ]
+  }
+}

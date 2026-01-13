@@ -1,0 +1,62 @@
+{
+    "spec_version":  1,
+    "asset_id":  "preset_bongo_high",
+    "asset_type":  "audio",
+    "license":  "CC0-1.0",
+    "seed":  10077,
+    "description":  "High bongo - bright short pitched body",
+    "outputs":  [
+                    {
+                        "kind":  "primary",
+                        "format":  "wav",
+                        "path":  "test-outputs/preset_library_v1/audio/drums/percussion/bongo_high.wav"
+                    }
+                ],
+    "recipe":  {
+                   "kind":  "audio_v1",
+                   "params":  {
+                                  "duration_seconds":  0.25,
+                                  "sample_rate":  44100,
+                                  "layers":  [
+                                                 {
+                                                     "synthesis":  {
+                                                                       "type":  "oscillator",
+                                                                       "waveform":  "sine",
+                                                                       "frequency":  400,
+                                                                       "freq_sweep":  {
+                                                                                          "end_freq":  200,
+                                                                                          "curve":  "exponential"
+                                                                                      }
+                                                                   },
+                                                     "envelope":  {
+                                                                      "attack":  0.001,
+                                                                      "decay":  0.1,
+                                                                      "sustain":  0,
+                                                                      "release":  0.08
+                                                                  },
+                                                     "volume":  0.75,
+                                                     "pan":  0
+                                                 },
+                                                 {
+                                                     "synthesis":  {
+                                                                       "type":  "noise_burst",
+                                                                       "noise_type":  "white",
+                                                                       "filter":  {
+                                                                                      "type":  "highpass",
+                                                                                      "cutoff":  3000,
+                                                                                      "resonance":  0.4
+                                                                                  }
+                                                                   },
+                                                     "envelope":  {
+                                                                      "attack":  0,
+                                                                      "decay":  0.015,
+                                                                      "sustain":  0,
+                                                                      "release":  0.01
+                                                                  },
+                                                     "volume":  0.2,
+                                                     "pan":  0
+                                                 }
+                                             ]
+                              }
+               }
+}

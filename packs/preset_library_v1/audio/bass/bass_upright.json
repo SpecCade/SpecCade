@@ -1,0 +1,46 @@
+{
+    "spec_version":  1,
+    "asset_id":  "preset_bass_upright",
+    "asset_type":  "audio",
+    "license":  "CC0-1.0",
+    "seed":  10105,
+    "description":  "Upright bass - Karplus-Strong with long decay and warm blend for acoustic double bass character",
+    "outputs":  [
+                    {
+                        "kind":  "primary",
+                        "format":  "wav",
+                        "path":  "test-outputs/preset_library_v1/audio/bass/bass_upright.wav"
+                    }
+                ],
+    "recipe":  {
+                   "kind":  "audio_v1",
+                   "params":  {
+                                  "base_note":  "C2",
+                                  "duration_seconds":  1.5,
+                                  "sample_rate":  44100,
+                                  "layers":  [
+                                                 {
+                                                     "synthesis":  {
+                                                                       "type":  "karplus_strong",
+                                                                       "frequency":  65.41,
+                                                                       "decay":  0.9985,
+                                                                       "blend":  0.4
+                                                                   },
+                                                     "filter":  {
+                                                                    "type":  "lowpass",
+                                                                    "cutoff":  1200.0,
+                                                                    "resonance":  0.15
+                                                                },
+                                                     "envelope":  {
+                                                                      "attack":  0.003,
+                                                                      "decay":  0.4,
+                                                                      "sustain":  0.6,
+                                                                      "release":  0.3
+                                                                  },
+                                                     "volume":  1.0,
+                                                     "pan":  0
+                                                 }
+                                             ]
+                              }
+               }
+}

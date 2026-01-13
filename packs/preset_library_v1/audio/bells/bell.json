@@ -1,0 +1,49 @@
+{
+    "spec_version":  1,
+    "asset_id":  "preset_bell",
+    "asset_type":  "audio",
+    "license":  "CC0-1.0",
+    "seed":  10250,
+    "description":  "Standard bell - medium-sized bell with clear fundamental and metallic overtones",
+    "outputs":  [
+                    {
+                        "kind":  "primary",
+                        "format":  "wav",
+                        "path":  "test-outputs/preset_library_v1/audio/bells/bell.wav"
+                    }
+                ],
+    "recipe":  {
+                   "kind":  "audio_v1",
+                   "params":  {
+                                  "duration_seconds":  2.0,
+                                  "sample_rate":  44100,
+                                  "base_note":  "A5",
+                                  "layers":  [
+                                                 {
+                                                     "synthesis":  {
+                                                                       "type":  "metallic",
+                                                                       "base_freq":  880.0,
+                                                                       "num_partials":  12,
+                                                                       "inharmonicity":  1.35
+                                                                   },
+                                                     "envelope":  {
+                                                                      "attack":  0.001,
+                                                                      "decay":  0.6,
+                                                                      "sustain":  0.15,
+                                                                      "release":  1.2
+                                                                  },
+                                                     "volume":  0.85,
+                                                     "pan":  0.0
+                                                 }
+                                             ],
+                                  "effects":  [
+                                                  {
+                                                      "type":  "reverb",
+                                                      "room_size":  0.7,
+                                                      "damping":  0.4,
+                                                      "wet":  0.35
+                                                  }
+                                              ]
+                              }
+               }
+}

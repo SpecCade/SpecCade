@@ -1,0 +1,49 @@
+{
+    "spec_version":  1,
+    "asset_id":  "preset_music_box",
+    "asset_type":  "audio",
+    "license":  "CC0-1.0",
+    "seed":  10256,
+    "description":  "Music box - delicate, high-pitched bell with toy-like character and quick decay",
+    "outputs":  [
+                    {
+                        "kind":  "primary",
+                        "format":  "wav",
+                        "path":  "test-outputs/preset_library_v1/audio/bells/music_box.wav"
+                    }
+                ],
+    "recipe":  {
+                   "kind":  "audio_v1",
+                   "params":  {
+                                  "duration_seconds":  1.5,
+                                  "sample_rate":  44100,
+                                  "base_note":  "G6",
+                                  "layers":  [
+                                                 {
+                                                     "synthesis":  {
+                                                                       "type":  "metallic",
+                                                                       "base_freq":  1568.0,
+                                                                       "num_partials":  9,
+                                                                       "inharmonicity":  1.55
+                                                                   },
+                                                     "envelope":  {
+                                                                      "attack":  0.001,
+                                                                      "decay":  0.2,
+                                                                      "sustain":  0.03,
+                                                                      "release":  0.4
+                                                                  },
+                                                     "volume":  0.7,
+                                                     "pan":  0.0
+                                                 }
+                                             ],
+                                  "effects":  [
+                                                  {
+                                                      "type":  "reverb",
+                                                      "room_size":  0.45,
+                                                      "damping":  0.5,
+                                                      "wet":  0.25
+                                                  }
+                                              ]
+                              }
+               }
+}

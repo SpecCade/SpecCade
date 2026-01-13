@@ -1,0 +1,72 @@
+{
+    "spec_version":  1,
+    "asset_id":  "preset_lead_2",
+    "asset_type":  "audio",
+    "license":  "CC0-1.0",
+    "seed":  10300,
+    "description":  "Second lead voice - bright saw with resonant filter and subtle vibrato",
+    "outputs":  [
+                    {
+                        "kind":  "primary",
+                        "format":  "wav",
+                        "path":  "test-outputs/preset_library_v1/audio/leads/synth/lead_2.wav"
+                    }
+                ],
+    "recipe":  {
+                   "kind":  "audio_v1",
+                   "params":  {
+                                  "base_note":  "A4",
+                                  "duration_seconds":  1.5,
+                                  "sample_rate":  44100,
+                                  "layers":  [
+                                                 {
+                                                     "synthesis":  {
+                                                                       "type":  "multi_oscillator",
+                                                                       "frequency":  440.0,
+                                                                       "oscillators":  [
+                                                                                           {
+                                                                                               "waveform":  "sawtooth",
+                                                                                               "volume":  1.0,
+                                                                                               "detune":  0
+                                                                                           },
+                                                                                           {
+                                                                                               "waveform":  "sawtooth",
+                                                                                               "volume":  0.85,
+                                                                                               "detune":  8
+                                                                                           },
+                                                                                           {
+                                                                                               "waveform":  "sawtooth",
+                                                                                               "volume":  0.85,
+                                                                                               "detune":  -8
+                                                                                           }
+                                                                                       ]
+                                                                   },
+                                                     "envelope":  {
+                                                                      "attack":  0.01,
+                                                                      "decay":  0.15,
+                                                                      "sustain":  0.85,
+                                                                      "release":  0.2
+                                                                  },
+                                                     "filter":  {
+                                                                    "type":  "lowpass",
+                                                                    "cutoff":  3500,
+                                                                    "resonance":  0.5
+                                                                },
+                                                     "lfo":  {
+                                                                 "config":  {
+                                                                                "waveform":  "sine",
+                                                                                "rate":  5.5,
+                                                                                "depth":  0.3
+                                                                            },
+                                                                 "target":  {
+                                                                                "target":  "pitch",
+                                                                                "semitones":  0.25
+                                                                            }
+                                                             },
+                                                     "volume":  0.9,
+                                                     "pan":  0
+                                                 }
+                                             ]
+                              }
+               }
+}

@@ -278,10 +278,13 @@ mod generation_tier1 {
                 volume: 0.7,
                 pan: 0.0,
                 delay: None,
+                filter: None,
+                lfo: None,
             }],
             pitch_envelope: None,
             generate_loop_points: false,
             master_filter: None,
+            effects: vec![],
         };
 
         let result = speccade_backend_audio::generate_from_params(&params, 42);
@@ -319,10 +322,13 @@ mod generation_tier1 {
                 volume: 1.0,
                 pan: 0.0,
                 delay: None,
+                filter: None,
+                lfo: None,
             }],
             pitch_envelope: None,
             generate_loop_points: true,
             master_filter: None,
+            effects: vec![],
         };
 
         let result = speccade_backend_audio::generate_from_params(&params, 42);

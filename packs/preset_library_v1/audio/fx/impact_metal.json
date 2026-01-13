@@ -1,0 +1,63 @@
+{
+  "spec_version": 1,
+  "asset_id": "impact_metal",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 10501,
+  "description": "Metallic clang with weight - high inharmonicity burst with sub layer",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/fx/impact_metal.wav"
+    }
+  ],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "duration_seconds": 0.6,
+      "sample_rate": 44100,
+      "layers": [
+        {
+          "synthesis": {
+            "type": "metallic",
+            "base_freq": 280,
+            "num_partials": 12,
+            "inharmonicity": 0.85
+          },
+          "envelope": {
+            "attack": 0.001,
+            "decay": 0.25,
+            "sustain": 0,
+            "release": 0.3
+          },
+          "volume": 1,
+          "pan": 0
+        },
+        {
+          "synthesis": {
+            "type": "pitched_body",
+            "start_freq": 120,
+            "end_freq": 40
+          },
+          "envelope": {
+            "attack": 0.001,
+            "decay": 0.2,
+            "sustain": 0,
+            "release": 0.35
+          },
+          "volume": 0.7,
+          "pan": 0
+        }
+      ],
+      "effects": [
+        {
+          "type": "reverb",
+          "room_size": 0.7,
+          "damping": 0.4,
+          "wet": 0.3
+        }
+      ]
+    }
+  }
+}

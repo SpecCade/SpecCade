@@ -1,0 +1,48 @@
+{
+    "spec_version":  1,
+    "asset_id":  "arp_bright",
+    "asset_type":  "audio",
+    "license":  "CC0-1.0",
+    "seed":  10155,
+    "description":  "Bright short pluck optimized for arpeggios - fast attack and decay with crystalline character",
+    "outputs":  [
+                    {
+                        "kind":  "primary",
+                        "format":  "wav",
+                        "path":  "test-outputs/preset_library_v1/audio/plucks/arp_bright.wav"
+                    }
+                ],
+    "recipe":  {
+                   "kind":  "audio_v1",
+                   "params":  {
+                                  "duration_seconds":  0.5,
+                                  "sample_rate":  44100,
+                                  "layers":  [
+                                                 {
+                                                     "synthesis":  {
+                                                                       "type":  "karplus_strong",
+                                                                       "frequency":  523.25,
+                                                                       "decay":  0.992,
+                                                                       "blend":  0.25
+                                                                   },
+                                                     "envelope":  {
+                                                                      "attack":  0.001,
+                                                                      "decay":  0.04,
+                                                                      "sustain":  0.4,
+                                                                      "release":  0.15
+                                                                  },
+                                                     "volume":  1.0,
+                                                     "pan":  0.0
+                                                 }
+                                             ],
+                                  "effects":  [
+                                                  {
+                                                      "type":  "delay",
+                                                      "time_ms":  100.0,
+                                                      "feedback":  0.2,
+                                                      "wet":  0.1
+                                                  }
+                                              ]
+                              }
+               }
+}

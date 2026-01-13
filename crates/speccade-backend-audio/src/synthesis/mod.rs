@@ -11,14 +11,18 @@
 //! - `pitched_body` - Frequency sweep for impact sounds
 //! - `metallic` - Inharmonic partials for metallic sounds
 //! - `harmonics` - Additive synthesis with multiple harmonics
+//! - `granular` - Granular synthesis with grain processing
+//! - `wavetable` - Wavetable synthesis with morphing
 
 pub mod fm;
+pub mod granular;
 pub mod harmonics;
 pub mod karplus;
 pub mod metallic;
 pub mod noise;
 pub mod oscillators;
 pub mod pitched_body;
+pub mod wavetable;
 
 use rand_pcg::Pcg32;
 

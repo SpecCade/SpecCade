@@ -1,0 +1,60 @@
+{
+  "spec_version": 1,
+  "asset_id": "drone_dark",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 10650,
+  "description": "Dark, ominous drone - low sawtooth tone with large grains and high density",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/textures/drone_dark.wav"
+    }
+  ],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "duration_seconds": 4.0,
+      "sample_rate": 44100,
+      "layers": [
+        {
+          "synthesis": {
+            "type": "granular",
+            "source": {
+              "type": "tone",
+              "waveform": "sawtooth",
+              "frequency": 55.0
+            },
+            "grain_size_ms": 150.0,
+            "grain_density": 30.0,
+            "pitch_spread": 0.15,
+            "position_spread": 0.2,
+            "pan_spread": 0.6
+          },
+          "envelope": {
+            "attack": 1.5,
+            "decay": 0.5,
+            "sustain": 0.85,
+            "release": 2.0
+          },
+          "volume": 0.7,
+          "pan": 0.0
+        }
+      ],
+      "master_filter": {
+        "type": "lowpass",
+        "cutoff": 800.0,
+        "resonance": 0.4
+      },
+      "effects": [
+        {
+          "type": "reverb",
+          "room_size": 0.9,
+          "damping": 0.3,
+          "wet": 0.5
+        }
+      ]
+    }
+  }
+}

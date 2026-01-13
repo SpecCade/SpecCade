@@ -1,0 +1,62 @@
+{
+    "spec_version":  1,
+    "asset_id":  "preset_finger_snap",
+    "asset_type":  "audio",
+    "license":  "CC0-1.0",
+    "seed":  10028,
+    "description":  "Finger snap - very short, bright transient with bandpass",
+    "outputs":  [
+                    {
+                        "kind":  "primary",
+                        "format":  "wav",
+                        "path":  "test-outputs/preset_library_v1/audio/drums/snares/finger_snap.wav"
+                    }
+                ],
+    "recipe":  {
+                   "kind":  "audio_v1",
+                   "params":  {
+                                  "duration_seconds":  0.08,
+                                  "sample_rate":  44100,
+                                  "layers":  [
+                                                 {
+                                                     "synthesis":  {
+                                                                       "type":  "noise_burst",
+                                                                       "noise_type":  "white",
+                                                                       "filter":  {
+                                                                                      "type":  "bandpass",
+                                                                                      "center":  2800,
+                                                                                      "resonance":  1.5
+                                                                                  }
+                                                                   },
+                                                     "envelope":  {
+                                                                      "attack":  0.0005,
+                                                                      "decay":  0.015,
+                                                                      "sustain":  0,
+                                                                      "release":  0.01
+                                                                  },
+                                                     "volume":  0.8,
+                                                     "pan":  0
+                                                 },
+                                                 {
+                                                     "synthesis":  {
+                                                                       "type":  "noise_burst",
+                                                                       "noise_type":  "white",
+                                                                       "filter":  {
+                                                                                      "type":  "highpass",
+                                                                                      "cutoff":  5000,
+                                                                                      "resonance":  0.9
+                                                                                  }
+                                                                   },
+                                                     "envelope":  {
+                                                                      "attack":  0.0003,
+                                                                      "decay":  0.012,
+                                                                      "sustain":  0,
+                                                                      "release":  0.008
+                                                                  },
+                                                     "volume":  0.6,
+                                                     "pan":  0
+                                                 }
+                                             ]
+                              }
+               }
+}

@@ -1,0 +1,62 @@
+{
+    "spec_version":  1,
+    "asset_id":  "preset_opl_lead",
+    "asset_type":  "audio",
+    "license":  "CC0-1.0",
+    "seed":  10313,
+    "description":  "OPL chip lead - FM synthesis mimicking Yamaha OPL for retro PC game character",
+    "outputs":  [
+                    {
+                        "kind":  "primary",
+                        "format":  "wav",
+                        "path":  "test-outputs/preset_library_v1/audio/leads/synth/opl_lead.wav"
+                    }
+                ],
+    "recipe":  {
+                   "kind":  "audio_v1",
+                   "params":  {
+                                  "base_note":  "A4",
+                                  "duration_seconds":  1.5,
+                                  "sample_rate":  44100,
+                                  "layers":  [
+                                                 {
+                                                     "synthesis":  {
+                                                                       "type":  "fm_synth",
+                                                                       "carrier_freq":  440.0,
+                                                                       "modulator_freq":  440.0,
+                                                                       "modulation_index":  2.0
+                                                                   },
+                                                     "envelope":  {
+                                                                      "attack":  0.002,
+                                                                      "decay":  0.1,
+                                                                      "sustain":  0.6,
+                                                                      "release":  0.12
+                                                                  },
+                                                     "volume":  0.7,
+                                                     "pan":  0
+                                                 },
+                                                 {
+                                                     "synthesis":  {
+                                                                       "type":  "fm_synth",
+                                                                       "carrier_freq":  880.0,
+                                                                       "modulator_freq":  1760.0,
+                                                                       "modulation_index":  1.5
+                                                                   },
+                                                     "envelope":  {
+                                                                      "attack":  0.002,
+                                                                      "decay":  0.08,
+                                                                      "sustain":  0.4,
+                                                                      "release":  0.1
+                                                                  },
+                                                     "volume":  0.5,
+                                                     "pan":  0
+                                                 }
+                                             ],
+                                  "master_filter":  {
+                                                        "type":  "lowpass",
+                                                        "cutoff":  8000,
+                                                        "resonance":  0.2
+                                                    }
+                              }
+               }
+}

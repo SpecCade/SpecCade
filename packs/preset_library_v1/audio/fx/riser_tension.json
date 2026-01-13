@@ -1,0 +1,58 @@
+{
+  "spec_version": 1,
+  "asset_id": "riser_tension",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 10550,
+  "description": "Building tension riser - noise with highpass filter sweep for rising pitch feel",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/fx/riser_tension.wav"
+    }
+  ],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "duration_seconds": 2.0,
+      "sample_rate": 44100,
+      "layers": [
+        {
+          "synthesis": {
+            "type": "noise_burst",
+            "noise_type": "white",
+            "filter": {
+              "type": "highpass",
+              "cutoff": 200,
+              "resonance": 0.5,
+              "cutoff_end": 8000
+            }
+          },
+          "envelope": {
+            "attack": 0.1,
+            "decay": 0,
+            "sustain": 1,
+            "release": 0.3
+          },
+          "volume": 1,
+          "pan": 0
+        }
+      ],
+      "effects": [
+        {
+          "type": "reverb",
+          "room_size": 0.85,
+          "damping": 0.3,
+          "wet": 0.45
+        },
+        {
+          "type": "delay",
+          "time_ms": 120,
+          "feedback": 0.25,
+          "wet": 0.15
+        }
+      ]
+    }
+  }
+}

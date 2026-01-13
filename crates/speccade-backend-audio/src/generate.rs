@@ -3,8 +3,8 @@
 //! This module takes a spec and generates a WAV file deterministically.
 
 use speccade_spec::recipe::audio::{
-    AudioLayer, AudioV1Params, Envelope, Filter, FreqSweep, NoiseType, OscillatorConfig,
-    PitchEnvelope, SweepCurve, Synthesis, Waveform,
+    AudioLayer, AudioV1Params, Envelope, Filter, FreqSweep, ModulationTarget, NoiseType,
+    OscillatorConfig, PitchEnvelope, SweepCurve, Synthesis, Waveform,
 };
 use speccade_spec::Spec;
 
@@ -13,12 +13,14 @@ use crate::error::{AudioError, AudioResult};
 use crate::mixer::{Layer, Mixer, MixerOutput};
 use crate::rng::create_rng;
 use crate::synthesis::fm::FmSynth;
+use crate::synthesis::granular::GranularSynth;
 use crate::synthesis::harmonics::HarmonicSynth;
 use crate::synthesis::karplus::KarplusStrong;
 use crate::synthesis::metallic::MetallicSynth;
 use crate::synthesis::noise::{NoiseColor, NoiseSynth};
 use crate::synthesis::oscillators::{SawSynth, SineSynth, SquareSynth, TriangleSynth};
 use crate::synthesis::pitched_body::PitchedBody;
+use crate::synthesis::wavetable::{PositionSweep as WavetablePositionSweep, WavetableSynth};
 use crate::synthesis::{FrequencySweep, Synthesizer};
 use crate::wav::WavResult;
 
@@ -185,6 +187,11 @@ fn generate_from_unified_params(params: &AudioV1Params, seed: u32) -> AudioResul
                 MixerOutput::Stereo(stereo)
             }
         };
+    }
+
+    // Apply effect chain if specified
+    if !params.effects.is_empty() {
+        mixed = crate::effects::apply_effect_chain(mixed, &params.effects, sample_rate)?;
     }
 
     // Determine loop point if requested
@@ -373,7 +380,134 @@ fn generate_layer(
             let synth = MetallicSynth::new(*base_freq, *num_partials, *inharmonicity);
             synth.synthesize(synthesis_samples, sample_rate, &mut rng)
         }
+
+        Synthesis::Granular {
+            source,
+            grain_size_ms,
+            grain_density,
+            pitch_spread,
+            position_spread,
+            pan_spread,
+        } => {
+            let synth = GranularSynth::new(
+                source.clone(),
+                *grain_size_ms,
+                *grain_density,
+                *pitch_spread,
+                *position_spread,
+                *pan_spread,
+            );
+            let raw_samples = synth.synthesize(synthesis_samples, sample_rate, &mut rng);
+
+            // If pan_spread > 0, granular synthesis returns interleaved stereo [L, R, L, R, ...]
+            // We need to de-interleave and mix to mono for now, or handle stereo properly
+            if *pan_spread > 0.0 {
+                // De-interleave and mix to mono
+                // TODO: In the future, could support per-layer stereo
+                let mut mono_samples = Vec::with_capacity(synthesis_samples);
+                for i in 0..synthesis_samples {
+                    let left = raw_samples[i * 2];
+                    let right = raw_samples[i * 2 + 1];
+                    mono_samples.push((left + right) * 0.5);
+                }
+                mono_samples
+            } else {
+                raw_samples
+            }
+        }
+
+        Synthesis::Wavetable {
+            table,
+            frequency,
+            position,
+            position_sweep,
+            voices,
+            detune,
+        } => {
+            let sweep = position_sweep.as_ref().map(|ps| WavetablePositionSweep {
+                start_position: *position,
+                end_position: ps.end_position,
+                curve: convert_sweep_curve(&ps.curve),
+            });
+
+            let synth = WavetableSynth::new(*table, *frequency, *position, sweep, *voices, *detune);
+            synth.synthesize(synthesis_samples, sample_rate, &mut rng)
+        }
     };
+
+    // Apply LFO modulation if specified
+    if let Some(ref lfo_mod) = layer.lfo {
+        use crate::modulation::lfo::{apply_volume_modulation, Lfo};
+
+        let initial_phase = lfo_mod.config.phase.unwrap_or(0.0);
+        let mut lfo = Lfo::new(
+            lfo_mod.config.waveform,
+            lfo_mod.config.rate,
+            lfo_mod.config.depth,
+            sample_rate,
+            initial_phase,
+        );
+
+        match &lfo_mod.target {
+            ModulationTarget::Pitch { semitones } => {
+                // Regenerate with pitch modulation (only works for oscillator-based synthesis)
+                if matches!(
+                    layer.synthesis,
+                    Synthesis::Oscillator { .. } | Synthesis::MultiOscillator { .. }
+                ) {
+                    samples = apply_lfo_pitch_modulation(
+                        layer,
+                        layer_idx,
+                        synthesis_samples,
+                        sample_rate,
+                        seed,
+                        &mut lfo,
+                        *semitones,
+                        &mut rng,
+                    )?;
+                }
+            }
+            ModulationTarget::Volume => {
+                // Apply volume modulation per-sample
+                for sample in samples.iter_mut() {
+                    let lfo_value = lfo.next_sample(&mut rng);
+                    *sample = apply_volume_modulation(*sample, lfo_value, lfo_mod.config.depth);
+                }
+            }
+            ModulationTarget::FilterCutoff { amount } => {
+                // Apply filter with LFO-modulated cutoff
+                // This requires the layer to have a filter
+                if let Some(ref filter) = layer.filter {
+                    apply_lfo_filter_modulation(
+                        &mut samples,
+                        filter,
+                        &mut lfo,
+                        *amount,
+                        sample_rate,
+                        &mut rng,
+                    );
+                }
+            }
+            ModulationTarget::Pan => {
+                // Pan modulation would need stereo processing, skip for now
+                // as layers are mono at this stage
+            }
+        }
+    }
+
+    // Apply layer filter if specified (and not already applied by LFO)
+    if let Some(ref filter) = layer.filter {
+        // Only apply if there's no filter cutoff LFO modulation
+        let has_filter_lfo = layer
+            .lfo
+            .as_ref()
+            .map(|lfo_mod| matches!(lfo_mod.target, ModulationTarget::FilterCutoff { .. }))
+            .unwrap_or(false);
+
+        if !has_filter_lfo {
+            apply_swept_filter(&mut samples, filter, sample_rate);
+        }
+    }
 
     // Apply envelope
     let envelope = generate_envelope(&layer.envelope, sample_rate, synthesis_samples);
@@ -824,6 +958,171 @@ fn apply_pitch_envelope_to_layer_samples(
     Ok(output)
 }
 
+/// Applies LFO pitch modulation to a layer by regenerating with modulated frequency.
+fn apply_lfo_pitch_modulation(
+    layer: &AudioLayer,
+    layer_idx: usize,
+    num_samples: usize,
+    sample_rate: f64,
+    seed: u32,
+    lfo: &mut crate::modulation::lfo::Lfo,
+    semitones: f64,
+    rng: &mut rand_pcg::Pcg32,
+) -> AudioResult<Vec<f64>> {
+    use crate::modulation::lfo::apply_pitch_modulation;
+    use crate::oscillator::{PhaseAccumulator, TWO_PI};
+
+    let mut output = vec![0.0; num_samples];
+
+    // Only oscillator-based synthesis can be pitch-modulated per-sample
+    match &layer.synthesis {
+        Synthesis::Oscillator {
+            waveform,
+            frequency,
+            detune,
+            duty,
+            ..
+        } => {
+            let base_frequency = *frequency;
+            let detune_mult = if let Some(detune_cents) = detune {
+                2.0_f64.powf(*detune_cents / 1200.0)
+            } else {
+                1.0
+            };
+            let duty_cycle = duty.unwrap_or(0.5);
+            let mut phase_acc = PhaseAccumulator::new(sample_rate);
+
+            for i in 0..num_samples {
+                let lfo_value = lfo.next_sample(rng);
+                let freq = apply_pitch_modulation(
+                    base_frequency * detune_mult,
+                    lfo_value,
+                    semitones,
+                );
+                let phase = phase_acc.advance(freq);
+                let sample = match waveform {
+                    Waveform::Sine => crate::oscillator::sine(phase),
+                    Waveform::Square | Waveform::Pulse => {
+                        crate::oscillator::square(phase, duty_cycle)
+                    }
+                    Waveform::Sawtooth => crate::oscillator::sawtooth(phase),
+                    Waveform::Triangle => crate::oscillator::triangle(phase),
+                };
+                output[i] = sample;
+            }
+        }
+        Synthesis::MultiOscillator {
+            frequency,
+            oscillators,
+            ..
+        } => {
+            let base_frequency = *frequency;
+            for osc_config in oscillators {
+                let detune_mult = if let Some(detune_cents) = osc_config.detune {
+                    2.0_f64.powf(detune_cents / 1200.0)
+                } else {
+                    1.0
+                };
+                let duty = osc_config.duty.unwrap_or(0.5);
+                let phase_offset = osc_config.phase.unwrap_or(0.0);
+                let volume = osc_config.volume;
+                let mut phase_acc = PhaseAccumulator::new(sample_rate);
+
+                // Reset LFO for each oscillator
+                let mut lfo_clone = lfo.clone();
+
+                for i in 0..num_samples {
+                    let lfo_value = lfo_clone.next_sample(rng);
+                    let freq = apply_pitch_modulation(
+                        base_frequency * detune_mult,
+                        lfo_value,
+                        semitones,
+                    );
+                    let mut phase = phase_acc.advance(freq);
+                    phase += phase_offset;
+                    while phase >= TWO_PI {
+                        phase -= TWO_PI;
+                    }
+                    let sample = match osc_config.waveform {
+                        Waveform::Sine => crate::oscillator::sine(phase),
+                        Waveform::Square | Waveform::Pulse => {
+                            crate::oscillator::square(phase, duty)
+                        }
+                        Waveform::Sawtooth => crate::oscillator::sawtooth(phase),
+                        Waveform::Triangle => crate::oscillator::triangle(phase),
+                    };
+                    output[i] += sample * volume;
+                }
+            }
+            let count = oscillators.len().max(1) as f64;
+            for sample in &mut output {
+                *sample /= count;
+            }
+        }
+        _ => {
+            // For other synthesis types, generate without pitch modulation
+            return generate_layer(layer, layer_idx, num_samples, sample_rate, seed);
+        }
+    }
+
+    Ok(output)
+}
+
+/// Applies LFO-modulated filter to a sample buffer.
+fn apply_lfo_filter_modulation(
+    samples: &mut [f64],
+    filter: &Filter,
+    lfo: &mut crate::modulation::lfo::Lfo,
+    amount: f64,
+    sample_rate: f64,
+    rng: &mut rand_pcg::Pcg32,
+) {
+    use crate::filter::{BiquadCoeffs, BiquadFilter};
+    use crate::modulation::lfo::apply_filter_cutoff_modulation;
+
+    match filter {
+        Filter::Lowpass {
+            cutoff, resonance, ..
+        } => {
+            let mut filter_state = BiquadFilter::lowpass(*cutoff, *resonance, sample_rate);
+            for sample in samples.iter_mut() {
+                let lfo_value = lfo.next_sample(rng);
+                let modulated_cutoff =
+                    apply_filter_cutoff_modulation(*cutoff, lfo_value, amount);
+                let coeffs = BiquadCoeffs::lowpass(modulated_cutoff, *resonance, sample_rate);
+                filter_state.set_coeffs(coeffs);
+                *sample = filter_state.process(*sample);
+            }
+        }
+        Filter::Highpass {
+            cutoff, resonance, ..
+        } => {
+            let mut filter_state = BiquadFilter::highpass(*cutoff, *resonance, sample_rate);
+            for sample in samples.iter_mut() {
+                let lfo_value = lfo.next_sample(rng);
+                let modulated_cutoff =
+                    apply_filter_cutoff_modulation(*cutoff, lfo_value, amount);
+                let coeffs = BiquadCoeffs::highpass(modulated_cutoff, *resonance, sample_rate);
+                filter_state.set_coeffs(coeffs);
+                *sample = filter_state.process(*sample);
+            }
+        }
+        Filter::Bandpass {
+            center, resonance, ..
+        } => {
+            let q = *resonance;
+            let mut filter_state = BiquadFilter::bandpass(*center, q, sample_rate);
+            for sample in samples.iter_mut() {
+                let lfo_value = lfo.next_sample(rng);
+                let modulated_center = apply_filter_cutoff_modulation(*center, lfo_value, amount);
+                let coeffs = BiquadCoeffs::bandpass(modulated_center, q, sample_rate);
+                filter_state.set_coeffs(coeffs);
+                *sample = filter_state.process(*sample);
+            }
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -851,10 +1150,13 @@ mod tests {
                 volume: 0.8,
                 pan: 0.0,
                 delay: None,
+                filter: None,
+                lfo: None,
             }],
             pitch_envelope: None,
             base_note: None,
             generate_loop_points: false,
+            effects: vec![],
         };
 
         Spec::builder("test-sfx", AssetType::Audio)
@@ -903,10 +1205,13 @@ mod tests {
                 volume: 1.0,
                 pan: 0.0,
                 delay: None,
+                filter: None,
+                lfo: None,
             }],
             pitch_envelope: None,
             base_note: None,
             generate_loop_points: false,
+            effects: vec![],
         };
 
         let spec1 = Spec::builder("test-sfx", AssetType::Audio)
@@ -950,6 +1255,8 @@ mod tests {
                     volume: 0.5,
                     pan: -0.8, // Left
                     delay: None,
+                    filter: None,
+                    lfo: None,
                 },
                 AudioLayer {
                     synthesis: Synthesis::Oscillator {
@@ -963,8 +1270,11 @@ mod tests {
                     volume: 0.5,
                     pan: 0.8, // Right
                     delay: None,
+                    filter: None,
+                    lfo: None,
                 },
             ],
+            effects: vec![],
         };
 
         let result = generate_from_params(&params, 42).expect("should generate");

@@ -1,0 +1,27 @@
+{
+  "spec_version": 1,
+  "asset_id": "kit_western",
+  "asset_type": "music_kit",
+  "license": "CC0-1.0",
+  "description": "Western and country music kit with harmonica lead, acoustic guitar textures, soft drums, and upright bass",
+  "kit": {
+    "name": "Western / Country",
+    "genre": "world",
+    "subgenre": "western",
+    "bpm_range": [90, 130],
+    "time_signature": [4, 4],
+    "instruments": {
+      "lead_harmonica": "leads/acoustic/harmonica",
+      "guitar_nylon": "plucks/pluck_nylon",
+      "guitar_pick": "bass/bass_pick",
+      "kick": "drums/kicks/kick_soft",
+      "snare": "drums/snares/snare_soft",
+      "snare_brush": "drums/snares/snare_brush",
+      "hihat": "drums/hats/hat_closed",
+      "ride": "drums/cymbals/ride",
+      "bass_upright": "bass/bass_upright",
+      "accordion": "leads/acoustic/accordion_lead"
+    },
+    "tags": ["western", "country", "americana", "folk", "regional", "acoustic"]
+  }
+}

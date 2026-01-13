@@ -1,0 +1,60 @@
+{
+  "spec_version": 1,
+  "asset_id": "drone_light",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 10651,
+  "description": "Ethereal, bright drone - sine tone with medium grains and moderate pitch spread",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/textures/drone_light.wav"
+    }
+  ],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "duration_seconds": 4.0,
+      "sample_rate": 44100,
+      "layers": [
+        {
+          "synthesis": {
+            "type": "granular",
+            "source": {
+              "type": "tone",
+              "waveform": "sine",
+              "frequency": 440.0
+            },
+            "grain_size_ms": 80.0,
+            "grain_density": 25.0,
+            "pitch_spread": 0.6,
+            "position_spread": 0.35,
+            "pan_spread": 0.75
+          },
+          "envelope": {
+            "attack": 1.8,
+            "decay": 0.4,
+            "sustain": 0.7,
+            "release": 1.8
+          },
+          "volume": 0.55,
+          "pan": 0.0
+        }
+      ],
+      "master_filter": {
+        "type": "highpass",
+        "cutoff": 200.0,
+        "resonance": 0.1
+      },
+      "effects": [
+        {
+          "type": "reverb",
+          "room_size": 0.85,
+          "damping": 0.4,
+          "wet": 0.6
+        }
+      ]
+    }
+  }
+}

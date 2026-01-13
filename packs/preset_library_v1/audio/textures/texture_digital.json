@@ -1,0 +1,54 @@
+{
+  "spec_version": 1,
+  "asset_id": "texture_digital",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 10602,
+  "description": "Glitchy digital artifacts - square wave tone with very small grains and high pitch spread",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/textures/texture_digital.wav"
+    }
+  ],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "duration_seconds": 4.0,
+      "sample_rate": 44100,
+      "layers": [
+        {
+          "synthesis": {
+            "type": "granular",
+            "source": {
+              "type": "tone",
+              "waveform": "square",
+              "frequency": 440.0
+            },
+            "grain_size_ms": 12.0,
+            "grain_density": 45.0,
+            "pitch_spread": 2.5,
+            "position_spread": 0.6,
+            "pan_spread": 0.7
+          },
+          "envelope": {
+            "attack": 0.5,
+            "decay": 0.3,
+            "sustain": 0.7,
+            "release": 1.0
+          },
+          "volume": 0.45,
+          "pan": 0.0
+        }
+      ],
+      "effects": [
+        {
+          "type": "bitcrush",
+          "bits": 12,
+          "sample_rate_reduction": 2
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,62 @@
+{
+    "spec_version":  1,
+    "asset_id":  "preset_snare",
+    "asset_type":  "audio",
+    "license":  "CC0-1.0",
+    "seed":  10002,
+    "description":  "Punchy snare - tonal body + filtered noise for snare wires",
+    "outputs":  [
+                    {
+                        "kind":  "primary",
+                        "format":  "wav",
+                        "path":  "test-outputs/preset_library_v1/audio/drums/snares/snare.wav"
+                    }
+                ],
+    "recipe":  {
+                   "kind":  "audio_v1",
+                   "params":  {
+                                  "duration_seconds":  0.3,
+                                  "sample_rate":  44100,
+                                  "layers":  [
+                                                 {
+                                                     "synthesis":  {
+                                                                       "type":  "oscillator",
+                                                                       "waveform":  "sine",
+                                                                       "frequency":  220,
+                                                                       "freq_sweep":  {
+                                                                                          "end_freq":  140,
+                                                                                          "curve":  "exponential"
+                                                                                      }
+                                                                   },
+                                                     "envelope":  {
+                                                                      "attack":  0.001,
+                                                                      "decay":  0.05,
+                                                                      "sustain":  0,
+                                                                      "release":  0.04
+                                                                  },
+                                                     "volume":  0.6,
+                                                     "pan":  0
+                                                 },
+                                                 {
+                                                     "synthesis":  {
+                                                                       "type":  "noise_burst",
+                                                                       "noise_type":  "pink",
+                                                                       "filter":  {
+                                                                                      "type":  "bandpass",
+                                                                                      "center":  4000,
+                                                                                      "resonance":  0.8
+                                                                                  }
+                                                                   },
+                                                     "envelope":  {
+                                                                      "attack":  0.001,
+                                                                      "decay":  0.1,
+                                                                      "sustain":  0.05,
+                                                                      "release":  0.12
+                                                                  },
+                                                     "volume":  0.9,
+                                                     "pan":  0
+                                                 }
+                                             ]
+                              }
+               }
+}

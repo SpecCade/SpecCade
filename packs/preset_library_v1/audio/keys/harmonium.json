@@ -1,0 +1,51 @@
+{
+  "spec_version": 1,
+  "asset_id": "harmonium",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 10210,
+  "description": "Warm harmonium or pump organ character with chorus for breath-like quality",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/keys/harmonium.wav"
+    }
+  ],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "duration_seconds": 3.0,
+      "sample_rate": 44100,
+      "base_note": "C4",
+      "layers": [
+        {
+          "synthesis": {
+            "type": "wavetable",
+            "table": "organ",
+            "frequency": 261.63,
+            "position": 0.3,
+            "voices": 3,
+            "detune": 10.0
+          },
+          "envelope": {
+            "attack": 0.15,
+            "decay": 0.2,
+            "sustain": 0.8,
+            "release": 0.4
+          },
+          "volume": 0.75,
+          "pan": 0.0
+        }
+      ],
+      "effects": [
+        {
+          "type": "chorus",
+          "rate": 0.5,
+          "depth": 0.2,
+          "wet": 0.3
+        }
+      ]
+    }
+  }
+}

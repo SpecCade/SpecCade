@@ -1,0 +1,32 @@
+{
+  "spec_version": 1,
+  "asset_id": "kit_scifi",
+  "asset_type": "music_kit",
+  "license": "CC0-1.0",
+  "description": "Science fiction and electronic kit with 909 drums, FM synthesis bass, digital pads and textures, alarm leads, and cinematic FX for futuristic soundscapes",
+  "kit": {
+    "name": "Sci-Fi Electronic",
+    "genre": "cinematic",
+    "subgenre": "action",
+    "bpm_range": [80, 140],
+    "time_signature": [4, 4],
+    "instruments": {
+      "kick": "drums/kicks/kick_909",
+      "snare": "drums/snares/snare_909",
+      "clap": "drums/snares/clap_909",
+      "hat": "drums/hats/hat_metallic",
+      "bass_fm": "bass/bass_fm",
+      "bass_dx7": "bass/bass_dx7",
+      "pad": "pads/pad_digital",
+      "texture": "textures/texture_digital",
+      "lead_alarm": "leads/synth/lead_alarm",
+      "lead_bleep": "leads/synth/lead_bleep",
+      "bell_glass": "bells/bell_glass",
+      "fm_bell": "bells/fm_bell",
+      "impact": "fx/impact",
+      "riser": "fx/riser",
+      "whoosh": "fx/whoosh"
+    },
+    "tags": ["scifi", "electronic", "futuristic", "digital", "action", "cinematic"]
+  }
+}

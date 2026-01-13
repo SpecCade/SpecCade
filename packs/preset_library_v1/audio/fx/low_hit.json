@@ -1,0 +1,47 @@
+{
+  "spec_version": 1,
+  "asset_id": "low_hit",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 10503,
+  "description": "Deep punchy low-end hit - 60Hz to 25Hz pitch drop",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/fx/low_hit.wav"
+    }
+  ],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "duration_seconds": 0.4,
+      "sample_rate": 44100,
+      "layers": [
+        {
+          "synthesis": {
+            "type": "pitched_body",
+            "start_freq": 60,
+            "end_freq": 25
+          },
+          "envelope": {
+            "attack": 0.001,
+            "decay": 0.18,
+            "sustain": 0,
+            "release": 0.2
+          },
+          "volume": 1,
+          "pan": 0
+        }
+      ],
+      "effects": [
+        {
+          "type": "reverb",
+          "room_size": 0.5,
+          "damping": 0.3,
+          "wet": 0.2
+        }
+      ]
+    }
+  }
+}

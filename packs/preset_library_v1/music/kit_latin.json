@@ -1,0 +1,29 @@
+{
+  "spec_version": 1,
+  "asset_id": "kit_latin",
+  "asset_type": "music_kit",
+  "license": "CC0-1.0",
+  "description": "Latin percussion kit with congas, bongos, timbales, and auxiliary percussion for salsa, cumbia, and Afro-Cuban styles",
+  "kit": {
+    "name": "Latin Percussion",
+    "genre": "world",
+    "subgenre": "latin",
+    "bpm_range": [100, 140],
+    "time_signature": [4, 4],
+    "instruments": {
+      "conga_high": "drums/percussion/conga_high",
+      "conga_low": "drums/percussion/conga_low",
+      "bongo_high": "drums/percussion/bongo_high",
+      "bongo_low": "drums/percussion/bongo_low",
+      "timbale": "drums/percussion/timbale",
+      "shaker": "drums/percussion/shaker",
+      "cowbell": "drums/percussion/cowbell",
+      "claves": "drums/percussion/claves",
+      "guiro": "drums/percussion/guiro",
+      "bass": "bass/bass_round",
+      "keys_ep": "keys/keys_ep",
+      "piano": "keys/piano"
+    },
+    "tags": ["latin", "salsa", "cumbia", "afro-cuban", "percussion", "regional", "dance"]
+  }
+}

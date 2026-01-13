@@ -1,0 +1,55 @@
+{
+  "spec_version": 1,
+  "asset_id": "kit_ethereal_dream",
+  "asset_type": "music_kit",
+  "license": "CC0-1.0",
+  "description": "Dreamy ethereal soundscape kit with granular shimmer and choir textures for fantasy and magical game moments",
+  "kit": {
+    "name": "Ethereal Dream",
+    "genre": "ambient",
+    "subgenre": "ethereal",
+    "bpm_range": [60, 90],
+    "time_signature": [4, 4],
+    "instruments": {
+      "pad": {
+        "preset": "pads/pad_shimmer",
+        "role": "pad",
+        "description": "Shimmering granular pad"
+      },
+      "choir": {
+        "preset": "pads/choir_ethereal",
+        "role": "choir",
+        "description": "Ethereal choir voices"
+      },
+      "texture": {
+        "preset": "textures/texture_organic",
+        "role": "texture",
+        "description": "Organic evolving texture"
+      },
+      "bell": {
+        "preset": "bells/bell_glass",
+        "role": "bell",
+        "description": "Glass bell with crystalline character"
+      },
+      "keys": {
+        "preset": "keys/celesta",
+        "role": "keys",
+        "description": "Celesta for magical sparkle"
+      },
+      "drone": {
+        "preset": "textures/drone_light",
+        "role": "drone",
+        "description": "Light sustaining drone foundation"
+      }
+    },
+    "tags": [
+      "ethereal",
+      "dream",
+      "fantasy",
+      "magical",
+      "choir",
+      "shimmer",
+      "mystical"
+    ]
+  }
+}

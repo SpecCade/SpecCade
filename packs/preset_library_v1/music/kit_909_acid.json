@@ -1,0 +1,25 @@
+{
+  "spec_version": 1,
+  "asset_id": "kit_909_acid",
+  "asset_type": "music_kit",
+  "license": "CC0-1.0",
+  "description": "Classic 909 acid house kit with TB-303 style bass and vintage Roland drum sounds",
+  "kit": {
+    "name": "909 / Acid",
+    "genre": "electronic",
+    "subgenre": "acid",
+    "bpm_range": [125, 135],
+    "time_signature": [4, 4],
+    "instruments": {
+      "kick": "drums/kicks/kick_909",
+      "snare": "drums/snares/snare_909",
+      "hihat_closed": "drums/hats/hat_closed",
+      "hihat_open": "drums/hats/hat_open",
+      "ride": "drums/cymbals/ride",
+      "bass": "bass/bass_acid",
+      "lead": "leads/synth/lead_acid",
+      "stab": "plucks/stab"
+    },
+    "tags": ["edm", "acid", "909", "303", "classic", "vintage", "techno"]
+  }
+}

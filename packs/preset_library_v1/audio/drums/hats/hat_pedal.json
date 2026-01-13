@@ -1,0 +1,59 @@
+{
+    "spec_version":  1,
+    "asset_id":  "preset_hat_pedal",
+    "asset_type":  "audio",
+    "license":  "CC0-1.0",
+    "seed":  10051,
+    "description":  "Pedal hi-hat - foot pedal character, slightly darker than closed hat",
+    "outputs":  [
+                    {
+                        "kind":  "primary",
+                        "format":  "wav",
+                        "path":  "test-outputs/preset_library_v1/audio/drums/hats/hat_pedal.wav"
+                    }
+                ],
+    "recipe":  {
+                   "kind":  "audio_v1",
+                   "params":  {
+                                  "duration_seconds":  0.15,
+                                  "sample_rate":  44100,
+                                  "layers":  [
+                                                 {
+                                                     "synthesis":  {
+                                                                       "type":  "metallic",
+                                                                       "base_freq":  6500,
+                                                                       "num_partials":  7,
+                                                                       "inharmonicity":  1.8
+                                                                   },
+                                                     "envelope":  {
+                                                                      "attack":  0.001,
+                                                                      "decay":  0.05,
+                                                                      "sustain":  0,
+                                                                      "release":  0.08
+                                                                  },
+                                                     "volume":  0.6,
+                                                     "pan":  0
+                                                 },
+                                                 {
+                                                     "synthesis":  {
+                                                                       "type":  "noise_burst",
+                                                                       "noise_type":  "white",
+                                                                       "filter":  {
+                                                                                      "type":  "highpass",
+                                                                                      "cutoff":  6000,
+                                                                                      "resonance":  0.5
+                                                                                  }
+                                                                   },
+                                                     "envelope":  {
+                                                                      "attack":  0.001,
+                                                                      "decay":  0.04,
+                                                                      "sustain":  0,
+                                                                      "release":  0.06
+                                                                  },
+                                                     "volume":  0.45,
+                                                     "pan":  0
+                                                 }
+                                             ]
+                              }
+               }
+}

@@ -1,0 +1,26 @@
+{
+  "spec_version": 1,
+  "asset_id": "kit_boss_action",
+  "asset_type": "music_kit",
+  "license": "CC0-1.0",
+  "description": "Intense boss battle and action sequence kit with powerful drums, aggressive bass, and heroic leads",
+  "kit": {
+    "name": "Boss Action",
+    "genre": "cinematic",
+    "subgenre": "action",
+    "bpm_range": [120, 160],
+    "time_signature": [4, 4],
+    "instruments": {
+      "kick": "drums/kicks/big_kick",
+      "snare": "drums/snares/snare_dist",
+      "hats": "drums/hats/hat_metallic",
+      "crash": "drums/cymbals/crash",
+      "taiko": "drums/percussion/taiko",
+      "bass": "bass/bass_aggressive",
+      "lead": "leads/synth/lead_heroic",
+      "stab": "plucks/stab_rave",
+      "impact": "fx/impact_metal"
+    },
+    "tags": ["boss", "action", "intense", "battle", "combat"]
+  }
+}

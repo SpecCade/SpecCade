@@ -1,0 +1,81 @@
+{
+    "spec_version":  1,
+    "asset_id":  "preset_bass_reese",
+    "asset_type":  "audio",
+    "license":  "CC0-1.0",
+    "seed":  10113,
+    "description":  "Reese bass - 4-voice detuned sawtooths creating characteristic phasing and movement for DnB and dubstep",
+    "outputs":  [
+                    {
+                        "kind":  "primary",
+                        "format":  "wav",
+                        "path":  "test-outputs/preset_library_v1/audio/bass/bass_reese.wav"
+                    }
+                ],
+    "recipe":  {
+                   "kind":  "audio_v1",
+                   "params":  {
+                                  "base_note":  "C2",
+                                  "duration_seconds":  1.2,
+                                  "sample_rate":  44100,
+                                  "layers":  [
+                                                 {
+                                                     "synthesis":  {
+                                                                       "type":  "multi_oscillator",
+                                                                       "frequency":  65.41,
+                                                                       "oscillators":  [
+                                                                                           {
+                                                                                               "waveform":  "sawtooth",
+                                                                                               "volume":  1.0,
+                                                                                               "detune":  0.0
+                                                                                           },
+                                                                                           {
+                                                                                               "waveform":  "sawtooth",
+                                                                                               "volume":  0.9,
+                                                                                               "detune":  12.0
+                                                                                           },
+                                                                                           {
+                                                                                               "waveform":  "sawtooth",
+                                                                                               "volume":  0.9,
+                                                                                               "detune":  -12.0
+                                                                                           },
+                                                                                           {
+                                                                                               "waveform":  "sawtooth",
+                                                                                               "volume":  0.8,
+                                                                                               "detune":  7.0
+                                                                                           }
+                                                                                       ]
+                                                                   },
+                                                     "filter":  {
+                                                                    "type":  "lowpass",
+                                                                    "cutoff":  1200.0,
+                                                                    "resonance":  0.35
+                                                                },
+                                                     "envelope":  {
+                                                                      "attack":  0.02,
+                                                                      "decay":  0.2,
+                                                                      "sustain":  0.85,
+                                                                      "release":  0.2
+                                                                  },
+                                                     "volume":  0.7,
+                                                     "pan":  0
+                                                 },
+                                                 {
+                                                     "synthesis":  {
+                                                                       "type":  "oscillator",
+                                                                       "waveform":  "sine",
+                                                                       "frequency":  65.41
+                                                                   },
+                                                     "envelope":  {
+                                                                      "attack":  0.01,
+                                                                      "decay":  0.1,
+                                                                      "sustain":  0.9,
+                                                                      "release":  0.15
+                                                                  },
+                                                     "volume":  0.4,
+                                                     "pan":  0
+                                                 }
+                                             ]
+                              }
+               }
+}

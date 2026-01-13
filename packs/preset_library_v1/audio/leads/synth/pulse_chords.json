@@ -1,0 +1,84 @@
+{
+    "spec_version":  1,
+    "asset_id":  "preset_pulse_chords",
+    "asset_type":  "audio",
+    "license":  "CC0-1.0",
+    "seed":  10311,
+    "description":  "Pulse chord lead - thick pulse wave stack optimized for chord voicings",
+    "outputs":  [
+                    {
+                        "kind":  "primary",
+                        "format":  "wav",
+                        "path":  "test-outputs/preset_library_v1/audio/leads/synth/pulse_chords.wav"
+                    }
+                ],
+    "recipe":  {
+                   "kind":  "audio_v1",
+                   "params":  {
+                                  "base_note":  "A4",
+                                  "duration_seconds":  1.5,
+                                  "sample_rate":  44100,
+                                  "layers":  [
+                                                 {
+                                                     "synthesis":  {
+                                                                       "type":  "multi_oscillator",
+                                                                       "frequency":  440.0,
+                                                                       "oscillators":  [
+                                                                                           {
+                                                                                               "waveform":  "pulse",
+                                                                                               "volume":  1.0,
+                                                                                               "detune":  0,
+                                                                                               "duty":  0.4
+                                                                                           },
+                                                                                           {
+                                                                                               "waveform":  "pulse",
+                                                                                               "volume":  0.9,
+                                                                                               "detune":  10,
+                                                                                               "duty":  0.45
+                                                                                           },
+                                                                                           {
+                                                                                               "waveform":  "pulse",
+                                                                                               "volume":  0.9,
+                                                                                               "detune":  -10,
+                                                                                               "duty":  0.35
+                                                                                           },
+                                                                                           {
+                                                                                               "waveform":  "pulse",
+                                                                                               "volume":  0.7,
+                                                                                               "detune":  15,
+                                                                                               "duty":  0.5
+                                                                                           },
+                                                                                           {
+                                                                                               "waveform":  "pulse",
+                                                                                               "volume":  0.7,
+                                                                                               "detune":  -15,
+                                                                                               "duty":  0.3
+                                                                                           }
+                                                                                       ]
+                                                                   },
+                                                     "envelope":  {
+                                                                      "attack":  0.01,
+                                                                      "decay":  0.15,
+                                                                      "sustain":  0.8,
+                                                                      "release":  0.25
+                                                                  },
+                                                     "filter":  {
+                                                                    "type":  "lowpass",
+                                                                    "cutoff":  3500,
+                                                                    "resonance":  0.35
+                                                                },
+                                                     "volume":  0.85,
+                                                     "pan":  0
+                                                 }
+                                             ],
+                                  "effects":  [
+                                                  {
+                                                      "type":  "chorus",
+                                                      "rate":  1.0,
+                                                      "depth":  0.25,
+                                                      "wet":  0.2
+                                                  }
+                                              ]
+                              }
+               }
+}

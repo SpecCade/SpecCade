@@ -1,0 +1,54 @@
+{
+  "spec_version": 1,
+  "asset_id": "texture_organic",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 10603,
+  "description": "Natural, organic texture - brown noise with medium grains and gentle modulation",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/textures/texture_organic.wav"
+    }
+  ],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "duration_seconds": 4.0,
+      "sample_rate": 44100,
+      "layers": [
+        {
+          "synthesis": {
+            "type": "granular",
+            "source": {
+              "type": "noise",
+              "noise_type": "brown"
+            },
+            "grain_size_ms": 60.0,
+            "grain_density": 15.0,
+            "pitch_spread": 0.3,
+            "position_spread": 0.25,
+            "pan_spread": 0.5
+          },
+          "envelope": {
+            "attack": 1.2,
+            "decay": 0.4,
+            "sustain": 0.75,
+            "release": 1.8
+          },
+          "volume": 0.55,
+          "pan": 0.0
+        }
+      ],
+      "effects": [
+        {
+          "type": "reverb",
+          "room_size": 0.6,
+          "damping": 0.6,
+          "wet": 0.35
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "spec_version": 1,
+  "asset_id": "kit_fm_arcade",
+  "asset_type": "music_kit",
+  "license": "CC0-1.0",
+  "description": "FM synthesis arcade style kit inspired by Sega Genesis/Mega Drive and YM2612 chip",
+  "kit": {
+    "name": "FM Arcade",
+    "genre": "retro",
+    "subgenre": "arcade",
+    "bpm_range": [130, 160],
+    "time_signature": [4, 4],
+    "instruments": {
+      "kick": "drums/kicks/kick",
+      "snare": "drums/snares/snare",
+      "hat": "drums/hats/hat_metallic",
+      "bass": "bass/bass_fm",
+      "lead": "leads/synth/fm_lead",
+      "bell": "bells/fm_bell",
+      "keys": "keys/keys_ep"
+    },
+    "tags": ["fm", "arcade", "sega", "genesis", "megadrive", "ym2612"]
+  }
+}

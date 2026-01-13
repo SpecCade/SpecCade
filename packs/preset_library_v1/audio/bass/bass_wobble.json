@@ -1,0 +1,71 @@
+{
+  "spec_version": 1,
+  "asset_id": "preset_bass_wobble",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 10115,
+  "description": "Classic dubstep wobble bass - sawtooth oscillator with LFO modulating filter cutoff for rhythmic movement",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/bass/bass_wobble.wav"
+    }
+  ],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "base_note": "A1",
+      "duration_seconds": 2.0,
+      "sample_rate": 44100,
+      "layers": [
+        {
+          "synthesis": {
+            "type": "oscillator",
+            "waveform": "sawtooth",
+            "frequency": 55.0
+          },
+          "envelope": {
+            "attack": 0.01,
+            "decay": 0.1,
+            "sustain": 0.9,
+            "release": 0.2
+          },
+          "filter": {
+            "type": "lowpass",
+            "cutoff": 2000.0,
+            "resonance": 0.75
+          },
+          "lfo": {
+            "config": {
+              "waveform": "sine",
+              "rate": 4.0,
+              "depth": 0.9
+            },
+            "target": {
+              "target": "filter_cutoff",
+              "amount": 1800.0
+            }
+          },
+          "volume": 0.85,
+          "pan": 0.0
+        },
+        {
+          "synthesis": {
+            "type": "oscillator",
+            "waveform": "sine",
+            "frequency": 55.0
+          },
+          "envelope": {
+            "attack": 0.01,
+            "decay": 0.05,
+            "sustain": 0.95,
+            "release": 0.15
+          },
+          "volume": 0.35,
+          "pan": 0.0
+        }
+      ]
+    }
+  }
+}

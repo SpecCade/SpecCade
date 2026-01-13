@@ -1,0 +1,61 @@
+{
+  "spec_version": 1,
+  "asset_id": "kit_lofi_chillhop",
+  "asset_type": "music_kit",
+  "license": "CC0-1.0",
+  "description": "Lo-fi chillhop kit with soft drums, warm Rhodes, and vinyl crackle for relaxed game menus and hub areas",
+  "kit": {
+    "name": "Lo-Fi Chillhop",
+    "genre": "lofi",
+    "subgenre": "chillhop",
+    "bpm_range": [70, 100],
+    "time_signature": [4, 4],
+    "instruments": {
+      "kick": {
+        "preset": "drums/kicks/kick_soft",
+        "role": "kick",
+        "description": "Soft pillowy kick drum"
+      },
+      "snare": {
+        "preset": "drums/snares/snare_soft",
+        "role": "snare",
+        "description": "Gentle lo-fi snare"
+      },
+      "hat": {
+        "preset": "drums/hats/hat_closed",
+        "role": "hat",
+        "description": "Closed hi-hat"
+      },
+      "bass": {
+        "preset": "bass/bass_round",
+        "role": "bass",
+        "description": "Round warm bass"
+      },
+      "keys": {
+        "preset": "keys/keys_ep",
+        "role": "keys",
+        "description": "Electric piano Rhodes character"
+      },
+      "texture": {
+        "preset": "textures/texture_vinyl",
+        "role": "texture",
+        "description": "Vinyl crackle and warmth"
+      },
+      "pad": {
+        "preset": "pads/pad_warm",
+        "role": "pad",
+        "description": "Warm sustaining pad"
+      }
+    },
+    "tags": [
+      "lofi",
+      "chillhop",
+      "hiphop",
+      "chill",
+      "vinyl",
+      "relaxed",
+      "cozy",
+      "menu"
+    ]
+  }
+}

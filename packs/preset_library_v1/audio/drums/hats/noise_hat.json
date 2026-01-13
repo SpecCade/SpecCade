@@ -1,0 +1,62 @@
+{
+    "spec_version":  1,
+    "asset_id":  "preset_noise_hat",
+    "asset_type":  "audio",
+    "license":  "CC0-1.0",
+    "seed":  10053,
+    "description":  "Noise hi-hat - pure filtered noise, chiptune digital character",
+    "outputs":  [
+                    {
+                        "kind":  "primary",
+                        "format":  "wav",
+                        "path":  "test-outputs/preset_library_v1/audio/drums/hats/noise_hat.wav"
+                    }
+                ],
+    "recipe":  {
+                   "kind":  "audio_v1",
+                   "params":  {
+                                  "duration_seconds":  0.08,
+                                  "sample_rate":  44100,
+                                  "layers":  [
+                                                 {
+                                                     "synthesis":  {
+                                                                       "type":  "noise_burst",
+                                                                       "noise_type":  "white",
+                                                                       "filter":  {
+                                                                                      "type":  "highpass",
+                                                                                      "cutoff":  9000,
+                                                                                      "resonance":  0.8
+                                                                                  }
+                                                                   },
+                                                     "envelope":  {
+                                                                      "attack":  0.001,
+                                                                      "decay":  0.025,
+                                                                      "sustain":  0,
+                                                                      "release":  0.03
+                                                                  },
+                                                     "volume":  0.6,
+                                                     "pan":  0
+                                                 },
+                                                 {
+                                                     "synthesis":  {
+                                                                       "type":  "noise_burst",
+                                                                       "noise_type":  "white",
+                                                                       "filter":  {
+                                                                                      "type":  "bandpass",
+                                                                                      "center":  12000,
+                                                                                      "resonance":  1.2
+                                                                                  }
+                                                                   },
+                                                     "envelope":  {
+                                                                      "attack":  0.001,
+                                                                      "decay":  0.02,
+                                                                      "sustain":  0,
+                                                                      "release":  0.025
+                                                                  },
+                                                     "volume":  0.5,
+                                                     "pan":  0
+                                                 }
+                                             ]
+                              }
+               }
+}

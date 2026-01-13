@@ -1307,10 +1307,13 @@ fn legacy_synthesis_to_audio_v1_params(
             volume: 1.0,
             pan: 0.0,
             delay: None,
+            filter: None,
+            lfo: None,
         }],
         pitch_envelope: None,
         generate_loop_points: want_loop,
         master_filter: None,
+        effects: vec![],
     })
 }
 
@@ -1604,6 +1607,8 @@ mod tests {
                         volume: 0.5,
                         pan: -1.0,
                         delay: None,
+                        filter: None,
+                        lfo: None,
                     },
                     AudioLayer {
                         synthesis: AudioSynthesis::Oscillator {
@@ -1617,11 +1622,14 @@ mod tests {
                         volume: 0.5,
                         pan: 1.0,
                         delay: None,
+                        filter: None,
+                        lfo: None,
                     },
                 ],
                 pitch_envelope: None,
                 generate_loop_points: false,
                 master_filter: None,
+                effects: vec![],
             }),
             envelope: Envelope {
                 attack: 0.01,
@@ -1658,11 +1666,14 @@ mod tests {
                 volume: 1.0,
                 pan: 0.0,
                 delay: None,
+                filter: None,
+                lfo: None,
             }],
             pitch_envelope: None,
             // Intentionally opposite of the tracker envelope tests below.
             generate_loop_points: true,
             master_filter: None,
+            effects: vec![],
         };
 
         let one_shot = TrackerInstrument {
@@ -1719,10 +1730,13 @@ mod tests {
                     volume: 1.0,
                     pan: 0.0,
                     delay: None,
+                    filter: None,
+                    lfo: None,
                 }],
                 pitch_envelope: None,
                 generate_loop_points: false,
                 master_filter: None,
+                effects: vec![],
             }),
             envelope: Envelope {
                 attack: 0.01,
@@ -1758,10 +1772,13 @@ mod tests {
                     volume: 1.0,
                     pan: 0.0,
                     delay: None,
+                    filter: None,
+                    lfo: None,
                 }],
                 pitch_envelope: None,
                 generate_loop_points: false,
                 master_filter: None,
+                effects: vec![],
             }),
             envelope: Envelope {
                 attack: 0.05,
@@ -1798,10 +1815,13 @@ mod tests {
                     volume: 1.0,
                     pan: 0.0,
                     delay: None,
+                    filter: None,
+                    lfo: None,
                 }],
                 pitch_envelope: None,
                 generate_loop_points: false,
                 master_filter: None,
+                effects: vec![],
             }),
             envelope: Envelope {
                 attack: 0.05,
