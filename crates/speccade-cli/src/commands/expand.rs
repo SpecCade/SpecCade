@@ -24,9 +24,9 @@ pub fn run(spec_path: &str) -> Result<ExitCode> {
 
     match recipe.kind.as_str() {
         "music.tracker_song_compose_v1" => {
-            let params = recipe.as_music_tracker_song_compose().with_context(|| {
-                format!("Invalid compose params for {}", recipe.kind)
-            })?;
+            let params = recipe
+                .as_music_tracker_song_compose()
+                .with_context(|| format!("Invalid compose params for {}", recipe.kind))?;
             let expanded = speccade_backend_music::expand_compose(&params, spec.seed)
                 .with_context(|| "Compose expansion failed".to_string())?;
             let json = serde_json::to_string_pretty(&expanded)?;
@@ -39,4 +39,3 @@ pub fn run(spec_path: &str) -> Result<ExitCode> {
         ),
     }
 }
-

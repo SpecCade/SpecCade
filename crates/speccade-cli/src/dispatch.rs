@@ -169,12 +169,11 @@ fn generate_music_compose(
     spec_dir: &Path,
 ) -> Result<Vec<OutputResult>, DispatchError> {
     let recipe = spec.recipe.as_ref().ok_or(DispatchError::NoRecipe)?;
-    let params = recipe.as_music_tracker_song_compose().map_err(|e| {
-        DispatchError::BackendError(format!("Invalid music compose params: {}", e))
-    })?;
-    let expanded = speccade_backend_music::expand_compose(&params, spec.seed).map_err(|e| {
-        DispatchError::BackendError(format!("Compose expansion failed: {}", e))
-    })?;
+    let params = recipe
+        .as_music_tracker_song_compose()
+        .map_err(|e| DispatchError::BackendError(format!("Invalid music compose params: {}", e)))?;
+    let expanded = speccade_backend_music::expand_compose(&params, spec.seed)
+        .map_err(|e| DispatchError::BackendError(format!("Compose expansion failed: {}", e)))?;
 
     generate_music_from_params(&expanded, &recipe.kind, spec, out_root, spec_dir)
 }
@@ -389,10 +388,8 @@ fn generate_texture_procedural(
             ))
         })?;
 
-        let (png_data, hash) =
-            speccade_backend_texture::encode_graph_value_png(value).map_err(|e| {
-                DispatchError::BackendError(format!("PNG encoding failed: {}", e))
-            })?;
+        let (png_data, hash) = speccade_backend_texture::encode_graph_value_png(value)
+            .map_err(|e| DispatchError::BackendError(format!("PNG encoding failed: {}", e)))?;
 
         write_output_bytes(out_root, &output_spec.path, &png_data)?;
 

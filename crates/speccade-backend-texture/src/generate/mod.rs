@@ -3,8 +3,8 @@
 //! This module provides the high-level API for procedural graphs and legacy
 //! PBR material map helpers.
 
-mod helpers;
 mod graph;
+mod helpers;
 mod layers;
 mod materials;
 mod packed;
@@ -28,10 +28,13 @@ use crate::maps::{
     NormalGenerator, RoughnessGenerator, TextureBuffer,
 };
 use crate::noise::{Fbm, Noise2D, PerlinNoise};
-use crate::pattern::{CheckerPattern, GradientPattern, Pattern2D, ScratchesPattern, StripesPattern};
+use crate::pattern::{
+    CheckerPattern, GradientPattern, Pattern2D, ScratchesPattern, StripesPattern,
+};
 use crate::png::{self, PngConfig, PngError};
 use crate::rng::DeterministicRng;
 
+pub use graph::{encode_graph_value_png, generate_graph, GraphValue};
 use helpers::{
     apply_pattern_to_buffer, create_noise_generator, get_default_metallic,
     get_default_roughness_range, validate_base_material, validate_map_list, validate_resolution,
@@ -39,7 +42,6 @@ use helpers::{
 use layers::apply_layer_to_height;
 use materials::apply_material_pattern;
 pub use packed::generate_packed_maps;
-pub use graph::{encode_graph_value_png, generate_graph, GraphValue};
 
 /// Errors from texture generation.
 #[derive(Debug, Error)]
@@ -388,6 +390,7 @@ fn add_emissive_from_mask(buffer: &mut TextureBuffer, mask: &GrayscaleBuffer, co
 ///
 /// The height_map is used to ensure albedo follows the same pattern as other maps
 /// (e.g., differentiating brick from mortar in a brick material).
+#[allow(clippy::too_many_arguments)]
 fn generate_albedo_map(
     base_color: &Color,
     height_map: &GrayscaleBuffer,
@@ -520,12 +523,7 @@ fn generate_albedo_map(
             } => {
                 if affects.contains(&TextureMapType::Albedo) {
                     let mask = build_threshold_mask(
-                        width,
-                        height,
-                        noise,
-                        layer_seed,
-                        *threshold,
-                        *strength,
+                        width, height, noise, layer_seed, *threshold, *strength,
                     );
                     let stain_color = Color::rgb(color[0], color[1], color[2]);
                     generator.apply_pattern_color(
@@ -546,13 +544,7 @@ fn generate_albedo_map(
             } => {
                 if affects.contains(&TextureMapType::Albedo) {
                     let mask = build_streak_mask(
-                        width,
-                        height,
-                        noise,
-                        layer_seed,
-                        *threshold,
-                        *strength,
-                        *direction,
+                        width, height, noise, layer_seed, *threshold, *strength, *direction,
                     );
                     let streak_color = Color::rgb(color[0], color[1], color[2]);
                     generator.apply_pattern_color(
@@ -659,12 +651,7 @@ fn generate_roughness_map(
             } => {
                 if affects.contains(&TextureMapType::Roughness) {
                     let mask = build_threshold_mask(
-                        width,
-                        height,
-                        noise,
-                        layer_seed,
-                        *threshold,
-                        *strength,
+                        width, height, noise, layer_seed, *threshold, *strength,
                     );
 
                     for y in 0..height {
@@ -690,13 +677,7 @@ fn generate_roughness_map(
             } => {
                 if affects.contains(&TextureMapType::Roughness) {
                     let mask = build_streak_mask(
-                        width,
-                        height,
-                        noise,
-                        layer_seed,
-                        *threshold,
-                        *strength,
-                        *direction,
+                        width, height, noise, layer_seed, *threshold, *strength, *direction,
                     );
 
                     for y in 0..height {
@@ -976,13 +957,7 @@ fn generate_emissive_map(
                 }
 
                 let mask = build_streak_mask(
-                    width,
-                    height,
-                    noise,
-                    layer_seed,
-                    *threshold,
-                    *strength,
-                    *direction,
+                    width, height, noise, layer_seed, *threshold, *strength, *direction,
                 );
                 let emit_color = Color::rgb(color[0], color[1], color[2]);
                 add_emissive_from_mask(&mut buffer, &mask, emit_color);

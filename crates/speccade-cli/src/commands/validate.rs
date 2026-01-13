@@ -5,8 +5,8 @@
 use anyhow::{Context, Result};
 use colored::Colorize;
 use speccade_spec::{
-    canonical_recipe_hash, canonical_spec_hash, validate_for_generate, validate_spec, ReportBuilder,
-    Spec,
+    canonical_recipe_hash, canonical_spec_hash, validate_for_generate, validate_spec,
+    ReportBuilder, Spec,
 };
 use std::fs;
 use std::process::ExitCode;
@@ -57,10 +57,9 @@ pub fn run(spec_path: &str, artifacts: bool) -> Result<ExitCode> {
     let backend_version = format!("speccade-cli v{}", env!("CARGO_PKG_VERSION"));
     let git_commit = option_env!("SPECCADE_GIT_SHA").map(|s| s.to_string());
     let git_dirty = matches!(option_env!("SPECCADE_GIT_DIRTY"), Some("1"));
-    let mut report_builder =
-        ReportBuilder::new(spec_hash.clone(), backend_version)
-            .spec_metadata(&spec)
-            .duration_ms(duration_ms);
+    let mut report_builder = ReportBuilder::new(spec_hash.clone(), backend_version)
+        .spec_metadata(&spec)
+        .duration_ms(duration_ms);
     if let Some(commit) = git_commit {
         report_builder = report_builder.git_metadata(commit, git_dirty);
     }

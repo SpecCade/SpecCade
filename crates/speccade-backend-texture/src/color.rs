@@ -256,7 +256,11 @@ impl Color {
         let g = u8::from_str_radix(&hex[2..4], 16).map_err(|_| ParseHexColorError::InvalidHex)?;
         let b = u8::from_str_radix(&hex[4..6], 16).map_err(|_| ParseHexColorError::InvalidHex)?;
 
-        Ok(Self::rgb(r as f64 / 255.0, g as f64 / 255.0, b as f64 / 255.0))
+        Ok(Self::rgb(
+            r as f64 / 255.0,
+            g as f64 / 255.0,
+            b as f64 / 255.0,
+        ))
     }
 }
 

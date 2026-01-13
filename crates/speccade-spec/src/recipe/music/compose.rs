@@ -3,7 +3,122 @@
 use serde::{Deserialize, Deserializer, Serialize};
 use std::collections::HashMap;
 
-use super::{ArrangementEntry, AutomationEntry, ItOptions, PatternNote, TrackerFormat, TrackerInstrument};
+use super::{
+    ArrangementEntry, AutomationEntry, ItOptions, PatternNote, TrackerFormat, TrackerInstrument,
+};
+
+/// Channel reference (index or alias name).
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum ChannelRef {
+    Index(u8),
+    Name(String),
+}
+
+impl Default for ChannelRef {
+    fn default() -> Self {
+        ChannelRef::Index(0)
+    }
+}
+
+/// Instrument reference (index or alias name).
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum InstrumentRef {
+    Index(u8),
+    Name(String),
+}
+
+impl Default for InstrumentRef {
+    fn default() -> Self {
+        InstrumentRef::Index(0)
+    }
+}
+
+/// Musical timebase for mapping bars/beats to tracker rows.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct TimeBase {
+    pub beats_per_bar: u16,
+    pub rows_per_beat: u16,
+}
+
+/// Beat position within a pattern (0-indexed).
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct BeatPos {
+    pub bar: u16,
+    #[serde(default)]
+    pub beat: u16,
+    #[serde(default)]
+    pub sub: u16,
+}
+
+/// Beat delta for stepping within a pattern (can be negative).
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct BeatDelta {
+    pub beats: i32,
+    pub sub: i32,
+}
+
+/// Supported key scales for harmony helpers.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum HarmonyScale {
+    Major,
+    Minor,
+}
+
+/// Key definition for harmony helpers.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct HarmonyKey {
+    pub root: String,
+    pub scale: HarmonyScale,
+}
+
+/// Symbol-form chord spec.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ChordSpecSymbol {
+    pub symbol: String,
+}
+
+/// Interval-form chord spec (escape hatch).
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ChordSpecIntervals {
+    pub root: String,
+    pub intervals: Vec<u8>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bass: Option<String>,
+}
+
+/// Chord specification (symbol or interval form).
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum ChordSpec {
+    Symbol(ChordSpecSymbol),
+    Intervals(ChordSpecIntervals),
+}
+
+/// Harmony chord change entry.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct HarmonyChordEntry {
+    pub at: BeatPos,
+    pub chord: ChordSpec,
+}
+
+/// Harmony helpers block (key + chord changes).
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Harmony {
+    pub key: HarmonyKey,
+    #[serde(default)]
+    pub chords: Vec<HarmonyChordEntry>,
+}
 
 /// Parameters for the `music.tracker_song_compose_v1` recipe.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
@@ -39,6 +154,18 @@ pub struct MusicTrackerSongComposeV1Params {
     /// Instrument definitions.
     #[serde(default)]
     pub instruments: Vec<TrackerInstrument>,
+    /// Optional channel alias map (name -> channel index).
+    #[serde(default, skip_serializing_if = "HashMap::is_empty")]
+    pub channel_ids: HashMap<String, u8>,
+    /// Optional instrument alias map (name -> instrument index).
+    #[serde(default, skip_serializing_if = "HashMap::is_empty")]
+    pub instrument_ids: HashMap<String, u8>,
+    /// Optional timebase for mapping bars/beats to tracker rows.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub timebase: Option<TimeBase>,
+    /// Optional harmony helpers (key/chords) for pitch sequencing.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub harmony: Option<Harmony>,
     /// Reusable pattern fragments.
     #[serde(default, skip_serializing_if = "HashMap::is_empty")]
     pub defs: HashMap<String, PatternExpr>,
@@ -61,7 +188,18 @@ pub struct MusicTrackerSongComposeV1Params {
 #[serde(deny_unknown_fields)]
 pub struct ComposePattern {
     /// Number of rows in the pattern.
-    pub rows: u16,
+    ///
+    /// Mutually exclusive with `bars`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub rows: Option<u16>,
+    /// Pattern length in bars (expanded to rows using the timebase).
+    ///
+    /// Mutually exclusive with `rows`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bars: Option<u16>,
+    /// Optional timebase override for this pattern.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub timebase: Option<TimeBase>,
     /// Pattern IR program to expand.
     pub program: PatternExpr,
     /// Optional flat notes to merge on top (channel stored per note).
@@ -73,21 +211,16 @@ pub struct ComposePattern {
 }
 
 /// Merge policy for overlapping cells.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum MergePolicy {
     /// Error on any double-write to the same cell.
     Error,
     /// Fieldwise merge; error on conflicting values.
+    #[default]
     MergeFields,
     /// Fieldwise merge; conflicts resolved by taking the later writer's value.
     LastWins,
-}
-
-impl Default for MergePolicy {
-    fn default() -> Self {
-        MergePolicy::MergeFields
-    }
 }
 
 /// Sequence mode for `emit_seq` values.
@@ -106,6 +239,27 @@ pub enum SeqMode {
 pub struct Seq<T> {
     pub mode: SeqMode,
     pub values: Vec<T>,
+}
+
+/// Kind of pitch sequence (degree/chord-tone authoring).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum PitchSeqKind {
+    ScaleDegree,
+    ChordTone,
+}
+
+/// Pitch sequence aligned to emitted events (compiled to note names during expansion).
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct PitchSeq {
+    pub kind: PitchSeqKind,
+    pub mode: SeqMode,
+    pub values: Vec<String>,
+    pub octave: i32,
+    /// Whether to allow accidentals in `values` for `scale_degree`.
+    #[serde(default)]
+    pub allow_accidentals: bool,
 }
 
 /// Pattern IR expression.
@@ -143,11 +297,13 @@ pub enum PatternExpr {
     },
     EmitSeq {
         at: TimeExpr,
-        cell: CellTemplate,
+        cell: Box<CellTemplate>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         note_seq: Option<Seq<String>>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        inst_seq: Option<Seq<u8>>,
+        pitch_seq: Option<PitchSeq>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        inst_seq: Option<Seq<InstrumentRef>>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         vol_seq: Option<Seq<u8>>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -202,6 +358,14 @@ pub enum TimeExpr {
     List {
         rows: Vec<i32>,
     },
+    BeatList {
+        beats: Vec<BeatPos>,
+    },
+    BeatRange {
+        start: BeatPos,
+        step: BeatDelta,
+        count: u32,
+    },
     Euclid {
         pulses: u32,
         steps: u32,
@@ -251,13 +415,17 @@ pub enum TransformOp {
 #[serde(deny_unknown_fields)]
 pub struct CellTemplate {
     /// Channel number (0-indexed).
-    pub channel: u8,
+    pub channel: ChannelRef,
     /// Note name (string or MIDI number); omitted means "use instrument base note".
-    #[serde(default, deserialize_with = "deserialize_note_opt", skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_note_opt",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub note: Option<String>,
     /// Instrument index.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub inst: Option<u8>,
+    pub inst: Option<InstrumentRef>,
     /// Volume (0-64, optional).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub vol: Option<u8>,

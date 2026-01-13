@@ -132,7 +132,10 @@ fn embed_git_metadata(repo_root: &Path) {
         println!("cargo:rustc-env=SPECCADE_GIT_SHA={}", sha.trim());
         if let Some(status) = git(repo_root, &["status", "--porcelain"]) {
             let dirty = !status.trim().is_empty();
-            println!("cargo:rustc-env=SPECCADE_GIT_DIRTY={}", if dirty { 1 } else { 0 });
+            println!(
+                "cargo:rustc-env=SPECCADE_GIT_DIRTY={}",
+                if dirty { 1 } else { 0 }
+            );
         }
     }
 }

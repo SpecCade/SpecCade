@@ -1,6 +1,6 @@
 # RFC-0004 Completion Plan (SpecCade)
 
-- **Status:** Draft (plan)
+- **Status:** COMPLETED
 - **Last updated:** 2026-01-13
 
 ## Goal
@@ -122,4 +122,3 @@ Bring RFC-0004 (“Musical Helpers for Music Compose”) to 100% compliance with
 - When all items above pass:
   - set RFC-0004 `Status: COMPLETED`
   - set `Last reviewed: YYYY-MM-DD`
-

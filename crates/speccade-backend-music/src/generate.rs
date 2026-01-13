@@ -26,9 +26,9 @@ use speccade_spec::recipe::music::{
 use speccade_spec::BackendError;
 use thiserror::Error;
 
+use crate::compose::expand_compose;
 use crate::note::{midi_to_freq, DEFAULT_IT_SYNTH_MIDI_NOTE, DEFAULT_SYNTH_MIDI_NOTE};
 use crate::synthesis::{derive_instrument_seed, load_wav_sample};
-use crate::compose::expand_compose;
 
 // Re-export format-specific generators (internal use)
 pub(crate) use crate::it_gen::generate_it;
@@ -620,8 +620,7 @@ pub(crate) fn bake_instrument_sample(
         )?;
 
         (pcm16_mono, sample_rate, base_midi)
-    } else if let Some(InstrumentSynthesis::Sample { path, base_note }) = instr.synthesis.as_ref()
-    {
+    } else if let Some(InstrumentSynthesis::Sample { path, base_note }) = instr.synthesis.as_ref() {
         let sample_path = spec_dir.join(path);
         let (pcm16_mono, sample_rate) =
             load_wav_sample(&sample_path).map_err(GenerateError::SampleLoadError)?;
@@ -676,13 +675,14 @@ pub(crate) fn bake_instrument_sample(
         audio_params.generate_loop_points = false;
 
         // Render via unified audio backend (deterministic by seed).
-        let gen =
-            speccade_backend_audio::generate_from_params(&audio_params, instr_seed).map_err(|e| {
+        let gen = speccade_backend_audio::generate_from_params(&audio_params, instr_seed).map_err(
+            |e| {
                 GenerateError::InstrumentError(format!(
                     "Failed to bake audio_v1 instrument '{}' to tracker sample: {}",
                     instr.name, e
                 ))
-            })?;
+            },
+        )?;
 
         let pcm =
             speccade_backend_audio::wav::extract_pcm_data(&gen.wav.wav_data).ok_or_else(|| {
@@ -818,7 +818,9 @@ pub(crate) fn bake_instrument_sample(
                     })
                 })
             }
-            Some(TrackerLoopMode::Auto) | None => forward_raw.filter(|c| c.corr >= FORWARD_LOOP_MIN_CORR),
+            Some(TrackerLoopMode::Auto) | None => {
+                forward_raw.filter(|c| c.corr >= FORWARD_LOOP_MIN_CORR)
+            }
             Some(TrackerLoopMode::PingPong) => None,
             Some(TrackerLoopMode::None) => None,
         };
@@ -856,7 +858,8 @@ pub(crate) fn bake_instrument_sample(
                     let b = samples[head_start + i] as f64;
                     let mixed = (a * fade_out + b * fade_in)
                         .round()
-                        .clamp(i16::MIN as f64, i16::MAX as f64) as i16;
+                        .clamp(i16::MIN as f64, i16::MAX as f64)
+                        as i16;
                     samples[tail_start + i] = mixed;
                 }
 
@@ -868,11 +871,10 @@ pub(crate) fn bake_instrument_sample(
                 if loop_start + 1 < loop_end && loop_end >= 2 {
                     let start = loop_start as usize;
                     let end = loop_end as usize;
-                    let amp_jump = (samples[end - 1] as i32 - samples[start] as i32).abs() as u32;
-                    let slope_end =
-                        samples[end - 1] as i32 - samples[end.saturating_sub(2)] as i32;
+                    let amp_jump = (samples[end - 1] as i32 - samples[start] as i32).unsigned_abs();
+                    let slope_end = samples[end - 1] as i32 - samples[end.saturating_sub(2)] as i32;
                     let slope_start = samples[start + 1] as i32 - samples[start] as i32;
-                    let slope_jump = (slope_end - slope_start).abs() as u32;
+                    let slope_jump = (slope_end - slope_start).unsigned_abs();
                     seam_report = Some(LoopSeamMetrics {
                         amp_jump,
                         slope_jump,
@@ -893,9 +895,8 @@ pub(crate) fn bake_instrument_sample(
             let start_idx =
                 find_best_pingpong_loop_start_near(&samples, desired_start_idx, radius) as u32;
 
-            let min_loop_len = (sample_rate / 20).max(256) as u32; // ~50ms, minimum 256 samples
-            let min_end_idx =
-                (start_idx + min_loop_len).min(sample_len.saturating_sub(1)) as usize;
+            let min_loop_len = (sample_rate / 20).max(256); // ~50ms, minimum 256 samples
+            let min_end_idx = (start_idx + min_loop_len).min(sample_len.saturating_sub(1)) as usize;
             let tail_window = sample_rate.max(4096) as usize; // ~1s tail search, minimum 4096 samples
             let end_search_end = samples.len().saturating_sub(1);
             let end_search_start = min_end_idx.max(end_search_end.saturating_sub(tail_window));
@@ -919,14 +920,12 @@ pub(crate) fn bake_instrument_sample(
             let end_usize = end as usize;
             if start_usize + 1 < samples.len() {
                 pingpong_start_slope_report = Some(
-                    (samples[start_usize + 1] as i32 - samples[start_usize] as i32)
-                        .abs() as u32,
+                    (samples[start_usize + 1] as i32 - samples[start_usize] as i32).unsigned_abs(),
                 );
             }
             if end_usize >= 2 && end_usize <= samples.len() {
                 pingpong_end_slope_report = Some(
-                    (samples[end_usize - 1] as i32 - samples[end_usize - 2] as i32)
-                        .abs() as u32,
+                    (samples[end_usize - 1] as i32 - samples[end_usize - 2] as i32).unsigned_abs(),
                 );
             }
 
@@ -1575,7 +1574,8 @@ mod tests {
             ..Default::default()
         };
 
-        let (baked, _) = bake_instrument_sample(&instr, 42, 0, &spec_dir, TrackerFormat::Xm).unwrap();
+        let (baked, _) =
+            bake_instrument_sample(&instr, 42, 0, &spec_dir, TrackerFormat::Xm).unwrap();
         assert!(!baked.pcm16_mono.is_empty());
         assert!(
             baked.loop_region.is_some(),
@@ -1774,7 +1774,9 @@ mod tests {
 
         let (baked, _) =
             bake_instrument_sample(&instr, 42, 0, Path::new("."), TrackerFormat::Xm).unwrap();
-        let loop_region = baked.loop_region.expect("sustained instruments should loop");
+        let loop_region = baked
+            .loop_region
+            .expect("sustained instruments should loop");
         assert_eq!(loop_region.mode, LoopMode::Forward);
         assert!(loop_region.end > loop_region.start);
     }
@@ -1812,7 +1814,9 @@ mod tests {
 
         let (baked, _) =
             bake_instrument_sample(&instr, 42, 0, Path::new("."), TrackerFormat::Xm).unwrap();
-        let loop_region = baked.loop_region.expect("sustained instruments should loop");
+        let loop_region = baked
+            .loop_region
+            .expect("sustained instruments should loop");
         assert_eq!(loop_region.mode, LoopMode::PingPong);
         assert!(loop_region.end > loop_region.start);
     }

@@ -701,7 +701,10 @@ fn test_emissive_layers_produce_non_black_output() {
     let emissive = result.maps.get(&TextureMapType::Emissive).unwrap();
     let (color_type, _, _, bytes) = decode_png_bytes(&emissive.data);
     assert_eq!(color_type, png_crate::ColorType::Rgb);
-    assert!(bytes.iter().any(|&b| b != 0), "expected some non-black pixels");
+    assert!(
+        bytes.iter().any(|&b| b != 0),
+        "expected some non-black pixels"
+    );
 }
 
 #[test]
@@ -723,7 +726,15 @@ fn test_metallic_layers_affect_metallic_output() {
     let base_result = generate_material_maps(&base, 42).unwrap();
     let striped_result = generate_material_maps(&striped, 42).unwrap();
 
-    let base_hash = &base_result.maps.get(&TextureMapType::Metallic).unwrap().hash;
-    let striped_hash = &striped_result.maps.get(&TextureMapType::Metallic).unwrap().hash;
+    let base_hash = &base_result
+        .maps
+        .get(&TextureMapType::Metallic)
+        .unwrap()
+        .hash;
+    let striped_hash = &striped_result
+        .maps
+        .get(&TextureMapType::Metallic)
+        .unwrap()
+        .hash;
     assert_ne!(base_hash, striped_hash);
 }

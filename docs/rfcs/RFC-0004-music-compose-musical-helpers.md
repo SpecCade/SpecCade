@@ -1,6 +1,6 @@
 # RFC-0004: Musical Helpers for Music Compose (Names, Beats, Harmony)
 
-- **Status:** Draft
+- **Status:** COMPLETED
 - **Author:** SpecCade Team
 - **Created:** 2026-01-11
 - **Target Version:** SpecCade v1.x (Compose extensions)
@@ -73,6 +73,8 @@ Then allow cell templates to reference channels/instruments by either:
 
 - integer index (existing)
 - string alias (new)
+
+Note: hand-authored overrides in `patterns.*.data` / `patterns.*.notes` remain numeric (no alias resolution).
 
 Example:
 

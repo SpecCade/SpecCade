@@ -272,7 +272,7 @@ pub fn validate_output_format(path: &Path, format: OutputFormat) -> Result<(), S
         OutputFormat::It => validate_it_file(path),
         OutputFormat::Glb => validate_glb_file(path),
         OutputFormat::Gltf => validate_gltf_file(path),
-        OutputFormat::Json => Ok(()),  // JSON is text, no binary validation needed
+        OutputFormat::Json => Ok(()), // JSON is text, no binary validation needed
     }
 }
 

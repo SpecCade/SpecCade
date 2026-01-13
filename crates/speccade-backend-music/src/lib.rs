@@ -56,8 +56,8 @@
 //! - [`it`]: IT (Impulse Tracker) format writer
 //! - [`generate`]: Main generation entry point
 
-pub mod envelope;
 pub mod compose;
+pub mod envelope;
 pub mod generate;
 pub mod it;
 pub mod it_gen;

@@ -175,7 +175,6 @@ fn validate_outputs(spec: &Spec, result: &mut ValidationResult) {
 
         // Validate path safety
         validate_output_path(output, i, result);
-
     }
 }
 
@@ -554,10 +553,7 @@ fn validate_music_outputs_common(
                 if seen_xm {
                     result.add_error(ValidationError::with_path(
                         ErrorCode::OutputValidationFailed,
-                        format!(
-                            "duplicate primary output format 'xm' for {}",
-                            recipe_kind
-                        ),
+                        format!("duplicate primary output format 'xm' for {}", recipe_kind),
                         format!("outputs[{}].format", index),
                     ));
                 }
@@ -567,10 +563,7 @@ fn validate_music_outputs_common(
                 if seen_it {
                     result.add_error(ValidationError::with_path(
                         ErrorCode::OutputValidationFailed,
-                        format!(
-                            "duplicate primary output format 'it' for {}",
-                            recipe_kind
-                        ),
+                        format!("duplicate primary output format 'it' for {}", recipe_kind),
                         format!("outputs[{}].format", index),
                     ));
                 }
@@ -741,11 +734,7 @@ fn validate_texture_procedural_outputs(
             | TextureProceduralOp::ColorRamp { input, .. }
             | TextureProceduralOp::Palette { input, .. }
             | TextureProceduralOp::NormalFromHeight { input, .. } => {
-                validate_ref(
-                    input,
-                    format!("recipe.params.nodes[{}].input", i),
-                    result,
-                );
+                validate_ref(input, format!("recipe.params.nodes[{}].input", i), result);
                 // Input types
                 match &node.op {
                     TextureProceduralOp::ToGrayscale { .. }
@@ -1240,7 +1229,6 @@ mod tests {
             .any(|e| e.code == ErrorCode::OutputValidationFailed));
     }
 
-
     #[test]
     fn test_duplicate_output_path() {
         let mut spec = make_valid_spec();
@@ -1536,14 +1524,6 @@ mod tests {
             .iter()
             .any(|e| e.code == ErrorCode::OutputValidationFailed));
     }
-
-
-
-
-
-
-
-
 
     #[test]
     fn test_warnings() {

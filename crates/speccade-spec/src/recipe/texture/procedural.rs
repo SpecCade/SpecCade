@@ -36,7 +36,6 @@ pub enum TextureProceduralOp {
     // ---------------------------------------------------------------------
     // Grayscale primitives
     // ---------------------------------------------------------------------
-
     /// A constant grayscale value.
     Constant { value: f64 },
 
@@ -76,7 +75,6 @@ pub enum TextureProceduralOp {
     // ---------------------------------------------------------------------
     // Grayscale ops
     // ---------------------------------------------------------------------
-
     /// Invert grayscale: `1 - x`.
     Invert { input: String },
 
@@ -98,7 +96,6 @@ pub enum TextureProceduralOp {
     // ---------------------------------------------------------------------
     // Color ops
     // ---------------------------------------------------------------------
-
     /// Convert color -> grayscale (explicit luminance conversion).
     ToGrayscale { input: String },
 

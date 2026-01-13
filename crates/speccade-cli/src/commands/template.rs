@@ -21,10 +21,13 @@ fn find_packs_root_from(start: &Path) -> Result<PathBuf> {
         }
     }
 
-    bail!("Could not find 'packs/{}' in current directory ancestry", PACK_NAME)
+    bail!(
+        "Could not find 'packs/{}' in current directory ancestry",
+        PACK_NAME
+    )
 }
 
-fn find_packs_root() -> Result<PathBuf> {
+fn _find_packs_root() -> Result<PathBuf> {
     let dir = std::env::current_dir().context("Failed to read current directory")?;
     find_packs_root_from(&dir)
 }
@@ -41,9 +44,12 @@ fn load_templates_from(start: &Path, asset_type: &str) -> Result<Vec<(Spec, Path
     }
 
     let mut templates = Vec::new();
-    for entry in fs::read_dir(&templates_dir)
-        .with_context(|| format!("Failed to read template directory: {}", templates_dir.display()))?
-    {
+    for entry in fs::read_dir(&templates_dir).with_context(|| {
+        format!(
+            "Failed to read template directory: {}",
+            templates_dir.display()
+        )
+    })? {
         let entry = entry?;
         let path = entry.path();
         if path.extension().and_then(|s| s.to_str()) != Some("json") {
@@ -160,11 +166,7 @@ mod tests {
     #[test]
     fn load_templates_from_reads_texture_templates() {
         let tmp = tempfile::tempdir().unwrap();
-        let templates_dir = tmp
-            .path()
-            .join("packs")
-            .join(PACK_NAME)
-            .join("texture");
+        let templates_dir = tmp.path().join("packs").join(PACK_NAME).join("texture");
         fs::create_dir_all(&templates_dir).unwrap();
 
         write_template(&templates_dir, "preset_texture_alpha", "texture");

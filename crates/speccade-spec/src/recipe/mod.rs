@@ -219,8 +219,14 @@ mod tests {
     #[test]
     fn test_recipe_kind_asset_type_prefix() {
         assert_eq!(RecipeKind::AudioV1.asset_type_prefix(), "audio");
-        assert_eq!(RecipeKind::MusicTrackerSongComposeV1.asset_type_prefix(), "music");
-        assert_eq!(RecipeKind::TextureProceduralV1.asset_type_prefix(), "texture");
+        assert_eq!(
+            RecipeKind::MusicTrackerSongComposeV1.asset_type_prefix(),
+            "music"
+        );
+        assert_eq!(
+            RecipeKind::TextureProceduralV1.asset_type_prefix(),
+            "texture"
+        );
         assert_eq!(
             RecipeKind::StaticMeshBlenderPrimitivesV1.asset_type_prefix(),
             "static_mesh"

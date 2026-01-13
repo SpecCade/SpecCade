@@ -583,7 +583,11 @@ mod generation_tier1 {
                     );
 
                     let nodes = nodes.unwrap();
-                    for output in spec.outputs.iter().filter(|o| o.kind == OutputKind::Primary) {
+                    for output in spec
+                        .outputs
+                        .iter()
+                        .filter(|o| o.kind == OutputKind::Primary)
+                    {
                         let source = output
                             .source
                             .as_ref()
@@ -1026,11 +1030,9 @@ mod determinism {
         let nodes2 = speccade_backend_texture::generate_graph(&params, 12345).unwrap();
 
         let (_, hash1) =
-            speccade_backend_texture::encode_graph_value_png(nodes1.get("mask").unwrap())
-                .unwrap();
+            speccade_backend_texture::encode_graph_value_png(nodes1.get("mask").unwrap()).unwrap();
         let (_, hash2) =
-            speccade_backend_texture::encode_graph_value_png(nodes2.get("mask").unwrap())
-                .unwrap();
+            speccade_backend_texture::encode_graph_value_png(nodes2.get("mask").unwrap()).unwrap();
 
         assert_eq!(hash1, hash2, "Same seed should produce same hash");
     }
@@ -1068,11 +1070,9 @@ mod determinism {
         let nodes2 = speccade_backend_texture::generate_graph(&params, 222).unwrap();
 
         let (_, hash1) =
-            speccade_backend_texture::encode_graph_value_png(nodes1.get("mask").unwrap())
-                .unwrap();
+            speccade_backend_texture::encode_graph_value_png(nodes1.get("mask").unwrap()).unwrap();
         let (_, hash2) =
-            speccade_backend_texture::encode_graph_value_png(nodes2.get("mask").unwrap())
-                .unwrap();
+            speccade_backend_texture::encode_graph_value_png(nodes2.get("mask").unwrap()).unwrap();
 
         // Note: This could theoretically fail with a collision, but it's extremely unlikely
         assert_ne!(

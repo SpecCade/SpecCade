@@ -448,7 +448,11 @@ impl ReportBuilder {
     }
 
     /// Marks this report as being for a derived variant run.
-    pub fn variant(mut self, base_spec_hash: impl Into<String>, variant_id: impl Into<String>) -> Self {
+    pub fn variant(
+        mut self,
+        base_spec_hash: impl Into<String>,
+        variant_id: impl Into<String>,
+    ) -> Self {
         self.base_spec_hash = Some(base_spec_hash.into());
         self.variant_id = Some(variant_id.into());
         self

@@ -32,11 +32,7 @@ pub fn run(spec_path: &str, out_root: Option<&str>, expand_variants: bool) -> Re
     println!("{} {}", "Generating from:".cyan().bold(), spec_path);
     println!("{} {}", "Output root:".cyan().bold(), out_root);
     if expand_variants {
-        println!(
-            "{} {}",
-            "Expand variants:".cyan().bold(),
-            "enabled".green()
-        );
+        println!("{} {}", "Expand variants:".cyan().bold(), "enabled".green());
     }
 
     // Read spec file
@@ -73,10 +69,9 @@ pub fn run(spec_path: &str, out_root: Option<&str>, expand_variants: bool) -> Re
         let duration_ms = start.elapsed().as_millis() as u64;
 
         // Build error report
-        let mut report_builder =
-            with_git(ReportBuilder::new(spec_hash, backend_version))
-                .spec_metadata(&spec)
-                .duration_ms(duration_ms);
+        let mut report_builder = with_git(ReportBuilder::new(spec_hash, backend_version))
+            .spec_metadata(&spec)
+            .duration_ms(duration_ms);
         if let Some(hash) = recipe_hash {
             report_builder = report_builder.recipe_hash(hash);
         }
@@ -135,8 +130,8 @@ pub fn run(spec_path: &str, out_root: Option<&str>, expand_variants: bool) -> Re
                 spec_hash.clone(),
                 backend_version.clone(),
             ))
-                .spec_metadata(&spec)
-                .duration_ms(base_duration_ms);
+            .spec_metadata(&spec)
+            .duration_ms(base_duration_ms);
             if let Some(hash) = recipe_hash.clone() {
                 report_builder = report_builder.recipe_hash(hash);
             }
@@ -160,15 +155,13 @@ pub fn run(spec_path: &str, out_root: Option<&str>, expand_variants: bool) -> Re
             println!("{} {}", "Report written to:".dimmed(), base_report_path);
         }
         Err(e) => {
-            any_generation_failed = true;
-
             // Build error report
             let mut report_builder = with_git(ReportBuilder::new(
                 spec_hash.clone(),
                 backend_version.clone(),
             ))
-                .spec_metadata(&spec)
-                .duration_ms(base_duration_ms);
+            .spec_metadata(&spec)
+            .duration_ms(base_duration_ms);
             if let Some(hash) = recipe_hash.clone() {
                 report_builder = report_builder.recipe_hash(hash);
             }
@@ -225,20 +218,21 @@ pub fn run(spec_path: &str, out_root: Option<&str>, expand_variants: bool) -> Re
                 match variant_result {
                     Ok(outputs) => {
                         let output_count = outputs.len();
-                        let mut report_builder =
-                            with_git(ReportBuilder::new(
-                                variant_spec_hash,
-                                backend_version.clone(),
-                            ))
-                                .spec_metadata(&variant_spec)
-                                .variant(spec_hash.clone(), variant_id.to_string())
-                                .duration_ms(variant_duration_ms);
+                        let mut report_builder = with_git(ReportBuilder::new(
+                            variant_spec_hash,
+                            backend_version.clone(),
+                        ))
+                        .spec_metadata(&variant_spec)
+                        .variant(spec_hash.clone(), variant_id.to_string())
+                        .duration_ms(variant_duration_ms);
                         if let Some(hash) = recipe_hash.clone() {
                             report_builder = report_builder.recipe_hash(hash);
                         }
 
-                        report_builder =
-                            reporting::apply_validation_messages(report_builder, &validation_result);
+                        report_builder = reporting::apply_validation_messages(
+                            report_builder,
+                            &validation_result,
+                        );
 
                         for output in outputs {
                             report_builder = report_builder.output(output);
@@ -258,31 +252,28 @@ pub fn run(spec_path: &str, out_root: Option<&str>, expand_variants: bool) -> Re
                     Err(e) => {
                         any_generation_failed = true;
 
-                        let mut report_builder =
-                            with_git(ReportBuilder::new(
-                                variant_spec_hash,
-                                backend_version.clone(),
-                            ))
-                                .spec_metadata(&variant_spec)
-                                .variant(spec_hash.clone(), variant_id.to_string())
-                                .duration_ms(variant_duration_ms);
+                        let mut report_builder = with_git(ReportBuilder::new(
+                            variant_spec_hash,
+                            backend_version.clone(),
+                        ))
+                        .spec_metadata(&variant_spec)
+                        .variant(spec_hash.clone(), variant_id.to_string())
+                        .duration_ms(variant_duration_ms);
                         if let Some(hash) = recipe_hash.clone() {
                             report_builder = report_builder.recipe_hash(hash);
                         }
 
-                        report_builder = report_builder.error(ReportError::new(e.code(), e.message()));
                         report_builder =
-                            reporting::apply_validation_messages(report_builder, &validation_result);
+                            report_builder.error(ReportError::new(e.code(), e.message()));
+                        report_builder = reporting::apply_validation_messages(
+                            report_builder,
+                            &validation_result,
+                        );
 
                         let report = report_builder.ok(false).build();
                         reporting::write_report(&report, &variant_report_path)?;
 
-                        println!(
-                            "  {} {}: {}",
-                            "VARIANT FAILED".red(),
-                            variant_id,
-                            e
-                        );
+                        println!("  {} {}: {}", "VARIANT FAILED".red(), variant_id, e);
                     }
                 }
             }

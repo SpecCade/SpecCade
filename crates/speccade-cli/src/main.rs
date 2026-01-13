@@ -195,14 +195,10 @@ fn main() -> ExitCode {
         Commands::Fmt { spec, output } => commands::fmt::run(&spec, output.as_deref()),
         Commands::Template { command } => match command {
             TemplateCommands::List { asset_type } => commands::template::list(&asset_type),
-            TemplateCommands::Show { id, asset_type } => {
-                commands::template::show(&asset_type, &id)
+            TemplateCommands::Show { id, asset_type } => commands::template::show(&asset_type, &id),
+            TemplateCommands::Copy { id, to, asset_type } => {
+                commands::template::copy(&asset_type, &id, Path::new(&to))
             }
-            TemplateCommands::Copy {
-                id,
-                to,
-                asset_type,
-            } => commands::template::copy(&asset_type, &id, Path::new(&to)),
         },
     };
 
@@ -437,14 +433,8 @@ mod tests {
 
     #[test]
     fn test_cli_parses_template_list() {
-        let cli = Cli::try_parse_from([
-            "speccade",
-            "template",
-            "list",
-            "--asset-type",
-            "texture",
-        ])
-        .unwrap();
+        let cli = Cli::try_parse_from(["speccade", "template", "list", "--asset-type", "texture"])
+            .unwrap();
         match cli.command {
             Commands::Template { command } => match command {
                 TemplateCommands::List { asset_type } => {

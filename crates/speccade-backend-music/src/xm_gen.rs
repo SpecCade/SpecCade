@@ -53,7 +53,8 @@ pub fn generate_xm(
     // Generate instruments
     let mut instrument_loop_reports = Vec::with_capacity(params.instruments.len());
     for (idx, instr) in params.instruments.iter().enumerate() {
-        let (xm_instrument, loop_report) = generate_xm_instrument(instr, seed, idx as u32, spec_dir)?;
+        let (xm_instrument, loop_report) =
+            generate_xm_instrument(instr, seed, idx as u32, spec_dir)?;
         module.add_instrument(xm_instrument);
         instrument_loop_reports.push(loop_report);
     }

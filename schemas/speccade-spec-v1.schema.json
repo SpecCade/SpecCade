@@ -106,7 +106,511 @@
           "type": "object",
           "description": "Backend-specific parameters (validated by Rust)."
         }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "kind": { "const": "music.tracker_song_compose_v1" } } },
+          "then": {
+            "properties": {
+              "params": { "$ref": "#/definitions/music_tracker_song_compose_v1_params" }
+            }
+          }
+        }
+      ]
+    },
+    "music_tracker_song_compose_v1_params": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["format", "bpm", "speed", "channels"],
+      "properties": {
+        "name": { "type": "string" },
+        "title": { "type": "string" },
+        "format": { "type": "string", "enum": ["xm", "it"] },
+        "bpm": { "type": "integer" },
+        "speed": { "type": "integer" },
+        "channels": { "type": "integer" },
+        "loop": { "type": "boolean" },
+        "restart_position": { "type": "integer" },
+        "instruments": { "type": "array", "items": { "type": "object" } },
+        "channel_ids": {
+          "type": "object",
+          "additionalProperties": { "type": "integer", "minimum": 0, "maximum": 255 }
+        },
+        "instrument_ids": {
+          "type": "object",
+          "additionalProperties": { "type": "integer", "minimum": 0, "maximum": 255 }
+        },
+        "timebase": { "$ref": "#/definitions/music_timebase" },
+        "harmony": { "$ref": "#/definitions/music_harmony" },
+        "defs": {
+          "type": "object",
+          "default": {},
+          "additionalProperties": { "$ref": "#/definitions/music_pattern_expr" }
+        },
+        "patterns": {
+          "type": "object",
+          "default": {},
+          "additionalProperties": { "$ref": "#/definitions/music_compose_pattern" }
+        },
+        "arrangement": { "type": "array" },
+        "automation": { "type": "array" },
+        "it_options": { "type": "object" }
       }
+    },
+    "music_timebase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["beats_per_bar", "rows_per_beat"],
+      "properties": {
+        "beats_per_bar": { "type": "integer", "minimum": 1, "maximum": 65535 },
+        "rows_per_beat": { "type": "integer", "minimum": 1, "maximum": 65535 }
+      }
+    },
+    "music_beat_pos": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["bar"],
+      "properties": {
+        "bar": { "type": "integer", "minimum": 0, "maximum": 65535 },
+        "beat": { "type": "integer", "minimum": 0, "maximum": 65535 },
+        "sub": { "type": "integer", "minimum": 0, "maximum": 65535 }
+      }
+    },
+    "music_beat_delta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["beats", "sub"],
+      "properties": {
+        "beats": { "type": "integer" },
+        "sub": { "type": "integer" }
+      }
+    },
+    "music_harmony": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["key"],
+      "properties": {
+        "key": { "$ref": "#/definitions/music_harmony_key" },
+        "chords": { "type": "array", "items": { "$ref": "#/definitions/music_harmony_chord" } }
+      }
+    },
+    "music_harmony_key": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["root", "scale"],
+      "properties": {
+        "root": { "type": "string" },
+        "scale": { "type": "string", "enum": ["major", "minor"] }
+      }
+    },
+    "music_harmony_chord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["at", "chord"],
+      "properties": {
+        "at": { "$ref": "#/definitions/music_beat_pos" },
+        "chord": { "$ref": "#/definitions/music_chord_spec" }
+      }
+    },
+    "music_chord_spec": {
+      "oneOf": [
+        { "$ref": "#/definitions/music_chord_spec_symbol" },
+        { "$ref": "#/definitions/music_chord_spec_intervals" }
+      ]
+    },
+    "music_chord_spec_symbol": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["symbol"],
+      "properties": { "symbol": { "type": "string" } }
+    },
+    "music_chord_spec_intervals": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["root", "intervals"],
+      "properties": {
+        "root": { "type": "string" },
+        "intervals": {
+          "type": "array",
+          "items": { "type": "integer", "minimum": 0, "maximum": 255 }
+        },
+        "bass": { "type": "string" }
+      }
+    },
+    "music_compose_pattern": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["program"],
+      "properties": {
+        "rows": { "type": "integer", "minimum": 0, "maximum": 65535 },
+        "bars": { "type": "integer", "minimum": 0, "maximum": 65535 },
+        "timebase": { "$ref": "#/definitions/music_timebase" },
+        "program": { "$ref": "#/definitions/music_pattern_expr" },
+        "data": { "type": "array", "items": { "type": "object" } },
+        "notes": { "type": "object" }
+      },
+      "oneOf": [
+        { "required": ["rows"], "not": { "required": ["bars"] } },
+        { "required": ["bars"], "not": { "required": ["rows"] } }
+      ]
+    },
+    "music_pattern_expr": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["op", "parts"],
+          "properties": {
+            "op": { "const": "stack" },
+            "merge": {
+              "type": "string",
+              "enum": ["error", "merge_fields", "last_wins"]
+            },
+            "parts": {
+              "type": "array",
+              "items": { "$ref": "#/definitions/music_pattern_expr" }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["op", "parts"],
+          "properties": {
+            "op": { "const": "concat" },
+            "parts": {
+              "type": "array",
+              "items": { "$ref": "#/definitions/music_concat_part" }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["op", "times", "len_rows", "body"],
+          "properties": {
+            "op": { "const": "repeat" },
+            "times": { "type": "integer", "minimum": 0, "maximum": 65535 },
+            "len_rows": { "type": "integer", "minimum": 0, "maximum": 65535 },
+            "body": { "$ref": "#/definitions/music_pattern_expr" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["op", "rows", "body"],
+          "properties": {
+            "op": { "const": "shift" },
+            "rows": { "type": "integer" },
+            "body": { "$ref": "#/definitions/music_pattern_expr" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["op", "start", "len", "body"],
+          "properties": {
+            "op": { "const": "slice" },
+            "start": { "type": "integer" },
+            "len": { "type": "integer" },
+            "body": { "$ref": "#/definitions/music_pattern_expr" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["op", "name"],
+          "properties": { "op": { "const": "ref" }, "name": { "type": "string" } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["op", "at", "cell"],
+          "properties": {
+            "op": { "const": "emit" },
+            "at": { "$ref": "#/definitions/music_time_expr" },
+            "cell": { "$ref": "#/definitions/music_cell_template" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["op", "at", "cell"],
+          "properties": {
+            "op": { "const": "emit_seq" },
+            "at": { "$ref": "#/definitions/music_time_expr" },
+            "cell": { "$ref": "#/definitions/music_cell_template" },
+            "note_seq": { "$ref": "#/definitions/music_seq_string" },
+            "pitch_seq": { "$ref": "#/definitions/music_pitch_seq" },
+            "inst_seq": { "$ref": "#/definitions/music_seq_instrument_ref" },
+            "vol_seq": { "$ref": "#/definitions/music_seq_u8" },
+            "effect_seq": { "$ref": "#/definitions/music_seq_u8" },
+            "param_seq": { "$ref": "#/definitions/music_seq_u8" },
+            "effect_name_seq": { "$ref": "#/definitions/music_seq_string" },
+            "effect_xy_seq": { "$ref": "#/definitions/music_seq_effect_xy" }
+          },
+          "allOf": [
+            {
+              "not": {
+                "required": ["note_seq", "pitch_seq"]
+              }
+            }
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["op", "ops", "body"],
+          "properties": {
+            "op": { "const": "transform" },
+            "ops": {
+              "type": "array",
+              "items": { "$ref": "#/definitions/music_transform_op" }
+            },
+            "body": { "$ref": "#/definitions/music_pattern_expr" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["op", "p_permille", "seed_salt", "body"],
+          "properties": {
+            "op": { "const": "prob" },
+            "p_permille": { "type": "integer", "minimum": 0, "maximum": 1000 },
+            "seed_salt": { "type": "string" },
+            "body": { "$ref": "#/definitions/music_pattern_expr" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["op", "seed_salt", "choices"],
+          "properties": {
+            "op": { "const": "choose" },
+            "seed_salt": { "type": "string" },
+            "choices": {
+              "type": "array",
+              "items": { "$ref": "#/definitions/music_weighted_choice" }
+            }
+          }
+        }
+      ]
+    },
+    "music_concat_part": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["len_rows", "body"],
+      "properties": {
+        "len_rows": { "type": "integer", "minimum": 0, "maximum": 65535 },
+        "body": { "$ref": "#/definitions/music_pattern_expr" }
+      }
+    },
+    "music_weighted_choice": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["weight", "body"],
+      "properties": {
+        "weight": { "type": "integer", "minimum": 0, "maximum": 4294967295 },
+        "body": { "$ref": "#/definitions/music_pattern_expr" }
+      }
+    },
+    "music_time_expr": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["op", "start", "step", "count"],
+          "properties": {
+            "op": { "const": "range" },
+            "start": { "type": "integer" },
+            "step": { "type": "integer" },
+            "count": { "type": "integer", "minimum": 0, "maximum": 4294967295 }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["op", "rows"],
+          "properties": {
+            "op": { "const": "list" },
+            "rows": { "type": "array", "items": { "type": "integer" } }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["op", "beats"],
+          "properties": {
+            "op": { "const": "beat_list" },
+            "beats": { "type": "array", "items": { "$ref": "#/definitions/music_beat_pos" } }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["op", "start", "step", "count"],
+          "properties": {
+            "op": { "const": "beat_range" },
+            "start": { "$ref": "#/definitions/music_beat_pos" },
+            "step": { "$ref": "#/definitions/music_beat_delta" },
+            "count": { "type": "integer", "minimum": 0, "maximum": 4294967295 }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["op", "pulses", "steps"],
+          "properties": {
+            "op": { "const": "euclid" },
+            "pulses": { "type": "integer", "minimum": 0, "maximum": 4294967295 },
+            "steps": { "type": "integer", "minimum": 0, "maximum": 4294967295 },
+            "rotate": { "type": "integer" },
+            "stride": { "type": "integer" },
+            "offset": { "type": "integer" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["op", "pattern"],
+          "properties": {
+            "op": { "const": "pattern" },
+            "pattern": { "type": "string" },
+            "stride": { "type": "integer" },
+            "offset": { "type": "integer" }
+          }
+        }
+      ]
+    },
+    "music_cell_template": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["channel"],
+      "properties": {
+        "channel": {
+          "oneOf": [{ "type": "integer", "minimum": 0, "maximum": 255 }, { "type": "string" }]
+        },
+        "note": { "type": ["string", "integer", "null"] },
+        "inst": {
+          "oneOf": [{ "type": "integer", "minimum": 0, "maximum": 255 }, { "type": "string" }]
+        },
+        "vol": { "type": "integer", "minimum": 0, "maximum": 64 },
+        "effect": { "type": "integer", "minimum": 0, "maximum": 255 },
+        "param": { "type": "integer", "minimum": 0, "maximum": 255 },
+        "effect_name": { "type": "string" },
+        "effect_xy": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": { "type": "integer", "minimum": 0, "maximum": 15 }
+        }
+      }
+    },
+    "music_seq_string": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "values"],
+      "properties": {
+        "mode": { "type": "string", "enum": ["cycle", "once"] },
+        "values": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "music_seq_u8": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "values"],
+      "properties": {
+        "mode": { "type": "string", "enum": ["cycle", "once"] },
+        "values": { "type": "array", "items": { "type": "integer", "minimum": 0, "maximum": 255 } }
+      }
+    },
+    "music_seq_instrument_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "values"],
+      "properties": {
+        "mode": { "type": "string", "enum": ["cycle", "once"] },
+        "values": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              { "type": "integer", "minimum": 0, "maximum": 255 },
+              { "type": "string" }
+            ]
+          }
+        }
+      }
+    },
+    "music_seq_effect_xy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "values"],
+      "properties": {
+        "mode": { "type": "string", "enum": ["cycle", "once"] },
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": { "type": "integer", "minimum": 0, "maximum": 15 }
+          }
+        }
+      }
+    },
+    "music_pitch_seq": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "mode", "values", "octave"],
+      "properties": {
+        "kind": { "type": "string", "enum": ["scale_degree", "chord_tone"] },
+        "mode": { "type": "string", "enum": ["cycle", "once"] },
+        "values": { "type": "array", "items": { "type": "string" } },
+        "octave": { "type": "integer" },
+        "allow_accidentals": { "type": "boolean" }
+      }
+    },
+    "music_transform_op": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["op", "semitones"],
+          "properties": {
+            "op": { "const": "transpose_semitones" },
+            "semitones": { "type": "integer" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["op", "mul", "div"],
+          "properties": {
+            "op": { "const": "vol_mul" },
+            "mul": { "type": "integer", "minimum": 0, "maximum": 4294967295 },
+            "div": { "type": "integer", "minimum": 1, "maximum": 4294967295 }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["op"],
+          "properties": {
+            "op": { "const": "set" },
+            "inst": { "type": "integer", "minimum": 0, "maximum": 255 },
+            "vol": { "type": "integer", "minimum": 0, "maximum": 64 },
+            "effect": { "type": "integer", "minimum": 0, "maximum": 255 },
+            "param": { "type": "integer", "minimum": 0, "maximum": 255 },
+            "effect_name": { "type": "string" },
+            "effect_xy": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": { "type": "integer", "minimum": 0, "maximum": 15 }
+            }
+          }
+        }
+      ]
     },
     "output_spec": {
       "type": "object",
