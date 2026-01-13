@@ -1,11 +1,12 @@
 # RFC-0002: Unopinionated Channel Packing for Textures
 
-- **Status:** Implemented
+- **Status:** COMPLETED
 - **Author:** SpecCade Team
 - **Created:** 2026-01-10
 - **Target Version:** SpecCade v1.x
 - **Dependencies:** RFC-0001 (Canonical Spec Architecture)
-- **Last reviewed:** 2026-01-12
+- **Last reviewed:** 2026-01-13
+- **Superseded by:** RFC-0006 (Unified Procedural Textures)
 
 ## Summary
 

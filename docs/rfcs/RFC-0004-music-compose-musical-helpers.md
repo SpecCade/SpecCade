@@ -5,6 +5,7 @@
 - **Created:** 2026-01-11
 - **Target Version:** SpecCade v1.x (Compose extensions)
 - **Dependencies:** RFC-0001 (Canonical Spec Architecture), RFC-0003 (Music Pattern IR)
+- **Last reviewed:** 2026-01-13
 
 ## Summary
 

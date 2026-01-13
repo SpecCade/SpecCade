@@ -166,4 +166,56 @@ mod tests {
         let parsed: TextureProceduralV1Params = serde_json::from_str(&json).unwrap();
         assert_eq!(parsed, params);
     }
+
+    #[test]
+    fn normal_from_height_strength_defaults_to_1() {
+        let json = r#"
+        {
+          "resolution": [16, 16],
+          "tileable": true,
+          "nodes": [
+            { "id": "h", "type": "constant", "value": 0.5 },
+            { "id": "n", "type": "normal_from_height", "input": "h" }
+          ]
+        }
+        "#;
+
+        let params: TextureProceduralV1Params = serde_json::from_str(json).unwrap();
+        let node = params.nodes.iter().find(|n| n.id == "n").unwrap();
+
+        let TextureProceduralOp::NormalFromHeight { input, strength } = &node.op else {
+            panic!("expected normal_from_height op");
+        };
+
+        assert_eq!(input, "h");
+        assert_eq!(*strength, 1.0);
+    }
+
+    #[test]
+    fn compose_rgba_alpha_is_optional() {
+        let json = r#"
+        {
+          "resolution": [16, 16],
+          "tileable": true,
+          "nodes": [
+            { "id": "r", "type": "constant", "value": 0.1 },
+            { "id": "g", "type": "constant", "value": 0.2 },
+            { "id": "b", "type": "constant", "value": 0.3 },
+            { "id": "rgba", "type": "compose_rgba", "r": "r", "g": "g", "b": "b" }
+          ]
+        }
+        "#;
+
+        let params: TextureProceduralV1Params = serde_json::from_str(json).unwrap();
+        let node = params.nodes.iter().find(|n| n.id == "rgba").unwrap();
+
+        let TextureProceduralOp::ComposeRgba { r, g, b, a } = &node.op else {
+            panic!("expected compose_rgba op");
+        };
+
+        assert_eq!(r, "r");
+        assert_eq!(g, "g");
+        assert_eq!(b, "b");
+        assert_eq!(a.as_deref(), None);
+    }
 }

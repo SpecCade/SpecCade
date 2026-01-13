@@ -1,10 +1,11 @@
 # RFC-0003: Music Pattern IR ("Compose") for Tracker Songs
 
-- **Status:** Draft
+- **Status:** COMPLETED
 - **Author:** SpecCade Team
 - **Created:** 2026-01-11
 - **Target Version:** SpecCade v1.x
 - **Dependencies:** RFC-0001 (Canonical Spec Architecture)
+- **Last reviewed:** 2026-01-13
 
 ## Summary
 

@@ -1,10 +1,11 @@
 # RFC-0007: Procedural Texture Templates (“Texture Kits”)
 
-- **Status:** Draft
+- **Status:** COMPLETED
 - **Author:** SpecCade Team
 - **Created:** 2026-01-13
 - **Target Version:** SpecCade v1 (pre-release)
 - **Depends on:** RFC-0006 (Unified Procedural Textures)
+- **Last reviewed:** 2026-01-13
 
 ## Summary
 
@@ -179,4 +180,3 @@ Deferred: a parameter system can be valuable, but it adds complexity and deserve
 
 - A lightweight parameterization system for templates (CLI-time only) if needed.
 - “Graph modules” (importable node bundles) as a separate RFC if we want composable libraries without copy/paste.
-

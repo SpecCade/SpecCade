@@ -1,11 +1,11 @@
 # RFC-0001 & RFC-0002 Completion Plan (SpecCade)
 
-- **Status:** Draft (plan)
-- **Last updated:** 2026-01-12
+- **Status:** COMPLETED (plan)
+- **Last updated:** 2026-01-13
 
 ## Goal
 
-Make RFC-0001 and RFC-0002 accurate, fully implemented, and ready to mark **Implemented**.  
+Make RFC-0001 and RFC-0002 accurate, fully implemented, and ready to mark **COMPLETED**.  
 Do **not** touch RFC-0003.
 
 ## Scope Decisions (locked)
@@ -17,7 +17,7 @@ Do **not** touch RFC-0003.
 
 - RFC text matches actual behavior (schema + validation + generator).
 - Golden specs/tests cover the RFC behavior.
-- RFC status lines updated to **Implemented** with a `Last reviewed: YYYY-MM-DD`.
+- RFC status lines updated to **COMPLETED** with a `Last reviewed: YYYY-MM-DD`.
 
 ---
 

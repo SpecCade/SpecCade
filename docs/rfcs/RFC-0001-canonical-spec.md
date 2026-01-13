@@ -1,10 +1,10 @@
 # RFC-0001: Canonical Spec Architecture
 
-- **Status:** Implemented
+- **Status:** COMPLETED
 - **Author:** SpecCade Team
 - **Created:** 2026-01-10
 - **Target Version:** SpecCade v1.0
-- **Last reviewed:** 2026-01-12
+- **Last reviewed:** 2026-01-13
 
 ## Summary
 

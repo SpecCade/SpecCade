@@ -1,5 +1,9 @@
 # RFC-0005: Texture Graph IR (`texture.graph_v1`)
 
+- **Status:** COMPLETED
+- **Superseded by:** RFC-0006 (Unified Procedural Textures)
+- **Last reviewed:** 2026-01-13
+
 ## Summary
 
 Introduce a **map-agnostic**, **named-node** texture authoring IR for SpecCade: `texture.graph_v1`.
@@ -130,4 +134,3 @@ Color ops:
 - Explicit type annotations (if needed for stronger validation).
 - A generic “graph” output kind or richer `source` descriptors (e.g. select a channel, output color type).
 - Bridges: `texture.material_v1` as a node inside graphs, or graphs feeding `texture.packed_v1`.
-

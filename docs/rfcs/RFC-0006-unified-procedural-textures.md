@@ -1,11 +1,12 @@
 # RFC-0006: Unified Procedural Textures (`texture.procedural_v1`)
 
-- **Status:** Draft
+- **Status:** COMPLETED
 - **Author:** SpecCade Team
 - **Created:** 2026-01-13
 - **Target Version:** SpecCade v1 (pre-release breaking change)
 - **Depends on:** RFC-0001 (Canonical Spec Architecture)
 - **Supersedes:** RFC-0002 (Channel Packing), RFC-0005 (Texture Graph IR)
+- **Last reviewed:** 2026-01-13
 
 ## Summary
 
