@@ -100,6 +100,8 @@ Each layer is a tagged union with `type`:
 - `gradient`: `{ "type": "gradient", "direction": "horizontal", "start": 0.0, "end": 1.0, "affects": [...], "strength": 0.5 }`
 - `stripes`: `{ "type": "stripes", "direction": "vertical", "stripe_width": 8, "color1": 0.2, "color2": 0.8, "affects": [...], "strength": 0.5 }`
 - `checkerboard`: `{ "type": "checkerboard", "tile_size": 16, "color1": 0.2, "color2": 0.8, "affects": [...], "strength": 0.5 }`
+- `pitting`: `{ "type": "pitting", "noise": { ... }, "threshold": 0.6, "depth": 0.2, "affects": [...] }`
+- `weave`: `{ "type": "weave", "thread_width": 8, "gap": 2, "depth": 0.2, "affects": [...] }`
 
 Noise config (`noise`) is:
 

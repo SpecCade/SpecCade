@@ -53,10 +53,12 @@ Legend (informal triage tags used below):
 
 - `[Q]` More procedural layer types in `texture.material_v1`:
   - Cracks, pitting, pores, rust, moss, stains, water streaks, fingerprints
+  - Implemented: `pitting` layer (material height detail)
   - “Grime accumulation” that uses cavity/slope/edge-distance masks
 - `[Q]` Smart masks (derived from `height`/`normal`): curvature/edge-wear, cavity, slope, edge-distance, ambient shading ramps
 - `[Q]` Stochastic tiling (Wang tiles / texture bombing) to reduce visible repetition
 - `[Q]` Additional noise/pattern primitives: blue-noise masks, fabric/weave, stone stratification, raindrop streaking
+  - Implemented: `weave` layer (fabric surface detail)
 - `[I]` Trimsheets + atlases: packing, padding, mip-safe gutters, labeled strips + metadata
   - Candidate recipe: `texture.trimsheet_v1`
 - `[I]` Decals: RGBA decal + optional normal/roughness + placement metadata

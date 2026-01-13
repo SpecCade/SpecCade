@@ -121,7 +121,102 @@ pub fn apply_layer_to_height(height_map: &mut GrayscaleBuffer, layer: &TextureLa
             // Blend checkerboard with current value using linear interpolation
             apply_pattern_blended(&checker, height_map, BlendMode::Lerp, *strength);
         }
+        TextureLayer::Pitting {
+            noise,
+            threshold,
+            depth,
+            ..
+        } => {
+            let threshold = threshold.clamp(0.0, 1.0);
+            let depth = depth.clamp(0.0, 1.0);
+
+            if depth <= 0.0 || threshold >= 1.0 {
+                return;
+            }
+
+            let noise_gen = create_noise_generator(noise, seed);
+            let scale = noise.scale;
+            let denom = (1.0 - threshold).max(1e-6);
+
+            apply_transform(height_map, |x, y, current| {
+                let nx = x as f64 * scale;
+                let ny = y as f64 * scale;
+                let noise_val = noise_gen.sample_01(nx, ny);
+                if noise_val <= threshold {
+                    current
+                } else {
+                    let t = (noise_val - threshold) / denom;
+                    (current - t * depth).clamp(0.0, 1.0)
+                }
+            });
+        }
+        TextureLayer::Weave {
+            thread_width,
+            gap,
+            depth,
+            ..
+        } => {
+            let depth = depth.clamp(0.0, 1.0);
+            if depth <= 0.0 {
+                return;
+            }
+
+            apply_transform(height_map, |x, y, current| {
+                let pattern_val = sample_weave_pattern(*thread_width, *gap, x, y);
+                (current + (pattern_val - 0.5) * depth).clamp(0.0, 1.0)
+            });
+        }
         _ => {}
+    }
+}
+
+fn sample_weave_pattern(thread_width: u32, gap: u32, x: u32, y: u32) -> f64 {
+    let pattern_size = thread_width.saturating_add(gap).saturating_mul(2);
+    if pattern_size == 0 {
+        return 0.5;
+    }
+
+    let pattern_x = x % pattern_size;
+    let pattern_y = y % pattern_size;
+    let half_pattern = pattern_size / 2;
+
+    let h_thread = pattern_x < thread_width
+        || (pattern_x >= half_pattern && pattern_x < half_pattern + thread_width);
+    let v_thread = pattern_y < thread_width
+        || (pattern_y >= half_pattern && pattern_y < half_pattern + thread_width);
+
+    let in_gap_x = pattern_x >= thread_width && pattern_x < half_pattern;
+    let in_gap_y = pattern_y >= thread_width && pattern_y < half_pattern;
+    let in_gap_x2 = pattern_x >= half_pattern + thread_width;
+    let in_gap_y2 = pattern_y >= half_pattern + thread_width;
+
+    if (in_gap_x || in_gap_x2) && (in_gap_y || in_gap_y2) {
+        return 0.0;
+    }
+
+    if h_thread && v_thread && thread_width > 0 {
+        let h_pos = if pattern_x < half_pattern {
+            pattern_x
+        } else {
+            pattern_x - half_pattern
+        };
+        let v_pos = if pattern_y < half_pattern {
+            pattern_y
+        } else {
+            pattern_y - half_pattern
+        };
+
+        let h_on_top = (pattern_x < half_pattern) == (pattern_y < half_pattern);
+
+        if h_on_top {
+            1.0 - (v_pos as f64 / thread_width as f64) * 0.3
+        } else {
+            1.0 - (h_pos as f64 / thread_width as f64) * 0.3
+        }
+    } else if h_thread || v_thread {
+        0.75
+    } else {
+        0.5
     }
 }
 
@@ -225,5 +320,43 @@ mod tests {
         apply_layer_to_height(&mut a, &layer, 42);
         apply_layer_to_height(&mut b, &layer, 42);
         assert_eq!(a.data, b.data);
+    }
+
+    #[test]
+    fn pitting_threshold_one_is_noop() {
+        let mut buf = make_height_map();
+        let before = buf.data.clone();
+
+        let layer = TextureLayer::Pitting {
+            noise: NoiseConfig {
+                algorithm: NoiseAlgorithm::Worley,
+                scale: 0.1,
+                octaves: 2,
+                persistence: 0.5,
+                lacunarity: 2.0,
+            },
+            threshold: 1.0,
+            depth: 0.5,
+            affects: vec![TextureMapType::Height],
+        };
+
+        apply_layer_to_height(&mut buf, &layer, 42);
+        assert_eq!(buf.data, before);
+    }
+
+    #[test]
+    fn weave_depth_zero_is_noop() {
+        let mut buf = make_height_map();
+        let before = buf.data.clone();
+
+        let layer = TextureLayer::Weave {
+            thread_width: 6,
+            gap: 2,
+            depth: 0.0,
+            affects: vec![TextureMapType::Height],
+        };
+
+        apply_layer_to_height(&mut buf, &layer, 42);
+        assert_eq!(buf.data, before);
     }
 }

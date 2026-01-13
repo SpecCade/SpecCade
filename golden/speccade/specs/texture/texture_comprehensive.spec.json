@@ -4,7 +4,7 @@
   "asset_type": "texture",
   "license": "CC0-1.0",
   "seed": 999004,
-  "description": "Golden comprehensive test - exercises ALL texture.material_v1 keys: resolution, tileable, maps, base_material (all MaterialTypes), layers (noise_pattern, scratches, edge_wear, dirt, color_variation, gradient, stripes, checkerboard), NoiseConfig (all algorithms, octaves, persistence, lacunarity), palette, color_ramp",
+  "description": "Golden comprehensive test - exercises ALL texture.material_v1 keys: resolution, tileable, maps, base_material (all MaterialTypes), layers (noise_pattern, scratches, edge_wear, dirt, color_variation, gradient, stripes, checkerboard, pitting, weave), NoiseConfig (all algorithms, octaves, persistence, lacunarity), palette, color_ramp",
   "style_tags": ["golden", "comprehensive", "test", "texture", "pbr"],
   "engine_targets": ["godot", "unity", "unreal"],
   "outputs": [
@@ -208,6 +208,26 @@
           "color2": 0.7,
           "affects": ["albedo", "normal", "height"],
           "strength": 0.1
+        },
+        {
+          "type": "pitting",
+          "noise": {
+            "algorithm": "worley",
+            "scale": 0.1,
+            "octaves": 2,
+            "persistence": 0.5,
+            "lacunarity": 2.0
+          },
+          "threshold": 0.65,
+          "depth": 0.2,
+          "affects": ["roughness", "height"]
+        },
+        {
+          "type": "weave",
+          "thread_width": 6,
+          "gap": 2,
+          "depth": 0.2,
+          "affects": ["normal", "roughness", "albedo"]
         }
       ],
       "palette": [

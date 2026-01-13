@@ -111,4 +111,26 @@ pub enum TextureLayer {
         /// Layer strength (0.0 to 1.0).
         strength: f64,
     },
+    /// Pitting/porous surface detail layer.
+    Pitting {
+        /// Noise configuration used to distribute pits.
+        noise: NoiseConfig,
+        /// Threshold for pit coverage (0.0 to 1.0).
+        threshold: f64,
+        /// Pit depth (0.0 to 1.0).
+        depth: f64,
+        /// Which maps this layer affects.
+        affects: Vec<TextureMapType>,
+    },
+    /// Weave/fabric surface detail layer.
+    Weave {
+        /// Thread width in pixels.
+        thread_width: u32,
+        /// Gap between threads in pixels.
+        gap: u32,
+        /// Weave depth (0.0 to 1.0).
+        depth: f64,
+        /// Which maps this layer affects.
+        affects: Vec<TextureMapType>,
+    },
 }

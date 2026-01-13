@@ -302,6 +302,42 @@ mod tests {
     }
 
     #[test]
+    fn test_layer_pitting() {
+        let layer = TextureLayer::Pitting {
+            noise: NoiseConfig {
+                algorithm: NoiseAlgorithm::Worley,
+                scale: 0.08,
+                octaves: 3,
+                persistence: 0.5,
+                lacunarity: 2.0,
+            },
+            threshold: 0.6,
+            depth: 0.2,
+            affects: vec![TextureMapType::Roughness],
+        };
+        let json = serde_json::to_string(&layer).unwrap();
+        assert!(json.contains("pitting"));
+        assert!(json.contains("threshold"));
+        let parsed: TextureLayer = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed, layer);
+    }
+
+    #[test]
+    fn test_layer_weave() {
+        let layer = TextureLayer::Weave {
+            thread_width: 8,
+            gap: 2,
+            depth: 0.25,
+            affects: vec![TextureMapType::Normal],
+        };
+        let json = serde_json::to_string(&layer).unwrap();
+        assert!(json.contains("weave"));
+        assert!(json.contains("thread_width"));
+        let parsed: TextureLayer = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed, layer);
+    }
+
+    #[test]
     fn test_layer_scratches() {
         let layer = TextureLayer::Scratches {
             density: 0.15,

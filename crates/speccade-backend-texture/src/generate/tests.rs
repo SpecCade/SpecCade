@@ -217,6 +217,40 @@ fn test_layer_checkerboard_generation() {
 }
 
 #[test]
+fn test_layer_pitting_generation() {
+    let mut params = make_params();
+    params.layers = vec![TextureLayer::Pitting {
+        noise: NoiseConfig {
+            algorithm: NoiseAlgorithm::Worley,
+            scale: 0.12,
+            octaves: 3,
+            persistence: 0.5,
+            lacunarity: 2.0,
+        },
+        threshold: 0.6,
+        depth: 0.2,
+        affects: vec![TextureMapType::Roughness],
+    }];
+
+    let result = generate_material_maps(&params, 42).unwrap();
+    assert!(result.maps.contains_key(&TextureMapType::Roughness));
+}
+
+#[test]
+fn test_layer_weave_generation() {
+    let mut params = make_params();
+    params.layers = vec![TextureLayer::Weave {
+        thread_width: 6,
+        gap: 2,
+        depth: 0.3,
+        affects: vec![TextureMapType::Normal],
+    }];
+
+    let result = generate_material_maps(&params, 42).unwrap();
+    assert!(result.maps.contains_key(&TextureMapType::Normal));
+}
+
+#[test]
 fn test_layer_scratches_generation() {
     let mut params = make_params();
     params.layers = vec![TextureLayer::Scratches {

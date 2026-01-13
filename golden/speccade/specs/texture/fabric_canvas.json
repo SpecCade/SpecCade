@@ -1,0 +1,54 @@
+{
+  "spec_version": 1,
+  "asset_id": "fabric_canvas",
+  "asset_type": "texture",
+  "license": "CC0-1.0",
+  "seed": 4012,
+  "description": "Woven fabric material with subtle weave detail",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "png",
+      "path": "fabric_canvas_albedo.png"
+    },
+    {
+      "kind": "primary",
+      "format": "png",
+      "path": "fabric_canvas_normal.png"
+    },
+    {
+      "kind": "primary",
+      "format": "png",
+      "path": "fabric_canvas_roughness.png"
+    }
+  ],
+  "recipe": {
+    "kind": "texture.material_v1",
+    "params": {
+      "resolution": [256, 256],
+      "tileable": true,
+      "maps": ["albedo", "normal", "roughness"],
+      "base_material": {
+        "type": "fabric",
+        "base_color": [0.7, 0.65, 0.6],
+        "roughness_range": [0.75, 0.9]
+      },
+      "layers": [
+        {
+          "type": "weave",
+          "thread_width": 6,
+          "gap": 2,
+          "depth": 0.25,
+          "affects": ["albedo", "normal", "roughness"]
+        },
+        {
+          "type": "color_variation",
+          "hue_range": 6.0,
+          "saturation_range": 0.08,
+          "value_range": 0.1,
+          "noise_scale": 0.08
+        }
+      ]
+    }
+  }
+}
