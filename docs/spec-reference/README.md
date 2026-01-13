@@ -121,6 +121,8 @@ Each entry in `outputs[]` declares an expected artifact:
 | `kind` | string | Output category | See output kinds below |
 | `format` | string | File format | `"wav"`, `"xm"`, `"it"`, `"png"`, `"glb"`, `"gltf"`, `"json"` |
 | `path` | string | Relative output path | Must be safe (see constraints) |
+| `source` | string | Optional output binding to a named node/map | Used by `texture.graph_v1` |
+| `channels` | object | Channel packing mapping | Used by `texture.packed_v1` |
 
 ### Output Kinds
 

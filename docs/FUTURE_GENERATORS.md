@@ -51,11 +51,15 @@ Legend (informal triage tags used below):
 
 ## Texture/Material Expansion
 
+- `[I]` Map-agnostic texture graph IR (`texture.graph_v1`) for named-map workflows (implemented)
 - `[Q]` More procedural layer types in `texture.material_v1`:
   - Cracks, pitting, pores, rust, moss, stains, water streaks, fingerprints
   - Implemented: `pitting` layer (material height detail)
   - Implemented: `stains` layer (noise-threshold blotches)
   - Implemented: `water_streaks` layer (directional streak mask)
+  - Implemented: `palette` + `color_ramp` post-processing for albedo stylization
+  - Implemented: emissive output can be driven by layers via `affects: ["emissive"]`
+  - Implemented: metallic output can be driven by pattern layers via `affects: ["metallic"]`
   - “Grime accumulation” that uses cavity/slope/edge-distance masks
 - `[Q]` Smart masks (derived from `height`/`normal`): curvature/edge-wear, cavity, slope, edge-distance, ambient shading ramps
 - `[Q]` Stochastic tiling (Wang tiles / texture bombing) to reduce visible repetition

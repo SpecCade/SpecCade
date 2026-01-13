@@ -1,9 +1,12 @@
 //! Tests for texture generation.
 
 use super::*;
+use ::png as png_crate;
 use speccade_spec::recipe::texture::{
     BaseMaterial, GradientDirection, MaterialType, NoiseAlgorithm, NoiseConfig, StripeDirection,
 };
+use std::collections::HashSet;
+use std::io::Cursor;
 
 fn make_params() -> TextureMaterialV1Params {
     TextureMaterialV1Params {
@@ -26,6 +29,19 @@ fn make_params() -> TextureMaterialV1Params {
         palette: None,
         color_ramp: None,
     }
+}
+
+fn decode_png_bytes(data: &[u8]) -> (png_crate::ColorType, u32, u32, Vec<u8>) {
+    let decoder = png_crate::Decoder::new(Cursor::new(data));
+    let mut reader = decoder.read_info().expect("decode png header");
+    let mut buf = vec![0; reader.output_buffer_size()];
+    let info = reader.next_frame(&mut buf).expect("decode png frame");
+    (
+        info.color_type,
+        info.width,
+        info.height,
+        buf[..info.buffer_size()].to_vec(),
+    )
 }
 
 // ========================================================================
@@ -604,25 +620,110 @@ fn test_multiple_layers_combined() {
 #[test]
 fn test_palette_specified() {
     let mut params = make_params();
-    params.palette = Some(vec![
-        "#FF0000".to_string(),
-        "#00FF00".to_string(),
-        "#0000FF".to_string(),
-    ]);
+    params.maps = vec![TextureMapType::Albedo];
+    params.layers = vec![TextureLayer::Checkerboard {
+        tile_size: 4,
+        color1: 0.0,
+        color2: 1.0,
+        affects: vec![TextureMapType::Albedo],
+        strength: 1.0,
+    }];
+    params.palette = Some(vec!["#000000".to_string(), "#0000FF".to_string()]);
 
     let result = generate_material_maps(&params, 42).unwrap();
-    assert!(!result.maps.is_empty());
+    let albedo = result.maps.get(&TextureMapType::Albedo).unwrap();
+    let (color_type, width, height, bytes) = decode_png_bytes(&albedo.data);
+    assert_eq!(color_type, png_crate::ColorType::Rgba);
+    assert_eq!(width, params.resolution[0]);
+    assert_eq!(height, params.resolution[1]);
+
+    let mut colors: HashSet<[u8; 3]> = HashSet::new();
+    for chunk in bytes.chunks_exact(4) {
+        colors.insert([chunk[0], chunk[1], chunk[2]]);
+    }
+
+    assert!(
+        colors.contains(&[0, 0, 0]) && colors.contains(&[0, 0, 255]),
+        "expected black and blue pixels, got {:?}",
+        colors
+    );
 }
 
 #[test]
 fn test_color_ramp_specified() {
     let mut params = make_params();
-    params.color_ramp = Some(vec![
-        "#000000".to_string(),
-        "#808080".to_string(),
-        "#FFFFFF".to_string(),
-    ]);
+    params.maps = vec![TextureMapType::Albedo];
+    params.layers = vec![TextureLayer::Checkerboard {
+        tile_size: 4,
+        color1: 0.0,
+        color2: 1.0,
+        affects: vec![TextureMapType::Albedo],
+        strength: 1.0,
+    }];
+    params.color_ramp = Some(vec!["#000000".to_string(), "#FF0000".to_string()]);
 
     let result = generate_material_maps(&params, 42).unwrap();
-    assert!(!result.maps.is_empty());
+    let albedo = result.maps.get(&TextureMapType::Albedo).unwrap();
+    let (color_type, _, _, bytes) = decode_png_bytes(&albedo.data);
+    assert_eq!(color_type, png_crate::ColorType::Rgba);
+
+    let mut colors: HashSet<[u8; 3]> = HashSet::new();
+    for chunk in bytes.chunks_exact(4) {
+        colors.insert([chunk[0], chunk[1], chunk[2]]);
+    }
+
+    assert!(
+        colors.contains(&[0, 0, 0]) && colors.contains(&[255, 0, 0]),
+        "expected black and red pixels, got {:?}",
+        colors
+    );
+}
+
+#[test]
+fn test_emissive_layers_produce_non_black_output() {
+    let mut params = make_params();
+    params.maps = vec![TextureMapType::Emissive];
+    params.layers = vec![TextureLayer::Stains {
+        noise: NoiseConfig {
+            algorithm: NoiseAlgorithm::Perlin,
+            scale: 0.1,
+            octaves: 2,
+            persistence: 0.5,
+            lacunarity: 2.0,
+        },
+        threshold: 0.4,
+        color: [1.0, 0.5, 0.0],
+        affects: vec![TextureMapType::Emissive],
+        strength: 1.0,
+    }];
+
+    let result = generate_material_maps(&params, 42).unwrap();
+    let emissive = result.maps.get(&TextureMapType::Emissive).unwrap();
+    let (color_type, _, _, bytes) = decode_png_bytes(&emissive.data);
+    assert_eq!(color_type, png_crate::ColorType::Rgb);
+    assert!(bytes.iter().any(|&b| b != 0), "expected some non-black pixels");
+}
+
+#[test]
+fn test_metallic_layers_affect_metallic_output() {
+    let mut base = make_params();
+    base.maps = vec![TextureMapType::Metallic];
+    base.layers.clear();
+
+    let mut striped = base.clone();
+    striped.layers = vec![TextureLayer::Stripes {
+        direction: StripeDirection::Vertical,
+        stripe_width: 4,
+        color1: 0.0,
+        color2: 1.0,
+        affects: vec![TextureMapType::Metallic],
+        strength: 1.0,
+    }];
+
+    let base_result = generate_material_maps(&base, 42).unwrap();
+    let striped_result = generate_material_maps(&striped, 42).unwrap();
+
+    let base_hash = &base_result.maps.get(&TextureMapType::Metallic).unwrap().hash;
+    let striped_hash = &striped_result.maps.get(&TextureMapType::Metallic).unwrap().hash;
+    assert_ne!(base_hash, striped_hash);
 }

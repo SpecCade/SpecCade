@@ -1,5 +1,7 @@
 //! Color utilities for texture generation.
 
+use thiserror::Error;
+
 /// RGBA color with f64 components (0.0 to 1.0 range).
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Color {
@@ -240,6 +242,22 @@ impl Color {
     pub fn luminance(&self) -> f64 {
         0.299 * self.r + 0.587 * self.g + 0.114 * self.b
     }
+
+    /// Parse a hex RGB color in the form `"#RRGGBB"` or `"RRGGBB"`.
+    pub fn from_hex_rgb(hex: &str) -> Result<Self, ParseHexColorError> {
+        let hex = hex.trim();
+        let hex = hex.strip_prefix('#').unwrap_or(hex);
+
+        if hex.len() != 6 {
+            return Err(ParseHexColorError::InvalidFormat);
+        }
+
+        let r = u8::from_str_radix(&hex[0..2], 16).map_err(|_| ParseHexColorError::InvalidHex)?;
+        let g = u8::from_str_radix(&hex[2..4], 16).map_err(|_| ParseHexColorError::InvalidHex)?;
+        let b = u8::from_str_radix(&hex[4..6], 16).map_err(|_| ParseHexColorError::InvalidHex)?;
+
+        Ok(Self::rgb(r as f64 / 255.0, g as f64 / 255.0, b as f64 / 255.0))
+    }
 }
 
 impl Default for Color {
@@ -257,6 +275,14 @@ pub enum BlendMode {
     Screen,
     Overlay,
     SoftLight,
+}
+
+#[derive(Debug, Error, Clone, Copy, PartialEq, Eq)]
+pub enum ParseHexColorError {
+    #[error("expected '#RRGGBB' or 'RRGGBB'")]
+    InvalidFormat,
+    #[error("invalid hex digits")]
+    InvalidHex,
 }
 
 impl BlendMode {
@@ -320,5 +346,33 @@ mod tests {
         assert!((original.r - restored.r).abs() < 0.01);
         assert!((original.g - restored.g).abs() < 0.01);
         assert!((original.b - restored.b).abs() < 0.01);
+    }
+
+    #[test]
+    fn from_hex_rgb_accepts_hash_prefixed() {
+        let c = Color::from_hex_rgb("#FF8000").unwrap();
+        assert!((c.r - 1.0).abs() < 1e-10);
+        assert!((c.g - (128.0 / 255.0)).abs() < 1e-10);
+        assert!((c.b - 0.0).abs() < 1e-10);
+    }
+
+    #[test]
+    fn from_hex_rgb_accepts_non_prefixed() {
+        let c = Color::from_hex_rgb("00ff00").unwrap();
+        assert!((c.r - 0.0).abs() < 1e-10);
+        assert!((c.g - 1.0).abs() < 1e-10);
+        assert!((c.b - 0.0).abs() < 1e-10);
+    }
+
+    #[test]
+    fn from_hex_rgb_rejects_invalid_length() {
+        let err = Color::from_hex_rgb("#fff").unwrap_err();
+        assert_eq!(err, ParseHexColorError::InvalidFormat);
+    }
+
+    #[test]
+    fn from_hex_rgb_rejects_invalid_hex_digits() {
+        let err = Color::from_hex_rgb("#GG0000").unwrap_err();
+        assert_eq!(err, ParseHexColorError::InvalidHex);
     }
 }

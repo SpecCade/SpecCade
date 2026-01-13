@@ -98,6 +98,9 @@ pub fn dispatch_generate(
         // Texture packed backend
         "texture.packed_v1" => generate_texture_packed(spec, out_root_path),
 
+        // Texture graph backend
+        "texture.graph_v1" => generate_texture_graph(spec, out_root_path),
+
         // Blender static mesh backend
         "static_mesh.blender_primitives_v1" => generate_blender_static_mesh(spec, out_root_path),
 
@@ -555,6 +558,75 @@ fn generate_texture_packed(
     Ok(outputs)
 }
 
+/// Generate map-agnostic texture graph using the texture backend.
+fn generate_texture_graph(
+    spec: &Spec,
+    out_root: &Path,
+) -> Result<Vec<OutputResult>, DispatchError> {
+    let recipe = spec.recipe.as_ref().ok_or(DispatchError::NoRecipe)?;
+    let params = recipe.as_texture_graph().map_err(|e| {
+        DispatchError::BackendError(format!("Invalid texture graph params: {}", e))
+    })?;
+
+    let nodes = speccade_backend_texture::generate_graph(&params, spec.seed).map_err(|e| {
+        DispatchError::BackendError(format!("Texture graph generation failed: {}", e))
+    })?;
+
+    let primary_outputs: Vec<(usize, &speccade_spec::OutputSpec)> = spec
+        .outputs
+        .iter()
+        .enumerate()
+        .filter(|(_, o)| o.kind == OutputKind::Primary)
+        .collect();
+
+    if primary_outputs.is_empty() {
+        return Err(DispatchError::BackendError(
+            "texture.graph_v1 requires at least one output of kind 'primary'".to_string(),
+        ));
+    }
+
+    let mut outputs = Vec::with_capacity(primary_outputs.len());
+
+    for (output_index, output_spec) in primary_outputs {
+        if output_spec.format != OutputFormat::Png {
+            return Err(DispatchError::BackendError(format!(
+                "texture.graph_v1 primary outputs must have format 'png' (outputs[{}].format)",
+                output_index
+            )));
+        }
+
+        let source = output_spec.source.as_ref().ok_or_else(|| {
+            DispatchError::BackendError(format!(
+                "texture.graph_v1 primary outputs must set 'source' (outputs[{}].source)",
+                output_index
+            ))
+        })?;
+
+        let value = nodes.get(source).ok_or_else(|| {
+            DispatchError::BackendError(format!(
+                "outputs[{}].source '{}' does not match any node id",
+                output_index, source
+            ))
+        })?;
+
+        let (png_data, hash) =
+            speccade_backend_texture::encode_graph_value_png(value).map_err(|e| {
+                DispatchError::BackendError(format!("PNG encoding failed: {}", e))
+            })?;
+
+        write_output_bytes(out_root, &output_spec.path, &png_data)?;
+
+        outputs.push(OutputResult::tier1(
+            output_spec.kind,
+            OutputFormat::Png,
+            PathBuf::from(&output_spec.path),
+            hash,
+        ));
+    }
+
+    Ok(outputs)
+}
+
 /// Generate static mesh using the Blender backend
 fn generate_blender_static_mesh(
     spec: &Spec,
@@ -709,6 +781,7 @@ pub fn is_backend_available(kind: &str) -> bool {
             | "texture.material_v1"
             | "texture.normal_v1"
             | "texture.packed_v1"
+            | "texture.graph_v1"
             | "static_mesh.blender_primitives_v1"
             | "skeletal_mesh.blender_rigged_mesh_v1"
             | "skeletal_animation.blender_clip_v1"
@@ -804,6 +877,7 @@ mod tests {
         assert!(is_backend_available("texture.material_v1"));
         assert!(is_backend_available("texture.normal_v1"));
         assert!(is_backend_available("texture.packed_v1"));
+        assert!(is_backend_available("texture.graph_v1"));
         assert!(is_backend_available("static_mesh.blender_primitives_v1"));
         assert!(is_backend_available("skeletal_mesh.blender_rigged_mesh_v1"));
         assert!(is_backend_available("skeletal_animation.blender_clip_v1"));
@@ -990,6 +1064,7 @@ mod tests {
             kind: OutputKind::Packed,
             format: OutputFormat::Png,
             path: "packed/orm.png".to_string(),
+            source: None,
             channels: Some(channels),
         };
 

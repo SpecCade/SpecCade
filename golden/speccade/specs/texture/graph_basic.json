@@ -1,0 +1,65 @@
+{
+  "spec_version": 1,
+  "asset_id": "graph_basic",
+  "asset_type": "texture",
+  "license": "CC0-1.0",
+  "seed": 424242,
+  "description": "Texture graph IR demo (named nodes + explicit output binding)",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "png",
+      "path": "graph_basic_mask.png",
+      "source": "mask"
+    },
+    {
+      "kind": "primary",
+      "format": "png",
+      "path": "graph_basic_albedo.png",
+      "source": "albedo"
+    },
+    {
+      "kind": "primary",
+      "format": "png",
+      "path": "graph_basic_rgba.png",
+      "source": "rgba"
+    }
+  ],
+  "recipe": {
+    "kind": "texture.graph_v1",
+    "params": {
+      "resolution": [256, 256],
+      "tileable": true,
+      "nodes": [
+        {
+          "id": "n",
+          "type": "noise",
+          "noise": {
+            "algorithm": "perlin",
+            "scale": 0.08
+          }
+        },
+        {
+          "id": "mask",
+          "type": "threshold",
+          "input": "n",
+          "threshold": 0.6
+        },
+        {
+          "id": "albedo",
+          "type": "color_ramp",
+          "input": "n",
+          "ramp": ["#0b1020", "#e94560", "#f39c12"]
+        },
+        {
+          "id": "rgba",
+          "type": "compose_rgba",
+          "r": "mask",
+          "g": "n",
+          "b": "mask"
+        }
+      ]
+    }
+  }
+}
+

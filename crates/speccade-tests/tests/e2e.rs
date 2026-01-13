@@ -612,6 +612,32 @@ mod generation_tier1 {
                         );
                     }
                 }
+            } else if recipe.kind == "texture.graph_v1" {
+                let params = recipe.as_texture_graph();
+                if let Ok(params) = params {
+                    let nodes = speccade_backend_texture::generate_graph(&params, spec.seed);
+                    assert!(
+                        nodes.is_ok(),
+                        "Failed to generate texture graph {:?}: {:?}",
+                        spec_path,
+                        nodes.err()
+                    );
+
+                    let nodes = nodes.unwrap();
+                    for output in spec.outputs.iter().filter(|o| o.kind == OutputKind::Primary) {
+                        let source = output.source.as_ref().expect("graph output missing source");
+                        let value = nodes
+                            .get(source)
+                            .unwrap_or_else(|| panic!("graph node '{}' not found", source));
+                        let encoded = speccade_backend_texture::encode_graph_value_png(value);
+                        assert!(
+                            encoded.is_ok(),
+                            "Failed to encode graph output {:?}: {:?}",
+                            spec_path,
+                            encoded.err()
+                        );
+                    }
+                }
             }
         }
     }

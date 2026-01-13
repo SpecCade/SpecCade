@@ -206,6 +206,7 @@ pub fn generate_outputs(
                 kind: OutputKind::Primary,
                 format: OutputFormat::Wav,
                 path: format!("audio/{}.wav", asset_id),
+                source: None,
                 channels: None,
             }]
         }
@@ -214,6 +215,7 @@ pub fn generate_outputs(
                 kind: OutputKind::Primary,
                 format: OutputFormat::Xm,
                 path: format!("music/{}.xm", asset_id),
+                source: None,
                 channels: None,
             }]
         }
@@ -223,6 +225,7 @@ pub fn generate_outputs(
                     kind: OutputKind::Primary,
                     format: OutputFormat::Png,
                     path: format!("textures/{}_normal.png", asset_id),
+                    source: None,
                     channels: None,
                 }]
             } else {
@@ -230,6 +233,7 @@ pub fn generate_outputs(
                     kind: OutputKind::Primary,
                     format: OutputFormat::Png,
                     path: format!("textures/{}.png", asset_id),
+                    source: None,
                     channels: None,
                 }]
             }
@@ -239,6 +243,7 @@ pub fn generate_outputs(
                 kind: OutputKind::Primary,
                 format: OutputFormat::Glb,
                 path: format!("meshes/{}.glb", asset_id),
+                source: None,
                 channels: None,
             }]
         }
@@ -247,6 +252,7 @@ pub fn generate_outputs(
                 kind: OutputKind::Primary,
                 format: OutputFormat::Glb,
                 path: format!("characters/{}.glb", asset_id),
+                source: None,
                 channels: None,
             }]
         }
@@ -255,6 +261,7 @@ pub fn generate_outputs(
                 kind: OutputKind::Primary,
                 format: OutputFormat::Glb,
                 path: format!("animations/{}.glb", asset_id),
+                source: None,
                 channels: None,
             }]
         }

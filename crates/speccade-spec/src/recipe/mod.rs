@@ -41,6 +41,9 @@ pub enum RecipeKind {
     /// `texture.packed_v1` - Packed channel texture.
     #[serde(rename = "texture.packed_v1")]
     TexturePackedV1,
+    /// `texture.graph_v1` - Map-agnostic texture graph IR.
+    #[serde(rename = "texture.graph_v1")]
+    TextureGraphV1,
     /// `static_mesh.blender_primitives_v1` - Static mesh from Blender primitives.
     #[serde(rename = "static_mesh.blender_primitives_v1")]
     StaticMeshBlenderPrimitivesV1,
@@ -65,6 +68,7 @@ impl RecipeKind {
             RecipeKind::TextureMaterialV1 => "texture.material_v1",
             RecipeKind::TextureNormalV1 => "texture.normal_v1",
             RecipeKind::TexturePackedV1 => "texture.packed_v1",
+            RecipeKind::TextureGraphV1 => "texture.graph_v1",
             RecipeKind::StaticMeshBlenderPrimitivesV1 => "static_mesh.blender_primitives_v1",
             RecipeKind::SkeletalMeshBlenderRiggedMeshV1 => "skeletal_mesh.blender_rigged_mesh_v1",
             RecipeKind::SkeletalAnimationBlenderClipV1 => "skeletal_animation.blender_clip_v1",
@@ -81,6 +85,7 @@ impl RecipeKind {
             RecipeKind::TextureMaterialV1 => "texture",
             RecipeKind::TextureNormalV1 => "texture",
             RecipeKind::TexturePackedV1 => "texture",
+            RecipeKind::TextureGraphV1 => "texture",
             RecipeKind::StaticMeshBlenderPrimitivesV1 => "static_mesh",
             RecipeKind::SkeletalMeshBlenderRiggedMeshV1 => "skeletal_mesh",
             RecipeKind::SkeletalAnimationBlenderClipV1 => "skeletal_animation",
@@ -96,7 +101,8 @@ impl RecipeKind {
             | RecipeKind::MusicTrackerSongComposeV1
             | RecipeKind::TextureMaterialV1
             | RecipeKind::TextureNormalV1
-            | RecipeKind::TexturePackedV1 => true,
+            | RecipeKind::TexturePackedV1
+            | RecipeKind::TextureGraphV1 => true,
             RecipeKind::StaticMeshBlenderPrimitivesV1
             | RecipeKind::SkeletalMeshBlenderRiggedMeshV1
             | RecipeKind::SkeletalAnimationBlenderClipV1
@@ -139,6 +145,7 @@ impl Recipe {
             "texture.material_v1" => Some(RecipeKind::TextureMaterialV1),
             "texture.normal_v1" => Some(RecipeKind::TextureNormalV1),
             "texture.packed_v1" => Some(RecipeKind::TexturePackedV1),
+            "texture.graph_v1" => Some(RecipeKind::TextureGraphV1),
             "static_mesh.blender_primitives_v1" => Some(RecipeKind::StaticMeshBlenderPrimitivesV1),
             "skeletal_mesh.blender_rigged_mesh_v1" => {
                 Some(RecipeKind::SkeletalMeshBlenderRiggedMeshV1)
@@ -194,6 +201,11 @@ impl Recipe {
 
     /// Attempts to parse params as texture packed params.
     pub fn as_texture_packed(&self) -> Result<TexturePackedV1Params, serde_json::Error> {
+        serde_json::from_value(self.params.clone())
+    }
+
+    /// Attempts to parse params as texture graph params.
+    pub fn as_texture_graph(&self) -> Result<TextureGraphV1Params, serde_json::Error> {
         serde_json::from_value(self.params.clone())
     }
 

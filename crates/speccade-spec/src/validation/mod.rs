@@ -253,6 +253,7 @@ fn validate_outputs_for_recipe(
         "texture.material_v1" => validate_texture_material_outputs(spec, recipe, result),
         "texture.normal_v1" => validate_texture_normal_outputs(spec, recipe, result),
         "texture.packed_v1" => validate_texture_packed_outputs(spec, recipe, result),
+        "texture.graph_v1" => validate_texture_graph_outputs(spec, recipe, result),
         "static_mesh.blender_primitives_v1" => {
             validate_single_primary_output_format(spec, OutputFormat::Glb, result)
         }
@@ -1158,6 +1159,133 @@ fn validate_texture_packed_outputs(
             "texture.packed_v1 requires at least one output of kind 'packed'",
             "outputs",
         ));
+    }
+}
+
+fn validate_texture_graph_outputs(
+    spec: &Spec,
+    recipe: &crate::recipe::Recipe,
+    result: &mut ValidationResult,
+) {
+    let params = match recipe.as_texture_graph() {
+        Ok(params) => params,
+        Err(e) => {
+            result.add_error(ValidationError::with_path(
+                ErrorCode::InvalidRecipeParams,
+                format!("invalid params for {}: {}", recipe.kind, e),
+                "recipe.params",
+            ));
+            return;
+        }
+    };
+
+    validate_non_packed_outputs(spec, result);
+
+    if params.nodes.is_empty() {
+        result.add_error(ValidationError::with_path(
+            ErrorCode::InvalidRecipeParams,
+            "texture.graph_v1 requires at least one node".to_string(),
+            "recipe.params.nodes",
+        ));
+        return;
+    }
+
+    let mut node_ids: HashSet<&str> = HashSet::new();
+    for (i, node) in params.nodes.iter().enumerate() {
+        if !node_ids.insert(node.id.as_str()) {
+            result.add_error(ValidationError::with_path(
+                ErrorCode::InvalidRecipeParams,
+                format!("duplicate node id: '{}'", node.id),
+                format!("recipe.params.nodes[{}].id", i),
+            ));
+        }
+    }
+
+    let validate_ref = |id: &str, path: String, result: &mut ValidationResult| {
+        if !node_ids.contains(id) {
+            result.add_error(ValidationError::with_path(
+                ErrorCode::InvalidRecipeParams,
+                format!("unknown node reference '{}'", id),
+                path,
+            ));
+        }
+    };
+
+    for (i, node) in params.nodes.iter().enumerate() {
+        use crate::recipe::texture::TextureGraphOp;
+
+        match &node.op {
+            TextureGraphOp::Invert { input }
+            | TextureGraphOp::Clamp { input, .. }
+            | TextureGraphOp::Threshold { input, .. }
+            | TextureGraphOp::ToGrayscale { input }
+            | TextureGraphOp::ColorRamp { input, .. }
+            | TextureGraphOp::Palette { input, .. }
+            | TextureGraphOp::NormalFromHeight { input, .. } => {
+                validate_ref(
+                    input,
+                    format!("recipe.params.nodes[{}].input", i),
+                    result,
+                );
+            }
+            TextureGraphOp::Add { a, b } | TextureGraphOp::Multiply { a, b } => {
+                validate_ref(a, format!("recipe.params.nodes[{}].a", i), result);
+                validate_ref(b, format!("recipe.params.nodes[{}].b", i), result);
+            }
+            TextureGraphOp::Lerp { a, b, t } => {
+                validate_ref(a, format!("recipe.params.nodes[{}].a", i), result);
+                validate_ref(b, format!("recipe.params.nodes[{}].b", i), result);
+                validate_ref(t, format!("recipe.params.nodes[{}].t", i), result);
+            }
+            TextureGraphOp::ComposeRgba { r, g, b, a } => {
+                validate_ref(r, format!("recipe.params.nodes[{}].r", i), result);
+                validate_ref(g, format!("recipe.params.nodes[{}].g", i), result);
+                validate_ref(b, format!("recipe.params.nodes[{}].b", i), result);
+                if let Some(a) = a.as_deref() {
+                    validate_ref(a, format!("recipe.params.nodes[{}].a", i), result);
+                }
+            }
+            TextureGraphOp::Constant { .. }
+            | TextureGraphOp::Noise { .. }
+            | TextureGraphOp::Gradient { .. }
+            | TextureGraphOp::Stripes { .. }
+            | TextureGraphOp::Checkerboard { .. } => {}
+        }
+    }
+
+    // Outputs: primary PNG outputs must declare source and refer to a node id.
+    for (i, output) in spec.outputs.iter().enumerate() {
+        if output.kind != OutputKind::Primary {
+            continue;
+        }
+
+        if output.format != OutputFormat::Png {
+            result.add_error(ValidationError::with_path(
+                ErrorCode::OutputValidationFailed,
+                "texture.graph_v1 primary outputs must have format 'png'",
+                format!("outputs[{}].format", i),
+            ));
+        }
+
+        let Some(source) = output.source.as_deref() else {
+            result.add_error(ValidationError::with_path(
+                ErrorCode::OutputValidationFailed,
+                "texture.graph_v1 primary outputs must set 'source' to a node id",
+                format!("outputs[{}].source", i),
+            ));
+            continue;
+        };
+
+        if !node_ids.contains(source) {
+            result.add_error(ValidationError::with_path(
+                ErrorCode::OutputValidationFailed,
+                format!(
+                    "outputs[{}].source '{}' does not match any recipe.params.nodes[].id",
+                    i, source
+                ),
+                format!("outputs[{}].source", i),
+            ));
+        }
     }
 }
 

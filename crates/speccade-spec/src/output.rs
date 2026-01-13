@@ -100,6 +100,9 @@ pub struct OutputSpec {
     pub format: OutputFormat,
     /// Relative path under the output root.
     pub path: String,
+    /// Optional source selector used by recipes that explicitly bind outputs to named nodes/maps.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub source: Option<String>,
     /// Channel packing specification (only for kind=packed).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub channels: Option<PackedChannels>,
@@ -112,6 +115,7 @@ impl OutputSpec {
             kind,
             format,
             path: path.into(),
+            source: None,
             channels: None,
         }
     }
@@ -137,6 +141,7 @@ impl OutputSpec {
             kind: OutputKind::Packed,
             format,
             path: path.into(),
+            source: None,
             channels: Some(channels),
         }
     }

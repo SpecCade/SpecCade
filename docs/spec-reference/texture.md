@@ -5,7 +5,7 @@ This document covers texture generation in SpecCade.
 ## Overview
 
 **Asset Type:** `texture`  
-**Recipe Kinds:** `texture.material_v1`, `texture.normal_v1`, `texture.packed_v1`  
+**Recipe Kinds:** `texture.material_v1`, `texture.normal_v1`, `texture.packed_v1`, `texture.graph_v1`  
 **Output Formats:** PNG
 
 ## Common Output Rules
@@ -14,6 +14,7 @@ This document covers texture generation in SpecCade.
 - For `texture.material_v1`, you must declare at least one `primary` PNG output per requested map.
 - For `texture.normal_v1`, you declare exactly one `primary` PNG output.
 - For `texture.packed_v1`, you declare one or more `packed` PNG outputs, each with a `channels` mapping.
+- For `texture.graph_v1`, each `primary` PNG output must set `outputs[].source` to a node id.
 
 ## Recipe: `texture.material_v1` (Material Maps)
 
@@ -50,6 +51,11 @@ Example:
 | `layers` | array | no | Procedural layers |
 | `palette` | array | no | Hex colors for palette remap |
 | `color_ramp` | array | no | Hex colors for ramp interpolation |
+
+Notes:
+
+- `color_ramp` remaps final **albedo** by per-pixel luminance (0 → first color, 1 → last color), using linear interpolation between ramp stops.
+- `palette` quantizes final **albedo** to the nearest palette color (RGB distance). If both are provided, `color_ramp` is applied first, then `palette`.
 
 #### Map Types (`maps[]`)
 
@@ -124,6 +130,13 @@ Algorithms:
 - `worley`
 - `value`
 - `fbm`
+
+Layer support notes:
+
+- **Emissive (`maps[]: "emissive"`):** layers can drive emission when `affects` includes `"emissive"`.
+  - `stains` / `water_streaks` emit using their `color`.
+  - `noise_pattern` / `gradient` / `stripes` / `checkerboard` emit monochrome based on their pattern value.
+- **Metallic (`maps[]: "metallic"`):** `noise_pattern`, `gradient`, `stripes`, and `checkerboard` can blend into the metallic map when `affects` includes `"metallic"`.
 
 ## Recipe: `texture.normal_v1` (Normal Map)
 
@@ -230,3 +243,43 @@ Each channel (`r`, `g`, `b`, optional `a`) is a `ChannelSource`:
 - **Constant:** `{ "constant": 0.5 }`
 
 Valid `component` values are: `r`, `g`, `b`, `a`, `luminance`.
+
+## Recipe: `texture.graph_v1` (Texture Graph IR)
+
+Generates one or more PNG textures by evaluating a deterministic node graph (map-agnostic IR).
+
+### Outputs
+
+Declare one or more `primary` outputs, each with:
+
+- `format: "png"`
+- a `source` that matches a node id in `recipe.params.nodes[]`
+
+Example:
+
+```json
+{
+  "outputs": [
+    { "kind": "primary", "format": "png", "path": "mask.png", "source": "mask" },
+    { "kind": "primary", "format": "png", "path": "albedo.png", "source": "albedo" }
+  ]
+}
+```
+
+### Params
+
+| Param | Type | Required | Notes |
+|------:|------|:--------:|------|
+| `resolution` | [integer, integer] | yes | `[width, height]` |
+| `tileable` | boolean | yes | Seamless tiling (per-node behavior may vary) |
+| `nodes` | array | yes | Node list; ids are referenced by other nodes and outputs |
+
+### Nodes (`nodes[]`)
+
+Each node has an `id` and a tagged `type`:
+
+```json
+{ "id": "n", "type": "noise", "noise": { "algorithm": "perlin", "scale": 0.08 } }
+```
+
+See RFC-0005 for the current node set and examples.

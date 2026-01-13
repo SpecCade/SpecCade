@@ -1,6 +1,7 @@
 //! Texture recipe types (material_maps and normal_map).
 
 mod common;
+mod graph;
 mod layers;
 mod materials;
 mod normal;
@@ -9,6 +10,7 @@ mod packing;
 mod pbr_maps;
 
 pub use common::*;
+pub use graph::*;
 pub use layers::*;
 pub use materials::*;
 pub use normal::*;
