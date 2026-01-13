@@ -292,6 +292,51 @@ fn test_layer_dirt_generation() {
 }
 
 #[test]
+fn test_layer_stains_generation() {
+    let mut params = make_params();
+    params.layers = vec![TextureLayer::Stains {
+        noise: NoiseConfig {
+            algorithm: NoiseAlgorithm::Perlin,
+            scale: 0.08,
+            octaves: 3,
+            persistence: 0.5,
+            lacunarity: 2.0,
+        },
+        threshold: 0.7,
+        color: [0.2, 0.18, 0.15],
+        affects: vec![TextureMapType::Albedo, TextureMapType::Roughness],
+        strength: 0.6,
+    }];
+
+    let result = generate_material_maps(&params, 42).unwrap();
+    assert!(result.maps.contains_key(&TextureMapType::Albedo));
+    assert!(result.maps.contains_key(&TextureMapType::Roughness));
+}
+
+#[test]
+fn test_layer_water_streaks_generation() {
+    let mut params = make_params();
+    params.layers = vec![TextureLayer::WaterStreaks {
+        noise: NoiseConfig {
+            algorithm: NoiseAlgorithm::Simplex,
+            scale: 0.05,
+            octaves: 4,
+            persistence: 0.6,
+            lacunarity: 2.2,
+        },
+        threshold: 0.65,
+        direction: StripeDirection::Vertical,
+        color: [0.15, 0.2, 0.25],
+        affects: vec![TextureMapType::Albedo, TextureMapType::Roughness],
+        strength: 0.5,
+    }];
+
+    let result = generate_material_maps(&params, 42).unwrap();
+    assert!(result.maps.contains_key(&TextureMapType::Albedo));
+    assert!(result.maps.contains_key(&TextureMapType::Roughness));
+}
+
+#[test]
 fn test_layer_color_variation_generation() {
     let mut params = make_params();
     params.layers = vec![TextureLayer::ColorVariation {

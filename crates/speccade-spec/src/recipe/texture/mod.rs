@@ -376,6 +376,49 @@ mod tests {
     }
 
     #[test]
+    fn test_layer_stains() {
+        let layer = TextureLayer::Stains {
+            noise: NoiseConfig {
+                algorithm: NoiseAlgorithm::Perlin,
+                scale: 0.08,
+                octaves: 3,
+                persistence: 0.5,
+                lacunarity: 2.0,
+            },
+            threshold: 0.7,
+            color: [0.2, 0.18, 0.15],
+            affects: vec![TextureMapType::Albedo, TextureMapType::Roughness],
+            strength: 0.6,
+        };
+        let json = serde_json::to_string(&layer).unwrap();
+        assert!(json.contains("stains"));
+        let parsed: TextureLayer = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed, layer);
+    }
+
+    #[test]
+    fn test_layer_water_streaks() {
+        let layer = TextureLayer::WaterStreaks {
+            noise: NoiseConfig {
+                algorithm: NoiseAlgorithm::Simplex,
+                scale: 0.05,
+                octaves: 4,
+                persistence: 0.6,
+                lacunarity: 2.2,
+            },
+            threshold: 0.65,
+            direction: StripeDirection::Vertical,
+            color: [0.15, 0.2, 0.25],
+            affects: vec![TextureMapType::Albedo, TextureMapType::Roughness],
+            strength: 0.5,
+        };
+        let json = serde_json::to_string(&layer).unwrap();
+        assert!(json.contains("water_streaks"));
+        let parsed: TextureLayer = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed, layer);
+    }
+
+    #[test]
     fn test_layer_color_variation() {
         let layer = TextureLayer::ColorVariation {
             hue_range: 10.0,

@@ -96,6 +96,8 @@ Each layer is a tagged union with `type`:
 - `scratches`: `{ "type": "scratches", "density": 0.1, "length_range": [0.1, 0.4], "width": 0.002, "affects": [...], "strength": 0.5 }`
 - `edge_wear`: `{ "type": "edge_wear", "amount": 0.4, "affects": [...] }`
 - `dirt`: `{ "type": "dirt", "density": 0.2, "color": [0.2, 0.15, 0.1], "affects": [...], "strength": 0.5 }`
+- `stains`: `{ "type": "stains", "noise": { ... }, "threshold": 0.7, "color": [0.2, 0.18, 0.15], "affects": [...], "strength": 0.6 }`
+- `water_streaks`: `{ "type": "water_streaks", "noise": { ... }, "threshold": 0.65, "direction": "vertical", "color": [0.15, 0.2, 0.25], "affects": [...], "strength": 0.5 }`
 - `color_variation`: `{ "type": "color_variation", "hue_range": 10.0, "saturation_range": 0.2, "value_range": 0.2, "noise_scale": 0.05 }`
 - `gradient`: `{ "type": "gradient", "direction": "horizontal", "start": 0.0, "end": 1.0, "affects": [...], "strength": 0.5 }`
 - `stripes`: `{ "type": "stripes", "direction": "vertical", "stripe_width": 8, "color1": 0.2, "color2": 0.8, "affects": [...], "strength": 0.5 }`

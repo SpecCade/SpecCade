@@ -48,6 +48,34 @@ pub enum TextureLayer {
         /// Layer strength (0.0 to 1.0).
         strength: f64,
     },
+    /// Stain/blotch overlay.
+    Stains {
+        /// Noise configuration for stain placement.
+        noise: NoiseConfig,
+        /// Threshold for stain coverage (0.0 to 1.0).
+        threshold: f64,
+        /// Stain color as [R, G, B].
+        color: [f64; 3],
+        /// Which maps this layer affects.
+        affects: Vec<TextureMapType>,
+        /// Layer strength (0.0 to 1.0).
+        strength: f64,
+    },
+    /// Water streaks/drips overlay.
+    WaterStreaks {
+        /// Noise configuration for streak placement.
+        noise: NoiseConfig,
+        /// Threshold for streak coverage (0.0 to 1.0).
+        threshold: f64,
+        /// Streak direction: "horizontal" or "vertical".
+        direction: StripeDirection,
+        /// Streak color as [R, G, B].
+        color: [f64; 3],
+        /// Which maps this layer affects.
+        affects: Vec<TextureMapType>,
+        /// Layer strength (0.0 to 1.0).
+        strength: f64,
+    },
     /// Color variation layer.
     ColorVariation {
         /// Hue variation range in degrees.

@@ -1,0 +1,82 @@
+{
+  "spec_version": 1,
+  "asset_id": "weathered_concrete",
+  "asset_type": "texture",
+  "license": "CC0-1.0",
+  "seed": 4042,
+  "description": "Concrete with stain blotches and water streaks",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "png",
+      "path": "weathered_concrete_albedo.png"
+    },
+    {
+      "kind": "primary",
+      "format": "png",
+      "path": "weathered_concrete_roughness.png"
+    },
+    {
+      "kind": "primary",
+      "format": "png",
+      "path": "weathered_concrete_normal.png"
+    }
+  ],
+  "recipe": {
+    "kind": "texture.material_v1",
+    "params": {
+      "resolution": [256, 256],
+      "tileable": true,
+      "maps": ["albedo", "roughness", "normal"],
+      "base_material": {
+        "type": "concrete",
+        "base_color": [0.6, 0.6, 0.58],
+        "roughness_range": [0.7, 0.9],
+        "metallic": 0.0
+      },
+      "layers": [
+        {
+          "type": "stains",
+          "noise": {
+            "algorithm": "perlin",
+            "scale": 0.08,
+            "octaves": 3,
+            "persistence": 0.55,
+            "lacunarity": 2.0
+          },
+          "threshold": 0.7,
+          "color": [0.25, 0.22, 0.2],
+          "affects": ["albedo", "roughness"],
+          "strength": 0.6
+        },
+        {
+          "type": "water_streaks",
+          "noise": {
+            "algorithm": "simplex",
+            "scale": 0.05,
+            "octaves": 4,
+            "persistence": 0.6,
+            "lacunarity": 2.2
+          },
+          "threshold": 0.65,
+          "direction": "vertical",
+          "color": [0.2, 0.23, 0.28],
+          "affects": ["albedo", "roughness"],
+          "strength": 0.5
+        },
+        {
+          "type": "noise_pattern",
+          "noise": {
+            "algorithm": "fbm",
+            "scale": 0.12,
+            "octaves": 4,
+            "persistence": 0.5,
+            "lacunarity": 2.0
+          },
+          "affects": ["roughness"],
+          "strength": 0.12
+        }
+      ]
+    }
+  }
+}
