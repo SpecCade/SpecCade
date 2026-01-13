@@ -32,18 +32,9 @@ pub enum RecipeKind {
     /// `music.tracker_song_compose_v1` - Tracker module song (Pattern IR).
     #[serde(rename = "music.tracker_song_compose_v1")]
     MusicTrackerSongComposeV1,
-    /// `texture.material_v1` - PBR material maps.
-    #[serde(rename = "texture.material_v1")]
-    TextureMaterialV1,
-    /// `texture.normal_v1` - Normal map.
-    #[serde(rename = "texture.normal_v1")]
-    TextureNormalV1,
-    /// `texture.packed_v1` - Packed channel texture.
-    #[serde(rename = "texture.packed_v1")]
-    TexturePackedV1,
-    /// `texture.graph_v1` - Map-agnostic texture graph IR.
-    #[serde(rename = "texture.graph_v1")]
-    TextureGraphV1,
+    /// `texture.procedural_v1` - Unified procedural texture graph.
+    #[serde(rename = "texture.procedural_v1")]
+    TextureProceduralV1,
     /// `static_mesh.blender_primitives_v1` - Static mesh from Blender primitives.
     #[serde(rename = "static_mesh.blender_primitives_v1")]
     StaticMeshBlenderPrimitivesV1,
@@ -65,10 +56,7 @@ impl RecipeKind {
             RecipeKind::AudioV1 => "audio_v1",
             RecipeKind::MusicTrackerSongV1 => "music.tracker_song_v1",
             RecipeKind::MusicTrackerSongComposeV1 => "music.tracker_song_compose_v1",
-            RecipeKind::TextureMaterialV1 => "texture.material_v1",
-            RecipeKind::TextureNormalV1 => "texture.normal_v1",
-            RecipeKind::TexturePackedV1 => "texture.packed_v1",
-            RecipeKind::TextureGraphV1 => "texture.graph_v1",
+            RecipeKind::TextureProceduralV1 => "texture.procedural_v1",
             RecipeKind::StaticMeshBlenderPrimitivesV1 => "static_mesh.blender_primitives_v1",
             RecipeKind::SkeletalMeshBlenderRiggedMeshV1 => "skeletal_mesh.blender_rigged_mesh_v1",
             RecipeKind::SkeletalAnimationBlenderClipV1 => "skeletal_animation.blender_clip_v1",
@@ -82,10 +70,7 @@ impl RecipeKind {
             RecipeKind::AudioV1 => "audio",
             RecipeKind::MusicTrackerSongV1 => "music",
             RecipeKind::MusicTrackerSongComposeV1 => "music",
-            RecipeKind::TextureMaterialV1 => "texture",
-            RecipeKind::TextureNormalV1 => "texture",
-            RecipeKind::TexturePackedV1 => "texture",
-            RecipeKind::TextureGraphV1 => "texture",
+            RecipeKind::TextureProceduralV1 => "texture",
             RecipeKind::StaticMeshBlenderPrimitivesV1 => "static_mesh",
             RecipeKind::SkeletalMeshBlenderRiggedMeshV1 => "skeletal_mesh",
             RecipeKind::SkeletalAnimationBlenderClipV1 => "skeletal_animation",
@@ -99,10 +84,7 @@ impl RecipeKind {
             RecipeKind::AudioV1
             | RecipeKind::MusicTrackerSongV1
             | RecipeKind::MusicTrackerSongComposeV1
-            | RecipeKind::TextureMaterialV1
-            | RecipeKind::TextureNormalV1
-            | RecipeKind::TexturePackedV1
-            | RecipeKind::TextureGraphV1 => true,
+            | RecipeKind::TextureProceduralV1 => true,
             RecipeKind::StaticMeshBlenderPrimitivesV1
             | RecipeKind::SkeletalMeshBlenderRiggedMeshV1
             | RecipeKind::SkeletalAnimationBlenderClipV1
@@ -142,10 +124,7 @@ impl Recipe {
             "audio_v1" => Some(RecipeKind::AudioV1),
             "music.tracker_song_v1" => Some(RecipeKind::MusicTrackerSongV1),
             "music.tracker_song_compose_v1" => Some(RecipeKind::MusicTrackerSongComposeV1),
-            "texture.material_v1" => Some(RecipeKind::TextureMaterialV1),
-            "texture.normal_v1" => Some(RecipeKind::TextureNormalV1),
-            "texture.packed_v1" => Some(RecipeKind::TexturePackedV1),
-            "texture.graph_v1" => Some(RecipeKind::TextureGraphV1),
+            "texture.procedural_v1" => Some(RecipeKind::TextureProceduralV1),
             "static_mesh.blender_primitives_v1" => Some(RecipeKind::StaticMeshBlenderPrimitivesV1),
             "skeletal_mesh.blender_rigged_mesh_v1" => {
                 Some(RecipeKind::SkeletalMeshBlenderRiggedMeshV1)
@@ -161,9 +140,9 @@ impl Recipe {
     }
 
     /// Returns the asset type prefix from the recipe kind.
-    /// Handles both dot format (e.g., "texture.material_v1") and underscore format (e.g., "audio_v1").
+    /// Handles both dot format (e.g., "texture.procedural_v1") and underscore format (e.g., "audio_v1").
     pub fn asset_type_prefix(&self) -> Option<&str> {
-        // First try dot format (e.g., "texture.material_v1" -> "texture")
+        // First try dot format (e.g., "texture.procedural_v1" -> "texture")
         if self.kind.contains('.') {
             self.kind.split('.').next()
         } else {
@@ -189,23 +168,8 @@ impl Recipe {
         serde_json::from_value(self.params.clone())
     }
 
-    /// Attempts to parse params as texture material maps params.
-    pub fn as_texture_material(&self) -> Result<TextureMaterialV1Params, serde_json::Error> {
-        serde_json::from_value(self.params.clone())
-    }
-
-    /// Attempts to parse params as texture normal map params.
-    pub fn as_texture_normal(&self) -> Result<TextureNormalV1Params, serde_json::Error> {
-        serde_json::from_value(self.params.clone())
-    }
-
-    /// Attempts to parse params as texture packed params.
-    pub fn as_texture_packed(&self) -> Result<TexturePackedV1Params, serde_json::Error> {
-        serde_json::from_value(self.params.clone())
-    }
-
-    /// Attempts to parse params as texture graph params.
-    pub fn as_texture_graph(&self) -> Result<TextureGraphV1Params, serde_json::Error> {
+    /// Attempts to parse params as procedural texture params.
+    pub fn as_texture_procedural(&self) -> Result<TextureProceduralV1Params, serde_json::Error> {
         serde_json::from_value(self.params.clone())
     }
 
@@ -256,8 +220,7 @@ mod tests {
     fn test_recipe_kind_asset_type_prefix() {
         assert_eq!(RecipeKind::AudioV1.asset_type_prefix(), "audio");
         assert_eq!(RecipeKind::MusicTrackerSongComposeV1.asset_type_prefix(), "music");
-        assert_eq!(RecipeKind::TextureMaterialV1.asset_type_prefix(), "texture");
-        assert_eq!(RecipeKind::TextureNormalV1.asset_type_prefix(), "texture");
+        assert_eq!(RecipeKind::TextureProceduralV1.asset_type_prefix(), "texture");
         assert_eq!(
             RecipeKind::StaticMeshBlenderPrimitivesV1.asset_type_prefix(),
             "static_mesh"
@@ -278,6 +241,13 @@ mod tests {
         let recipe = Recipe::new("audio_v1", serde_json::json!({"duration_seconds": 0.5}));
         assert_eq!(recipe.parse_kind(), Some(RecipeKind::AudioV1));
         assert_eq!(recipe.asset_type_prefix(), Some("audio"));
+
+        let recipe = Recipe::new(
+            "texture.procedural_v1",
+            serde_json::json!({"resolution": [64, 64], "tileable": true, "nodes": []}),
+        );
+        assert_eq!(recipe.parse_kind(), Some(RecipeKind::TextureProceduralV1));
+        assert_eq!(recipe.asset_type_prefix(), Some("texture"));
 
         let recipe = Recipe::new(
             "music.tracker_song_compose_v1",

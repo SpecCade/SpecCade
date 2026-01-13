@@ -1,7 +1,7 @@
-//! Texture recipe types (material_maps and normal_map).
+//! Texture recipe types (procedural graphs and legacy helpers).
 
 mod common;
-mod graph;
+mod procedural;
 mod layers;
 mod materials;
 mod normal;
@@ -10,7 +10,7 @@ mod packing;
 mod pbr_maps;
 
 pub use common::*;
-pub use graph::*;
+pub use procedural::*;
 pub use layers::*;
 pub use materials::*;
 pub use normal::*;

@@ -16,7 +16,7 @@ pub enum ErrorCode {
     SeedOutOfRange,
     /// E005: No outputs declared
     NoOutputs,
-    /// E006: No primary or packed output declared
+    /// E006: No primary output declared
     NoPrimaryOutput,
     /// E007: Duplicate output path
     DuplicateOutputPath,
@@ -41,7 +41,7 @@ pub enum ErrorCode {
     /// E016: Recipe kind is not supported by this generator version
     UnsupportedRecipeKind,
 
-    // Packed output errors (E020-E023)
+    // Legacy packed output errors (E020-E023)
     /// E020: Packed output channel references an unknown map key
     PackedChannelsUnknownMapKey,
     /// E021: Packed output is missing a channels mapping

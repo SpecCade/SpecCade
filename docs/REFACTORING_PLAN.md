@@ -21,9 +21,7 @@ The repo already uses (and the golden corpus demonstrates) the **new canonical**
 - Recipe kinds:
   - `audio_v1`
   - `music.tracker_song_v1`
-  - `texture.material_v1`
-  - `texture.normal_v1`
-  - `texture.packed_v1`
+  - `texture.procedural_v1`
   - Blender: `static_mesh.blender_primitives_v1`, `skeletal_mesh.blender_rigged_mesh_v1`, `skeletal_animation.blender_clip_v1`
 
 Legacy names (`audio_sfx.*`, `audio_instrument.*`, `texture_2d.*`) are now treated as **removed API**: they are rejected by parsing/validation and are not supported by any backend dispatch.
@@ -45,23 +43,18 @@ Plan:
 - Update backends to call `speccade_spec::hash::*` for seed derivation instead of duplicating logic.
 - Keep backend-local RNG wrappers (`Pcg32` init, `DeterministicRng`) but remove duplicated seed-hash code.
 
-## 3. Channel Packing (SSOT + RFC alignment)
+## 3. Procedural Packing (RFC alignment)
 
 Problems observed:
 
-- `PackedChannels`/`ChannelSource`/`ColorComponent` exist in both `speccade-spec` and `speccade-backend-texture`.
-- CLI currently converts spec packing types to backend packing types.
-- Packed outputs are inconsistently treated as `kind: primary` in places.
+- `texture.packed_v1` and `outputs[].channels` were a pre-graph workaround.
+- Channel packing should be expressed as graph composition (e.g., `compose_rgba`).
 
 Plan:
 
-- Treat `speccade-spec` packing types as the canonical serde model.
-- Make the texture backend packing implementation operate on spec packing types (no conversion layer).
-- Update CLI packed-texture generation to:
-  - Look for `outputs[].kind == "packed"` (support multiple packed outputs).
-  - Require `outputs[].channels` for packed outputs.
-  - Validate key references via `PackedChannels::validate_*` utilities.
-  - Reject legacy “primary+channels” configurations (no implicit packing).
+- Treat `texture.procedural_v1` as the only canonical texture recipe kind.
+- Remove `outputs[].kind = "packed"` and `outputs[].channels` from schema/docs/validation.
+- Document packing as a graph pattern (build grayscale maps -> `compose_rgba` -> output PNG).
 
 ## 4. Workspace Hygiene (Cargo / deps)
 
@@ -90,7 +83,7 @@ Plan:
 
 Problems observed:
 
-- `schemas/speccade-spec-v1.schema.json` and multiple docs still describe pre-refactor names and omit `texture.packed_v1`.
+- `schemas/speccade-spec-v1.schema.json` and multiple docs still describe pre-refactor names and omit `texture.procedural_v1`.
 
 Plan:
 

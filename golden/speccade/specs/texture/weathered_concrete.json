@@ -9,72 +9,94 @@
     {
       "kind": "primary",
       "format": "png",
-      "path": "weathered_concrete_albedo.png"
+      "path": "weathered_concrete_albedo.png",
+      "source": "albedo"
     },
     {
       "kind": "primary",
       "format": "png",
-      "path": "weathered_concrete_roughness.png"
+      "path": "weathered_concrete_roughness.png",
+      "source": "roughness"
     },
     {
       "kind": "primary",
       "format": "png",
-      "path": "weathered_concrete_normal.png"
+      "path": "weathered_concrete_normal.png",
+      "source": "normal"
     }
   ],
   "recipe": {
-    "kind": "texture.material_v1",
+    "kind": "texture.procedural_v1",
     "params": {
-      "resolution": [256, 256],
+      "resolution": [
+        256,
+        256
+      ],
       "tileable": true,
-      "maps": ["albedo", "roughness", "normal"],
-      "base_material": {
-        "type": "concrete",
-        "base_color": [0.6, 0.6, 0.58],
-        "roughness_range": [0.7, 0.9],
-        "metallic": 0.0
-      },
-      "layers": [
+      "nodes": [
         {
-          "type": "stains",
+          "id": "height",
+          "type": "noise",
           "noise": {
             "algorithm": "perlin",
-            "scale": 0.08,
-            "octaves": 3,
-            "persistence": 0.55,
-            "lacunarity": 2.0
-          },
-          "threshold": 0.7,
-          "color": [0.25, 0.22, 0.2],
-          "affects": ["albedo", "roughness"],
-          "strength": 0.6
+            "scale": 0.08
+          }
         },
         {
-          "type": "water_streaks",
-          "noise": {
-            "algorithm": "simplex",
-            "scale": 0.05,
-            "octaves": 4,
-            "persistence": 0.6,
-            "lacunarity": 2.2
-          },
-          "threshold": 0.65,
-          "direction": "vertical",
-          "color": [0.2, 0.23, 0.28],
-          "affects": ["albedo", "roughness"],
-          "strength": 0.5
+          "id": "mask",
+          "type": "threshold",
+          "input": "height",
+          "threshold": 0.5
         },
         {
-          "type": "noise_pattern",
-          "noise": {
-            "algorithm": "fbm",
-            "scale": 0.12,
-            "octaves": 4,
-            "persistence": 0.5,
-            "lacunarity": 2.0
-          },
-          "affects": ["roughness"],
-          "strength": 0.12
+          "id": "albedo",
+          "type": "color_ramp",
+          "input": "height",
+          "ramp": [
+            "#2b2b2b",
+            "#8f8f8f",
+            "#e0e0e0"
+          ]
+        },
+        {
+          "id": "roughness",
+          "type": "clamp",
+          "input": "height",
+          "min": 0.2,
+          "max": 0.8
+        },
+        {
+          "id": "metallic",
+          "type": "invert",
+          "input": "mask"
+        },
+        {
+          "id": "ao",
+          "type": "multiply",
+          "a": "mask",
+          "b": "height"
+        },
+        {
+          "id": "emissive",
+          "type": "color_ramp",
+          "input": "mask",
+          "ramp": [
+            "#000000",
+            "#ffcc00"
+          ]
+        },
+        {
+          "id": "normal",
+          "type": "normal_from_height",
+          "input": "height",
+          "strength": 1.0
+        },
+        {
+          "id": "packed",
+          "type": "compose_rgba",
+          "r": "ao",
+          "g": "roughness",
+          "b": "metallic"
         }
       ]
     }

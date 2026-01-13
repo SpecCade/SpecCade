@@ -7,53 +7,86 @@
   "description": "Packed texture demonstrating non-noise pattern sources (stripes/grid/gradient/worley_edges).",
   "outputs": [
     {
-      "kind": "packed",
+      "kind": "primary",
       "format": "png",
       "path": "patterns.png",
-      "channels": {
-        "r": "stripes",
-        "g": "grid",
-        "b": "gradient",
-        "a": "edges"
-      }
+      "source": "albedo"
     }
   ],
   "recipe": {
-    "kind": "texture.packed_v1",
+    "kind": "texture.procedural_v1",
     "params": {
-      "resolution": [64, 64],
+      "resolution": [
+        64,
+        64
+      ],
       "tileable": true,
-      "maps": {
-        "stripes": {
-          "type": "pattern",
-          "pattern": "stripes",
-          "axis": "x",
-          "frequency": 8,
-          "duty_cycle": 0.25,
-          "phase": 0.0
+      "nodes": [
+        {
+          "id": "height",
+          "type": "noise",
+          "noise": {
+            "algorithm": "perlin",
+            "scale": 0.08
+          }
         },
-        "grid": {
-          "type": "pattern",
-          "pattern": "grid",
-          "cells": [8, 8],
-          "line_width": 0.1,
-          "phase": 0.0
+        {
+          "id": "mask",
+          "type": "threshold",
+          "input": "height",
+          "threshold": 0.5
         },
-        "gradient": {
-          "type": "pattern",
-          "pattern": "gradient",
-          "axis": "y",
-          "start": 0.0,
-          "end": 1.0,
-          "phase": 0.0
+        {
+          "id": "albedo",
+          "type": "color_ramp",
+          "input": "height",
+          "ramp": [
+            "#2b2b2b",
+            "#8f8f8f",
+            "#e0e0e0"
+          ]
         },
-        "edges": {
-          "type": "pattern",
-          "pattern": "worley_edges",
-          "jitter": 1.0,
-          "distance_fn": "euclidean"
+        {
+          "id": "roughness",
+          "type": "clamp",
+          "input": "height",
+          "min": 0.2,
+          "max": 0.8
+        },
+        {
+          "id": "metallic",
+          "type": "invert",
+          "input": "mask"
+        },
+        {
+          "id": "ao",
+          "type": "multiply",
+          "a": "mask",
+          "b": "height"
+        },
+        {
+          "id": "emissive",
+          "type": "color_ramp",
+          "input": "mask",
+          "ramp": [
+            "#000000",
+            "#ffcc00"
+          ]
+        },
+        {
+          "id": "normal",
+          "type": "normal_from_height",
+          "input": "height",
+          "strength": 1.0
+        },
+        {
+          "id": "packed",
+          "type": "compose_rgba",
+          "r": "ao",
+          "g": "roughness",
+          "b": "metallic"
         }
-      }
+      ]
     }
   }
 }

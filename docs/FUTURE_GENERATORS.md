@@ -18,7 +18,7 @@ Legend (informal triage tags used below):
   - `[Q]` Curvature/cavity masks (derived from sphere normal) as first-class outputs/drivers for wear/grime
   - `[I]` `matcap_preset` library + “preset + overrides” pattern for stable art direction
   - `[I]` Optional post stack: `lut`, `vignette`, `film_grain`, `chromatic_aberration`
-  - `[G]` `matcap_from_pbr`: render/bake a sphere from `texture.material_v1` maps into a matcap
+  - `[G]` `matcap_from_pbr`: render/bake a sphere from `texture.procedural_v1` outputs into a matcap
   - `[G]` “Studio rig” matcaps: 2–3 key lights + rim + ambient (bigger look range than single-light)
 
 ## Spritesheets (`sprite.sheet_v1`)
@@ -51,20 +51,13 @@ Legend (informal triage tags used below):
 
 ## Texture/Material Expansion
 
-- `[I]` Map-agnostic texture graph IR (`texture.graph_v1`) for named-map workflows (implemented)
-- `[Q]` More procedural layer types in `texture.material_v1`:
+- `[I]` Unified procedural texture graph (`texture.procedural_v1`) for named-map workflows (implemented)
+- `[Q]` More procedural ops for `texture.procedural_v1`:
   - Cracks, pitting, pores, rust, moss, stains, water streaks, fingerprints
-  - Implemented: `pitting` layer (material height detail)
-  - Implemented: `stains` layer (noise-threshold blotches)
-  - Implemented: `water_streaks` layer (directional streak mask)
-  - Implemented: `palette` + `color_ramp` post-processing for albedo stylization
-  - Implemented: emissive output can be driven by layers via `affects: ["emissive"]`
-  - Implemented: metallic output can be driven by pattern layers via `affects: ["metallic"]`
-  - “Grime accumulation” that uses cavity/slope/edge-distance masks
-- `[Q]` Smart masks (derived from `height`/`normal`): curvature/edge-wear, cavity, slope, edge-distance, ambient shading ramps
+  - Blend modes, warp/transform, blur, morphology, edge detection
+  - Smart masks (curvature, cavity, slope, edge-distance) derived from height/normal
 - `[Q]` Stochastic tiling (Wang tiles / texture bombing) to reduce visible repetition
 - `[Q]` Additional noise/pattern primitives: blue-noise masks, fabric/weave, stone stratification, raindrop streaking
-  - Implemented: `weave` layer (fabric surface detail)
 - `[I]` Trimsheets + atlases: packing, padding, mip-safe gutters, labeled strips + metadata
   - Candidate recipe: `texture.trimsheet_v1`
 - `[I]` Decals: RGBA decal + optional normal/roughness + placement metadata

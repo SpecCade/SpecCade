@@ -60,7 +60,7 @@ Each entry in `outputs[]` declares an expected artifact:
 
 | Field | Type | Values |
 |-------|------|--------|
-| `kind` | enum | `"primary"`, `"metadata"`, `"preview"`, `"packed"` |
+| `kind` | enum | `"primary"`, `"metadata"`, `"preview"` |
 | `format` | enum | `"wav"`, `"xm"`, `"it"`, `"png"`, `"glb"`, `"gltf"`, `"json"` |
 | `path` | string | Relative path under output root |
 
@@ -72,7 +72,7 @@ Each entry in `outputs[]` declares an expected artifact:
 - Must end with extension matching `format`
 - Must be unique within the spec
 
-**At least one output with `kind: "primary"` or `kind: "packed"` is required.**
+**At least one output with `kind: "primary"` is required.**
 
 **Reserved kinds:** `metadata` and `preview` are reserved for future use and are **invalid** in v1.
 Validation rejects them; use the `${asset_id}.report.json` sibling file instead.
@@ -148,9 +148,7 @@ The recipe defines how to generate the asset:
 |-------------|------------|---------|-------------|
 | `audio_v1` | `audio` | Rust | Unified layered synthesis (SFX + samples) |
 | `music.tracker_song_v1` | `music` | Rust | XM/IT tracker module generation |
-| `texture.material_v1` | `texture` | Rust | Coherent PBR material maps (albedo, roughness, metallic, AO, emissive, height) |
-| `texture.normal_v1` | `texture` | Rust | Pattern-driven normal maps |
-| `texture.packed_v1` | `texture` | Rust | Unopinionated channel packing into RGBA outputs |
+| `texture.procedural_v1` | `texture` | Rust | Unified procedural DAG (named outputs) |
 | `static_mesh.blender_primitives_v1` | `static_mesh` | Blender | Primitive-based mesh generation |
 | `skeletal_mesh.blender_rigged_mesh_v1` | `skeletal_mesh` | Blender | Rigged character/prop meshes |
 | `skeletal_animation.blender_clip_v1` | `skeletal_animation` | Blender | Animation clips for armatures |
@@ -336,8 +334,8 @@ The `speccade migrate` command (v0.3+) converts legacy `.spec.py` files to canon
 | `sounds/` | `audio` | `audio_v1` |
 | `instruments/` | `audio` | `audio_v1` |
 | `music/` | `music` | `music.tracker_song_v1` |
-| `textures/` | `texture` | `texture.material_v1` |
-| `normals/` | `texture` | `texture.normal_v1` |
+| `textures/` | `texture` | `texture.procedural_v1` |
+| `normals/` | `texture` | `texture.procedural_v1` |
 | `meshes/` | `static_mesh` | `static_mesh.blender_primitives_v1` |
 | `characters/` | `skeletal_mesh` | `skeletal_mesh.blender_rigged_mesh_v1` |
 | `animations/` | `skeletal_animation` | `skeletal_animation.blender_clip_v1` |
@@ -526,60 +524,66 @@ The `speccade migrate` command (v0.3+) converts legacy `.spec.py` files to canon
     {
       "kind": "primary",
       "format": "png",
-      "path": "textures/metal_panel_01_albedo.png"
+      "path": "textures/metal_panel_01_albedo.png",
+      "source": "albedo"
     },
     {
       "kind": "primary",
       "format": "png",
-      "path": "textures/metal_panel_01_normal.png"
+      "path": "textures/metal_panel_01_normal.png",
+      "source": "normal"
     },
     {
       "kind": "primary",
       "format": "png",
-      "path": "textures/metal_panel_01_roughness.png"
+      "path": "textures/metal_panel_01_roughness.png",
+      "source": "roughness"
     },
     {
       "kind": "primary",
       "format": "png",
-      "path": "textures/metal_panel_01_metallic.png"
+      "path": "textures/metal_panel_01_metallic.png",
+      "source": "metallic"
     }
   ],
   "recipe": {
-    "kind": "texture.material_v1",
+    "kind": "texture.procedural_v1",
     "params": {
       "resolution": [1024, 1024],
       "tileable": true,
-      "maps": ["albedo", "normal", "roughness", "metallic"],
-      "base_material": {
-        "type": "metal",
-        "base_color": [0.6, 0.6, 0.65],
-        "roughness_range": [0.3, 0.6],
-        "metallic": 1.0
-      },
-      "layers": [
+      "nodes": [
         {
-          "type": "noise_pattern",
+          "id": "height",
+          "type": "noise",
           "noise": {
             "algorithm": "simplex",
-            "scale": 8.0,
+            "scale": 0.08,
             "octaves": 4,
-            "persistence": 0.5
-          },
-          "affects": ["roughness", "normal"],
-          "strength": 0.3
+            "persistence": 0.5,
+            "lacunarity": 2.0
+          }
         },
         {
-          "type": "scratches",
-          "density": 0.15,
-          "length_range": [0.1, 0.4],
-          "width": 0.002,
-          "affects": ["albedo", "roughness", "normal"],
-          "strength": 0.5
+          "id": "albedo",
+          "type": "color_ramp",
+          "input": "height",
+          "ramp": ["#6a6a70", "#9aa0a6", "#c8cdd2"]
         },
         {
-          "type": "edge_wear",
-          "amount": 0.2,
-          "affects": ["roughness", "metallic"]
+          "id": "roughness",
+          "type": "invert",
+          "input": "height"
+        },
+        {
+          "id": "metallic",
+          "type": "constant",
+          "value": 1.0
+        },
+        {
+          "id": "normal",
+          "type": "normal_from_height",
+          "input": "height",
+          "strength": 1.2
         }
       ]
     }
@@ -880,7 +884,7 @@ The `speccade migrate` command (v0.3+) converts legacy `.spec.py` files to canon
 | `asset_type` must be a known type | E003 | Unknown asset type |
 | `seed` must be in range `0..2^32-1` | E004 | Seed out of range |
 | `outputs` must have at least one entry | E005 | No outputs declared |
-| `outputs` must have at least one `kind: "primary"` or `kind: "packed"` | E006 | No primary or packed output |
+| `outputs` must have at least one `kind: "primary"` | E006 | No primary output |
 | `outputs[].path` must be unique | E007 | Duplicate output path |
 | `outputs[].path` must be safe (relative, no `..`) | E008 | Unsafe output path |
 | `outputs[].path` extension must match format | E009 | Path/format mismatch |
@@ -1013,7 +1017,7 @@ Bone naming follows Blender/glTF conventions with `_l`/`_r` suffixes for left/ri
 | E003 | Contract | Unknown asset_type |
 | E004 | Contract | Seed out of valid range |
 | E005 | Contract | No outputs declared |
-| E006 | Contract | No primary or packed output declared |
+| E006 | Contract | No primary output declared |
 | E007 | Contract | Duplicate output path |
 | E008 | Contract | Unsafe output path (traversal) |
 | E009 | Contract | Output path extension does not match format |

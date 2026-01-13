@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use super::common::NoiseConfig;
 
-/// Parameters for the `texture.normal_v1` recipe.
+/// Legacy parameters for the `texture.normal_v1` recipe.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct TextureNormalV1Params {

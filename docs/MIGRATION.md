@@ -5,7 +5,7 @@ This guide covers migrating from the legacy `.studio/specs/*.spec.py` system to 
 ## TL;DR
 
 - `speccade migrate` converts legacy `.spec.py` files into **canonical SpecCade spec _envelopes_** (contract + recipe kind).
-- **Recipe param mapping is not fully implemented yet.** Migrated specs will usually require manual edits before `speccade generate` will succeed.
+- **Recipe param mapping is not fully implemented yet.** Textures/normals receive placeholder procedural graphs; other asset types usually require manual edits before `speccade generate` will succeed.
 
 ## Commands
 
@@ -58,7 +58,9 @@ the migrator will:
 
 ### Important Limitation: Params Mapping Is TODO
 
-The migrator currently **passes through** the legacy dict contents into `recipe.params` (minus the legacy `name` field). Because SpecCade recipe params are strict (`deny_unknown_fields`), migrated specs are not guaranteed to validate or generate until you translate legacy keys into the canonical recipe schema.
+For most asset types, the migrator currently **passes through** the legacy dict contents into `recipe.params` (minus the legacy `name` field). Because SpecCade recipe params are strict (`deny_unknown_fields`), migrated specs are not guaranteed to validate or generate until you translate legacy keys into the canonical recipe schema.
+
+For legacy `textures/` and `normals/`, the migrator now produces a **placeholder** `texture.procedural_v1` graph (noise → mask/albedo or noise → normal). This is intended as a starting point and still requires manual review.
 
 Use:
 
@@ -75,8 +77,8 @@ to see which parts need manual conversion.
 | `sounds/` | `audio` | `audio_v1` |
 | `instruments/` | `audio` | `audio_v1` |
 | `music/` | `music` | `music.tracker_song_v1` |
-| `textures/` | `texture` | `texture.material_v1` |
-| `normals/` | `texture` | `texture.normal_v1` |
+| `textures/` | `texture` | `texture.procedural_v1` |
+| `normals/` | `texture` | `texture.procedural_v1` |
 | `meshes/` | `static_mesh` | `static_mesh.blender_primitives_v1` |
 | `characters/` | `skeletal_mesh` | `skeletal_mesh.blender_rigged_mesh_v1` |
 | `animations/` | `skeletal_animation` | `skeletal_animation.blender_clip_v1` |

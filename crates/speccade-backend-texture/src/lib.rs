@@ -1,6 +1,6 @@
 //! SpecCade Texture Generation Backend
 //!
-//! This crate provides deterministic PBR material map generation for SpecCade.
+//! This crate provides deterministic procedural texture generation for SpecCade.
 //! All output is byte-identical given the same seed and parameters, ensuring
 //! Tier 1 determinism as specified in the SpecCade determinism policy.
 //!
@@ -8,41 +8,47 @@
 //!
 //! - **Noise Primitives**: Simplex, Perlin, Worley/Voronoi, and FBM
 //! - **Pattern Primitives**: Brick, checkerboard, wood grain, scratches, edge wear
-//! - **PBR Map Types**: Albedo, roughness, metallic, normal, AO, emissive, height
+//! - **Procedural Graph Ops**: Named DAG nodes producing grayscale or RGBA outputs
 //! - **Deterministic PNG**: Fixed compression settings for byte-identical output
 //!
 //! # Example
 //!
 //! ```no_run
-//! use speccade_backend_texture::generate::{generate_material_maps, save_texture_result};
+//! use speccade_backend_texture::generate::{encode_graph_value_png, generate_graph};
 //! use speccade_spec::recipe::texture::{
-//!     TextureMaterialV1Params, TextureMapType, BaseMaterial, MaterialType,
+//!     NoiseAlgorithm, NoiseConfig, TextureProceduralNode, TextureProceduralOp,
+//!     TextureProceduralV1Params,
 //! };
-//! use std::path::Path;
 //!
-//! let params = TextureMaterialV1Params {
+//! let params = TextureProceduralV1Params {
 //!     resolution: [256, 256],
 //!     tileable: true,
-//!     maps: vec![
-//!         TextureMapType::Albedo,
-//!         TextureMapType::Normal,
-//!         TextureMapType::Roughness,
+//!     nodes: vec![
+//!         TextureProceduralNode {
+//!             id: "n".to_string(),
+//!             op: TextureProceduralOp::Noise {
+//!                 noise: NoiseConfig {
+//!                     algorithm: NoiseAlgorithm::Perlin,
+//!                     scale: 0.08,
+//!                     octaves: 3,
+//!                     persistence: 0.5,
+//!                     lacunarity: 2.0,
+//!                 },
+//!             },
+//!         },
+//!         TextureProceduralNode {
+//!             id: "mask".to_string(),
+//!             op: TextureProceduralOp::Threshold {
+//!                 input: "n".to_string(),
+//!                 threshold: 0.55,
+//!             },
+//!         },
 //!     ],
-//!     base_material: Some(BaseMaterial {
-//!         material_type: MaterialType::Metal,
-//!         base_color: [0.8, 0.2, 0.1],
-//!         roughness_range: Some([0.2, 0.5]),
-//!         metallic: Some(1.0),
-//!         brick_pattern: None,
-//!         normal_params: None,
-//!     }),
-//!     layers: vec![],
-//!     palette: None,
-//!     color_ramp: None,
 //! };
 //!
-//! let result = generate_material_maps(&params, 42).unwrap();
-//! save_texture_result(&result, Path::new("output"), "my_material").unwrap();
+//! let nodes = generate_graph(&params, 42).unwrap();
+//! let (bytes, _hash) = encode_graph_value_png(nodes.get("mask").unwrap()).unwrap();
+//! std::fs::write("output/mask.png", bytes).unwrap();
 //! ```
 //!
 //! # Determinism
@@ -90,25 +96,42 @@ pub use rng::DeterministicRng;
 #[cfg(test)]
 mod tests {
     use super::*;
-    use speccade_spec::recipe::texture::{TextureMaterialV1Params, TextureMapType};
+    use speccade_spec::recipe::texture::{
+        NoiseAlgorithm, NoiseConfig, TextureProceduralNode, TextureProceduralOp,
+        TextureProceduralV1Params,
+    };
 
     #[test]
-    fn crate_root_reexports_generate_material_maps() {
-        let params = TextureMaterialV1Params {
+    fn crate_root_reexports_generate_graph() {
+        let params = TextureProceduralV1Params {
             resolution: [16, 16],
             tileable: true,
-            maps: vec![TextureMapType::Albedo],
-            base_material: None,
-            layers: vec![],
-            palette: None,
-            color_ramp: None,
+            nodes: vec![
+                TextureProceduralNode {
+                    id: "n".to_string(),
+                    op: TextureProceduralOp::Noise {
+                        noise: NoiseConfig {
+                            algorithm: NoiseAlgorithm::Perlin,
+                            scale: 0.1,
+                            octaves: 2,
+                            persistence: 0.5,
+                            lacunarity: 2.0,
+                        },
+                    },
+                },
+                TextureProceduralNode {
+                    id: "mask".to_string(),
+                    op: TextureProceduralOp::Threshold {
+                        input: "n".to_string(),
+                        threshold: 0.5,
+                    },
+                },
+            ],
         };
 
-        let result = generate_material_maps(&params, 42).unwrap();
-        assert!(result.maps.contains_key(&TextureMapType::Albedo));
-        let m = result.maps.get(&TextureMapType::Albedo).unwrap();
-        assert!(!m.data.is_empty());
-        assert_eq!(m.width, 16);
-        assert_eq!(m.height, 16);
+        let nodes = generate_graph(&params, 42).unwrap();
+        let value = nodes.get("mask").unwrap();
+        let (data, _hash) = encode_graph_value_png(value).unwrap();
+        assert!(!data.is_empty());
     }
 }

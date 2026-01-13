@@ -9,7 +9,6 @@ use regex::Regex;
 
 use crate::error::{ErrorCode, ValidationError, ValidationResult, ValidationWarning, WarningCode};
 use crate::output::{OutputFormat, OutputKind};
-use crate::recipe::texture::MapDefinition;
 use crate::spec::{Spec, SPEC_VERSION};
 
 // Re-export common validation utilities for convenience
@@ -132,17 +131,12 @@ fn validate_outputs(spec: &Spec, result: &mut ValidationResult) {
         return;
     }
 
-    // Require at least one "asset" output.
-    //
-    // Most backends use `primary`. Packed texture generation uses `packed`.
-    let has_asset_output = spec
-        .outputs
-        .iter()
-        .any(|o| matches!(o.kind, OutputKind::Primary | OutputKind::Packed));
-    if !has_asset_output {
+    // Require at least one primary output.
+    let has_primary_output = spec.outputs.iter().any(|o| o.kind == OutputKind::Primary);
+    if !has_primary_output {
         result.add_error(ValidationError::with_path(
             ErrorCode::NoPrimaryOutput,
-            "No primary or packed output declared.",
+            "No primary output declared.",
             "outputs",
         ));
     }
@@ -182,32 +176,6 @@ fn validate_outputs(spec: &Spec, result: &mut ValidationResult) {
         // Validate path safety
         validate_output_path(output, i, result);
 
-        // `channels` is only valid for `kind: packed` outputs.
-        if output.kind != OutputKind::Packed && output.channels.is_some() {
-            result.add_error(ValidationError::with_path(
-                ErrorCode::OutputValidationFailed,
-                "channels is only valid for outputs with kind 'packed'",
-                format!("outputs[{}].channels", i),
-            ));
-        }
-
-        if output.kind == OutputKind::Packed {
-            if output.channels.is_none() {
-                result.add_error(ValidationError::with_path(
-                    ErrorCode::PackedOutputMissingChannels,
-                    "packed output requires a 'channels' mapping",
-                    format!("outputs[{}].channels", i),
-                ));
-            }
-
-            if output.format != OutputFormat::Png {
-                result.add_error(ValidationError::with_path(
-                    ErrorCode::PackedOutputInvalidFormat,
-                    "packed output format must be 'png'",
-                    format!("outputs[{}].format", i),
-                ));
-            }
-        }
     }
 }
 
@@ -250,10 +218,7 @@ fn validate_outputs_for_recipe(
         "audio_v1" => validate_audio_outputs(spec, recipe, result),
         "music.tracker_song_v1" => validate_music_outputs(spec, recipe, result),
         "music.tracker_song_compose_v1" => validate_music_compose_outputs(spec, recipe, result),
-        "texture.material_v1" => validate_texture_material_outputs(spec, recipe, result),
-        "texture.normal_v1" => validate_texture_normal_outputs(spec, recipe, result),
-        "texture.packed_v1" => validate_texture_packed_outputs(spec, recipe, result),
-        "texture.graph_v1" => validate_texture_graph_outputs(spec, recipe, result),
+        "texture.procedural_v1" => validate_texture_procedural_outputs(spec, recipe, result),
         "static_mesh.blender_primitives_v1" => {
             validate_single_primary_output_format(spec, OutputFormat::Glb, result)
         }
@@ -263,21 +228,22 @@ fn validate_outputs_for_recipe(
         "skeletal_animation.blender_clip_v1" => {
             validate_single_primary_output_format(spec, OutputFormat::Glb, result)
         }
-        _ => validate_non_packed_outputs(spec, result),
+        _ if recipe.kind.starts_with("texture.") => {
+            result.add_error(ValidationError::with_path(
+                ErrorCode::UnsupportedRecipeKind,
+                format!(
+                    "unsupported texture recipe kind '{}'; use 'texture.procedural_v1'",
+                    recipe.kind
+                ),
+                "recipe.kind",
+            ));
+            validate_primary_output_present(spec, result);
+        }
+        _ => validate_primary_output_present(spec, result),
     }
 }
 
-fn validate_non_packed_outputs(spec: &Spec, result: &mut ValidationResult) {
-    for (i, output) in spec.outputs.iter().enumerate() {
-        if output.kind == OutputKind::Packed {
-            result.add_error(ValidationError::with_path(
-                ErrorCode::OutputValidationFailed,
-                "outputs with kind 'packed' are only valid for recipe kind 'texture.packed_v1'",
-                format!("outputs[{}].kind", i),
-            ));
-        }
-    }
-
+fn validate_primary_output_present(spec: &Spec, result: &mut ValidationResult) {
     let has_primary = spec.outputs.iter().any(|o| o.kind == OutputKind::Primary);
     if !has_primary {
         result.add_error(ValidationError::with_path(
@@ -293,7 +259,7 @@ fn validate_single_primary_output_format(
     expected_format: OutputFormat,
     result: &mut ValidationResult,
 ) {
-    validate_non_packed_outputs(spec, result);
+    validate_primary_output_present(spec, result);
 
     let primary_outputs: Vec<(usize, &crate::output::OutputSpec)> = spec
         .outputs
@@ -513,7 +479,7 @@ fn validate_music_outputs_common(
     instruments: &[crate::recipe::music::TrackerInstrument],
     result: &mut ValidationResult,
 ) {
-    validate_non_packed_outputs(spec, result);
+    validate_primary_output_present(spec, result);
 
     // Validate instrument sources are well-formed (matches backend behavior).
     for (idx, instrument) in instruments.iter().enumerate() {
@@ -651,29 +617,13 @@ fn validate_music_outputs_common(
     }
 }
 
-fn validate_texture_normal_outputs(
+// Legacy texture recipe validations removed in favor of texture.procedural_v1.
+fn validate_texture_procedural_outputs(
     spec: &Spec,
     recipe: &crate::recipe::Recipe,
     result: &mut ValidationResult,
 ) {
-    if let Err(e) = recipe.as_texture_normal() {
-        result.add_error(ValidationError::with_path(
-            ErrorCode::InvalidRecipeParams,
-            format!("invalid params for {}: {}", recipe.kind, e),
-            "recipe.params",
-        ));
-        return;
-    }
-
-    validate_single_primary_output_format(spec, OutputFormat::Png, result);
-}
-
-fn validate_texture_material_outputs(
-    spec: &Spec,
-    recipe: &crate::recipe::Recipe,
-    result: &mut ValidationResult,
-) {
-    let params = match recipe.as_texture_material() {
+    let params = match recipe.as_texture_procedural() {
         Ok(params) => params,
         Err(e) => {
             result.add_error(ValidationError::with_path(
@@ -685,506 +635,12 @@ fn validate_texture_material_outputs(
         }
     };
 
-    validate_non_packed_outputs(spec, result);
-
-    let primary_outputs: Vec<(usize, &crate::output::OutputSpec)> = spec
-        .outputs
-        .iter()
-        .enumerate()
-        .filter(|(_, o)| o.kind == OutputKind::Primary)
-        .collect();
-
-    let primary_png_outputs: Vec<(usize, &crate::output::OutputSpec)> = primary_outputs
-        .iter()
-        .copied()
-        .filter(|(_, o)| o.format == OutputFormat::Png)
-        .collect();
-
-    for (i, output) in primary_outputs {
-        if output.format != OutputFormat::Png {
-            result.add_error(ValidationError::with_path(
-                ErrorCode::OutputValidationFailed,
-                "texture.material_v1 primary outputs must have format 'png'",
-                format!("outputs[{}].format", i),
-            ));
-        }
-    }
-
-    if primary_png_outputs.len() < params.maps.len() {
-        result.add_error(ValidationError::with_path(
-            ErrorCode::OutputValidationFailed,
-            format!(
-                "not enough primary PNG outputs for material maps: {} requested, but only {} primary PNG outputs declared",
-                params.maps.len(),
-                primary_png_outputs.len()
-            ),
-            "outputs",
-        ));
-    }
-}
-
-fn validate_texture_packed_outputs(
-    spec: &Spec,
-    recipe: &crate::recipe::Recipe,
-    result: &mut ValidationResult,
-) {
-    let params = match recipe.as_texture_packed() {
-        Ok(params) => params,
-        Err(e) => {
-            result.add_error(ValidationError::with_path(
-                ErrorCode::InvalidRecipeParams,
-                format!("invalid params for {}: {}", recipe.kind, e),
-                "recipe.params",
-            ));
-            return;
-        }
-    };
-
-    let available_keys: HashSet<&str> = params.maps.keys().map(|k| k.as_str()).collect();
-
-    // Validate packed map definitions.
-    let mut needs_height = false;
-    let has_height = params.maps.contains_key("height");
-
-    for (key, def) in &params.maps {
-        match def {
-            MapDefinition::Grayscale {
-                value,
-                from_height,
-                ao_strength,
-            } => {
-                let uses_from_height = from_height.unwrap_or(false);
-                if uses_from_height {
-                    needs_height = true;
-                }
-
-                if uses_from_height && value.is_some() {
-                    result.add_error(ValidationError::with_path(
-                        ErrorCode::InvalidRecipeParams,
-                        format!("maps.{} cannot set both value and from_height", key),
-                        format!("recipe.params.maps.{}", key),
-                    ));
-                }
-
-                if !uses_from_height && ao_strength.is_some() {
-                    result.add_error(ValidationError::with_path(
-                        ErrorCode::InvalidRecipeParams,
-                        format!("maps.{} sets ao_strength without from_height", key),
-                        format!("recipe.params.maps.{}", key),
-                    ));
-                }
-
-                if key == "height" && uses_from_height {
-                    result.add_error(ValidationError::with_path(
-                        ErrorCode::InvalidRecipeParams,
-                        "maps.height cannot set from_height (height map is the source)".to_string(),
-                        "recipe.params.maps.height",
-                    ));
-                }
-
-                if let Some(value) = value {
-                    if let Err(e) = validate_unit_interval(&format!("maps.{}.value", key), *value)
-                    {
-                        result.add_error(ValidationError::with_path(
-                            ErrorCode::InvalidRecipeParams,
-                            e.to_string(),
-                            format!("recipe.params.maps.{}.value", key),
-                        ));
-                    }
-                }
-
-                if let Some(strength) = ao_strength {
-                    if let Err(e) =
-                        validate_unit_interval(&format!("maps.{}.ao_strength", key), *strength)
-                    {
-                        result.add_error(ValidationError::with_path(
-                            ErrorCode::InvalidRecipeParams,
-                            e.to_string(),
-                            format!("recipe.params.maps.{}.ao_strength", key),
-                        ));
-                    }
-                }
-            }
-            MapDefinition::Pattern {
-                pattern,
-                noise_type,
-                octaves,
-                axis,
-                frequency,
-                duty_cycle,
-                phase,
-                cells,
-                line_width,
-                start,
-                end,
-                jitter,
-                distance_fn,
-            } => {
-                match pattern.as_str() {
-                    "noise" => {
-                        if axis.is_some()
-                            || frequency.is_some()
-                            || duty_cycle.is_some()
-                            || phase.is_some()
-                            || cells.is_some()
-                            || line_width.is_some()
-                            || start.is_some()
-                            || end.is_some()
-                            || jitter.is_some()
-                            || distance_fn.is_some()
-                        {
-                            result.add_error(ValidationError::with_path(
-                                ErrorCode::InvalidRecipeParams,
-                                format!(
-                                    "maps.{} pattern 'noise' does not accept non-noise parameters",
-                                    key
-                                ),
-                                format!("recipe.params.maps.{}", key),
-                            ));
-                        }
-
-                        let noise = noise_type
-                            .as_deref()
-                            .unwrap_or("perlin")
-                            .to_lowercase();
-
-                        let is_fbm = noise == "fbm";
-
-                        if !matches!(
-                            noise.as_str(),
-                            "perlin" | "simplex" | "fbm" | "worley"
-                        ) {
-                            result.add_error(ValidationError::with_path(
-                                ErrorCode::InvalidRecipeParams,
-                                format!("maps.{} noise_type '{}' is not supported", key, noise),
-                                format!("recipe.params.maps.{}.noise_type", key),
-                            ));
-                        }
-
-                        if !is_fbm && octaves.is_some() {
-                            result.add_error(ValidationError::with_path(
-                                ErrorCode::InvalidRecipeParams,
-                                format!("maps.{} octaves is only valid for noise_type 'fbm'", key),
-                                format!("recipe.params.maps.{}.octaves", key),
-                            ));
-                        }
-
-                        if is_fbm {
-                            if matches!(*octaves, Some(0)) {
-                                result.add_error(ValidationError::with_path(
-                                    ErrorCode::InvalidRecipeParams,
-                                    format!("maps.{} octaves must be >= 1", key),
-                                    format!("recipe.params.maps.{}.octaves", key),
-                                ));
-                            }
-                        }
-                    }
-                    "worley_edges" => {
-                        if noise_type.is_some()
-                            || octaves.is_some()
-                            || axis.is_some()
-                            || frequency.is_some()
-                            || duty_cycle.is_some()
-                            || phase.is_some()
-                            || cells.is_some()
-                            || line_width.is_some()
-                            || start.is_some()
-                            || end.is_some()
-                        {
-                            result.add_error(ValidationError::with_path(
-                                ErrorCode::InvalidRecipeParams,
-                                format!(
-                                    "maps.{} pattern 'worley_edges' only supports jitter/distance_fn",
-                                    key
-                                ),
-                                format!("recipe.params.maps.{}", key),
-                            ));
-                        }
-
-                        if let Some(jitter) = *jitter {
-                            if let Err(e) =
-                                validate_unit_interval(&format!("maps.{}.jitter", key), jitter)
-                            {
-                                result.add_error(ValidationError::with_path(
-                                    ErrorCode::InvalidRecipeParams,
-                                    e.to_string(),
-                                    format!("recipe.params.maps.{}.jitter", key),
-                                ));
-                            }
-                        }
-
-                        if let Some(raw) = distance_fn.as_deref() {
-                            let normalized = raw.to_lowercase();
-                            if !matches!(
-                                normalized.as_str(),
-                                "euclidean" | "manhattan" | "chebyshev"
-                            ) {
-                                result.add_error(ValidationError::with_path(
-                                    ErrorCode::InvalidRecipeParams,
-                                    format!(
-                                        "maps.{} distance_fn '{}' is not supported",
-                                        key, raw
-                                    ),
-                                    format!("recipe.params.maps.{}.distance_fn", key),
-                                ));
-                            }
-                        }
-                    }
-                    "stripes" => {
-                        if noise_type.is_some()
-                            || octaves.is_some()
-                            || cells.is_some()
-                            || line_width.is_some()
-                            || start.is_some()
-                            || end.is_some()
-                            || jitter.is_some()
-                            || distance_fn.is_some()
-                        {
-                            result.add_error(ValidationError::with_path(
-                                ErrorCode::InvalidRecipeParams,
-                                format!(
-                                    "maps.{} pattern 'stripes' does not accept noise/grid/gradient parameters",
-                                    key
-                                ),
-                                format!("recipe.params.maps.{}", key),
-                            ));
-                        }
-
-                        if let Some(axis) = axis.as_deref() {
-                            if !matches!(axis, "x" | "y") {
-                                result.add_error(ValidationError::with_path(
-                                    ErrorCode::InvalidRecipeParams,
-                                    format!(
-                                        "maps.{} axis '{}' is not supported (expected 'x' or 'y')",
-                                        key, axis
-                                    ),
-                                    format!("recipe.params.maps.{}.axis", key),
-                                ));
-                            }
-                        }
-
-                        if matches!(*frequency, Some(0)) {
-                            result.add_error(ValidationError::with_path(
-                                ErrorCode::InvalidRecipeParams,
-                                format!("maps.{} frequency must be >= 1", key),
-                                format!("recipe.params.maps.{}.frequency", key),
-                            ));
-                        }
-
-                        if let Some(duty) = *duty_cycle {
-                            if let Err(e) = validate_unit_interval(
-                                &format!("maps.{}.duty_cycle", key),
-                                duty,
-                            ) {
-                                result.add_error(ValidationError::with_path(
-                                    ErrorCode::InvalidRecipeParams,
-                                    e.to_string(),
-                                    format!("recipe.params.maps.{}.duty_cycle", key),
-                                ));
-                            }
-                        }
-                    }
-                    "grid" => {
-                        if noise_type.is_some()
-                            || octaves.is_some()
-                            || axis.is_some()
-                            || frequency.is_some()
-                            || duty_cycle.is_some()
-                            || start.is_some()
-                            || end.is_some()
-                            || jitter.is_some()
-                            || distance_fn.is_some()
-                        {
-                            result.add_error(ValidationError::with_path(
-                                ErrorCode::InvalidRecipeParams,
-                                format!(
-                                    "maps.{} pattern 'grid' only supports cells/line_width/phase",
-                                    key
-                                ),
-                                format!("recipe.params.maps.{}", key),
-                            ));
-                        }
-
-                        if let Some([cx, cy]) = *cells {
-                            if cx == 0 || cy == 0 {
-                                result.add_error(ValidationError::with_path(
-                                    ErrorCode::InvalidRecipeParams,
-                                    format!("maps.{} cells must be >= 1", key),
-                                    format!("recipe.params.maps.{}.cells", key),
-                                ));
-                            }
-                        }
-
-                        if let Some(width) = *line_width {
-                            if !(width >= 0.0 && width <= 0.5) {
-                                result.add_error(ValidationError::with_path(
-                                    ErrorCode::InvalidRecipeParams,
-                                    format!(
-                                        "maps.{} line_width must be in range [0, 0.5]",
-                                        key
-                                    ),
-                                    format!("recipe.params.maps.{}.line_width", key),
-                                ));
-                            }
-                        }
-                    }
-                    "gradient" => {
-                        if noise_type.is_some()
-                            || octaves.is_some()
-                            || frequency.is_some()
-                            || duty_cycle.is_some()
-                            || cells.is_some()
-                            || line_width.is_some()
-                            || jitter.is_some()
-                            || distance_fn.is_some()
-                        {
-                            result.add_error(ValidationError::with_path(
-                                ErrorCode::InvalidRecipeParams,
-                                format!(
-                                    "maps.{} pattern 'gradient' does not accept noise/grid/stripes parameters",
-                                    key
-                                ),
-                                format!("recipe.params.maps.{}", key),
-                            ));
-                        }
-
-                        if let Some(axis) = axis.as_deref() {
-                            if !matches!(axis, "x" | "y") {
-                                result.add_error(ValidationError::with_path(
-                                    ErrorCode::InvalidRecipeParams,
-                                    format!(
-                                        "maps.{} axis '{}' is not supported (expected 'x' or 'y')",
-                                        key, axis
-                                    ),
-                                    format!("recipe.params.maps.{}.axis", key),
-                                ));
-                            }
-                        }
-
-                        if let Some(start) = *start {
-                            if let Err(e) =
-                                validate_unit_interval(&format!("maps.{}.start", key), start)
-                            {
-                                result.add_error(ValidationError::with_path(
-                                    ErrorCode::InvalidRecipeParams,
-                                    e.to_string(),
-                                    format!("recipe.params.maps.{}.start", key),
-                                ));
-                            }
-                        }
-
-                        if let Some(end) = *end {
-                            if let Err(e) =
-                                validate_unit_interval(&format!("maps.{}.end", key), end)
-                            {
-                                result.add_error(ValidationError::with_path(
-                                    ErrorCode::InvalidRecipeParams,
-                                    e.to_string(),
-                                    format!("recipe.params.maps.{}.end", key),
-                                ));
-                            }
-                        }
-                    }
-                    _ => {
-                        result.add_error(ValidationError::with_path(
-                            ErrorCode::InvalidRecipeParams,
-                            format!("maps.{} pattern '{}' is not supported", key, pattern),
-                            format!("recipe.params.maps.{}.pattern", key),
-                        ));
-                    }
-                }
-            }
-        }
-    }
-
-    if needs_height && !has_height {
-        result.add_error(ValidationError::with_path(
-            ErrorCode::InvalidRecipeParams,
-            "maps.height is required when any map uses from_height".to_string(),
-            "recipe.params.maps",
-        ));
-    }
-
-    for (i, output) in spec.outputs.iter().enumerate() {
-        if output.kind != OutputKind::Packed {
-            result.add_error(ValidationError::with_path(
-                ErrorCode::OutputValidationFailed,
-                "texture.packed_v1 outputs must have kind 'packed'",
-                format!("outputs[{}].kind", i),
-            ));
-        }
-    }
-
-    let mut has_any_packed_output = false;
-
-    for (i, output) in spec.outputs.iter().enumerate() {
-        if output.kind != OutputKind::Packed {
-            continue;
-        }
-
-        has_any_packed_output = true;
-
-        let output_channels = match output.channels.as_ref() {
-            Some(channels) => channels,
-            None => {
-                result.add_error(ValidationError::with_path(
-                    ErrorCode::PackedOutputMissingChannels,
-                    "packed output requires a 'channels' mapping",
-                    format!("outputs[{}].channels", i),
-                ));
-                continue;
-            }
-        };
-
-        if let Err(e) = output_channels.validate_constants() {
-            result.add_error(ValidationError::with_path(
-                ErrorCode::OutputValidationFailed,
-                e.to_string(),
-                format!("outputs[{}].channels", i),
-            ));
-        }
-
-        if let Err(e) = output_channels.validate_key_references(&available_keys) {
-            result.add_error(ValidationError::with_path(
-                ErrorCode::PackedChannelsUnknownMapKey,
-                e.to_string(),
-                format!("outputs[{}].channels", i),
-            ));
-        }
-    }
-
-    if !has_any_packed_output {
-        result.add_error(ValidationError::with_path(
-            ErrorCode::NoPackedOutputs,
-            "texture.packed_v1 requires at least one output of kind 'packed'",
-            "outputs",
-        ));
-    }
-}
-
-fn validate_texture_graph_outputs(
-    spec: &Spec,
-    recipe: &crate::recipe::Recipe,
-    result: &mut ValidationResult,
-) {
-    let params = match recipe.as_texture_graph() {
-        Ok(params) => params,
-        Err(e) => {
-            result.add_error(ValidationError::with_path(
-                ErrorCode::InvalidRecipeParams,
-                format!("invalid params for {}: {}", recipe.kind, e),
-                "recipe.params",
-            ));
-            return;
-        }
-    };
-
-    validate_non_packed_outputs(spec, result);
+    validate_primary_output_present(spec, result);
 
     if params.nodes.is_empty() {
         result.add_error(ValidationError::with_path(
             ErrorCode::InvalidRecipeParams,
-            "texture.graph_v1 requires at least one node".to_string(),
+            "texture.procedural_v1 requires at least one node".to_string(),
             "recipe.params.nodes",
         ));
         return;
@@ -1229,25 +685,25 @@ fn validate_texture_graph_outputs(
     // Type information for each node is fixed based on op kind (this enables simple type checks).
     let mut node_types: HashMap<&str, GraphValueType> = HashMap::new();
     for node in &params.nodes {
-        use crate::recipe::texture::TextureGraphOp;
+        use crate::recipe::texture::TextureProceduralOp;
 
         let node_type = match &node.op {
-            TextureGraphOp::ColorRamp { .. }
-            | TextureGraphOp::Palette { .. }
-            | TextureGraphOp::ComposeRgba { .. }
-            | TextureGraphOp::NormalFromHeight { .. } => GraphValueType::Color,
-            TextureGraphOp::Constant { .. }
-            | TextureGraphOp::Noise { .. }
-            | TextureGraphOp::Gradient { .. }
-            | TextureGraphOp::Stripes { .. }
-            | TextureGraphOp::Checkerboard { .. }
-            | TextureGraphOp::Invert { .. }
-            | TextureGraphOp::Clamp { .. }
-            | TextureGraphOp::Add { .. }
-            | TextureGraphOp::Multiply { .. }
-            | TextureGraphOp::Lerp { .. }
-            | TextureGraphOp::Threshold { .. }
-            | TextureGraphOp::ToGrayscale { .. } => GraphValueType::Grayscale,
+            TextureProceduralOp::ColorRamp { .. }
+            | TextureProceduralOp::Palette { .. }
+            | TextureProceduralOp::ComposeRgba { .. }
+            | TextureProceduralOp::NormalFromHeight { .. } => GraphValueType::Color,
+            TextureProceduralOp::Constant { .. }
+            | TextureProceduralOp::Noise { .. }
+            | TextureProceduralOp::Gradient { .. }
+            | TextureProceduralOp::Stripes { .. }
+            | TextureProceduralOp::Checkerboard { .. }
+            | TextureProceduralOp::Invert { .. }
+            | TextureProceduralOp::Clamp { .. }
+            | TextureProceduralOp::Add { .. }
+            | TextureProceduralOp::Multiply { .. }
+            | TextureProceduralOp::Lerp { .. }
+            | TextureProceduralOp::Threshold { .. }
+            | TextureProceduralOp::ToGrayscale { .. } => GraphValueType::Grayscale,
         };
 
         node_types.insert(node.id.as_str(), node_type);
@@ -1275,16 +731,16 @@ fn validate_texture_graph_outputs(
     let mut deps: HashMap<&str, Vec<&str>> = HashMap::new();
 
     for (i, node) in params.nodes.iter().enumerate() {
-        use crate::recipe::texture::TextureGraphOp;
+        use crate::recipe::texture::TextureProceduralOp;
 
         match &node.op {
-            TextureGraphOp::Invert { input }
-            | TextureGraphOp::Clamp { input, .. }
-            | TextureGraphOp::Threshold { input, .. }
-            | TextureGraphOp::ToGrayscale { input }
-            | TextureGraphOp::ColorRamp { input, .. }
-            | TextureGraphOp::Palette { input, .. }
-            | TextureGraphOp::NormalFromHeight { input, .. } => {
+            TextureProceduralOp::Invert { input }
+            | TextureProceduralOp::Clamp { input, .. }
+            | TextureProceduralOp::Threshold { input, .. }
+            | TextureProceduralOp::ToGrayscale { input }
+            | TextureProceduralOp::ColorRamp { input, .. }
+            | TextureProceduralOp::Palette { input, .. }
+            | TextureProceduralOp::NormalFromHeight { input, .. } => {
                 validate_ref(
                     input,
                     format!("recipe.params.nodes[{}].input", i),
@@ -1292,7 +748,8 @@ fn validate_texture_graph_outputs(
                 );
                 // Input types
                 match &node.op {
-                    TextureGraphOp::ToGrayscale { .. } | TextureGraphOp::Palette { .. } => {
+                    TextureProceduralOp::ToGrayscale { .. }
+                    | TextureProceduralOp::Palette { .. } => {
                         validate_input_type(
                             GraphValueType::Color,
                             input,
@@ -1300,11 +757,11 @@ fn validate_texture_graph_outputs(
                             result,
                         );
                     }
-                    TextureGraphOp::ColorRamp { .. }
-                    | TextureGraphOp::NormalFromHeight { .. }
-                    | TextureGraphOp::Invert { .. }
-                    | TextureGraphOp::Clamp { .. }
-                    | TextureGraphOp::Threshold { .. } => {
+                    TextureProceduralOp::ColorRamp { .. }
+                    | TextureProceduralOp::NormalFromHeight { .. }
+                    | TextureProceduralOp::Invert { .. }
+                    | TextureProceduralOp::Clamp { .. }
+                    | TextureProceduralOp::Threshold { .. } => {
                         validate_input_type(
                             GraphValueType::Grayscale,
                             input,
@@ -1317,7 +774,7 @@ fn validate_texture_graph_outputs(
 
                 deps.insert(node.id.as_str(), vec![input.as_str()]);
             }
-            TextureGraphOp::Add { a, b } | TextureGraphOp::Multiply { a, b } => {
+            TextureProceduralOp::Add { a, b } | TextureProceduralOp::Multiply { a, b } => {
                 validate_ref(a, format!("recipe.params.nodes[{}].a", i), result);
                 validate_ref(b, format!("recipe.params.nodes[{}].b", i), result);
                 validate_input_type(
@@ -1335,7 +792,7 @@ fn validate_texture_graph_outputs(
 
                 deps.insert(node.id.as_str(), vec![a.as_str(), b.as_str()]);
             }
-            TextureGraphOp::Lerp { a, b, t } => {
+            TextureProceduralOp::Lerp { a, b, t } => {
                 validate_ref(a, format!("recipe.params.nodes[{}].a", i), result);
                 validate_ref(b, format!("recipe.params.nodes[{}].b", i), result);
                 validate_ref(t, format!("recipe.params.nodes[{}].t", i), result);
@@ -1360,7 +817,7 @@ fn validate_texture_graph_outputs(
 
                 deps.insert(node.id.as_str(), vec![a.as_str(), b.as_str(), t.as_str()]);
             }
-            TextureGraphOp::ComposeRgba { r, g, b, a } => {
+            TextureProceduralOp::ComposeRgba { r, g, b, a } => {
                 validate_ref(r, format!("recipe.params.nodes[{}].r", i), result);
                 validate_ref(g, format!("recipe.params.nodes[{}].g", i), result);
                 validate_ref(b, format!("recipe.params.nodes[{}].b", i), result);
@@ -1399,11 +856,11 @@ fn validate_texture_graph_outputs(
                 }
                 deps.insert(node.id.as_str(), d);
             }
-            TextureGraphOp::Constant { .. }
-            | TextureGraphOp::Noise { .. }
-            | TextureGraphOp::Gradient { .. }
-            | TextureGraphOp::Stripes { .. }
-            | TextureGraphOp::Checkerboard { .. } => {
+            TextureProceduralOp::Constant { .. }
+            | TextureProceduralOp::Noise { .. }
+            | TextureProceduralOp::Gradient { .. }
+            | TextureProceduralOp::Stripes { .. }
+            | TextureProceduralOp::Checkerboard { .. } => {
                 deps.insert(node.id.as_str(), Vec::new());
             }
         }
@@ -1475,7 +932,7 @@ fn validate_texture_graph_outputs(
         if output.format != OutputFormat::Png {
             result.add_error(ValidationError::with_path(
                 ErrorCode::OutputValidationFailed,
-                "texture.graph_v1 primary outputs must have format 'png'",
+                "texture.procedural_v1 primary outputs must have format 'png'",
                 format!("outputs[{}].format", i),
             ));
         }
@@ -1483,7 +940,7 @@ fn validate_texture_graph_outputs(
         let Some(source) = output.source.as_deref() else {
             result.add_error(ValidationError::with_path(
                 ErrorCode::OutputValidationFailed,
-                "texture.graph_v1 primary outputs must set 'source' to a node id",
+                "texture.procedural_v1 primary outputs must set 'source' to a node id",
                 format!("outputs[{}].source", i),
             ));
             continue;
@@ -1575,10 +1032,7 @@ pub fn validate_for_generate(spec: &Spec) -> ValidationResult {
             "audio_v1",
             "music.tracker_song_v1",
             "music.tracker_song_compose_v1",
-            "texture.material_v1",
-            "texture.normal_v1",
-            "texture.packed_v1",
-            "texture.graph_v1",
+            "texture.procedural_v1",
             "static_mesh.blender_primitives_v1",
             "skeletal_mesh.blender_rigged_mesh_v1",
             "skeletal_animation.blender_clip_v1",
@@ -1669,7 +1123,6 @@ fn output_path_safety_errors(path: &str) -> Vec<String> {
 mod tests {
     use super::*;
     use crate::output::{OutputFormat, OutputSpec};
-    use crate::recipe::texture::{ChannelSource, PackedChannels};
     use crate::recipe::Recipe;
     use crate::spec::AssetType;
 
@@ -1787,35 +1240,6 @@ mod tests {
             .any(|e| e.code == ErrorCode::OutputValidationFailed));
     }
 
-    #[test]
-    fn test_audio_rejects_packed_outputs() {
-        let mut spec = make_valid_spec();
-        spec.recipe = Some(crate::recipe::Recipe::new(
-            "audio_v1",
-            serde_json::json!({
-                "duration_seconds": 0.1,
-                "layers": []
-            }),
-        ));
-
-        spec.outputs.push(OutputSpec::packed(
-            OutputFormat::Png,
-            "textures/not-valid-for-audio.png",
-            PackedChannels {
-                r: ChannelSource::constant(0.0),
-                g: ChannelSource::constant(0.0),
-                b: ChannelSource::constant(0.0),
-                a: None,
-            },
-        ));
-
-        let result = validate_for_generate(&spec);
-        assert!(!result.is_ok());
-        assert!(result
-            .errors
-            .iter()
-            .any(|e| e.code == ErrorCode::OutputValidationFailed));
-    }
 
     #[test]
     fn test_duplicate_output_path() {
@@ -1905,6 +1329,33 @@ mod tests {
                 "layers": []
             }),
         ));
+
+        let result = validate_for_generate(&spec);
+        assert!(!result.is_ok());
+        assert!(result
+            .errors
+            .iter()
+            .any(|e| e.code == ErrorCode::UnsupportedRecipeKind));
+    }
+
+    #[test]
+    fn test_legacy_texture_recipe_kind_rejected() {
+        let spec = Spec::builder("legacy-texture-01", AssetType::Texture)
+            .license("CC0-1.0")
+            .seed(42)
+            .output(OutputSpec::primary(
+                OutputFormat::Png,
+                "textures/legacy.png",
+            ))
+            .recipe(crate::recipe::Recipe::new(
+                "texture.material_v1",
+                serde_json::json!({
+                    "resolution": [16, 16],
+                    "tileable": true,
+                    "maps": ["albedo"]
+                }),
+            ))
+            .build();
 
         let result = validate_for_generate(&spec);
         assert!(!result.is_ok());
@@ -2086,273 +1537,13 @@ mod tests {
             .any(|e| e.code == ErrorCode::OutputValidationFailed));
     }
 
-    #[test]
-    fn test_texture_normal_requires_png_primary_output() {
-        let spec = Spec::builder("test-normal-01", AssetType::Texture)
-            .license("CC0-1.0")
-            .seed(42)
-            .output(OutputSpec::primary(
-                OutputFormat::Json,
-                "textures/normal.json",
-            ))
-            .recipe(crate::recipe::Recipe::new(
-                "texture.normal_v1",
-                serde_json::json!({
-                    "resolution": [64, 64],
-                    "tileable": true
-                }),
-            ))
-            .build();
 
-        let result = validate_for_generate(&spec);
-        assert!(!result.is_ok());
-        assert!(result
-            .errors
-            .iter()
-            .any(|e| e.code == ErrorCode::OutputValidationFailed));
-    }
 
-    #[test]
-    fn test_texture_material_requires_enough_primary_png_outputs() {
-        let spec = Spec::builder("test-texture-01", AssetType::Texture)
-            .license("CC0-1.0")
-            .seed(42)
-            .output(OutputSpec::primary(
-                OutputFormat::Png,
-                "textures/test_albedo.png",
-            ))
-            .recipe(crate::recipe::Recipe::new(
-                "texture.material_v1",
-                serde_json::json!({
-                    "resolution": [64, 64],
-                    "tileable": true,
-                    "maps": ["albedo", "normal"]
-                }),
-            ))
-            .build();
 
-        let result = validate_for_generate(&spec);
-        assert!(!result.is_ok());
-        assert!(result
-            .errors
-            .iter()
-            .any(|e| e.code == ErrorCode::OutputValidationFailed));
-    }
 
-    #[test]
-    fn test_texture_packed_rejects_primary_outputs() {
-        let spec = Spec::builder("test-packed-01", AssetType::Texture)
-            .license("CC0-1.0")
-            .seed(42)
-            .output(OutputSpec::primary(OutputFormat::Png, "textures/out.png"))
-            .output(OutputSpec::packed(
-                OutputFormat::Png,
-                "textures/out-packed.png",
-                PackedChannels {
-                    r: ChannelSource::constant(0.0),
-                    g: ChannelSource::constant(0.0),
-                    b: ChannelSource::constant(0.0),
-                    a: None,
-                },
-            ))
-            .recipe(crate::recipe::Recipe::new(
-                "texture.packed_v1",
-                serde_json::json!({
-                    "resolution": [1, 1],
-                    "tileable": true,
-                    "maps": {
-                        "ao": { "type": "grayscale", "value": 0.0 }
-                    }
-                }),
-            ))
-            .build();
 
-        let result = validate_for_generate(&spec);
-        assert!(!result.is_ok());
-        assert!(result
-            .errors
-            .iter()
-            .any(|e| e.code == ErrorCode::OutputValidationFailed));
-    }
 
-    #[test]
-    fn test_texture_packed_requires_height_map_for_from_height() {
-        let spec = Spec::builder("test-packed-height-01", AssetType::Texture)
-            .license("CC0-1.0")
-            .seed(42)
-            .output(OutputSpec::packed(
-                OutputFormat::Png,
-                "textures/out-packed.png",
-                PackedChannels {
-                    r: ChannelSource::constant(0.0),
-                    g: ChannelSource::constant(0.0),
-                    b: ChannelSource::constant(0.0),
-                    a: None,
-                },
-            ))
-            .recipe(crate::recipe::Recipe::new(
-                "texture.packed_v1",
-                serde_json::json!({
-                    "resolution": [4, 4],
-                    "tileable": true,
-                    "maps": {
-                        "roughness": { "type": "grayscale", "from_height": true }
-                    }
-                }),
-            ))
-            .build();
 
-        let result = validate_for_generate(&spec);
-        assert!(!result.is_ok());
-        assert!(result
-            .errors
-            .iter()
-            .any(|e| e.code == ErrorCode::InvalidRecipeParams));
-    }
-
-    #[test]
-    fn test_texture_packed_rejects_unknown_noise_type() {
-        let spec = Spec::builder("test-packed-noise-01", AssetType::Texture)
-            .license("CC0-1.0")
-            .seed(42)
-            .output(OutputSpec::packed(
-                OutputFormat::Png,
-                "textures/out-packed.png",
-                PackedChannels {
-                    r: ChannelSource::constant(0.0),
-                    g: ChannelSource::constant(0.0),
-                    b: ChannelSource::constant(0.0),
-                    a: None,
-                },
-            ))
-            .recipe(crate::recipe::Recipe::new(
-                "texture.packed_v1",
-                serde_json::json!({
-                    "resolution": [4, 4],
-                    "tileable": true,
-                    "maps": {
-                        "height": { "type": "pattern", "pattern": "noise", "noise_type": "value" }
-                    }
-                }),
-            ))
-            .build();
-
-        let result = validate_for_generate(&spec);
-        assert!(!result.is_ok());
-        assert!(result
-            .errors
-            .iter()
-            .any(|e| e.code == ErrorCode::InvalidRecipeParams));
-    }
-
-    #[test]
-    fn test_texture_packed_rejects_octaves_for_non_fbm() {
-        let spec = Spec::builder("test-packed-octaves-01", AssetType::Texture)
-            .license("CC0-1.0")
-            .seed(42)
-            .output(OutputSpec::packed(
-                OutputFormat::Png,
-                "textures/out-packed.png",
-                PackedChannels {
-                    r: ChannelSource::constant(0.0),
-                    g: ChannelSource::constant(0.0),
-                    b: ChannelSource::constant(0.0),
-                    a: None,
-                },
-            ))
-            .recipe(crate::recipe::Recipe::new(
-                "texture.packed_v1",
-                serde_json::json!({
-                    "resolution": [4, 4],
-                    "tileable": true,
-                    "maps": {
-                        "height": {
-                            "type": "pattern",
-                            "pattern": "noise",
-                            "noise_type": "perlin",
-                            "octaves": 3
-                        }
-                    }
-                }),
-            ))
-            .build();
-
-        let result = validate_for_generate(&spec);
-        assert!(!result.is_ok());
-        assert!(result
-            .errors
-            .iter()
-            .any(|e| e.code == ErrorCode::InvalidRecipeParams));
-    }
-
-    #[test]
-    fn test_texture_packed_accepts_non_noise_patterns() {
-        let spec = Spec::builder("test-packed-patterns-01", AssetType::Texture)
-            .license("CC0-1.0")
-            .seed(42)
-            .output(OutputSpec::packed(
-                OutputFormat::Png,
-                "textures/patterns.png",
-                PackedChannels {
-                    r: ChannelSource::key("stripes"),
-                    g: ChannelSource::key("grid"),
-                    b: ChannelSource::key("gradient"),
-                    a: Some(ChannelSource::key("edges")),
-                },
-            ))
-            .recipe(crate::recipe::Recipe::new(
-                "texture.packed_v1",
-                serde_json::json!({
-                    "resolution": [16, 16],
-                    "tileable": true,
-                    "maps": {
-                        "stripes": { "type": "pattern", "pattern": "stripes", "axis": "x", "frequency": 4, "duty_cycle": 0.25, "phase": 0.0 },
-                        "grid": { "type": "pattern", "pattern": "grid", "cells": [4, 4], "line_width": 0.1, "phase": 0.0 },
-                        "gradient": { "type": "pattern", "pattern": "gradient", "axis": "y", "start": 0.0, "end": 1.0, "phase": 0.0 },
-                        "edges": { "type": "pattern", "pattern": "worley_edges", "jitter": 1.0, "distance_fn": "euclidean" }
-                    }
-                }),
-            ))
-            .build();
-
-        let result = validate_for_generate(&spec);
-        assert!(result.is_ok(), "errors: {:?}", result.errors);
-    }
-
-    #[test]
-    fn test_texture_packed_rejects_noise_with_non_noise_params() {
-        let spec = Spec::builder("test-packed-noise-params-01", AssetType::Texture)
-            .license("CC0-1.0")
-            .seed(42)
-            .output(OutputSpec::packed(
-                OutputFormat::Png,
-                "textures/out-packed.png",
-                PackedChannels {
-                    r: ChannelSource::constant(0.0),
-                    g: ChannelSource::constant(0.0),
-                    b: ChannelSource::constant(0.0),
-                    a: None,
-                },
-            ))
-            .recipe(crate::recipe::Recipe::new(
-                "texture.packed_v1",
-                serde_json::json!({
-                    "resolution": [4, 4],
-                    "tileable": true,
-                    "maps": {
-                        "height": { "type": "pattern", "pattern": "noise", "noise_type": "perlin", "frequency": 4 }
-                    }
-                }),
-            ))
-            .build();
-
-        let result = validate_for_generate(&spec);
-        assert!(!result.is_ok());
-        assert!(result
-            .errors
-            .iter()
-            .any(|e| e.code == ErrorCode::InvalidRecipeParams));
-    }
 
     #[test]
     fn test_warnings() {
@@ -2400,16 +1591,16 @@ mod tests {
         assert!(!is_safe_output_path("../traversal"));
     }
 
-    fn make_valid_texture_graph_spec() -> Spec {
+    fn make_valid_texture_procedural_spec() -> Spec {
         let mut output = OutputSpec::primary(OutputFormat::Png, "textures/mask.png");
         output.source = Some("mask".to_string());
 
-        Spec::builder("graph-test-01", AssetType::Texture)
+        Spec::builder("procedural-test-01", AssetType::Texture)
             .license("CC0-1.0")
             .seed(123)
             .output(output)
             .recipe(Recipe::new(
-                "texture.graph_v1",
+                "texture.procedural_v1",
                 serde_json::json!({
                     "resolution": [16, 16],
                     "tileable": true,
@@ -2423,15 +1614,15 @@ mod tests {
     }
 
     #[test]
-    fn test_texture_graph_valid_spec() {
-        let spec = make_valid_texture_graph_spec();
+    fn test_texture_procedural_valid_spec() {
+        let spec = make_valid_texture_procedural_spec();
         let result = validate_for_generate(&spec);
         assert!(result.is_ok(), "errors: {:?}", result.errors);
     }
 
     #[test]
-    fn test_texture_graph_rejects_missing_output_source() {
-        let mut spec = make_valid_texture_graph_spec();
+    fn test_texture_procedural_rejects_missing_output_source() {
+        let mut spec = make_valid_texture_procedural_spec();
         spec.outputs[0].source = None;
 
         let result = validate_for_generate(&spec);
@@ -2443,8 +1634,8 @@ mod tests {
     }
 
     #[test]
-    fn test_texture_graph_rejects_unknown_output_source() {
-        let mut spec = make_valid_texture_graph_spec();
+    fn test_texture_procedural_rejects_unknown_output_source() {
+        let mut spec = make_valid_texture_procedural_spec();
         spec.outputs[0].source = Some("missing".to_string());
 
         let result = validate_for_generate(&spec);
@@ -2456,16 +1647,16 @@ mod tests {
     }
 
     #[test]
-    fn test_texture_graph_rejects_cycles() {
+    fn test_texture_procedural_rejects_cycles() {
         let mut output = OutputSpec::primary(OutputFormat::Png, "textures/a.png");
         output.source = Some("a".to_string());
 
-        let spec = Spec::builder("graph-cycle-01", AssetType::Texture)
+        let spec = Spec::builder("procedural-cycle-01", AssetType::Texture)
             .license("CC0-1.0")
             .seed(1)
             .output(output)
             .recipe(Recipe::new(
-                "texture.graph_v1",
+                "texture.procedural_v1",
                 serde_json::json!({
                     "resolution": [8, 8],
                     "tileable": true,
@@ -2486,16 +1677,16 @@ mod tests {
     }
 
     #[test]
-    fn test_texture_graph_rejects_obvious_type_mismatch() {
+    fn test_texture_procedural_rejects_obvious_type_mismatch() {
         let mut output = OutputSpec::primary(OutputFormat::Png, "textures/bad.png");
         output.source = Some("bad".to_string());
 
-        let spec = Spec::builder("graph-types-01", AssetType::Texture)
+        let spec = Spec::builder("procedural-types-01", AssetType::Texture)
             .license("CC0-1.0")
             .seed(1)
             .output(output)
             .recipe(Recipe::new(
-                "texture.graph_v1",
+                "texture.procedural_v1",
                 serde_json::json!({
                     "resolution": [8, 8],
                     "tileable": true,

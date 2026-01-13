@@ -1,7 +1,7 @@
 //! Main entry point for texture generation.
 //!
-//! This module provides the high-level API for generating PBR material maps
-//! from a spec.
+//! This module provides the high-level API for procedural graphs and legacy
+//! PBR material map helpers.
 
 mod helpers;
 mod graph;

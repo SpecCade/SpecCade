@@ -370,8 +370,7 @@ mod tests {
         assert!(AssetType::Music.is_compatible_recipe(
             "music.tracker_song_compose_v1"
         ));
-        assert!(AssetType::Texture.is_compatible_recipe("texture.material_v1"));
-        assert!(AssetType::Texture.is_compatible_recipe("texture.normal_v1"));
+        assert!(AssetType::Texture.is_compatible_recipe("texture.procedural_v1"));
     }
 
     #[test]

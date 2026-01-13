@@ -25,7 +25,8 @@ use speccade_spec::recipe::music::{
     TrackerInstrument, TrackerPattern,
 };
 use speccade_spec::recipe::texture::{
-    NormalMapPattern, TextureMapType, TextureMaterialV1Params, TextureNormalV1Params,
+    NoiseAlgorithm, NoiseConfig, TextureProceduralNode, TextureProceduralOp,
+    TextureProceduralV1Params,
 };
 use speccade_spec::{AssetType, OutputFormat, OutputKind, OutputSpec, Recipe, Spec};
 use speccade_tests::fixtures::{GoldenFixtures, LegacyProjectFixture};
@@ -335,36 +336,52 @@ mod generation_tier1 {
         assert!(!gen_result.wav.wav_data.is_empty());
     }
 
-    /// Test texture material maps generation produces valid PNG output.
+    /// Test procedural texture graph generation produces valid PNG output.
     #[test]
-    fn test_generate_texture_material_maps() {
+    fn test_generate_texture_procedural() {
         let harness = TestHarness::new();
 
-        let params = TextureMaterialV1Params {
+        let params = TextureProceduralV1Params {
             resolution: [64, 64],
             tileable: true,
-            maps: vec![TextureMapType::Albedo],
-            base_material: None,
-            layers: vec![],
-            color_ramp: None,
-            palette: None,
+            nodes: vec![
+                TextureProceduralNode {
+                    id: "n".to_string(),
+                    op: TextureProceduralOp::Noise {
+                        noise: NoiseConfig {
+                            algorithm: NoiseAlgorithm::Perlin,
+                            scale: 0.1,
+                            octaves: 3,
+                            persistence: 0.5,
+                            lacunarity: 2.0,
+                        },
+                    },
+                },
+                TextureProceduralNode {
+                    id: "mask".to_string(),
+                    op: TextureProceduralOp::Threshold {
+                        input: "n".to_string(),
+                        threshold: 0.5,
+                    },
+                },
+            ],
         };
 
-        let result = speccade_backend_texture::generate_material_maps(&params, 42);
+        let result = speccade_backend_texture::generate_graph(&params, 42);
         assert!(
             result.is_ok(),
-            "Texture generation failed: {:?}",
+            "Procedural graph generation failed: {:?}",
             result.err()
         );
 
-        let gen_result = result.unwrap();
-        let albedo = gen_result.maps.get(&TextureMapType::Albedo);
-        assert!(albedo.is_some(), "Albedo map should be present");
-        assert!(!albedo.unwrap().data.is_empty());
+        let nodes = result.unwrap();
+        let mask = nodes.get("mask").expect("mask node missing");
+        let (png_bytes, _) =
+            speccade_backend_texture::encode_graph_value_png(mask).expect("encode failed");
 
         // Write output and validate
-        let output_path = harness.path().join("test_albedo.png");
-        fs::write(&output_path, &albedo.unwrap().data).unwrap();
+        let output_path = harness.path().join("test_mask.png");
+        fs::write(&output_path, &png_bytes).unwrap();
 
         let validation = validate_png_file(&output_path);
         assert!(
@@ -374,37 +391,45 @@ mod generation_tier1 {
         );
     }
 
-    /// Test texture normal map generation.
+    /// Test procedural normal-from-height generation.
     #[test]
-    fn test_generate_texture_normal_map() {
+    fn test_generate_texture_normal_from_height() {
         let harness = TestHarness::new();
 
-        let params = TextureNormalV1Params {
+        let params = TextureProceduralV1Params {
             resolution: [64, 64],
             tileable: true,
-            bump_strength: 1.0,
-            pattern: Some(NormalMapPattern::Bricks {
-                brick_width: 32,
-                brick_height: 16,
-                mortar_width: 2,
-                offset: 0.5,
-            }),
-            processing: None,
+            nodes: vec![
+                TextureProceduralNode {
+                    id: "height".to_string(),
+                    op: TextureProceduralOp::Noise {
+                        noise: NoiseConfig {
+                            algorithm: NoiseAlgorithm::Perlin,
+                            scale: 0.12,
+                            octaves: 2,
+                            persistence: 0.5,
+                            lacunarity: 2.0,
+                        },
+                    },
+                },
+                TextureProceduralNode {
+                    id: "normal".to_string(),
+                    op: TextureProceduralOp::NormalFromHeight {
+                        input: "height".to_string(),
+                        strength: 1.0,
+                    },
+                },
+            ],
         };
 
-        let result = speccade_backend_texture::generate_normal_map(&params, 42);
-        assert!(
-            result.is_ok(),
-            "Normal map generation failed: {:?}",
-            result.err()
-        );
+        let nodes = speccade_backend_texture::generate_graph(&params, 7)
+            .expect("Normal-from-height graph failed");
+        let normal = nodes.get("normal").expect("normal node missing");
+        let (png_bytes, _) =
+            speccade_backend_texture::encode_graph_value_png(normal).expect("encode failed");
 
-        let gen_result = result.unwrap();
-        assert!(!gen_result.data.is_empty());
-
-        // Write output and validate
         let output_path = harness.path().join("test_normal.png");
-        fs::write(&output_path, &gen_result.data).unwrap();
+        fs::write(&output_path, &png_bytes).unwrap();
 
         let validation = validate_png_file(&output_path);
         assert!(
@@ -546,179 +571,35 @@ mod generation_tier1 {
 
             let recipe = spec.recipe.as_ref().unwrap();
 
-            // Handle both material_maps and normal_map recipes
-            if recipe.kind == "texture.material_v1" {
-                let params = recipe.as_texture_material();
-                if let Ok(params) = params {
-                    let result =
-                        speccade_backend_texture::generate_material_maps(&params, spec.seed);
-                    assert!(
-                        result.is_ok(),
-                        "Failed to generate {:?}: {:?}",
-                        spec_path,
-                        result.err()
-                    );
-                }
-            } else if recipe.kind == "texture.normal_v1" {
-                let params = recipe.as_texture_normal();
-                if let Ok(params) = params {
-                    let result = speccade_backend_texture::generate_normal_map(&params, spec.seed);
-                    assert!(
-                        result.is_ok(),
-                        "Failed to generate {:?}: {:?}",
-                        spec_path,
-                        result.err()
-                    );
-                }
-            } else if recipe.kind == "texture.packed_v1" {
-                let params = recipe.as_texture_packed();
-                if let Ok(params) = params {
-                    let maps =
-                        speccade_backend_texture::generate_packed_maps(&params, spec.seed);
-                    assert!(
-                        maps.is_ok(),
-                        "Failed to generate packed maps {:?}: {:?}",
-                        spec_path,
-                        maps.err()
-                    );
-
-                    let maps = maps.unwrap();
-                    let [width, height] = params.resolution;
-                    let config = speccade_backend_texture::PngConfig::default();
-
-                    for output in spec.outputs.iter().filter(|o| o.kind == OutputKind::Packed) {
-                        let channels = output
-                            .channels
-                            .as_ref()
-                            .expect("packed output missing channels");
-                        let packed =
-                            speccade_backend_texture::pack_channels(channels, &maps, width, height);
-                        assert!(
-                            packed.is_ok(),
-                            "Failed to pack channels {:?}: {:?}",
-                            spec_path,
-                            packed.err()
-                        );
-
-                        let packed = packed.unwrap();
-                        let encoded = speccade_backend_texture::png::write_rgba_to_vec_with_hash(
-                            &packed, &config,
-                        );
-                        assert!(
-                            encoded.is_ok(),
-                            "Failed to encode packed PNG {:?}: {:?}",
-                            spec_path,
-                            encoded.err()
-                        );
-                    }
-                }
-            } else if recipe.kind == "texture.graph_v1" {
-                let params = recipe.as_texture_graph();
+            if recipe.kind == "texture.procedural_v1" {
+                let params = recipe.as_texture_procedural();
                 if let Ok(params) = params {
                     let nodes = speccade_backend_texture::generate_graph(&params, spec.seed);
                     assert!(
                         nodes.is_ok(),
-                        "Failed to generate texture graph {:?}: {:?}",
+                        "Failed to generate procedural texture {:?}: {:?}",
                         spec_path,
                         nodes.err()
                     );
 
                     let nodes = nodes.unwrap();
                     for output in spec.outputs.iter().filter(|o| o.kind == OutputKind::Primary) {
-                        let source = output.source.as_ref().expect("graph output missing source");
+                        let source = output
+                            .source
+                            .as_ref()
+                            .expect("procedural output missing source");
                         let value = nodes
                             .get(source)
-                            .unwrap_or_else(|| panic!("graph node '{}' not found", source));
+                            .unwrap_or_else(|| panic!("node '{}' not found", source));
                         let encoded = speccade_backend_texture::encode_graph_value_png(value);
                         assert!(
                             encoded.is_ok(),
-                            "Failed to encode graph output {:?}: {:?}",
+                            "Failed to encode procedural output {:?}: {:?}",
                             spec_path,
                             encoded.err()
                         );
                     }
                 }
-            }
-        }
-    }
-
-    /// Test that packed texture goldens match expected output hashes.
-    #[test]
-    fn test_packed_texture_goldens_match_expected() {
-        if !GoldenFixtures::exists() {
-            println!("Golden fixtures not found, skipping test");
-            return;
-        }
-
-        let specs_dir = GoldenFixtures::speccade_specs_dir().join("texture");
-        let target_triple = speccade_spec::ReportBuilder::new(
-            "hash".to_string(),
-            "speccade-tests".to_string(),
-        )
-        .build()
-        .target_triple;
-        let expected_dir = GoldenFixtures::expected_hashes_dir()
-            .join("texture")
-            .join(&target_triple);
-
-        if !expected_dir.exists() {
-            println!(
-                "Expected packed texture hashes not found for target '{}', skipping test",
-                target_triple
-            );
-            return;
-        }
-
-        let specs = [
-            specs_dir.join("packed_orm.json"),
-            specs_dir.join("packed_mre.json"),
-            specs_dir.join("packed_smoothness.json"),
-            specs_dir.join("packed_patterns.json"),
-        ];
-
-        for spec_path in specs {
-            let spec = parse_spec_file(&spec_path).expect("Failed to parse spec");
-            let recipe = spec.recipe.as_ref().expect("Packed spec missing recipe");
-            let params = recipe
-                .as_texture_packed()
-                .expect("Invalid packed params");
-
-            let maps = speccade_backend_texture::generate_packed_maps(&params, spec.seed)
-                .expect("Failed to generate packed maps");
-            let [width, height] = params.resolution;
-            let config = speccade_backend_texture::PngConfig::default();
-
-            for output in spec.outputs.iter().filter(|o| o.kind == OutputKind::Packed) {
-                let channels = output.channels.as_ref().expect("Missing packed channels");
-                let packed = speccade_backend_texture::pack_channels(channels, &maps, width, height)
-                    .expect("Failed to pack channels");
-                let (data, hash) =
-                    speccade_backend_texture::png::write_rgba_to_vec_with_hash(&packed, &config)
-                        .expect("Failed to encode PNG");
-
-                let expected_path = expected_dir
-                    .join(&spec.asset_id)
-                    .join(format!("{}.blake3", output.path));
-                if !expected_path.exists() {
-                    println!(
-                        "Expected packed texture hash missing: {:?}; skipping test",
-                        expected_path
-                    );
-                    return;
-                }
-                let expected_hash = fs::read_to_string(&expected_path)
-                    .expect("Missing expected hash file")
-                    .trim()
-                    .to_string();
-
-                assert_eq!(
-                    hash, expected_hash,
-                    "Packed texture hash mismatch for {:?}",
-                    spec_path
-                );
-
-                // Sanity check: generated PNG is non-empty.
-                assert!(!data.is_empty(), "Generated PNG is empty");
             }
         }
     }
@@ -1115,21 +996,41 @@ mod determinism {
     /// Test that texture generation is deterministic.
     #[test]
     fn test_texture_determinism() {
-        let params = TextureMaterialV1Params {
+        let params = TextureProceduralV1Params {
             resolution: [32, 32],
             tileable: true,
-            maps: vec![TextureMapType::Albedo],
-            base_material: None,
-            layers: vec![],
-            color_ramp: None,
-            palette: None,
+            nodes: vec![
+                TextureProceduralNode {
+                    id: "n".to_string(),
+                    op: TextureProceduralOp::Noise {
+                        noise: NoiseConfig {
+                            algorithm: NoiseAlgorithm::Perlin,
+                            scale: 0.1,
+                            octaves: 3,
+                            persistence: 0.5,
+                            lacunarity: 2.0,
+                        },
+                    },
+                },
+                TextureProceduralNode {
+                    id: "mask".to_string(),
+                    op: TextureProceduralOp::Threshold {
+                        input: "n".to_string(),
+                        threshold: 0.5,
+                    },
+                },
+            ],
         };
 
-        let result1 = speccade_backend_texture::generate_material_maps(&params, 12345).unwrap();
-        let result2 = speccade_backend_texture::generate_material_maps(&params, 12345).unwrap();
+        let nodes1 = speccade_backend_texture::generate_graph(&params, 12345).unwrap();
+        let nodes2 = speccade_backend_texture::generate_graph(&params, 12345).unwrap();
 
-        let hash1 = &result1.maps.get(&TextureMapType::Albedo).unwrap().hash;
-        let hash2 = &result2.maps.get(&TextureMapType::Albedo).unwrap().hash;
+        let (_, hash1) =
+            speccade_backend_texture::encode_graph_value_png(nodes1.get("mask").unwrap())
+                .unwrap();
+        let (_, hash2) =
+            speccade_backend_texture::encode_graph_value_png(nodes2.get("mask").unwrap())
+                .unwrap();
 
         assert_eq!(hash1, hash2, "Same seed should produce same hash");
     }
@@ -1137,21 +1038,41 @@ mod determinism {
     /// Test that different seeds produce different outputs.
     #[test]
     fn test_different_seeds_different_output() {
-        let params = TextureMaterialV1Params {
+        let params = TextureProceduralV1Params {
             resolution: [32, 32],
             tileable: true,
-            maps: vec![TextureMapType::Albedo],
-            base_material: None,
-            layers: vec![],
-            color_ramp: None,
-            palette: None,
+            nodes: vec![
+                TextureProceduralNode {
+                    id: "n".to_string(),
+                    op: TextureProceduralOp::Noise {
+                        noise: NoiseConfig {
+                            algorithm: NoiseAlgorithm::Perlin,
+                            scale: 0.1,
+                            octaves: 3,
+                            persistence: 0.5,
+                            lacunarity: 2.0,
+                        },
+                    },
+                },
+                TextureProceduralNode {
+                    id: "mask".to_string(),
+                    op: TextureProceduralOp::Threshold {
+                        input: "n".to_string(),
+                        threshold: 0.5,
+                    },
+                },
+            ],
         };
 
-        let result1 = speccade_backend_texture::generate_material_maps(&params, 111).unwrap();
-        let result2 = speccade_backend_texture::generate_material_maps(&params, 222).unwrap();
+        let nodes1 = speccade_backend_texture::generate_graph(&params, 111).unwrap();
+        let nodes2 = speccade_backend_texture::generate_graph(&params, 222).unwrap();
 
-        let hash1 = &result1.maps.get(&TextureMapType::Albedo).unwrap().hash;
-        let hash2 = &result2.maps.get(&TextureMapType::Albedo).unwrap().hash;
+        let (_, hash1) =
+            speccade_backend_texture::encode_graph_value_png(nodes1.get("mask").unwrap())
+                .unwrap();
+        let (_, hash2) =
+            speccade_backend_texture::encode_graph_value_png(nodes2.get("mask").unwrap())
+                .unwrap();
 
         // Note: This could theoretically fail with a collision, but it's extremely unlikely
         assert_ne!(

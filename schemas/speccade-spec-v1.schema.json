@@ -36,7 +36,7 @@
     "outputs": {
       "type": "array",
       "minItems": 1,
-      "description": "Declared output artifacts. Generation currently writes `primary` outputs (and `packed` outputs for `texture.packed_v1`).",
+      "description": "Declared output artifacts. Generation currently writes `primary` outputs.",
       "items": { "$ref": "#/definitions/output_spec" }
     },
     "description": {
@@ -95,10 +95,7 @@
             "audio_v1",
             "music.tracker_song_v1",
             "music.tracker_song_compose_v1",
-            "texture.material_v1",
-            "texture.normal_v1",
-            "texture.packed_v1",
-            "texture.graph_v1",
+            "texture.procedural_v1",
             "static_mesh.blender_primitives_v1",
             "skeletal_mesh.blender_rigged_mesh_v1",
             "skeletal_animation.blender_clip_v1"
@@ -112,12 +109,6 @@
       }
     },
     "output_spec": {
-      "oneOf": [
-        { "$ref": "#/definitions/output_spec_non_packed" },
-        { "$ref": "#/definitions/output_spec_packed" }
-      ]
-    },
-    "output_spec_non_packed": {
       "type": "object",
       "additionalProperties": false,
       "required": ["kind", "format", "path"],
@@ -133,66 +124,14 @@
         "path": { "$ref": "#/definitions/output_path" },
         "source": {
           "type": "string",
-          "description": "Optional output binding to a named node/map (used by texture.graph_v1)."
-        },
-        "channels": false
-      }
-    },
-    "output_spec_packed": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["kind", "format", "path", "channels"],
-      "properties": {
-        "kind": { "const": "packed" },
-        "format": { "const": "png" },
-        "path": { "$ref": "#/definitions/output_path" },
-        "channels": { "$ref": "#/definitions/packed_channels" }
+          "description": "Optional output binding to a named node (used by texture.procedural_v1)."
+        }
       }
     },
     "output_path": {
       "type": "string",
       "pattern": "^(?!.*\\.\\.)[^/\\\\:*?\"<>|]+(/[^/\\\\:*?\"<>|]+)*$",
       "description": "Relative output path (no `..`, no backslashes)."
-    },
-    "packed_channels": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["r", "g", "b"],
-      "properties": {
-        "r": { "$ref": "#/definitions/channel_source" },
-        "g": { "$ref": "#/definitions/channel_source" },
-        "b": { "$ref": "#/definitions/channel_source" },
-        "a": { "$ref": "#/definitions/channel_source" }
-      }
-    },
-    "channel_source": {
-      "oneOf": [
-        { "type": "string", "description": "Map key reference." },
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": ["key"],
-          "properties": {
-            "key": { "type": "string" },
-            "component": { "$ref": "#/definitions/color_component" },
-            "invert": { "type": "boolean", "default": false }
-          },
-          "description": "Extended map reference."
-        },
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": ["constant"],
-          "properties": {
-            "constant": { "type": "number", "minimum": 0.0, "maximum": 1.0 }
-          },
-          "description": "Constant fill value."
-        }
-      ]
-    },
-    "color_component": {
-      "type": "string",
-      "enum": ["r", "g", "b", "a", "luminance"]
     }
   }
 }

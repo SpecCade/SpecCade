@@ -3,9 +3,7 @@
 //! Dispatches generation requests to the appropriate backend based on recipe.kind.
 
 use speccade_spec::recipe::music::{MusicTrackerSongV1Params, TrackerFormat};
-use speccade_spec::recipe::texture::TextureMapType;
 use speccade_spec::{BackendError, OutputFormat, OutputKind, OutputResult, Spec};
-use std::collections::HashSet;
 use std::fmt;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -89,17 +87,8 @@ pub fn dispatch_generate(
         "music.tracker_song_v1" => generate_music(spec, out_root_path, spec_dir),
         "music.tracker_song_compose_v1" => generate_music_compose(spec, out_root_path, spec_dir),
 
-        // Texture material maps backend
-        "texture.material_v1" => generate_texture_material_maps(spec, out_root_path),
-
-        // Texture normal map backend
-        "texture.normal_v1" => generate_texture_normal_map(spec, out_root_path),
-
-        // Texture packed backend
-        "texture.packed_v1" => generate_texture_packed(spec, out_root_path),
-
-        // Texture graph backend
-        "texture.graph_v1" => generate_texture_graph(spec, out_root_path),
+        // Unified procedural texture backend
+        "texture.procedural_v1" => generate_texture_procedural(spec, out_root_path),
 
         // Blender static mesh backend
         "static_mesh.blender_primitives_v1" => generate_blender_static_mesh(spec, out_root_path),
@@ -349,227 +338,18 @@ fn generate_music_from_params(
     Ok(results)
 }
 
-/// Generate texture material maps using the texture backend
-fn generate_texture_material_maps(
+/// Generate procedural texture outputs using the texture backend.
+fn generate_texture_procedural(
     spec: &Spec,
     out_root: &Path,
 ) -> Result<Vec<OutputResult>, DispatchError> {
     let recipe = spec.recipe.as_ref().ok_or(DispatchError::NoRecipe)?;
-    let params = recipe
-        .as_texture_material()
-        .map_err(|e| DispatchError::BackendError(format!("Invalid texture params: {}", e)))?;
-
-    let result = speccade_backend_texture::generate_material_maps(&params, spec.seed)
-        .map_err(|e| DispatchError::BackendError(format!("Texture generation failed: {}", e)))?;
-
-    // Collect PNG outputs once and map them deterministically to the requested map types.
-    //
-    // Prefer explicit filename suffixes (e.g. `_albedo.png`) to avoid silently overwriting
-    // multiple maps to the same output path.
-    let mut unused_png_output_indices: Vec<usize> = spec
-        .outputs
-        .iter()
-        .enumerate()
-        .filter(|(_, o)| o.kind == OutputKind::Primary && o.format == OutputFormat::Png)
-        .map(|(i, _)| i)
-        .collect();
-
-    if unused_png_output_indices.len() < params.maps.len() {
-        return Err(DispatchError::BackendError(format!(
-            "Not enough primary PNG outputs for material maps: {} requested, but only {} primary PNG outputs declared",
-            params.maps.len(),
-            unused_png_output_indices.len()
-        )));
-    }
-
-    let mut used_paths: HashSet<&str> = HashSet::new();
-    let mut outputs = Vec::with_capacity(params.maps.len());
-
-    for (map_index, map_type) in params.maps.iter().enumerate() {
-        let map_result = result.maps.get(map_type).ok_or_else(|| {
-            DispatchError::BackendError(format!("Missing generated map for {:?}", map_type))
-        })?;
-
-        let suffix = texture_map_suffix(*map_type);
-        let mut matching_indices: Vec<usize> = unused_png_output_indices
-            .iter()
-            .copied()
-            .filter(|&i| output_path_matches_suffix(&spec.outputs[i].path, suffix))
-            .collect();
-
-        let chosen_index = match matching_indices.len() {
-            0 => {
-                // Fallback: if the caller provided exactly one PNG output per requested map,
-                // map them in order.
-                let remaining_maps = params.maps.len() - map_index;
-                if unused_png_output_indices.len() == remaining_maps {
-                    unused_png_output_indices[0]
-                } else {
-                    return Err(DispatchError::BackendError(format!(
-                        "No PNG output path found for map {:?}. Expected a path ending with '_{}.png' (or provide exactly one PNG output per map in the same order as 'recipe.params.maps')",
-                        map_type, suffix
-                    )));
-                }
-            }
-            1 => matching_indices.pop().unwrap(),
-            _ => {
-                matching_indices.sort();
-                let matching_paths: Vec<String> = matching_indices
-                    .iter()
-                    .map(|&i| spec.outputs[i].path.clone())
-                    .collect();
-                return Err(DispatchError::BackendError(format!(
-                    "Multiple PNG outputs match map {:?} (suffix '{}'): {}",
-                    map_type,
-                    suffix,
-                    matching_paths.join(", ")
-                )));
-            }
-        };
-
-        unused_png_output_indices.retain(|&i| i != chosen_index);
-
-        let output_spec = &spec.outputs[chosen_index];
-        if !used_paths.insert(output_spec.path.as_str()) {
-            return Err(DispatchError::BackendError(format!(
-                "Output path matched more than once while mapping texture maps: {}",
-                output_spec.path
-            )));
-        }
-
-        write_output_bytes(out_root, &output_spec.path, &map_result.data)?;
-
-        outputs.push(OutputResult::tier1(
-            output_spec.kind,
-            OutputFormat::Png,
-            PathBuf::from(&output_spec.path),
-            map_result.hash.clone(),
-        ));
-    }
-
-    Ok(outputs)
-}
-
-/// Generate texture normal map using the texture backend
-fn generate_texture_normal_map(
-    spec: &Spec,
-    out_root: &Path,
-) -> Result<Vec<OutputResult>, DispatchError> {
-    let recipe = spec.recipe.as_ref().ok_or(DispatchError::NoRecipe)?;
-    let params = recipe
-        .as_texture_normal()
-        .map_err(|e| DispatchError::BackendError(format!("Invalid normal map params: {}", e)))?;
-
-    let result = speccade_backend_texture::generate_normal_map(&params, spec.seed)
-        .map_err(|e| DispatchError::BackendError(format!("Normal map generation failed: {}", e)))?;
-
-    // Write normal map file to the output path from spec
-    let primary_output = get_primary_output(spec)?;
-    if primary_output.format != OutputFormat::Png {
-        return Err(DispatchError::BackendError(format!(
-            "texture.normal_v1 requires primary output format 'png', got '{}'",
-            primary_output.format
-        )));
-    }
-    write_output_bytes(out_root, &primary_output.path, &result.data)?;
-
-    Ok(vec![OutputResult::tier1(
-        OutputKind::Primary,
-        OutputFormat::Png,
-        PathBuf::from(&primary_output.path),
-        result.hash,
-    )])
-}
-
-/// Generate packed texture using the texture backend
-fn generate_texture_packed(
-    spec: &Spec,
-    out_root: &Path,
-) -> Result<Vec<OutputResult>, DispatchError> {
-    use speccade_backend_texture::PngConfig;
-
-    let recipe = spec.recipe.as_ref().ok_or(DispatchError::NoRecipe)?;
-    let params = recipe.as_texture_packed().map_err(|e| {
-        DispatchError::BackendError(format!("Invalid packed texture params: {}", e))
-    })?;
-
-    let [width, height] = params.resolution;
-
-    // Generate a TextureBuffer for each map definition
-    let map_buffers = speccade_backend_texture::generate_packed_maps(&params, spec.seed).map_err(
-        |e| DispatchError::BackendError(format!("Packed map generation failed: {}", e)),
-    )?;
-
-    // Find all packed outputs.
-    let packed_outputs: Vec<(usize, &speccade_spec::OutputSpec)> = spec
-        .outputs
-        .iter()
-        .enumerate()
-        .filter(|(_, o)| o.kind == OutputKind::Packed)
-        .collect();
-
-    if packed_outputs.is_empty() {
-        return Err(DispatchError::BackendError(
-            "texture.packed_v1 requires at least one output of kind 'packed'".to_string(),
-        ));
-    }
-
-    let config = PngConfig::default();
-    let mut outputs = Vec::with_capacity(packed_outputs.len());
-
-    for (output_index, output_spec) in packed_outputs {
-        if output_spec.format != OutputFormat::Png {
-            return Err(DispatchError::BackendError(format!(
-                "Packed output must have format 'png' (outputs[{}].format)",
-                output_index
-            )));
-        }
-
-        let channels = output_spec.channels.as_ref().ok_or_else(|| {
-            DispatchError::BackendError(format!(
-                "Packed output is missing 'channels' (outputs[{}].channels)",
-                output_index
-            ))
-        })?;
-
-        // Pack the channels
-        let packed_buffer =
-            speccade_backend_texture::pack_channels(channels, &map_buffers, width, height)
-                .map_err(|e| {
-                    DispatchError::BackendError(format!("Channel packing failed: {}", e))
-                })?;
-
-        // Encode to PNG
-        let (png_data, hash) =
-            speccade_backend_texture::png::write_rgba_to_vec_with_hash(&packed_buffer, &config)
-                .map_err(|e| DispatchError::BackendError(format!("PNG encoding failed: {}", e)))?;
-
-        // Write to output
-        write_output_bytes(out_root, &output_spec.path, &png_data)?;
-
-        outputs.push(OutputResult::tier1(
-            output_spec.kind,
-            OutputFormat::Png,
-            PathBuf::from(&output_spec.path),
-            hash,
-        ));
-    }
-
-    Ok(outputs)
-}
-
-/// Generate map-agnostic texture graph using the texture backend.
-fn generate_texture_graph(
-    spec: &Spec,
-    out_root: &Path,
-) -> Result<Vec<OutputResult>, DispatchError> {
-    let recipe = spec.recipe.as_ref().ok_or(DispatchError::NoRecipe)?;
-    let params = recipe.as_texture_graph().map_err(|e| {
-        DispatchError::BackendError(format!("Invalid texture graph params: {}", e))
+    let params = recipe.as_texture_procedural().map_err(|e| {
+        DispatchError::BackendError(format!("Invalid texture procedural params: {}", e))
     })?;
 
     let nodes = speccade_backend_texture::generate_graph(&params, spec.seed).map_err(|e| {
-        DispatchError::BackendError(format!("Texture graph generation failed: {}", e))
+        DispatchError::BackendError(format!("Procedural texture generation failed: {}", e))
     })?;
 
     let primary_outputs: Vec<(usize, &speccade_spec::OutputSpec)> = spec
@@ -581,7 +361,7 @@ fn generate_texture_graph(
 
     if primary_outputs.is_empty() {
         return Err(DispatchError::BackendError(
-            "texture.graph_v1 requires at least one output of kind 'primary'".to_string(),
+            "texture.procedural_v1 requires at least one output of kind 'primary'".to_string(),
         ));
     }
 
@@ -590,14 +370,14 @@ fn generate_texture_graph(
     for (output_index, output_spec) in primary_outputs {
         if output_spec.format != OutputFormat::Png {
             return Err(DispatchError::BackendError(format!(
-                "texture.graph_v1 primary outputs must have format 'png' (outputs[{}].format)",
+                "texture.procedural_v1 primary outputs must have format 'png' (outputs[{}].format)",
                 output_index
             )));
         }
 
         let source = output_spec.source.as_ref().ok_or_else(|| {
             DispatchError::BackendError(format!(
-                "texture.graph_v1 primary outputs must set 'source' (outputs[{}].source)",
+                "texture.procedural_v1 primary outputs must set 'source' (outputs[{}].source)",
                 output_index
             ))
         })?;
@@ -778,38 +558,11 @@ pub fn is_backend_available(kind: &str) -> bool {
         "audio_v1"
             | "music.tracker_song_v1"
             | "music.tracker_song_compose_v1"
-            | "texture.material_v1"
-            | "texture.normal_v1"
-            | "texture.packed_v1"
-            | "texture.graph_v1"
+            | "texture.procedural_v1"
             | "static_mesh.blender_primitives_v1"
             | "skeletal_mesh.blender_rigged_mesh_v1"
             | "skeletal_animation.blender_clip_v1"
     )
-}
-
-fn texture_map_suffix(map_type: TextureMapType) -> &'static str {
-    match map_type {
-        TextureMapType::Albedo => "albedo",
-        TextureMapType::Normal => "normal",
-        TextureMapType::Roughness => "roughness",
-        TextureMapType::Metallic => "metallic",
-        TextureMapType::Ao => "ao",
-        TextureMapType::Emissive => "emissive",
-        TextureMapType::Height => "height",
-    }
-}
-
-fn output_path_matches_suffix(path: &str, suffix: &str) -> bool {
-    let path_lower = path.to_ascii_lowercase();
-    let stem = match path_lower.strip_suffix(".png") {
-        Some(stem) => stem,
-        None => path_lower.as_str(),
-    };
-
-    stem.ends_with(&format!("_{}", suffix))
-        || stem.ends_with(&format!("-{}", suffix))
-        || stem.ends_with(&format!("/{}", suffix))
 }
 
 /// Get the backend tier for a recipe kind
@@ -839,7 +592,6 @@ pub fn get_backend_tier(kind: &str) -> Option<u8> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use speccade_spec::recipe::texture::TextureMaterialV1Params;
     use speccade_spec::{AssetType, OutputSpec, Recipe};
 
     #[test]
@@ -848,7 +600,7 @@ mod tests {
         assert_eq!(get_backend_tier("audio_v1"), Some(1));
         assert_eq!(get_backend_tier("music.tracker_song_v1"), Some(1));
         assert_eq!(get_backend_tier("music.tracker_song_compose_v1"), Some(1));
-        assert_eq!(get_backend_tier("texture.material_v1"), Some(1));
+        assert_eq!(get_backend_tier("texture.procedural_v1"), Some(1));
 
         // Tier 2 - Blender backends
         assert_eq!(
@@ -874,10 +626,7 @@ mod tests {
         assert!(is_backend_available("audio_v1"));
         assert!(is_backend_available("music.tracker_song_v1"));
         assert!(is_backend_available("music.tracker_song_compose_v1"));
-        assert!(is_backend_available("texture.material_v1"));
-        assert!(is_backend_available("texture.normal_v1"));
-        assert!(is_backend_available("texture.packed_v1"));
-        assert!(is_backend_available("texture.graph_v1"));
+        assert!(is_backend_available("texture.procedural_v1"));
         assert!(is_backend_available("static_mesh.blender_primitives_v1"));
         assert!(is_backend_available("skeletal_mesh.blender_rigged_mesh_v1"));
         assert!(is_backend_available("skeletal_animation.blender_clip_v1"));
@@ -887,188 +636,25 @@ mod tests {
     }
 
     #[test]
-    fn test_dispatch_texture_material_maps_matches_by_suffix() {
+    fn test_dispatch_texture_procedural_generates_outputs() {
         let tmp = tempfile::tempdir().unwrap();
 
-        let params = TextureMaterialV1Params {
-            resolution: [16, 16],
-            tileable: true,
-            maps: vec![TextureMapType::Albedo, TextureMapType::Normal],
-            base_material: None,
-            layers: vec![],
-            color_ramp: None,
-            palette: None,
-        };
+        let mut output = OutputSpec::primary(OutputFormat::Png, "textures/mask.png");
+        output.source = Some("mask".to_string());
 
         let recipe = Recipe::new(
-            "texture.material_v1",
-            serde_json::to_value(&params).unwrap(),
+            "texture.procedural_v1",
+            serde_json::json!({
+                "resolution": [16, 16],
+                "tileable": true,
+                "nodes": [
+                    { "id": "n", "type": "noise", "noise": { "algorithm": "perlin", "scale": 0.08 } },
+                    { "id": "mask", "type": "threshold", "input": "n", "threshold": 0.5 }
+                ]
+            }),
         );
 
-        let spec = Spec::builder("test-tex-01", AssetType::Texture)
-            .license("CC0-1.0")
-            .seed(42)
-            .output(OutputSpec::primary(
-                OutputFormat::Png,
-                "textures/test-tex-01_albedo.png",
-            ))
-            .output(OutputSpec::primary(
-                OutputFormat::Png,
-                "textures/test-tex-01_normal.png",
-            ))
-            .recipe(recipe)
-            .build();
-
-        let spec_path = tmp.path().join("test.spec.json");
-        let outputs = dispatch_generate(&spec, tmp.path().to_str().unwrap(), &spec_path).unwrap();
-        assert_eq!(outputs.len(), 2);
-
-        let albedo_path = tmp.path().join("textures/test-tex-01_albedo.png");
-        let normal_path = tmp.path().join("textures/test-tex-01_normal.png");
-
-        assert!(albedo_path.exists());
-        assert!(normal_path.exists());
-
-        let albedo_bytes = std::fs::read(&albedo_path).unwrap();
-        let normal_bytes = std::fs::read(&normal_path).unwrap();
-        assert!(!albedo_bytes.is_empty());
-        assert!(!normal_bytes.is_empty());
-        assert_ne!(
-            albedo_bytes, normal_bytes,
-            "maps should not overwrite each other"
-        );
-    }
-
-    #[test]
-    fn test_dispatch_texture_material_maps_fallbacks_to_order() {
-        let tmp = tempfile::tempdir().unwrap();
-
-        let params = TextureMaterialV1Params {
-            resolution: [8, 8],
-            tileable: true,
-            maps: vec![TextureMapType::Roughness, TextureMapType::Metallic],
-            base_material: None,
-            layers: vec![],
-            color_ramp: None,
-            palette: None,
-        };
-
-        let recipe = Recipe::new(
-            "texture.material_v1",
-            serde_json::to_value(&params).unwrap(),
-        );
-
-        let spec = Spec::builder("test-tex-02", AssetType::Texture)
-            .license("CC0-1.0")
-            .seed(123)
-            .output(OutputSpec::primary(OutputFormat::Png, "textures/out1.png"))
-            .output(OutputSpec::primary(OutputFormat::Png, "textures/out2.png"))
-            .recipe(recipe)
-            .build();
-
-        let spec_path = tmp.path().join("test.spec.json");
-        let outputs = dispatch_generate(&spec, tmp.path().to_str().unwrap(), &spec_path).unwrap();
-        assert_eq!(outputs.len(), 2);
-        assert!(tmp.path().join("textures/out1.png").exists());
-        assert!(tmp.path().join("textures/out2.png").exists());
-    }
-
-    #[test]
-    fn test_dispatch_texture_material_maps_requires_enough_outputs() {
-        let tmp = tempfile::tempdir().unwrap();
-
-        let params = TextureMaterialV1Params {
-            resolution: [8, 8],
-            tileable: true,
-            maps: vec![TextureMapType::Albedo, TextureMapType::Normal],
-            base_material: None,
-            layers: vec![],
-            color_ramp: None,
-            palette: None,
-        };
-
-        let recipe = Recipe::new(
-            "texture.material_v1",
-            serde_json::to_value(&params).unwrap(),
-        );
-
-        let spec = Spec::builder("test-tex-03", AssetType::Texture)
-            .license("CC0-1.0")
-            .seed(1)
-            .output(OutputSpec::primary(
-                OutputFormat::Png,
-                "textures/only_one.png",
-            ))
-            .recipe(recipe)
-            .build();
-
-        let spec_path = tmp.path().join("test.spec.json");
-        let err = dispatch_generate(&spec, tmp.path().to_str().unwrap(), &spec_path).unwrap_err();
-        assert!(err
-            .to_string()
-            .contains("Not enough primary PNG outputs for material maps"));
-    }
-
-    #[test]
-    fn test_dispatch_texture_packed_with_constant_maps() {
-        use speccade_spec::recipe::texture::{
-            ChannelSource, MapDefinition, PackedChannels, TexturePackedV1Params,
-        };
-        use std::collections::HashMap;
-
-        let tmp = tempfile::tempdir().unwrap();
-
-        // Create params with constant grayscale maps
-        let mut maps = HashMap::new();
-        maps.insert(
-            "ao".to_string(),
-            MapDefinition::Grayscale {
-                value: Some(0.8),
-                from_height: None,
-                ao_strength: None,
-            },
-        );
-        maps.insert(
-            "roughness".to_string(),
-            MapDefinition::Grayscale {
-                value: Some(0.5),
-                from_height: None,
-                ao_strength: None,
-            },
-        );
-        maps.insert(
-            "metallic".to_string(),
-            MapDefinition::Grayscale {
-                value: Some(1.0),
-                from_height: None,
-                ao_strength: None,
-            },
-        );
-
-        let params = TexturePackedV1Params {
-            resolution: [16, 16],
-            tileable: true,
-            maps,
-        };
-
-        let recipe = Recipe::new("texture.packed_v1", serde_json::to_value(&params).unwrap());
-
-        // Create channels spec
-        let channels = PackedChannels::rgb(
-            ChannelSource::key("ao"),
-            ChannelSource::key("roughness"),
-            ChannelSource::key("metallic"),
-        );
-
-        let output = OutputSpec {
-            kind: OutputKind::Packed,
-            format: OutputFormat::Png,
-            path: "packed/orm.png".to_string(),
-            source: None,
-            channels: Some(channels),
-        };
-
-        let spec = Spec::builder("test-packed-01", AssetType::Texture)
+        let spec = Spec::builder("test-procedural-01", AssetType::Texture)
             .license("CC0-1.0")
             .seed(42)
             .output(output)
@@ -1077,16 +663,12 @@ mod tests {
 
         let spec_path = tmp.path().join("test.spec.json");
         let outputs = dispatch_generate(&spec, tmp.path().to_str().unwrap(), &spec_path).unwrap();
-
         assert_eq!(outputs.len(), 1);
-        assert_eq!(outputs[0].kind, OutputKind::Packed);
         assert_eq!(outputs[0].format, OutputFormat::Png);
 
-        // Verify the file was created
-        let output_path = tmp.path().join("packed/orm.png");
-        assert!(output_path.exists(), "Output file should exist");
-
+        let output_path = tmp.path().join("textures/mask.png");
+        assert!(output_path.exists());
         let bytes = std::fs::read(&output_path).unwrap();
-        assert!(!bytes.is_empty(), "Output file should not be empty");
+        assert!(!bytes.is_empty());
     }
 }

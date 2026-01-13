@@ -6,7 +6,7 @@ use super::common::TextureMapType;
 use super::layers::TextureLayer;
 use super::materials::BaseMaterial;
 
-/// Parameters for the `texture.material_v1` recipe.
+/// Legacy parameters for the `texture.material_v1` recipe.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct TextureMaterialV1Params {

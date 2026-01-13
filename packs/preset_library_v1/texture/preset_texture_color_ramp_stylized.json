@@ -1,0 +1,36 @@
+{
+  "spec_version": 1,
+  "asset_id": "preset_texture_color_ramp_stylized",
+  "asset_type": "texture",
+  "license": "CC0-1.0",
+  "seed": 1003,
+  "description": "Stylized albedo from a height field and a bold color ramp.",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "png",
+      "path": "textures/preset_texture_color_ramp_stylized_albedo.png",
+      "source": "albedo"
+    }
+  ],
+  "recipe": {
+    "kind": "texture.procedural_v1",
+    "params": {
+      "resolution": [512, 512],
+      "tileable": true,
+      "nodes": [
+        {
+          "id": "height",
+          "type": "noise",
+          "noise": { "algorithm": "perlin", "scale": 0.07 }
+        },
+        {
+          "id": "albedo",
+          "type": "color_ramp",
+          "input": "height",
+          "ramp": ["#0b1020", "#e94560", "#f39c12"]
+        }
+      ]
+    }
+  }
+}

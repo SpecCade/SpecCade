@@ -7,6 +7,7 @@ pub mod generate;
 pub mod generate_all;
 pub mod migrate;
 pub mod preview;
+pub mod template;
 pub mod validate;
 
 mod reporting;
@@ -23,6 +24,7 @@ mod tests {
         let _ = generate::run;
         let _ = generate_all::run;
         let _ = preview::run;
+        let _ = template::list;
         let _ = validate::run;
     }
 }

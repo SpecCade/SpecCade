@@ -15,10 +15,7 @@ For authoritative validation, use `speccade validate` / `speccade generate` (the
 |------------|------------|------|
 | `audio` | `audio_v1` | WAV output |
 | `music` | `music.tracker_song_v1` | XM/IT output |
-| `texture` | `texture.material_v1` | Material maps (multiple PNG outputs) |
-| `texture` | `texture.normal_v1` | Normal map (single PNG output) |
-| `texture` | `texture.packed_v1` | Packed RGBA PNG outputs |
-| `texture` | `texture.graph_v1` | Map-agnostic node graph IR (multiple PNG outputs) |
+| `texture` | `texture.procedural_v1` | Unified procedural DAG outputs (PNG) |
 | `static_mesh` | `static_mesh.blender_primitives_v1` | Blender-backed (Tier 2 metrics) |
 | `skeletal_mesh` | `skeletal_mesh.blender_rigged_mesh_v1` | Blender-backed (Tier 2 metrics) |
 | `skeletal_animation` | `skeletal_animation.blender_clip_v1` | Blender-backed (Tier 2 metrics) |

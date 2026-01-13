@@ -1,34 +1,58 @@
 {
   "spec_version": 1,
-  "asset_id": "scratched_metal",
+  "asset_id": "preset_texture_material_set_with_packed_orm",
   "asset_type": "texture",
   "license": "CC0-1.0",
-  "seed": 5003,
-  "description": "Scratched metal surface normal map",
+  "seed": 1009,
+  "description": "Material set with separate maps plus a packed ORM output.",
   "outputs": [
     {
       "kind": "primary",
       "format": "png",
-      "path": "scratched_metal.png",
+      "path": "textures/preset_texture_material_set_with_packed_orm_albedo.png",
+      "source": "albedo"
+    },
+    {
+      "kind": "primary",
+      "format": "png",
+      "path": "textures/preset_texture_material_set_with_packed_orm_normal.png",
+      "source": "normal"
+    },
+    {
+      "kind": "primary",
+      "format": "png",
+      "path": "textures/preset_texture_material_set_with_packed_orm_roughness.png",
+      "source": "roughness"
+    },
+    {
+      "kind": "primary",
+      "format": "png",
+      "path": "textures/preset_texture_material_set_with_packed_orm_metallic.png",
       "source": "metallic"
+    },
+    {
+      "kind": "primary",
+      "format": "png",
+      "path": "textures/preset_texture_material_set_with_packed_orm_ao.png",
+      "source": "ao"
+    },
+    {
+      "kind": "primary",
+      "format": "png",
+      "path": "textures/preset_texture_material_set_with_packed_orm_orm.png",
+      "source": "packed"
     }
   ],
   "recipe": {
     "kind": "texture.procedural_v1",
     "params": {
-      "resolution": [
-        256,
-        256
-      ],
+      "resolution": [512, 512],
       "tileable": true,
       "nodes": [
         {
           "id": "height",
           "type": "noise",
-          "noise": {
-            "algorithm": "perlin",
-            "scale": 0.08
-          }
+          "noise": { "algorithm": "perlin", "scale": 0.08 }
         },
         {
           "id": "mask",
@@ -40,11 +64,7 @@
           "id": "albedo",
           "type": "color_ramp",
           "input": "height",
-          "ramp": [
-            "#2b2b2b",
-            "#8f8f8f",
-            "#e0e0e0"
-          ]
+          "ramp": ["#2b2b2b", "#8f8f8f", "#e0e0e0"]
         },
         {
           "id": "roughness",
@@ -63,15 +83,6 @@
           "type": "multiply",
           "a": "mask",
           "b": "height"
-        },
-        {
-          "id": "emissive",
-          "type": "color_ramp",
-          "input": "mask",
-          "ramp": [
-            "#000000",
-            "#ffcc00"
-          ]
         },
         {
           "id": "normal",

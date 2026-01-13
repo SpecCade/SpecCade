@@ -2,8 +2,6 @@
 
 use serde::{Deserialize, Serialize};
 
-use crate::recipe::texture::PackedChannels;
-
 /// Output kind (what role the output serves).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -14,8 +12,6 @@ pub enum OutputKind {
     Metadata,
     /// Preview file (thumbnail, preview audio, etc.).
     Preview,
-    /// Packed texture output (channel packing).
-    Packed,
 }
 
 impl std::fmt::Display for OutputKind {
@@ -24,7 +20,6 @@ impl std::fmt::Display for OutputKind {
             OutputKind::Primary => write!(f, "primary"),
             OutputKind::Metadata => write!(f, "metadata"),
             OutputKind::Preview => write!(f, "preview"),
-            OutputKind::Packed => write!(f, "packed"),
         }
     }
 }
@@ -94,7 +89,7 @@ impl std::fmt::Display for OutputFormat {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct OutputSpec {
-    /// The kind of output (primary, metadata, preview, packed).
+    /// The kind of output (primary, metadata, preview).
     pub kind: OutputKind,
     /// The file format.
     pub format: OutputFormat,
@@ -103,9 +98,6 @@ pub struct OutputSpec {
     /// Optional source selector used by recipes that explicitly bind outputs to named nodes/maps.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub source: Option<String>,
-    /// Channel packing specification (only for kind=packed).
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub channels: Option<PackedChannels>,
 }
 
 impl OutputSpec {
@@ -116,7 +108,6 @@ impl OutputSpec {
             format,
             path: path.into(),
             source: None,
-            channels: None,
         }
     }
 
@@ -133,17 +124,6 @@ impl OutputSpec {
     /// Creates a preview output specification.
     pub fn preview(format: OutputFormat, path: impl Into<String>) -> Self {
         Self::new(OutputKind::Preview, format, path)
-    }
-
-    /// Creates a packed texture output specification with channel mapping.
-    pub fn packed(format: OutputFormat, path: impl Into<String>, channels: PackedChannels) -> Self {
-        Self {
-            kind: OutputKind::Packed,
-            format,
-            path: path.into(),
-            source: None,
-            channels: Some(channels),
-        }
     }
 
     /// Returns the expected file extension based on the format.

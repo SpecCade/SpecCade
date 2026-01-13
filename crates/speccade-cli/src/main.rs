@@ -4,6 +4,7 @@
 //! SpecCade specs and their generated assets.
 
 use clap::{Parser, Subcommand};
+use std::path::Path;
 use std::process::ExitCode;
 
 mod commands;
@@ -118,6 +119,41 @@ enum Commands {
         #[arg(short, long)]
         output: Option<String>,
     },
+
+    /// Manage built-in templates (texture kits)
+    Template {
+        #[command(subcommand)]
+        command: TemplateCommands,
+    },
+}
+
+#[derive(Subcommand)]
+enum TemplateCommands {
+    /// List available templates
+    List {
+        /// Asset type to list (default: texture)
+        #[arg(long, default_value = "texture")]
+        asset_type: String,
+    },
+    /// Show details for a template
+    Show {
+        /// Template id (asset_id)
+        id: String,
+        /// Asset type scope (default: texture)
+        #[arg(long, default_value = "texture")]
+        asset_type: String,
+    },
+    /// Copy a template spec to a destination path
+    Copy {
+        /// Template id (asset_id)
+        id: String,
+        /// Destination path to write the template JSON
+        #[arg(long)]
+        to: String,
+        /// Asset type scope (default: texture)
+        #[arg(long, default_value = "texture")]
+        asset_type: String,
+    },
 }
 
 fn main() -> ExitCode {
@@ -157,6 +193,17 @@ fn main() -> ExitCode {
             }
         }
         Commands::Fmt { spec, output } => commands::fmt::run(&spec, output.as_deref()),
+        Commands::Template { command } => match command {
+            TemplateCommands::List { asset_type } => commands::template::list(&asset_type),
+            TemplateCommands::Show { id, asset_type } => {
+                commands::template::show(&asset_type, &id)
+            }
+            TemplateCommands::Copy {
+                id,
+                to,
+                asset_type,
+            } => commands::template::copy(&asset_type, &id, Path::new(&to)),
+        },
     };
 
     match result {
@@ -385,6 +432,67 @@ mod tests {
                 assert!(verbose);
             }
             _ => panic!("expected generate-all command"),
+        }
+    }
+
+    #[test]
+    fn test_cli_parses_template_list() {
+        let cli = Cli::try_parse_from([
+            "speccade",
+            "template",
+            "list",
+            "--asset-type",
+            "texture",
+        ])
+        .unwrap();
+        match cli.command {
+            Commands::Template { command } => match command {
+                TemplateCommands::List { asset_type } => {
+                    assert_eq!(asset_type, "texture");
+                }
+                _ => panic!("expected template list"),
+            },
+            _ => panic!("expected template command"),
+        }
+    }
+
+    #[test]
+    fn test_cli_parses_template_show() {
+        let cli =
+            Cli::try_parse_from(["speccade", "template", "show", "preset_texture_basic"]).unwrap();
+        match cli.command {
+            Commands::Template { command } => match command {
+                TemplateCommands::Show { id, asset_type } => {
+                    assert_eq!(id, "preset_texture_basic");
+                    assert_eq!(asset_type, "texture");
+                }
+                _ => panic!("expected template show"),
+            },
+            _ => panic!("expected template command"),
+        }
+    }
+
+    #[test]
+    fn test_cli_parses_template_copy() {
+        let cli = Cli::try_parse_from([
+            "speccade",
+            "template",
+            "copy",
+            "preset_texture_basic",
+            "--to",
+            "out.json",
+        ])
+        .unwrap();
+        match cli.command {
+            Commands::Template { command } => match command {
+                TemplateCommands::Copy { id, to, asset_type } => {
+                    assert_eq!(id, "preset_texture_basic");
+                    assert_eq!(to, "out.json");
+                    assert_eq!(asset_type, "texture");
+                }
+                _ => panic!("expected template copy"),
+            },
+            _ => panic!("expected template command"),
         }
     }
 }

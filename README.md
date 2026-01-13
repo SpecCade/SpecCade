@@ -128,6 +128,10 @@ speccade fmt --spec <path>
 
 # Check system requirements and dependencies
 speccade doctor
+
+# List and copy texture templates
+speccade template list --asset-type texture
+speccade template copy preset_texture_material_set_basic --to ./specs/texture/my_material.json
 ```
 
 ### Migration
@@ -145,7 +149,7 @@ See [`docs/MIGRATION.md`](docs/MIGRATION.md) for migration guide and safety note
 |------------|----------------|--------------|
 | `audio` | WAV | `audio_v1` |
 | `music` | XM, IT | `music.tracker_song_v1` |
-| `texture` | PNG | `texture.material_v1`, `texture.normal_v1`, `texture.packed_v1` |
+| `texture` | PNG | `texture.procedural_v1` |
 | `static_mesh` | GLB | `static_mesh.blender_primitives_v1` |
 | `skeletal_mesh` | GLB | `skeletal_mesh.blender_rigged_mesh_v1` |
 | `skeletal_animation` | GLB | `skeletal_animation.blender_clip_v1` |

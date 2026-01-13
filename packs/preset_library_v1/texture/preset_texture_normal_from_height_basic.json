@@ -1,0 +1,36 @@
+{
+  "spec_version": 1,
+  "asset_id": "preset_texture_normal_from_height_basic",
+  "asset_type": "texture",
+  "license": "CC0-1.0",
+  "seed": 1004,
+  "description": "Basic normal map derived from a procedural height field.",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "png",
+      "path": "textures/preset_texture_normal_from_height_basic_normal.png",
+      "source": "normal"
+    }
+  ],
+  "recipe": {
+    "kind": "texture.procedural_v1",
+    "params": {
+      "resolution": [512, 512],
+      "tileable": true,
+      "nodes": [
+        {
+          "id": "height",
+          "type": "noise",
+          "noise": { "algorithm": "perlin", "scale": 0.08 }
+        },
+        {
+          "id": "normal",
+          "type": "normal_from_height",
+          "input": "height",
+          "strength": 1.0
+        }
+      ]
+    }
+  }
+}

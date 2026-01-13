@@ -116,8 +116,7 @@ pub fn map_category_to_type(category: &str) -> Result<(AssetType, String)> {
         "sounds" => Ok((AssetType::Audio, "audio_v1".to_string())),
         "instruments" => Ok((AssetType::Audio, "audio_v1".to_string())),
         "music" => Ok((AssetType::Music, "music.tracker_song_v1".to_string())),
-        "textures" => Ok((AssetType::Texture, "texture.material_v1".to_string())),
-        "normals" => Ok((AssetType::Texture, "texture.normal_v1".to_string())),
+        "textures" | "normals" => Ok((AssetType::Texture, "texture.procedural_v1".to_string())),
         "meshes" => Ok((
             AssetType::StaticMesh,
             "static_mesh.blender_primitives_v1".to_string(),
@@ -176,6 +175,56 @@ pub fn map_legacy_keys_to_params(
 ) -> Result<(serde_json::Value, Vec<String>)> {
     let mut warnings = Vec::new();
 
+    if recipe_kind == "texture.procedural_v1" {
+        let data = &legacy.data;
+
+        let resolution = match data.get("size").or_else(|| data.get("resolution")) {
+            Some(serde_json::Value::Number(n)) => {
+                let size = n.as_u64().unwrap_or(256) as u32;
+                [size, size]
+            }
+            Some(serde_json::Value::Array(values)) if values.len() == 2 => {
+                let w = values[0].as_u64().unwrap_or(256) as u32;
+                let h = values[1].as_u64().unwrap_or(256) as u32;
+                [w, h]
+            }
+            _ => [256, 256],
+        };
+
+        let tileable = data
+            .get("tileable")
+            .or_else(|| data.get("tile"))
+            .or_else(|| data.get("seamless"))
+            .and_then(|v| v.as_bool())
+            .unwrap_or(false);
+
+        let nodes = if legacy.category == "normals" {
+            serde_json::json!([
+                { "id": "height", "type": "noise", "noise": { "algorithm": "perlin", "scale": 0.08 } },
+                { "id": "normal", "type": "normal_from_height", "input": "height", "strength": 1.0 }
+            ])
+        } else {
+            serde_json::json!([
+                { "id": "height", "type": "noise", "noise": { "algorithm": "perlin", "scale": 0.08 } },
+                { "id": "albedo", "type": "color_ramp", "input": "height", "ramp": ["#2b2b2b", "#cfcfcf"] }
+            ])
+        };
+
+        warnings.push(
+            "Legacy texture specs migrated to placeholder procedural graphs. Manual review recommended."
+                .to_string(),
+        );
+
+        return Ok((
+            serde_json::json!({
+                "resolution": resolution,
+                "tileable": tileable,
+                "nodes": nodes
+            }),
+            warnings,
+        ));
+    }
+
     // For now, just pass through the legacy data as params
     // TODO: Map legacy keys to canonical params using docs/legacy/PARITY_MATRIX_LEGACY_SPEC_PY.md (SSOT for mapping rules).
 
@@ -207,7 +256,6 @@ pub fn generate_outputs(
                 format: OutputFormat::Wav,
                 path: format!("audio/{}.wav", asset_id),
                 source: None,
-                channels: None,
             }]
         }
         AssetType::Music => {
@@ -216,25 +264,27 @@ pub fn generate_outputs(
                 format: OutputFormat::Xm,
                 path: format!("music/{}.xm", asset_id),
                 source: None,
-                channels: None,
             }]
         }
         AssetType::Texture => {
+            let source = if category == "normals" {
+                Some("normal".to_string())
+            } else {
+                Some("albedo".to_string())
+            };
             if category == "normals" {
                 vec![OutputSpec {
                     kind: OutputKind::Primary,
                     format: OutputFormat::Png,
                     path: format!("textures/{}_normal.png", asset_id),
-                    source: None,
-                    channels: None,
+                    source,
                 }]
             } else {
                 vec![OutputSpec {
                     kind: OutputKind::Primary,
                     format: OutputFormat::Png,
                     path: format!("textures/{}.png", asset_id),
-                    source: None,
-                    channels: None,
+                    source,
                 }]
             }
         }
@@ -244,7 +294,6 @@ pub fn generate_outputs(
                 format: OutputFormat::Glb,
                 path: format!("meshes/{}.glb", asset_id),
                 source: None,
-                channels: None,
             }]
         }
         AssetType::SkeletalMesh => {
@@ -253,7 +302,6 @@ pub fn generate_outputs(
                 format: OutputFormat::Glb,
                 path: format!("characters/{}.glb", asset_id),
                 source: None,
-                channels: None,
             }]
         }
         AssetType::SkeletalAnimation => {
@@ -262,7 +310,6 @@ pub fn generate_outputs(
                 format: OutputFormat::Glb,
                 path: format!("animations/{}.glb", asset_id),
                 source: None,
-                channels: None,
             }]
         }
     };
@@ -280,6 +327,10 @@ mod tests {
         let (asset_type, kind) = map_category_to_type("sounds").unwrap();
         assert_eq!(asset_type, AssetType::Audio);
         assert_eq!(kind, "audio_v1");
+
+        let (asset_type, kind) = map_category_to_type("textures").unwrap();
+        assert_eq!(asset_type, AssetType::Texture);
+        assert_eq!(kind, "texture.procedural_v1");
     }
 
     #[test]
@@ -331,5 +382,14 @@ mod tests {
         let outputs = generate_outputs("wall-01", &AssetType::Texture, "normals").unwrap();
         assert_eq!(outputs.len(), 1);
         assert!(outputs[0].path.ends_with("_normal.png"));
+        assert_eq!(outputs[0].source.as_deref(), Some("normal"));
+    }
+
+    #[test]
+    fn test_generate_outputs_textures() {
+        let outputs = generate_outputs("brick-01", &AssetType::Texture, "textures").unwrap();
+        assert_eq!(outputs.len(), 1);
+        assert!(outputs[0].path.ends_with(".png"));
+        assert_eq!(outputs[0].source.as_deref(), Some("albedo"));
     }
 }

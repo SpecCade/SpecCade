@@ -1,38 +1,38 @@
-//! Map-agnostic texture graph recipe types.
+//! Map-agnostic procedural texture recipe types.
 //!
-//! `texture.graph_v1` is intended as a flexible authoring IR: a deterministic
-//! DAG of named nodes producing grayscale or RGBA images.
+//! `texture.procedural_v1` is a deterministic DAG of named nodes producing
+//! grayscale or RGBA images.
 
 use serde::{Deserialize, Serialize};
 
 use super::common::{GradientDirection, NoiseConfig, StripeDirection};
 
-/// Parameters for the `texture.graph_v1` recipe.
+/// Parameters for the `texture.procedural_v1` recipe.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub struct TextureGraphV1Params {
+pub struct TextureProceduralV1Params {
     /// Texture resolution [width, height] in pixels.
     pub resolution: [u32; 2],
     /// Whether the texture should tile seamlessly.
     pub tileable: bool,
     /// Graph nodes (a DAG). Each node has a stable id that can be referenced by other nodes and by outputs.
-    pub nodes: Vec<TextureGraphNode>,
+    pub nodes: Vec<TextureProceduralNode>,
 }
 
 /// A named graph node.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct TextureGraphNode {
+pub struct TextureProceduralNode {
     /// Stable node id.
     pub id: String,
     /// The node operation.
     #[serde(flatten)]
-    pub op: TextureGraphOp,
+    pub op: TextureProceduralOp,
 }
 
 /// Graph node operations.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "snake_case", deny_unknown_fields)]
-pub enum TextureGraphOp {
+pub enum TextureProceduralOp {
     // ---------------------------------------------------------------------
     // Grayscale primitives
     // ---------------------------------------------------------------------
@@ -135,14 +135,14 @@ mod tests {
     use crate::recipe::texture::{NoiseAlgorithm, NoiseConfig};
 
     #[test]
-    fn graph_params_roundtrip() {
-        let params = TextureGraphV1Params {
+    fn procedural_params_roundtrip() {
+        let params = TextureProceduralV1Params {
             resolution: [64, 64],
             tileable: true,
             nodes: vec![
-                TextureGraphNode {
+                TextureProceduralNode {
                     id: "n".to_string(),
-                    op: TextureGraphOp::Noise {
+                    op: TextureProceduralOp::Noise {
                         noise: NoiseConfig {
                             algorithm: NoiseAlgorithm::Perlin,
                             scale: 0.1,
@@ -152,9 +152,9 @@ mod tests {
                         },
                     },
                 },
-                TextureGraphNode {
+                TextureProceduralNode {
                     id: "mask".to_string(),
-                    op: TextureGraphOp::Threshold {
+                    op: TextureProceduralOp::Threshold {
                         input: "n".to_string(),
                         threshold: 0.5,
                     },
@@ -163,7 +163,7 @@ mod tests {
         };
 
         let json = serde_json::to_string_pretty(&params).unwrap();
-        let parsed: TextureGraphV1Params = serde_json::from_str(&json).unwrap();
+        let parsed: TextureProceduralV1Params = serde_json::from_str(&json).unwrap();
         assert_eq!(parsed, params);
     }
 }

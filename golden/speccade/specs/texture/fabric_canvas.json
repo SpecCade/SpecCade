@@ -9,44 +9,94 @@
     {
       "kind": "primary",
       "format": "png",
-      "path": "fabric_canvas_albedo.png"
+      "path": "fabric_canvas_albedo.png",
+      "source": "albedo"
     },
     {
       "kind": "primary",
       "format": "png",
-      "path": "fabric_canvas_normal.png"
+      "path": "fabric_canvas_normal.png",
+      "source": "normal"
     },
     {
       "kind": "primary",
       "format": "png",
-      "path": "fabric_canvas_roughness.png"
+      "path": "fabric_canvas_roughness.png",
+      "source": "roughness"
     }
   ],
   "recipe": {
-    "kind": "texture.material_v1",
+    "kind": "texture.procedural_v1",
     "params": {
-      "resolution": [256, 256],
+      "resolution": [
+        256,
+        256
+      ],
       "tileable": true,
-      "maps": ["albedo", "normal", "roughness"],
-      "base_material": {
-        "type": "fabric",
-        "base_color": [0.7, 0.65, 0.6],
-        "roughness_range": [0.75, 0.9]
-      },
-      "layers": [
+      "nodes": [
         {
-          "type": "weave",
-          "thread_width": 6,
-          "gap": 2,
-          "depth": 0.25,
-          "affects": ["albedo", "normal", "roughness"]
+          "id": "height",
+          "type": "noise",
+          "noise": {
+            "algorithm": "perlin",
+            "scale": 0.08
+          }
         },
         {
-          "type": "color_variation",
-          "hue_range": 6.0,
-          "saturation_range": 0.08,
-          "value_range": 0.1,
-          "noise_scale": 0.08
+          "id": "mask",
+          "type": "threshold",
+          "input": "height",
+          "threshold": 0.5
+        },
+        {
+          "id": "albedo",
+          "type": "color_ramp",
+          "input": "height",
+          "ramp": [
+            "#2b2b2b",
+            "#8f8f8f",
+            "#e0e0e0"
+          ]
+        },
+        {
+          "id": "roughness",
+          "type": "clamp",
+          "input": "height",
+          "min": 0.2,
+          "max": 0.8
+        },
+        {
+          "id": "metallic",
+          "type": "invert",
+          "input": "mask"
+        },
+        {
+          "id": "ao",
+          "type": "multiply",
+          "a": "mask",
+          "b": "height"
+        },
+        {
+          "id": "emissive",
+          "type": "color_ramp",
+          "input": "mask",
+          "ramp": [
+            "#000000",
+            "#ffcc00"
+          ]
+        },
+        {
+          "id": "normal",
+          "type": "normal_from_height",
+          "input": "height",
+          "strength": 1.0
+        },
+        {
+          "id": "packed",
+          "type": "compose_rgba",
+          "r": "ao",
+          "g": "roughness",
+          "b": "metallic"
         }
       ]
     }

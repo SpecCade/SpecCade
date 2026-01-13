@@ -7,42 +7,86 @@
   "description": "Packed ORM texture (ambient occlusion, roughness, metallic)",
   "outputs": [
     {
-      "kind": "packed",
+      "kind": "primary",
       "format": "png",
       "path": "orm.png",
-      "channels": {
-        "r": "ao",
-        "g": "roughness",
-        "b": "metallic"
-      }
+      "source": "packed"
     }
   ],
   "recipe": {
-    "kind": "texture.packed_v1",
+    "kind": "texture.procedural_v1",
     "params": {
-      "resolution": [512, 512],
+      "resolution": [
+        512,
+        512
+      ],
       "tileable": true,
-      "maps": {
-        "height": {
-          "type": "pattern",
-          "pattern": "noise",
-          "noise_type": "fbm",
-          "octaves": 4
+      "nodes": [
+        {
+          "id": "height",
+          "type": "noise",
+          "noise": {
+            "algorithm": "perlin",
+            "scale": 0.08
+          }
         },
-        "ao": {
-          "type": "grayscale",
-          "from_height": true,
-          "ao_strength": 0.5
+        {
+          "id": "mask",
+          "type": "threshold",
+          "input": "height",
+          "threshold": 0.5
         },
-        "roughness": {
-          "type": "grayscale",
-          "from_height": true
+        {
+          "id": "albedo",
+          "type": "color_ramp",
+          "input": "height",
+          "ramp": [
+            "#2b2b2b",
+            "#8f8f8f",
+            "#e0e0e0"
+          ]
         },
-        "metallic": {
-          "type": "grayscale",
-          "value": 1.0
+        {
+          "id": "roughness",
+          "type": "clamp",
+          "input": "height",
+          "min": 0.2,
+          "max": 0.8
+        },
+        {
+          "id": "metallic",
+          "type": "invert",
+          "input": "mask"
+        },
+        {
+          "id": "ao",
+          "type": "multiply",
+          "a": "mask",
+          "b": "height"
+        },
+        {
+          "id": "emissive",
+          "type": "color_ramp",
+          "input": "mask",
+          "ramp": [
+            "#000000",
+            "#ffcc00"
+          ]
+        },
+        {
+          "id": "normal",
+          "type": "normal_from_height",
+          "input": "height",
+          "strength": 1.0
+        },
+        {
+          "id": "packed",
+          "type": "compose_rgba",
+          "r": "ao",
+          "g": "roughness",
+          "b": "metallic"
         }
-      }
+      ]
     }
   }
 }

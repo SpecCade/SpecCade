@@ -9,20 +9,84 @@
     {
       "kind": "primary",
       "format": "png",
-      "path": "diamond_plate.png"
+      "path": "diamond_plate.png",
+      "source": "albedo"
     }
   ],
   "recipe": {
-    "kind": "texture.normal_v1",
+    "kind": "texture.procedural_v1",
     "params": {
-      "resolution": [512, 512],
+      "resolution": [
+        512,
+        512
+      ],
       "tileable": true,
-      "pattern": {
-        "type": "diamond_plate",
-        "diamond_size": 40,
-        "height": 0.35
-      },
-      "bump_strength": 1.2
+      "nodes": [
+        {
+          "id": "height",
+          "type": "noise",
+          "noise": {
+            "algorithm": "perlin",
+            "scale": 0.08
+          }
+        },
+        {
+          "id": "mask",
+          "type": "threshold",
+          "input": "height",
+          "threshold": 0.5
+        },
+        {
+          "id": "albedo",
+          "type": "color_ramp",
+          "input": "height",
+          "ramp": [
+            "#2b2b2b",
+            "#8f8f8f",
+            "#e0e0e0"
+          ]
+        },
+        {
+          "id": "roughness",
+          "type": "clamp",
+          "input": "height",
+          "min": 0.2,
+          "max": 0.8
+        },
+        {
+          "id": "metallic",
+          "type": "invert",
+          "input": "mask"
+        },
+        {
+          "id": "ao",
+          "type": "multiply",
+          "a": "mask",
+          "b": "height"
+        },
+        {
+          "id": "emissive",
+          "type": "color_ramp",
+          "input": "mask",
+          "ramp": [
+            "#000000",
+            "#ffcc00"
+          ]
+        },
+        {
+          "id": "normal",
+          "type": "normal_from_height",
+          "input": "height",
+          "strength": 1.0
+        },
+        {
+          "id": "packed",
+          "type": "compose_rgba",
+          "r": "ao",
+          "g": "roughness",
+          "b": "metallic"
+        }
+      ]
     }
   }
 }

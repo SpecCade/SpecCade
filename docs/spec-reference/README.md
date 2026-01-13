@@ -12,7 +12,7 @@ If a doc/example disagrees with validation, treat `speccade validate` + Rust typ
 
 ## Quick Links
 
-- [Texture Specs](texture.md) - Material maps, normal maps, and packed textures
+- [Texture Specs](texture.md) - Unified procedural texture graphs
 - [Audio Specs](audio.md) - Sound effects and instrument samples
 - [Music Specs](music.md) - Tracker module songs
 - [Game Music Genre Kits (Draft)](../music-genre-kits-master-list.md) - Target kit inventory + instrument roles
@@ -64,7 +64,7 @@ Every SpecCade spec is a JSON document with two logical sections:
 | `asset_type` | string | Asset type enum | See asset types below |
 | `license` | string | License identifier | SPDX recommended (e.g., `"CC0-1.0"`) |
 | `seed` | integer | RNG seed | Range: `0` to `4294967295` (2^32-1) |
-| `outputs` | array | Expected artifacts | At least one entry required; most recipes require a `primary` output (textures can also use `packed`) |
+| `outputs` | array | Expected artifacts | At least one entry required; textures require `primary` PNG outputs with `source` bindings |
 
 ### Optional Fields
 
@@ -121,15 +121,13 @@ Each entry in `outputs[]` declares an expected artifact:
 | `kind` | string | Output category | See output kinds below |
 | `format` | string | File format | `"wav"`, `"xm"`, `"it"`, `"png"`, `"glb"`, `"gltf"`, `"json"` |
 | `path` | string | Relative output path | Must be safe (see constraints) |
-| `source` | string | Optional output binding to a named node/map | Used by `texture.graph_v1` |
-| `channels` | object | Channel packing mapping | Used by `texture.packed_v1` |
+| `source` | string | Optional output binding to a named node | Used by `texture.procedural_v1` |
 
 ### Output Kinds
 
 Currently supported output kinds are:
 
 - `primary` (most recipes)
-- `packed` (`texture.packed_v1` only)
 
 `preview` and `metadata` are reserved and currently rejected by validation.
 
@@ -138,7 +136,6 @@ Currently supported output kinds are:
 | `primary` | Main asset output | The generated asset file |
 | `preview` | Preview/thumbnail | Reserved (currently rejected by validation) |
 | `metadata` | Generation metadata | Reserved (currently rejected; use `${asset_id}.report.json`) |
-| `packed` | Channel-packed texture | Multiple maps in one file (see texture docs) |
 
 ### Path Constraints
 
@@ -159,6 +156,7 @@ Currently supported output kinds are:
 | `asset_type` must be known | E003 | Unknown asset type |
 | `seed` must be in range `0..2^32-1` | E004 | Seed out of range |
 | `outputs` must have at least one entry | E005 | No outputs declared |
+| `outputs` must include at least one `primary` output | E006 | No primary output declared |
 | `outputs[].path` must be unique | E007 | Duplicate output path |
 | `outputs[].path` must be safe | E008 | Unsafe output path |
 | `outputs[].path` extension must match format | E009 | Path/format mismatch |
@@ -180,14 +178,14 @@ Currently supported output kinds are:
 |------------|--------------|----------------|---------------|
 | `audio` | `audio_v1` | WAV | [audio.md](audio.md) |
 | `music` | `music.tracker_song_v1` (canonical), `music.tracker_song_compose_v1` (draft) | XM, IT | [music.md](music.md) |
-| `texture` | `texture.material_v1`, `texture.normal_v1`, `texture.packed_v1` | PNG | [texture.md](texture.md) |
+| `texture` | `texture.procedural_v1` | PNG | [texture.md](texture.md) |
 | `static_mesh` | `static_mesh.blender_primitives_v1` | GLB | See `docs/SPEC_REFERENCE.md` |
 | `skeletal_mesh` | `skeletal_mesh.blender_rigged_mesh_v1` | GLB | See `docs/SPEC_REFERENCE.md` |
 | `skeletal_animation` | `skeletal_animation.blender_clip_v1` | GLB | See `docs/SPEC_REFERENCE.md` |
 
 ## Recipe Structure
 
-Every recipe has a `kind` and `params`. Most recipe kinds are `asset_type.recipe_name` (e.g. `texture.material_v1`), but some are underscore-delimited (e.g. `audio_v1`).
+Every recipe has a `kind` and `params`. Most recipe kinds are `asset_type.recipe_name` (e.g. `texture.procedural_v1`), but some are underscore-delimited (e.g. `audio_v1`).
 
 ```json
 {
@@ -212,7 +210,7 @@ Reference specs are available in the golden corpus:
 golden/speccade/specs/
   audio/            # Audio specs (SFX and instrument samples)
   music/            # Tracker song specs
-  texture/          # Texture specs (material, normal, packed)
+  texture/          # Texture specs (procedural graphs)
   static_mesh/      # Static mesh specs
   skeletal_mesh/    # Character mesh specs
   skeletal_animation/ # Animation clip specs
