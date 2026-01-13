@@ -8,10 +8,14 @@
 ## Context
 
 You are working on SpecCade's audio preset library and music genre kits. This prompt enables you to:
-- Develop audio presets efficiently in batches
+- **Implement engine enhancements first** (wavetable, granular, modulators, effects)
+- Develop audio presets efficiently in batches (after engine features are ready)
 - Validate and export generated audio
 - Coordinate with human reviewers for quality assurance
 - Build genre kit templates with proper instrument mappings
+
+> **IMPORTANT:** Follow the implementation order: Engine Enhancements → Audio Presets → Genre Kits.
+> New presets may require engine features. Check Phase 0 dependencies before implementing complex presets.
 
 ---
 
@@ -44,19 +48,78 @@ for f in packs/preset_library_v1/audio/*.json; do speccade generate "$f"; done
 
 ---
 
+## Phase 0: Audio Engine Enhancements (IMPLEMENT FIRST)
+
+Before developing presets, implement engine features that presets will depend on.
+
+### 0.1 Engine Feature Priority Order
+
+Implement in this order to maximize value:
+
+| Priority | Features | Why First |
+|----------|----------|-----------|
+| **Q (Quick wins)** | Wavetable oscillator, Granular synth, LFO modulators | Enables rich pads, textures, wobble bass |
+| **I (Isolated)** | Effect chain, Loudness targets, Loop points, One-shot/loop pairing | Improves all preset quality |
+| **G (Gap-fillers)** | Foley helpers, Convolution reverb, Batch variations | Enables complex FX and variations |
+
+### 0.2 Engine Feature → Preset Dependencies
+
+Check this before implementing presets that require new features:
+
+| Engine Feature | Presets That Need It |
+|----------------|---------------------|
+| Wavetable oscillator | pad_shimmer, poly_pad, complex leads, choir_pad |
+| Granular synth | texture_*, drone_*, atmospheric sounds |
+| LFO modulators | bass_wobble, vibrato effects, tremolo |
+| Effect chain (reverb) | pad_*, ambient sounds, spatial FX |
+| Effect chain (delay) | echoed leads, dub bass |
+| Effect chain (chorus) | poly_pad, detuned sounds |
+| Foley helpers | impact_*, whoosh_*, complex FX layers |
+
+### 0.3 Engine Development Workflow
+
+```
+1. SELECT    → Choose next engine feature from Section 1 of AUDIO_WORK_TRACKER.md
+2. DESIGN    → Document API/schema changes needed
+3. IMPLEMENT → Add feature to audio generator
+4. TEST      → Create test preset using new feature
+5. VALIDATE  → Ensure determinism, quality metrics
+6. UPDATE    → Mark complete in AUDIO_WORK_TRACKER.md
+```
+
+### 0.4 Minimum Engine Features Before Preset Work
+
+You can begin basic preset development (drums, simple synths) immediately. However, wait for these features before developing complex presets:
+
+| Preset Category | Required Engine Features |
+|-----------------|-------------------------|
+| Basic drums (kicks, snares, hats) | None - can proceed now |
+| Simple bass (sub, pluck) | None - can proceed now |
+| Simple leads | None - can proceed now |
+| Wobble bass | LFO modulators |
+| Textured pads | Wavetable or Granular |
+| Atmospheric drones | Granular synth |
+| Complex FX (impacts, whooshes) | Foley helpers (recommended) |
+| Spatial sounds | Effect chain (reverb) |
+
+---
+
 ## Phase 1: Audio Preset Development
+
+> **Note:** Complete relevant engine features from Phase 0 before implementing presets that need them.
 
 ### 1.1 Development Loop (Single Preset)
 
 ```
-1. SELECT    → Choose next preset from AUDIO_WORK_TRACKER.md (prioritize Tier 1)
-2. RESEARCH  → Read similar existing presets for synthesis patterns
-3. WRITE     → Create JSON spec following audio_v1 format
-4. VALIDATE  → Run: speccade validate <spec.json>
-5. GENERATE  → Run: speccade generate <spec.json>
-6. REPORT    → Check .report.json for quality metrics
-7. QUEUE     → Add to "Ready to Validate" in AUDIO_WORK_TRACKER.md
-8. AWAIT     → Human reviews and marks APPROVED or NEEDS IMPROVEMENT
+0. CHECK DEPS → Verify required engine features are implemented (see Phase 0)
+1. SELECT     → Choose next preset from AUDIO_WORK_TRACKER.md (prioritize Tier 1)
+2. RESEARCH   → Read similar existing presets for synthesis patterns
+3. WRITE      → Create JSON spec following audio_v1 format
+4. VALIDATE   → Run: speccade validate <spec.json>
+5. GENERATE   → Run: speccade generate <spec.json>
+6. REPORT     → Check .report.json for quality metrics
+7. QUEUE      → Add to "Ready to Validate" in AUDIO_WORK_TRACKER.md
+8. AWAIT      → Human reviews and marks APPROVED or NEEDS IMPROVEMENT
 ```
 
 ### 1.2 Parallel Dispatch Strategy
@@ -351,6 +414,61 @@ For each kit:
 
 Use these prompts to execute common workflows. Each includes the recommended model.
 
+### Engine Feature Development (Opus)
+
+```
+[Model: Opus]
+Implement the next engine feature from Section 1 of AUDIO_WORK_TRACKER.md:
+1. Review the feature specification
+2. Design the API/schema changes
+3. Implement the feature in the audio generator
+4. Create a test preset demonstrating the feature
+5. Validate determinism and quality
+6. Mark complete in tracker
+```
+
+### Implement Wavetable Oscillator (Opus)
+
+```
+[Model: Opus]
+Implement the wavetable oscillator synthesis type:
+1. Define wavetable format (single-cycle waves, interpolation method)
+2. Add "wavetable" synthesis type to audio_v1 schema
+3. Implement wavetable playback with:
+   - Table selection/morphing
+   - Interpolation (linear/cubic)
+   - Detune and unison voices
+4. Create test presets: pad_shimmer, poly_pad
+5. Update docs/spec-reference/audio.md
+```
+
+### Implement LFO Modulators (Opus)
+
+```
+[Model: Opus]
+Implement LFO modulators for the audio engine:
+1. Define modulator schema (rate, depth, shape, target)
+2. Support targets: pitch, amplitude, filter cutoff
+3. Support shapes: sine, triangle, square, sample-and-hold
+4. Implement modulator routing in synthesis pipeline
+5. Create test preset: bass_wobble
+6. Update docs/spec-reference/audio.md
+```
+
+### Implement Effect Chain (Opus)
+
+```
+[Model: Opus]
+Implement the effect chain for audio_v1:
+1. Define effect chain schema in recipe params
+2. Implement effects: delay, reverb, chorus, phaser, bitcrush, waveshaper, compressor
+3. Support effect ordering and wet/dry mix
+4. Create test presets demonstrating each effect
+5. Update docs/spec-reference/audio.md
+```
+
+---
+
 ### Create Next Batch of Presets (Sonnet)
 
 ```
@@ -550,9 +668,11 @@ Each agent writes specs, validates, generates, and queues for review.
 Before ending a development session:
 
 ```
+[ ] Engine features: Check if any were completed, update Section 1 of tracker
+[ ] Presets: Verified required engine features exist before implementation
 [ ] All new presets validated without errors
 [ ] All new presets added to "Ready to Validate" queue
-[ ] AUDIO_WORK_TRACKER.md dashboard updated
+[ ] AUDIO_WORK_TRACKER.md dashboard updated (both engine and preset counts)
 [ ] Any blockers noted in tracker
 [ ] Git status shows expected changes
 ```

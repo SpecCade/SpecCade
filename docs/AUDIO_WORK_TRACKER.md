@@ -3,13 +3,19 @@
 **Last Updated:** 2026-01-13
 **Status:** Active
 
+> **IMPLEMENTATION ORDER:** Engine Enhancements → Audio Presets → Genre Kits
+>
+> New presets may require engine features (wavetable oscillator, granular synth, modulators, reverb).
+> Complete engine enhancements first before developing instruments that need them.
+
 ## Progress Dashboard
 
 | Category | Done | Total | Progress |
 |----------|------|-------|----------|
+| Engine Enhancements | 0 | 11 | 0% |
+| Music/Compose Enhancements | 0 | 9 | 0% |
 | Audio Presets | 19 | 173 | 11% |
 | Genre Kits | 0 | 42 | 0% |
-| Expansion Features | 0 | 20 | 0% |
 
 ---
 
@@ -59,7 +65,48 @@ Presets that failed validation or need tuning:
 
 ---
 
-## 1. Audio Presets
+## 1. Audio Engine Enhancements (IMPLEMENT FIRST)
+
+These engine features unlock new synthesis capabilities. Many presets depend on them.
+
+### 1.1 Core Engine Features (11 items)
+
+| Status | Priority | Feature | Enables Presets |
+|:------:|:--------:|---------|-----------------|
+| [ ] | Q | Wavetable oscillator (tables + interpolation + detune/unison) | pad_shimmer, poly_pad, complex leads |
+| [ ] | Q | Granular synth (grain size/rate/jitter/window) | textures, atmospheric sounds, drones |
+| [ ] | Q | Modulators: LFOs for pitch/amp/filter + envelope curve types | bass_wobble, vibrato, tremolo effects |
+| [ ] | I | Effect chain: delay, reverb, chorus, phaser, bitcrush, waveshaper, compressor | pads, ambient sounds, spatial FX |
+| [ ] | I | Loudness targets (LUFS) + true-peak limiter | All presets (consistent loudness) |
+| [ ] | I | Better loop point generation (zero-crossing search + crossfade) | All looping presets |
+| [ ] | I | One-shot + loop pairing from same recipe | Instrument variants |
+| [ ] | G | Foley layering helpers (impact builder, whoosh builder) | impact_*, whoosh_*, complex FX |
+| [ ] | G | Convolution reverb IR generation + apply | Reverb-heavy presets |
+| [ ] | G | Impulse/decay modeling (room/plate/spring) | Spatial effects |
+| [ ] | G | Batch SFX variation sets (seed sweeps + constraints) | All preset variations |
+
+### 1.2 Music/Compose Enhancements (9 items)
+
+| Status | Priority | Feature |
+|:------:|:--------:|---------|
+| [ ] | Q | Expand `effect_name` support + validation (arp, porta, vibrato, etc.) |
+| [ ] | Q | Deterministic swing/humanize macros in Pattern IR |
+| [ ] | I | Motif transforms (transpose/rotate/invert/stretch) |
+| [ ] | I | Cue templates (loop_low/loop_main/loop_hi + stingers + transitions) |
+| [ ] | G | Genre-kit integration (kit + tempo + intensity → arrangement skeleton) |
+| [ ] | G | Style presets (curated defaults for kit + arrangement templates) |
+| [ ] | G | Harmony helpers (scale/chord constraints + voice-leading guardrails) |
+| [ ] | G | Fill generator (bar-end drum fills + risers) |
+| [ ] | G | Enforce sample/preset role aliasing per kit |
+
+**Priority Legend:**
+- `Q` = Quick win / high payoff relative to cost
+- `I` = Isolated improvement / low-risk addition
+- `G` = Significant gap-filler / capability unlock
+
+---
+
+## 2. Audio Presets
 
 ### Priority Tier 1: Core (10+ kits) — 7 presets
 
@@ -334,14 +381,14 @@ These presets are essential across the majority of kits. Implement first.
 
 ---
 
-## 2. Genre Kits (42 total)
+## 3. Genre Kits (42 total)
 
 ### Status Legend
 - [ ] = Not started
 - [~] = In progress (presets done, templates pending)
 - [x] = Complete (presets + templates + audition spec)
 
-### 2.1 Retro / Tracker-first (5 kits)
+### 3.1 Retro / Tracker-first (5 kits)
 
 | Status | Kit | Required Presets |
 |:------:|-----|-----------------|
@@ -351,7 +398,7 @@ These presets are essential across the majority of kits. Implement first.
 | [ ] | OPL / AdLib / DOS FM | opl_bass, opl_brass, opl_lead, opl_bell, kick, snare, hat_closed, stinger, pickup |
 | [ ] | DX7 / FM Pop Keys | dx7_ep, dx7_bass, dx7_bell, dx7_marimba, dx7_lead, kick, snare, hat_closed, stinger, pickup |
 
-### 2.2 Modern Synth Genres (11 kits)
+### 3.2 Modern Synth Genres (11 kits)
 
 | Status | Kit | Required Presets |
 |:------:|-----|-----------------|
@@ -364,7 +411,7 @@ These presets are essential across the majority of kits. Implement first.
 | [ ] | Action EDM / Boss Fight | big_kick, snare, cymbal, toms, bass_growl, bass_sub, brass_stab/stacked_saw_chords, lead_1, lead_2, riser, impact, downlifter, whoosh |
 | [ ] | Bass Music / Halftime | big_kick, snare_heavy, hat_closed, perc_1, bass_wobble, bass_sub, stab_dark/pad_dark, lead_1, impact, riser, downlifter, whoosh |
 
-### 2.3 Atmos / Exploration / Horror (4 kits)
+### 3.3 Atmos / Exploration / Horror (4 kits)
 
 | Status | Kit | Required Presets |
 |:------:|-----|-----------------|
@@ -373,7 +420,7 @@ These presets are essential across the majority of kits. Implement first.
 | [ ] | Dark Ambient / Horror | drone_dark, texture_noise, sub_rumble, impact_metal, stinger_horror, riser_tension, downlifter_tension |
 | [ ] | Stealth / Spy | kick_soft, snare_brush/rim, hat_tick, perc_click, bass_muted/bass_round, chord_pluck_muted/pad_cold, lead_muted, stinger, riser_tension, whoosh_soft |
 
-### 2.4 Cinematic (3 kits)
+### 3.4 Cinematic (3 kits)
 
 | Status | Kit | Required Presets |
 |:------:|-----|-----------------|
@@ -381,7 +428,7 @@ These presets are essential across the majority of kits. Implement first.
 | [ ] | Sci-Fi Hybrid Cinematic | low_hit, metallic_perc, arp_pulse, pad_cold, lead_alarm, impact, riser, downlifter |
 | [ ] | Military / March / Strategy | snare_march, toms, big_drum, cymbal, brass_low, brass_stab, string_stacc, choir_pad/pad_cold, riser_tension, impact, stinger |
 
-### 2.5 Style Color Kits (8 kits)
+### 3.5 Style Color Kits (8 kits)
 
 | Status | Kit | Required Presets |
 |:------:|-----|-----------------|
@@ -394,7 +441,7 @@ These presets are essential across the majority of kits. Implement first.
 | [ ] | Piano Minimal / Narrative | piano, string_pad/pad_warm, bell_soft, stinger_soft, downlifter_soft |
 | [ ] | Metal / Heavy | kick, snare, hat_closed, toms, cymbal, bass_pick, guitar_rhythm, guitar_lead, impact, stinger |
 
-### 2.6 Acoustic / Hybrid (4 kits)
+### 3.6 Acoustic / Hybrid (4 kits)
 
 | Status | Kit | Required Presets |
 |:------:|-----|-----------------|
@@ -402,7 +449,7 @@ These presets are essential across the majority of kits. Implement first.
 | [ ] | Pirate / Nautical | frame_drum, perc_clack, shaker, bass_upright/bass_round, accordion/concertina, guitar_pluck, fiddle_lead, whistle_lead, stinger, impact, whoosh |
 | [ ] | Celtic / Medieval Folk | harp/lute_pluck, fiddle_lead/lead_1, flute_lead, frame_drum, shaker, stinger, downlifter_soft |
 
-### 2.7 Casual / Whimsical / Pop (4 kits)
+### 3.7 Casual / Whimsical / Pop (4 kits)
 
 | Status | Kit | Required Presets |
 |:------:|-----|-----------------|
@@ -411,7 +458,7 @@ These presets are essential across the majority of kits. Implement first.
 | [ ] | Uplifting Pop / Indie Pop | kick, snare/clap, hat_closed, cymbal, bass_round, chord_pluck, pad_warm, lead_1, riser, downlifter, stinger |
 | [ ] | Stadium / Sports Hype | big_kick, snare, clap, hat_closed, toms, cymbal, bass_saw/bass_round, brass_stab, chord_pluck, lead_1, riser, impact, stinger |
 
-### 2.8 Regional Flavor (5 kits)
+### 3.8 Regional Flavor (5 kits)
 
 | Status | Kit | Required Presets |
 |:------:|-----|-----------------|
@@ -422,52 +469,11 @@ These presets are essential across the majority of kits. Implement first.
 | [ ] | Middle Eastern / Desert | oud_pluck, ney_lead/lead_1, darbuka, drone, perc_clack, stinger, whoosh |
 | [ ] | South Asian | tabla, frame_drum, shaker, tanpura_drone/drone, sitar_pluck, harmonium_keys, bansuri_lead/lead_1, stinger, downlifter_soft |
 
-### 2.9 Experimental (1 kit)
+### 3.9 Experimental (1 kit)
 
 | Status | Kit | Required Presets |
 |:------:|-----|-----------------|
 | [ ] | Glitch / IDM | perc_glitch, perc_click, hat_metallic, bass_sub, lead_bleep, texture_noise, whoosh, impact, downlifter |
-
----
-
-## 3. Audio/Music Expansion Features (22 items)
-
-From `FUTURE_GENERATORS.md` — these are engine/tooling improvements.
-
-### Audio Engine Enhancements (11 items)
-
-| Status | Priority | Feature |
-|:------:|:--------:|---------|
-| [ ] | Q | Wavetable oscillator (tables + interpolation + detune/unison) |
-| [ ] | Q | Granular synth (grain size/rate/jitter/window) |
-| [ ] | Q | Modulators: LFOs for pitch/amp/filter + envelope curve types |
-| [ ] | I | Effect chain: delay, reverb, chorus, phaser, bitcrush, waveshaper, compressor |
-| [ ] | I | Loudness targets (LUFS) + true-peak limiter |
-| [ ] | I | Better loop point generation (zero-crossing search + crossfade) |
-| [ ] | I | One-shot + loop pairing from same recipe |
-| [ ] | G | Foley layering helpers (impact builder, whoosh builder) |
-| [ ] | G | Convolution reverb IR generation + apply |
-| [ ] | G | Impulse/decay modeling (room/plate/spring) |
-| [ ] | G | Batch SFX variation sets (seed sweeps + constraints) |
-
-### Music/Compose Enhancements (11 items)
-
-| Status | Priority | Feature |
-|:------:|:--------:|---------|
-| [ ] | Q | Expand `effect_name` support + validation (arp, porta, vibrato, etc.) |
-| [ ] | Q | Deterministic swing/humanize macros in Pattern IR |
-| [ ] | I | Motif transforms (transpose/rotate/invert/stretch) |
-| [ ] | I | Cue templates (loop_low/loop_main/loop_hi + stingers + transitions) |
-| [ ] | G | Genre-kit integration (kit + tempo + intensity → arrangement skeleton) |
-| [ ] | G | Style presets (curated defaults for kit + arrangement templates) |
-| [ ] | G | Harmony helpers (scale/chord constraints + voice-leading guardrails) |
-| [ ] | G | Fill generator (bar-end drum fills + risers) |
-| [ ] | G | Enforce sample/preset role aliasing per kit |
-
-**Priority Legend:**
-- `Q` = Quick win / high payoff relative to cost
-- `I` = Isolated improvement / low-risk addition
-- `G` = Significant gap-filler / capability unlock
 
 ---
 
