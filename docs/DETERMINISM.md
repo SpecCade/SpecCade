@@ -181,7 +181,7 @@ JCS defines a deterministic serialization of JSON that produces identical byte s
 
 **JCS Rules:**
 
-1. **Object key ordering**: Keys are sorted by their UTF-16 code unit values (lexicographic)
+1. **Object key ordering**: Keys are sorted lexicographically (per RFC 8785 JCS)
 2. **No whitespace**: No spaces or newlines between tokens
 3. **Number formatting**: IEEE 754 double precision with specific formatting rules
 4. **String escaping**: Minimal escaping (only required characters)
@@ -206,7 +206,14 @@ Canonicalization ensures:
 
 ### Implementation
 
-**Rust (recommended):**
+**In SpecCade (SSOT):**
+
+SpecCade canonicalization and hashing are implemented in `crates/speccade-spec/src/hash.rs`
+(see `canonicalize_json`, `canonical_value_hash`, `canonical_spec_hash`).
+
+If you need to reproduce hashes outside this repo, implement RFC 8785 JCS canonicalization and then hash the canonical bytes with BLAKE3.
+
+**Standalone tooling (Rust example):**
 
 ```toml
 # Cargo.toml
@@ -241,7 +248,7 @@ fn canonicalize_value(value: &Value) -> String {
             format!("[{}]", items.join(","))
         }
         Value::Object(obj) => {
-            // Sort keys lexicographically by UTF-16 code units
+            // Sort keys lexicographically (per JCS)
             let mut sorted: BTreeMap<&String, &Value> = BTreeMap::new();
             for (k, v) in obj {
                 sorted.insert(k, v);
@@ -499,7 +506,7 @@ Computes the canonical hash of a spec JSON document.
 ```rust
 use blake3::Hasher;
 use serde_json::Value;
-use serde_json_canonicalizer::to_string as canonicalize;
+use serde_json_canonicalizer::to_string as canonicalize; // Example JCS implementation
 
 /// Computes the canonical BLAKE3 hash of a spec.
 ///

@@ -129,6 +129,9 @@ speccade fmt --spec <path>
 # Check system requirements and dependencies
 speccade doctor
 
+# Expand compose music specs into canonical tracker params JSON
+speccade expand --spec <path>
+
 # List and copy texture templates
 speccade template list --asset-type texture
 speccade template copy preset_texture_material_set_basic --to ./specs/texture/my_material.json
@@ -139,6 +142,9 @@ speccade template copy preset_texture_material_set_basic --to ./specs/texture/my
 ```bash
 # Migrate legacy `.studio/specs/*.spec.py` files to SpecCade JSON specs
 speccade migrate --project <path> --allow-exec-specs
+
+# Audit legacy specs without migrating
+speccade migrate --project <path> --audit --audit-threshold 0.90
 ```
 
 See [`docs/MIGRATION.md`](docs/MIGRATION.md) for migration guide and safety notes.

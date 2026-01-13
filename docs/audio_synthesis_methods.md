@@ -1,29 +1,28 @@
-# Audio Synthesis Methods Status
+# Audio Synthesis Types — Status
 
-Status of synthesis methods implementation. Updated: 2026-01-14
+Status of `audio_v1` synthesis implementations. Updated: 2026-01-13
 
----
+This is a quick snapshot. For the authoritative schema, see `crates/speccade-spec/src/recipe/audio/synthesis.rs`.
+For parameter docs and examples, see `docs/spec-reference/audio.md`.
 
-## Low Complexity
+## Implemented
 
-- **AM (Amplitude Modulation)** — DONE
-- **Ring Modulation** — DONE
-- **Phase Distortion** — DONE
+All currently supported `recipe.params.layers[].synthesis.type` variants are implemented in `speccade-backend-audio`:
 
----
-
-## Medium Complexity
-
-- **Modal** — DONE
-- **Vocoder** — DONE
-
----
-
-## High Complexity
-
-- **Formant** — DONE
-- **Vector** — DONE
-
----
-
-**All 7 synthesis methods have been implemented.**
+- `oscillator` — DONE
+- `multi_oscillator` — DONE
+- `fm_synth` — DONE
+- `am_synth` — DONE
+- `ring_mod_synth` — DONE
+- `karplus_strong` — DONE
+- `noise_burst` — DONE
+- `additive` — DONE
+- `pitched_body` — DONE
+- `metallic` — DONE
+- `wavetable` — DONE
+- `granular` — DONE
+- `pd_synth` — DONE
+- `modal` — DONE
+- `vocoder` — DONE
+- `formant` — DONE
+- `vector` — DONE

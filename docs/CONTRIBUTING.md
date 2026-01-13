@@ -13,7 +13,7 @@ This guide covers development setup, repo structure, and how to add/modify backe
 ### Build
 
 ```bash
-cd speccade
+# From the SpecCade repo root
 cargo build
 ```
 

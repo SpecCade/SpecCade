@@ -1,9 +1,11 @@
 # Game Music Genre Kits — Master Inventory
 
-**Last updated:** 2026-01-14
+**Last updated:** 2026-01-13
 **Location:** `packs/preset_library_v1/music/`
 
 This document is the single source of truth for genre kits in the preset library.
+
+For a per-kit validation/listening checklist, see `docs/music-genre-kits-audit.md`.
 
 ## Implementation Status Summary
 

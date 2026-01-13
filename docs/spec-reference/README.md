@@ -16,7 +16,7 @@ If a doc/example disagrees with validation, treat `speccade validate` + Rust typ
 - [Audio Specs](audio.md) - Sound effects and instrument samples
 - [Music Specs](music.md) - Tracker module songs
 - [Game Music Genre Kits (Draft)](../music-genre-kits-master-list.md) - Target kit inventory + instrument roles
-- [Game Music Genre Kits Audit (Draft)](../music-genre-kits-audit.md) - Coverage checklist + gap list
+- [Game Music Genre Kits Audit (Draft)](../music-genre-kits-audit.md) - Checklist for validation/coverage/listening
 - [Audio Preset Library (Draft)](../audio-preset-library-master-list.md) - Target `audio_v1` preset inventory for music kits
 
 ## Spec Structure

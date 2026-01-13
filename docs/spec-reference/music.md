@@ -16,17 +16,17 @@ Tracker music is dense; fully-expanded note event lists can be thousands of line
 
 This proposal is specified in:
 
-- `docs/rfcs/RFC-0003-music-pattern-ir.md` (core Pattern IR)
-- `docs/rfcs/RFC-0004-music-compose-musical-helpers.md` (optional musical helpers: names/beats/harmony)
+- [RFC-0003: Music Pattern IR](../rfcs/RFC-0003-music-pattern-ir.md) (core Pattern IR)
+- [RFC-0004: Musical Helpers](../rfcs/RFC-0004-music-compose-musical-helpers.md) (optional: names/beats/harmony)
 
 See also:
 
-- `docs/music-pattern-ir-quickstart.md`
-- `docs/music-pattern-ir-examples.md`
-- `docs/music-pattern-ir-implementation.md`
-- `docs/music-chord-spec.md`
-- `docs/music-genre-kits-master-list.md`
-- `docs/music-genre-kits-audit.md`
+- [Music Pattern IR — Quickstart](../music-pattern-ir-quickstart.md)
+- [Music Pattern IR — Examples](../music-pattern-ir-examples.md)
+- [Music Pattern IR — Implementation](../music-pattern-ir-implementation.md)
+- [Music Chord Spec](../music-chord-spec.md)
+- [Game Music Genre Kits — Master Inventory](../music-genre-kits-master-list.md)
+- [Game Music Genre Kits — Audit Checklist](../music-genre-kits-audit.md)
 
 Minimal example (16th hats + 4-on-the-floor kick, 64-row pattern):
 
