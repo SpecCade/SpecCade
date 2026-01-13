@@ -6,6 +6,7 @@ use speccade_spec::recipe::texture::{TextureGraphOp, TextureGraphV1Params};
 
 use crate::color::Color;
 use crate::maps::{GrayscaleBuffer, NormalGenerator, TextureBuffer};
+use crate::noise::lerp as lerp_f64;
 use crate::pattern::{CheckerPattern, GradientPattern, Pattern2D, StripesPattern};
 use crate::png;
 use crate::rng::DeterministicRng;
@@ -77,6 +78,7 @@ pub fn generate_graph(
             &mut visiting,
             width,
             height,
+            params.tileable,
             seed,
         )?;
     }
@@ -94,6 +96,7 @@ fn eval_node<'a>(
     visiting: &mut HashSet<&'a str>,
     width: u32,
     height: u32,
+    tileable: bool,
     seed: u32,
 ) -> Result<(), GenerateError> {
     if cache.contains_key(node_id) {
@@ -124,13 +127,41 @@ fn eval_node<'a>(
             let noise_gen = create_noise_generator(noise, derived_seed);
             let scale = noise.scale;
             let mut buf = GrayscaleBuffer::new(width, height, 0.0);
-            for y in 0..height {
-                for x in 0..width {
-                    let nx = x as f64 * scale;
-                    let ny = y as f64 * scale;
-                    buf.set(x, y, noise_gen.sample_01(nx, ny));
+
+            if tileable && width > 1 && height > 1 && scale != 0.0 {
+                let denom_x = (width as f64 - 1.0).max(1.0);
+                let denom_y = (height as f64 - 1.0).max(1.0);
+                let period_x = denom_x * scale;
+                let period_y = denom_y * scale;
+
+                for y in 0..height {
+                    let v = y as f64 / denom_y;
+                    let ny = v * period_y;
+                    for x in 0..width {
+                        let u = x as f64 / denom_x;
+                        let nx = u * period_x;
+
+                        let n00 = noise_gen.sample_01(nx, ny);
+                        let n10 = noise_gen.sample_01(nx - period_x, ny);
+                        let n01 = noise_gen.sample_01(nx, ny - period_y);
+                        let n11 = noise_gen.sample_01(nx - period_x, ny - period_y);
+
+                        let n0 = lerp_f64(n00, n10, u);
+                        let n1 = lerp_f64(n01, n11, u);
+                        let value = lerp_f64(n0, n1, v);
+                        buf.set(x, y, value);
+                    }
+                }
+            } else {
+                for y in 0..height {
+                    for x in 0..width {
+                        let nx = x as f64 * scale;
+                        let ny = y as f64 * scale;
+                        buf.set(x, y, noise_gen.sample_01(nx, ny));
+                    }
                 }
             }
+
             GraphValue::Grayscale(buf)
         }
         TextureGraphOp::Gradient {
@@ -210,7 +241,7 @@ fn eval_node<'a>(
         // Grayscale ops
         // -----------------------------------------------------------------
         TextureGraphOp::Invert { input } => {
-            eval_node(input, nodes_by_id, cache, visiting, width, height, seed)?;
+            eval_node(input, nodes_by_id, cache, visiting, width, height, tileable, seed)?;
             let out = {
                 let in_buf = expect_gray(cache, input)?;
                 let mut out = GrayscaleBuffer::new(width, height, 0.0);
@@ -222,7 +253,7 @@ fn eval_node<'a>(
             GraphValue::Grayscale(out)
         }
         TextureGraphOp::Clamp { input, min, max } => {
-            eval_node(input, nodes_by_id, cache, visiting, width, height, seed)?;
+            eval_node(input, nodes_by_id, cache, visiting, width, height, tileable, seed)?;
             let out = {
                 let in_buf = expect_gray(cache, input)?;
                 let mut out = GrayscaleBuffer::new(width, height, 0.0);
@@ -234,8 +265,8 @@ fn eval_node<'a>(
             GraphValue::Grayscale(out)
         }
         TextureGraphOp::Add { a, b } => {
-            eval_node(a, nodes_by_id, cache, visiting, width, height, seed)?;
-            eval_node(b, nodes_by_id, cache, visiting, width, height, seed)?;
+            eval_node(a, nodes_by_id, cache, visiting, width, height, tileable, seed)?;
+            eval_node(b, nodes_by_id, cache, visiting, width, height, tileable, seed)?;
             let out = {
                 let a_buf = expect_gray(cache, a)?;
                 let b_buf = expect_gray(cache, b)?;
@@ -248,8 +279,8 @@ fn eval_node<'a>(
             GraphValue::Grayscale(out)
         }
         TextureGraphOp::Multiply { a, b } => {
-            eval_node(a, nodes_by_id, cache, visiting, width, height, seed)?;
-            eval_node(b, nodes_by_id, cache, visiting, width, height, seed)?;
+            eval_node(a, nodes_by_id, cache, visiting, width, height, tileable, seed)?;
+            eval_node(b, nodes_by_id, cache, visiting, width, height, tileable, seed)?;
             let out = {
                 let a_buf = expect_gray(cache, a)?;
                 let b_buf = expect_gray(cache, b)?;
@@ -262,9 +293,9 @@ fn eval_node<'a>(
             GraphValue::Grayscale(out)
         }
         TextureGraphOp::Lerp { a, b, t } => {
-            eval_node(a, nodes_by_id, cache, visiting, width, height, seed)?;
-            eval_node(b, nodes_by_id, cache, visiting, width, height, seed)?;
-            eval_node(t, nodes_by_id, cache, visiting, width, height, seed)?;
+            eval_node(a, nodes_by_id, cache, visiting, width, height, tileable, seed)?;
+            eval_node(b, nodes_by_id, cache, visiting, width, height, tileable, seed)?;
+            eval_node(t, nodes_by_id, cache, visiting, width, height, tileable, seed)?;
             let out = {
                 let a_buf = expect_gray(cache, a)?;
                 let b_buf = expect_gray(cache, b)?;
@@ -279,7 +310,7 @@ fn eval_node<'a>(
             GraphValue::Grayscale(out)
         }
         TextureGraphOp::Threshold { input, threshold } => {
-            eval_node(input, nodes_by_id, cache, visiting, width, height, seed)?;
+            eval_node(input, nodes_by_id, cache, visiting, width, height, tileable, seed)?;
             let out = {
                 let in_buf = expect_gray(cache, input)?;
                 let mut out = GrayscaleBuffer::new(width, height, 0.0);
@@ -295,7 +326,7 @@ fn eval_node<'a>(
         // Color ops
         // -----------------------------------------------------------------
         TextureGraphOp::ToGrayscale { input } => {
-            eval_node(input, nodes_by_id, cache, visiting, width, height, seed)?;
+            eval_node(input, nodes_by_id, cache, visiting, width, height, tileable, seed)?;
             let out = {
                 let in_buf = expect_color(cache, input)?;
                 let mut out = GrayscaleBuffer::new(width, height, 0.0);
@@ -307,7 +338,7 @@ fn eval_node<'a>(
             GraphValue::Grayscale(out)
         }
         TextureGraphOp::ColorRamp { input, ramp } => {
-            eval_node(input, nodes_by_id, cache, visiting, width, height, seed)?;
+            eval_node(input, nodes_by_id, cache, visiting, width, height, tileable, seed)?;
             let ramp = parse_hex_color_list(ramp, "ramp")?;
             let out = {
                 let in_buf = expect_gray(cache, input)?;
@@ -321,7 +352,7 @@ fn eval_node<'a>(
             GraphValue::Color(out)
         }
         TextureGraphOp::Palette { input, palette } => {
-            eval_node(input, nodes_by_id, cache, visiting, width, height, seed)?;
+            eval_node(input, nodes_by_id, cache, visiting, width, height, tileable, seed)?;
             let palette = parse_hex_color_list(palette, "palette")?;
             let out = {
                 let in_buf = expect_color(cache, input)?;
@@ -336,11 +367,11 @@ fn eval_node<'a>(
             GraphValue::Color(out)
         }
         TextureGraphOp::ComposeRgba { r, g, b, a } => {
-            eval_node(r, nodes_by_id, cache, visiting, width, height, seed)?;
-            eval_node(g, nodes_by_id, cache, visiting, width, height, seed)?;
-            eval_node(b, nodes_by_id, cache, visiting, width, height, seed)?;
+            eval_node(r, nodes_by_id, cache, visiting, width, height, tileable, seed)?;
+            eval_node(g, nodes_by_id, cache, visiting, width, height, tileable, seed)?;
+            eval_node(b, nodes_by_id, cache, visiting, width, height, tileable, seed)?;
             if let Some(a) = a.as_deref() {
-                eval_node(a, nodes_by_id, cache, visiting, width, height, seed)?;
+                eval_node(a, nodes_by_id, cache, visiting, width, height, tileable, seed)?;
             }
 
             let out = {
@@ -362,7 +393,7 @@ fn eval_node<'a>(
             GraphValue::Color(out)
         }
         TextureGraphOp::NormalFromHeight { input, strength } => {
-            eval_node(input, nodes_by_id, cache, visiting, width, height, seed)?;
+            eval_node(input, nodes_by_id, cache, visiting, width, height, tileable, seed)?;
             let out = {
                 let in_buf = expect_gray(cache, input)?;
                 NormalGenerator::new()
@@ -482,17 +513,17 @@ mod tests {
     use super::*;
     use speccade_spec::recipe::texture::{NoiseAlgorithm, NoiseConfig, TextureGraphNode};
 
-    fn make_params(nodes: Vec<TextureGraphNode>) -> TextureGraphV1Params {
+    fn make_params(tileable: bool, nodes: Vec<TextureGraphNode>) -> TextureGraphV1Params {
         TextureGraphV1Params {
             resolution: [32, 32],
-            tileable: true,
+            tileable,
             nodes,
         }
     }
 
     #[test]
     fn graph_is_deterministic_for_same_seed() {
-        let params = make_params(vec![
+        let params = make_params(true, vec![
             TextureGraphNode {
                 id: "n".to_string(),
                 op: TextureGraphOp::Noise {
@@ -528,7 +559,7 @@ mod tests {
 
     #[test]
     fn unknown_node_reference_is_error() {
-        let params = make_params(vec![TextureGraphNode {
+        let params = make_params(true, vec![TextureGraphNode {
             id: "bad".to_string(),
             op: TextureGraphOp::Invert {
                 input: "missing".to_string(),
@@ -538,5 +569,143 @@ mod tests {
         let err = generate_graph(&params, 1).unwrap_err();
         assert!(err.to_string().contains("unknown node id") || err.to_string().contains("unknown node reference"));
     }
-}
 
+    #[test]
+    fn cycle_is_error() {
+        let params = make_params(
+            true,
+            vec![
+                TextureGraphNode {
+                    id: "a".to_string(),
+                    op: TextureGraphOp::Invert {
+                        input: "b".to_string(),
+                    },
+                },
+                TextureGraphNode {
+                    id: "b".to_string(),
+                    op: TextureGraphOp::Invert {
+                        input: "a".to_string(),
+                    },
+                },
+            ],
+        );
+
+        let err = generate_graph(&params, 1).unwrap_err();
+        assert!(err.to_string().contains("cycle detected"));
+    }
+
+    #[test]
+    fn obvious_type_mismatch_is_error() {
+        let params = make_params(
+            true,
+            vec![
+                TextureGraphNode {
+                    id: "n".to_string(),
+                    op: TextureGraphOp::Noise {
+                        noise: NoiseConfig {
+                            algorithm: NoiseAlgorithm::Perlin,
+                            scale: 0.1,
+                            octaves: 2,
+                            persistence: 0.5,
+                            lacunarity: 2.0,
+                        },
+                    },
+                },
+                TextureGraphNode {
+                    id: "bad".to_string(),
+                    op: TextureGraphOp::Palette {
+                        input: "n".to_string(),
+                        palette: vec!["#000000".to_string(), "#ffffff".to_string()],
+                    },
+                },
+            ],
+        );
+
+        let err = generate_graph(&params, 1).unwrap_err();
+        assert!(err.to_string().contains("color output") || err.to_string().contains("color was required"));
+    }
+
+    #[test]
+    fn tileable_noise_matches_edges() {
+        let params = make_params(
+            true,
+            vec![TextureGraphNode {
+                id: "n".to_string(),
+                op: TextureGraphOp::Noise {
+                    noise: NoiseConfig {
+                        algorithm: NoiseAlgorithm::Perlin,
+                        scale: 0.12,
+                        octaves: 3,
+                        persistence: 0.5,
+                        lacunarity: 2.0,
+                    },
+                },
+            }],
+        );
+
+        let nodes = generate_graph(&params, 42).unwrap();
+        let n = nodes.get("n").unwrap().as_grayscale().unwrap();
+
+        let w = n.width;
+        let h = n.height;
+
+        for y in 0..h {
+            let left = n.get(0, y);
+            let right = n.get(w - 1, y);
+            assert!(
+                (left - right).abs() < 1e-12,
+                "left/right mismatch at y={}: {} vs {}",
+                y,
+                left,
+                right
+            );
+        }
+
+        for x in 0..w {
+            let top = n.get(x, 0);
+            let bottom = n.get(x, h - 1);
+            assert!(
+                (top - bottom).abs() < 1e-12,
+                "top/bottom mismatch at x={}: {} vs {}",
+                x,
+                top,
+                bottom
+            );
+        }
+    }
+
+    #[test]
+    fn reorder_does_not_change_output() {
+        let n = TextureGraphNode {
+            id: "n".to_string(),
+            op: TextureGraphOp::Noise {
+                noise: NoiseConfig {
+                    algorithm: NoiseAlgorithm::Perlin,
+                    scale: 0.1,
+                    octaves: 3,
+                    persistence: 0.5,
+                    lacunarity: 2.0,
+                },
+            },
+        };
+        let mask = TextureGraphNode {
+            id: "mask".to_string(),
+            op: TextureGraphOp::Threshold {
+                input: "n".to_string(),
+                threshold: 0.5,
+            },
+        };
+
+        let params_a = make_params(true, vec![n.clone(), mask.clone()]);
+        let params_b = make_params(true, vec![mask, n]);
+
+        let a = generate_graph(&params_a, 123).unwrap();
+        let b = generate_graph(&params_b, 123).unwrap();
+
+        let (bytes_a, hash_a) = encode_graph_value_png(a.get("mask").unwrap()).unwrap();
+        let (bytes_b, hash_b) = encode_graph_value_png(b.get("mask").unwrap()).unwrap();
+
+        assert_eq!(hash_a, hash_b);
+        assert_eq!(bytes_a, bytes_b);
+    }
+}

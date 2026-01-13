@@ -2,7 +2,7 @@
 
 pub mod common;
 
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::sync::OnceLock;
 
 use regex::Regex;
@@ -1211,6 +1211,69 @@ fn validate_texture_graph_outputs(
         }
     };
 
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    enum GraphValueType {
+        Grayscale,
+        Color,
+    }
+
+    impl GraphValueType {
+        fn as_str(&self) -> &'static str {
+            match self {
+                GraphValueType::Grayscale => "grayscale",
+                GraphValueType::Color => "color",
+            }
+        }
+    }
+
+    // Type information for each node is fixed based on op kind (this enables simple type checks).
+    let mut node_types: HashMap<&str, GraphValueType> = HashMap::new();
+    for node in &params.nodes {
+        use crate::recipe::texture::TextureGraphOp;
+
+        let node_type = match &node.op {
+            TextureGraphOp::ColorRamp { .. }
+            | TextureGraphOp::Palette { .. }
+            | TextureGraphOp::ComposeRgba { .. }
+            | TextureGraphOp::NormalFromHeight { .. } => GraphValueType::Color,
+            TextureGraphOp::Constant { .. }
+            | TextureGraphOp::Noise { .. }
+            | TextureGraphOp::Gradient { .. }
+            | TextureGraphOp::Stripes { .. }
+            | TextureGraphOp::Checkerboard { .. }
+            | TextureGraphOp::Invert { .. }
+            | TextureGraphOp::Clamp { .. }
+            | TextureGraphOp::Add { .. }
+            | TextureGraphOp::Multiply { .. }
+            | TextureGraphOp::Lerp { .. }
+            | TextureGraphOp::Threshold { .. }
+            | TextureGraphOp::ToGrayscale { .. } => GraphValueType::Grayscale,
+        };
+
+        node_types.insert(node.id.as_str(), node_type);
+    }
+
+    let validate_input_type =
+        |expected: GraphValueType, id: &str, path: String, result: &mut ValidationResult| {
+            let Some(actual) = node_types.get(id).copied() else {
+                return;
+            };
+            if actual != expected {
+                result.add_error(ValidationError::with_path(
+                    ErrorCode::InvalidRecipeParams,
+                    format!(
+                        "type mismatch: expected {} input from '{}' but it produces {} output",
+                        expected.as_str(),
+                        id,
+                        actual.as_str()
+                    ),
+                    path,
+                ));
+            }
+        };
+
+    let mut deps: HashMap<&str, Vec<&str>> = HashMap::new();
+
     for (i, node) in params.nodes.iter().enumerate() {
         use crate::recipe::texture::TextureGraphOp;
 
@@ -1227,30 +1290,180 @@ fn validate_texture_graph_outputs(
                     format!("recipe.params.nodes[{}].input", i),
                     result,
                 );
+                // Input types
+                match &node.op {
+                    TextureGraphOp::ToGrayscale { .. } | TextureGraphOp::Palette { .. } => {
+                        validate_input_type(
+                            GraphValueType::Color,
+                            input,
+                            format!("recipe.params.nodes[{}].input", i),
+                            result,
+                        );
+                    }
+                    TextureGraphOp::ColorRamp { .. }
+                    | TextureGraphOp::NormalFromHeight { .. }
+                    | TextureGraphOp::Invert { .. }
+                    | TextureGraphOp::Clamp { .. }
+                    | TextureGraphOp::Threshold { .. } => {
+                        validate_input_type(
+                            GraphValueType::Grayscale,
+                            input,
+                            format!("recipe.params.nodes[{}].input", i),
+                            result,
+                        );
+                    }
+                    _ => {}
+                }
+
+                deps.insert(node.id.as_str(), vec![input.as_str()]);
             }
             TextureGraphOp::Add { a, b } | TextureGraphOp::Multiply { a, b } => {
                 validate_ref(a, format!("recipe.params.nodes[{}].a", i), result);
                 validate_ref(b, format!("recipe.params.nodes[{}].b", i), result);
+                validate_input_type(
+                    GraphValueType::Grayscale,
+                    a,
+                    format!("recipe.params.nodes[{}].a", i),
+                    result,
+                );
+                validate_input_type(
+                    GraphValueType::Grayscale,
+                    b,
+                    format!("recipe.params.nodes[{}].b", i),
+                    result,
+                );
+
+                deps.insert(node.id.as_str(), vec![a.as_str(), b.as_str()]);
             }
             TextureGraphOp::Lerp { a, b, t } => {
                 validate_ref(a, format!("recipe.params.nodes[{}].a", i), result);
                 validate_ref(b, format!("recipe.params.nodes[{}].b", i), result);
                 validate_ref(t, format!("recipe.params.nodes[{}].t", i), result);
+                validate_input_type(
+                    GraphValueType::Grayscale,
+                    a,
+                    format!("recipe.params.nodes[{}].a", i),
+                    result,
+                );
+                validate_input_type(
+                    GraphValueType::Grayscale,
+                    b,
+                    format!("recipe.params.nodes[{}].b", i),
+                    result,
+                );
+                validate_input_type(
+                    GraphValueType::Grayscale,
+                    t,
+                    format!("recipe.params.nodes[{}].t", i),
+                    result,
+                );
+
+                deps.insert(node.id.as_str(), vec![a.as_str(), b.as_str(), t.as_str()]);
             }
             TextureGraphOp::ComposeRgba { r, g, b, a } => {
                 validate_ref(r, format!("recipe.params.nodes[{}].r", i), result);
                 validate_ref(g, format!("recipe.params.nodes[{}].g", i), result);
                 validate_ref(b, format!("recipe.params.nodes[{}].b", i), result);
+                validate_input_type(
+                    GraphValueType::Grayscale,
+                    r,
+                    format!("recipe.params.nodes[{}].r", i),
+                    result,
+                );
+                validate_input_type(
+                    GraphValueType::Grayscale,
+                    g,
+                    format!("recipe.params.nodes[{}].g", i),
+                    result,
+                );
+                validate_input_type(
+                    GraphValueType::Grayscale,
+                    b,
+                    format!("recipe.params.nodes[{}].b", i),
+                    result,
+                );
+
                 if let Some(a) = a.as_deref() {
                     validate_ref(a, format!("recipe.params.nodes[{}].a", i), result);
+                    validate_input_type(
+                        GraphValueType::Grayscale,
+                        a,
+                        format!("recipe.params.nodes[{}].a", i),
+                        result,
+                    );
                 }
+
+                let mut d = vec![r.as_str(), g.as_str(), b.as_str()];
+                if let Some(a) = a.as_deref() {
+                    d.push(a);
+                }
+                deps.insert(node.id.as_str(), d);
             }
             TextureGraphOp::Constant { .. }
             | TextureGraphOp::Noise { .. }
             | TextureGraphOp::Gradient { .. }
             | TextureGraphOp::Stripes { .. }
-            | TextureGraphOp::Checkerboard { .. } => {}
+            | TextureGraphOp::Checkerboard { .. } => {
+                deps.insert(node.id.as_str(), Vec::new());
+            }
         }
+    }
+
+    // Cycle detection (graph must be a DAG).
+    fn find_cycle<'a>(deps: &HashMap<&'a str, Vec<&'a str>>) -> Option<Vec<&'a str>> {
+        fn dfs<'a>(
+            node: &'a str,
+            deps: &HashMap<&'a str, Vec<&'a str>>,
+            state: &mut HashMap<&'a str, u8>,
+            stack: &mut Vec<&'a str>,
+        ) -> Option<Vec<&'a str>> {
+            match state.get(node).copied().unwrap_or(0) {
+                1 => {
+                    if let Some(pos) = stack.iter().position(|&n| n == node) {
+                        let mut cycle = stack[pos..].to_vec();
+                        cycle.push(node);
+                        return Some(cycle);
+                    }
+                    return Some(vec![node, node]);
+                }
+                2 => return None,
+                _ => {}
+            }
+
+            state.insert(node, 1);
+            stack.push(node);
+
+            if let Some(children) = deps.get(node) {
+                for &child in children {
+                    if let Some(cycle) = dfs(child, deps, state, stack) {
+                        return Some(cycle);
+                    }
+                }
+            }
+
+            stack.pop();
+            state.insert(node, 2);
+            None
+        }
+
+        let mut state: HashMap<&str, u8> = HashMap::new();
+        let mut stack: Vec<&str> = Vec::new();
+        for &node in deps.keys() {
+            if state.get(node).copied().unwrap_or(0) == 0 {
+                if let Some(cycle) = dfs(node, deps, &mut state, &mut stack) {
+                    return Some(cycle);
+                }
+            }
+        }
+        None
+    }
+
+    if let Some(cycle) = find_cycle(&deps) {
+        result.add_error(ValidationError::with_path(
+            ErrorCode::InvalidRecipeParams,
+            format!("cycle detected: {}", cycle.join(" -> ")),
+            "recipe.params.nodes",
+        ));
     }
 
     // Outputs: primary PNG outputs must declare source and refer to a node id.
@@ -1365,6 +1578,7 @@ pub fn validate_for_generate(spec: &Spec) -> ValidationResult {
             "texture.material_v1",
             "texture.normal_v1",
             "texture.packed_v1",
+            "texture.graph_v1",
             "static_mesh.blender_primitives_v1",
             "skeletal_mesh.blender_rigged_mesh_v1",
             "skeletal_animation.blender_clip_v1",
@@ -1456,6 +1670,7 @@ mod tests {
     use super::*;
     use crate::output::{OutputFormat, OutputSpec};
     use crate::recipe::texture::{ChannelSource, PackedChannels};
+    use crate::recipe::Recipe;
     use crate::spec::AssetType;
 
     fn make_valid_spec() -> Spec {
@@ -2183,5 +2398,120 @@ mod tests {
         assert!(!is_safe_output_path("C:/windows/path"));
         assert!(!is_safe_output_path("path\\backslash"));
         assert!(!is_safe_output_path("../traversal"));
+    }
+
+    fn make_valid_texture_graph_spec() -> Spec {
+        let mut output = OutputSpec::primary(OutputFormat::Png, "textures/mask.png");
+        output.source = Some("mask".to_string());
+
+        Spec::builder("graph-test-01", AssetType::Texture)
+            .license("CC0-1.0")
+            .seed(123)
+            .output(output)
+            .recipe(Recipe::new(
+                "texture.graph_v1",
+                serde_json::json!({
+                    "resolution": [16, 16],
+                    "tileable": true,
+                    "nodes": [
+                        { "id": "n", "type": "noise", "noise": { "algorithm": "perlin", "scale": 0.1 } },
+                        { "id": "mask", "type": "threshold", "input": "n", "threshold": 0.5 }
+                    ]
+                }),
+            ))
+            .build()
+    }
+
+    #[test]
+    fn test_texture_graph_valid_spec() {
+        let spec = make_valid_texture_graph_spec();
+        let result = validate_for_generate(&spec);
+        assert!(result.is_ok(), "errors: {:?}", result.errors);
+    }
+
+    #[test]
+    fn test_texture_graph_rejects_missing_output_source() {
+        let mut spec = make_valid_texture_graph_spec();
+        spec.outputs[0].source = None;
+
+        let result = validate_for_generate(&spec);
+        assert!(!result.is_ok());
+        assert!(result
+            .errors
+            .iter()
+            .any(|e| e.message.contains("must set 'source'")));
+    }
+
+    #[test]
+    fn test_texture_graph_rejects_unknown_output_source() {
+        let mut spec = make_valid_texture_graph_spec();
+        spec.outputs[0].source = Some("missing".to_string());
+
+        let result = validate_for_generate(&spec);
+        assert!(!result.is_ok());
+        assert!(result
+            .errors
+            .iter()
+            .any(|e| e.message.contains("does not match any recipe.params.nodes")));
+    }
+
+    #[test]
+    fn test_texture_graph_rejects_cycles() {
+        let mut output = OutputSpec::primary(OutputFormat::Png, "textures/a.png");
+        output.source = Some("a".to_string());
+
+        let spec = Spec::builder("graph-cycle-01", AssetType::Texture)
+            .license("CC0-1.0")
+            .seed(1)
+            .output(output)
+            .recipe(Recipe::new(
+                "texture.graph_v1",
+                serde_json::json!({
+                    "resolution": [8, 8],
+                    "tileable": true,
+                    "nodes": [
+                        { "id": "a", "type": "invert", "input": "b" },
+                        { "id": "b", "type": "invert", "input": "a" }
+                    ]
+                }),
+            ))
+            .build();
+
+        let result = validate_for_generate(&spec);
+        assert!(!result.is_ok());
+        assert!(result
+            .errors
+            .iter()
+            .any(|e| e.message.contains("cycle detected")));
+    }
+
+    #[test]
+    fn test_texture_graph_rejects_obvious_type_mismatch() {
+        let mut output = OutputSpec::primary(OutputFormat::Png, "textures/bad.png");
+        output.source = Some("bad".to_string());
+
+        let spec = Spec::builder("graph-types-01", AssetType::Texture)
+            .license("CC0-1.0")
+            .seed(1)
+            .output(output)
+            .recipe(Recipe::new(
+                "texture.graph_v1",
+                serde_json::json!({
+                    "resolution": [8, 8],
+                    "tileable": true,
+                    "nodes": [
+                        { "id": "n", "type": "noise", "noise": { "algorithm": "perlin", "scale": 0.1 } },
+                        { "id": "bad", "type": "palette", "input": "n", "palette": ["#000000", "#ffffff"] }
+                    ]
+                }),
+            ))
+            .build();
+
+        let result = validate_for_generate(&spec);
+        assert!(!result.is_ok());
+        assert!(result
+            .errors
+            .iter()
+            .any(|e| e.message.contains("type mismatch")));
     }
 }
