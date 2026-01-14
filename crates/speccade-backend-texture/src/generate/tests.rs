@@ -4,6 +4,7 @@ use super::*;
 use ::png as png_crate;
 use speccade_spec::recipe::texture::{
     BaseMaterial, GradientDirection, MaterialType, NoiseAlgorithm, NoiseConfig, StripeDirection,
+    TextureLayer,
 };
 use std::collections::HashSet;
 use std::io::Cursor;

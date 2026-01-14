@@ -12,8 +12,20 @@ publish = false
 path = "src/lib.rs"
 
 [[test]]
-name = "e2e"
-path = "tests/e2e.rs"
+name = "e2e_migration"
+path = "tests/e2e_migration.rs"
+
+[[test]]
+name = "e2e_generation"
+path = "tests/e2e_generation.rs"
+
+[[test]]
+name = "e2e_validation"
+path = "tests/e2e_validation.rs"
+
+[[test]]
+name = "e2e_determinism"
+path = "tests/e2e_determinism.rs"
 
 [dependencies]
 # We need all the workspace crates for integration testing
