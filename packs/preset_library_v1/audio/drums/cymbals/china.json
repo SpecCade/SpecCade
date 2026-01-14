@@ -1,75 +1,75 @@
 {
-    "spec_version":  1,
-    "asset_id":  "preset_china",
-    "asset_type":  "audio",
-    "license":  "CC0-1.0",
-    "seed":  10057,
-    "description":  "China cymbal - trashy, highly inharmonic character with quick attack",
-    "outputs":  [
-                    {
-                        "kind":  "primary",
-                        "format":  "wav",
-                        "path":  "test-outputs/preset_library_v1/audio/drums/cymbals/china.wav"
-                    }
-                ],
-    "recipe":  {
-                   "kind":  "audio_v1",
-                   "params":  {
-                                  "duration_seconds":  1.2,
-                                  "sample_rate":  44100,
-                                  "layers":  [
-                                                 {
-                                                     "synthesis":  {
-                                                                       "type":  "metallic",
-                                                                       "base_freq":  4500,
-                                                                       "num_partials":  14,
-                                                                       "inharmonicity":  3.5
-                                                                   },
-                                                     "envelope":  {
-                                                                      "attack":  0.001,
-                                                                      "decay":  0.6,
-                                                                      "sustain":  0.08,
-                                                                      "release":  0.4
-                                                                  },
-                                                     "volume":  0.6,
-                                                     "pan":  0
-                                                 },
-                                                 {
-                                                     "synthesis":  {
-                                                                       "type":  "metallic",
-                                                                       "base_freq":  8500,
-                                                                       "num_partials":  10,
-                                                                       "inharmonicity":  4
-                                                                   },
-                                                     "envelope":  {
-                                                                      "attack":  0.002,
-                                                                      "decay":  0.5,
-                                                                      "sustain":  0.06,
-                                                                      "release":  0.35
-                                                                  },
-                                                     "volume":  0.5,
-                                                     "pan":  0
-                                                 },
-                                                 {
-                                                     "synthesis":  {
-                                                                       "type":  "noise_burst",
-                                                                       "noise_type":  "white",
-                                                                       "filter":  {
-                                                                                      "type":  "bandpass",
-                                                                                      "center":  6000,
-                                                                                      "resonance":  0.8
-                                                                                  }
-                                                                   },
-                                                     "envelope":  {
-                                                                      "attack":  0.001,
-                                                                      "decay":  0.4,
-                                                                      "sustain":  0.05,
-                                                                      "release":  0.3
-                                                                  },
-                                                     "volume":  0.4,
-                                                     "pan":  0
-                                                 }
-                                             ]
-                              }
-               }
+  "spec_version": 1,
+  "asset_id": "preset_china",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 10057,
+  "description": "China cymbal - trashy, highly inharmonic character with quick attack",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/drums/cymbals/china.wav"
+    }
+  ],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "duration_seconds": 1.2,
+      "sample_rate": 44100,
+      "layers": [
+        {
+          "synthesis": {
+            "type": "metallic",
+            "base_freq": 4500,
+            "num_partials": 14,
+            "inharmonicity": 3.5
+          },
+          "envelope": {
+            "attack": 0.001,
+            "decay": 0.6,
+            "sustain": 0.08,
+            "release": 0.4
+          },
+          "volume": 0.6,
+          "pan": 0
+        },
+        {
+          "synthesis": {
+            "type": "metallic",
+            "base_freq": 8500,
+            "num_partials": 10,
+            "inharmonicity": 4
+          },
+          "envelope": {
+            "attack": 0.002,
+            "decay": 0.5,
+            "sustain": 0.06,
+            "release": 0.35
+          },
+          "volume": 0.5,
+          "pan": 0
+        },
+        {
+          "synthesis": {
+            "type": "noise_burst",
+            "noise_type": "white",
+            "filter": {
+              "type": "bandpass",
+              "center": 6000,
+              "resonance": 0.8
+            }
+          },
+          "envelope": {
+            "attack": 0.001,
+            "decay": 0.4,
+            "sustain": 0.05,
+            "release": 0.3
+          },
+          "volume": 0.4,
+          "pan": 0
+        }
+      ]
+    }
+  }
 }

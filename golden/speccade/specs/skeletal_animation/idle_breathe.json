@@ -23,15 +23,30 @@
       "ground_offset": 0.0,
       "poses": {
         "neutral": {
-          "spine": {"pitch": 0, "yaw": 0, "roll": 0},
-          "chest": {"pitch": 0, "yaw": 0, "roll": 0},
-          "head": {"pitch": 0, "yaw": 0, "roll": 0}
+          "spine": {
+            "pitch": 0,
+            "yaw": 0,
+            "roll": 0
+          },
+          "chest": {
+            "pitch": 0,
+            "yaw": 0,
+            "roll": 0
+          },
+          "head": {
+            "pitch": 0,
+            "yaw": 0,
+            "roll": 0
+          }
         }
       },
       "phases": [
         {
           "name": "idle",
-          "frames": [0, 60],
+          "frames": [
+            0,
+            60
+          ],
           "pose": "neutral",
           "timing_curve": "linear"
         }

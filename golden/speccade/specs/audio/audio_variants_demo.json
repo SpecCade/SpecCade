@@ -13,8 +13,14 @@
     }
   ],
   "variants": [
-    { "variant_id": "soft", "seed_offset": 0 },
-    { "variant_id": "hard", "seed_offset": 1 }
+    {
+      "variant_id": "soft",
+      "seed_offset": 0
+    },
+    {
+      "variant_id": "hard",
+      "seed_offset": 1
+    }
   ],
   "recipe": {
     "kind": "audio_v1",

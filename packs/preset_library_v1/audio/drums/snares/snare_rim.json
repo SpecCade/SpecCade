@@ -5,11 +5,13 @@
   "license": "CC0-1.0",
   "seed": 20005,
   "description": "Rim-focused snare - emphasis on the rim click/crack with less body",
-  "outputs": [{
-    "kind": "primary",
-    "format": "wav",
-    "path": "test-outputs/preset_library_v1/audio/drums/snares/snare_rim.wav"
-  }],
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/drums/snares/snare_rim.wav"
+    }
+  ],
   "recipe": {
     "kind": "audio_v1",
     "params": {

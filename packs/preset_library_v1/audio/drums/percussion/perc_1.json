@@ -5,11 +5,13 @@
   "license": "CC0-1.0",
   "seed": 20009,
   "description": "Generic percussion hit 1 - versatile mid-frequency percussion with quick decay",
-  "outputs": [{
-    "kind": "primary",
-    "format": "wav",
-    "path": "test-outputs/preset_library_v1/audio/drums/percussion/perc_1.wav"
-  }],
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/drums/percussion/perc_1.wav"
+    }
+  ],
   "recipe": {
     "kind": "audio_v1",
     "params": {

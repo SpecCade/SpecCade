@@ -1,59 +1,59 @@
 {
-    "spec_version": 1,
-    "asset_id": "preset_swell",
-    "asset_type": "audio",
-    "license": "CC0-1.0",
-    "seed": 20073,
-    "description": "Musical swell - crescendo effect that builds in volume and intensity",
-    "outputs": [
-        {
-            "kind": "primary",
-            "format": "wav",
-            "path": "test-outputs/preset_library_v1/audio/fx/swell.wav"
-        }
-    ],
-    "recipe": {
-        "kind": "audio_v1",
-        "params": {
-            "duration_seconds": 2.0,
-            "sample_rate": 44100,
-            "layers": [
-                {
-                    "synthesis": {
-                        "type": "oscillator",
-                        "waveform": "sawtooth",
-                        "frequency": 110
-                    },
-                    "envelope": {
-                        "attack": 1.5,
-                        "decay": 0.2,
-                        "sustain": 0.9,
-                        "release": 0.3
-                    },
-                    "filter": {
-                        "type": "lowpass",
-                        "cutoff": 200,
-                        "resonance": 0.3,
-                        "cutoff_end": 8000
-                    },
-                    "volume": 0.7,
-                    "pan": 0
-                }
-            ],
-            "effects": [
-                {
-                    "type": "reverb",
-                    "room_size": 0.8,
-                    "damping": 0.5,
-                    "wet": 0.4
-                },
-                {
-                    "type": "chorus",
-                    "rate": 0.5,
-                    "depth": 0.4,
-                    "wet": 0.3
-                }
-            ]
-        }
+  "spec_version": 1,
+  "asset_id": "preset_swell",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 20073,
+  "description": "Musical swell - crescendo effect that builds in volume and intensity",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/fx/swell.wav"
     }
+  ],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "duration_seconds": 2.0,
+      "sample_rate": 44100,
+      "layers": [
+        {
+          "synthesis": {
+            "type": "oscillator",
+            "waveform": "sawtooth",
+            "frequency": 110
+          },
+          "envelope": {
+            "attack": 1.5,
+            "decay": 0.2,
+            "sustain": 0.9,
+            "release": 0.3
+          },
+          "filter": {
+            "type": "lowpass",
+            "cutoff": 200,
+            "resonance": 0.3,
+            "cutoff_end": 8000
+          },
+          "volume": 0.7,
+          "pan": 0
+        }
+      ],
+      "effects": [
+        {
+          "type": "reverb",
+          "room_size": 0.8,
+          "damping": 0.5,
+          "wet": 0.4
+        },
+        {
+          "type": "chorus",
+          "rate": 0.5,
+          "depth": 0.4,
+          "wet": 0.3
+        }
+      ]
+    }
+  }
 }

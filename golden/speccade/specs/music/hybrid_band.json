@@ -5,7 +5,11 @@
   "license": "CC0-1.0",
   "seed": 3011,
   "description": "Hybrid band demo - fully synthesized instruments with varied synthesis types",
-  "style_tags": ["hybrid", "rock", "electronic"],
+  "style_tags": [
+    "hybrid",
+    "rock",
+    "electronic"
+  ],
   "outputs": [
     {
       "kind": "primary",
@@ -102,71 +106,395 @@
         "verse": {
           "rows": 64,
           "data": [
-            {"row": 0, "channel": 2, "note": "C4", "instrument": 2, "volume": 64},
-            {"row": 0, "channel": 4, "note": "C4", "instrument": 4, "volume": 32},
-            {"row": 0, "channel": 1, "note": "E2", "instrument": 1, "volume": 56},
-            {"row": 4, "channel": 4, "note": "C4", "instrument": 4, "volume": 28},
-            {"row": 8, "channel": 4, "note": "C4", "instrument": 4, "volume": 32},
-            {"row": 8, "channel": 3, "note": "C4", "instrument": 3, "volume": 56},
-            {"row": 12, "channel": 4, "note": "C4", "instrument": 4, "volume": 28},
-            {"row": 16, "channel": 2, "note": "C4", "instrument": 2, "volume": 64},
-            {"row": 16, "channel": 4, "note": "C4", "instrument": 4, "volume": 32},
-            {"row": 16, "channel": 1, "note": "G2", "instrument": 1, "volume": 56},
-            {"row": 20, "channel": 4, "note": "C4", "instrument": 4, "volume": 28},
-            {"row": 24, "channel": 4, "note": "C4", "instrument": 4, "volume": 32},
-            {"row": 24, "channel": 3, "note": "C4", "instrument": 3, "volume": 56},
-            {"row": 28, "channel": 4, "note": "C4", "instrument": 4, "volume": 28},
-            {"row": 32, "channel": 2, "note": "C4", "instrument": 2, "volume": 64},
-            {"row": 32, "channel": 4, "note": "C4", "instrument": 4, "volume": 32},
-            {"row": 32, "channel": 1, "note": "A2", "instrument": 1, "volume": 56},
-            {"row": 36, "channel": 4, "note": "C4", "instrument": 4, "volume": 28},
-            {"row": 40, "channel": 4, "note": "C4", "instrument": 4, "volume": 32},
-            {"row": 40, "channel": 3, "note": "C4", "instrument": 3, "volume": 56},
-            {"row": 44, "channel": 4, "note": "C4", "instrument": 4, "volume": 28},
-            {"row": 48, "channel": 2, "note": "C4", "instrument": 2, "volume": 64},
-            {"row": 48, "channel": 4, "note": "C4", "instrument": 4, "volume": 32},
-            {"row": 48, "channel": 1, "note": "B2", "instrument": 1, "volume": 56},
-            {"row": 52, "channel": 4, "note": "C4", "instrument": 4, "volume": 28},
-            {"row": 56, "channel": 4, "note": "C4", "instrument": 4, "volume": 32},
-            {"row": 56, "channel": 3, "note": "C4", "instrument": 3, "volume": 56},
-            {"row": 60, "channel": 4, "note": "C4", "instrument": 4, "volume": 28}
+            {
+              "row": 0,
+              "channel": 2,
+              "note": "C4",
+              "instrument": 2,
+              "volume": 64
+            },
+            {
+              "row": 0,
+              "channel": 4,
+              "note": "C4",
+              "instrument": 4,
+              "volume": 32
+            },
+            {
+              "row": 0,
+              "channel": 1,
+              "note": "E2",
+              "instrument": 1,
+              "volume": 56
+            },
+            {
+              "row": 4,
+              "channel": 4,
+              "note": "C4",
+              "instrument": 4,
+              "volume": 28
+            },
+            {
+              "row": 8,
+              "channel": 4,
+              "note": "C4",
+              "instrument": 4,
+              "volume": 32
+            },
+            {
+              "row": 8,
+              "channel": 3,
+              "note": "C4",
+              "instrument": 3,
+              "volume": 56
+            },
+            {
+              "row": 12,
+              "channel": 4,
+              "note": "C4",
+              "instrument": 4,
+              "volume": 28
+            },
+            {
+              "row": 16,
+              "channel": 2,
+              "note": "C4",
+              "instrument": 2,
+              "volume": 64
+            },
+            {
+              "row": 16,
+              "channel": 4,
+              "note": "C4",
+              "instrument": 4,
+              "volume": 32
+            },
+            {
+              "row": 16,
+              "channel": 1,
+              "note": "G2",
+              "instrument": 1,
+              "volume": 56
+            },
+            {
+              "row": 20,
+              "channel": 4,
+              "note": "C4",
+              "instrument": 4,
+              "volume": 28
+            },
+            {
+              "row": 24,
+              "channel": 4,
+              "note": "C4",
+              "instrument": 4,
+              "volume": 32
+            },
+            {
+              "row": 24,
+              "channel": 3,
+              "note": "C4",
+              "instrument": 3,
+              "volume": 56
+            },
+            {
+              "row": 28,
+              "channel": 4,
+              "note": "C4",
+              "instrument": 4,
+              "volume": 28
+            },
+            {
+              "row": 32,
+              "channel": 2,
+              "note": "C4",
+              "instrument": 2,
+              "volume": 64
+            },
+            {
+              "row": 32,
+              "channel": 4,
+              "note": "C4",
+              "instrument": 4,
+              "volume": 32
+            },
+            {
+              "row": 32,
+              "channel": 1,
+              "note": "A2",
+              "instrument": 1,
+              "volume": 56
+            },
+            {
+              "row": 36,
+              "channel": 4,
+              "note": "C4",
+              "instrument": 4,
+              "volume": 28
+            },
+            {
+              "row": 40,
+              "channel": 4,
+              "note": "C4",
+              "instrument": 4,
+              "volume": 32
+            },
+            {
+              "row": 40,
+              "channel": 3,
+              "note": "C4",
+              "instrument": 3,
+              "volume": 56
+            },
+            {
+              "row": 44,
+              "channel": 4,
+              "note": "C4",
+              "instrument": 4,
+              "volume": 28
+            },
+            {
+              "row": 48,
+              "channel": 2,
+              "note": "C4",
+              "instrument": 2,
+              "volume": 64
+            },
+            {
+              "row": 48,
+              "channel": 4,
+              "note": "C4",
+              "instrument": 4,
+              "volume": 32
+            },
+            {
+              "row": 48,
+              "channel": 1,
+              "note": "B2",
+              "instrument": 1,
+              "volume": 56
+            },
+            {
+              "row": 52,
+              "channel": 4,
+              "note": "C4",
+              "instrument": 4,
+              "volume": 28
+            },
+            {
+              "row": 56,
+              "channel": 4,
+              "note": "C4",
+              "instrument": 4,
+              "volume": 32
+            },
+            {
+              "row": 56,
+              "channel": 3,
+              "note": "C4",
+              "instrument": 3,
+              "volume": 56
+            },
+            {
+              "row": 60,
+              "channel": 4,
+              "note": "C4",
+              "instrument": 4,
+              "volume": 28
+            }
           ]
         },
         "chorus": {
           "rows": 64,
           "data": [
-            {"row": 0, "channel": 0, "note": "E5", "instrument": 0, "volume": 56},
-            {"row": 0, "channel": 2, "note": "C4", "instrument": 2, "volume": 64},
-            {"row": 0, "channel": 4, "note": "C4", "instrument": 4, "volume": 36},
-            {"row": 0, "channel": 1, "note": "E2", "instrument": 1, "volume": 60},
-            {"row": 0, "channel": 5, "note": "E4", "instrument": 5, "volume": 36},
-            {"row": 8, "channel": 0, "note": "G5", "instrument": 0, "volume": 56},
-            {"row": 8, "channel": 3, "note": "C4", "instrument": 3, "volume": 60},
-            {"row": 16, "channel": 0, "note": "A5", "instrument": 0, "volume": 56},
-            {"row": 16, "channel": 2, "note": "C4", "instrument": 2, "volume": 64},
-            {"row": 16, "channel": 1, "note": "A2", "instrument": 1, "volume": 60},
-            {"row": 24, "channel": 0, "note": "G5", "instrument": 0, "volume": 56},
-            {"row": 24, "channel": 3, "note": "C4", "instrument": 3, "volume": 60},
-            {"row": 32, "channel": 0, "note": "E5", "instrument": 0, "volume": 56},
-            {"row": 32, "channel": 2, "note": "C4", "instrument": 2, "volume": 64},
-            {"row": 32, "channel": 1, "note": "G2", "instrument": 1, "volume": 60},
-            {"row": 32, "channel": 5, "note": "G4", "instrument": 5, "volume": 36},
-            {"row": 40, "channel": 0, "note": "D5", "instrument": 0, "volume": 56},
-            {"row": 40, "channel": 3, "note": "C4", "instrument": 3, "volume": 60},
-            {"row": 48, "channel": 0, "note": "C5", "instrument": 0, "volume": 56},
-            {"row": 48, "channel": 2, "note": "C4", "instrument": 2, "volume": 64},
-            {"row": 48, "channel": 1, "note": "C2", "instrument": 1, "volume": 60},
-            {"row": 48, "channel": 5, "note": "C4", "instrument": 5, "volume": 36},
-            {"row": 56, "channel": 0, "note": "OFF", "instrument": 0, "volume": 0},
-            {"row": 56, "channel": 3, "note": "C4", "instrument": 3, "volume": 60}
+            {
+              "row": 0,
+              "channel": 0,
+              "note": "E5",
+              "instrument": 0,
+              "volume": 56
+            },
+            {
+              "row": 0,
+              "channel": 2,
+              "note": "C4",
+              "instrument": 2,
+              "volume": 64
+            },
+            {
+              "row": 0,
+              "channel": 4,
+              "note": "C4",
+              "instrument": 4,
+              "volume": 36
+            },
+            {
+              "row": 0,
+              "channel": 1,
+              "note": "E2",
+              "instrument": 1,
+              "volume": 60
+            },
+            {
+              "row": 0,
+              "channel": 5,
+              "note": "E4",
+              "instrument": 5,
+              "volume": 36
+            },
+            {
+              "row": 8,
+              "channel": 0,
+              "note": "G5",
+              "instrument": 0,
+              "volume": 56
+            },
+            {
+              "row": 8,
+              "channel": 3,
+              "note": "C4",
+              "instrument": 3,
+              "volume": 60
+            },
+            {
+              "row": 16,
+              "channel": 0,
+              "note": "A5",
+              "instrument": 0,
+              "volume": 56
+            },
+            {
+              "row": 16,
+              "channel": 2,
+              "note": "C4",
+              "instrument": 2,
+              "volume": 64
+            },
+            {
+              "row": 16,
+              "channel": 1,
+              "note": "A2",
+              "instrument": 1,
+              "volume": 60
+            },
+            {
+              "row": 24,
+              "channel": 0,
+              "note": "G5",
+              "instrument": 0,
+              "volume": 56
+            },
+            {
+              "row": 24,
+              "channel": 3,
+              "note": "C4",
+              "instrument": 3,
+              "volume": 60
+            },
+            {
+              "row": 32,
+              "channel": 0,
+              "note": "E5",
+              "instrument": 0,
+              "volume": 56
+            },
+            {
+              "row": 32,
+              "channel": 2,
+              "note": "C4",
+              "instrument": 2,
+              "volume": 64
+            },
+            {
+              "row": 32,
+              "channel": 1,
+              "note": "G2",
+              "instrument": 1,
+              "volume": 60
+            },
+            {
+              "row": 32,
+              "channel": 5,
+              "note": "G4",
+              "instrument": 5,
+              "volume": 36
+            },
+            {
+              "row": 40,
+              "channel": 0,
+              "note": "D5",
+              "instrument": 0,
+              "volume": 56
+            },
+            {
+              "row": 40,
+              "channel": 3,
+              "note": "C4",
+              "instrument": 3,
+              "volume": 60
+            },
+            {
+              "row": 48,
+              "channel": 0,
+              "note": "C5",
+              "instrument": 0,
+              "volume": 56
+            },
+            {
+              "row": 48,
+              "channel": 2,
+              "note": "C4",
+              "instrument": 2,
+              "volume": 64
+            },
+            {
+              "row": 48,
+              "channel": 1,
+              "note": "C2",
+              "instrument": 1,
+              "volume": 60
+            },
+            {
+              "row": 48,
+              "channel": 5,
+              "note": "C4",
+              "instrument": 5,
+              "volume": 36
+            },
+            {
+              "row": 56,
+              "channel": 0,
+              "note": "OFF",
+              "instrument": 0,
+              "volume": 0
+            },
+            {
+              "row": 56,
+              "channel": 3,
+              "note": "C4",
+              "instrument": 3,
+              "volume": 60
+            }
           ]
         }
       },
       "arrangement": [
-        {"pattern": "verse", "repeat": 2},
-        {"pattern": "chorus", "repeat": 2},
-        {"pattern": "verse", "repeat": 1},
-        {"pattern": "chorus", "repeat": 2}
+        {
+          "pattern": "verse",
+          "repeat": 2
+        },
+        {
+          "pattern": "chorus",
+          "repeat": 2
+        },
+        {
+          "pattern": "verse",
+          "repeat": 1
+        },
+        {
+          "pattern": "chorus",
+          "repeat": 2
+        }
       ]
     }
   }

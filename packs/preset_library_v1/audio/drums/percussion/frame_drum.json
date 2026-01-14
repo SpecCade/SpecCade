@@ -5,11 +5,13 @@
   "license": "CC0-1.0",
   "seed": 20006,
   "description": "Frame drum - deep resonant hand drum with warm body and natural decay",
-  "outputs": [{
-    "kind": "primary",
-    "format": "wav",
-    "path": "test-outputs/preset_library_v1/audio/drums/percussion/frame_drum.wav"
-  }],
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/drums/percussion/frame_drum.wav"
+    }
+  ],
   "recipe": {
     "kind": "audio_v1",
     "params": {

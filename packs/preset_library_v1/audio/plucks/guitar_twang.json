@@ -1,48 +1,48 @@
 {
-    "spec_version": 1,
-    "asset_id": "guitar_twang",
-    "asset_type": "audio",
-    "license": "CC0-1.0",
-    "seed": 20060,
-    "description": "Twangy guitar - country/surf style bright guitar with characteristic spring reverb twang",
-    "outputs": [
-        {
-            "kind": "primary",
-            "format": "wav",
-            "path": "test-outputs/preset_library_v1/audio/plucks/guitar_twang.wav"
-        }
-    ],
-    "recipe": {
-        "kind": "audio_v1",
-        "params": {
-            "duration_seconds": 0.8,
-            "sample_rate": 44100,
-            "layers": [
-                {
-                    "synthesis": {
-                        "type": "karplus_strong",
-                        "frequency": 493.88,
-                        "decay": 0.992,
-                        "blend": 0.08
-                    },
-                    "envelope": {
-                        "attack": 0.0005,
-                        "decay": 0.05,
-                        "sustain": 0.55,
-                        "release": 0.25
-                    },
-                    "volume": 1.0,
-                    "pan": 0.0
-                }
-            ],
-            "effects": [
-                {
-                    "type": "delay",
-                    "time_ms": 45.0,
-                    "feedback": 0.35,
-                    "wet": 0.25
-                }
-            ]
-        }
+  "spec_version": 1,
+  "asset_id": "guitar_twang",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 20060,
+  "description": "Twangy guitar - country/surf style bright guitar with characteristic spring reverb twang",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/plucks/guitar_twang.wav"
     }
+  ],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "duration_seconds": 0.8,
+      "sample_rate": 44100,
+      "layers": [
+        {
+          "synthesis": {
+            "type": "karplus_strong",
+            "frequency": 493.88,
+            "decay": 0.992,
+            "blend": 0.08
+          },
+          "envelope": {
+            "attack": 0.0005,
+            "decay": 0.05,
+            "sustain": 0.55,
+            "release": 0.25
+          },
+          "volume": 1.0,
+          "pan": 0.0
+        }
+      ],
+      "effects": [
+        {
+          "type": "delay",
+          "time_ms": 45.0,
+          "feedback": 0.35,
+          "wet": 0.25
+        }
+      ]
+    }
+  }
 }

@@ -8,8 +8,14 @@
     "name": "Western / Country",
     "genre": "world",
     "subgenre": "western",
-    "bpm_range": [90, 130],
-    "time_signature": [4, 4],
+    "bpm_range": [
+      90,
+      130
+    ],
+    "time_signature": [
+      4,
+      4
+    ],
     "instruments": {
       "lead_harmonica": "leads/acoustic/harmonica",
       "guitar_nylon": "plucks/pluck_nylon",
@@ -22,6 +28,13 @@
       "bass_upright": "bass/bass_upright",
       "accordion": "leads/acoustic/accordion_lead"
     },
-    "tags": ["western", "country", "americana", "folk", "regional", "acoustic"]
+    "tags": [
+      "western",
+      "country",
+      "americana",
+      "folk",
+      "regional",
+      "acoustic"
+    ]
   }
 }

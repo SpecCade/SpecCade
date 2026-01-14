@@ -1,40 +1,40 @@
 {
-    "spec_version": 1,
-    "asset_id": "guitar_pluck",
-    "asset_type": "audio",
-    "license": "CC0-1.0",
-    "seed": 20059,
-    "description": "Guitar pluck - single clean guitar note pluck",
-    "outputs": [
-        {
-            "kind": "primary",
-            "format": "wav",
-            "path": "test-outputs/preset_library_v1/audio/plucks/guitar_pluck.wav"
-        }
-    ],
-    "recipe": {
-        "kind": "audio_v1",
-        "params": {
-            "duration_seconds": 0.8,
-            "sample_rate": 44100,
-            "layers": [
-                {
-                    "synthesis": {
-                        "type": "karplus_strong",
-                        "frequency": 293.66,
-                        "decay": 0.996,
-                        "blend": 0.35
-                    },
-                    "envelope": {
-                        "attack": 0.001,
-                        "decay": 0.1,
-                        "sustain": 0.7,
-                        "release": 0.25
-                    },
-                    "volume": 1.0,
-                    "pan": 0.0
-                }
-            ]
-        }
+  "spec_version": 1,
+  "asset_id": "guitar_pluck",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 20059,
+  "description": "Guitar pluck - single clean guitar note pluck",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/plucks/guitar_pluck.wav"
     }
+  ],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "duration_seconds": 0.8,
+      "sample_rate": 44100,
+      "layers": [
+        {
+          "synthesis": {
+            "type": "karplus_strong",
+            "frequency": 293.66,
+            "decay": 0.996,
+            "blend": 0.35
+          },
+          "envelope": {
+            "attack": 0.001,
+            "decay": 0.1,
+            "sustain": 0.7,
+            "release": 0.25
+          },
+          "volume": 1.0,
+          "pan": 0.0
+        }
+      ]
+    }
+  }
 }

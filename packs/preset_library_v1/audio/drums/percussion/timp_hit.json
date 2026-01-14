@@ -5,11 +5,13 @@
   "license": "CC0-1.0",
   "seed": 20008,
   "description": "Timpani hit - orchestral kettle drum with resonant pitched tone",
-  "outputs": [{
-    "kind": "primary",
-    "format": "wav",
-    "path": "test-outputs/preset_library_v1/audio/drums/percussion/timp_hit.wav"
-  }],
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/drums/percussion/timp_hit.wav"
+    }
+  ],
   "recipe": {
     "kind": "audio_v1",
     "params": {

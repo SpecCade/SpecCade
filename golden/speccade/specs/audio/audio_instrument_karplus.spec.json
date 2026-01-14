@@ -5,8 +5,17 @@
   "license": "CC0-1.0",
   "seed": 999010,
   "description": "Golden test for Karplus-Strong synthesis - exercises decay, blend (brightness), notes array, and generate_loop_points",
-  "style_tags": ["golden", "karplus", "plucked", "instrument"],
-  "engine_targets": ["godot", "unity", "unreal"],
+  "style_tags": [
+    "golden",
+    "karplus",
+    "plucked",
+    "instrument"
+  ],
+  "engine_targets": [
+    "godot",
+    "unity",
+    "unreal"
+  ],
   "outputs": [
     {
       "kind": "primary",

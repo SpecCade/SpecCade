@@ -1,81 +1,81 @@
 {
-    "spec_version":  1,
-    "asset_id":  "preset_taiko",
-    "asset_type":  "audio",
-    "license":  "CC0-1.0",
-    "seed":  10092,
-    "description":  "Taiko - large pitched body with sub emphasis and long decay",
-    "outputs":  [
-                    {
-                        "kind":  "primary",
-                        "format":  "wav",
-                        "path":  "test-outputs/preset_library_v1/audio/drums/percussion/taiko.wav"
-                    }
-                ],
-    "recipe":  {
-                   "kind":  "audio_v1",
-                   "params":  {
-                                  "duration_seconds":  1,
-                                  "sample_rate":  44100,
-                                  "layers":  [
-                                                 {
-                                                     "synthesis":  {
-                                                                       "type":  "oscillator",
-                                                                       "waveform":  "sine",
-                                                                       "frequency":  100,
-                                                                       "freq_sweep":  {
-                                                                                          "end_freq":  45,
-                                                                                          "curve":  "exponential"
-                                                                                      }
-                                                                   },
-                                                     "envelope":  {
-                                                                      "attack":  0.003,
-                                                                      "decay":  0.6,
-                                                                      "sustain":  0.1,
-                                                                      "release":  0.35
-                                                                  },
-                                                     "volume":  0.95,
-                                                     "pan":  0
-                                                 },
-                                                 {
-                                                     "synthesis":  {
-                                                                       "type":  "oscillator",
-                                                                       "waveform":  "sine",
-                                                                       "frequency":  300,
-                                                                       "freq_sweep":  {
-                                                                                          "end_freq":  135,
-                                                                                          "curve":  "exponential"
-                                                                                      }
-                                                                   },
-                                                     "envelope":  {
-                                                                      "attack":  0.003,
-                                                                      "decay":  0.25,
-                                                                      "sustain":  0,
-                                                                      "release":  0.15
-                                                                  },
-                                                     "volume":  0.4,
-                                                     "pan":  0
-                                                 },
-                                                 {
-                                                     "synthesis":  {
-                                                                       "type":  "noise_burst",
-                                                                       "noise_type":  "white",
-                                                                       "filter":  {
-                                                                                      "type":  "highpass",
-                                                                                      "cutoff":  2000,
-                                                                                      "resonance":  0.3
-                                                                                  }
-                                                                   },
-                                                     "envelope":  {
-                                                                      "attack":  0,
-                                                                      "decay":  0.03,
-                                                                      "sustain":  0,
-                                                                      "release":  0.02
-                                                                  },
-                                                     "volume":  0.15,
-                                                     "pan":  0
-                                                 }
-                                             ]
-                              }
-               }
+  "spec_version": 1,
+  "asset_id": "preset_taiko",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 10092,
+  "description": "Taiko - large pitched body with sub emphasis and long decay",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/drums/percussion/taiko.wav"
+    }
+  ],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "duration_seconds": 1,
+      "sample_rate": 44100,
+      "layers": [
+        {
+          "synthesis": {
+            "type": "oscillator",
+            "waveform": "sine",
+            "frequency": 100,
+            "freq_sweep": {
+              "end_freq": 45,
+              "curve": "exponential"
+            }
+          },
+          "envelope": {
+            "attack": 0.003,
+            "decay": 0.6,
+            "sustain": 0.1,
+            "release": 0.35
+          },
+          "volume": 0.95,
+          "pan": 0
+        },
+        {
+          "synthesis": {
+            "type": "oscillator",
+            "waveform": "sine",
+            "frequency": 300,
+            "freq_sweep": {
+              "end_freq": 135,
+              "curve": "exponential"
+            }
+          },
+          "envelope": {
+            "attack": 0.003,
+            "decay": 0.25,
+            "sustain": 0,
+            "release": 0.15
+          },
+          "volume": 0.4,
+          "pan": 0
+        },
+        {
+          "synthesis": {
+            "type": "noise_burst",
+            "noise_type": "white",
+            "filter": {
+              "type": "highpass",
+              "cutoff": 2000,
+              "resonance": 0.3
+            }
+          },
+          "envelope": {
+            "attack": 0,
+            "decay": 0.03,
+            "sustain": 0,
+            "release": 0.02
+          },
+          "volume": 0.15,
+          "pan": 0
+        }
+      ]
+    }
+  }
 }

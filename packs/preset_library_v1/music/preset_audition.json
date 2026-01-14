@@ -6,8 +6,16 @@
   "seed": 20001,
   "description": "Audition piece for preset_library_v1 - tests all Phase 1 presets with XM and IT output",
   "outputs": [
-    { "kind": "primary", "format": "xm", "path": "preset_audition.xm" },
-    { "kind": "primary", "format": "it", "path": "preset_audition.it" }
+    {
+      "kind": "primary",
+      "format": "xm",
+      "path": "preset_audition.xm"
+    },
+    {
+      "kind": "primary",
+      "format": "it",
+      "path": "preset_audition.it"
+    }
   ],
   "recipe": {
     "kind": "music.tracker_song_v1",
@@ -23,145 +31,507 @@
         {
           "name": "kick",
           "ref": "../audio/kick.json",
-          "envelope": { "attack": 0.0, "decay": 0.2, "sustain": 0.0, "release": 0.15 }
+          "envelope": {
+            "attack": 0.0,
+            "decay": 0.2,
+            "sustain": 0.0,
+            "release": 0.15
+          }
         },
         {
           "name": "snare",
           "ref": "../audio/snare.json",
-          "envelope": { "attack": 0.0, "decay": 0.15, "sustain": 0.0, "release": 0.1 }
+          "envelope": {
+            "attack": 0.0,
+            "decay": 0.15,
+            "sustain": 0.0,
+            "release": 0.1
+          }
         },
         {
           "name": "clap",
           "ref": "../audio/clap.json",
-          "envelope": { "attack": 0.0, "decay": 0.12, "sustain": 0.0, "release": 0.08 }
+          "envelope": {
+            "attack": 0.0,
+            "decay": 0.12,
+            "sustain": 0.0,
+            "release": 0.08
+          }
         },
         {
           "name": "hat_closed",
           "ref": "../audio/hat_closed.json",
-          "envelope": { "attack": 0.0, "decay": 0.04, "sustain": 0.0, "release": 0.03 }
+          "envelope": {
+            "attack": 0.0,
+            "decay": 0.04,
+            "sustain": 0.0,
+            "release": 0.03
+          }
         },
         {
           "name": "hat_open",
           "ref": "../audio/hat_open.json",
-          "envelope": { "attack": 0.0, "decay": 0.25, "sustain": 0.0, "release": 0.2 }
+          "envelope": {
+            "attack": 0.0,
+            "decay": 0.25,
+            "sustain": 0.0,
+            "release": 0.2
+          }
         },
         {
           "name": "bass_sub",
           "ref": "../audio/bass_sub.json",
           "base_note": "C2",
-          "envelope": { "attack": 0.01, "decay": 0.1, "sustain": 0.6, "release": 0.15 }
+          "envelope": {
+            "attack": 0.01,
+            "decay": 0.1,
+            "sustain": 0.6,
+            "release": 0.15
+          }
         },
         {
           "name": "bass_pluck",
           "ref": "../audio/bass_pluck.json",
           "base_note": "C2",
-          "envelope": { "attack": 0.005, "decay": 0.15, "sustain": 0.4, "release": 0.1 }
+          "envelope": {
+            "attack": 0.005,
+            "decay": 0.15,
+            "sustain": 0.4,
+            "release": 0.1
+          }
         },
         {
           "name": "lead_1",
           "ref": "../audio/lead_1.json",
           "base_note": "C4",
-          "envelope": { "attack": 0.02, "decay": 0.1, "sustain": 0.7, "release": 0.2 }
+          "envelope": {
+            "attack": 0.02,
+            "decay": 0.1,
+            "sustain": 0.7,
+            "release": 0.2
+          }
         },
         {
           "name": "pad_warm",
           "ref": "../audio/pad_warm.json",
           "base_note": "C4",
-          "envelope": { "attack": 0.15, "decay": 0.3, "sustain": 0.8, "release": 0.4 }
+          "envelope": {
+            "attack": 0.15,
+            "decay": 0.3,
+            "sustain": 0.8,
+            "release": 0.4
+          }
         }
       ],
       "patterns": {
         "drums_showcase": {
           "rows": 64,
           "data": [
-            {"row": 0,  "channel": 0, "instrument": 0, "volume": 64},
-            {"row": 8,  "channel": 0, "instrument": 0, "volume": 60},
-            {"row": 16, "channel": 0, "instrument": 0, "volume": 64},
-            {"row": 24, "channel": 0, "instrument": 0, "volume": 60},
-            {"row": 32, "channel": 0, "instrument": 0, "volume": 64},
-            {"row": 40, "channel": 0, "instrument": 0, "volume": 60},
-            {"row": 48, "channel": 0, "instrument": 0, "volume": 64},
-            {"row": 56, "channel": 0, "instrument": 0, "volume": 60},
-
-            {"row": 8,  "channel": 1, "instrument": 1, "volume": 56},
-            {"row": 24, "channel": 1, "instrument": 1, "volume": 56},
-            {"row": 40, "channel": 1, "instrument": 1, "volume": 56},
-            {"row": 56, "channel": 1, "instrument": 1, "volume": 56},
-
-            {"row": 12, "channel": 1, "instrument": 2, "volume": 48},
-            {"row": 44, "channel": 1, "instrument": 2, "volume": 48},
-
-            {"row": 0,  "channel": 2, "instrument": 3, "volume": 44},
-            {"row": 4,  "channel": 2, "instrument": 3, "volume": 36},
-            {"row": 8,  "channel": 2, "instrument": 3, "volume": 44},
-            {"row": 12, "channel": 2, "instrument": 3, "volume": 36},
-            {"row": 16, "channel": 2, "instrument": 3, "volume": 44},
-            {"row": 20, "channel": 2, "instrument": 3, "volume": 36},
-            {"row": 24, "channel": 2, "instrument": 3, "volume": 44},
-            {"row": 28, "channel": 2, "instrument": 4, "volume": 52},
-            {"row": 32, "channel": 2, "instrument": 3, "volume": 44},
-            {"row": 36, "channel": 2, "instrument": 3, "volume": 36},
-            {"row": 40, "channel": 2, "instrument": 3, "volume": 44},
-            {"row": 44, "channel": 2, "instrument": 3, "volume": 36},
-            {"row": 48, "channel": 2, "instrument": 3, "volume": 44},
-            {"row": 52, "channel": 2, "instrument": 3, "volume": 36},
-            {"row": 56, "channel": 2, "instrument": 3, "volume": 44},
-            {"row": 60, "channel": 2, "instrument": 4, "volume": 52}
+            {
+              "row": 0,
+              "channel": 0,
+              "instrument": 0,
+              "volume": 64
+            },
+            {
+              "row": 8,
+              "channel": 0,
+              "instrument": 0,
+              "volume": 60
+            },
+            {
+              "row": 16,
+              "channel": 0,
+              "instrument": 0,
+              "volume": 64
+            },
+            {
+              "row": 24,
+              "channel": 0,
+              "instrument": 0,
+              "volume": 60
+            },
+            {
+              "row": 32,
+              "channel": 0,
+              "instrument": 0,
+              "volume": 64
+            },
+            {
+              "row": 40,
+              "channel": 0,
+              "instrument": 0,
+              "volume": 60
+            },
+            {
+              "row": 48,
+              "channel": 0,
+              "instrument": 0,
+              "volume": 64
+            },
+            {
+              "row": 56,
+              "channel": 0,
+              "instrument": 0,
+              "volume": 60
+            },
+            {
+              "row": 8,
+              "channel": 1,
+              "instrument": 1,
+              "volume": 56
+            },
+            {
+              "row": 24,
+              "channel": 1,
+              "instrument": 1,
+              "volume": 56
+            },
+            {
+              "row": 40,
+              "channel": 1,
+              "instrument": 1,
+              "volume": 56
+            },
+            {
+              "row": 56,
+              "channel": 1,
+              "instrument": 1,
+              "volume": 56
+            },
+            {
+              "row": 12,
+              "channel": 1,
+              "instrument": 2,
+              "volume": 48
+            },
+            {
+              "row": 44,
+              "channel": 1,
+              "instrument": 2,
+              "volume": 48
+            },
+            {
+              "row": 0,
+              "channel": 2,
+              "instrument": 3,
+              "volume": 44
+            },
+            {
+              "row": 4,
+              "channel": 2,
+              "instrument": 3,
+              "volume": 36
+            },
+            {
+              "row": 8,
+              "channel": 2,
+              "instrument": 3,
+              "volume": 44
+            },
+            {
+              "row": 12,
+              "channel": 2,
+              "instrument": 3,
+              "volume": 36
+            },
+            {
+              "row": 16,
+              "channel": 2,
+              "instrument": 3,
+              "volume": 44
+            },
+            {
+              "row": 20,
+              "channel": 2,
+              "instrument": 3,
+              "volume": 36
+            },
+            {
+              "row": 24,
+              "channel": 2,
+              "instrument": 3,
+              "volume": 44
+            },
+            {
+              "row": 28,
+              "channel": 2,
+              "instrument": 4,
+              "volume": 52
+            },
+            {
+              "row": 32,
+              "channel": 2,
+              "instrument": 3,
+              "volume": 44
+            },
+            {
+              "row": 36,
+              "channel": 2,
+              "instrument": 3,
+              "volume": 36
+            },
+            {
+              "row": 40,
+              "channel": 2,
+              "instrument": 3,
+              "volume": 44
+            },
+            {
+              "row": 44,
+              "channel": 2,
+              "instrument": 3,
+              "volume": 36
+            },
+            {
+              "row": 48,
+              "channel": 2,
+              "instrument": 3,
+              "volume": 44
+            },
+            {
+              "row": 52,
+              "channel": 2,
+              "instrument": 3,
+              "volume": 36
+            },
+            {
+              "row": 56,
+              "channel": 2,
+              "instrument": 3,
+              "volume": 44
+            },
+            {
+              "row": 60,
+              "channel": 2,
+              "instrument": 4,
+              "volume": 52
+            }
           ]
         },
         "bass_showcase": {
           "rows": 64,
           "data": [
-            {"row": 0,  "channel": 3, "note": "C2", "instrument": 5, "volume": 56},
-            {"row": 15, "channel": 3, "note": "OFF"},
-            {"row": 16, "channel": 3, "note": "E2", "instrument": 5, "volume": 54},
-            {"row": 31, "channel": 3, "note": "OFF"},
-            {"row": 32, "channel": 3, "note": "G2", "instrument": 5, "volume": 56},
-            {"row": 47, "channel": 3, "note": "OFF"},
-            {"row": 48, "channel": 3, "note": "C2", "instrument": 5, "volume": 58},
-            {"row": 62, "channel": 3, "note": "OFF"},
-
-            {"row": 0,  "channel": 4, "note": "C2", "instrument": 6, "volume": 50},
-            {"row": 8,  "channel": 4, "note": "C2", "instrument": 6, "volume": 46},
-            {"row": 16, "channel": 4, "note": "E2", "instrument": 6, "volume": 50},
-            {"row": 24, "channel": 4, "note": "E2", "instrument": 6, "volume": 46},
-            {"row": 32, "channel": 4, "note": "G2", "instrument": 6, "volume": 50},
-            {"row": 40, "channel": 4, "note": "G2", "instrument": 6, "volume": 46},
-            {"row": 48, "channel": 4, "note": "C2", "instrument": 6, "volume": 50},
-            {"row": 56, "channel": 4, "note": "C2", "instrument": 6, "volume": 46}
+            {
+              "row": 0,
+              "channel": 3,
+              "note": "C2",
+              "instrument": 5,
+              "volume": 56
+            },
+            {
+              "row": 15,
+              "channel": 3,
+              "note": "OFF"
+            },
+            {
+              "row": 16,
+              "channel": 3,
+              "note": "E2",
+              "instrument": 5,
+              "volume": 54
+            },
+            {
+              "row": 31,
+              "channel": 3,
+              "note": "OFF"
+            },
+            {
+              "row": 32,
+              "channel": 3,
+              "note": "G2",
+              "instrument": 5,
+              "volume": 56
+            },
+            {
+              "row": 47,
+              "channel": 3,
+              "note": "OFF"
+            },
+            {
+              "row": 48,
+              "channel": 3,
+              "note": "C2",
+              "instrument": 5,
+              "volume": 58
+            },
+            {
+              "row": 62,
+              "channel": 3,
+              "note": "OFF"
+            },
+            {
+              "row": 0,
+              "channel": 4,
+              "note": "C2",
+              "instrument": 6,
+              "volume": 50
+            },
+            {
+              "row": 8,
+              "channel": 4,
+              "note": "C2",
+              "instrument": 6,
+              "volume": 46
+            },
+            {
+              "row": 16,
+              "channel": 4,
+              "note": "E2",
+              "instrument": 6,
+              "volume": 50
+            },
+            {
+              "row": 24,
+              "channel": 4,
+              "note": "E2",
+              "instrument": 6,
+              "volume": 46
+            },
+            {
+              "row": 32,
+              "channel": 4,
+              "note": "G2",
+              "instrument": 6,
+              "volume": 50
+            },
+            {
+              "row": 40,
+              "channel": 4,
+              "note": "G2",
+              "instrument": 6,
+              "volume": 46
+            },
+            {
+              "row": 48,
+              "channel": 4,
+              "note": "C2",
+              "instrument": 6,
+              "volume": 50
+            },
+            {
+              "row": 56,
+              "channel": 4,
+              "note": "C2",
+              "instrument": 6,
+              "volume": 46
+            }
           ]
         },
         "lead_showcase": {
           "rows": 64,
           "data": [
-            {"row": 0,  "channel": 5, "note": "C4", "instrument": 7, "volume": 56},
-            {"row": 12, "channel": 5, "note": "OFF"},
-            {"row": 16, "channel": 5, "note": "E4", "instrument": 7, "volume": 56},
-            {"row": 28, "channel": 5, "note": "OFF"},
-            {"row": 32, "channel": 5, "note": "G4", "instrument": 7, "volume": 56},
-            {"row": 44, "channel": 5, "note": "OFF"},
-            {"row": 48, "channel": 5, "note": "C5", "instrument": 7, "volume": 60},
-            {"row": 62, "channel": 5, "note": "OFF"}
+            {
+              "row": 0,
+              "channel": 5,
+              "note": "C4",
+              "instrument": 7,
+              "volume": 56
+            },
+            {
+              "row": 12,
+              "channel": 5,
+              "note": "OFF"
+            },
+            {
+              "row": 16,
+              "channel": 5,
+              "note": "E4",
+              "instrument": 7,
+              "volume": 56
+            },
+            {
+              "row": 28,
+              "channel": 5,
+              "note": "OFF"
+            },
+            {
+              "row": 32,
+              "channel": 5,
+              "note": "G4",
+              "instrument": 7,
+              "volume": 56
+            },
+            {
+              "row": 44,
+              "channel": 5,
+              "note": "OFF"
+            },
+            {
+              "row": 48,
+              "channel": 5,
+              "note": "C5",
+              "instrument": 7,
+              "volume": 60
+            },
+            {
+              "row": 62,
+              "channel": 5,
+              "note": "OFF"
+            }
           ]
         },
         "pad_sustain_test": {
           "rows": 128,
           "data": [
-            {"row": 0,   "channel": 6, "note": "C4", "instrument": 8, "volume": 48},
-            {"row": 0,   "channel": 7, "note": "E4", "instrument": 8, "volume": 44},
-            {"row": 96,  "channel": 6, "note": "OFF"},
-            {"row": 96,  "channel": 7, "note": "OFF"},
-
-            {"row": 100, "channel": 6, "note": "G4", "instrument": 8, "volume": 48},
-            {"row": 100, "channel": 7, "note": "B4", "instrument": 8, "volume": 44}
+            {
+              "row": 0,
+              "channel": 6,
+              "note": "C4",
+              "instrument": 8,
+              "volume": 48
+            },
+            {
+              "row": 0,
+              "channel": 7,
+              "note": "E4",
+              "instrument": 8,
+              "volume": 44
+            },
+            {
+              "row": 96,
+              "channel": 6,
+              "note": "OFF"
+            },
+            {
+              "row": 96,
+              "channel": 7,
+              "note": "OFF"
+            },
+            {
+              "row": 100,
+              "channel": 6,
+              "note": "G4",
+              "instrument": 8,
+              "volume": 48
+            },
+            {
+              "row": 100,
+              "channel": 7,
+              "note": "B4",
+              "instrument": 8,
+              "volume": 44
+            }
           ]
         }
       },
       "arrangement": [
-        {"pattern": "drums_showcase", "repeat": 2},
-        {"pattern": "bass_showcase", "repeat": 2},
-        {"pattern": "lead_showcase", "repeat": 2},
-        {"pattern": "pad_sustain_test", "repeat": 1}
+        {
+          "pattern": "drums_showcase",
+          "repeat": 2
+        },
+        {
+          "pattern": "bass_showcase",
+          "repeat": 2
+        },
+        {
+          "pattern": "lead_showcase",
+          "repeat": 2
+        },
+        {
+          "pattern": "pad_sustain_test",
+          "repeat": 1
+        }
       ]
     }
   }

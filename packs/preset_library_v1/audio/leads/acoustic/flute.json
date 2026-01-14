@@ -1,70 +1,70 @@
 {
-    "spec_version":  1,
-    "asset_id":  "preset_flute",
-    "asset_type":  "audio",
-    "license":  "CC0-1.0",
-    "seed":  10350,
-    "description":  "Concert flute - pure sine with breath noise and vibrato",
-    "outputs":  [
-                    {
-                        "kind":  "primary",
-                        "format":  "wav",
-                        "path":  "test-outputs/preset_library_v1/audio/leads/acoustic/flute.wav"
-                    }
-                ],
-    "recipe":  {
-                   "kind":  "audio_v1",
-                   "params":  {
-                                  "base_note":  "A4",
-                                  "duration_seconds":  2.0,
-                                  "sample_rate":  44100,
-                                  "layers":  [
-                                                 {
-                                                     "synthesis":  {
-                                                                       "type":  "oscillator",
-                                                                       "waveform":  "sine",
-                                                                       "frequency":  440.0
-                                                                   },
-                                                     "envelope":  {
-                                                                      "attack":  0.05,
-                                                                      "decay":  0.1,
-                                                                      "sustain":  0.9,
-                                                                      "release":  0.15
-                                                                  },
-                                                     "lfo":  {
-                                                                 "config":  {
-                                                                                "waveform":  "sine",
-                                                                                "rate":  5.5,
-                                                                                "depth":  0.4
-                                                                            },
-                                                                 "target":  {
-                                                                                "target":  "pitch",
-                                                                                "semitones":  0.25
-                                                                            }
-                                                             },
-                                                     "volume":  0.8,
-                                                     "pan":  0
-                                                 },
-                                                 {
-                                                     "synthesis":  {
-                                                                       "type":  "noise_burst",
-                                                                       "noise_type":  "white",
-                                                                       "filter":  {
-                                                                                      "type":  "bandpass",
-                                                                                      "center":  4000.0,
-                                                                                      "resonance":  0.5
-                                                                                  }
-                                                                   },
-                                                     "envelope":  {
-                                                                      "attack":  0.03,
-                                                                      "decay":  0.1,
-                                                                      "sustain":  0.3,
-                                                                      "release":  0.1
-                                                                  },
-                                                     "volume":  0.12,
-                                                     "pan":  0
-                                                 }
-                                             ]
-                              }
-               }
+  "spec_version": 1,
+  "asset_id": "preset_flute",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 10350,
+  "description": "Concert flute - pure sine with breath noise and vibrato",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/leads/acoustic/flute.wav"
+    }
+  ],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "base_note": "A4",
+      "duration_seconds": 2.0,
+      "sample_rate": 44100,
+      "layers": [
+        {
+          "synthesis": {
+            "type": "oscillator",
+            "waveform": "sine",
+            "frequency": 440.0
+          },
+          "envelope": {
+            "attack": 0.05,
+            "decay": 0.1,
+            "sustain": 0.9,
+            "release": 0.15
+          },
+          "lfo": {
+            "config": {
+              "waveform": "sine",
+              "rate": 5.5,
+              "depth": 0.4
+            },
+            "target": {
+              "target": "pitch",
+              "semitones": 0.25
+            }
+          },
+          "volume": 0.8,
+          "pan": 0
+        },
+        {
+          "synthesis": {
+            "type": "noise_burst",
+            "noise_type": "white",
+            "filter": {
+              "type": "bandpass",
+              "center": 4000.0,
+              "resonance": 0.5
+            }
+          },
+          "envelope": {
+            "attack": 0.03,
+            "decay": 0.1,
+            "sustain": 0.3,
+            "release": 0.1
+          },
+          "volume": 0.12,
+          "pan": 0
+        }
+      ]
+    }
+  }
 }

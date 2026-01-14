@@ -8,8 +8,14 @@
     "name": "Chiptune 16-bit",
     "genre": "retro",
     "subgenre": "chiptune",
-    "bpm_range": [120, 150],
-    "time_signature": [4, 4],
+    "bpm_range": [
+      120,
+      150
+    ],
+    "time_signature": [
+      4,
+      4
+    ],
     "instruments": {
       "kick": "drums/kicks/kick",
       "snare": "drums/snares/snare",
@@ -19,6 +25,12 @@
       "lead": "leads/synth/lead_2",
       "pad": "pads/pad_warm"
     },
-    "tags": ["16bit", "retro", "snes", "genesis", "megadrive"]
+    "tags": [
+      "16bit",
+      "retro",
+      "snes",
+      "genesis",
+      "megadrive"
+    ]
   }
 }

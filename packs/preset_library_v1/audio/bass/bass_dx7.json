@@ -1,56 +1,56 @@
 {
-    "spec_version":  1,
-    "asset_id":  "preset_bass_dx7",
-    "asset_type":  "audio",
-    "license":  "CC0-1.0",
-    "seed":  10112,
-    "description":  "DX7 bass - classic Yamaha DX7 FM bass with high modulation index for glassy, complex harmonic spectrum",
-    "outputs":  [
-                    {
-                        "kind":  "primary",
-                        "format":  "wav",
-                        "path":  "test-outputs/preset_library_v1/audio/bass/bass_dx7.wav"
-                    }
-                ],
-    "recipe":  {
-                   "kind":  "audio_v1",
-                   "params":  {
-                                  "base_note":  "C2",
-                                  "duration_seconds":  1.0,
-                                  "sample_rate":  44100,
-                                  "layers":  [
-                                                 {
-                                                     "synthesis":  {
-                                                                       "type":  "fm_synth",
-                                                                       "carrier_freq":  65.41,
-                                                                       "modulator_freq":  65.41,
-                                                                       "modulation_index":  5.0
-                                                                   },
-                                                     "envelope":  {
-                                                                      "attack":  0.003,
-                                                                      "decay":  0.25,
-                                                                      "sustain":  0.55,
-                                                                      "release":  0.18
-                                                                  },
-                                                     "volume":  0.75,
-                                                     "pan":  0
-                                                 },
-                                                 {
-                                                     "synthesis":  {
-                                                                       "type":  "oscillator",
-                                                                       "waveform":  "sine",
-                                                                       "frequency":  65.41
-                                                                   },
-                                                     "envelope":  {
-                                                                      "attack":  0.01,
-                                                                      "decay":  0.1,
-                                                                      "sustain":  0.8,
-                                                                      "release":  0.15
-                                                                  },
-                                                     "volume":  0.35,
-                                                     "pan":  0
-                                                 }
-                                             ]
-                              }
-               }
+  "spec_version": 1,
+  "asset_id": "preset_bass_dx7",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 10112,
+  "description": "DX7 bass - classic Yamaha DX7 FM bass with high modulation index for glassy, complex harmonic spectrum",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/bass/bass_dx7.wav"
+    }
+  ],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "base_note": "C2",
+      "duration_seconds": 1.0,
+      "sample_rate": 44100,
+      "layers": [
+        {
+          "synthesis": {
+            "type": "fm_synth",
+            "carrier_freq": 65.41,
+            "modulator_freq": 65.41,
+            "modulation_index": 5.0
+          },
+          "envelope": {
+            "attack": 0.003,
+            "decay": 0.25,
+            "sustain": 0.55,
+            "release": 0.18
+          },
+          "volume": 0.75,
+          "pan": 0
+        },
+        {
+          "synthesis": {
+            "type": "oscillator",
+            "waveform": "sine",
+            "frequency": 65.41
+          },
+          "envelope": {
+            "attack": 0.01,
+            "decay": 0.1,
+            "sustain": 0.8,
+            "release": 0.15
+          },
+          "volume": 0.35,
+          "pan": 0
+        }
+      ]
+    }
+  }
 }

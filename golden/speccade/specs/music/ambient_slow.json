@@ -50,17 +50,56 @@
         "pad_intro": {
           "rows": 128,
           "data": [
-            {"row": 0, "channel": 0, "note": "C3", "instrument": 0, "volume": 32},
-            {"row": 64, "channel": 0, "note": "G3", "instrument": 0, "volume": 32},
-            {"row": 0, "channel": 1, "note": "E3", "instrument": 0, "volume": 32},
-            {"row": 64, "channel": 1, "note": "B3", "instrument": 0, "volume": 32},
-            {"row": 32, "channel": 4, "note": "C5", "instrument": 1, "volume": 24},
-            {"row": 96, "channel": 4, "note": "G5", "instrument": 1, "volume": 24}
+            {
+              "row": 0,
+              "channel": 0,
+              "note": "C3",
+              "instrument": 0,
+              "volume": 32
+            },
+            {
+              "row": 64,
+              "channel": 0,
+              "note": "G3",
+              "instrument": 0,
+              "volume": 32
+            },
+            {
+              "row": 0,
+              "channel": 1,
+              "note": "E3",
+              "instrument": 0,
+              "volume": 32
+            },
+            {
+              "row": 64,
+              "channel": 1,
+              "note": "B3",
+              "instrument": 0,
+              "volume": 32
+            },
+            {
+              "row": 32,
+              "channel": 4,
+              "note": "C5",
+              "instrument": 1,
+              "volume": 24
+            },
+            {
+              "row": 96,
+              "channel": 4,
+              "note": "G5",
+              "instrument": 1,
+              "volume": 24
+            }
           ]
         }
       },
       "arrangement": [
-        {"pattern": "pad_intro", "repeat": 2}
+        {
+          "pattern": "pad_intro",
+          "repeat": 2
+        }
       ]
     }
   }

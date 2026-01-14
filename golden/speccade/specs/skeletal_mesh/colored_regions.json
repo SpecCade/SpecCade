@@ -17,21 +17,97 @@
     "params": {
       "tri_budget": 1000,
       "skeleton": [
-        {"bone": "root", "head": [0, 0, 0], "tail": [0, 0, 0.1]},
-        {"bone": "torso", "head": [0, 0, 0.1], "tail": [0, 0, 0.5], "parent": "root"},
-        {"bone": "head", "head": [0, 0, 0.5], "tail": [0, 0, 0.7], "parent": "torso"},
-        {"bone": "arm_L", "head": [0.15, 0, 0.45], "tail": [0.35, 0, 0.45], "parent": "torso"},
-        {"bone": "arm_R", "mirror": "arm_L"},
-        {"bone": "leg_L", "head": [0.08, 0, 0.1], "tail": [0.08, 0, -0.3], "parent": "root"},
-        {"bone": "leg_R", "mirror": "leg_L"}
+        {
+          "bone": "root",
+          "head": [
+            0,
+            0,
+            0
+          ],
+          "tail": [
+            0,
+            0,
+            0.1
+          ]
+        },
+        {
+          "bone": "torso",
+          "head": [
+            0,
+            0,
+            0.1
+          ],
+          "tail": [
+            0,
+            0,
+            0.5
+          ],
+          "parent": "root"
+        },
+        {
+          "bone": "head",
+          "head": [
+            0,
+            0,
+            0.5
+          ],
+          "tail": [
+            0,
+            0,
+            0.7
+          ],
+          "parent": "torso"
+        },
+        {
+          "bone": "arm_L",
+          "head": [
+            0.15,
+            0,
+            0.45
+          ],
+          "tail": [
+            0.35,
+            0,
+            0.45
+          ],
+          "parent": "torso"
+        },
+        {
+          "bone": "arm_R",
+          "mirror": "arm_L"
+        },
+        {
+          "bone": "leg_L",
+          "head": [
+            0.08,
+            0,
+            0.1
+          ],
+          "tail": [
+            0.08,
+            0,
+            -0.3
+          ],
+          "parent": "root"
+        },
+        {
+          "bone": "leg_R",
+          "mirror": "leg_L"
+        }
       ],
       "parts": {
         "torso_mesh": {
           "bone": "torso",
           "base": "hexagon(6)",
-          "base_radius": [0.12, 0.15],
+          "base_radius": [
+            0.12,
+            0.15
+          ],
           "steps": [
-            {"extrude": 0.4, "scale": 1.1}
+            {
+              "extrude": 0.4,
+              "scale": 1.1
+            }
           ],
           "cap_start": true,
           "cap_end": true
@@ -40,9 +116,16 @@
           "bone": "head",
           "base": "hexagon(8)",
           "base_radius": 0.1,
-          "offset": [0, 0, 0.5],
+          "offset": [
+            0,
+            0,
+            0.5
+          ],
           "steps": [
-            {"extrude": 0.2, "scale": 1.0}
+            {
+              "extrude": 0.2,
+              "scale": 1.0
+            }
           ],
           "cap_start": true,
           "cap_end": true
@@ -51,52 +134,97 @@
           "bone": "arm_L",
           "base": "hexagon(4)",
           "base_radius": 0.04,
-          "offset": [0.15, 0, 0.45],
-          "rotation": [0, 90, 0],
+          "offset": [
+            0.15,
+            0,
+            0.45
+          ],
+          "rotation": [
+            0,
+            90,
+            0
+          ],
           "steps": [
-            {"extrude": 0.2, "scale": 0.8}
+            {
+              "extrude": 0.2,
+              "scale": 0.8
+            }
           ],
           "cap_start": true,
           "cap_end": true
         },
-        "arm_R_mesh": {"mirror": "arm_L_mesh"},
+        "arm_R_mesh": {
+          "mirror": "arm_L_mesh"
+        },
         "leg_L_mesh": {
           "bone": "leg_L",
           "base": "hexagon(4)",
           "base_radius": 0.06,
-          "offset": [0.08, 0, 0.1],
-          "rotation": [180, 0, 0],
+          "offset": [
+            0.08,
+            0,
+            0.1
+          ],
+          "rotation": [
+            180,
+            0,
+            0
+          ],
           "steps": [
-            {"extrude": 0.4, "scale": 0.7}
+            {
+              "extrude": 0.4,
+              "scale": 0.7
+            }
           ],
           "cap_start": true,
           "cap_end": true
         },
-        "leg_R_mesh": {"mirror": "leg_L_mesh"}
+        "leg_R_mesh": {
+          "mirror": "leg_L_mesh"
+        }
       },
       "texturing": {
         "uv_mode": "region_based",
         "regions": {
           "body": {
-            "parts": ["torso_mesh"],
+            "parts": [
+              "torso_mesh"
+            ],
             "material_index": 0,
             "uv_island": 0,
             "color": "#3366CC"
           },
           "head_region": {
-            "parts": ["head_mesh"],
+            "parts": [
+              "head_mesh"
+            ],
             "material_index": 1,
             "uv_island": 1,
-            "color": [0.9, 0.75, 0.6]
+            "color": [
+              0.9,
+              0.75,
+              0.6
+            ]
           },
           "arms": {
-            "parts": ["arm_L_mesh", "arm_R_mesh"],
+            "parts": [
+              "arm_L_mesh",
+              "arm_R_mesh"
+            ],
             "material_index": 0,
             "uv_island": 2,
-            "color": [0.2, 0.5, 0.8, 1.0]
+            "color": [
+              0.2,
+              0.5,
+              0.8,
+              1.0
+            ]
           },
           "legs": {
-            "parts": ["leg_L_mesh", "leg_R_mesh"],
+            "parts": [
+              "leg_L_mesh",
+              "leg_R_mesh"
+            ],
             "material_index": 2,
             "color": "#445566"
           }

@@ -8,8 +8,14 @@
     "name": "Epic Cinematic",
     "genre": "cinematic",
     "subgenre": "epic",
-    "bpm_range": [80, 140],
-    "time_signature": [4, 4],
+    "bpm_range": [
+      80,
+      140
+    ],
+    "time_signature": [
+      4,
+      4
+    ],
     "instruments": {
       "impact_sub": "fx/impact_sub",
       "impact_metal": "fx/impact_metal",
@@ -22,6 +28,11 @@
       "strings": "pads/strings_ensemble",
       "bell": "bells/bell_tubular"
     },
-    "tags": ["epic", "cinematic", "trailer", "orchestral"]
+    "tags": [
+      "epic",
+      "cinematic",
+      "trailer",
+      "orchestral"
+    ]
   }
 }

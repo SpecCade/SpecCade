@@ -8,8 +8,14 @@
     "name": "East Asian",
     "genre": "world",
     "subgenre": "east_asian",
-    "bpm_range": [60, 100],
-    "time_signature": [4, 4],
+    "bpm_range": [
+      60,
+      100
+    ],
+    "time_signature": [
+      4,
+      4
+    ],
     "instruments": {
       "koto": "plucks/pluck_soft",
       "koto_bright": "plucks/pluck_glass",
@@ -23,6 +29,14 @@
       "drone": "textures/drone_light",
       "atmosphere": "pads/atmosphere"
     },
-    "tags": ["east_asian", "japanese", "chinese", "korean", "zen", "regional", "meditative"]
+    "tags": [
+      "east_asian",
+      "japanese",
+      "chinese",
+      "korean",
+      "zen",
+      "regional",
+      "meditative"
+    ]
   }
 }

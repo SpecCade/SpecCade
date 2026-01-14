@@ -1,103 +1,103 @@
 {
-    "spec_version":  1,
-    "asset_id":  "preset_accordion_lead",
-    "asset_type":  "audio",
-    "license":  "CC0-1.0",
-    "seed":  10357,
-    "description":  "Accordion melody voice - reed character with detuned voices and bellows vibrato",
-    "outputs":  [
-                    {
-                        "kind":  "primary",
-                        "format":  "wav",
-                        "path":  "test-outputs/preset_library_v1/audio/leads/acoustic/accordion_lead.wav"
-                    }
-                ],
-    "recipe":  {
-                   "kind":  "audio_v1",
-                   "params":  {
-                                  "base_note":  "C4",
-                                  "duration_seconds":  2.0,
-                                  "sample_rate":  44100,
-                                  "layers":  [
-                                                 {
-                                                     "synthesis":  {
-                                                                       "type":  "fm_synth",
-                                                                       "carrier_freq":  261.63,
-                                                                       "modulator_freq":  523.25,
-                                                                       "modulation_index":  1.5
-                                                                   },
-                                                     "envelope":  {
-                                                                      "attack":  0.04,
-                                                                      "decay":  0.08,
-                                                                      "sustain":  0.9,
-                                                                      "release":  0.12
-                                                                  },
-                                                     "lfo":  {
-                                                                 "config":  {
-                                                                                "waveform":  "sine",
-                                                                                "rate":  4.5,
-                                                                                "depth":  0.35
-                                                                            },
-                                                                 "target":  {
-                                                                                "target":  "pitch",
-                                                                                "semitones":  0.2
-                                                                            }
-                                                             },
-                                                     "volume":  0.6,
-                                                     "pan":  -0.15
-                                                 },
-                                                 {
-                                                     "synthesis":  {
-                                                                       "type":  "fm_synth",
-                                                                       "carrier_freq":  265.41,
-                                                                       "modulator_freq":  530.82,
-                                                                       "modulation_index":  1.5
-                                                                   },
-                                                     "envelope":  {
-                                                                      "attack":  0.04,
-                                                                      "decay":  0.08,
-                                                                      "sustain":  0.9,
-                                                                      "release":  0.12
-                                                                  },
-                                                     "lfo":  {
-                                                                 "config":  {
-                                                                                "waveform":  "sine",
-                                                                                "rate":  4.5,
-                                                                                "depth":  0.35,
-                                                                                "phase":  0.3
-                                                                            },
-                                                                 "target":  {
-                                                                                "target":  "pitch",
-                                                                                "semitones":  0.2
-                                                                            }
-                                                             },
-                                                     "volume":  0.55,
-                                                     "pan":  0.15
-                                                 },
-                                                 {
-                                                     "synthesis":  {
-                                                                       "type":  "additive",
-                                                                       "base_freq":  261.63,
-                                                                       "harmonics":  [
-                                                                                         1.0,
-                                                                                         0.0,
-                                                                                         0.6,
-                                                                                         0.0,
-                                                                                         0.4,
-                                                                                         0.0,
-                                                                                         0.2
-                                                                                     ]
-                                                                   },
-                                                     "envelope":  {
-                                                                      "attack":  0.04,
-                                                                      "decay":  0.08,
-                                                                      "sustain":  0.85,
-                                                                      "release":  0.1
-                                                                  },
-                                                     "volume":  0.25,
-                                                     "pan":  0
-                                                 }
-                                             ]
-                              }
-               }
+  "spec_version": 1,
+  "asset_id": "preset_accordion_lead",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 10357,
+  "description": "Accordion melody voice - reed character with detuned voices and bellows vibrato",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/leads/acoustic/accordion_lead.wav"
+    }
+  ],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "base_note": "C4",
+      "duration_seconds": 2.0,
+      "sample_rate": 44100,
+      "layers": [
+        {
+          "synthesis": {
+            "type": "fm_synth",
+            "carrier_freq": 261.63,
+            "modulator_freq": 523.25,
+            "modulation_index": 1.5
+          },
+          "envelope": {
+            "attack": 0.04,
+            "decay": 0.08,
+            "sustain": 0.9,
+            "release": 0.12
+          },
+          "lfo": {
+            "config": {
+              "waveform": "sine",
+              "rate": 4.5,
+              "depth": 0.35
+            },
+            "target": {
+              "target": "pitch",
+              "semitones": 0.2
+            }
+          },
+          "volume": 0.6,
+          "pan": -0.15
+        },
+        {
+          "synthesis": {
+            "type": "fm_synth",
+            "carrier_freq": 265.41,
+            "modulator_freq": 530.82,
+            "modulation_index": 1.5
+          },
+          "envelope": {
+            "attack": 0.04,
+            "decay": 0.08,
+            "sustain": 0.9,
+            "release": 0.12
+          },
+          "lfo": {
+            "config": {
+              "waveform": "sine",
+              "rate": 4.5,
+              "depth": 0.35,
+              "phase": 0.3
+            },
+            "target": {
+              "target": "pitch",
+              "semitones": 0.2
+            }
+          },
+          "volume": 0.55,
+          "pan": 0.15
+        },
+        {
+          "synthesis": {
+            "type": "additive",
+            "base_freq": 261.63,
+            "harmonics": [
+              1.0,
+              0.0,
+              0.6,
+              0.0,
+              0.4,
+              0.0,
+              0.2
+            ]
+          },
+          "envelope": {
+            "attack": 0.04,
+            "decay": 0.08,
+            "sustain": 0.85,
+            "release": 0.1
+          },
+          "volume": 0.25,
+          "pan": 0
+        }
+      ]
+    }
+  }
 }

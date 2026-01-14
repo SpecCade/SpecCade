@@ -1,60 +1,60 @@
 {
-    "spec_version":  1,
-    "asset_id":  "preset_bass_round",
-    "asset_type":  "audio",
-    "license":  "CC0-1.0",
-    "seed":  10101,
-    "description":  "Round bass - warm sine foundation with gentle saw harmonics, heavily filtered for smooth character",
-    "outputs":  [
-                    {
-                        "kind":  "primary",
-                        "format":  "wav",
-                        "path":  "test-outputs/preset_library_v1/audio/bass/bass_round.wav"
-                    }
-                ],
-    "recipe":  {
-                   "kind":  "audio_v1",
-                   "params":  {
-                                  "base_note":  "C2",
-                                  "duration_seconds":  1.0,
-                                  "sample_rate":  44100,
-                                  "layers":  [
-                                                 {
-                                                     "synthesis":  {
-                                                                       "type":  "oscillator",
-                                                                       "waveform":  "sine",
-                                                                       "frequency":  65.41
-                                                                   },
-                                                     "envelope":  {
-                                                                      "attack":  0.02,
-                                                                      "decay":  0.1,
-                                                                      "sustain":  0.85,
-                                                                      "release":  0.2
-                                                                  },
-                                                     "volume":  0.8,
-                                                     "pan":  0
-                                                 },
-                                                 {
-                                                     "synthesis":  {
-                                                                       "type":  "oscillator",
-                                                                       "waveform":  "sawtooth",
-                                                                       "frequency":  65.41
-                                                                   },
-                                                     "filter":  {
-                                                                    "type":  "lowpass",
-                                                                    "cutoff":  400.0,
-                                                                    "resonance":  0.2
-                                                                },
-                                                     "envelope":  {
-                                                                      "attack":  0.03,
-                                                                      "decay":  0.15,
-                                                                      "sustain":  0.6,
-                                                                      "release":  0.2
-                                                                  },
-                                                     "volume":  0.35,
-                                                     "pan":  0
-                                                 }
-                                             ]
-                              }
-               }
+  "spec_version": 1,
+  "asset_id": "preset_bass_round",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 10101,
+  "description": "Round bass - warm sine foundation with gentle saw harmonics, heavily filtered for smooth character",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/bass/bass_round.wav"
+    }
+  ],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "base_note": "C2",
+      "duration_seconds": 1.0,
+      "sample_rate": 44100,
+      "layers": [
+        {
+          "synthesis": {
+            "type": "oscillator",
+            "waveform": "sine",
+            "frequency": 65.41
+          },
+          "envelope": {
+            "attack": 0.02,
+            "decay": 0.1,
+            "sustain": 0.85,
+            "release": 0.2
+          },
+          "volume": 0.8,
+          "pan": 0
+        },
+        {
+          "synthesis": {
+            "type": "oscillator",
+            "waveform": "sawtooth",
+            "frequency": 65.41
+          },
+          "filter": {
+            "type": "lowpass",
+            "cutoff": 400.0,
+            "resonance": 0.2
+          },
+          "envelope": {
+            "attack": 0.03,
+            "decay": 0.15,
+            "sustain": 0.6,
+            "release": 0.2
+          },
+          "volume": 0.35,
+          "pan": 0
+        }
+      ]
+    }
+  }
 }

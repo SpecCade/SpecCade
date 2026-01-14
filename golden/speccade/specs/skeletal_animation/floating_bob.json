@@ -23,20 +23,41 @@
       "ground_offset": 0.5,
       "poses": {
         "floating": {
-          "spine": {"pitch": 5},
-          "chest": {"pitch": 3},
-          "arm_upper_L": {"pitch": -30, "roll": 15},
-          "arm_upper_R": {"pitch": -30, "roll": -15},
-          "leg_upper_L": {"pitch": 20},
-          "leg_lower_L": {"pitch": -30},
-          "leg_upper_R": {"pitch": 15},
-          "leg_lower_R": {"pitch": -25}
+          "spine": {
+            "pitch": 5
+          },
+          "chest": {
+            "pitch": 3
+          },
+          "arm_upper_L": {
+            "pitch": -30,
+            "roll": 15
+          },
+          "arm_upper_R": {
+            "pitch": -30,
+            "roll": -15
+          },
+          "leg_upper_L": {
+            "pitch": 20
+          },
+          "leg_lower_L": {
+            "pitch": -30
+          },
+          "leg_upper_R": {
+            "pitch": 15
+          },
+          "leg_lower_R": {
+            "pitch": -25
+          }
         }
       },
       "phases": [
         {
           "name": "float_hold",
-          "frames": [0, 90],
+          "frames": [
+            0,
+            90
+          ],
           "pose": "floating",
           "timing_curve": "constant"
         }

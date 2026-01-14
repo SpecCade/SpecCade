@@ -8,8 +8,14 @@
     "name": "Trap / 808",
     "genre": "electronic",
     "subgenre": "trap",
-    "bpm_range": [130, 150],
-    "time_signature": [4, 4],
+    "bpm_range": [
+      130,
+      150
+    ],
+    "time_signature": [
+      4,
+      4
+    ],
     "instruments": {
       "kick": "drums/kicks/kick_808",
       "snare": "drums/snares/snare",
@@ -21,6 +27,13 @@
       "pad": "pads/pad_warm",
       "pluck": "plucks/pluck"
     },
-    "tags": ["edm", "trap", "hip-hop", "808", "urban", "rolls"]
+    "tags": [
+      "edm",
+      "trap",
+      "hip-hop",
+      "808",
+      "urban",
+      "rolls"
+    ]
   }
 }

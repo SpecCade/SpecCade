@@ -1,80 +1,80 @@
 {
-    "spec_version": 1,
-    "asset_id": "preset_pad",
-    "asset_type": "audio",
-    "license": "CC0-1.0",
-    "seed": 20035,
-    "description": "Basic pad - simple, neutral synth pad for chord playing",
-    "outputs": [
-        {
-            "kind": "primary",
-            "format": "wav",
-            "path": "test-outputs/preset_library_v1/audio/pads/pad.wav"
-        }
-    ],
-    "recipe": {
-        "kind": "audio_v1",
-        "params": {
-            "base_note": "C4",
-            "duration_seconds": 2,
-            "sample_rate": 44100,
-            "layers": [
-                {
-                    "synthesis": {
-                        "type": "multi_oscillator",
-                        "frequency": 261.63,
-                        "oscillators": [
-                            {
-                                "waveform": "sawtooth",
-                                "volume": 1,
-                                "detune": -8
-                            },
-                            {
-                                "waveform": "sawtooth",
-                                "volume": 1,
-                                "detune": 0
-                            },
-                            {
-                                "waveform": "sawtooth",
-                                "volume": 1,
-                                "detune": 8
-                            },
-                            {
-                                "waveform": "triangle",
-                                "volume": 0.7,
-                                "detune": -4
-                            }
-                        ]
-                    },
-                    "envelope": {
-                        "attack": 0.8,
-                        "decay": 0.3,
-                        "sustain": 0.85,
-                        "release": 1.2
-                    },
-                    "volume": 0.7,
-                    "pan": 0
-                }
-            ],
-            "master_filter": {
-                "type": "lowpass",
-                "cutoff": 2200,
-                "resonance": 0.3
-            },
-            "effects": [
-                {
-                    "type": "chorus",
-                    "rate": 0.4,
-                    "depth": 0.25,
-                    "wet": 0.35
-                },
-                {
-                    "type": "reverb",
-                    "room_size": 0.5,
-                    "damping": 0.6,
-                    "wet": 0.25
-                }
-            ]
-        }
+  "spec_version": 1,
+  "asset_id": "preset_pad",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 20035,
+  "description": "Basic pad - simple, neutral synth pad for chord playing",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/pads/pad.wav"
     }
+  ],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "base_note": "C4",
+      "duration_seconds": 2,
+      "sample_rate": 44100,
+      "layers": [
+        {
+          "synthesis": {
+            "type": "multi_oscillator",
+            "frequency": 261.63,
+            "oscillators": [
+              {
+                "waveform": "sawtooth",
+                "volume": 1,
+                "detune": -8
+              },
+              {
+                "waveform": "sawtooth",
+                "volume": 1,
+                "detune": 0
+              },
+              {
+                "waveform": "sawtooth",
+                "volume": 1,
+                "detune": 8
+              },
+              {
+                "waveform": "triangle",
+                "volume": 0.7,
+                "detune": -4
+              }
+            ]
+          },
+          "envelope": {
+            "attack": 0.8,
+            "decay": 0.3,
+            "sustain": 0.85,
+            "release": 1.2
+          },
+          "volume": 0.7,
+          "pan": 0
+        }
+      ],
+      "master_filter": {
+        "type": "lowpass",
+        "cutoff": 2200,
+        "resonance": 0.3
+      },
+      "effects": [
+        {
+          "type": "chorus",
+          "rate": 0.4,
+          "depth": 0.25,
+          "wet": 0.35
+        },
+        {
+          "type": "reverb",
+          "room_size": 0.5,
+          "damping": 0.6,
+          "wet": 0.25
+        }
+      ]
+    }
+  }
 }

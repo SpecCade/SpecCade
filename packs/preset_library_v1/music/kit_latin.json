@@ -8,8 +8,14 @@
     "name": "Latin Percussion",
     "genre": "world",
     "subgenre": "latin",
-    "bpm_range": [100, 140],
-    "time_signature": [4, 4],
+    "bpm_range": [
+      100,
+      140
+    ],
+    "time_signature": [
+      4,
+      4
+    ],
     "instruments": {
       "conga_high": "drums/percussion/conga_high",
       "conga_low": "drums/percussion/conga_low",
@@ -24,6 +30,14 @@
       "keys_ep": "keys/keys_ep",
       "piano": "keys/piano"
     },
-    "tags": ["latin", "salsa", "cumbia", "afro-cuban", "percussion", "regional", "dance"]
+    "tags": [
+      "latin",
+      "salsa",
+      "cumbia",
+      "afro-cuban",
+      "percussion",
+      "regional",
+      "dance"
+    ]
   }
 }

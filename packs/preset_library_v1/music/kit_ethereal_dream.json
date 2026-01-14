@@ -8,8 +8,14 @@
     "name": "Ethereal Dream",
     "genre": "ambient",
     "subgenre": "ethereal",
-    "bpm_range": [60, 90],
-    "time_signature": [4, 4],
+    "bpm_range": [
+      60,
+      90
+    ],
+    "time_signature": [
+      4,
+      4
+    ],
     "instruments": {
       "pad": {
         "preset": "pads/pad_shimmer",

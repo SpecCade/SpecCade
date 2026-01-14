@@ -1,62 +1,62 @@
 {
-    "spec_version":  1,
-    "asset_id":  "preset_tabla_low",
-    "asset_type":  "audio",
-    "license":  "CC0-1.0",
-    "seed":  10089,
-    "description":  "Low tabla - deep resonant body with rich harmonics",
-    "outputs":  [
-                    {
-                        "kind":  "primary",
-                        "format":  "wav",
-                        "path":  "test-outputs/preset_library_v1/audio/drums/percussion/tabla_low.wav"
-                    }
-                ],
-    "recipe":  {
-                   "kind":  "audio_v1",
-                   "params":  {
-                                  "duration_seconds":  0.45,
-                                  "sample_rate":  44100,
-                                  "layers":  [
-                                                 {
-                                                     "synthesis":  {
-                                                                       "type":  "oscillator",
-                                                                       "waveform":  "sine",
-                                                                       "frequency":  150,
-                                                                       "freq_sweep":  {
-                                                                                          "end_freq":  120,
-                                                                                          "curve":  "exponential"
-                                                                                      }
-                                                                   },
-                                                     "envelope":  {
-                                                                      "attack":  0.002,
-                                                                      "decay":  0.25,
-                                                                      "sustain":  0.05,
-                                                                      "release":  0.18
-                                                                  },
-                                                     "volume":  0.85,
-                                                     "pan":  0
-                                                 },
-                                                 {
-                                                     "synthesis":  {
-                                                                       "type":  "oscillator",
-                                                                       "waveform":  "sine",
-                                                                       "frequency":  450,
-                                                                       "freq_sweep":  {
-                                                                                          "end_freq":  360,
-                                                                                          "curve":  "exponential"
-                                                                                      }
-                                                                   },
-                                                     "envelope":  {
-                                                                      "attack":  0.002,
-                                                                      "decay":  0.12,
-                                                                      "sustain":  0,
-                                                                      "release":  0.08
-                                                                  },
-                                                     "volume":  0.25,
-                                                     "pan":  0
-                                                 }
-                                             ]
-                              }
-               }
+  "spec_version": 1,
+  "asset_id": "preset_tabla_low",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 10089,
+  "description": "Low tabla - deep resonant body with rich harmonics",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/drums/percussion/tabla_low.wav"
+    }
+  ],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "duration_seconds": 0.45,
+      "sample_rate": 44100,
+      "layers": [
+        {
+          "synthesis": {
+            "type": "oscillator",
+            "waveform": "sine",
+            "frequency": 150,
+            "freq_sweep": {
+              "end_freq": 120,
+              "curve": "exponential"
+            }
+          },
+          "envelope": {
+            "attack": 0.002,
+            "decay": 0.25,
+            "sustain": 0.05,
+            "release": 0.18
+          },
+          "volume": 0.85,
+          "pan": 0
+        },
+        {
+          "synthesis": {
+            "type": "oscillator",
+            "waveform": "sine",
+            "frequency": 450,
+            "freq_sweep": {
+              "end_freq": 360,
+              "curve": "exponential"
+            }
+          },
+          "envelope": {
+            "attack": 0.002,
+            "decay": 0.12,
+            "sustain": 0,
+            "release": 0.08
+          },
+          "volume": 0.25,
+          "pan": 0
+        }
+      ]
+    }
+  }
 }

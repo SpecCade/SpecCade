@@ -5,8 +5,17 @@
   "license": "CC0-1.0",
   "seed": 999012,
   "description": "Golden test for subtractive synthesis - exercises multi_oscillator with volume, detune, phase, duty, and freq_sweep",
-  "style_tags": ["golden", "subtractive", "multi-oscillator", "instrument"],
-  "engine_targets": ["godot", "unity", "unreal"],
+  "style_tags": [
+    "golden",
+    "subtractive",
+    "multi-oscillator",
+    "instrument"
+  ],
+  "engine_targets": [
+    "godot",
+    "unity",
+    "unreal"
+  ],
   "outputs": [
     {
       "kind": "primary",

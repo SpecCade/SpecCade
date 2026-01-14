@@ -5,11 +5,13 @@
   "license": "CC0-1.0",
   "seed": 20002,
   "description": "Dub reggae bass - warm, round, and deep with slight filtering",
-  "outputs": [{
-    "kind": "primary",
-    "format": "wav",
-    "path": "test-outputs/preset_library_v1/audio/bass/bass_dub.wav"
-  }],
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/bass/bass_dub.wav"
+    }
+  ],
   "recipe": {
     "kind": "audio_v1",
     "params": {

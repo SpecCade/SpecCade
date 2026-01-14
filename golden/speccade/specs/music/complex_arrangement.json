@@ -62,53 +62,236 @@
         "intro": {
           "rows": 64,
           "data": [
-            {"row": 0, "channel": 0, "note": "C4", "instrument": 2, "volume": 48},
-            {"row": 4, "channel": 0, "note": "E4", "instrument": 2, "volume": 40},
-            {"row": 8, "channel": 0, "note": "G4", "instrument": 2, "volume": 48},
-            {"row": 12, "channel": 0, "note": "E4", "instrument": 2, "volume": 40}
+            {
+              "row": 0,
+              "channel": 0,
+              "note": "C4",
+              "instrument": 2,
+              "volume": 48
+            },
+            {
+              "row": 4,
+              "channel": 0,
+              "note": "E4",
+              "instrument": 2,
+              "volume": 40
+            },
+            {
+              "row": 8,
+              "channel": 0,
+              "note": "G4",
+              "instrument": 2,
+              "volume": 48
+            },
+            {
+              "row": 12,
+              "channel": 0,
+              "note": "E4",
+              "instrument": 2,
+              "volume": 40
+            }
           ]
         },
         "verse": {
           "rows": 64,
           "data": [
-            {"row": 0, "channel": 0, "note": "C4", "instrument": 0, "volume": 64},
-            {"row": 16, "channel": 0, "note": "D4", "instrument": 0, "volume": 64},
-            {"row": 32, "channel": 0, "note": "E4", "instrument": 0, "volume": 64},
-            {"row": 48, "channel": 0, "note": "G4", "instrument": 0, "volume": 64},
-            {"row": 0, "channel": 1, "note": "C2", "instrument": 1, "volume": 56},
-            {"row": 16, "channel": 1, "note": "D2", "instrument": 1, "volume": 56},
-            {"row": 32, "channel": 1, "note": "E2", "instrument": 1, "volume": 56},
-            {"row": 48, "channel": 1, "note": "G2", "instrument": 1, "volume": 56},
-            {"row": 0, "channel": 2, "note": "C4", "instrument": 2, "volume": 40},
-            {"row": 4, "channel": 2, "note": "E4", "instrument": 2, "volume": 32},
-            {"row": 8, "channel": 2, "note": "G4", "instrument": 2, "volume": 40},
-            {"row": 12, "channel": 2, "note": "E4", "instrument": 2, "volume": 32},
-            {"row": 16, "channel": 2, "note": "D4", "instrument": 2, "volume": 40},
-            {"row": 20, "channel": 2, "note": "F4", "instrument": 2, "volume": 32},
-            {"row": 24, "channel": 2, "note": "A4", "instrument": 2, "volume": 40},
-            {"row": 28, "channel": 2, "note": "F4", "instrument": 2, "volume": 32}
+            {
+              "row": 0,
+              "channel": 0,
+              "note": "C4",
+              "instrument": 0,
+              "volume": 64
+            },
+            {
+              "row": 16,
+              "channel": 0,
+              "note": "D4",
+              "instrument": 0,
+              "volume": 64
+            },
+            {
+              "row": 32,
+              "channel": 0,
+              "note": "E4",
+              "instrument": 0,
+              "volume": 64
+            },
+            {
+              "row": 48,
+              "channel": 0,
+              "note": "G4",
+              "instrument": 0,
+              "volume": 64
+            },
+            {
+              "row": 0,
+              "channel": 1,
+              "note": "C2",
+              "instrument": 1,
+              "volume": 56
+            },
+            {
+              "row": 16,
+              "channel": 1,
+              "note": "D2",
+              "instrument": 1,
+              "volume": 56
+            },
+            {
+              "row": 32,
+              "channel": 1,
+              "note": "E2",
+              "instrument": 1,
+              "volume": 56
+            },
+            {
+              "row": 48,
+              "channel": 1,
+              "note": "G2",
+              "instrument": 1,
+              "volume": 56
+            },
+            {
+              "row": 0,
+              "channel": 2,
+              "note": "C4",
+              "instrument": 2,
+              "volume": 40
+            },
+            {
+              "row": 4,
+              "channel": 2,
+              "note": "E4",
+              "instrument": 2,
+              "volume": 32
+            },
+            {
+              "row": 8,
+              "channel": 2,
+              "note": "G4",
+              "instrument": 2,
+              "volume": 40
+            },
+            {
+              "row": 12,
+              "channel": 2,
+              "note": "E4",
+              "instrument": 2,
+              "volume": 32
+            },
+            {
+              "row": 16,
+              "channel": 2,
+              "note": "D4",
+              "instrument": 2,
+              "volume": 40
+            },
+            {
+              "row": 20,
+              "channel": 2,
+              "note": "F4",
+              "instrument": 2,
+              "volume": 32
+            },
+            {
+              "row": 24,
+              "channel": 2,
+              "note": "A4",
+              "instrument": 2,
+              "volume": 40
+            },
+            {
+              "row": 28,
+              "channel": 2,
+              "note": "F4",
+              "instrument": 2,
+              "volume": 32
+            }
           ]
         },
         "chorus": {
           "rows": 64,
           "data": [
-            {"row": 0, "channel": 0, "note": "G4", "instrument": 0, "volume": 64},
-            {"row": 8, "channel": 0, "note": "A4", "instrument": 0, "volume": 64},
-            {"row": 16, "channel": 0, "note": "B4", "instrument": 0, "volume": 64},
-            {"row": 24, "channel": 0, "note": "C5", "instrument": 0, "volume": 64},
-            {"row": 0, "channel": 1, "note": "G2", "instrument": 1, "volume": 64},
-            {"row": 16, "channel": 1, "note": "A2", "instrument": 1, "volume": 64},
-            {"row": 32, "channel": 1, "note": "B2", "instrument": 1, "volume": 64},
-            {"row": 48, "channel": 1, "note": "C3", "instrument": 1, "volume": 64}
+            {
+              "row": 0,
+              "channel": 0,
+              "note": "G4",
+              "instrument": 0,
+              "volume": 64
+            },
+            {
+              "row": 8,
+              "channel": 0,
+              "note": "A4",
+              "instrument": 0,
+              "volume": 64
+            },
+            {
+              "row": 16,
+              "channel": 0,
+              "note": "B4",
+              "instrument": 0,
+              "volume": 64
+            },
+            {
+              "row": 24,
+              "channel": 0,
+              "note": "C5",
+              "instrument": 0,
+              "volume": 64
+            },
+            {
+              "row": 0,
+              "channel": 1,
+              "note": "G2",
+              "instrument": 1,
+              "volume": 64
+            },
+            {
+              "row": 16,
+              "channel": 1,
+              "note": "A2",
+              "instrument": 1,
+              "volume": 64
+            },
+            {
+              "row": 32,
+              "channel": 1,
+              "note": "B2",
+              "instrument": 1,
+              "volume": 64
+            },
+            {
+              "row": 48,
+              "channel": 1,
+              "note": "C3",
+              "instrument": 1,
+              "volume": 64
+            }
           ]
         }
       },
       "arrangement": [
-        {"pattern": "intro", "repeat": 1},
-        {"pattern": "verse", "repeat": 2},
-        {"pattern": "chorus", "repeat": 2},
-        {"pattern": "verse", "repeat": 1},
-        {"pattern": "chorus", "repeat": 2}
+        {
+          "pattern": "intro",
+          "repeat": 1
+        },
+        {
+          "pattern": "verse",
+          "repeat": 2
+        },
+        {
+          "pattern": "chorus",
+          "repeat": 2
+        },
+        {
+          "pattern": "verse",
+          "repeat": 1
+        },
+        {
+          "pattern": "chorus",
+          "repeat": 2
+        }
       ]
     }
   }

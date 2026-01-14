@@ -1,70 +1,70 @@
 {
-    "spec_version": 1,
-    "asset_id": "guitar_skank",
-    "asset_type": "audio",
-    "license": "CC0-1.0",
-    "seed": 20061,
-    "description": "Skank guitar - reggae/ska offbeat guitar stab",
-    "outputs": [
-        {
-            "kind": "primary",
-            "format": "wav",
-            "path": "test-outputs/preset_library_v1/audio/plucks/guitar_skank.wav"
-        }
-    ],
-    "recipe": {
-        "kind": "audio_v1",
-        "params": {
-            "duration_seconds": 0.25,
-            "sample_rate": 44100,
-            "layers": [
-                {
-                    "synthesis": {
-                        "type": "multi_oscillator",
-                        "frequency": 392.0,
-                        "oscillators": [
-                            {
-                                "waveform": "sawtooth",
-                                "volume": 1.0,
-                                "detune": 0.0
-                            },
-                            {
-                                "waveform": "sawtooth",
-                                "volume": 0.8,
-                                "detune": 5.0
-                            },
-                            {
-                                "waveform": "sawtooth",
-                                "volume": 0.8,
-                                "detune": -5.0
-                            },
-                            {
-                                "waveform": "square",
-                                "volume": 0.6,
-                                "detune": 0.0
-                            },
-                            {
-                                "waveform": "triangle",
-                                "volume": 0.4,
-                                "detune": 0.0
-                            }
-                        ]
-                    },
-                    "envelope": {
-                        "attack": 0.001,
-                        "decay": 0.08,
-                        "sustain": 0.1,
-                        "release": 0.05
-                    },
-                    "filter": {
-                        "type": "lowpass",
-                        "cutoff": 2200,
-                        "resonance": 0.3
-                    },
-                    "volume": 1.0,
-                    "pan": 0.0
-                }
-            ]
-        }
+  "spec_version": 1,
+  "asset_id": "guitar_skank",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 20061,
+  "description": "Skank guitar - reggae/ska offbeat guitar stab",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/plucks/guitar_skank.wav"
     }
+  ],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "duration_seconds": 0.25,
+      "sample_rate": 44100,
+      "layers": [
+        {
+          "synthesis": {
+            "type": "multi_oscillator",
+            "frequency": 392.0,
+            "oscillators": [
+              {
+                "waveform": "sawtooth",
+                "volume": 1.0,
+                "detune": 0.0
+              },
+              {
+                "waveform": "sawtooth",
+                "volume": 0.8,
+                "detune": 5.0
+              },
+              {
+                "waveform": "sawtooth",
+                "volume": 0.8,
+                "detune": -5.0
+              },
+              {
+                "waveform": "square",
+                "volume": 0.6,
+                "detune": 0.0
+              },
+              {
+                "waveform": "triangle",
+                "volume": 0.4,
+                "detune": 0.0
+              }
+            ]
+          },
+          "envelope": {
+            "attack": 0.001,
+            "decay": 0.08,
+            "sustain": 0.1,
+            "release": 0.05
+          },
+          "filter": {
+            "type": "lowpass",
+            "cutoff": 2200,
+            "resonance": 0.3
+          },
+          "volume": 1.0,
+          "pan": 0.0
+        }
+      ]
+    }
+  }
 }

@@ -8,8 +8,14 @@
     "name": "OPL DOS",
     "genre": "retro",
     "subgenre": "dos",
-    "bpm_range": [100, 140],
-    "time_signature": [4, 4],
+    "bpm_range": [
+      100,
+      140
+    ],
+    "time_signature": [
+      4,
+      4
+    ],
     "instruments": {
       "kick": "drums/kicks/kick",
       "snare": "drums/snares/snare",
@@ -19,6 +25,13 @@
       "keys": "keys/keys_ep",
       "bell": "bells/dx7_bell"
     },
-    "tags": ["opl", "adlib", "dos", "pc", "yamaha", "soundblaster"]
+    "tags": [
+      "opl",
+      "adlib",
+      "dos",
+      "pc",
+      "yamaha",
+      "soundblaster"
+    ]
   }
 }

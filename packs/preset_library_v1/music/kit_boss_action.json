@@ -8,8 +8,14 @@
     "name": "Boss Action",
     "genre": "cinematic",
     "subgenre": "action",
-    "bpm_range": [120, 160],
-    "time_signature": [4, 4],
+    "bpm_range": [
+      120,
+      160
+    ],
+    "time_signature": [
+      4,
+      4
+    ],
     "instruments": {
       "kick": "drums/kicks/big_kick",
       "snare": "drums/snares/snare_dist",
@@ -21,6 +27,12 @@
       "stab": "plucks/stab_rave",
       "impact": "fx/impact_metal"
     },
-    "tags": ["boss", "action", "intense", "battle", "combat"]
+    "tags": [
+      "boss",
+      "action",
+      "intense",
+      "battle",
+      "combat"
+    ]
   }
 }

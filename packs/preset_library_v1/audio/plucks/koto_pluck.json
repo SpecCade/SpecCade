@@ -1,48 +1,48 @@
 {
-    "spec_version": 1,
-    "asset_id": "koto_pluck",
-    "asset_type": "audio",
-    "license": "CC0-1.0",
-    "seed": 20052,
-    "description": "Koto pluck - Japanese zither pluck with bright, clear attack",
-    "outputs": [
-        {
-            "kind": "primary",
-            "format": "wav",
-            "path": "test-outputs/preset_library_v1/audio/plucks/koto_pluck.wav"
-        }
-    ],
-    "recipe": {
-        "kind": "audio_v1",
-        "params": {
-            "duration_seconds": 1.8,
-            "sample_rate": 44100,
-            "layers": [
-                {
-                    "synthesis": {
-                        "type": "karplus_strong",
-                        "frequency": 523.25,
-                        "decay": 0.9965,
-                        "blend": 0.25
-                    },
-                    "envelope": {
-                        "attack": 0.0008,
-                        "decay": 0.04,
-                        "sustain": 0.7,
-                        "release": 0.8
-                    },
-                    "volume": 1.0,
-                    "pan": 0.0
-                }
-            ],
-            "effects": [
-                {
-                    "type": "delay",
-                    "time_ms": 65.0,
-                    "feedback": 0.18,
-                    "wet": 0.1
-                }
-            ]
-        }
+  "spec_version": 1,
+  "asset_id": "koto_pluck",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 20052,
+  "description": "Koto pluck - Japanese zither pluck with bright, clear attack",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/plucks/koto_pluck.wav"
     }
+  ],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "duration_seconds": 1.8,
+      "sample_rate": 44100,
+      "layers": [
+        {
+          "synthesis": {
+            "type": "karplus_strong",
+            "frequency": 523.25,
+            "decay": 0.9965,
+            "blend": 0.25
+          },
+          "envelope": {
+            "attack": 0.0008,
+            "decay": 0.04,
+            "sustain": 0.7,
+            "release": 0.8
+          },
+          "volume": 1.0,
+          "pan": 0.0
+        }
+      ],
+      "effects": [
+        {
+          "type": "delay",
+          "time_ms": 65.0,
+          "feedback": 0.18,
+          "wet": 0.1
+        }
+      ]
+    }
+  }
 }

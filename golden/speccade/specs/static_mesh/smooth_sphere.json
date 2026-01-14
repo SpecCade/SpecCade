@@ -16,7 +16,11 @@
     "kind": "static_mesh.blender_primitives_v1",
     "params": {
       "base_primitive": "sphere",
-      "dimensions": [1.0, 1.0, 1.0],
+      "dimensions": [
+        1.0,
+        1.0,
+        1.0
+      ],
       "modifiers": [],
       "uv_projection": {
         "method": "smart",

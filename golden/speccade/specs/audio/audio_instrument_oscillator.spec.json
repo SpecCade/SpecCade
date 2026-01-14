@@ -5,8 +5,17 @@
   "license": "CC0-1.0",
   "seed": 999016,
   "description": "Golden test for simple oscillator synthesis - exercises waveform, frequency, freq_sweep, detune, and duty cycle",
-  "style_tags": ["golden", "oscillator", "simple", "instrument"],
-  "engine_targets": ["godot", "unity", "unreal"],
+  "style_tags": [
+    "golden",
+    "oscillator",
+    "simple",
+    "instrument"
+  ],
+  "engine_targets": [
+    "godot",
+    "unity",
+    "unreal"
+  ],
   "outputs": [
     {
       "kind": "primary",

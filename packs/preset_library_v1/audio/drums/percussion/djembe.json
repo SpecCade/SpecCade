@@ -1,62 +1,62 @@
 {
-    "spec_version":  1,
-    "asset_id":  "preset_djembe",
-    "asset_type":  "audio",
-    "license":  "CC0-1.0",
-    "seed":  10090,
-    "description":  "Djembe - pitched body with sharp slap character",
-    "outputs":  [
-                    {
-                        "kind":  "primary",
-                        "format":  "wav",
-                        "path":  "test-outputs/preset_library_v1/audio/drums/percussion/djembe.wav"
-                    }
-                ],
-    "recipe":  {
-                   "kind":  "audio_v1",
-                   "params":  {
-                                  "duration_seconds":  0.4,
-                                  "sample_rate":  44100,
-                                  "layers":  [
-                                                 {
-                                                     "synthesis":  {
-                                                                       "type":  "oscillator",
-                                                                       "waveform":  "sine",
-                                                                       "frequency":  280,
-                                                                       "freq_sweep":  {
-                                                                                          "end_freq":  120,
-                                                                                          "curve":  "exponential"
-                                                                                      }
-                                                                   },
-                                                     "envelope":  {
-                                                                      "attack":  0.001,
-                                                                      "decay":  0.22,
-                                                                      "sustain":  0,
-                                                                      "release":  0.15
-                                                                  },
-                                                     "volume":  0.8,
-                                                     "pan":  0
-                                                 },
-                                                 {
-                                                     "synthesis":  {
-                                                                       "type":  "noise_burst",
-                                                                       "noise_type":  "white",
-                                                                       "filter":  {
-                                                                                      "type":  "bandpass",
-                                                                                      "center":  2500,
-                                                                                      "resonance":  0.6
-                                                                                  }
-                                                                   },
-                                                     "envelope":  {
-                                                                      "attack":  0,
-                                                                      "decay":  0.03,
-                                                                      "sustain":  0,
-                                                                      "release":  0.02
-                                                                  },
-                                                     "volume":  0.35,
-                                                     "pan":  0
-                                                 }
-                                             ]
-                              }
-               }
+  "spec_version": 1,
+  "asset_id": "preset_djembe",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 10090,
+  "description": "Djembe - pitched body with sharp slap character",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/drums/percussion/djembe.wav"
+    }
+  ],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "duration_seconds": 0.4,
+      "sample_rate": 44100,
+      "layers": [
+        {
+          "synthesis": {
+            "type": "oscillator",
+            "waveform": "sine",
+            "frequency": 280,
+            "freq_sweep": {
+              "end_freq": 120,
+              "curve": "exponential"
+            }
+          },
+          "envelope": {
+            "attack": 0.001,
+            "decay": 0.22,
+            "sustain": 0,
+            "release": 0.15
+          },
+          "volume": 0.8,
+          "pan": 0
+        },
+        {
+          "synthesis": {
+            "type": "noise_burst",
+            "noise_type": "white",
+            "filter": {
+              "type": "bandpass",
+              "center": 2500,
+              "resonance": 0.6
+            }
+          },
+          "envelope": {
+            "attack": 0,
+            "decay": 0.03,
+            "sustain": 0,
+            "release": 0.02
+          },
+          "volume": 0.35,
+          "pan": 0
+        }
+      ]
+    }
+  }
 }

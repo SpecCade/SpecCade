@@ -8,8 +8,14 @@
     "name": "Celtic / Medieval",
     "genre": "world",
     "subgenre": "celtic",
-    "bpm_range": [80, 120],
-    "time_signature": [4, 4],
+    "bpm_range": [
+      80,
+      120
+    ],
+    "time_signature": [
+      4,
+      4
+    ],
     "instruments": {
       "lead_flute": "leads/acoustic/flute",
       "lead_pan_flute": "leads/acoustic/flute_pan",
@@ -23,6 +29,14 @@
       "drone_dark": "textures/drone_dark",
       "bagpipe_chanter": "leads/acoustic/bagpipe_chanter"
     },
-    "tags": ["celtic", "medieval", "folk", "irish", "scottish", "regional", "acoustic"]
+    "tags": [
+      "celtic",
+      "medieval",
+      "folk",
+      "irish",
+      "scottish",
+      "regional",
+      "acoustic"
+    ]
   }
 }

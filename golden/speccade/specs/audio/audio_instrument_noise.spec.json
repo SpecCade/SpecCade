@@ -5,8 +5,17 @@
   "license": "CC0-1.0",
   "seed": 999017,
   "description": "Golden test for noise burst synthesis - exercises noise_type (white, pink, brown) and filter (lowpass, highpass, bandpass)",
-  "style_tags": ["golden", "noise", "percussion", "instrument"],
-  "engine_targets": ["godot", "unity", "unreal"],
+  "style_tags": [
+    "golden",
+    "noise",
+    "percussion",
+    "instrument"
+  ],
+  "engine_targets": [
+    "godot",
+    "unity",
+    "unreal"
+  ],
   "outputs": [
     {
       "kind": "primary",

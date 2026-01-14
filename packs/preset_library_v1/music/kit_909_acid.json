@@ -8,8 +8,14 @@
     "name": "909 / Acid",
     "genre": "electronic",
     "subgenre": "acid",
-    "bpm_range": [125, 135],
-    "time_signature": [4, 4],
+    "bpm_range": [
+      125,
+      135
+    ],
+    "time_signature": [
+      4,
+      4
+    ],
     "instruments": {
       "kick": "drums/kicks/kick_909",
       "snare": "drums/snares/snare_909",
@@ -20,6 +26,14 @@
       "lead": "leads/synth/lead_acid",
       "stab": "plucks/stab"
     },
-    "tags": ["edm", "acid", "909", "303", "classic", "vintage", "techno"]
+    "tags": [
+      "edm",
+      "acid",
+      "909",
+      "303",
+      "classic",
+      "vintage",
+      "techno"
+    ]
   }
 }

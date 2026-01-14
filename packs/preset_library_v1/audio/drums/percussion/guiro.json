@@ -1,58 +1,58 @@
 {
-    "spec_version":  1,
-    "asset_id":  "preset_guiro",
-    "asset_type":  "audio",
-    "license":  "CC0-1.0",
-    "seed":  10087,
-    "description":  "Guiro - raspy noise texture with rhythmic character",
-    "outputs":  [
-                    {
-                        "kind":  "primary",
-                        "format":  "wav",
-                        "path":  "test-outputs/preset_library_v1/audio/drums/percussion/guiro.wav"
-                    }
-                ],
-    "recipe":  {
-                   "kind":  "audio_v1",
-                   "params":  {
-                                  "duration_seconds":  0.25,
-                                  "sample_rate":  44100,
-                                  "layers":  [
-                                                 {
-                                                     "synthesis":  {
-                                                                       "type":  "noise_burst",
-                                                                       "noise_type":  "white",
-                                                                       "filter":  {
-                                                                                      "type":  "bandpass",
-                                                                                      "center":  2000,
-                                                                                      "resonance":  0.9
-                                                                                  }
-                                                                   },
-                                                     "envelope":  {
-                                                                      "attack":  0.005,
-                                                                      "decay":  0.12,
-                                                                      "sustain":  0,
-                                                                      "release":  0.08
-                                                                  },
-                                                     "volume":  0.7,
-                                                     "pan":  0
-                                                 },
-                                                 {
-                                                     "synthesis":  {
-                                                                       "type":  "oscillator",
-                                                                       "waveform":  "square",
-                                                                       "frequency":  1500
-                                                                   },
-                                                     "envelope":  {
-                                                                      "attack":  0.005,
-                                                                      "decay":  0.1,
-                                                                      "sustain":  0,
-                                                                      "release":  0.06
-                                                                  },
-                                                     "volume":  0.2,
-                                                     "pan":  0
-                                                 }
-                                             ]
-                              }
-               }
+  "spec_version": 1,
+  "asset_id": "preset_guiro",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 10087,
+  "description": "Guiro - raspy noise texture with rhythmic character",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/drums/percussion/guiro.wav"
+    }
+  ],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "duration_seconds": 0.25,
+      "sample_rate": 44100,
+      "layers": [
+        {
+          "synthesis": {
+            "type": "noise_burst",
+            "noise_type": "white",
+            "filter": {
+              "type": "bandpass",
+              "center": 2000,
+              "resonance": 0.9
+            }
+          },
+          "envelope": {
+            "attack": 0.005,
+            "decay": 0.12,
+            "sustain": 0,
+            "release": 0.08
+          },
+          "volume": 0.7,
+          "pan": 0
+        },
+        {
+          "synthesis": {
+            "type": "oscillator",
+            "waveform": "square",
+            "frequency": 1500
+          },
+          "envelope": {
+            "attack": 0.005,
+            "decay": 0.1,
+            "sustain": 0,
+            "release": 0.06
+          },
+          "volume": 0.2,
+          "pan": 0
+        }
+      ]
+    }
+  }
 }

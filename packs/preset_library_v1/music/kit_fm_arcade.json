@@ -8,8 +8,14 @@
     "name": "FM Arcade",
     "genre": "retro",
     "subgenre": "arcade",
-    "bpm_range": [130, 160],
-    "time_signature": [4, 4],
+    "bpm_range": [
+      130,
+      160
+    ],
+    "time_signature": [
+      4,
+      4
+    ],
     "instruments": {
       "kick": "drums/kicks/kick",
       "snare": "drums/snares/snare",
@@ -19,6 +25,13 @@
       "bell": "bells/fm_bell",
       "keys": "keys/keys_ep"
     },
-    "tags": ["fm", "arcade", "sega", "genesis", "megadrive", "ym2612"]
+    "tags": [
+      "fm",
+      "arcade",
+      "sega",
+      "genesis",
+      "megadrive",
+      "ym2612"
+    ]
   }
 }

@@ -1,75 +1,75 @@
 {
-    "spec_version": 1,
-    "asset_id": "preset_woodwind_lead",
-    "asset_type": "audio",
-    "license": "CC0-1.0",
-    "seed": 20030,
-    "description": "Generic woodwind lead - breathy wind instrument sound",
-    "outputs": [
-        {
-            "kind": "primary",
-            "format": "wav",
-            "path": "test-outputs/preset_library_v1/audio/leads/acoustic/woodwind_lead.wav"
-        }
-    ],
-    "recipe": {
-        "kind": "audio_v1",
-        "params": {
-            "base_note": "A4",
-            "duration_seconds": 2.0,
-            "sample_rate": 44100,
-            "layers": [
-                {
-                    "synthesis": {
-                        "type": "oscillator",
-                        "waveform": "triangle",
-                        "frequency": 440.0
-                    },
-                    "envelope": {
-                        "attack": 0.08,
-                        "decay": 0.12,
-                        "sustain": 0.88,
-                        "release": 0.18
-                    },
-                    "lfo": {
-                        "config": {
-                            "waveform": "sine",
-                            "rate": 5.2,
-                            "depth": 0.35
-                        },
-                        "target": {
-                            "target": "pitch",
-                            "semitones": 0.22
-                        }
-                    },
-                    "filter": {
-                        "type": "highpass",
-                        "cutoff": 180.0,
-                        "resonance": 0.3
-                    },
-                    "volume": 0.75,
-                    "pan": 0
-                },
-                {
-                    "synthesis": {
-                        "type": "noise_burst",
-                        "noise_type": "white",
-                        "filter": {
-                            "type": "bandpass",
-                            "center": 3500.0,
-                            "resonance": 0.6
-                        }
-                    },
-                    "envelope": {
-                        "attack": 0.06,
-                        "decay": 0.15,
-                        "sustain": 0.25,
-                        "release": 0.15
-                    },
-                    "volume": 0.15,
-                    "pan": 0
-                }
-            ]
-        }
+  "spec_version": 1,
+  "asset_id": "preset_woodwind_lead",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 20030,
+  "description": "Generic woodwind lead - breathy wind instrument sound",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/leads/acoustic/woodwind_lead.wav"
     }
+  ],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "base_note": "A4",
+      "duration_seconds": 2.0,
+      "sample_rate": 44100,
+      "layers": [
+        {
+          "synthesis": {
+            "type": "oscillator",
+            "waveform": "triangle",
+            "frequency": 440.0
+          },
+          "envelope": {
+            "attack": 0.08,
+            "decay": 0.12,
+            "sustain": 0.88,
+            "release": 0.18
+          },
+          "lfo": {
+            "config": {
+              "waveform": "sine",
+              "rate": 5.2,
+              "depth": 0.35
+            },
+            "target": {
+              "target": "pitch",
+              "semitones": 0.22
+            }
+          },
+          "filter": {
+            "type": "highpass",
+            "cutoff": 180.0,
+            "resonance": 0.3
+          },
+          "volume": 0.75,
+          "pan": 0
+        },
+        {
+          "synthesis": {
+            "type": "noise_burst",
+            "noise_type": "white",
+            "filter": {
+              "type": "bandpass",
+              "center": 3500.0,
+              "resonance": 0.6
+            }
+          },
+          "envelope": {
+            "attack": 0.06,
+            "decay": 0.15,
+            "sustain": 0.25,
+            "release": 0.15
+          },
+          "volume": 0.15,
+          "pan": 0
+        }
+      ]
+    }
+  }
 }

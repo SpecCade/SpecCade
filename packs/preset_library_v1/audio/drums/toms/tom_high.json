@@ -1,43 +1,43 @@
 {
-    "spec_version":  1,
-    "asset_id":  "preset_tom_high",
-    "asset_type":  "audio",
-    "license":  "CC0-1.0",
-    "seed":  10070,
-    "description":  "High tom - pitched body with fast decay",
-    "outputs":  [
-                    {
-                        "kind":  "primary",
-                        "format":  "wav",
-                        "path":  "test-outputs/preset_library_v1/audio/drums/toms/tom_high.wav"
-                    }
-                ],
-    "recipe":  {
-                   "kind":  "audio_v1",
-                   "params":  {
-                                  "duration_seconds":  0.4,
-                                  "sample_rate":  44100,
-                                  "layers":  [
-                                                 {
-                                                     "synthesis":  {
-                                                                       "type":  "oscillator",
-                                                                       "waveform":  "sine",
-                                                                       "frequency":  300,
-                                                                       "freq_sweep":  {
-                                                                                          "end_freq":  150,
-                                                                                          "curve":  "exponential"
-                                                                                      }
-                                                                   },
-                                                     "envelope":  {
-                                                                      "attack":  0.002,
-                                                                      "decay":  0.25,
-                                                                      "sustain":  0,
-                                                                      "release":  0.15
-                                                                  },
-                                                     "volume":  0.8,
-                                                     "pan":  0
-                                                 }
-                                             ]
-                              }
-               }
+  "spec_version": 1,
+  "asset_id": "preset_tom_high",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 10070,
+  "description": "High tom - pitched body with fast decay",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/drums/toms/tom_high.wav"
+    }
+  ],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "duration_seconds": 0.4,
+      "sample_rate": 44100,
+      "layers": [
+        {
+          "synthesis": {
+            "type": "oscillator",
+            "waveform": "sine",
+            "frequency": 300,
+            "freq_sweep": {
+              "end_freq": 150,
+              "curve": "exponential"
+            }
+          },
+          "envelope": {
+            "attack": 0.002,
+            "decay": 0.25,
+            "sustain": 0,
+            "release": 0.15
+          },
+          "volume": 0.8,
+          "pan": 0
+        }
+      ]
+    }
+  }
 }

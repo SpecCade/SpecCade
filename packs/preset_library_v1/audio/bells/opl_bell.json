@@ -1,49 +1,49 @@
 {
-    "spec_version": 1,
-    "asset_id": "preset_opl_bell",
-    "asset_type": "audio",
-    "license": "CC0-1.0",
-    "seed": 20024,
-    "description": "OPL/AdLib style FM bell - retro PC game bell sound with metallic YM3812 character",
-    "outputs": [
-        {
-            "kind": "primary",
-            "format": "wav",
-            "path": "test-outputs/preset_library_v1/audio/bells/opl_bell.wav"
-        }
-    ],
-    "recipe": {
-        "kind": "audio_v1",
-        "params": {
-            "duration_seconds": 1.5,
-            "sample_rate": 44100,
-            "base_note": "C5",
-            "layers": [
-                {
-                    "synthesis": {
-                        "type": "fm_synth",
-                        "carrier_freq": 523.25,
-                        "modulator_freq": 1569.75,
-                        "modulation_index": 5.5
-                    },
-                    "envelope": {
-                        "attack": 0.002,
-                        "decay": 0.3,
-                        "sustain": 0.08,
-                        "release": 0.7
-                    },
-                    "volume": 0.9,
-                    "pan": 0.0
-                }
-            ],
-            "effects": [
-                {
-                    "type": "reverb",
-                    "room_size": 0.45,
-                    "damping": 0.5,
-                    "wet": 0.2
-                }
-            ]
-        }
+  "spec_version": 1,
+  "asset_id": "preset_opl_bell",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 20024,
+  "description": "OPL/AdLib style FM bell - retro PC game bell sound with metallic YM3812 character",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/bells/opl_bell.wav"
     }
+  ],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "duration_seconds": 1.5,
+      "sample_rate": 44100,
+      "base_note": "C5",
+      "layers": [
+        {
+          "synthesis": {
+            "type": "fm_synth",
+            "carrier_freq": 523.25,
+            "modulator_freq": 1569.75,
+            "modulation_index": 5.5
+          },
+          "envelope": {
+            "attack": 0.002,
+            "decay": 0.3,
+            "sustain": 0.08,
+            "release": 0.7
+          },
+          "volume": 0.9,
+          "pan": 0.0
+        }
+      ],
+      "effects": [
+        {
+          "type": "reverb",
+          "room_size": 0.45,
+          "damping": 0.5,
+          "wet": 0.2
+        }
+      ]
+    }
+  }
 }

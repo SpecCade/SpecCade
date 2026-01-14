@@ -5,11 +5,13 @@
   "license": "CC0-1.0",
   "seed": 20010,
   "description": "Breakbeat percussion layer - punchy mid-freq hit for layering with kicks/snares",
-  "outputs": [{
-    "kind": "primary",
-    "format": "wav",
-    "path": "test-outputs/preset_library_v1/audio/drums/percussion/perc_break_layer.wav"
-  }],
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/drums/percussion/perc_break_layer.wav"
+    }
+  ],
   "recipe": {
     "kind": "audio_v1",
     "params": {

@@ -1,81 +1,81 @@
 {
-    "spec_version":  1,
-    "asset_id":  "preset_snare_dist",
-    "asset_type":  "audio",
-    "license":  "CC0-1.0",
-    "seed":  10022,
-    "description":  "Distorted snare - aggressive, crunchy character with high resonance",
-    "outputs":  [
-                    {
-                        "kind":  "primary",
-                        "format":  "wav",
-                        "path":  "test-outputs/preset_library_v1/audio/drums/snares/snare_dist.wav"
-                    }
-                ],
-    "recipe":  {
-                   "kind":  "audio_v1",
-                   "params":  {
-                                  "duration_seconds":  0.28,
-                                  "sample_rate":  44100,
-                                  "layers":  [
-                                                 {
-                                                     "synthesis":  {
-                                                                       "type":  "oscillator",
-                                                                       "waveform":  "square",
-                                                                       "frequency":  190,
-                                                                       "freq_sweep":  {
-                                                                                          "end_freq":  110,
-                                                                                          "curve":  "exponential"
-                                                                                      }
-                                                                   },
-                                                     "envelope":  {
-                                                                      "attack":  0.001,
-                                                                      "decay":  0.06,
-                                                                      "sustain":  0,
-                                                                      "release":  0.05
-                                                                  },
-                                                     "volume":  0.9,
-                                                     "pan":  0
-                                                 },
-                                                 {
-                                                     "synthesis":  {
-                                                                       "type":  "oscillator",
-                                                                       "waveform":  "sawtooth",
-                                                                       "frequency":  195,
-                                                                       "freq_sweep":  {
-                                                                                          "end_freq":  115,
-                                                                                          "curve":  "exponential"
-                                                                                      }
-                                                                   },
-                                                     "envelope":  {
-                                                                      "attack":  0.001,
-                                                                      "decay":  0.06,
-                                                                      "sustain":  0,
-                                                                      "release":  0.05
-                                                                  },
-                                                     "volume":  0.7,
-                                                     "pan":  0
-                                                 },
-                                                 {
-                                                     "synthesis":  {
-                                                                       "type":  "noise_burst",
-                                                                       "noise_type":  "white",
-                                                                       "filter":  {
-                                                                                      "type":  "bandpass",
-                                                                                      "center":  3500,
-                                                                                      "resonance":  2
-                                                                                  }
-                                                                   },
-                                                     "envelope":  {
-                                                                      "attack":  0.001,
-                                                                      "decay":  0.08,
-                                                                      "sustain":  0,
-                                                                      "release":  0.06
-                                                                  },
-                                                     "volume":  1,
-                                                     "pan":  0
-                                                 }
-                                             ]
-                              }
-               }
+  "spec_version": 1,
+  "asset_id": "preset_snare_dist",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 10022,
+  "description": "Distorted snare - aggressive, crunchy character with high resonance",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/drums/snares/snare_dist.wav"
+    }
+  ],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "duration_seconds": 0.28,
+      "sample_rate": 44100,
+      "layers": [
+        {
+          "synthesis": {
+            "type": "oscillator",
+            "waveform": "square",
+            "frequency": 190,
+            "freq_sweep": {
+              "end_freq": 110,
+              "curve": "exponential"
+            }
+          },
+          "envelope": {
+            "attack": 0.001,
+            "decay": 0.06,
+            "sustain": 0,
+            "release": 0.05
+          },
+          "volume": 0.9,
+          "pan": 0
+        },
+        {
+          "synthesis": {
+            "type": "oscillator",
+            "waveform": "sawtooth",
+            "frequency": 195,
+            "freq_sweep": {
+              "end_freq": 115,
+              "curve": "exponential"
+            }
+          },
+          "envelope": {
+            "attack": 0.001,
+            "decay": 0.06,
+            "sustain": 0,
+            "release": 0.05
+          },
+          "volume": 0.7,
+          "pan": 0
+        },
+        {
+          "synthesis": {
+            "type": "noise_burst",
+            "noise_type": "white",
+            "filter": {
+              "type": "bandpass",
+              "center": 3500,
+              "resonance": 2
+            }
+          },
+          "envelope": {
+            "attack": 0.001,
+            "decay": 0.08,
+            "sustain": 0,
+            "release": 0.06
+          },
+          "volume": 1,
+          "pan": 0
+        }
+      ]
+    }
+  }
 }

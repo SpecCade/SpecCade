@@ -1,59 +1,59 @@
 {
-    "spec_version":  1,
-    "asset_id":  "preset_hat_tick",
-    "asset_type":  "audio",
-    "license":  "CC0-1.0",
-    "seed":  10050,
-    "description":  "Tick hi-hat - very short, bright click with metallic character",
-    "outputs":  [
-                    {
-                        "kind":  "primary",
-                        "format":  "wav",
-                        "path":  "test-outputs/preset_library_v1/audio/drums/hats/hat_tick.wav"
-                    }
-                ],
-    "recipe":  {
-                   "kind":  "audio_v1",
-                   "params":  {
-                                  "duration_seconds":  0.03,
-                                  "sample_rate":  44100,
-                                  "layers":  [
-                                                 {
-                                                     "synthesis":  {
-                                                                       "type":  "metallic",
-                                                                       "base_freq":  9000,
-                                                                       "num_partials":  5,
-                                                                       "inharmonicity":  2.5
-                                                                   },
-                                                     "envelope":  {
-                                                                      "attack":  0.0005,
-                                                                      "decay":  0.01,
-                                                                      "sustain":  0,
-                                                                      "release":  0.015
-                                                                  },
-                                                     "volume":  0.65,
-                                                     "pan":  0
-                                                 },
-                                                 {
-                                                     "synthesis":  {
-                                                                       "type":  "noise_burst",
-                                                                       "noise_type":  "white",
-                                                                       "filter":  {
-                                                                                      "type":  "highpass",
-                                                                                      "cutoff":  10000,
-                                                                                      "resonance":  0.7
-                                                                                  }
-                                                                   },
-                                                     "envelope":  {
-                                                                      "attack":  0.0005,
-                                                                      "decay":  0.008,
-                                                                      "sustain":  0,
-                                                                      "release":  0.01
-                                                                  },
-                                                     "volume":  0.5,
-                                                     "pan":  0
-                                                 }
-                                             ]
-                              }
-               }
+  "spec_version": 1,
+  "asset_id": "preset_hat_tick",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 10050,
+  "description": "Tick hi-hat - very short, bright click with metallic character",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/drums/hats/hat_tick.wav"
+    }
+  ],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "duration_seconds": 0.03,
+      "sample_rate": 44100,
+      "layers": [
+        {
+          "synthesis": {
+            "type": "metallic",
+            "base_freq": 9000,
+            "num_partials": 5,
+            "inharmonicity": 2.5
+          },
+          "envelope": {
+            "attack": 0.0005,
+            "decay": 0.01,
+            "sustain": 0,
+            "release": 0.015
+          },
+          "volume": 0.65,
+          "pan": 0
+        },
+        {
+          "synthesis": {
+            "type": "noise_burst",
+            "noise_type": "white",
+            "filter": {
+              "type": "highpass",
+              "cutoff": 10000,
+              "resonance": 0.7
+            }
+          },
+          "envelope": {
+            "attack": 0.0005,
+            "decay": 0.008,
+            "sustain": 0,
+            "release": 0.01
+          },
+          "volume": 0.5,
+          "pan": 0
+        }
+      ]
+    }
+  }
 }

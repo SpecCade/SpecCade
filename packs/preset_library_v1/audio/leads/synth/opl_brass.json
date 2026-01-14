@@ -5,11 +5,13 @@
   "license": "CC0-1.0",
   "seed": 20025,
   "description": "OPL/AdLib style FM brass - retro PC game brass sound",
-  "outputs": [{
-    "kind": "primary",
-    "format": "wav",
-    "path": "test-outputs/preset_library_v1/audio/leads/synth/opl_brass.wav"
-  }],
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/leads/synth/opl_brass.wav"
+    }
+  ],
   "recipe": {
     "kind": "audio_v1",
     "params": {

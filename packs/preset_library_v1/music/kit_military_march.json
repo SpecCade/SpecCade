@@ -8,8 +8,14 @@
     "name": "Military March",
     "genre": "cinematic",
     "subgenre": "march",
-    "bpm_range": [100, 140],
-    "time_signature": [4, 4],
+    "bpm_range": [
+      100,
+      140
+    ],
+    "time_signature": [
+      4,
+      4
+    ],
     "instruments": {
       "kick": "drums/kicks/kick",
       "snare": "drums/snares/snare",
@@ -20,6 +26,11 @@
       "lead_accordion": "leads/acoustic/accordion_lead",
       "strings": "pads/strings_ensemble"
     },
-    "tags": ["military", "march", "patriotic", "ceremonial"]
+    "tags": [
+      "military",
+      "march",
+      "patriotic",
+      "ceremonial"
+    ]
   }
 }

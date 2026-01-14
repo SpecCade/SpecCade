@@ -1,85 +1,85 @@
 {
-    "spec_version": 1,
-    "asset_id": "preset_stinger_horror",
-    "asset_type": "audio",
-    "license": "CC0-1.0",
-    "seed": 20069,
-    "description": "Horror stinger - scary, dissonant accent for horror games",
-    "outputs": [
-        {
-            "kind": "primary",
-            "format": "wav",
-            "path": "test-outputs/preset_library_v1/audio/fx/stinger_horror.wav"
-        }
-    ],
-    "recipe": {
-        "kind": "audio_v1",
-        "params": {
-            "base_note": "C5",
-            "duration_seconds": 1.2,
-            "sample_rate": 44100,
-            "layers": [
-                {
-                    "synthesis": {
-                        "type": "oscillator",
-                        "waveform": "sawtooth",
-                        "frequency": 220.0
-                    },
-                    "envelope": {
-                        "attack": 0.002,
-                        "decay": 0.3,
-                        "sustain": 0.15,
-                        "release": 0.6
-                    },
-                    "volume": 0.7,
-                    "pan": -0.3
-                },
-                {
-                    "synthesis": {
-                        "type": "oscillator",
-                        "waveform": "sawtooth",
-                        "frequency": 233.08
-                    },
-                    "envelope": {
-                        "attack": 0.001,
-                        "decay": 0.35,
-                        "sustain": 0.1,
-                        "release": 0.7
-                    },
-                    "volume": 0.65,
-                    "pan": 0.3
-                },
-                {
-                    "synthesis": {
-                        "type": "metallic",
-                        "base_freq": 880,
-                        "num_partials": 8,
-                        "inharmonicity": 2.8
-                    },
-                    "envelope": {
-                        "attack": 0.001,
-                        "decay": 0.2,
-                        "sustain": 0.05,
-                        "release": 0.5
-                    },
-                    "volume": 0.5,
-                    "pan": 0
-                },
-                {
-                    "synthesis": {
-                        "type": "noise_burst",
-                        "noise_type": "white"
-                    },
-                    "envelope": {
-                        "attack": 0.001,
-                        "decay": 0.1,
-                        "sustain": 0,
-                        "release": 0.2
-                    },
-                    "volume": 0.3,
-                    "pan": 0
-                }
-            ]
-        }
+  "spec_version": 1,
+  "asset_id": "preset_stinger_horror",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 20069,
+  "description": "Horror stinger - scary, dissonant accent for horror games",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/fx/stinger_horror.wav"
     }
+  ],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "base_note": "C5",
+      "duration_seconds": 1.2,
+      "sample_rate": 44100,
+      "layers": [
+        {
+          "synthesis": {
+            "type": "oscillator",
+            "waveform": "sawtooth",
+            "frequency": 220.0
+          },
+          "envelope": {
+            "attack": 0.002,
+            "decay": 0.3,
+            "sustain": 0.15,
+            "release": 0.6
+          },
+          "volume": 0.7,
+          "pan": -0.3
+        },
+        {
+          "synthesis": {
+            "type": "oscillator",
+            "waveform": "sawtooth",
+            "frequency": 233.08
+          },
+          "envelope": {
+            "attack": 0.001,
+            "decay": 0.35,
+            "sustain": 0.1,
+            "release": 0.7
+          },
+          "volume": 0.65,
+          "pan": 0.3
+        },
+        {
+          "synthesis": {
+            "type": "metallic",
+            "base_freq": 880,
+            "num_partials": 8,
+            "inharmonicity": 2.8
+          },
+          "envelope": {
+            "attack": 0.001,
+            "decay": 0.2,
+            "sustain": 0.05,
+            "release": 0.5
+          },
+          "volume": 0.5,
+          "pan": 0
+        },
+        {
+          "synthesis": {
+            "type": "noise_burst",
+            "noise_type": "white"
+          },
+          "envelope": {
+            "attack": 0.001,
+            "decay": 0.1,
+            "sustain": 0,
+            "release": 0.2
+          },
+          "volume": 0.3,
+          "pan": 0
+        }
+      ]
+    }
+  }
 }

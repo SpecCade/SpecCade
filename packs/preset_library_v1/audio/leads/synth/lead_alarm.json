@@ -1,56 +1,56 @@
 {
-    "spec_version":  1,
-    "asset_id":  "preset_lead_alarm",
-    "asset_type":  "audio",
-    "license":  "CC0-1.0",
-    "seed":  10303,
-    "description":  "Alarm lead - bright square wave that demands attention",
-    "outputs":  [
-                    {
-                        "kind":  "primary",
-                        "format":  "wav",
-                        "path":  "test-outputs/preset_library_v1/audio/leads/synth/lead_alarm.wav"
-                    }
-                ],
-    "recipe":  {
-                   "kind":  "audio_v1",
-                   "params":  {
-                                  "base_note":  "A4",
-                                  "duration_seconds":  1.5,
-                                  "sample_rate":  44100,
-                                  "layers":  [
-                                                 {
-                                                     "synthesis":  {
-                                                                       "type":  "multi_oscillator",
-                                                                       "frequency":  440.0,
-                                                                       "oscillators":  [
-                                                                                           {
-                                                                                               "waveform":  "square",
-                                                                                               "volume":  1.0,
-                                                                                               "detune":  0
-                                                                                           },
-                                                                                           {
-                                                                                               "waveform":  "square",
-                                                                                               "volume":  0.6,
-                                                                                               "detune":  1200
-                                                                                           }
-                                                                                       ]
-                                                                   },
-                                                     "envelope":  {
-                                                                      "attack":  0.002,
-                                                                      "decay":  0.05,
-                                                                      "sustain":  0.95,
-                                                                      "release":  0.08
-                                                                  },
-                                                     "filter":  {
-                                                                    "type":  "lowpass",
-                                                                    "cutoff":  5000,
-                                                                    "resonance":  0.4
-                                                                },
-                                                     "volume":  0.8,
-                                                     "pan":  0
-                                                 }
-                                             ]
-                              }
-               }
+  "spec_version": 1,
+  "asset_id": "preset_lead_alarm",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 10303,
+  "description": "Alarm lead - bright square wave that demands attention",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/leads/synth/lead_alarm.wav"
+    }
+  ],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "base_note": "A4",
+      "duration_seconds": 1.5,
+      "sample_rate": 44100,
+      "layers": [
+        {
+          "synthesis": {
+            "type": "multi_oscillator",
+            "frequency": 440.0,
+            "oscillators": [
+              {
+                "waveform": "square",
+                "volume": 1.0,
+                "detune": 0
+              },
+              {
+                "waveform": "square",
+                "volume": 0.6,
+                "detune": 1200
+              }
+            ]
+          },
+          "envelope": {
+            "attack": 0.002,
+            "decay": 0.05,
+            "sustain": 0.95,
+            "release": 0.08
+          },
+          "filter": {
+            "type": "lowpass",
+            "cutoff": 5000,
+            "resonance": 0.4
+          },
+          "volume": 0.8,
+          "pan": 0
+        }
+      ]
+    }
+  }
 }

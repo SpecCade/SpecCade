@@ -1,96 +1,96 @@
 {
-    "spec_version": 1,
-    "asset_id": "preset_bansuri_lead",
-    "asset_type": "audio",
-    "license": "CC0-1.0",
-    "seed": 20033,
-    "description": "Bansuri flute lead - Indian bamboo flute with warm, flowing character",
-    "outputs": [
-        {
-            "kind": "primary",
-            "format": "wav",
-            "path": "test-outputs/preset_library_v1/audio/leads/acoustic/bansuri_lead.wav"
-        }
-    ],
-    "recipe": {
-        "kind": "audio_v1",
-        "params": {
-            "base_note": "D4",
-            "duration_seconds": 2.0,
-            "sample_rate": 44100,
-            "layers": [
-                {
-                    "synthesis": {
-                        "type": "oscillator",
-                        "waveform": "sine",
-                        "frequency": 293.66
-                    },
-                    "envelope": {
-                        "attack": 0.12,
-                        "decay": 0.15,
-                        "sustain": 0.88,
-                        "release": 0.25
-                    },
-                    "lfo": {
-                        "config": {
-                            "waveform": "sine",
-                            "rate": 4.8,
-                            "depth": 0.45
-                        },
-                        "target": {
-                            "target": "pitch",
-                            "semitones": 0.3
-                        }
-                    },
-                    "volume": 0.7,
-                    "pan": 0
-                },
-                {
-                    "synthesis": {
-                        "type": "oscillator",
-                        "waveform": "triangle",
-                        "frequency": 293.66
-                    },
-                    "envelope": {
-                        "attack": 0.12,
-                        "decay": 0.15,
-                        "sustain": 0.88,
-                        "release": 0.25
-                    },
-                    "lfo": {
-                        "config": {
-                            "waveform": "sine",
-                            "rate": 4.8,
-                            "depth": 0.45
-                        },
-                        "target": {
-                            "target": "pitch",
-                            "semitones": 0.3
-                        }
-                    },
-                    "volume": 0.15,
-                    "pan": 0
-                },
-                {
-                    "synthesis": {
-                        "type": "noise_burst",
-                        "noise_type": "white",
-                        "filter": {
-                            "type": "bandpass",
-                            "center": 2800.0,
-                            "resonance": 0.45
-                        }
-                    },
-                    "envelope": {
-                        "attack": 0.08,
-                        "decay": 0.14,
-                        "sustain": 0.35,
-                        "release": 0.18
-                    },
-                    "volume": 0.15,
-                    "pan": 0
-                }
-            ]
-        }
+  "spec_version": 1,
+  "asset_id": "preset_bansuri_lead",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 20033,
+  "description": "Bansuri flute lead - Indian bamboo flute with warm, flowing character",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/leads/acoustic/bansuri_lead.wav"
     }
+  ],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "base_note": "D4",
+      "duration_seconds": 2.0,
+      "sample_rate": 44100,
+      "layers": [
+        {
+          "synthesis": {
+            "type": "oscillator",
+            "waveform": "sine",
+            "frequency": 293.66
+          },
+          "envelope": {
+            "attack": 0.12,
+            "decay": 0.15,
+            "sustain": 0.88,
+            "release": 0.25
+          },
+          "lfo": {
+            "config": {
+              "waveform": "sine",
+              "rate": 4.8,
+              "depth": 0.45
+            },
+            "target": {
+              "target": "pitch",
+              "semitones": 0.3
+            }
+          },
+          "volume": 0.7,
+          "pan": 0
+        },
+        {
+          "synthesis": {
+            "type": "oscillator",
+            "waveform": "triangle",
+            "frequency": 293.66
+          },
+          "envelope": {
+            "attack": 0.12,
+            "decay": 0.15,
+            "sustain": 0.88,
+            "release": 0.25
+          },
+          "lfo": {
+            "config": {
+              "waveform": "sine",
+              "rate": 4.8,
+              "depth": 0.45
+            },
+            "target": {
+              "target": "pitch",
+              "semitones": 0.3
+            }
+          },
+          "volume": 0.15,
+          "pan": 0
+        },
+        {
+          "synthesis": {
+            "type": "noise_burst",
+            "noise_type": "white",
+            "filter": {
+              "type": "bandpass",
+              "center": 2800.0,
+              "resonance": 0.45
+            }
+          },
+          "envelope": {
+            "attack": 0.08,
+            "decay": 0.14,
+            "sustain": 0.35,
+            "release": 0.18
+          },
+          "volume": 0.15,
+          "pan": 0
+        }
+      ]
+    }
+  }
 }

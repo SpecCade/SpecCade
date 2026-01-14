@@ -5,11 +5,13 @@
   "license": "CC0-1.0",
   "seed": 20020,
   "description": "Cymbal swell - building cymbal wash that crescendos",
-  "outputs": [{
-    "kind": "primary",
-    "format": "wav",
-    "path": "test-outputs/preset_library_v1/audio/drums/cymbals/cym_swell.wav"
-  }],
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/drums/cymbals/cym_swell.wav"
+    }
+  ],
   "recipe": {
     "kind": "audio_v1",
     "params": {

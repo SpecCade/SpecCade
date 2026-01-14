@@ -1,54 +1,54 @@
 {
-    "spec_version":  1,
-    "asset_id":  "preset_cowbell",
-    "asset_type":  "audio",
-    "license":  "CC0-1.0",
-    "seed":  10080,
-    "description":  "Cowbell - two inharmonic metallic partials, classic 808 style",
-    "outputs":  [
-                    {
-                        "kind":  "primary",
-                        "format":  "wav",
-                        "path":  "test-outputs/preset_library_v1/audio/drums/percussion/cowbell.wav"
-                    }
-                ],
-    "recipe":  {
-                   "kind":  "audio_v1",
-                   "params":  {
-                                  "duration_seconds":  0.25,
-                                  "sample_rate":  44100,
-                                  "layers":  [
-                                                 {
-                                                     "synthesis":  {
-                                                                       "type":  "oscillator",
-                                                                       "waveform":  "square",
-                                                                       "frequency":  540
-                                                                   },
-                                                     "envelope":  {
-                                                                      "attack":  0.001,
-                                                                      "decay":  0.15,
-                                                                      "sustain":  0,
-                                                                      "release":  0.1
-                                                                  },
-                                                     "volume":  0.6,
-                                                     "pan":  0
-                                                 },
-                                                 {
-                                                     "synthesis":  {
-                                                                       "type":  "oscillator",
-                                                                       "waveform":  "square",
-                                                                       "frequency":  800
-                                                                   },
-                                                     "envelope":  {
-                                                                      "attack":  0.001,
-                                                                      "decay":  0.12,
-                                                                      "sustain":  0,
-                                                                      "release":  0.08
-                                                                  },
-                                                     "volume":  0.5,
-                                                     "pan":  0
-                                                 }
-                                             ]
-                              }
-               }
+  "spec_version": 1,
+  "asset_id": "preset_cowbell",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 10080,
+  "description": "Cowbell - two inharmonic metallic partials, classic 808 style",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/drums/percussion/cowbell.wav"
+    }
+  ],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "duration_seconds": 0.25,
+      "sample_rate": 44100,
+      "layers": [
+        {
+          "synthesis": {
+            "type": "oscillator",
+            "waveform": "square",
+            "frequency": 540
+          },
+          "envelope": {
+            "attack": 0.001,
+            "decay": 0.15,
+            "sustain": 0,
+            "release": 0.1
+          },
+          "volume": 0.6,
+          "pan": 0
+        },
+        {
+          "synthesis": {
+            "type": "oscillator",
+            "waveform": "square",
+            "frequency": 800
+          },
+          "envelope": {
+            "attack": 0.001,
+            "decay": 0.12,
+            "sustain": 0,
+            "release": 0.08
+          },
+          "volume": 0.5,
+          "pan": 0
+        }
+      ]
+    }
+  }
 }

@@ -5,8 +5,17 @@
   "license": "CC0-1.0",
   "seed": 999011,
   "description": "Golden test for advanced FM synthesis - exercises fm_synth with carrier/modulator frequencies, modulation_index, freq_sweep, and pitch_envelope",
-  "style_tags": ["golden", "fm", "operators", "instrument"],
-  "engine_targets": ["godot", "unity", "unreal"],
+  "style_tags": [
+    "golden",
+    "fm",
+    "operators",
+    "instrument"
+  ],
+  "engine_targets": [
+    "godot",
+    "unity",
+    "unreal"
+  ],
   "outputs": [
     {
       "kind": "primary",

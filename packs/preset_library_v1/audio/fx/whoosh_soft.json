@@ -1,44 +1,44 @@
 {
-    "spec_version": 1,
-    "asset_id": "preset_whoosh_soft",
-    "asset_type": "audio",
-    "license": "CC0-1.0",
-    "seed": 20072,
-    "description": "Soft whoosh - gentle passing/transition sound",
-    "outputs": [
-        {
-            "kind": "primary",
-            "format": "wav",
-            "path": "test-outputs/preset_library_v1/audio/fx/whoosh_soft.wav"
-        }
-    ],
-    "recipe": {
-        "kind": "audio_v1",
-        "params": {
-            "duration_seconds": 0.5,
-            "sample_rate": 44100,
-            "layers": [
-                {
-                    "synthesis": {
-                        "type": "noise_burst",
-                        "noise_type": "pink",
-                        "filter": {
-                            "type": "bandpass",
-                            "center": 600,
-                            "resonance": 0.8,
-                            "center_end": 2500
-                        }
-                    },
-                    "envelope": {
-                        "attack": 0.08,
-                        "decay": 0.15,
-                        "sustain": 0.2,
-                        "release": 0.15
-                    },
-                    "volume": 0.55,
-                    "pan": 0
-                }
-            ]
-        }
+  "spec_version": 1,
+  "asset_id": "preset_whoosh_soft",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 20072,
+  "description": "Soft whoosh - gentle passing/transition sound",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/fx/whoosh_soft.wav"
     }
+  ],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "duration_seconds": 0.5,
+      "sample_rate": 44100,
+      "layers": [
+        {
+          "synthesis": {
+            "type": "noise_burst",
+            "noise_type": "pink",
+            "filter": {
+              "type": "bandpass",
+              "center": 600,
+              "resonance": 0.8,
+              "center_end": 2500
+            }
+          },
+          "envelope": {
+            "attack": 0.08,
+            "decay": 0.15,
+            "sustain": 0.2,
+            "release": 0.15
+          },
+          "volume": 0.55,
+          "pan": 0
+        }
+      ]
+    }
+  }
 }

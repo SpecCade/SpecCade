@@ -5,11 +5,13 @@
   "license": "CC0-1.0",
   "seed": 20021,
   "description": "DX7-style FM electric piano - classic 80s FM EP sound",
-  "outputs": [{
-    "kind": "primary",
-    "format": "wav",
-    "path": "test-outputs/preset_library_v1/audio/keys/dx7_ep.wav"
-  }],
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/keys/dx7_ep.wav"
+    }
+  ],
   "recipe": {
     "kind": "audio_v1",
     "params": {

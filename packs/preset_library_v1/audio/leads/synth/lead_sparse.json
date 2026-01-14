@@ -1,40 +1,40 @@
 {
-    "spec_version":  1,
-    "asset_id":  "preset_lead_sparse",
-    "asset_type":  "audio",
-    "license":  "CC0-1.0",
-    "seed":  10307,
-    "description":  "Sparse minimal lead - single naked sawtooth oscillator for raw character",
-    "outputs":  [
-                    {
-                        "kind":  "primary",
-                        "format":  "wav",
-                        "path":  "test-outputs/preset_library_v1/audio/leads/synth/lead_sparse.wav"
-                    }
-                ],
-    "recipe":  {
-                   "kind":  "audio_v1",
-                   "params":  {
-                                  "base_note":  "A4",
-                                  "duration_seconds":  1.5,
-                                  "sample_rate":  44100,
-                                  "layers":  [
-                                                 {
-                                                     "synthesis":  {
-                                                                       "type":  "oscillator",
-                                                                       "waveform":  "sawtooth",
-                                                                       "frequency":  440.0
-                                                                   },
-                                                     "envelope":  {
-                                                                      "attack":  0.01,
-                                                                      "decay":  0.1,
-                                                                      "sustain":  0.9,
-                                                                      "release":  0.15
-                                                                  },
-                                                     "volume":  0.9,
-                                                     "pan":  0
-                                                 }
-                                             ]
-                              }
-               }
+  "spec_version": 1,
+  "asset_id": "preset_lead_sparse",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 10307,
+  "description": "Sparse minimal lead - single naked sawtooth oscillator for raw character",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/leads/synth/lead_sparse.wav"
+    }
+  ],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "base_note": "A4",
+      "duration_seconds": 1.5,
+      "sample_rate": 44100,
+      "layers": [
+        {
+          "synthesis": {
+            "type": "oscillator",
+            "waveform": "sawtooth",
+            "frequency": 440.0
+          },
+          "envelope": {
+            "attack": 0.01,
+            "decay": 0.1,
+            "sustain": 0.9,
+            "release": 0.15
+          },
+          "volume": 0.9,
+          "pan": 0
+        }
+      ]
+    }
+  }
 }

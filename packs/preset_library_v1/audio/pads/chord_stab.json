@@ -1,67 +1,67 @@
 {
-    "spec_version":  1,
-    "asset_id":  "preset_chord_stab",
-    "asset_type":  "audio",
-    "license":  "CC0-1.0",
-    "seed":  10105,
-    "description":  "Bright chord stab - multi-osc stack (loop-safe)",
-    "outputs":  [
-                    {
-                        "kind":  "primary",
-                        "format":  "wav",
-                        "path":  "test-outputs/preset_library_v1/audio/pads/chord_stab.wav"
-                    }
-                ],
-    "recipe":  {
-                   "kind":  "audio_v1",
-                   "params":  {
-                                  "base_note":  "C4",
-                                  "duration_seconds":  1,
-                                  "sample_rate":  44100,
-                                  "layers":  [
-                                                 {
-                                                     "synthesis":  {
-                                                                       "type":  "multi_oscillator",
-                                                                       "frequency":  261.63,
-                                                                       "oscillators":  [
-                                                                                           {
-                                                                                               "waveform":  "sawtooth",
-                                                                                               "volume":  1,
-                                                                                               "detune":  0
-                                                                                           },
-                                                                                           {
-                                                                                               "waveform":  "sawtooth",
-                                                                                               "volume":  0.9,
-                                                                                               "detune":  10
-                                                                                           },
-                                                                                           {
-                                                                                               "waveform":  "sawtooth",
-                                                                                               "volume":  0.9,
-                                                                                               "detune":  -10
-                                                                                           },
-                                                                                           {
-                                                                                               "waveform":  "square",
-                                                                                               "volume":  0.5,
-                                                                                               "detune":  0,
-                                                                                               "duty":  0.5
-                                                                                           }
-                                                                                       ]
-                                                                   },
-                                                     "envelope":  {
-                                                                      "attack":  0.002,
-                                                                      "decay":  0.15,
-                                                                      "sustain":  1,
-                                                                      "release":  0.1
-                                                                  },
-                                                     "volume":  0.85,
-                                                     "pan":  0
-                                                 }
-                                             ],
-                                  "master_filter":  {
-                                                        "type":  "lowpass",
-                                                        "cutoff":  4000,
-                                                        "resonance":  0.5
-                                                    }
-                              }
-               }
+  "spec_version": 1,
+  "asset_id": "preset_chord_stab",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 10105,
+  "description": "Bright chord stab - multi-osc stack (loop-safe)",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/pads/chord_stab.wav"
+    }
+  ],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "base_note": "C4",
+      "duration_seconds": 1,
+      "sample_rate": 44100,
+      "layers": [
+        {
+          "synthesis": {
+            "type": "multi_oscillator",
+            "frequency": 261.63,
+            "oscillators": [
+              {
+                "waveform": "sawtooth",
+                "volume": 1,
+                "detune": 0
+              },
+              {
+                "waveform": "sawtooth",
+                "volume": 0.9,
+                "detune": 10
+              },
+              {
+                "waveform": "sawtooth",
+                "volume": 0.9,
+                "detune": -10
+              },
+              {
+                "waveform": "square",
+                "volume": 0.5,
+                "detune": 0,
+                "duty": 0.5
+              }
+            ]
+          },
+          "envelope": {
+            "attack": 0.002,
+            "decay": 0.15,
+            "sustain": 1,
+            "release": 0.1
+          },
+          "volume": 0.85,
+          "pan": 0
+        }
+      ],
+      "master_filter": {
+        "type": "lowpass",
+        "cutoff": 4000,
+        "resonance": 0.5
+      }
+    }
+  }
 }

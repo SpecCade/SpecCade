@@ -1,46 +1,46 @@
 {
-    "spec_version":  1,
-    "asset_id":  "preset_bass_saw",
-    "asset_type":  "audio",
-    "license":  "CC0-1.0",
-    "seed":  10102,
-    "description":  "Saw bass - raw sawtooth with dramatic filter envelope sweep on attack for classic synth bass movement",
-    "outputs":  [
-                    {
-                        "kind":  "primary",
-                        "format":  "wav",
-                        "path":  "test-outputs/preset_library_v1/audio/bass/bass_saw.wav"
-                    }
-                ],
-    "recipe":  {
-                   "kind":  "audio_v1",
-                   "params":  {
-                                  "base_note":  "C2",
-                                  "duration_seconds":  1.0,
-                                  "sample_rate":  44100,
-                                  "layers":  [
-                                                 {
-                                                     "synthesis":  {
-                                                                       "type":  "oscillator",
-                                                                       "waveform":  "sawtooth",
-                                                                       "frequency":  65.41
-                                                                   },
-                                                     "filter":  {
-                                                                    "type":  "lowpass",
-                                                                    "cutoff":  2000.0,
-                                                                    "resonance":  0.4,
-                                                                    "cutoff_end":  400.0
-                                                                },
-                                                     "envelope":  {
-                                                                      "attack":  0.005,
-                                                                      "decay":  0.2,
-                                                                      "sustain":  0.7,
-                                                                      "release":  0.15
-                                                                  },
-                                                     "volume":  0.85,
-                                                     "pan":  0
-                                                 }
-                                             ]
-                              }
-               }
+  "spec_version": 1,
+  "asset_id": "preset_bass_saw",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 10102,
+  "description": "Saw bass - raw sawtooth with dramatic filter envelope sweep on attack for classic synth bass movement",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/bass/bass_saw.wav"
+    }
+  ],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "base_note": "C2",
+      "duration_seconds": 1.0,
+      "sample_rate": 44100,
+      "layers": [
+        {
+          "synthesis": {
+            "type": "oscillator",
+            "waveform": "sawtooth",
+            "frequency": 65.41
+          },
+          "filter": {
+            "type": "lowpass",
+            "cutoff": 2000.0,
+            "resonance": 0.4,
+            "cutoff_end": 400.0
+          },
+          "envelope": {
+            "attack": 0.005,
+            "decay": 0.2,
+            "sustain": 0.7,
+            "release": 0.15
+          },
+          "volume": 0.85,
+          "pan": 0
+        }
+      ]
+    }
+  }
 }

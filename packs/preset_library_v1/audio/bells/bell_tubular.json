@@ -1,49 +1,49 @@
 {
-    "spec_version":  1,
-    "asset_id":  "preset_bell_tubular",
-    "asset_type":  "audio",
-    "license":  "CC0-1.0",
-    "seed":  10253,
-    "description":  "Tubular bell - deep, resonant chime with long sustain and moderate inharmonicity",
-    "outputs":  [
-                    {
-                        "kind":  "primary",
-                        "format":  "wav",
-                        "path":  "test-outputs/preset_library_v1/audio/bells/bell_tubular.wav"
-                    }
-                ],
-    "recipe":  {
-                   "kind":  "audio_v1",
-                   "params":  {
-                                  "duration_seconds":  3.0,
-                                  "sample_rate":  44100,
-                                  "base_note":  "C4",
-                                  "layers":  [
-                                                 {
-                                                     "synthesis":  {
-                                                                       "type":  "metallic",
-                                                                       "base_freq":  440.0,
-                                                                       "num_partials":  10,
-                                                                       "inharmonicity":  1.25
-                                                                   },
-                                                     "envelope":  {
-                                                                      "attack":  0.002,
-                                                                      "decay":  1.0,
-                                                                      "sustain":  0.3,
-                                                                      "release":  2.0
-                                                                  },
-                                                     "volume":  0.9,
-                                                     "pan":  0.0
-                                                 }
-                                             ],
-                                  "effects":  [
-                                                  {
-                                                      "type":  "reverb",
-                                                      "room_size":  0.8,
-                                                      "damping":  0.35,
-                                                      "wet":  0.45
-                                                  }
-                                              ]
-                              }
-               }
+  "spec_version": 1,
+  "asset_id": "preset_bell_tubular",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 10253,
+  "description": "Tubular bell - deep, resonant chime with long sustain and moderate inharmonicity",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/bells/bell_tubular.wav"
+    }
+  ],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "duration_seconds": 3.0,
+      "sample_rate": 44100,
+      "base_note": "C4",
+      "layers": [
+        {
+          "synthesis": {
+            "type": "metallic",
+            "base_freq": 440.0,
+            "num_partials": 10,
+            "inharmonicity": 1.25
+          },
+          "envelope": {
+            "attack": 0.002,
+            "decay": 1.0,
+            "sustain": 0.3,
+            "release": 2.0
+          },
+          "volume": 0.9,
+          "pan": 0.0
+        }
+      ],
+      "effects": [
+        {
+          "type": "reverb",
+          "room_size": 0.8,
+          "damping": 0.35,
+          "wet": 0.45
+        }
+      ]
+    }
+  }
 }

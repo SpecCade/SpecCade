@@ -5,8 +5,17 @@
   "license": "CC0-1.0",
   "seed": 999002,
   "description": "Golden comprehensive test - exercises multiple synthesis types: fm_synth, multi_oscillator, additive, karplus_strong, and pitch_envelope with all ADSR",
-  "style_tags": ["golden", "comprehensive", "test", "instrument"],
-  "engine_targets": ["godot", "unity", "unreal"],
+  "style_tags": [
+    "golden",
+    "comprehensive",
+    "test",
+    "instrument"
+  ],
+  "engine_targets": [
+    "godot",
+    "unity",
+    "unreal"
+  ],
   "outputs": [
     {
       "kind": "primary",
@@ -15,9 +24,18 @@
     }
   ],
   "variants": [
-    {"variant_id": "c3", "seed_offset": 0},
-    {"variant_id": "c4", "seed_offset": 12},
-    {"variant_id": "c5", "seed_offset": 24}
+    {
+      "variant_id": "c3",
+      "seed_offset": 0
+    },
+    {
+      "variant_id": "c4",
+      "seed_offset": 12
+    },
+    {
+      "variant_id": "c5",
+      "seed_offset": 24
+    }
   ],
   "recipe": {
     "kind": "audio_v1",
@@ -95,7 +113,16 @@
           "synthesis": {
             "type": "additive",
             "base_freq": 440.0,
-            "harmonics": [1.0, 0.5, 0.33, 0.25, 0.2, 0.167, 0.143, 0.125]
+            "harmonics": [
+              1.0,
+              0.5,
+              0.33,
+              0.25,
+              0.2,
+              0.167,
+              0.143,
+              0.125
+            ]
           },
           "envelope": {
             "attack": 0.02,

@@ -5,7 +5,11 @@
   "license": "CC0-1.0",
   "seed": 3020,
   "description": "Advanced features demo - showcases automation, IT options, effects, and all keywords",
-  "style_tags": ["advanced", "demo", "it-format"],
+  "style_tags": [
+    "advanced",
+    "demo",
+    "it-format"
+  ],
   "outputs": [
     {
       "kind": "primary",
@@ -67,63 +71,285 @@
         "intro_fade": {
           "rows": 64,
           "data": [
-            {"row": 0, "channel": 0, "note": "C4", "instrument": 0, "volume": 32},
-            {"row": 8, "channel": 0, "note": "E4", "instrument": 0, "volume": 40},
-            {"row": 16, "channel": 0, "note": "G4", "instrument": 0, "volume": 48},
-            {"row": 24, "channel": 0, "note": "C5", "instrument": 0, "volume": 56},
-            {"row": 32, "channel": 0, "note": "E5", "instrument": 0, "volume": 64},
-            {"row": 0, "channel": 1, "note": "C2", "instrument": 1, "volume": 48},
-            {"row": 32, "channel": 1, "note": "G2", "instrument": 1, "volume": 48}
+            {
+              "row": 0,
+              "channel": 0,
+              "note": "C4",
+              "instrument": 0,
+              "volume": 32
+            },
+            {
+              "row": 8,
+              "channel": 0,
+              "note": "E4",
+              "instrument": 0,
+              "volume": 40
+            },
+            {
+              "row": 16,
+              "channel": 0,
+              "note": "G4",
+              "instrument": 0,
+              "volume": 48
+            },
+            {
+              "row": 24,
+              "channel": 0,
+              "note": "C5",
+              "instrument": 0,
+              "volume": 56
+            },
+            {
+              "row": 32,
+              "channel": 0,
+              "note": "E5",
+              "instrument": 0,
+              "volume": 64
+            },
+            {
+              "row": 0,
+              "channel": 1,
+              "note": "C2",
+              "instrument": 1,
+              "volume": 48
+            },
+            {
+              "row": 32,
+              "channel": 1,
+              "note": "G2",
+              "instrument": 1,
+              "volume": 48
+            }
           ]
         },
         "main_with_effects": {
           "rows": 64,
           "data": [
-            {"row": 0, "channel": 0, "note": "C4", "instrument": 0, "volume": 64, "effect_name": "vibrato", "param": 72},
-            {"row": 16, "channel": 0, "note": "D4", "instrument": 0, "volume": 64, "effect_name": "vibrato", "param": 72},
-            {"row": 32, "channel": 0, "note": "E4", "instrument": 0, "volume": 64, "effect_name": "volume_slide", "param": 15},
-            {"row": 48, "channel": 0, "note": "G4", "instrument": 0, "volume": 64},
-            {"row": 0, "channel": 1, "note": "C2", "instrument": 1, "volume": 56},
-            {"row": 16, "channel": 1, "note": "D2", "instrument": 1, "volume": 56},
-            {"row": 32, "channel": 1, "note": "E2", "instrument": 1, "volume": 56},
-            {"row": 48, "channel": 1, "note": "G2", "instrument": 1, "volume": 56},
-            {"row": 0, "channel": 2, "note": "C4", "instrument": 2, "volume": 32},
-            {"row": 8, "channel": 2, "note": "C4", "instrument": 2, "volume": 28},
-            {"row": 16, "channel": 2, "note": "C4", "instrument": 2, "volume": 32},
-            {"row": 24, "channel": 2, "note": "C4", "instrument": 2, "volume": 28},
-            {"row": 32, "channel": 2, "note": "C4", "instrument": 2, "volume": 32},
-            {"row": 40, "channel": 2, "note": "C4", "instrument": 2, "volume": 28},
-            {"row": 48, "channel": 2, "note": "C4", "instrument": 2, "volume": 32},
-            {"row": 56, "channel": 2, "note": "C4", "instrument": 2, "volume": 28}
+            {
+              "row": 0,
+              "channel": 0,
+              "note": "C4",
+              "instrument": 0,
+              "volume": 64,
+              "effect_name": "vibrato",
+              "param": 72
+            },
+            {
+              "row": 16,
+              "channel": 0,
+              "note": "D4",
+              "instrument": 0,
+              "volume": 64,
+              "effect_name": "vibrato",
+              "param": 72
+            },
+            {
+              "row": 32,
+              "channel": 0,
+              "note": "E4",
+              "instrument": 0,
+              "volume": 64,
+              "effect_name": "volume_slide",
+              "param": 15
+            },
+            {
+              "row": 48,
+              "channel": 0,
+              "note": "G4",
+              "instrument": 0,
+              "volume": 64
+            },
+            {
+              "row": 0,
+              "channel": 1,
+              "note": "C2",
+              "instrument": 1,
+              "volume": 56
+            },
+            {
+              "row": 16,
+              "channel": 1,
+              "note": "D2",
+              "instrument": 1,
+              "volume": 56
+            },
+            {
+              "row": 32,
+              "channel": 1,
+              "note": "E2",
+              "instrument": 1,
+              "volume": 56
+            },
+            {
+              "row": 48,
+              "channel": 1,
+              "note": "G2",
+              "instrument": 1,
+              "volume": 56
+            },
+            {
+              "row": 0,
+              "channel": 2,
+              "note": "C4",
+              "instrument": 2,
+              "volume": 32
+            },
+            {
+              "row": 8,
+              "channel": 2,
+              "note": "C4",
+              "instrument": 2,
+              "volume": 28
+            },
+            {
+              "row": 16,
+              "channel": 2,
+              "note": "C4",
+              "instrument": 2,
+              "volume": 32
+            },
+            {
+              "row": 24,
+              "channel": 2,
+              "note": "C4",
+              "instrument": 2,
+              "volume": 28
+            },
+            {
+              "row": 32,
+              "channel": 2,
+              "note": "C4",
+              "instrument": 2,
+              "volume": 32
+            },
+            {
+              "row": 40,
+              "channel": 2,
+              "note": "C4",
+              "instrument": 2,
+              "volume": 28
+            },
+            {
+              "row": 48,
+              "channel": 2,
+              "note": "C4",
+              "instrument": 2,
+              "volume": 32
+            },
+            {
+              "row": 56,
+              "channel": 2,
+              "note": "C4",
+              "instrument": 2,
+              "volume": 28
+            }
           ]
         },
         "tempo_section": {
           "rows": 32,
           "data": [
-            {"row": 0, "channel": 0, "note": "G4", "instrument": 0, "volume": 64},
-            {"row": 8, "channel": 0, "note": "A4", "instrument": 0, "volume": 64},
-            {"row": 16, "channel": 0, "note": "B4", "instrument": 0, "volume": 64},
-            {"row": 24, "channel": 0, "note": "C5", "instrument": 0, "volume": 64},
-            {"row": 0, "channel": 1, "note": "G2", "instrument": 1, "volume": 56}
+            {
+              "row": 0,
+              "channel": 0,
+              "note": "G4",
+              "instrument": 0,
+              "volume": 64
+            },
+            {
+              "row": 8,
+              "channel": 0,
+              "note": "A4",
+              "instrument": 0,
+              "volume": 64
+            },
+            {
+              "row": 16,
+              "channel": 0,
+              "note": "B4",
+              "instrument": 0,
+              "volume": 64
+            },
+            {
+              "row": 24,
+              "channel": 0,
+              "note": "C5",
+              "instrument": 0,
+              "volume": 64
+            },
+            {
+              "row": 0,
+              "channel": 1,
+              "note": "G2",
+              "instrument": 1,
+              "volume": 56
+            }
           ]
         },
         "outro_fade": {
           "rows": 64,
           "data": [
-            {"row": 0, "channel": 0, "note": "C5", "instrument": 0, "volume": 64},
-            {"row": 16, "channel": 0, "note": "G4", "instrument": 0, "volume": 48},
-            {"row": 32, "channel": 0, "note": "E4", "instrument": 0, "volume": 32},
-            {"row": 48, "channel": 0, "note": "C4", "instrument": 0, "volume": 16},
-            {"row": 0, "channel": 1, "note": "C2", "instrument": 1, "volume": 48},
-            {"row": 32, "channel": 1, "note": "OFF", "instrument": 1, "volume": 0}
+            {
+              "row": 0,
+              "channel": 0,
+              "note": "C5",
+              "instrument": 0,
+              "volume": 64
+            },
+            {
+              "row": 16,
+              "channel": 0,
+              "note": "G4",
+              "instrument": 0,
+              "volume": 48
+            },
+            {
+              "row": 32,
+              "channel": 0,
+              "note": "E4",
+              "instrument": 0,
+              "volume": 32
+            },
+            {
+              "row": 48,
+              "channel": 0,
+              "note": "C4",
+              "instrument": 0,
+              "volume": 16
+            },
+            {
+              "row": 0,
+              "channel": 1,
+              "note": "C2",
+              "instrument": 1,
+              "volume": 48
+            },
+            {
+              "row": 32,
+              "channel": 1,
+              "note": "OFF",
+              "instrument": 1,
+              "volume": 0
+            }
           ]
         }
       },
       "arrangement": [
-        {"pattern": "intro_fade", "repeat": 1},
-        {"pattern": "main_with_effects", "repeat": 2},
-        {"pattern": "tempo_section", "repeat": 1},
-        {"pattern": "outro_fade", "repeat": 1}
+        {
+          "pattern": "intro_fade",
+          "repeat": 1
+        },
+        {
+          "pattern": "main_with_effects",
+          "repeat": 2
+        },
+        {
+          "pattern": "tempo_section",
+          "repeat": 1
+        },
+        {
+          "pattern": "outro_fade",
+          "repeat": 1
+        }
       ],
       "automation": [
         {

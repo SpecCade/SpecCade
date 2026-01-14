@@ -1,63 +1,63 @@
 {
-    "spec_version":  1,
-    "asset_id":  "preset_riser",
-    "asset_type":  "audio",
-    "license":  "CC0-1.0",
-    "seed":  10202,
-    "description":  "Rising sweep - pitch up with noise buildup",
-    "outputs":  [
-                    {
-                        "kind":  "primary",
-                        "format":  "wav",
-                        "path":  "test-outputs/preset_library_v1/audio/fx/riser.wav"
-                    }
-                ],
-    "recipe":  {
-                   "kind":  "audio_v1",
-                   "params":  {
-                                  "duration_seconds":  1.5,
-                                  "sample_rate":  44100,
-                                  "layers":  [
-                                                 {
-                                                     "synthesis":  {
-                                                                       "type":  "oscillator",
-                                                                       "waveform":  "sawtooth",
-                                                                       "frequency":  100,
-                                                                       "freq_sweep":  {
-                                                                                          "end_freq":  800,
-                                                                                          "curve":  "exponential"
-                                                                                      }
-                                                                   },
-                                                     "envelope":  {
-                                                                      "attack":  1,
-                                                                      "decay":  0.2,
-                                                                      "sustain":  0.8,
-                                                                      "release":  0.2
-                                                                  },
-                                                     "volume":  0.7,
-                                                     "pan":  0
-                                                 },
-                                                 {
-                                                     "synthesis":  {
-                                                                       "type":  "noise_burst",
-                                                                       "noise_type":  "white",
-                                                                       "filter":  {
-                                                                                      "type":  "highpass",
-                                                                                      "cutoff":  500,
-                                                                                      "resonance":  0.5,
-                                                                                      "cutoff_end":  6000
-                                                                                  }
-                                                                   },
-                                                     "envelope":  {
-                                                                      "attack":  1.2,
-                                                                      "decay":  0.1,
-                                                                      "sustain":  0.6,
-                                                                      "release":  0.1
-                                                                  },
-                                                     "volume":  0.5,
-                                                     "pan":  0
-                                                 }
-                                             ]
-                              }
-               }
+  "spec_version": 1,
+  "asset_id": "preset_riser",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 10202,
+  "description": "Rising sweep - pitch up with noise buildup",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/fx/riser.wav"
+    }
+  ],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "duration_seconds": 1.5,
+      "sample_rate": 44100,
+      "layers": [
+        {
+          "synthesis": {
+            "type": "oscillator",
+            "waveform": "sawtooth",
+            "frequency": 100,
+            "freq_sweep": {
+              "end_freq": 800,
+              "curve": "exponential"
+            }
+          },
+          "envelope": {
+            "attack": 1,
+            "decay": 0.2,
+            "sustain": 0.8,
+            "release": 0.2
+          },
+          "volume": 0.7,
+          "pan": 0
+        },
+        {
+          "synthesis": {
+            "type": "noise_burst",
+            "noise_type": "white",
+            "filter": {
+              "type": "highpass",
+              "cutoff": 500,
+              "resonance": 0.5,
+              "cutoff_end": 6000
+            }
+          },
+          "envelope": {
+            "attack": 1.2,
+            "decay": 0.1,
+            "sustain": 0.6,
+            "release": 0.1
+          },
+          "volume": 0.5,
+          "pan": 0
+        }
+      ]
+    }
+  }
 }

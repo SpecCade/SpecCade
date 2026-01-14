@@ -5,8 +5,17 @@
   "license": "CC0-1.0",
   "seed": 999018,
   "description": "Golden test for pitched body synthesis - exercises start_freq and end_freq for impact sounds",
-  "style_tags": ["golden", "pitched-body", "impact", "instrument"],
-  "engine_targets": ["godot", "unity", "unreal"],
+  "style_tags": [
+    "golden",
+    "pitched-body",
+    "impact",
+    "instrument"
+  ],
+  "engine_targets": [
+    "godot",
+    "unity",
+    "unreal"
+  ],
   "outputs": [
     {
       "kind": "primary",

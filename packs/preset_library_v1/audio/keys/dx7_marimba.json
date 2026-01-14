@@ -5,11 +5,13 @@
   "license": "CC0-1.0",
   "seed": 20022,
   "description": "DX7-style FM marimba - warm wooden mallet FM sound",
-  "outputs": [{
-    "kind": "primary",
-    "format": "wav",
-    "path": "test-outputs/preset_library_v1/audio/keys/dx7_marimba.wav"
-  }],
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/keys/dx7_marimba.wav"
+    }
+  ],
   "recipe": {
     "kind": "audio_v1",
     "params": {

@@ -5,8 +5,17 @@
   "license": "CC0-1.0",
   "seed": 999014,
   "description": "Golden test for metallic synthesis - exercises base_freq, num_partials, and inharmonicity",
-  "style_tags": ["golden", "metallic", "bell", "instrument"],
-  "engine_targets": ["godot", "unity", "unreal"],
+  "style_tags": [
+    "golden",
+    "metallic",
+    "bell",
+    "instrument"
+  ],
+  "engine_targets": [
+    "godot",
+    "unity",
+    "unreal"
+  ],
   "outputs": [
     {
       "kind": "primary",

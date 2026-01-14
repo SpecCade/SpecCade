@@ -8,8 +8,14 @@
     "name": "Heavy Metal",
     "genre": "cinematic",
     "subgenre": "action",
-    "bpm_range": [120, 200],
-    "time_signature": [4, 4],
+    "bpm_range": [
+      120,
+      200
+    ],
+    "time_signature": [
+      4,
+      4
+    ],
     "instruments": {
       "kick": "drums/kicks/kick",
       "kick_double": "drums/kicks/kick_dist",
@@ -27,6 +33,13 @@
       "rhythm": "plucks/stab",
       "impact": "fx/impact_metal"
     },
-    "tags": ["metal", "heavy", "action", "rock", "aggressive", "double-kick"]
+    "tags": [
+      "metal",
+      "heavy",
+      "action",
+      "rock",
+      "aggressive",
+      "double-kick"
+    ]
   }
 }

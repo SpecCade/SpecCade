@@ -8,8 +8,14 @@
     "name": "Ambient Exploration",
     "genre": "ambient",
     "subgenre": "exploration",
-    "bpm_range": [60, 90],
-    "time_signature": [4, 4],
+    "bpm_range": [
+      60,
+      90
+    ],
+    "time_signature": [
+      4,
+      4
+    ],
     "instruments": {
       "pad": {
         "preset": "pads/pad_evolving",

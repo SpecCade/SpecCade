@@ -5,8 +5,17 @@
   "license": "CC0-1.0",
   "seed": 999003,
   "description": "Golden comprehensive test - exercises ALL music/SONG keys: format (IT), bpm, speed, channels, restart_position, instruments with ref/wav/synthesis/envelope, patterns with rows/notes, notes with row/note/inst/vol/effect/param/effect_name/effect_xy, arrangement with repeat, automation with volume_fade/tempo_change, it_options with stereo/global_volume/mix_volume",
-  "style_tags": ["golden", "comprehensive", "test", "music", "tracker"],
-  "engine_targets": ["godot", "unity"],
+  "style_tags": [
+    "golden",
+    "comprehensive",
+    "test",
+    "music",
+    "tracker"
+  ],
+  "engine_targets": [
+    "godot",
+    "unity"
+  ],
   "outputs": [
     {
       "kind": "primary",
@@ -15,8 +24,14 @@
     }
   ],
   "variants": [
-    {"variant_id": "slow", "seed_offset": 50},
-    {"variant_id": "fast", "seed_offset": 100}
+    {
+      "variant_id": "slow",
+      "seed_offset": 50
+    },
+    {
+      "variant_id": "fast",
+      "seed_offset": 100
+    }
   ],
   "recipe": {
     "kind": "music.tracker_song_v1",
@@ -44,11 +59,25 @@
                   "type": "multi_oscillator",
                   "frequency": 523.25,
                   "oscillators": [
-                    { "waveform": "sawtooth", "volume": 0.7, "detune": -6.0 },
-                    { "waveform": "square", "volume": 0.3, "detune": 6.0, "duty": 0.5 }
+                    {
+                      "waveform": "sawtooth",
+                      "volume": 0.7,
+                      "detune": -6.0
+                    },
+                    {
+                      "waveform": "square",
+                      "volume": 0.3,
+                      "detune": 6.0,
+                      "duty": 0.5
+                    }
                   ]
                 },
-                "envelope": { "attack": 0.01, "decay": 0.1, "sustain": 0.7, "release": 0.3 },
+                "envelope": {
+                  "attack": 0.01,
+                  "decay": 0.1,
+                  "sustain": 0.7,
+                  "release": 0.3
+                },
                 "volume": 1.0,
                 "pan": 0.0
               }
@@ -122,7 +151,12 @@
           "comment": "Instrument 5: External audio_v1 ref baked into tracker sample (advanced synthesis)",
           "name": "bass_pluck",
           "ref": "../audio/audio_instrument_fm_advanced.spec.json",
-          "envelope": { "attack": 0.001, "decay": 0.2, "sustain": 0.3, "release": 0.4 }
+          "envelope": {
+            "attack": 0.001,
+            "decay": 0.2,
+            "sustain": 0.3,
+            "release": 0.4
+          }
         },
         {
           "comment": "Instrument 6: Kick drum (inline noise synthesis replacing WAV sample)",
@@ -145,14 +179,54 @@
           "rows": 64,
           "notes": {
             "0": [
-              {"row": 0, "note": "C4", "inst": 2, "vol": 48},
-              {"row": 4, "note": "E4", "inst": 2, "vol": 44},
-              {"row": 8, "note": "G4", "inst": 2, "vol": 48},
-              {"row": 12, "note": "E4", "inst": 2, "vol": 44},
-              {"row": 16, "note": "C4", "inst": 2, "vol": 48},
-              {"row": 20, "note": "E4", "inst": 2, "vol": 44},
-              {"row": 24, "note": "G4", "inst": 2, "vol": 48},
-              {"row": 28, "note": "B4", "inst": 2, "vol": 52}
+              {
+                "row": 0,
+                "note": "C4",
+                "inst": 2,
+                "vol": 48
+              },
+              {
+                "row": 4,
+                "note": "E4",
+                "inst": 2,
+                "vol": 44
+              },
+              {
+                "row": 8,
+                "note": "G4",
+                "inst": 2,
+                "vol": 48
+              },
+              {
+                "row": 12,
+                "note": "E4",
+                "inst": 2,
+                "vol": 44
+              },
+              {
+                "row": 16,
+                "note": "C4",
+                "inst": 2,
+                "vol": 48
+              },
+              {
+                "row": 20,
+                "note": "E4",
+                "inst": 2,
+                "vol": 44
+              },
+              {
+                "row": 24,
+                "note": "G4",
+                "inst": 2,
+                "vol": 48
+              },
+              {
+                "row": 28,
+                "note": "B4",
+                "inst": 2,
+                "vol": 52
+              }
             ]
           }
         },
@@ -160,32 +234,129 @@
           "rows": 64,
           "notes": {
             "0": [
-              {"row": 0, "note": "C4", "inst": 0, "vol": 64, "effect": 0, "param": 0},
-              {"row": 16, "note": "D4", "inst": 0, "vol": 64},
-              {"row": 32, "note": "E4", "inst": 0, "vol": 64},
-              {"row": 48, "note": "G4", "inst": 0, "vol": 64}
+              {
+                "row": 0,
+                "note": "C4",
+                "inst": 0,
+                "vol": 64,
+                "effect": 0,
+                "param": 0
+              },
+              {
+                "row": 16,
+                "note": "D4",
+                "inst": 0,
+                "vol": 64
+              },
+              {
+                "row": 32,
+                "note": "E4",
+                "inst": 0,
+                "vol": 64
+              },
+              {
+                "row": 48,
+                "note": "G4",
+                "inst": 0,
+                "vol": 64
+              }
             ],
             "1": [
-              {"row": 0, "note": "C2", "inst": 1, "vol": 56},
-              {"row": 16, "note": "D2", "inst": 1, "vol": 56},
-              {"row": 32, "note": "E2", "inst": 1, "vol": 56},
-              {"row": 48, "note": "G2", "inst": 1, "vol": 56}
+              {
+                "row": 0,
+                "note": "C2",
+                "inst": 1,
+                "vol": 56
+              },
+              {
+                "row": 16,
+                "note": "D2",
+                "inst": 1,
+                "vol": 56
+              },
+              {
+                "row": 32,
+                "note": "E2",
+                "inst": 1,
+                "vol": 56
+              },
+              {
+                "row": 48,
+                "note": "G2",
+                "inst": 1,
+                "vol": 56
+              }
             ],
             "2": [
-              {"row": 0, "note": "C4", "inst": 2, "vol": 40, "effect_name": "arpeggio", "effect_xy": [3, 7]},
-              {"row": 4, "note": "E4", "inst": 2, "vol": 36},
-              {"row": 8, "note": "G4", "inst": 2, "vol": 40},
-              {"row": 12, "note": "E4", "inst": 2, "vol": 36}
+              {
+                "row": 0,
+                "note": "C4",
+                "inst": 2,
+                "vol": 40,
+                "effect_name": "arpeggio",
+                "effect_xy": [
+                  3,
+                  7
+                ]
+              },
+              {
+                "row": 4,
+                "note": "E4",
+                "inst": 2,
+                "vol": 36
+              },
+              {
+                "row": 8,
+                "note": "G4",
+                "inst": 2,
+                "vol": 40
+              },
+              {
+                "row": 12,
+                "note": "E4",
+                "inst": 2,
+                "vol": 36
+              }
             ],
             "3": [
-              {"row": 0, "note": "E3", "inst": 3, "vol": 48},
-              {"row": 32, "note": "G3", "inst": 3, "vol": 48}
+              {
+                "row": 0,
+                "note": "E3",
+                "inst": 3,
+                "vol": 48
+              },
+              {
+                "row": 32,
+                "note": "G3",
+                "inst": 3,
+                "vol": 48
+              }
             ],
             "4": [
-              {"row": 0, "note": "C5", "inst": 4, "vol": 32},
-              {"row": 8, "note": "C5", "inst": 4, "vol": 28},
-              {"row": 16, "note": "C5", "inst": 4, "vol": 32},
-              {"row": 24, "note": "C5", "inst": 4, "vol": 28}
+              {
+                "row": 0,
+                "note": "C5",
+                "inst": 4,
+                "vol": 32
+              },
+              {
+                "row": 8,
+                "note": "C5",
+                "inst": 4,
+                "vol": 28
+              },
+              {
+                "row": 16,
+                "note": "C5",
+                "inst": 4,
+                "vol": 32
+              },
+              {
+                "row": 24,
+                "note": "C5",
+                "inst": 4,
+                "vol": 28
+              }
             ]
           }
         },
@@ -193,26 +364,116 @@
           "rows": 64,
           "notes": {
             "0": [
-              {"row": 0, "note": "G4", "inst": 0, "vol": 64, "effect_name": "vibrato", "effect_xy": [4, 8]},
-              {"row": 8, "note": "A4", "inst": 0, "vol": 64},
-              {"row": 16, "note": "B4", "inst": 0, "vol": 64},
-              {"row": 24, "note": "C5", "inst": 0, "vol": 64},
-              {"row": 32, "note": "D5", "inst": 0, "vol": 64},
-              {"row": 40, "note": "C5", "inst": 0, "vol": 60},
-              {"row": 48, "note": "B4", "inst": 0, "vol": 56},
-              {"row": 56, "note": "A4", "inst": 0, "vol": 52}
+              {
+                "row": 0,
+                "note": "G4",
+                "inst": 0,
+                "vol": 64,
+                "effect_name": "vibrato",
+                "effect_xy": [
+                  4,
+                  8
+                ]
+              },
+              {
+                "row": 8,
+                "note": "A4",
+                "inst": 0,
+                "vol": 64
+              },
+              {
+                "row": 16,
+                "note": "B4",
+                "inst": 0,
+                "vol": 64
+              },
+              {
+                "row": 24,
+                "note": "C5",
+                "inst": 0,
+                "vol": 64
+              },
+              {
+                "row": 32,
+                "note": "D5",
+                "inst": 0,
+                "vol": 64
+              },
+              {
+                "row": 40,
+                "note": "C5",
+                "inst": 0,
+                "vol": 60
+              },
+              {
+                "row": 48,
+                "note": "B4",
+                "inst": 0,
+                "vol": 56
+              },
+              {
+                "row": 56,
+                "note": "A4",
+                "inst": 0,
+                "vol": 52
+              }
             ],
             "1": [
-              {"row": 0, "note": "G2", "inst": 1, "vol": 64},
-              {"row": 16, "note": "A2", "inst": 1, "vol": 64},
-              {"row": 32, "note": "B2", "inst": 1, "vol": 64},
-              {"row": 48, "note": "C3", "inst": 1, "vol": 64}
+              {
+                "row": 0,
+                "note": "G2",
+                "inst": 1,
+                "vol": 64
+              },
+              {
+                "row": 16,
+                "note": "A2",
+                "inst": 1,
+                "vol": 64
+              },
+              {
+                "row": 32,
+                "note": "B2",
+                "inst": 1,
+                "vol": 64
+              },
+              {
+                "row": 48,
+                "note": "C3",
+                "inst": 1,
+                "vol": 64
+              }
             ],
             "2": [
-              {"row": 0, "note": "G4", "inst": 2, "vol": 44, "effect_name": "porta_down", "effect_xy": [0, 2]},
-              {"row": 4, "note": "B4", "inst": 2, "vol": 40},
-              {"row": 8, "note": "D5", "inst": 2, "vol": 44},
-              {"row": 12, "note": "B4", "inst": 2, "vol": 40}
+              {
+                "row": 0,
+                "note": "G4",
+                "inst": 2,
+                "vol": 44,
+                "effect_name": "porta_down",
+                "effect_xy": [
+                  0,
+                  2
+                ]
+              },
+              {
+                "row": 4,
+                "note": "B4",
+                "inst": 2,
+                "vol": 40
+              },
+              {
+                "row": 8,
+                "note": "D5",
+                "inst": 2,
+                "vol": 44
+              },
+              {
+                "row": 12,
+                "note": "B4",
+                "inst": 2,
+                "vol": 40
+              }
             ]
           }
         },
@@ -220,14 +481,44 @@
           "rows": 32,
           "notes": {
             "0": [
-              {"row": 0, "note": "F4", "inst": 0, "vol": 56},
-              {"row": 8, "note": "E4", "inst": 0, "vol": 56},
-              {"row": 16, "note": "D4", "inst": 0, "vol": 56},
-              {"row": 24, "note": "C4", "inst": 0, "vol": 56}
+              {
+                "row": 0,
+                "note": "F4",
+                "inst": 0,
+                "vol": 56
+              },
+              {
+                "row": 8,
+                "note": "E4",
+                "inst": 0,
+                "vol": 56
+              },
+              {
+                "row": 16,
+                "note": "D4",
+                "inst": 0,
+                "vol": 56
+              },
+              {
+                "row": 24,
+                "note": "C4",
+                "inst": 0,
+                "vol": 56
+              }
             ],
             "3": [
-              {"row": 0, "note": "F3", "inst": 3, "vol": 52},
-              {"row": 16, "note": "C3", "inst": 3, "vol": 52}
+              {
+                "row": 0,
+                "note": "F3",
+                "inst": 3,
+                "vol": 52
+              },
+              {
+                "row": 16,
+                "note": "C3",
+                "inst": 3,
+                "vol": 52
+              }
             ]
           }
         },
@@ -235,24 +526,67 @@
           "rows": 64,
           "notes": {
             "0": [
-              {"row": 0, "note": "C4", "inst": 0, "vol": 64},
-              {"row": 32, "note": "OFF", "inst": 0, "vol": 0}
+              {
+                "row": 0,
+                "note": "C4",
+                "inst": 0,
+                "vol": 64
+              },
+              {
+                "row": 32,
+                "note": "OFF",
+                "inst": 0,
+                "vol": 0
+              }
             ],
             "3": [
-              {"row": 0, "note": "C3", "inst": 3, "vol": 48, "effect": 12, "param": 64},
-              {"row": 32, "note": 97, "inst": 3, "vol": 0}
+              {
+                "row": 0,
+                "note": "C3",
+                "inst": 3,
+                "vol": 48,
+                "effect": 12,
+                "param": 64
+              },
+              {
+                "row": 32,
+                "note": 97,
+                "inst": 3,
+                "vol": 0
+              }
             ]
           }
         }
       },
       "arrangement": [
-        {"pattern": "intro", "repeat": 1},
-        {"pattern": "verse", "repeat": 2},
-        {"pattern": "chorus", "repeat": 2},
-        {"pattern": "bridge", "repeat": 1},
-        {"pattern": "verse", "repeat": 1},
-        {"pattern": "chorus", "repeat": 2},
-        {"pattern": "outro", "repeat": 1}
+        {
+          "pattern": "intro",
+          "repeat": 1
+        },
+        {
+          "pattern": "verse",
+          "repeat": 2
+        },
+        {
+          "pattern": "chorus",
+          "repeat": 2
+        },
+        {
+          "pattern": "bridge",
+          "repeat": 1
+        },
+        {
+          "pattern": "verse",
+          "repeat": 1
+        },
+        {
+          "pattern": "chorus",
+          "repeat": 2
+        },
+        {
+          "pattern": "outro",
+          "repeat": 1
+        }
       ],
       "automation": [
         {

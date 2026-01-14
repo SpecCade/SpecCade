@@ -5,11 +5,13 @@
   "license": "CC0-1.0",
   "seed": 20001,
   "description": "TR-808 style sub bass with long decay, classic boomy character",
-  "outputs": [{
-    "kind": "primary",
-    "format": "wav",
-    "path": "test-outputs/preset_library_v1/audio/bass/bass_808.wav"
-  }],
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/bass/bass_808.wav"
+    }
+  ],
   "recipe": {
     "kind": "audio_v1",
     "params": {

@@ -8,8 +8,14 @@
     "name": "DnB / Breakbeat",
     "genre": "cinematic",
     "subgenre": "action",
-    "bpm_range": [160, 180],
-    "time_signature": [4, 4],
+    "bpm_range": [
+      160,
+      180
+    ],
+    "time_signature": [
+      4,
+      4
+    ],
     "instruments": {
       "kick": "drums/kicks/kick",
       "snare": "drums/snares/snare_tight",
@@ -21,6 +27,11 @@
       "lead": "leads/synth/lead_2",
       "pad": "pads/pad_warm"
     },
-    "tags": ["dnb", "drum_and_bass", "breakbeat", "jungle"]
+    "tags": [
+      "dnb",
+      "drum_and_bass",
+      "breakbeat",
+      "jungle"
+    ]
   }
 }

@@ -8,8 +8,14 @@
     "name": "Caribbean / Reggae / Dub",
     "genre": "world",
     "subgenre": "caribbean",
-    "bpm_range": [60, 90],
-    "time_signature": [4, 4],
+    "bpm_range": [
+      60,
+      90
+    ],
+    "time_signature": [
+      4,
+      4
+    ],
     "instruments": {
       "kick": {
         "preset": "drums/kicks/kick_soft",

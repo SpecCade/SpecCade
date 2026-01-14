@@ -8,8 +8,14 @@
     "name": "Middle Eastern",
     "genre": "world",
     "subgenre": "middle_eastern",
-    "bpm_range": [80, 130],
-    "time_signature": [4, 4],
+    "bpm_range": [
+      80,
+      130
+    ],
+    "time_signature": [
+      4,
+      4
+    ],
     "instruments": {
       "ney": {
         "preset": "leads/acoustic/flute",

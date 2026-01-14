@@ -8,8 +8,14 @@
     "name": "Afrobeat",
     "genre": "world",
     "subgenre": "afrobeat",
-    "bpm_range": [100, 130],
-    "time_signature": [4, 4],
+    "bpm_range": [
+      100,
+      130
+    ],
+    "time_signature": [
+      4,
+      4
+    ],
     "instruments": {
       "djembe": {
         "preset": "drums/percussion/djembe",

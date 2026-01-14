@@ -6,7 +6,11 @@
   "seed": 1,
   "description": "Draft compose-v1 example: 16-row beat (expected expansion snapshot lives next to this file)",
   "outputs": [
-    { "kind": "primary", "format": "xm", "path": "compose_minimal_16rows.xm" }
+    {
+      "kind": "primary",
+      "format": "xm",
+      "path": "compose_minimal_16rows.xm"
+    }
   ],
   "recipe": {
     "kind": "music.tracker_song_compose_v1",
@@ -21,13 +25,18 @@
           "name": "kick",
           "base_note": "C4",
           "default_volume": 64,
-          "synthesis": { "type": "sine" }
+          "synthesis": {
+            "type": "sine"
+          }
         },
         {
           "name": "hat",
           "base_note": "C1",
           "default_volume": 32,
-          "synthesis": { "type": "noise", "periodic": false }
+          "synthesis": {
+            "type": "noise",
+            "periodic": false
+          }
         }
       ],
       "patterns": {
@@ -39,19 +48,44 @@
             "parts": [
               {
                 "op": "emit",
-                "at": { "op": "range", "start": 0, "step": 4, "count": 4 },
-                "cell": { "channel": 0, "note": "C4", "inst": 0, "vol": 64 }
+                "at": {
+                  "op": "range",
+                  "start": 0,
+                  "step": 4,
+                  "count": 4
+                },
+                "cell": {
+                  "channel": 0,
+                  "note": "C4",
+                  "inst": 0,
+                  "vol": 64
+                }
               },
               {
                 "op": "emit",
-                "at": { "op": "range", "start": 0, "step": 1, "count": 16 },
-                "cell": { "channel": 1, "note": "C1", "inst": 1, "vol": 32 }
+                "at": {
+                  "op": "range",
+                  "start": 0,
+                  "step": 1,
+                  "count": 16
+                },
+                "cell": {
+                  "channel": 1,
+                  "note": "C1",
+                  "inst": 1,
+                  "vol": 32
+                }
               }
             ]
           }
         }
       },
-      "arrangement": [{ "pattern": "p0", "repeat": 1 }]
+      "arrangement": [
+        {
+          "pattern": "p0",
+          "repeat": 1
+        }
+      ]
     }
   }
 }

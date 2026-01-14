@@ -8,8 +8,14 @@
     "name": "Dark Ambient",
     "genre": "ambient",
     "subgenre": "dark",
-    "bpm_range": [50, 90],
-    "time_signature": [4, 4],
+    "bpm_range": [
+      50,
+      90
+    ],
+    "time_signature": [
+      4,
+      4
+    ],
     "instruments": {
       "drone": {
         "preset": "textures/drone_dark",

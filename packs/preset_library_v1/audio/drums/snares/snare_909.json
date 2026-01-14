@@ -1,62 +1,62 @@
 {
-    "spec_version":  1,
-    "asset_id":  "preset_snare_909",
-    "asset_type":  "audio",
-    "license":  "CC0-1.0",
-    "seed":  10021,
-    "description":  "Classic 909 snare - noise burst + resonant body at 180Hz",
-    "outputs":  [
-                    {
-                        "kind":  "primary",
-                        "format":  "wav",
-                        "path":  "test-outputs/preset_library_v1/audio/drums/snares/snare_909.wav"
-                    }
-                ],
-    "recipe":  {
-                   "kind":  "audio_v1",
-                   "params":  {
-                                  "duration_seconds":  0.25,
-                                  "sample_rate":  44100,
-                                  "layers":  [
-                                                 {
-                                                     "synthesis":  {
-                                                                       "type":  "noise_burst",
-                                                                       "noise_type":  "white",
-                                                                       "filter":  {
-                                                                                      "type":  "highpass",
-                                                                                      "cutoff":  2000,
-                                                                                      "resonance":  0.5
-                                                                                  }
-                                                                   },
-                                                     "envelope":  {
-                                                                      "attack":  0.001,
-                                                                      "decay":  0.1,
-                                                                      "sustain":  0,
-                                                                      "release":  0.05
-                                                                  },
-                                                     "volume":  0.6,
-                                                     "pan":  0
-                                                 },
-                                                 {
-                                                     "synthesis":  {
-                                                                       "type":  "oscillator",
-                                                                       "waveform":  "sine",
-                                                                       "frequency":  180,
-                                                                       "freq_sweep":  {
-                                                                                          "end_freq":  100,
-                                                                                          "curve":  "exponential"
-                                                                                      }
-                                                                   },
-                                                     "envelope":  {
-                                                                      "attack":  0.001,
-                                                                      "decay":  0.08,
-                                                                      "sustain":  0,
-                                                                      "release":  0.04
-                                                                  },
-                                                     "volume":  0.5,
-                                                     "pan":  0
-                                                 }
-                                             ]
-                              }
-               }
+  "spec_version": 1,
+  "asset_id": "preset_snare_909",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 10021,
+  "description": "Classic 909 snare - noise burst + resonant body at 180Hz",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/drums/snares/snare_909.wav"
+    }
+  ],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "duration_seconds": 0.25,
+      "sample_rate": 44100,
+      "layers": [
+        {
+          "synthesis": {
+            "type": "noise_burst",
+            "noise_type": "white",
+            "filter": {
+              "type": "highpass",
+              "cutoff": 2000,
+              "resonance": 0.5
+            }
+          },
+          "envelope": {
+            "attack": 0.001,
+            "decay": 0.1,
+            "sustain": 0,
+            "release": 0.05
+          },
+          "volume": 0.6,
+          "pan": 0
+        },
+        {
+          "synthesis": {
+            "type": "oscillator",
+            "waveform": "sine",
+            "frequency": 180,
+            "freq_sweep": {
+              "end_freq": 100,
+              "curve": "exponential"
+            }
+          },
+          "envelope": {
+            "attack": 0.001,
+            "decay": 0.08,
+            "sustain": 0,
+            "release": 0.04
+          },
+          "volume": 0.5,
+          "pan": 0
+        }
+      ]
+    }
+  }
 }

@@ -1,62 +1,62 @@
 {
-    "spec_version":  1,
-    "asset_id":  "preset_snare_tight",
-    "asset_type":  "audio",
-    "license":  "CC0-1.0",
-    "seed":  10030,
-    "description":  "Tight snare - very short, punchy with fast decay",
-    "outputs":  [
-                    {
-                        "kind":  "primary",
-                        "format":  "wav",
-                        "path":  "test-outputs/preset_library_v1/audio/drums/snares/snare_tight.wav"
-                    }
-                ],
-    "recipe":  {
-                   "kind":  "audio_v1",
-                   "params":  {
-                                  "duration_seconds":  0.15,
-                                  "sample_rate":  44100,
-                                  "layers":  [
-                                                 {
-                                                     "synthesis":  {
-                                                                       "type":  "oscillator",
-                                                                       "waveform":  "sine",
-                                                                       "frequency":  240,
-                                                                       "freq_sweep":  {
-                                                                                          "end_freq":  150,
-                                                                                          "curve":  "exponential"
-                                                                                      }
-                                                                   },
-                                                     "envelope":  {
-                                                                      "attack":  0.001,
-                                                                      "decay":  0.03,
-                                                                      "sustain":  0,
-                                                                      "release":  0.02
-                                                                  },
-                                                     "volume":  0.7,
-                                                     "pan":  0
-                                                 },
-                                                 {
-                                                     "synthesis":  {
-                                                                       "type":  "noise_burst",
-                                                                       "noise_type":  "white",
-                                                                       "filter":  {
-                                                                                      "type":  "bandpass",
-                                                                                      "center":  4500,
-                                                                                      "resonance":  1
-                                                                                  }
-                                                                   },
-                                                     "envelope":  {
-                                                                      "attack":  0.0005,
-                                                                      "decay":  0.04,
-                                                                      "sustain":  0,
-                                                                      "release":  0.02
-                                                                  },
-                                                     "volume":  0.85,
-                                                     "pan":  0
-                                                 }
-                                             ]
-                              }
-               }
+  "spec_version": 1,
+  "asset_id": "preset_snare_tight",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 10030,
+  "description": "Tight snare - very short, punchy with fast decay",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/drums/snares/snare_tight.wav"
+    }
+  ],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "duration_seconds": 0.15,
+      "sample_rate": 44100,
+      "layers": [
+        {
+          "synthesis": {
+            "type": "oscillator",
+            "waveform": "sine",
+            "frequency": 240,
+            "freq_sweep": {
+              "end_freq": 150,
+              "curve": "exponential"
+            }
+          },
+          "envelope": {
+            "attack": 0.001,
+            "decay": 0.03,
+            "sustain": 0,
+            "release": 0.02
+          },
+          "volume": 0.7,
+          "pan": 0
+        },
+        {
+          "synthesis": {
+            "type": "noise_burst",
+            "noise_type": "white",
+            "filter": {
+              "type": "bandpass",
+              "center": 4500,
+              "resonance": 1
+            }
+          },
+          "envelope": {
+            "attack": 0.0005,
+            "decay": 0.04,
+            "sustain": 0,
+            "release": 0.02
+          },
+          "volume": 0.85,
+          "pan": 0
+        }
+      ]
+    }
+  }
 }

@@ -5,11 +5,13 @@
   "license": "CC0-1.0",
   "seed": 20013,
   "description": "Percussion shaker variant - alternative shaker texture with different character",
-  "outputs": [{
-    "kind": "primary",
-    "format": "wav",
-    "path": "test-outputs/preset_library_v1/audio/drums/percussion/perc_shaker.wav"
-  }],
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/drums/percussion/perc_shaker.wav"
+    }
+  ],
   "recipe": {
     "kind": "audio_v1",
     "params": {

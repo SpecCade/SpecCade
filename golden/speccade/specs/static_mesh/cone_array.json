@@ -16,7 +16,11 @@
     "kind": "static_mesh.blender_primitives_v1",
     "params": {
       "base_primitive": "cone",
-      "dimensions": [0.5, 0.5, 1.0],
+      "dimensions": [
+        0.5,
+        0.5,
+        1.0
+      ],
       "modifiers": [
         {
           "type": "solidify",
@@ -26,7 +30,11 @@
         {
           "type": "array",
           "count": 3,
-          "offset": [0.0, 0.0, 1.2]
+          "offset": [
+            0.0,
+            0.0,
+            1.2
+          ]
         }
       ],
       "uv_projection": {
@@ -35,10 +43,19 @@
       "material_slots": [
         {
           "name": "EmissiveMaterial",
-          "base_color": [0.2, 0.2, 0.2, 1.0],
+          "base_color": [
+            0.2,
+            0.2,
+            0.2,
+            1.0
+          ],
           "metallic": 0.0,
           "roughness": 0.8,
-          "emissive": [1.0, 0.3, 0.0],
+          "emissive": [
+            1.0,
+            0.3,
+            0.0
+          ],
           "emissive_strength": 2.5
         }
       ],

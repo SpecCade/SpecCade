@@ -8,8 +8,14 @@
     "name": "Synthwave",
     "genre": "electronic",
     "subgenre": "synthwave",
-    "bpm_range": [100, 120],
-    "time_signature": [4, 4],
+    "bpm_range": [
+      100,
+      120
+    ],
+    "time_signature": [
+      4,
+      4
+    ],
     "instruments": {
       "kick": "drums/kicks/kick",
       "snare": "drums/snares/gated_snare",
@@ -24,6 +30,14 @@
       "lead": "leads/synth/lead_bright",
       "arp": "plucks/arp_bright"
     },
-    "tags": ["edm", "synthwave", "retrowave", "80s", "retro", "neon", "outrun"]
+    "tags": [
+      "edm",
+      "synthwave",
+      "retrowave",
+      "80s",
+      "retro",
+      "neon",
+      "outrun"
+    ]
   }
 }

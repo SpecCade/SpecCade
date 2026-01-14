@@ -5,8 +5,18 @@
   "license": "CC0-1.0",
   "seed": 999006,
   "description": "Golden comprehensive test - exercises ALL static_mesh/MESH keys: all primitives (cube, cylinder, sphere, icosphere, cone, torus), all primitive params, location/rotation/scale, shade modes, all modifiers (bevel, decimate, triangulate) with angle_limit, UV projection with all modes and params (angle_limit, cube_size), export with tangents, constraints",
-  "style_tags": ["golden", "comprehensive", "test", "mesh", "3d"],
-  "engine_targets": ["godot", "unity", "unreal"],
+  "style_tags": [
+    "golden",
+    "comprehensive",
+    "test",
+    "mesh",
+    "3d"
+  ],
+  "engine_targets": [
+    "godot",
+    "unity",
+    "unreal"
+  ],
   "outputs": [
     {
       "kind": "primary",
@@ -15,15 +25,25 @@
     }
   ],
   "variants": [
-    {"variant_id": "lowpoly", "seed_offset": 1},
-    {"variant_id": "highpoly", "seed_offset": 2}
+    {
+      "variant_id": "lowpoly",
+      "seed_offset": 1
+    },
+    {
+      "variant_id": "highpoly",
+      "seed_offset": 2
+    }
   ],
   "recipe": {
     "kind": "static_mesh.blender_primitives_v1",
     "params": {
       "name": "comprehensive_mesh",
       "base_primitive": "cube",
-      "dimensions": [1.0, 1.0, 1.0],
+      "dimensions": [
+        1.0,
+        1.0,
+        1.0
+      ],
       "primitives": [
         {
           "comment": "Primitive 1: Cube with all params",
@@ -31,9 +51,21 @@
           "params": {
             "size": 1.0
           },
-          "location": [0.0, 0.0, 0.0],
-          "rotation": [0.0, 0.0, 0.0],
-          "scale": [1.0, 1.0, 1.0],
+          "location": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
           "shade": "smooth"
         },
         {
@@ -44,9 +76,21 @@
             "depth": 2.0,
             "vertices": 32
           },
-          "location": [3.0, 0.0, 0.0],
-          "rotation": [0.0, 0.0, 0.0],
-          "scale": [1.0, 1.0, 1.0],
+          "location": [
+            3.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
           "shade": "smooth"
         },
         {
@@ -57,9 +101,21 @@
             "segments": 32,
             "rings": 16
           },
-          "location": [6.0, 0.0, 0.0],
-          "rotation": [0.0, 0.0, 0.0],
-          "scale": [1.0, 1.0, 1.0],
+          "location": [
+            6.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
           "shade": "smooth"
         },
         {
@@ -69,9 +125,21 @@
             "radius": 0.55,
             "subdivisions": 3
           },
-          "location": [9.0, 0.0, 0.0],
-          "rotation": [0.0, 0.0, 0.0],
-          "scale": [1.0, 1.0, 1.0],
+          "location": [
+            9.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
           "shade": "flat"
         },
         {
@@ -83,9 +151,21 @@
             "depth": 1.5,
             "vertices": 24
           },
-          "location": [12.0, 0.0, 0.0],
-          "rotation": [0.0, 0.0, 0.0],
-          "scale": [1.0, 1.0, 1.0],
+          "location": [
+            12.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
           "shade": "smooth"
         },
         {
@@ -97,9 +177,21 @@
             "depth": 1.2,
             "vertices": 20
           },
-          "location": [15.0, 0.0, 0.0],
-          "rotation": [0.7854, 0.0, 0.0],
-          "scale": [1.0, 1.2, 1.0],
+          "location": [
+            15.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.7854,
+            0.0,
+            0.0
+          ],
+          "scale": [
+            1.0,
+            1.2,
+            1.0
+          ],
           "shade": "smooth"
         },
         {
@@ -111,9 +203,21 @@
             "major_segments": 48,
             "minor_segments": 16
           },
-          "location": [18.0, 0.0, 0.0],
-          "rotation": [1.5708, 0.0, 0.0],
-          "scale": [1.0, 1.0, 1.0],
+          "location": [
+            18.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            1.5708,
+            0.0,
+            0.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
           "shade": "smooth"
         }
       ],
@@ -121,9 +225,21 @@
       "primitive_params": {
         "size": 1.0
       },
-      "location": [0.0, 0.0, 0.0],
-      "rotation": [0.0, 0.0, 0.0],
-      "scale": [1.0, 1.0, 1.0],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
       "shade": "smooth",
       "modifiers": [
         {
@@ -160,11 +276,21 @@
       "material_slots": [
         {
           "name": "main_material",
-          "color": [0.8, 0.8, 0.8, 1.0]
+          "color": [
+            0.8,
+            0.8,
+            0.8,
+            1.0
+          ]
         },
         {
           "name": "accent_material",
-          "color": [0.2, 0.4, 0.8, 1.0]
+          "color": [
+            0.2,
+            0.4,
+            0.8,
+            1.0
+          ]
         }
       ],
       "export": {

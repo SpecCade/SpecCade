@@ -5,11 +5,13 @@
   "license": "CC0-1.0",
   "seed": 20007,
   "description": "Big orchestral bass drum - massive low-end impact with cinematic character",
-  "outputs": [{
-    "kind": "primary",
-    "format": "wav",
-    "path": "test-outputs/preset_library_v1/audio/drums/percussion/big_drum.wav"
-  }],
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/drums/percussion/big_drum.wav"
+    }
+  ],
   "recipe": {
     "kind": "audio_v1",
     "params": {

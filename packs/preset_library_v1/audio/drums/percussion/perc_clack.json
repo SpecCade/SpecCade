@@ -5,11 +5,13 @@
   "license": "CC0-1.0",
   "seed": 20012,
   "description": "Percussion clack - woody mid-frequency clacking sound like sticks hitting",
-  "outputs": [{
-    "kind": "primary",
-    "format": "wav",
-    "path": "test-outputs/preset_library_v1/audio/drums/percussion/perc_clack.wav"
-  }],
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/drums/percussion/perc_clack.wav"
+    }
+  ],
   "recipe": {
     "kind": "audio_v1",
     "params": {

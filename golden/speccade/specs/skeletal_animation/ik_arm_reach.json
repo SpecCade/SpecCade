@@ -24,61 +24,150 @@
       "save_blend": true,
       "poses": {
         "rest": {
-          "arm_upper_R": {"pitch": 0, "yaw": 0, "roll": 0},
-          "arm_lower_R": {"pitch": 0},
-          "spine": {"pitch": 0},
-          "head": {"pitch": 0, "yaw": 0}
+          "arm_upper_R": {
+            "pitch": 0,
+            "yaw": 0,
+            "roll": 0
+          },
+          "arm_lower_R": {
+            "pitch": 0
+          },
+          "spine": {
+            "pitch": 0
+          },
+          "head": {
+            "pitch": 0,
+            "yaw": 0
+          }
         },
         "reach_up": {
-          "arm_upper_R": {"pitch": -90, "yaw": 20},
-          "arm_lower_R": {"pitch": -15},
-          "spine": {"pitch": -10},
-          "head": {"pitch": -20, "yaw": 15}
+          "arm_upper_R": {
+            "pitch": -90,
+            "yaw": 20
+          },
+          "arm_lower_R": {
+            "pitch": -15
+          },
+          "spine": {
+            "pitch": -10
+          },
+          "head": {
+            "pitch": -20,
+            "yaw": 15
+          }
         },
         "reach_extended": {
-          "arm_upper_R": {"pitch": -120, "yaw": 30},
-          "arm_lower_R": {"pitch": 0, "location": [0.0, 0.05, 0.0]},
-          "spine": {"pitch": -15, "roll": 5},
-          "head": {"pitch": -30, "yaw": 20}
+          "arm_upper_R": {
+            "pitch": -120,
+            "yaw": 30
+          },
+          "arm_lower_R": {
+            "pitch": 0,
+            "location": [
+              0.0,
+              0.05,
+              0.0
+            ]
+          },
+          "spine": {
+            "pitch": -15,
+            "roll": 5
+          },
+          "head": {
+            "pitch": -30,
+            "yaw": 20
+          }
         }
       },
       "phases": [
         {
           "name": "anticipation",
-          "frames": [0, 10],
+          "frames": [
+            0,
+            10
+          ],
           "pose": "rest",
           "timing_curve": "linear"
         },
         {
           "name": "reach_up",
-          "frames": [10, 30],
+          "frames": [
+            10,
+            30
+          ],
           "pose": "reach_up",
           "timing_curve": "ease_out",
           "ik_targets": {
             "ik_hand_R": [
-              {"frame": 10, "location": [0.3, 0.0, 1.2]},
-              {"frame": 30, "location": [0.4, 0.2, 1.8], "ikfk": 1.0}
+              {
+                "frame": 10,
+                "location": [
+                  0.3,
+                  0.0,
+                  1.2
+                ]
+              },
+              {
+                "frame": 30,
+                "location": [
+                  0.4,
+                  0.2,
+                  1.8
+                ],
+                "ikfk": 1.0
+              }
             ]
           }
         },
         {
           "name": "extend",
-          "frames": [30, 45],
+          "frames": [
+            30,
+            45
+          ],
           "pose": "reach_extended",
           "timing_curve": "ease_in_out",
           "ik_targets": {
             "ik_hand_R": [
-              {"frame": 30, "location": [0.4, 0.2, 1.8], "ikfk": 1.0},
-              {"frame": 45, "location": [0.5, 0.3, 2.0], "ikfk": 1.0}
+              {
+                "frame": 30,
+                "location": [
+                  0.4,
+                  0.2,
+                  1.8
+                ],
+                "ikfk": 1.0
+              },
+              {
+                "frame": 45,
+                "location": [
+                  0.5,
+                  0.3,
+                  2.0
+                ],
+                "ikfk": 1.0
+              }
             ]
           },
           "ikfk_blend": {
-            "ik_arm_R": [[30, 1.0], [45, 1.0]]
+            "ik_arm_R": [
+              [
+                30,
+                1.0
+              ],
+              [
+                45,
+                1.0
+              ]
+            ]
           }
         },
         {
           "name": "return",
-          "frames": [45, 60],
+          "frames": [
+            45,
+            60
+          ],
           "pose": "rest",
           "timing_curve": "ease_in"
         }
@@ -90,7 +179,10 @@
         "ik_chains": [
           {
             "name": "ik_spine_tip",
-            "bones": ["spine", "chest"],
+            "bones": [
+              "spine",
+              "chest"
+            ],
             "target": {
               "name": "ik_spine_target",
               "at": "tip"
@@ -112,7 +204,10 @@
             "bone": "arm_lower_R",
             "type": "hinge",
             "axis": "X",
-            "limits": [0, 145]
+            "limits": [
+              0,
+              145
+            ]
           },
           {
             "bone": "arm_upper_R",

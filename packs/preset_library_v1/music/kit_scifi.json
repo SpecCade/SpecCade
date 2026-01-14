@@ -8,8 +8,14 @@
     "name": "Sci-Fi Electronic",
     "genre": "cinematic",
     "subgenre": "action",
-    "bpm_range": [80, 140],
-    "time_signature": [4, 4],
+    "bpm_range": [
+      80,
+      140
+    ],
+    "time_signature": [
+      4,
+      4
+    ],
     "instruments": {
       "kick": "drums/kicks/kick_909",
       "snare": "drums/snares/snare_909",
@@ -27,6 +33,13 @@
       "riser": "fx/riser",
       "whoosh": "fx/whoosh"
     },
-    "tags": ["scifi", "electronic", "futuristic", "digital", "action", "cinematic"]
+    "tags": [
+      "scifi",
+      "electronic",
+      "futuristic",
+      "digital",
+      "action",
+      "cinematic"
+    ]
   }
 }

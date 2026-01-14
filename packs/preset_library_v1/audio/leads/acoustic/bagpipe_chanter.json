@@ -1,66 +1,66 @@
 {
-    "spec_version":  1,
-    "asset_id":  "preset_bagpipe_chanter",
-    "asset_type":  "audio",
-    "license":  "CC0-1.0",
-    "seed":  10356,
-    "description":  "Bagpipe chanter - nasal, buzzy with strong odd harmonics and drone-like sustain",
-    "outputs":  [
-                    {
-                        "kind":  "primary",
-                        "format":  "wav",
-                        "path":  "test-outputs/preset_library_v1/audio/leads/acoustic/bagpipe_chanter.wav"
-                    }
-                ],
-    "recipe":  {
-                   "kind":  "audio_v1",
-                   "params":  {
-                                  "base_note":  "A4",
-                                  "duration_seconds":  2.5,
-                                  "sample_rate":  44100,
-                                  "layers":  [
-                                                 {
-                                                     "synthesis":  {
-                                                                       "type":  "additive",
-                                                                       "base_freq":  440.0,
-                                                                       "harmonics":  [
-                                                                                         0.8,
-                                                                                         0.0,
-                                                                                         0.9,
-                                                                                         0.0,
-                                                                                         0.7,
-                                                                                         0.0,
-                                                                                         0.5,
-                                                                                         0.0,
-                                                                                         0.3
-                                                                                     ]
-                                                                   },
-                                                     "envelope":  {
-                                                                      "attack":  0.1,
-                                                                      "decay":  0.05,
-                                                                      "sustain":  1.0,
-                                                                      "release":  0.08
-                                                                  },
-                                                     "volume":  0.85,
-                                                     "pan":  0
-                                                 },
-                                                 {
-                                                     "synthesis":  {
-                                                                       "type":  "fm_synth",
-                                                                       "carrier_freq":  440.0,
-                                                                       "modulator_freq":  880.0,
-                                                                       "modulation_index":  2.5
-                                                                   },
-                                                     "envelope":  {
-                                                                      "attack":  0.1,
-                                                                      "decay":  0.05,
-                                                                      "sustain":  0.95,
-                                                                      "release":  0.08
-                                                                  },
-                                                     "volume":  0.35,
-                                                     "pan":  0
-                                                 }
-                                             ]
-                              }
-               }
+  "spec_version": 1,
+  "asset_id": "preset_bagpipe_chanter",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 10356,
+  "description": "Bagpipe chanter - nasal, buzzy with strong odd harmonics and drone-like sustain",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/leads/acoustic/bagpipe_chanter.wav"
+    }
+  ],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "base_note": "A4",
+      "duration_seconds": 2.5,
+      "sample_rate": 44100,
+      "layers": [
+        {
+          "synthesis": {
+            "type": "additive",
+            "base_freq": 440.0,
+            "harmonics": [
+              0.8,
+              0.0,
+              0.9,
+              0.0,
+              0.7,
+              0.0,
+              0.5,
+              0.0,
+              0.3
+            ]
+          },
+          "envelope": {
+            "attack": 0.1,
+            "decay": 0.05,
+            "sustain": 1.0,
+            "release": 0.08
+          },
+          "volume": 0.85,
+          "pan": 0
+        },
+        {
+          "synthesis": {
+            "type": "fm_synth",
+            "carrier_freq": 440.0,
+            "modulator_freq": 880.0,
+            "modulation_index": 2.5
+          },
+          "envelope": {
+            "attack": 0.1,
+            "decay": 0.05,
+            "sustain": 0.95,
+            "release": 0.08
+          },
+          "volume": 0.35,
+          "pan": 0
+        }
+      ]
+    }
+  }
 }

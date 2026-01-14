@@ -8,8 +8,14 @@
     "name": "Lo-Fi Chillhop",
     "genre": "lofi",
     "subgenre": "chillhop",
-    "bpm_range": [70, 100],
-    "time_signature": [4, 4],
+    "bpm_range": [
+      70,
+      100
+    ],
+    "time_signature": [
+      4,
+      4
+    ],
     "instruments": {
       "kick": {
         "preset": "drums/kicks/kick_soft",

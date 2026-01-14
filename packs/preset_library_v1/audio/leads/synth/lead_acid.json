@@ -1,46 +1,46 @@
 {
-    "spec_version":  1,
-    "asset_id":  "preset_lead_acid",
-    "asset_type":  "audio",
-    "license":  "CC0-1.0",
-    "seed":  10308,
-    "description":  "Acid lead - TB-303 style sawtooth with high resonance filter for squelchy acid lines",
-    "outputs":  [
-                    {
-                        "kind":  "primary",
-                        "format":  "wav",
-                        "path":  "test-outputs/preset_library_v1/audio/leads/synth/lead_acid.wav"
-                    }
-                ],
-    "recipe":  {
-                   "kind":  "audio_v1",
-                   "params":  {
-                                  "base_note":  "A3",
-                                  "duration_seconds":  1.5,
-                                  "sample_rate":  44100,
-                                  "layers":  [
-                                                 {
-                                                     "synthesis":  {
-                                                                       "type":  "oscillator",
-                                                                       "waveform":  "sawtooth",
-                                                                       "frequency":  220.0
-                                                                   },
-                                                     "envelope":  {
-                                                                      "attack":  0.002,
-                                                                      "decay":  0.15,
-                                                                      "sustain":  0.7,
-                                                                      "release":  0.1
-                                                                  },
-                                                     "filter":  {
-                                                                    "type":  "lowpass",
-                                                                    "cutoff":  2500,
-                                                                    "resonance":  0.88,
-                                                                    "cutoff_end":  800
-                                                                },
-                                                     "volume":  0.9,
-                                                     "pan":  0
-                                                 }
-                                             ]
-                              }
-               }
+  "spec_version": 1,
+  "asset_id": "preset_lead_acid",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 10308,
+  "description": "Acid lead - TB-303 style sawtooth with high resonance filter for squelchy acid lines",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/leads/synth/lead_acid.wav"
+    }
+  ],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "base_note": "A3",
+      "duration_seconds": 1.5,
+      "sample_rate": 44100,
+      "layers": [
+        {
+          "synthesis": {
+            "type": "oscillator",
+            "waveform": "sawtooth",
+            "frequency": 220.0
+          },
+          "envelope": {
+            "attack": 0.002,
+            "decay": 0.15,
+            "sustain": 0.7,
+            "release": 0.1
+          },
+          "filter": {
+            "type": "lowpass",
+            "cutoff": 2500,
+            "resonance": 0.88,
+            "cutoff_end": 800
+          },
+          "volume": 0.9,
+          "pan": 0
+        }
+      ]
+    }
+  }
 }

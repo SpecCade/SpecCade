@@ -5,11 +5,13 @@
   "license": "CC0-1.0",
   "seed": 20003,
   "description": "Marching snare drum - tight, crisp, military character with pronounced snares",
-  "outputs": [{
-    "kind": "primary",
-    "format": "wav",
-    "path": "test-outputs/preset_library_v1/audio/drums/snares/snare_march.wav"
-  }],
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/drums/snares/snare_march.wav"
+    }
+  ],
   "recipe": {
     "kind": "audio_v1",
     "params": {

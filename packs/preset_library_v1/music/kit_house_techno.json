@@ -8,8 +8,14 @@
     "name": "House / Techno",
     "genre": "electronic",
     "subgenre": "house",
-    "bpm_range": [120, 130],
-    "time_signature": [4, 4],
+    "bpm_range": [
+      120,
+      130
+    ],
+    "time_signature": [
+      4,
+      4
+    ],
     "instruments": {
       "kick": "drums/kicks/kick_4",
       "snare": "drums/snares/clap",
@@ -20,6 +26,13 @@
       "pad": "pads/pad_warm",
       "chord": "plucks/stab"
     },
-    "tags": ["edm", "dance", "club", "four-on-floor", "techno", "house"]
+    "tags": [
+      "edm",
+      "dance",
+      "club",
+      "four-on-floor",
+      "techno",
+      "house"
+    ]
   }
 }

@@ -8,8 +8,14 @@
     "name": "South Asian / Indian",
     "genre": "world",
     "subgenre": "south_asian",
-    "bpm_range": [60, 120],
-    "time_signature": [4, 4],
+    "bpm_range": [
+      60,
+      120
+    ],
+    "time_signature": [
+      4,
+      4
+    ],
     "instruments": {
       "tabla_high": {
         "preset": "drums/percussion/tabla_high",

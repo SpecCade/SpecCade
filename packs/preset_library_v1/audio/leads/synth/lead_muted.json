@@ -1,72 +1,72 @@
 {
-    "spec_version":  1,
-    "asset_id":  "preset_lead_muted",
-    "asset_type":  "audio",
-    "license":  "CC0-1.0",
-    "seed":  10302,
-    "description":  "Muted soft lead - heavily filtered for warm background melodies",
-    "outputs":  [
-                    {
-                        "kind":  "primary",
-                        "format":  "wav",
-                        "path":  "test-outputs/preset_library_v1/audio/leads/synth/lead_muted.wav"
-                    }
-                ],
-    "recipe":  {
-                   "kind":  "audio_v1",
-                   "params":  {
-                                  "base_note":  "A4",
-                                  "duration_seconds":  1.5,
-                                  "sample_rate":  44100,
-                                  "layers":  [
-                                                 {
-                                                     "synthesis":  {
-                                                                       "type":  "multi_oscillator",
-                                                                       "frequency":  440.0,
-                                                                       "oscillators":  [
-                                                                                           {
-                                                                                               "waveform":  "sawtooth",
-                                                                                               "volume":  1.0,
-                                                                                               "detune":  0
-                                                                                           },
-                                                                                           {
-                                                                                               "waveform":  "sawtooth",
-                                                                                               "volume":  0.8,
-                                                                                               "detune":  6
-                                                                                           },
-                                                                                           {
-                                                                                               "waveform":  "sawtooth",
-                                                                                               "volume":  0.8,
-                                                                                               "detune":  -6
-                                                                                           }
-                                                                                       ]
-                                                                   },
-                                                     "envelope":  {
-                                                                      "attack":  0.02,
-                                                                      "decay":  0.2,
-                                                                      "sustain":  0.75,
-                                                                      "release":  0.3
-                                                                  },
-                                                     "filter":  {
-                                                                    "type":  "lowpass",
-                                                                    "cutoff":  1500,
-                                                                    "resonance":  0.3
-                                                                },
-                                                     "lfo":  {
-                                                                 "config":  {
-                                                                                "waveform":  "sine",
-                                                                                "rate":  5.0,
-                                                                                "depth":  0.35
-                                                                            },
-                                                                 "target":  {
-                                                                                "target":  "pitch",
-                                                                                "semitones":  0.3
-                                                                            }
-                                                             },
-                                                     "volume":  0.9,
-                                                     "pan":  0
-                                                 }
-                                             ]
-                              }
-               }
+  "spec_version": 1,
+  "asset_id": "preset_lead_muted",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 10302,
+  "description": "Muted soft lead - heavily filtered for warm background melodies",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/leads/synth/lead_muted.wav"
+    }
+  ],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "base_note": "A4",
+      "duration_seconds": 1.5,
+      "sample_rate": 44100,
+      "layers": [
+        {
+          "synthesis": {
+            "type": "multi_oscillator",
+            "frequency": 440.0,
+            "oscillators": [
+              {
+                "waveform": "sawtooth",
+                "volume": 1.0,
+                "detune": 0
+              },
+              {
+                "waveform": "sawtooth",
+                "volume": 0.8,
+                "detune": 6
+              },
+              {
+                "waveform": "sawtooth",
+                "volume": 0.8,
+                "detune": -6
+              }
+            ]
+          },
+          "envelope": {
+            "attack": 0.02,
+            "decay": 0.2,
+            "sustain": 0.75,
+            "release": 0.3
+          },
+          "filter": {
+            "type": "lowpass",
+            "cutoff": 1500,
+            "resonance": 0.3
+          },
+          "lfo": {
+            "config": {
+              "waveform": "sine",
+              "rate": 5.0,
+              "depth": 0.35
+            },
+            "target": {
+              "target": "pitch",
+              "semitones": 0.3
+            }
+          },
+          "volume": 0.9,
+          "pan": 0
+        }
+      ]
+    }
+  }
 }

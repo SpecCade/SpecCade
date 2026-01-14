@@ -82,7 +82,10 @@
   "recipe": {
     "kind": "texture.procedural_v1",
     "params": {
-      "resolution": [64, 64],
+      "resolution": [
+        64,
+        64
+      ],
       "tileable": true,
       "nodes": [
         {
@@ -108,7 +111,10 @@
           "id": "grad_r",
           "type": "gradient",
           "direction": "radial",
-          "center": [0.5, 0.5],
+          "center": [
+            0.5,
+            0.5
+          ],
           "inner": 1.0,
           "outer": 0.0
         },
@@ -152,13 +158,19 @@
           "id": "ramp_color",
           "type": "color_ramp",
           "input": "grad_h",
-          "ramp": ["#000000", "#ffffff"]
+          "ramp": [
+            "#000000",
+            "#ffffff"
+          ]
         },
         {
           "id": "paletted",
           "type": "palette",
           "input": "ramp_color",
-          "palette": ["#000000", "#ffffff"]
+          "palette": [
+            "#000000",
+            "#ffffff"
+          ]
         },
         {
           "id": "gray",

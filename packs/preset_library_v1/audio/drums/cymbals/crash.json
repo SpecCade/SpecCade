@@ -1,75 +1,75 @@
 {
-    "spec_version":  1,
-    "asset_id":  "preset_crash",
-    "asset_type":  "audio",
-    "license":  "CC0-1.0",
-    "seed":  10056,
-    "description":  "Crash cymbal - explosive attack with long decay, wide spectrum",
-    "outputs":  [
-                    {
-                        "kind":  "primary",
-                        "format":  "wav",
-                        "path":  "test-outputs/preset_library_v1/audio/drums/cymbals/crash.wav"
-                    }
-                ],
-    "recipe":  {
-                   "kind":  "audio_v1",
-                   "params":  {
-                                  "duration_seconds":  2,
-                                  "sample_rate":  44100,
-                                  "layers":  [
-                                                 {
-                                                     "synthesis":  {
-                                                                       "type":  "metallic",
-                                                                       "base_freq":  3500,
-                                                                       "num_partials":  14,
-                                                                       "inharmonicity":  2.4
-                                                                   },
-                                                     "envelope":  {
-                                                                      "attack":  0.002,
-                                                                      "decay":  1.2,
-                                                                      "sustain":  0.1,
-                                                                      "release":  0.6
-                                                                  },
-                                                     "volume":  0.55,
-                                                     "pan":  0
-                                                 },
-                                                 {
-                                                     "synthesis":  {
-                                                                       "type":  "metallic",
-                                                                       "base_freq":  7000,
-                                                                       "num_partials":  12,
-                                                                       "inharmonicity":  2.8
-                                                                   },
-                                                     "envelope":  {
-                                                                      "attack":  0.001,
-                                                                      "decay":  1,
-                                                                      "sustain":  0.08,
-                                                                      "release":  0.5
-                                                                  },
-                                                     "volume":  0.5,
-                                                     "pan":  0
-                                                 },
-                                                 {
-                                                     "synthesis":  {
-                                                                       "type":  "noise_burst",
-                                                                       "noise_type":  "white",
-                                                                       "filter":  {
-                                                                                      "type":  "highpass",
-                                                                                      "cutoff":  4000,
-                                                                                      "resonance":  0.3
-                                                                                  }
-                                                                   },
-                                                     "envelope":  {
-                                                                      "attack":  0.001,
-                                                                      "decay":  0.8,
-                                                                      "sustain":  0.06,
-                                                                      "release":  0.4
-                                                                  },
-                                                     "volume":  0.45,
-                                                     "pan":  0
-                                                 }
-                                             ]
-                              }
-               }
+  "spec_version": 1,
+  "asset_id": "preset_crash",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 10056,
+  "description": "Crash cymbal - explosive attack with long decay, wide spectrum",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/drums/cymbals/crash.wav"
+    }
+  ],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "duration_seconds": 2,
+      "sample_rate": 44100,
+      "layers": [
+        {
+          "synthesis": {
+            "type": "metallic",
+            "base_freq": 3500,
+            "num_partials": 14,
+            "inharmonicity": 2.4
+          },
+          "envelope": {
+            "attack": 0.002,
+            "decay": 1.2,
+            "sustain": 0.1,
+            "release": 0.6
+          },
+          "volume": 0.55,
+          "pan": 0
+        },
+        {
+          "synthesis": {
+            "type": "metallic",
+            "base_freq": 7000,
+            "num_partials": 12,
+            "inharmonicity": 2.8
+          },
+          "envelope": {
+            "attack": 0.001,
+            "decay": 1,
+            "sustain": 0.08,
+            "release": 0.5
+          },
+          "volume": 0.5,
+          "pan": 0
+        },
+        {
+          "synthesis": {
+            "type": "noise_burst",
+            "noise_type": "white",
+            "filter": {
+              "type": "highpass",
+              "cutoff": 4000,
+              "resonance": 0.3
+            }
+          },
+          "envelope": {
+            "attack": 0.001,
+            "decay": 0.8,
+            "sustain": 0.06,
+            "release": 0.4
+          },
+          "volume": 0.45,
+          "pan": 0
+        }
+      ]
+    }
+  }
 }

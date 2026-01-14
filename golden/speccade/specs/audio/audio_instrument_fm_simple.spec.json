@@ -5,8 +5,17 @@
   "license": "CC0-1.0",
   "seed": 999015,
   "description": "Golden test for simple FM synthesis - exercises carrier_freq, modulator_freq, modulation_index, and freq_sweep",
-  "style_tags": ["golden", "fm", "simple", "instrument"],
-  "engine_targets": ["godot", "unity", "unreal"],
+  "style_tags": [
+    "golden",
+    "fm",
+    "simple",
+    "instrument"
+  ],
+  "engine_targets": [
+    "godot",
+    "unity",
+    "unreal"
+  ],
   "outputs": [
     {
       "kind": "primary",
