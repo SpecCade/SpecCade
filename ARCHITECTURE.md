@@ -2,17 +2,35 @@
 
 Deterministic asset pipeline for procedural game asset generation.
 
-## Crate Overview
+> This file is a high-level map of crates + the determinism model.
+> For usage and examples, start with `README.md` and `PARITY_MATRIX.md`.
+
+## TL;DR (mental model)
+
+SpecCade takes a `Spec` (JSON) and produces one or more artifacts (WAV/PNG/XM/IT/…) plus a `Report`.
+
+- Validation and hashing live in `speccade-spec`
+- The CLI (`speccade-cli`) validates + dispatches to a backend
+- Tier 1 backends are Rust-only and aim for byte-identical output
+- Tier 2 backends use external tools (Blender) and are validated differently
+
+## Repo map
 
 ```
 speccade/
-├── speccade-spec          # Core types, validation, hashing
-├── speccade-cli           # Command-line interface
-├── speccade-backend-audio # Audio/SFX generation (Tier 1)
-├── speccade-backend-music # XM/IT tracker generation (Tier 1)
-├── speccade-backend-texture # Procedural textures (Tier 1)
-├── speccade-backend-blender # Mesh/animation via Blender (Tier 2)
-└── speccade-tests         # Integration tests, determinism validation
+├── crates/
+│   ├── speccade-spec             # Core types, validation, hashing
+│   ├── speccade-cli              # CLI entry point + dispatch
+│   ├── speccade-backend-audio    # Audio/SFX generation (Tier 1)
+│   ├── speccade-backend-music    # XM/IT tracker generation (Tier 1)
+│   ├── speccade-backend-texture  # Procedural textures (Tier 1)
+│   ├── speccade-backend-blender  # Mesh/animation via Blender (Tier 2)
+│   └── speccade-tests            # Integration + determinism validation
+├── schemas/                      # JSON schemas
+├── packs/                        # Example packs/inputs
+├── golden/                       # Golden outputs for tests
+├── scripts/                      # Helper scripts (generate_all.sh/ps1)
+└── docs/                         # Additional docs
 ```
 
 ## Crate Purposes
@@ -122,7 +140,7 @@ speccade-tests
 
 | Operation | Entry Point |
 |-----------|-------------|
-| CLI main | `speccade-cli/src/main.rs` |
+| CLI main | `crates/speccade-cli/src/main.rs` |
 | Audio generation | `speccade-backend-audio::generate()` |
 | Music generation | `speccade-backend-music::generate_music()` |
 | Texture generation | `speccade-backend-texture::generate_graph()` |
@@ -133,8 +151,16 @@ speccade-tests
 - **Tier 1** (Rust-only): Audio, music, texture - byte-identical output guaranteed
 - **Tier 2** (Blender subprocess): Mesh, animation - hash-validated but platform-dependent
 
-## File Statistics
+## Key invariants (read before changing behavior)
 
-- **360 source files** across all crates
-- **Largest implementation file:** ~575 lines (harmony.rs)
-- **All implementation files:** ≤600 lines (test files may be larger)
+- **Hashing drives determinism:** canonical hashing and seed derivation live in `speccade-spec` (`hash` module). Backends should only use derived seeds, not OS RNG/time.
+- **Stable iteration matters:** avoid nondeterministic ordering (e.g., unordered map iteration) in any path that affects output bytes.
+- **Tier 2 is special:** Blender output can vary with platform/Blender version; treat Tier 2 as “validated, not byte-identical”.
+
+## Glossary
+
+- **Spec**: the canonical JSON document describing *what* to generate.
+- **Recipe**: backend-specific parameters inside the spec.
+- **Backend**: a generator crate (audio/music/texture/blender).
+- **Tier 1 / Tier 2**: determinism guarantees (Rust-only vs external tool).
+- **Report**: structured summary of what was generated (paths, hashes, metrics).
