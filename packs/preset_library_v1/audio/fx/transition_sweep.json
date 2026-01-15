@@ -54,17 +54,6 @@
                         "sustain": 0.85,
                         "release": 0.4
                     },
-                    "lfo": {
-                        "config": {
-                            "waveform": "sine",
-                            "rate": 4.0,
-                            "depth": 1.0
-                        },
-                        "target": {
-                            "target": "filter_cutoff",
-                            "amount": 1000
-                        }
-                    },
                     "volume": 0.5,
                     "pan": -0.15
                 },

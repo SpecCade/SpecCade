@@ -1,12 +1,12 @@
 # [EFFECT P3] Ring modulator (effect)
 
-Source: `speccade/docs/FUTURE_GENERATORS.md` → “Missing Effects (Priority 3)”.
+Source: `docs/FUTURE_GENERATORS.md` → “Missing Effects (Priority 3)”.
 
 ## Goal
 
 Add a `ring_modulator` effect that processes existing audio (distinct from `ring_mod_synth`).
 
-## Suggested spec surface (MVP)
+## Required spec surface
 
 - Add `Effect::RingModulator { frequency: f64, mix: f64 }`
   - Serde tag: `"type": "ring_modulator"`
@@ -19,4 +19,3 @@ Add a `ring_modulator` effect that processes existing audio (distinct from `ring
 ## Acceptance criteria
 
 - Audible sidebands; deterministic; docs/schema/tests updated.
-

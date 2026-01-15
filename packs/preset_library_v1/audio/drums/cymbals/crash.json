@@ -32,18 +32,7 @@
                         "release": 1.0
                     },
                     "volume": 0.5,
-                    "pan": -0.15,
-                    "lfo": {
-                        "config": {
-                            "waveform": "sine",
-                            "rate": 4.2,
-                            "depth": 0.3
-                        },
-                        "target": {
-                            "target": "filter_cutoff",
-                            "amount": 0.15
-                        }
-                    }
+                    "pan": -0.15
                 },
                 {
                     "synthesis": {
@@ -75,18 +64,7 @@
                         "release": 0.8
                     },
                     "volume": 0.42,
-                    "pan": 0,
-                    "lfo": {
-                        "config": {
-                            "waveform": "sine",
-                            "rate": 5.8,
-                            "depth": 0.25
-                        },
-                        "target": {
-                            "target": "filter_cutoff",
-                            "amount": 0.12
-                        }
-                    }
+                    "pan": 0
                 },
                 {
                     "synthesis": {

@@ -4,14 +4,17 @@ You are the **orchestrator**. Keep your own context small and stable: delegate a
 
 ## Objective
 
-Implement **all** audio feature gaps enumerated in `speccade/docs/FUTURE_GENERATORS.md`:
+Implement the **procedural-only** audio feature gaps enumerated in `docs/FUTURE_GENERATORS.md`:
 
 1. Priority 1–3 missing **synthesis types**
 2. Priority 1–3 missing **effect types**
 3. Missing **LFO targets**
 4. Missing **filter types**
 
-Use the checklist in `speccade/.claude/runpacks/fg-audio-v1-library-expansion/FEATURE_INDEX.md` as the source of truth.
+Use the checklist in `.claude/runpacks/fg-audio-v1-library-expansion/FEATURE_INDEX.md` as the source of truth.
+
+Global decisions (procedural-only scope + post-FX LFO contract):
+- `.claude/runpacks/fg-audio-v1-library-expansion/DECISIONS.md`
 
 ## Subagents (required)
 
@@ -26,6 +29,7 @@ Use these agents heavily; do not “solo” large implementations:
 ## Global constraints (non-negotiable)
 
 - Determinism: no wall-clock, OS RNG, unstable iteration ordering, or thread timing dependency.
+- Procedural-only: do not add any feature that requires external audio bytes (no sample/IR loading).
 - Code quality:
   - No file should end up **> 600 LoC**. If a file would exceed this, refactor into modules.
   - Avoid DRY violations: extract helpers instead of copy/paste.
@@ -51,18 +55,18 @@ For each feature prompt in `features/`:
    Keep the response as a short checklist with file paths.
 3. Ask `fg-audio-implementer` to implement the feature (use `TEMPLATE_IMPLEMENT_FEATURE.md` + the feature file + scout checklist).
 4. Ask `fg-schema-docs` to update:
-   - `speccade/schemas/speccade-spec-v1.schema.json`
-   - `speccade/docs/spec-reference/audio.md`
-   - `speccade/docs/audio_synthesis_methods.md` (if synthesis types changed)
+   - `schemas/speccade-spec-v1.schema.json`
+   - `docs/spec-reference/audio.md`
+   - `docs/audio_synthesis_methods.md` (if synthesis types changed)
 5. Ask `fg-tests` to add/adjust coverage:
    - Unit tests in `speccade-spec` / `speccade-backend-audio`
-   - New/updated example specs (prefer `speccade/golden/speccade/specs/audio/` when it helps)
+   - New/updated example specs (prefer `golden/speccade/specs/audio/` when it helps)
 6. Ask `fg-qa` to run and fix (minimum viable loop per feature):
    - `cargo fmt`
    - `cargo clippy -p speccade-spec -p speccade-backend-audio -p speccade-cli -p speccade-tests --all-targets -- -D warnings`
    - `cargo test -p speccade-spec -p speccade-backend-audio`
    - `cargo test -p speccade-tests` (when fixtures/golden are touched)
-   - `python validate_all.py` (when preset library compatibility is relevant)
+   - `python3 validate_all.py` (or `python validate_all.py`) (when preset library compatibility is relevant)
 7. Mark the feature done by checking it off in `FEATURE_INDEX.md` and add a 1–2 line note if anything subtle happened.
 
 If a feature is too large to finish safely in one go, **split it** into smaller “MVP then polish” steps inside that feature prompt, but still keep forward progress and keep the checklist honest.

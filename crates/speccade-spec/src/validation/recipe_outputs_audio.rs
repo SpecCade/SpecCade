@@ -6,6 +6,7 @@ use crate::spec::Spec;
 use crate::validation::{
     validate_non_negative, validate_positive, validate_range, validate_unit_interval,
 };
+use crate::recipe::audio::ModulationTarget;
 
 use super::recipe_outputs::validate_single_primary_output_format;
 
@@ -130,6 +131,105 @@ pub(super) fn validate_audio_outputs(
                 e.to_string(),
                 format!("recipe.params.layers[{}].envelope.release", i),
             ));
+        }
+
+        if let Some(lfo) = &layer.lfo {
+            // ----------------
+            // LFO config
+            // ----------------
+            if let Err(e) = validate_positive("rate", lfo.config.rate) {
+                result.add_error(ValidationError::with_path(
+                    ErrorCode::InvalidRecipeParams,
+                    e.to_string(),
+                    format!("recipe.params.layers[{}].lfo.config.rate", i),
+                ));
+            }
+
+            if let Err(e) = validate_unit_interval("depth", lfo.config.depth) {
+                result.add_error(ValidationError::with_path(
+                    ErrorCode::InvalidRecipeParams,
+                    e.to_string(),
+                    format!("recipe.params.layers[{}].lfo.config.depth", i),
+                ));
+            } else if lfo.config.depth == 0.0 {
+                result.add_error(ValidationError::with_path(
+                    ErrorCode::InvalidRecipeParams,
+                    "depth must be > 0.0 (otherwise this LFO is a no-op)",
+                    format!("recipe.params.layers[{}].lfo.config.depth", i),
+                ));
+            }
+
+            if let Some(phase) = lfo.config.phase {
+                if let Err(e) = validate_unit_interval("phase", phase) {
+                    result.add_error(ValidationError::with_path(
+                        ErrorCode::InvalidRecipeParams,
+                        e.to_string(),
+                        format!("recipe.params.layers[{}].lfo.config.phase", i),
+                    ));
+                }
+            }
+
+            // ----------------
+            // LFO target
+            // ----------------
+            match &lfo.target {
+                ModulationTarget::Pitch { semitones } => {
+                    if let Err(e) = validate_positive("semitones", *semitones) {
+                        result.add_error(ValidationError::with_path(
+                            ErrorCode::InvalidRecipeParams,
+                            e.to_string(),
+                            format!("recipe.params.layers[{}].lfo.target.semitones", i),
+                        ));
+                    }
+                }
+                ModulationTarget::Volume { amount } => {
+                    if let Err(e) = validate_unit_interval("amount", *amount) {
+                        result.add_error(ValidationError::with_path(
+                            ErrorCode::InvalidRecipeParams,
+                            e.to_string(),
+                            format!("recipe.params.layers[{}].lfo.target.amount", i),
+                        ));
+                    } else if *amount == 0.0 {
+                        result.add_error(ValidationError::with_path(
+                            ErrorCode::InvalidRecipeParams,
+                            "amount must be > 0.0 (otherwise this LFO is a no-op)",
+                            format!("recipe.params.layers[{}].lfo.target.amount", i),
+                        ));
+                    }
+                }
+                ModulationTarget::FilterCutoff { amount } => {
+                    if let Err(e) = validate_positive("amount", *amount) {
+                        result.add_error(ValidationError::with_path(
+                            ErrorCode::InvalidRecipeParams,
+                            e.to_string(),
+                            format!("recipe.params.layers[{}].lfo.target.amount", i),
+                        ));
+                    }
+
+                    if layer.filter.is_none() {
+                        result.add_error(ValidationError::with_path(
+                            ErrorCode::InvalidRecipeParams,
+                            "filter_cutoff LFO requires layers[].filter to be present (otherwise this LFO is a no-op)",
+                            format!("recipe.params.layers[{}].lfo.target", i),
+                        ));
+                    }
+                }
+                ModulationTarget::Pan { amount } => {
+                    if let Err(e) = validate_unit_interval("amount", *amount) {
+                        result.add_error(ValidationError::with_path(
+                            ErrorCode::InvalidRecipeParams,
+                            e.to_string(),
+                            format!("recipe.params.layers[{}].lfo.target.amount", i),
+                        ));
+                    } else if *amount == 0.0 {
+                        result.add_error(ValidationError::with_path(
+                            ErrorCode::InvalidRecipeParams,
+                            "amount must be > 0.0 (otherwise this LFO is a no-op)",
+                            format!("recipe.params.layers[{}].lfo.target.amount", i),
+                        ));
+                    }
+                }
+            }
         }
     }
 

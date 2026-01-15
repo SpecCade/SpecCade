@@ -21,7 +21,7 @@ pub struct LfoConfig {
 
 /// Modulation target specification.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "target", rename_all = "snake_case")]
+#[serde(tag = "target", rename_all = "snake_case", deny_unknown_fields)]
 pub enum ModulationTarget {
     /// Modulate pitch (vibrato).
     Pitch {
@@ -29,14 +29,24 @@ pub enum ModulationTarget {
         semitones: f64,
     },
     /// Modulate volume (tremolo).
-    Volume,
+    Volume {
+        /// Maximum amplitude reduction (0.0-1.0).
+        ///
+        /// Effective strength is `amount * config.depth`.
+        amount: f64,
+    },
     /// Modulate filter cutoff frequency.
     FilterCutoff {
         /// Maximum cutoff frequency change in Hz.
         amount: f64,
     },
     /// Modulate stereo pan.
-    Pan,
+    Pan {
+        /// Maximum pan delta applied around the base `layer.pan` (0.0-1.0).
+        ///
+        /// Effective strength is `amount * config.depth`.
+        amount: f64,
+    },
 }
 
 /// LFO modulation configuration.

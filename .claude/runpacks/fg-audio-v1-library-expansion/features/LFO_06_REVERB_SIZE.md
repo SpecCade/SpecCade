@@ -1,28 +1,38 @@
 # [LFO] Target: `reverb_size`
 
-Source: `speccade/docs/FUTURE_GENERATORS.md` → “Missing LFO Targets”.
+Source: `docs/FUTURE_GENERATORS.md` → “Missing LFO Targets”.
 
 ## Goal
 
-Add an LFO target to modulate reverb “room size” over time (evolving spaces).
+Add a **post-FX** LFO target to modulate reverb room size over time.
 
-## Design note
+This target is **not** a layer LFO target. It must be implemented via `AudioV1Params.post_fx_lfos` per:
+- `.claude/runpacks/fg-audio-v1-library-expansion/DECISIONS.md`
 
-Reverb lives in the global effects chain, so this likely needs recipe-level modulation (see `LFO_05_DELAY_TIME.md`).
+## Required spec surface
 
-## Suggested spec surface (minimal)
+1. Add `ModulationTarget::ReverbSize { amount: f64 }`:
+   - File: `crates/speccade-spec/src/recipe/audio/synthesis/modulation.rs`
+   - Serde target object shape: `{ "target": "reverb_size", "amount": 0.2 }`
 
-- Add `AudioV1Params.master_lfo: Option<LfoModulation>` (or equivalent)
-- Add `ModulationTarget::ReverbSize { amount: f64 }` (unit interval delta)
+2. This target uses `AudioV1Params.post_fx_lfos` (not `AudioLayer.lfo`):
+   - If `post_fx_lfos` is not present yet, add it exactly as specified in `.claude/runpacks/fg-audio-v1-library-expansion/DECISIONS.md`.
 
-## Implementation notes
+## Required behavior (no discretion)
 
-- Backend:
-  - Apply modulation to `Effect::Reverb.room_size` over time.
-  - Prefer deterministic block updates if per-sample is too invasive.
+1. Validation rules:
+   - `ModulationTarget::ReverbSize` is invalid on `AudioLayer.lfo`.
+   - `AudioV1Params.post_fx_lfos` must contain **max 1 entry per target** (duplicate targets must fail validation).
+   - If any `post_fx_lfos[]` entry has `target == reverb_size` and there are **zero matching effects** in `AudioV1Params.effects[]`, validation must fail.
+   - Implement the “matching effects” list exactly as defined in `.claude/runpacks/fg-audio-v1-library-expansion/DECISIONS.md` (apply to all matching effect instances).
+
+2. Backend rules:
+   - Apply modulation to `Effect::Reverb.room_size` during post-mix effect processing.
+   - Reuse the LFO curve for this entry across all matching effects.
+   - Apply modulation using the formula and clamps in `.claude/runpacks/fg-audio-v1-library-expansion/DECISIONS.md`.
 
 ## Acceptance criteria
 
-- Target is not a no-op: reverb size varies over time.
-- Deterministic behavior; schema/docs updated.
-
+- Target is not a no-op: reverb room size varies over time in output audio, deterministically.
+- If `post_fx_lfos` contains a `reverb_size` entry but there is no matching effect in the chain, spec validation fails.
+- Schema + docs updated to include the `reverb_size` target.

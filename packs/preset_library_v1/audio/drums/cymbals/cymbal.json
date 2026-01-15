@@ -115,12 +115,7 @@
                 {
                     "synthesis": {
                         "type": "noise_burst",
-                        "noise_type": "white",
-                        "filter": {
-                            "type": "highpass",
-                            "cutoff": 8000,
-                            "resonance": 0.15
-                        }
+                        "noise_type": "white"
                     },
                     "envelope": {
                         "attack": 0.001,
@@ -130,6 +125,11 @@
                     },
                     "volume": 0.22,
                     "pan": -0.1,
+                    "filter": {
+                        "type": "highpass",
+                        "cutoff": 8000,
+                        "resonance": 0.15
+                    },
                     "lfo": {
                         "config": {
                             "waveform": "triangle",

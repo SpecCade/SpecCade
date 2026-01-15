@@ -32,18 +32,7 @@
             "release": 0.045
           },
           "volume": 0.7,
-          "pan": -0.15,
-          "lfo": {
-            "config": {
-              "waveform": "sine",
-              "rate": 8.5,
-              "depth": 0.3
-            },
-            "target": {
-              "target": "filter_cutoff",
-              "amount": 0.08
-            }
-          }
+          "pan": -0.15
         },
         {
           "synthesis": {

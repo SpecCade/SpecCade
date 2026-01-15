@@ -1,12 +1,12 @@
 # [FILTER] Allpass
 
-Source: `speccade/docs/FUTURE_GENERATORS.md` → “Missing Filter Types”.
+Source: `docs/FUTURE_GENERATORS.md` → “Missing Filter Types”.
 
 ## Goal
 
 Expose an `allpass` filter type for layer/master filters (phase shaping; phaser building block).
 
-## Suggested spec surface
+## Required spec surface
 
 - Add `Filter::Allpass { frequency: f64, resonance: f64, frequency_end: Option<f64> }`
   - Serde tag: `"type": "allpass"`
@@ -15,12 +15,11 @@ Expose an `allpass` filter type for layer/master filters (phase shaping; phaser 
 
 ## Implementation notes
 
-- Spec types: `speccade/crates/speccade-spec/src/recipe/audio/synthesis/basic_types.rs`
-- Backend: `speccade/crates/speccade-backend-audio/src/filter.rs` already has `BiquadCoeffs::allpass(...)`
+- Spec types: `crates/speccade-spec/src/recipe/audio/synthesis/basic_types.rs`
+- Backend: `crates/speccade-backend-audio/src/filter.rs` already has `BiquadCoeffs::allpass(...)`
 
 ## Acceptance criteria
 
 - Serde roundtrip tests.
 - `apply_swept_filter` supports allpass with optional sweep.
 - Schema + docs updated.
-

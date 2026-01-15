@@ -165,7 +165,47 @@ fn generate_from_unified_params(params: &AudioV1Params, seed: u32) -> AudioResul
             )?;
         }
 
-        mixer.add_layer(Layer::new(layer_samples, layer.volume, layer.pan));
+        let mut mix_layer = Layer::new(layer_samples, layer.volume, layer.pan);
+
+        // Pan LFO is applied during mixing. Keep it deterministic and aligned to layer start:
+        // delay time does not advance LFO phase.
+        if let Some(lfo_mod) = &layer.lfo {
+            if let speccade_spec::recipe::audio::ModulationTarget::Pan { amount } = &lfo_mod.target
+            {
+                use crate::modulation::lfo::{apply_pan_modulation, Lfo};
+
+                let initial_phase = lfo_mod.config.phase.unwrap_or(0.0);
+                let mut lfo = Lfo::new(
+                    lfo_mod.config.waveform,
+                    lfo_mod.config.rate,
+                    sample_rate,
+                    initial_phase,
+                );
+                let lfo_seed = crate::rng::derive_component_seed(layer_seed, "layer_pan_lfo");
+                let mut lfo_rng = crate::rng::create_rng(lfo_seed);
+
+                let delay_samples = layer
+                    .delay
+                    .map(|delay| (delay.max(0.0) * sample_rate).floor() as usize)
+                    .unwrap_or(0)
+                    .min(num_samples);
+
+                let mut pan_curve = vec![layer.pan.clamp(-1.0, 1.0); num_samples];
+                for i in delay_samples..num_samples {
+                    let lfo_value = lfo.next_sample(&mut lfo_rng);
+                    pan_curve[i] = apply_pan_modulation(
+                        layer.pan,
+                        lfo_value,
+                        *amount,
+                        lfo_mod.config.depth,
+                    );
+                }
+
+                mix_layer = mix_layer.with_pan_curve(pan_curve);
+            }
+        }
+
+        mixer.add_layer(mix_layer);
     }
 
     // Mix layers

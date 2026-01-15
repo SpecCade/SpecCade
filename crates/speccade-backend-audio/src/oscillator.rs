@@ -215,6 +215,13 @@ impl PhaseAccumulator {
         self.phase = 0.0;
     }
 
+    /// Sets the current phase in radians.
+    ///
+    /// The phase is wrapped into `[0, 2π)`.
+    pub fn set_phase_radians(&mut self, phase_radians: f64) {
+        self.phase = phase_radians.rem_euclid(TWO_PI);
+    }
+
     /// Gets the current phase without advancing.
     pub fn current(&self) -> f64 {
         self.phase

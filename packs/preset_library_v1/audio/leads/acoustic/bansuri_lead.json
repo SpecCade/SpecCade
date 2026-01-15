@@ -85,12 +85,7 @@
                 {
                     "synthesis": {
                         "type": "noise_burst",
-                        "noise_type": "pink",
-                        "filter": {
-                            "type": "bandpass",
-                            "center": 2200,
-                            "resonance": 0.6
-                        }
+                        "noise_type": "pink"
                     },
                     "envelope": {
                         "attack": 0.08,
@@ -100,6 +95,11 @@
                     },
                     "volume": 0.15,
                     "pan": 0,
+                    "filter": {
+                        "type": "bandpass",
+                        "center": 2200,
+                        "resonance": 0.6
+                    },
                     "lfo": {
                         "config": {
                             "waveform": "sine",

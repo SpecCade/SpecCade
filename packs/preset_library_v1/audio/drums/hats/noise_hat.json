@@ -21,12 +21,7 @@
         {
           "synthesis": {
             "type": "noise_burst",
-            "noise_type": "white",
-            "filter": {
-              "type": "highpass",
-              "cutoff": 10000,
-              "resonance": 1.0
-            }
+            "noise_type": "white"
           },
           "envelope": {
             "attack": 0.001,
@@ -36,6 +31,11 @@
           },
           "volume": 0.65,
           "pan": -0.15,
+          "filter": {
+            "type": "highpass",
+            "cutoff": 10000,
+            "resonance": 1.0
+          },
           "lfo": {
             "config": {
               "waveform": "sine",
@@ -51,12 +51,7 @@
         {
           "synthesis": {
             "type": "noise_burst",
-            "noise_type": "white",
-            "filter": {
-              "type": "bandpass",
-              "center": 14000,
-              "resonance": 1.5
-            }
+            "noise_type": "white"
           },
           "envelope": {
             "attack": 0.0005,
@@ -66,6 +61,11 @@
           },
           "volume": 0.55,
           "pan": 0.15,
+          "filter": {
+            "type": "bandpass",
+            "center": 14000,
+            "resonance": 1.5
+          },
           "lfo": {
             "config": {
               "waveform": "sine",
@@ -81,12 +81,7 @@
         {
           "synthesis": {
             "type": "noise_burst",
-            "noise_type": "pink",
-            "filter": {
-              "type": "highpass",
-              "cutoff": 6000,
-              "resonance": 0.6
-            }
+            "noise_type": "pink"
           },
           "envelope": {
             "attack": 0.002,
@@ -96,6 +91,11 @@
           },
           "volume": 0.3,
           "pan": 0,
+          "filter": {
+            "type": "highpass",
+            "cutoff": 6000,
+            "resonance": 0.6
+          },
           "lfo": {
             "config": {
               "waveform": "sine",

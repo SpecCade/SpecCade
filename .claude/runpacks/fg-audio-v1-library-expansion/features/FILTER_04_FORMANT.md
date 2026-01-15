@@ -1,12 +1,12 @@
 # [FILTER] Formant
 
-Source: `speccade/docs/FUTURE_GENERATORS.md` → “Missing Filter Types”.
+Source: `docs/FUTURE_GENERATORS.md` → “Missing Filter Types”.
 
 ## Goal
 
 Expose a `formant` filter type (vowel filtering) usable as a layer/master filter.
 
-## Suggested spec surface (MVP)
+## Required spec surface
 
 - Add `Filter::Formant { vowel: FormantVowel, intensity: f64 }`
   - Serde tag: `"type": "formant"`
@@ -17,7 +17,7 @@ If reuse creates confusing naming collisions, prefer `FilterFormantVowel` / `For
 
 ## Implementation notes
 
-- Spec types live in `speccade/crates/speccade-spec/src/recipe/audio/synthesis/**`.
+- Spec types live in `crates/speccade-spec/src/recipe/audio/synthesis/**`.
 - Backend:
   - Implement as a small bank of deterministic resonant bandpass/peaking filters.
   - Ensure stable, bounded gains (avoid runaway resonance).
@@ -27,4 +27,3 @@ If reuse creates confusing naming collisions, prefer `FilterFormantVowel` / `For
 - Serde roundtrip tests.
 - Filter produces audible vowel-ish shaping and remains stable.
 - Schema + docs updated.
-

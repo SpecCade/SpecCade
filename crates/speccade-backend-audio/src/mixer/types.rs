@@ -9,6 +9,10 @@ pub struct Layer {
     pub volume: f64,
     /// Stereo pan (-1.0 = left, 0.0 = center, 1.0 = right).
     pub pan: f64,
+    /// Optional per-sample pan curve (-1.0 to 1.0).
+    ///
+    /// When present, this overrides `pan` for stereo mixing.
+    pub pan_curve: Option<Vec<f64>>,
     /// Delay in samples before this layer starts.
     pub delay_samples: usize,
 }
@@ -20,6 +24,7 @@ impl Layer {
             samples,
             volume: volume.clamp(0.0, 1.0),
             pan: pan.clamp(-1.0, 1.0),
+            pan_curve: None,
             delay_samples: 0,
         }
     }
@@ -32,6 +37,12 @@ impl Layer {
     /// Sets a delay for the layer.
     pub fn with_delay(mut self, delay_samples: usize) -> Self {
         self.delay_samples = delay_samples;
+        self
+    }
+
+    /// Sets a per-sample pan curve for the layer.
+    pub fn with_pan_curve(mut self, pan_curve: Vec<f64>) -> Self {
+        self.pan_curve = Some(pan_curve);
         self
     }
 

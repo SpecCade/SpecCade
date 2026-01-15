@@ -13,8 +13,6 @@ pub struct Lfo {
     waveform: Waveform,
     /// LFO rate in Hz.
     rate: f64,
-    /// Modulation depth (0.0-1.0).
-    depth: f64,
     /// Phase accumulator for waveform generation.
     phase_acc: PhaseAccumulator,
 }
@@ -25,30 +23,23 @@ impl Lfo {
     /// # Arguments
     /// * `waveform` - The waveform type (sine, triangle, square, sawtooth, pulse)
     /// * `rate` - LFO rate in Hz (typically 0.1-20 Hz)
-    /// * `depth` - Modulation depth (0.0-1.0)
     /// * `sample_rate` - Audio sample rate
     /// * `initial_phase` - Initial phase offset (0.0-1.0)
     pub fn new(
         waveform: Waveform,
         rate: f64,
-        depth: f64,
         sample_rate: f64,
         initial_phase: f64,
     ) -> Self {
         let mut phase_acc = PhaseAccumulator::new(sample_rate);
 
-        // Set initial phase by advancing the phase accumulator
-        if initial_phase > 0.0 {
-            // Advance the phase accumulator to the initial phase
-            for _ in 0..(initial_phase * sample_rate / rate).floor() as usize {
-                phase_acc.advance(rate);
-            }
-        }
+        // Set initial phase directly in radians (0.0-1.0 cycles).
+        let initial_phase = initial_phase.clamp(0.0, 1.0);
+        phase_acc.set_phase_radians(initial_phase * std::f64::consts::TAU);
 
         Self {
             waveform,
             rate,
-            depth,
             phase_acc,
         }
     }
@@ -77,12 +68,7 @@ impl Lfo {
         };
 
         // Convert from [-1.0, 1.0] to [0.0, 1.0]
-        let normalized = (raw_value + 1.0) * 0.5;
-
-        // Apply depth: (1 - depth) represents center point, depth scales the modulation
-        let modulated = (1.0 - self.depth) + normalized * self.depth;
-
-        modulated.clamp(0.0, 1.0)
+        ((raw_value + 1.0) * 0.5).clamp(0.0, 1.0)
     }
 
     /// Generates a buffer of LFO samples.
@@ -112,10 +98,22 @@ impl Lfo {
 /// # Returns
 /// Modulated frequency in Hz
 pub fn apply_pitch_modulation(frequency: f64, lfo_value: f64, semitones: f64) -> f64 {
+    apply_pitch_modulation_with_depth(frequency, lfo_value, semitones, 1.0)
+}
+
+/// Applies pitch modulation to a frequency value, with an explicit depth scalar.
+///
+/// `depth` scales the target amount (`semitones`) and should be in [0.0, 1.0].
+pub fn apply_pitch_modulation_with_depth(
+    frequency: f64,
+    lfo_value: f64,
+    semitones: f64,
+    depth: f64,
+) -> f64 {
     // Convert LFO value from [0.0, 1.0] to [-1.0, 1.0]
     let bipolar = (lfo_value - 0.5) * 2.0;
     // Convert semitones to frequency multiplier
-    let pitch_shift = bipolar * semitones;
+    let pitch_shift = bipolar * semitones * depth.clamp(0.0, 1.0);
     frequency * 2.0_f64.powf(pitch_shift / 12.0)
 }
 
@@ -128,9 +126,10 @@ pub fn apply_pitch_modulation(frequency: f64, lfo_value: f64, semitones: f64) ->
 ///
 /// # Returns
 /// Modulated amplitude
-pub fn apply_volume_modulation(amplitude: f64, lfo_value: f64, depth: f64) -> f64 {
-    // LFO value is already in [0.0, 1.0], scale by depth
-    amplitude * ((1.0 - depth) + lfo_value * depth)
+pub fn apply_volume_modulation(amplitude: f64, lfo_value: f64, amount: f64, depth: f64) -> f64 {
+    let amount = amount.clamp(0.0, 1.0);
+    let strength = amount * depth.clamp(0.0, 1.0);
+    amplitude * ((1.0 - strength) + lfo_value * strength)
 }
 
 /// Applies filter cutoff modulation.
@@ -142,10 +141,15 @@ pub fn apply_volume_modulation(amplitude: f64, lfo_value: f64, depth: f64) -> f6
 ///
 /// # Returns
 /// Modulated cutoff frequency in Hz
-pub fn apply_filter_cutoff_modulation(base_cutoff: f64, lfo_value: f64, amount: f64) -> f64 {
+pub fn apply_filter_cutoff_modulation(
+    base_cutoff: f64,
+    lfo_value: f64,
+    amount_hz: f64,
+    depth: f64,
+) -> f64 {
     // Convert LFO value from [0.0, 1.0] to [-1.0, 1.0]
     let bipolar = (lfo_value - 0.5) * 2.0;
-    (base_cutoff + bipolar * amount).max(20.0) // Ensure cutoff doesn't go below 20 Hz
+    (base_cutoff + bipolar * amount_hz * depth.clamp(0.0, 1.0)).max(20.0)
 }
 
 /// Applies pan modulation.
@@ -157,10 +161,12 @@ pub fn apply_filter_cutoff_modulation(base_cutoff: f64, lfo_value: f64, amount: 
 ///
 /// # Returns
 /// Modulated pan position (-1.0 to 1.0)
-pub fn apply_pan_modulation(base_pan: f64, lfo_value: f64, depth: f64) -> f64 {
+pub fn apply_pan_modulation(base_pan: f64, lfo_value: f64, amount: f64, depth: f64) -> f64 {
+    let amount = amount.clamp(0.0, 1.0);
+    let strength = amount * depth.clamp(0.0, 1.0);
     // Convert LFO value from [0.0, 1.0] to [-1.0, 1.0]
     let bipolar = (lfo_value - 0.5) * 2.0;
-    (base_pan + bipolar * depth).clamp(-1.0, 1.0)
+    (base_pan + bipolar * strength).clamp(-1.0, 1.0)
 }
 
 #[cfg(test)]
@@ -171,7 +177,7 @@ mod tests {
     #[test]
     fn test_lfo_sine_generation() {
         let mut rng = create_rng(42);
-        let mut lfo = Lfo::new(Waveform::Sine, 1.0, 1.0, 44100.0, 0.0);
+        let mut lfo = Lfo::new(Waveform::Sine, 1.0, 44100.0, 0.0);
 
         // Generate some samples
         let samples = lfo.generate(100, &mut rng);
@@ -191,8 +197,8 @@ mod tests {
         let mut rng1 = create_rng(42);
         let mut rng2 = create_rng(42);
 
-        let mut lfo1 = Lfo::new(Waveform::Sine, 2.0, 0.8, 44100.0, 0.0);
-        let mut lfo2 = Lfo::new(Waveform::Sine, 2.0, 0.8, 44100.0, 0.0);
+        let mut lfo1 = Lfo::new(Waveform::Sine, 2.0, 44100.0, 0.0);
+        let mut lfo2 = Lfo::new(Waveform::Sine, 2.0, 44100.0, 0.0);
 
         let samples1 = lfo1.generate(100, &mut rng1);
         let samples2 = lfo2.generate(100, &mut rng2);
@@ -223,18 +229,19 @@ mod tests {
     #[test]
     fn test_volume_modulation() {
         let amplitude = 1.0;
+        let amount = 1.0;
         let depth = 1.0;
 
         // At LFO max, should be full amplitude
-        let mod_max = apply_volume_modulation(amplitude, 1.0, depth);
+        let mod_max = apply_volume_modulation(amplitude, 1.0, amount, depth);
         assert!((mod_max - 1.0).abs() < 0.01);
 
         // At LFO min, should be zero with full depth
-        let mod_min = apply_volume_modulation(amplitude, 0.0, depth);
+        let mod_min = apply_volume_modulation(amplitude, 0.0, amount, depth);
         assert!(mod_min < 0.01);
 
         // At LFO center with half depth, should be 0.75
-        let mod_center = apply_volume_modulation(amplitude, 0.5, 0.5);
+        let mod_center = apply_volume_modulation(amplitude, 0.5, 1.0, 0.5);
         assert!((mod_center - 0.75).abs() < 0.01);
     }
 
@@ -242,35 +249,37 @@ mod tests {
     fn test_filter_cutoff_modulation() {
         let base_cutoff = 1000.0;
         let amount = 500.0;
+        let depth = 1.0;
 
         // At center, should be base cutoff
-        let mod_center = apply_filter_cutoff_modulation(base_cutoff, 0.5, amount);
+        let mod_center = apply_filter_cutoff_modulation(base_cutoff, 0.5, amount, depth);
         assert!((mod_center - base_cutoff).abs() < 0.1);
 
         // At max, should be base + amount
-        let mod_max = apply_filter_cutoff_modulation(base_cutoff, 1.0, amount);
+        let mod_max = apply_filter_cutoff_modulation(base_cutoff, 1.0, amount, depth);
         assert!((mod_max - (base_cutoff + amount)).abs() < 0.1);
 
         // At min, should be base - amount
-        let mod_min = apply_filter_cutoff_modulation(base_cutoff, 0.0, amount);
+        let mod_min = apply_filter_cutoff_modulation(base_cutoff, 0.0, amount, depth);
         assert!((mod_min - (base_cutoff - amount)).abs() < 0.1);
     }
 
     #[test]
     fn test_pan_modulation() {
         let base_pan = 0.0; // Center
+        let amount = 1.0;
         let depth = 1.0;
 
         // At center, should be close to base
-        let mod_center = apply_pan_modulation(base_pan, 0.5, depth);
+        let mod_center = apply_pan_modulation(base_pan, 0.5, amount, depth);
         assert!(mod_center.abs() < 0.01);
 
         // At max, should be right
-        let mod_max = apply_pan_modulation(base_pan, 1.0, depth);
+        let mod_max = apply_pan_modulation(base_pan, 1.0, amount, depth);
         assert!((mod_max - 1.0).abs() < 0.01);
 
         // At min, should be left
-        let mod_min = apply_pan_modulation(base_pan, 0.0, depth);
+        let mod_min = apply_pan_modulation(base_pan, 0.0, amount, depth);
         assert!((mod_min + 1.0).abs() < 0.01);
     }
 }

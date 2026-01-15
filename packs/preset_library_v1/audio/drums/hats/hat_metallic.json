@@ -104,12 +104,7 @@
         {
           "synthesis": {
             "type": "noise_burst",
-            "noise_type": "white",
-            "filter": {
-              "type": "highpass",
-              "cutoff": 8500,
-              "resonance": 0.5
-            }
+            "noise_type": "white"
           },
           "envelope": {
             "attack": 0.0005,
@@ -119,6 +114,11 @@
           },
           "volume": 0.25,
           "pan": 0,
+          "filter": {
+            "type": "highpass",
+            "cutoff": 8500,
+            "resonance": 0.5
+          },
           "lfo": {
             "config": {
               "waveform": "sine",

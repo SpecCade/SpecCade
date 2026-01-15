@@ -47,7 +47,7 @@
                         "config": {
                             "waveform": "sine",
                             "rate": 4.2,
-                            "depth": 600
+                            "depth": 1.0
                         },
                         "target": {
                             "target": "filter_cutoff",
@@ -206,7 +206,7 @@
                         "config": {
                             "waveform": "triangle",
                             "rate": 3.7,
-                            "depth": 800
+                            "depth": 1.0
                         },
                         "target": {
                             "target": "filter_cutoff",

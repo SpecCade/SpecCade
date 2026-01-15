@@ -264,6 +264,104 @@ fn test_audio_requires_wav_primary_output() {
 }
 
 #[test]
+fn test_audio_lfo_rejects_depth_out_of_range() {
+    let spec = Spec::builder("test-audio-lfo-01", AssetType::Audio)
+        .license("CC0-1.0")
+        .seed(42)
+        .output(OutputSpec::primary(OutputFormat::Wav, "sounds/test.wav"))
+        .recipe(Recipe::new(
+            "audio_v1",
+            serde_json::json!({
+                "duration_seconds": 0.1,
+                "layers": [
+                    {
+                        "synthesis": { "type": "oscillator", "waveform": "sine", "frequency": 440.0 },
+                        "envelope": { "attack": 0.0, "decay": 0.0, "sustain": 1.0, "release": 0.0 },
+                        "volume": 1.0,
+                        "pan": 0.0,
+                        "lfo": {
+                            "config": { "waveform": "sine", "rate": 5.0, "depth": 2.0 },
+                            "target": { "target": "volume", "amount": 1.0 }
+                        }
+                    }
+                ]
+            }),
+        ))
+        .build();
+
+    let result = validate_spec(&spec);
+    assert!(!result.is_ok());
+    assert!(result
+        .errors
+        .iter()
+        .any(|e| e.code == ErrorCode::InvalidRecipeParams));
+}
+
+#[test]
+fn test_audio_lfo_allows_pitch_lfo_on_non_oscillator() {
+    let spec = Spec::builder("test-audio-lfo-02", AssetType::Audio)
+        .license("CC0-1.0")
+        .seed(42)
+        .output(OutputSpec::primary(OutputFormat::Wav, "sounds/test.wav"))
+        .recipe(Recipe::new(
+            "audio_v1",
+            serde_json::json!({
+                "duration_seconds": 0.1,
+                "layers": [
+                    {
+                        "synthesis": { "type": "fm_synth", "carrier_freq": 440.0, "modulator_freq": 880.0, "modulation_index": 2.0 },
+                        "envelope": { "attack": 0.0, "decay": 0.0, "sustain": 1.0, "release": 0.0 },
+                        "volume": 1.0,
+                        "pan": 0.0,
+                        "lfo": {
+                            "config": { "waveform": "sine", "rate": 5.0, "depth": 1.0 },
+                            "target": { "target": "pitch", "semitones": 1.0 }
+                        }
+                    }
+                ]
+            }),
+        ))
+        .build();
+
+    let result = validate_spec(&spec);
+    assert!(result.is_ok(), "{:?}", result.errors);
+}
+
+#[test]
+fn test_audio_lfo_rejects_filter_cutoff_lfo_without_filter() {
+    let spec = Spec::builder("test-audio-lfo-03", AssetType::Audio)
+        .license("CC0-1.0")
+        .seed(42)
+        .output(OutputSpec::primary(OutputFormat::Wav, "sounds/test.wav"))
+        .recipe(Recipe::new(
+            "audio_v1",
+            serde_json::json!({
+                "duration_seconds": 0.1,
+                "layers": [
+                    {
+                        "synthesis": { "type": "oscillator", "waveform": "sine", "frequency": 440.0 },
+                        "envelope": { "attack": 0.0, "decay": 0.0, "sustain": 1.0, "release": 0.0 },
+                        "volume": 1.0,
+                        "pan": 0.0,
+                        "lfo": {
+                            "config": { "waveform": "sine", "rate": 5.0, "depth": 1.0 },
+                            "target": { "target": "filter_cutoff", "amount": 100.0 }
+                        }
+                    }
+                ]
+            }),
+        ))
+        .build();
+
+    let result = validate_spec(&spec);
+    assert!(!result.is_ok());
+    assert!(result
+        .errors
+        .iter()
+        .any(|e| e.message.contains("filter_cutoff LFO requires")));
+}
+
+#[test]
 fn test_music_requires_primary_format_matches_recipe_format() {
     let spec = Spec::builder("test-song-01", AssetType::Music)
         .license("CC0-1.0")

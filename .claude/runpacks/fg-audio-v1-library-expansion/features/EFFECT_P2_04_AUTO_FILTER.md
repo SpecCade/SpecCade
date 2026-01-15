@@ -1,12 +1,12 @@
 # [EFFECT P2] Auto-filter / Envelope follower
 
-Source: `speccade/docs/FUTURE_GENERATORS.md` → “Missing Effects (Priority 2)”.
+Source: `docs/FUTURE_GENERATORS.md` → “Missing Effects (Priority 2)”.
 
 ## Goal
 
 Add `auto_filter` effect (auto-wah / dynamic filter sweeps driven by signal level).
 
-## Suggested spec surface
+## Required spec surface
 
 - Add `Effect::AutoFilter { sensitivity: f64, attack_ms: f64, release_ms: f64, depth: f64, base_frequency: f64 }`
 
@@ -20,4 +20,3 @@ Add `auto_filter` effect (auto-wah / dynamic filter sweeps driven by signal leve
 
 - Audible auto-wah behavior on a dynamic signal.
 - Deterministic; tests updated.
-

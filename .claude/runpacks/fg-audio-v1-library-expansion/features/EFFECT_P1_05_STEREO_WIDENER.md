@@ -1,12 +1,12 @@
 # [EFFECT P1] Stereo Widener
 
-Source: `speccade/docs/FUTURE_GENERATORS.md` → “Missing Effects (Priority 1)”.
+Source: `docs/FUTURE_GENERATORS.md` → “Missing Effects (Priority 1)”.
 
 ## Goal
 
 Add `stereo_widener` effect for stereo enhancement.
 
-## Suggested spec surface
+## Required spec surface
 
 - Add `Effect::StereoWidener { width: f64, mode: StereoWidenerMode, delay_ms: f64 }`
 - Add `StereoWidenerMode`: `simple`, `haas`, `mid_side`
@@ -22,4 +22,3 @@ Add `stereo_widener` effect for stereo enhancement.
 - Deterministic.
 - Width=0 yields mono-ish; width=1 default; >1 increases side.
 - Tests cover basic invariants (e.g., energy not exploding).
-

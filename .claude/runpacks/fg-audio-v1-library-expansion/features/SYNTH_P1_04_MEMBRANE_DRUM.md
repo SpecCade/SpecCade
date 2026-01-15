@@ -1,12 +1,12 @@
 # [SYNTH P1] Membrane / drum synthesis
 
-Source: `speccade/docs/FUTURE_GENERATORS.md` → “Missing Synthesis Types (Priority 1)”.
+Source: `docs/FUTURE_GENERATORS.md` → “Missing Synthesis Types (Priority 1)”.
 
 ## Goal
 
 Add `membrane_drum` synthesis for drumhead physics / realistic toms and hand drums.
 
-## Suggested spec surface (MVP)
+## Required spec surface
 
 - Add `Synthesis::MembraneDrum { frequency: f64, decay: f64, tone: f64, strike: f64 }`
 
@@ -20,4 +20,3 @@ Add `membrane_drum` synthesis for drumhead physics / realistic toms and hand dru
 
 - Sounds like a drum membrane (clear modes) and is distinct from layered noise.
 - Deterministic; schema/docs/tests updated.
-

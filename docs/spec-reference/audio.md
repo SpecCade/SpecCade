@@ -103,14 +103,14 @@ Each layer can have an optional `lfo` field for Low Frequency Oscillator modulat
 |------:|------|:--------:|-------|
 | `waveform` | string | yes | `sine`, `square`, `sawtooth`, `triangle`, or `pulse` |
 | `rate` | number | yes | LFO rate in Hz (typically 0.1-20) |
-| `depth` | number | yes | Modulation depth (0.0-1.0) |
+| `depth` | number | yes | Modulation depth (0.0-1.0). Must be `> 0.0` when `lfo` is present. |
 | `phase` | number | no | Initial phase offset (0.0-1.0) |
 
 **Modulation Targets:**
-- `{ "target": "pitch", "semitones": 2.0 }` — Vibrato (pitch deviation in semitones)
-- `{ "target": "volume" }` — Tremolo (amplitude modulation)
-- `{ "target": "filter_cutoff", "amount": 1000.0 }` — Filter sweep (Hz change)
-- `{ "target": "pan" }` — Auto-panning (stereo sweep)
+- `{ "target": "pitch", "semitones": 2.0 }` — Vibrato (pitch deviation in semitones; effective range is `semitones * depth`)
+- `{ "target": "volume", "amount": 1.0 }` — Tremolo (maximum amplitude reduction; effective strength is `amount * depth`)
+- `{ "target": "filter_cutoff", "amount": 1000.0 }` — Filter sweep (Hz delta; effective strength is `amount * depth`)
+- `{ "target": "pan", "amount": 1.0 }` — Auto-panning (max pan delta around `layer.pan`; effective strength is `amount * depth`)
 
 ### Synthesis Types
 

@@ -1,6 +1,6 @@
 # FG Audio V1 Library Expansion — Feature Index
 
-Source: `speccade/docs/FUTURE_GENERATORS.md` (Audio/Music Expansion).
+Source: `docs/FUTURE_GENERATORS.md` (Audio/Music Expansion).
 
 Guidance: implement in this order unless dependencies force a reorder.
 
@@ -47,7 +47,6 @@ Guidance: implement in this order unless dependencies force a reorder.
 - [ ] Rotary speaker — `features/EFFECT_P3_01_ROTARY_SPEAKER.md`
 - [ ] Ring modulator (effect) — `features/EFFECT_P3_02_RING_MODULATOR.md`
 - [ ] Granular delay — `features/EFFECT_P3_03_GRANULAR_DELAY.md`
-- [ ] Convolution reverb — `features/EFFECT_P3_04_CONVOLUTION_REVERB.md`
 
 ## Synthesis types (missing, Priority 1–3)
 
@@ -62,11 +61,9 @@ Guidance: implement in this order unless dependencies force a reorder.
 
 - [ ] Feedback FM — `features/SYNTH_P2_01_FEEDBACK_FM.md`
 - [ ] Comb filter synthesis — `features/SYNTH_P2_02_COMB_FILTER_SYNTH.md`
-- [ ] Sample playback — `features/SYNTH_P2_03_SAMPLE_PLAYBACK.md`
 
 ### Priority 3
 
 - [ ] Pulsar synthesis — `features/SYNTH_P3_01_PULSAR.md`
 - [ ] VOSIM — `features/SYNTH_P3_02_VOSIM.md`
 - [ ] Spectral synthesis — `features/SYNTH_P3_03_SPECTRAL.md`
-

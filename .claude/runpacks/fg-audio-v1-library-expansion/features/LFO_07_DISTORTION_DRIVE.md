@@ -1,28 +1,38 @@
 # [LFO] Target: `distortion_drive`
 
-Source: `speccade/docs/FUTURE_GENERATORS.md` → “Missing LFO Targets”.
+Source: `docs/FUTURE_GENERATORS.md` → “Missing LFO Targets”.
 
 ## Goal
 
-Add an LFO target to modulate distortion drive over time (dynamic saturation).
+Add a **post-FX** LFO target to modulate distortion drive over time.
 
-## Design note
+This target is **not** a layer LFO target. It must be implemented via `AudioV1Params.post_fx_lfos` per:
+- `.claude/runpacks/fg-audio-v1-library-expansion/DECISIONS.md`
 
-Waveshaper drive is part of the global effects chain. This likely needs recipe-level modulation (see `LFO_05_DELAY_TIME.md`).
+## Required spec surface
 
-## Suggested spec surface (minimal)
+1. Add `ModulationTarget::DistortionDrive { amount: f64 }`:
+   - File: `crates/speccade-spec/src/recipe/audio/synthesis/modulation.rs`
+   - Serde target object shape: `{ "target": "distortion_drive", "amount": 10.0 }`
 
-- Add `AudioV1Params.master_lfo: Option<LfoModulation>` (or equivalent)
-- Add `ModulationTarget::DistortionDrive { amount: f64 }`
+2. This target uses `AudioV1Params.post_fx_lfos` (not `AudioLayer.lfo`):
+   - If `post_fx_lfos` is not present yet, add it exactly as specified in `.claude/runpacks/fg-audio-v1-library-expansion/DECISIONS.md`.
 
-## Implementation notes
+## Required behavior (no discretion)
 
-- Backend:
-  - Apply modulation to `Effect::Waveshaper.drive` over time.
-  - Deterministic block updates are acceptable.
+1. Validation rules:
+   - `ModulationTarget::DistortionDrive` is invalid on `AudioLayer.lfo`.
+   - `AudioV1Params.post_fx_lfos` must contain **max 1 entry per target** (duplicate targets must fail validation).
+   - If any `post_fx_lfos[]` entry has `target == distortion_drive` and there are **zero matching effects** in `AudioV1Params.effects[]`, validation must fail.
+   - Implement the “matching effects” list exactly as defined in `.claude/runpacks/fg-audio-v1-library-expansion/DECISIONS.md` (apply to all matching effect instances).
+
+2. Backend rules:
+   - Apply modulation to distortion drive during post-mix effect processing.
+   - Reuse the LFO curve for this entry across all matching effects.
+   - Apply modulation using the formula and clamps in `.claude/runpacks/fg-audio-v1-library-expansion/DECISIONS.md`.
 
 ## Acceptance criteria
 
-- Target is not a no-op: drive varies over time.
-- Deterministic behavior; schema/docs updated.
-
+- Target is not a no-op: distortion drive varies over time in output audio, deterministically.
+- If `post_fx_lfos` contains a `distortion_drive` entry but there is no matching effect in the chain, spec validation fails.
+- Schema + docs updated to include the `distortion_drive` target.

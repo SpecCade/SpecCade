@@ -89,13 +89,7 @@
                 {
                     "synthesis": {
                         "type": "noise_burst",
-                        "noise_type": "pink",
-                        "filter": {
-                            "type": "highpass",
-                            "cutoff": 6000,
-                            "resonance": 0.7,
-                            "cutoff_end": 300
-                        }
+                        "noise_type": "pink"
                     },
                     "envelope": {
                         "attack": 0.02,
@@ -105,6 +99,12 @@
                     },
                     "volume": 0.5,
                     "pan": 0,
+                    "filter": {
+                        "type": "highpass",
+                        "cutoff": 6000,
+                        "resonance": 0.7,
+                        "cutoff_end": 300
+                    },
                     "lfo": {
                         "config": {
                             "waveform": "triangle",

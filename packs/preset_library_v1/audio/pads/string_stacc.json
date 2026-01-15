@@ -69,7 +69,7 @@
                         "config": {
                             "waveform": "sine",
                             "rate": 6.5,
-                            "depth": 200.0
+                            "depth": 1.0
                         },
                         "target": {
                             "target": "filter_cutoff",
@@ -117,7 +117,7 @@
                         "config": {
                             "waveform": "sine",
                             "rate": 7.2,
-                            "depth": 180.0
+                            "depth": 1.0
                         },
                         "target": {
                             "target": "filter_cutoff",

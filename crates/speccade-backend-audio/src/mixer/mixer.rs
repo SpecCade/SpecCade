@@ -32,7 +32,7 @@ impl Mixer {
 
     /// Adds a layer to the mix.
     pub fn add_layer(&mut self, layer: Layer) {
-        if layer.pan.abs() > 1e-6 {
+        if layer.pan.abs() > 1e-6 || layer.pan_curve.is_some() {
             self.has_stereo_content = true;
         }
         self.layers.push(layer);
@@ -76,20 +76,38 @@ impl Mixer {
         let mut output = StereoOutput::new(self.num_samples);
 
         for layer in &self.layers {
-            // Equal power panning
-            let pan_angle = (layer.pan + 1.0) * std::f64::consts::FRAC_PI_4; // 0 to PI/2
-            let left_gain = pan_angle.cos() * layer.volume;
-            let right_gain = pan_angle.sin() * layer.volume;
-
             let start = layer.delay_samples;
 
-            for (i, &sample) in layer.samples.iter().enumerate() {
-                let output_idx = start + i;
-                if output_idx < self.num_samples {
-                    output.left[output_idx] += sample * left_gain;
-                    output.right[output_idx] += sample * right_gain;
+            match &layer.pan_curve {
+                Some(pan_curve) => {
+                    for (i, &sample) in layer.samples.iter().enumerate() {
+                        let output_idx = start + i;
+                        if output_idx < self.num_samples {
+                            let pan = pan_curve.get(i).copied().unwrap_or(layer.pan);
+                            let pan_angle = (pan + 1.0) * std::f64::consts::FRAC_PI_4; // 0 to PI/2
+                            let left_gain = pan_angle.cos() * layer.volume;
+                            let right_gain = pan_angle.sin() * layer.volume;
+
+                            output.left[output_idx] += sample * left_gain;
+                            output.right[output_idx] += sample * right_gain;
+                        }
+                    }
                 }
-            }
+                None => {
+                    // Equal power panning
+                    let pan_angle = (layer.pan + 1.0) * std::f64::consts::FRAC_PI_4; // 0 to PI/2
+                    let left_gain = pan_angle.cos() * layer.volume;
+                    let right_gain = pan_angle.sin() * layer.volume;
+
+                    for (i, &sample) in layer.samples.iter().enumerate() {
+                        let output_idx = start + i;
+                        if output_idx < self.num_samples {
+                            output.left[output_idx] += sample * left_gain;
+                            output.right[output_idx] += sample * right_gain;
+                        }
+                    }
+                }
+            };
         }
 
         output

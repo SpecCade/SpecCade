@@ -1,12 +1,12 @@
 # [SYNTH P3] Pulsar synthesis
 
-Source: `speccade/docs/FUTURE_GENERATORS.md` → “Missing Synthesis Types (Priority 3)”.
+Source: `docs/FUTURE_GENERATORS.md` → “Missing Synthesis Types (Priority 3)”.
 
 ## Goal
 
 Add `pulsar` synthesis (synchronized grain trains for rhythmic/tonal granular).
 
-## Suggested spec surface (MVP)
+## Required spec surface
 
 - Add `Synthesis::Pulsar { frequency: f64, pulse_rate: f64, grain_size_ms: f64, shape: Waveform }`
 
@@ -18,4 +18,3 @@ Add `pulsar` synthesis (synchronized grain trains for rhythmic/tonal granular).
 ## Acceptance criteria
 
 - Audible pulsed/grain-train character; deterministic; docs/schema/tests updated.
-

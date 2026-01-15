@@ -128,7 +128,8 @@
                             "depth": 0.06
                         },
                         "target": {
-                            "target": "volume"
+                            "target": "volume",
+                            "amount": 1.0
                         }
                     }
                 },

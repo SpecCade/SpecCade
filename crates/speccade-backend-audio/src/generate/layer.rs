@@ -434,18 +434,17 @@ pub fn generate_layer(
         let mut lfo = Lfo::new(
             lfo_mod.config.waveform,
             lfo_mod.config.rate,
-            lfo_mod.config.depth,
             sample_rate,
             initial_phase,
         );
 
         match &lfo_mod.target {
             ModulationTarget::Pitch { semitones } => {
-                // Regenerate with pitch modulation (only works for oscillator-based synthesis)
                 if matches!(
                     layer.synthesis,
                     Synthesis::Oscillator { .. } | Synthesis::MultiOscillator { .. }
                 ) {
+                    // Regenerate with per-sample frequency modulation for oscillator-based synthesis.
                     samples = modulation::apply_lfo_pitch_modulation(
                         layer,
                         layer_idx,
@@ -454,15 +453,26 @@ pub fn generate_layer(
                         seed,
                         &mut lfo,
                         *semitones,
+                        lfo_mod.config.depth,
                         &mut rng,
                     )?;
+                } else {
+                    // Fallback: apply pitch modulation via deterministic time-warp (variable-rate resampling).
+                    samples = modulation::apply_lfo_pitch_warp(
+                        &samples,
+                        &mut lfo,
+                        *semitones,
+                        lfo_mod.config.depth,
+                        &mut rng,
+                    );
                 }
             }
-            ModulationTarget::Volume => {
+            ModulationTarget::Volume { amount } => {
                 // Apply volume modulation per-sample
                 for sample in samples.iter_mut() {
                     let lfo_value = lfo.next_sample(&mut rng);
-                    *sample = apply_volume_modulation(*sample, lfo_value, lfo_mod.config.depth);
+                    *sample =
+                        apply_volume_modulation(*sample, lfo_value, *amount, lfo_mod.config.depth);
                 }
             }
             ModulationTarget::FilterCutoff { amount } => {
@@ -474,14 +484,14 @@ pub fn generate_layer(
                         filter,
                         &mut lfo,
                         *amount,
+                        lfo_mod.config.depth,
                         sample_rate,
                         &mut rng,
                     );
                 }
             }
-            ModulationTarget::Pan => {
-                // Pan modulation would need stereo processing, skip for now
-                // as layers are mono at this stage
+            ModulationTarget::Pan { .. } => {
+                // Pan modulation is applied during mixing (not during layer synthesis).
             }
         }
     }

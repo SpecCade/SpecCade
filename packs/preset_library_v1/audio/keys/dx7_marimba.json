@@ -130,18 +130,7 @@
                         "release": 1.0
                     },
                     "volume": 0.22,
-                    "pan": -0.08,
-                    "lfo": {
-                        "config": {
-                            "waveform": "triangle",
-                            "rate": 3.2,
-                            "depth": 0.15
-                        },
-                        "target": {
-                            "target": "filter_cutoff",
-                            "amount": 0.25
-                        }
-                    }
+                    "pan": -0.08
                 }
             ],
             "master_filter": {

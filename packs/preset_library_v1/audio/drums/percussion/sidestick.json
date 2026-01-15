@@ -64,12 +64,7 @@
         {
           "synthesis": {
             "type": "noise_burst",
-            "noise_type": "white",
-            "filter": {
-              "type": "bandpass",
-              "center": 2800,
-              "resonance": 0.7
-            }
+            "noise_type": "white"
           },
           "envelope": {
             "attack": 0,
@@ -79,6 +74,11 @@
           },
           "volume": 0.8,
           "pan": 0.12,
+          "filter": {
+            "type": "bandpass",
+            "center": 2800,
+            "resonance": 0.7
+          },
           "lfo": {
             "config": {
               "waveform": "triangle",
@@ -87,7 +87,6 @@
             },
             "target": {
               "target": "filter_cutoff",
-              "semitones": 0.3,
               "amount": 0.5
             }
           }

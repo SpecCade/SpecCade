@@ -1,12 +1,12 @@
 # [EFFECT P2] Transient shaper
 
-Source: `speccade/docs/FUTURE_GENERATORS.md` → “Missing Effects (Priority 2)”.
+Source: `docs/FUTURE_GENERATORS.md` → “Missing Effects (Priority 2)”.
 
 ## Goal
 
 Add `transient_shaper` for attack/sustain control.
 
-## Suggested spec surface
+## Required spec surface
 
 - Add `Effect::TransientShaper { attack: f64, sustain: f64, output_gain_db: f64 }`
   - `attack` and `sustain` in -100..=100 (as doc suggests), or normalize to -1..=1.
@@ -19,4 +19,3 @@ Add `transient_shaper` for attack/sustain control.
 
 - Audible change on percussive input.
 - Deterministic; tests include a simple impulse/decay fixture.
-
