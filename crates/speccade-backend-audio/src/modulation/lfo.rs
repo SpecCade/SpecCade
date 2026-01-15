@@ -17,10 +17,6 @@ pub struct Lfo {
     depth: f64,
     /// Phase accumulator for waveform generation.
     phase_acc: PhaseAccumulator,
-    /// Previous sample for sample-and-hold (random waveform).
-    sh_value: f64,
-    /// Phase at which to update sample-and-hold.
-    sh_update_phase: f64,
 }
 
 impl Lfo {
@@ -54,8 +50,6 @@ impl Lfo {
             rate,
             depth,
             phase_acc,
-            sh_value: 0.0,
-            sh_update_phase: 0.0,
         }
     }
 

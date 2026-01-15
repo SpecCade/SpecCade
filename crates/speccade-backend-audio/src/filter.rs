@@ -24,6 +24,8 @@ impl BiquadCoeffs {
     /// * `q` - Q factor (resonance), typical values 0.5-10, 0.707 is Butterworth
     /// * `sample_rate` - Audio sample rate in Hz
     pub fn lowpass(cutoff: f64, q: f64, sample_rate: f64) -> Self {
+        // Clamp Q to minimum safe value to prevent division by zero
+        let q = q.max(0.5);
         let omega = 2.0 * PI * cutoff / sample_rate;
         let sin_omega = omega.sin();
         let cos_omega = omega.cos();
@@ -52,6 +54,8 @@ impl BiquadCoeffs {
     /// * `q` - Q factor (resonance)
     /// * `sample_rate` - Audio sample rate in Hz
     pub fn highpass(cutoff: f64, q: f64, sample_rate: f64) -> Self {
+        // Clamp Q to minimum safe value to prevent division by zero
+        let q = q.max(0.5);
         let omega = 2.0 * PI * cutoff / sample_rate;
         let sin_omega = omega.sin();
         let cos_omega = omega.cos();
@@ -80,6 +84,8 @@ impl BiquadCoeffs {
     /// * `q` - Q factor (bandwidth = center / Q)
     /// * `sample_rate` - Audio sample rate in Hz
     pub fn bandpass(center: f64, q: f64, sample_rate: f64) -> Self {
+        // Clamp Q to minimum safe value to prevent division by zero
+        let q = q.max(0.5);
         let omega = 2.0 * PI * center / sample_rate;
         let sin_omega = omega.sin();
         let cos_omega = omega.cos();
@@ -108,6 +114,8 @@ impl BiquadCoeffs {
     /// * `q` - Q factor
     /// * `sample_rate` - Audio sample rate in Hz
     pub fn notch(center: f64, q: f64, sample_rate: f64) -> Self {
+        // Clamp Q to minimum safe value to prevent division by zero
+        let q = q.max(0.5);
         let omega = 2.0 * PI * center / sample_rate;
         let sin_omega = omega.sin();
         let cos_omega = omega.cos();
@@ -136,6 +144,8 @@ impl BiquadCoeffs {
     /// * `q` - Q factor
     /// * `sample_rate` - Audio sample rate in Hz
     pub fn allpass(frequency: f64, q: f64, sample_rate: f64) -> Self {
+        // Clamp Q to minimum safe value to prevent division by zero
+        let q = q.max(0.5);
         let omega = 2.0 * PI * frequency / sample_rate;
         let sin_omega = omega.sin();
         let cos_omega = omega.cos();
@@ -165,6 +175,8 @@ impl BiquadCoeffs {
     /// * `db_gain` - Gain in dB (positive for boost, negative for cut)
     /// * `sample_rate` - Audio sample rate in Hz
     pub fn peaking_eq(frequency: f64, q: f64, db_gain: f64, sample_rate: f64) -> Self {
+        // Clamp Q to minimum safe value to prevent division by zero
+        let q = q.max(0.5);
         let a = 10.0_f64.powf(db_gain / 40.0);
         let omega = 2.0 * PI * frequency / sample_rate;
         let sin_omega = omega.sin();
