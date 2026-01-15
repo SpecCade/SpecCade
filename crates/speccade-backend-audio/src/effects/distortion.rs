@@ -39,13 +39,34 @@ fn quantize(sample: f64, step: f64) -> f64 {
 
 /// Applies waveshaper distortion to stereo audio.
 pub fn apply_waveshaper(stereo: &mut StereoOutput, drive: f64, curve: &WaveshaperCurve, wet: f64) {
-    let drive = drive.clamp(1.0, 100.0);
+    // Create a constant drive curve for the non-modulated case
+    let num_samples = stereo.left.len();
+    let drive_curve = vec![drive; num_samples];
+    apply_waveshaper_with_modulation(stereo, &drive_curve, curve, wet);
+}
+
+/// Applies waveshaper distortion to stereo audio with per-sample drive modulation.
+///
+/// # Arguments
+/// * `stereo` - Stereo audio to process
+/// * `drive_curve` - Per-sample drive values (clamped to 1.0-100.0)
+/// * `curve` - Waveshaping curve type
+/// * `wet` - Wet/dry mix (0.0-1.0)
+pub fn apply_waveshaper_with_modulation(
+    stereo: &mut StereoOutput,
+    drive_curve: &[f64],
+    curve: &WaveshaperCurve,
+    wet: f64,
+) {
     let wet = wet.clamp(0.0, 1.0);
     let dry = 1.0 - wet;
 
     for i in 0..stereo.left.len() {
         let in_left = stereo.left[i];
         let in_right = stereo.right[i];
+
+        // Get modulated drive for this sample
+        let drive = drive_curve.get(i).copied().unwrap_or(1.0).clamp(1.0, 100.0);
 
         // Apply drive
         let driven_left = in_left * drive;

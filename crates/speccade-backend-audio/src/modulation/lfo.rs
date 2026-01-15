@@ -25,12 +25,7 @@ impl Lfo {
     /// * `rate` - LFO rate in Hz (typically 0.1-20 Hz)
     /// * `sample_rate` - Audio sample rate
     /// * `initial_phase` - Initial phase offset (0.0-1.0)
-    pub fn new(
-        waveform: Waveform,
-        rate: f64,
-        sample_rate: f64,
-        initial_phase: f64,
-    ) -> Self {
+    pub fn new(waveform: Waveform, rate: f64, sample_rate: f64, initial_phase: f64) -> Self {
         let mut phase_acc = PhaseAccumulator::new(sample_rate);
 
         // Set initial phase directly in radians (0.0-1.0 cycles).
@@ -169,6 +164,112 @@ pub fn apply_pan_modulation(base_pan: f64, lfo_value: f64, amount: f64, depth: f
     (base_pan + bipolar * strength).clamp(-1.0, 1.0)
 }
 
+/// Applies pulse width (duty cycle) modulation.
+///
+/// # Arguments
+/// * `base_duty` - Base duty cycle (typically 0.5)
+/// * `lfo_value` - LFO modulation value (0.0-1.0)
+/// * `amount` - Maximum duty cycle delta (0.0-0.49)
+/// * `depth` - Modulation depth (0.0-1.0)
+///
+/// # Returns
+/// Modulated duty cycle clamped to (0.01, 0.99)
+pub fn apply_pulse_width_modulation(
+    base_duty: f64,
+    lfo_value: f64,
+    amount: f64,
+    depth: f64,
+) -> f64 {
+    let amount = amount.clamp(0.0, 0.49);
+    let strength = amount * depth.clamp(0.0, 1.0);
+    // Convert LFO value from [0.0, 1.0] to [-1.0, 1.0]
+    let bipolar = (lfo_value - 0.5) * 2.0;
+    (base_duty + bipolar * strength).clamp(0.01, 0.99)
+}
+
+/// Applies FM modulation index modulation.
+///
+/// # Arguments
+/// * `base_index` - Base FM modulation index
+/// * `lfo_value` - LFO modulation value (0.0-1.0)
+/// * `amount` - Maximum index delta
+/// * `depth` - Modulation depth (0.0-1.0)
+///
+/// # Returns
+/// Modulated modulation index clamped to >= 0.0
+pub fn apply_fm_index_modulation(base_index: f64, lfo_value: f64, amount: f64, depth: f64) -> f64 {
+    let strength = amount * depth.clamp(0.0, 1.0);
+    // Convert LFO value from [0.0, 1.0] to [-1.0, 1.0]
+    let bipolar = (lfo_value - 0.5) * 2.0;
+    (base_index + bipolar * strength).max(0.0)
+}
+
+/// Applies grain size modulation for granular synthesis.
+///
+/// # Arguments
+/// * `base_size_ms` - Base grain size in milliseconds
+/// * `lfo_value` - LFO modulation value (0.0-1.0)
+/// * `amount_ms` - Maximum grain size delta in milliseconds
+/// * `depth` - Modulation depth (0.0-1.0)
+///
+/// # Returns
+/// Modulated grain size clamped to [10.0, 500.0] ms
+pub fn apply_grain_size_modulation(
+    base_size_ms: f64,
+    lfo_value: f64,
+    amount_ms: f64,
+    depth: f64,
+) -> f64 {
+    let strength = amount_ms * depth.clamp(0.0, 1.0);
+    // Convert LFO value from [0.0, 1.0] to [-1.0, 1.0]
+    let bipolar = (lfo_value - 0.5) * 2.0;
+    (base_size_ms + bipolar * strength).clamp(10.0, 500.0)
+}
+
+/// Applies grain density modulation for granular synthesis.
+///
+/// # Arguments
+/// * `base_density` - Base grain density in grains/sec
+/// * `lfo_value` - LFO modulation value (0.0-1.0)
+/// * `amount` - Maximum density delta in grains/sec
+/// * `depth` - Modulation depth (0.0-1.0)
+///
+/// # Returns
+/// Modulated grain density clamped to [1.0, 100.0] grains/sec
+pub fn apply_grain_density_modulation(
+    base_density: f64,
+    lfo_value: f64,
+    amount: f64,
+    depth: f64,
+) -> f64 {
+    let strength = amount * depth.clamp(0.0, 1.0);
+    // Convert LFO value from [0.0, 1.0] to [-1.0, 1.0]
+    let bipolar = (lfo_value - 0.5) * 2.0;
+    (base_density + bipolar * strength).clamp(1.0, 100.0)
+}
+
+/// Applies delay time modulation for post-FX delay effects.
+///
+/// # Arguments
+/// * `base_time_ms` - Base delay time in milliseconds
+/// * `lfo_value` - LFO modulation value (0.0-1.0)
+/// * `amount_ms` - Maximum delay time delta in milliseconds
+/// * `depth` - Modulation depth (0.0-1.0)
+///
+/// # Returns
+/// Modulated delay time clamped to [1.0, 2000.0] ms
+pub fn apply_delay_time_modulation(
+    base_time_ms: f64,
+    lfo_value: f64,
+    amount_ms: f64,
+    depth: f64,
+) -> f64 {
+    let strength = amount_ms * depth.clamp(0.0, 1.0);
+    // Convert LFO value from [0.0, 1.0] to [-1.0, 1.0]
+    let bipolar = (lfo_value - 0.5) * 2.0;
+    (base_time_ms + bipolar * strength).clamp(1.0, 2000.0)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -281,5 +382,156 @@ mod tests {
         // At min, should be left
         let mod_min = apply_pan_modulation(base_pan, 0.0, amount, depth);
         assert!((mod_min + 1.0).abs() < 0.01);
+    }
+
+    #[test]
+    fn test_pulse_width_modulation() {
+        let base_duty = 0.5; // 50% duty cycle
+        let amount = 0.4; // +/- 40% delta
+        let depth = 1.0;
+
+        // At center (LFO = 0.5), should be close to base duty
+        let mod_center = apply_pulse_width_modulation(base_duty, 0.5, amount, depth);
+        assert!((mod_center - base_duty).abs() < 0.01);
+
+        // At max (LFO = 1.0), should be base + amount = 0.9
+        let mod_max = apply_pulse_width_modulation(base_duty, 1.0, amount, depth);
+        assert!((mod_max - 0.9).abs() < 0.01);
+
+        // At min (LFO = 0.0), should be base - amount = 0.1
+        let mod_min = apply_pulse_width_modulation(base_duty, 0.0, amount, depth);
+        assert!((mod_min - 0.1).abs() < 0.01);
+
+        // Test clamping at extremes
+        let mod_extreme_max = apply_pulse_width_modulation(0.95, 1.0, 0.49, 1.0);
+        assert!(mod_extreme_max <= 0.99);
+
+        let mod_extreme_min = apply_pulse_width_modulation(0.05, 0.0, 0.49, 1.0);
+        assert!(mod_extreme_min >= 0.01);
+
+        // Test depth scaling
+        let mod_half_depth = apply_pulse_width_modulation(base_duty, 1.0, amount, 0.5);
+        assert!((mod_half_depth - 0.7).abs() < 0.01); // 0.5 + 0.4 * 0.5 = 0.7
+    }
+
+    #[test]
+    fn test_fm_index_modulation() {
+        let base_index = 4.0;
+        let amount = 2.0;
+        let depth = 1.0;
+
+        // At center (LFO = 0.5), should be close to base index
+        let mod_center = apply_fm_index_modulation(base_index, 0.5, amount, depth);
+        assert!((mod_center - base_index).abs() < 0.01);
+
+        // At max (LFO = 1.0), should be base + amount = 6.0
+        let mod_max = apply_fm_index_modulation(base_index, 1.0, amount, depth);
+        assert!((mod_max - 6.0).abs() < 0.01);
+
+        // At min (LFO = 0.0), should be base - amount = 2.0
+        let mod_min = apply_fm_index_modulation(base_index, 0.0, amount, depth);
+        assert!((mod_min - 2.0).abs() < 0.01);
+
+        // Test clamping at zero (index can't go negative)
+        let mod_extreme_min = apply_fm_index_modulation(1.0, 0.0, 5.0, 1.0);
+        assert!(mod_extreme_min >= 0.0);
+        assert!((mod_extreme_min).abs() < 0.01); // 1.0 - 5.0 clamped to 0.0
+
+        // Test depth scaling
+        let mod_half_depth = apply_fm_index_modulation(base_index, 1.0, amount, 0.5);
+        assert!((mod_half_depth - 5.0).abs() < 0.01); // 4.0 + 2.0 * 0.5 = 5.0
+    }
+
+    #[test]
+    fn test_grain_size_modulation() {
+        let base_size_ms = 50.0;
+        let amount_ms = 30.0;
+        let depth = 1.0;
+
+        // At center (LFO = 0.5), should be close to base size
+        let mod_center = apply_grain_size_modulation(base_size_ms, 0.5, amount_ms, depth);
+        assert!((mod_center - base_size_ms).abs() < 0.01);
+
+        // At max (LFO = 1.0), should be base + amount = 80.0
+        let mod_max = apply_grain_size_modulation(base_size_ms, 1.0, amount_ms, depth);
+        assert!((mod_max - 80.0).abs() < 0.01);
+
+        // At min (LFO = 0.0), should be base - amount = 20.0
+        let mod_min = apply_grain_size_modulation(base_size_ms, 0.0, amount_ms, depth);
+        assert!((mod_min - 20.0).abs() < 0.01);
+
+        // Test clamping at minimum (10.0)
+        let mod_extreme_min = apply_grain_size_modulation(15.0, 0.0, 50.0, 1.0);
+        assert!((mod_extreme_min - 10.0).abs() < 0.01);
+
+        // Test clamping at maximum (500.0)
+        let mod_extreme_max = apply_grain_size_modulation(480.0, 1.0, 50.0, 1.0);
+        assert!((mod_extreme_max - 500.0).abs() < 0.01);
+
+        // Test depth scaling
+        let mod_half_depth = apply_grain_size_modulation(base_size_ms, 1.0, amount_ms, 0.5);
+        assert!((mod_half_depth - 65.0).abs() < 0.01); // 50.0 + 30.0 * 0.5 = 65.0
+    }
+
+    #[test]
+    fn test_grain_density_modulation() {
+        let base_density = 20.0;
+        let amount = 15.0;
+        let depth = 1.0;
+
+        // At center (LFO = 0.5), should be close to base density
+        let mod_center = apply_grain_density_modulation(base_density, 0.5, amount, depth);
+        assert!((mod_center - base_density).abs() < 0.01);
+
+        // At max (LFO = 1.0), should be base + amount = 35.0
+        let mod_max = apply_grain_density_modulation(base_density, 1.0, amount, depth);
+        assert!((mod_max - 35.0).abs() < 0.01);
+
+        // At min (LFO = 0.0), should be base - amount = 5.0
+        let mod_min = apply_grain_density_modulation(base_density, 0.0, amount, depth);
+        assert!((mod_min - 5.0).abs() < 0.01);
+
+        // Test clamping at minimum (1.0)
+        let mod_extreme_min = apply_grain_density_modulation(5.0, 0.0, 50.0, 1.0);
+        assert!((mod_extreme_min - 1.0).abs() < 0.01);
+
+        // Test clamping at maximum (100.0)
+        let mod_extreme_max = apply_grain_density_modulation(90.0, 1.0, 50.0, 1.0);
+        assert!((mod_extreme_max - 100.0).abs() < 0.01);
+
+        // Test depth scaling
+        let mod_half_depth = apply_grain_density_modulation(base_density, 1.0, amount, 0.5);
+        assert!((mod_half_depth - 27.5).abs() < 0.01); // 20.0 + 15.0 * 0.5 = 27.5
+    }
+
+    #[test]
+    fn test_delay_time_modulation() {
+        let base_time_ms = 250.0;
+        let amount_ms = 50.0;
+        let depth = 1.0;
+
+        // At center (LFO = 0.5), should be close to base time
+        let mod_center = apply_delay_time_modulation(base_time_ms, 0.5, amount_ms, depth);
+        assert!((mod_center - base_time_ms).abs() < 0.01);
+
+        // At max (LFO = 1.0), should be base + amount = 300.0
+        let mod_max = apply_delay_time_modulation(base_time_ms, 1.0, amount_ms, depth);
+        assert!((mod_max - 300.0).abs() < 0.01);
+
+        // At min (LFO = 0.0), should be base - amount = 200.0
+        let mod_min = apply_delay_time_modulation(base_time_ms, 0.0, amount_ms, depth);
+        assert!((mod_min - 200.0).abs() < 0.01);
+
+        // Test clamping at minimum (1.0)
+        let mod_extreme_min = apply_delay_time_modulation(10.0, 0.0, 50.0, 1.0);
+        assert!((mod_extreme_min - 1.0).abs() < 0.01);
+
+        // Test clamping at maximum (2000.0)
+        let mod_extreme_max = apply_delay_time_modulation(1990.0, 1.0, 50.0, 1.0);
+        assert!((mod_extreme_max - 2000.0).abs() < 0.01);
+
+        // Test depth scaling
+        let mod_half_depth = apply_delay_time_modulation(base_time_ms, 1.0, amount_ms, 0.5);
+        assert!((mod_half_depth - 275.0).abs() < 0.01); // 250.0 + 50.0 * 0.5 = 275.0
     }
 }

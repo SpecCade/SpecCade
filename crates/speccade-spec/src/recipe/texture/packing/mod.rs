@@ -11,12 +11,12 @@
 //! outputs[].channels = { "r": "my_key" }                   // Reference by key
 //! ```
 
-mod types;
 mod packed;
+mod types;
 
 #[cfg(test)]
 mod tests;
 
 // Re-export public API
-pub use types::{ColorComponent, ChannelSource, ExtendedBuilder};
 pub use packed::PackedChannels;
+pub use types::{ChannelSource, ColorComponent, ExtendedBuilder};

@@ -108,6 +108,36 @@ fn test_filter_highpass() {
     assert_eq!(parsed, filter);
 }
 
+#[test]
+fn test_filter_allpass() {
+    let filter = Filter::Allpass {
+        frequency: 1000.0,
+        resonance: 2.0,
+        frequency_end: Some(2000.0),
+    };
+
+    let json = serde_json::to_string(&filter).unwrap();
+    assert!(json.contains("allpass"));
+    assert!(json.contains("frequency"));
+    let parsed: Filter = serde_json::from_str(&json).unwrap();
+    assert_eq!(parsed, filter);
+}
+
+#[test]
+fn test_filter_allpass_no_sweep() {
+    let filter = Filter::Allpass {
+        frequency: 800.0,
+        resonance: 0.707,
+        frequency_end: None,
+    };
+
+    let json = serde_json::to_string(&filter).unwrap();
+    assert!(json.contains("allpass"));
+    assert!(!json.contains("frequency_end"));
+    let parsed: Filter = serde_json::from_str(&json).unwrap();
+    assert_eq!(parsed, filter);
+}
+
 // ========================================================================
 // Synthesis Tests
 // ========================================================================
@@ -240,4 +270,160 @@ fn test_midi_to_frequency() {
     assert!((midi_to_frequency(57) - 220.0).abs() < 0.001);
     // A5 = 880 Hz
     assert!((midi_to_frequency(81) - 880.0).abs() < 0.001);
+}
+
+// ========================================================================
+// ModulationTarget Tests
+// ========================================================================
+
+#[test]
+fn test_modulation_target_pulse_width_serde() {
+    let target = ModulationTarget::PulseWidth { amount: 0.2 };
+
+    let json = serde_json::to_string(&target).unwrap();
+    assert!(json.contains(r#""target":"pulse_width""#));
+    assert!(json.contains(r#""amount":0.2"#));
+
+    let parsed: ModulationTarget = serde_json::from_str(&json).unwrap();
+    assert_eq!(parsed, target);
+}
+
+#[test]
+fn test_modulation_target_pulse_width_from_json() {
+    let json = r#"{"target":"pulse_width","amount":0.3}"#;
+    let target: ModulationTarget = serde_json::from_str(json).unwrap();
+
+    match target {
+        ModulationTarget::PulseWidth { amount } => {
+            assert!((amount - 0.3).abs() < 0.0001);
+        }
+        _ => panic!("Expected PulseWidth variant"),
+    }
+}
+
+#[test]
+fn test_modulation_target_all_variants_serde() {
+    let targets = vec![
+        ModulationTarget::Pitch { semitones: 2.0 },
+        ModulationTarget::Volume { amount: 0.5 },
+        ModulationTarget::FilterCutoff { amount: 1000.0 },
+        ModulationTarget::Pan { amount: 0.8 },
+        ModulationTarget::PulseWidth { amount: 0.2 },
+    ];
+
+    for target in targets {
+        let json = serde_json::to_string(&target).unwrap();
+        let parsed: ModulationTarget = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed, target);
+    }
+}
+
+// ========================================================================
+// DetuneCurve Tests
+// ========================================================================
+
+#[test]
+fn test_detune_curve_default() {
+    let curve: DetuneCurve = Default::default();
+    assert_eq!(curve, DetuneCurve::Linear);
+}
+
+#[test]
+fn test_detune_curve_serde() {
+    let curves = vec![DetuneCurve::Linear, DetuneCurve::Exp2];
+
+    for curve in curves {
+        let json = serde_json::to_string(&curve).unwrap();
+        let parsed: DetuneCurve = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed, curve);
+    }
+}
+
+#[test]
+fn test_detune_curve_from_json() {
+    let json_linear = r#""linear""#;
+    let json_exp2 = r#""exp2""#;
+
+    let linear: DetuneCurve = serde_json::from_str(json_linear).unwrap();
+    let exp2: DetuneCurve = serde_json::from_str(json_exp2).unwrap();
+
+    assert_eq!(linear, DetuneCurve::Linear);
+    assert_eq!(exp2, DetuneCurve::Exp2);
+}
+
+// ========================================================================
+// SupersawUnison Tests
+// ========================================================================
+
+#[test]
+fn test_synthesis_supersaw_unison() {
+    let synth = Synthesis::SupersawUnison {
+        frequency: 440.0,
+        voices: 7,
+        detune_cents: 25.0,
+        spread: 0.8,
+        detune_curve: DetuneCurve::Linear,
+    };
+
+    let json = serde_json::to_string(&synth).unwrap();
+    assert!(json.contains("supersaw_unison"));
+    assert!(json.contains("frequency"));
+    assert!(json.contains("voices"));
+    assert!(json.contains("detune_cents"));
+    assert!(json.contains("spread"));
+
+    let parsed: Synthesis = serde_json::from_str(&json).unwrap();
+    assert_eq!(parsed, synth);
+}
+
+#[test]
+fn test_synthesis_supersaw_unison_from_json() {
+    let json = r#"{
+        "type": "supersaw_unison",
+        "frequency": 220.0,
+        "voices": 5,
+        "detune_cents": 20.0,
+        "spread": 1.0,
+        "detune_curve": "exp2"
+    }"#;
+
+    let synth: Synthesis = serde_json::from_str(json).unwrap();
+
+    match synth {
+        Synthesis::SupersawUnison {
+            frequency,
+            voices,
+            detune_cents,
+            spread,
+            detune_curve,
+        } => {
+            assert!((frequency - 220.0).abs() < 0.001);
+            assert_eq!(voices, 5);
+            assert!((detune_cents - 20.0).abs() < 0.001);
+            assert!((spread - 1.0).abs() < 0.001);
+            assert_eq!(detune_curve, DetuneCurve::Exp2);
+        }
+        _ => panic!("Expected SupersawUnison variant"),
+    }
+}
+
+#[test]
+fn test_synthesis_supersaw_unison_default_curve() {
+    // Test that detune_curve defaults to Linear when omitted
+    let json = r#"{
+        "type": "supersaw_unison",
+        "frequency": 440.0,
+        "voices": 3,
+        "detune_cents": 15.0,
+        "spread": 0.5
+    }"#;
+
+    let synth: Synthesis = serde_json::from_str(json).unwrap();
+
+    match synth {
+        Synthesis::SupersawUnison { detune_curve, .. } => {
+            assert_eq!(detune_curve, DetuneCurve::Linear);
+        }
+        _ => panic!("Expected SupersawUnison variant"),
+    }
 }

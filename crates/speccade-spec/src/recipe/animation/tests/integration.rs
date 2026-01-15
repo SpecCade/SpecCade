@@ -1,9 +1,6 @@
 //! Integration tests for complete animation parameters and rig setup.
 
-use crate::recipe::{
-    animation::*,
-    character::SkeletonPreset,
-};
+use crate::recipe::{animation::*, character::SkeletonPreset};
 
 // =========================================================================
 // Rig Setup Integration Tests
@@ -157,13 +154,13 @@ fn test_all_top_level_keys() {
         poses: std::collections::HashMap::new(),                // poses
         phases: vec![],                                         // phases
         procedural_layers: vec![],                              // procedural_layers
-        keyframes: vec![],    // (bone_transforms via keyframes)
-        ik_keyframes: vec![], // (IK keyframes)
-        interpolation: InterpolationMode::Linear, // (interpolation)
-        export: Some(AnimationExportSettings::default()), // export settings
-        animator_rig: Some(AnimatorRigConfig::default()), // animator_rig
-        save_blend: true,     // save_blend
-        conventions: Some(ConventionsConfig::default()), // conventions
+        keyframes: vec![],                                      // (bone_transforms via keyframes)
+        ik_keyframes: vec![],                                   // (IK keyframes)
+        interpolation: InterpolationMode::Linear,               // (interpolation)
+        export: Some(AnimationExportSettings::default()),       // export settings
+        animator_rig: Some(AnimatorRigConfig::default()),       // animator_rig
+        save_blend: true,                                       // save_blend
+        conventions: Some(ConventionsConfig::default()),        // conventions
     };
 
     let json = serde_json::to_string(&params).unwrap();

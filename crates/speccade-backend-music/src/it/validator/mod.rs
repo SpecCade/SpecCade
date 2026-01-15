@@ -12,6 +12,7 @@ mod instrument_validator;
 mod pattern_validator;
 mod report;
 mod sample_validator;
+#[allow(clippy::module_inception)]
 mod validator;
 
 #[cfg(test)]

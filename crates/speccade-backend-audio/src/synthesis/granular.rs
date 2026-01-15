@@ -95,8 +95,9 @@ impl Synthesizer for GranularSynth {
                 0
             };
 
-            let grain_start =
-                (current_sample as i32 + jitter).max(0).min(num_samples as i32 - 1) as usize;
+            let grain_start = (current_sample as i32 + jitter)
+                .max(0)
+                .min(num_samples as i32 - 1) as usize;
 
             // Generate pitch shift for this grain
             let pitch_shift = if self.pitch_spread > 0.0 {
@@ -123,7 +124,8 @@ impl Synthesizer for GranularSynth {
             };
 
             // Generate grain samples
-            let grain_samples = self.generate_grain(grain_size_samples, sample_rate, pitch_shift, rng);
+            let grain_samples =
+                self.generate_grain(grain_size_samples, sample_rate, pitch_shift, rng);
 
             // Apply Hann window and add to output buffer (overlap-add)
             for (i, &grain_sample) in grain_samples.iter().enumerate() {

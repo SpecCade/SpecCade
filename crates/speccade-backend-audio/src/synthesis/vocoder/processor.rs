@@ -2,9 +2,9 @@
 
 use rand_pcg::Pcg32;
 
+use super::synth::VocoderSynth;
 use crate::filter::{BiquadCoeffs, BiquadFilter};
 use crate::synthesis::Synthesizer;
-use super::synth::VocoderSynth;
 
 impl Synthesizer for VocoderSynth {
     fn synthesize(&self, num_samples: usize, sample_rate: f64, rng: &mut Pcg32) -> Vec<f64> {

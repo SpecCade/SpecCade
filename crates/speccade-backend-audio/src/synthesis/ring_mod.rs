@@ -345,6 +345,9 @@ mod tests {
         let samples1 = synth.synthesize(100, 44100.0, &mut rng1);
         let samples2 = synth.synthesize(100, 44100.0, &mut rng2);
 
-        assert_eq!(samples1, samples2, "Ring modulation synthesis must be deterministic");
+        assert_eq!(
+            samples1, samples2,
+            "Ring modulation synthesis must be deterministic"
+        );
     }
 }

@@ -48,13 +48,30 @@ pub fn apply(
     ping_pong: bool,
     sample_rate: f64,
 ) -> AudioResult<()> {
+    // Create a constant time curve for the non-modulated case
+    let num_samples = stereo.left.len();
+    let time_curve = vec![time_ms; num_samples];
+    apply_with_modulation(stereo, &time_curve, feedback, wet, ping_pong, sample_rate)
+}
+
+/// Applies delay effect to stereo audio with per-sample time modulation.
+///
+/// # Arguments
+/// * `stereo` - Stereo audio to process
+/// * `time_curve` - Per-sample delay time in milliseconds
+/// * `feedback` - Feedback amount (0.0-0.95)
+/// * `wet` - Wet/dry mix (0.0-1.0)
+/// * `ping_pong` - Enable ping-pong stereo delay
+/// * `sample_rate` - Sample rate in Hz
+pub fn apply_with_modulation(
+    stereo: &mut StereoOutput,
+    time_curve: &[f64],
+    feedback: f64,
+    wet: f64,
+    ping_pong: bool,
+    sample_rate: f64,
+) -> AudioResult<()> {
     // Validate parameters
-    if !(1.0..=2000.0).contains(&time_ms) {
-        return Err(AudioError::invalid_param(
-            "delay.time_ms",
-            format!("must be 1-2000, got {}", time_ms),
-        ));
-    }
     if !(0.0..=0.95).contains(&feedback) {
         return Err(AudioError::invalid_param(
             "delay.feedback",
@@ -68,8 +85,14 @@ pub fn apply(
         ));
     }
 
-    let delay_samples = (time_ms / 1000.0) * sample_rate;
-    let delay_buffer_size = (delay_samples.ceil() as usize + 1).max(2);
+    // Find max delay time to size the buffer
+    let max_time_ms = time_curve
+        .iter()
+        .copied()
+        .fold(1.0_f64, |a, b| a.max(b))
+        .clamp(1.0, 2000.0);
+    let max_delay_samples = (max_time_ms / 1000.0) * sample_rate;
+    let delay_buffer_size = (max_delay_samples.ceil() as usize + 2).max(4);
 
     let mut delay_left = DelayLine::new(delay_buffer_size);
     let mut delay_right = DelayLine::new(delay_buffer_size);
@@ -83,6 +106,10 @@ pub fn apply(
     for i in 0..num_samples {
         let in_left = stereo.left[i];
         let in_right = stereo.right[i];
+
+        // Get modulated delay time for this sample
+        let time_ms = time_curve.get(i).copied().unwrap_or(1.0).clamp(1.0, 2000.0);
+        let delay_samples = (time_ms / 1000.0) * sample_rate;
 
         if ping_pong {
             // Ping-pong: left delay feeds right, right delay feeds left

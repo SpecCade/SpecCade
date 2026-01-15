@@ -249,13 +249,30 @@ pub fn apply(
     width: f64,
     sample_rate: f64,
 ) -> AudioResult<()> {
+    // Create a constant room_size curve for the non-modulated case
+    let num_samples = stereo.left.len();
+    let room_size_curve = vec![room_size; num_samples];
+    apply_with_modulation(stereo, &room_size_curve, damping, wet, width, sample_rate)
+}
+
+/// Applies reverb effect to stereo audio with per-sample room_size modulation.
+///
+/// # Arguments
+/// * `stereo` - Stereo audio to process
+/// * `room_size_curve` - Per-sample room size values (0.0-1.0)
+/// * `damping` - High-frequency absorption (0.0-1.0)
+/// * `wet` - Wet/dry mix (0.0-1.0)
+/// * `width` - Stereo width (0.0-1.0)
+/// * `sample_rate` - Sample rate in Hz
+pub fn apply_with_modulation(
+    stereo: &mut StereoOutput,
+    room_size_curve: &[f64],
+    damping: f64,
+    wet: f64,
+    width: f64,
+    sample_rate: f64,
+) -> AudioResult<()> {
     // Validate parameters
-    if !(0.0..=1.0).contains(&room_size) {
-        return Err(AudioError::invalid_param(
-            "reverb.room_size",
-            format!("must be 0.0-1.0, got {}", room_size),
-        ));
-    }
     if !(0.0..=1.0).contains(&damping) {
         return Err(AudioError::invalid_param(
             "reverb.damping",
@@ -276,7 +293,6 @@ pub fn apply(
     }
 
     let mut reverb = Freeverb::new(sample_rate);
-    reverb.set_room_size(room_size);
     reverb.set_damping(damping);
     reverb.set_wet(wet);
     reverb.set_width(width);
@@ -288,6 +304,14 @@ pub fn apply(
     let mut wet_right = Vec::with_capacity(num_samples);
 
     for i in 0..num_samples {
+        // Get modulated room_size for this sample
+        let room_size = room_size_curve
+            .get(i)
+            .copied()
+            .unwrap_or(0.5)
+            .clamp(0.0, 1.0);
+        reverb.set_room_size(room_size);
+
         let (left, right) = reverb.process(stereo.left[i], stereo.right[i]);
         wet_left.push(left);
         wet_right.push(right);

@@ -1,7 +1,7 @@
 //! Pattern generation functions for packed textures.
 
 use crate::maps::GrayscaleBuffer;
-use crate::noise::{Fbm, Noise2D, PerlinNoise, SimplexNoise, WorleyNoise, tile_coord};
+use crate::noise::{tile_coord, Fbm, Noise2D, PerlinNoise, SimplexNoise, WorleyNoise};
 
 use super::parsers::Axis;
 

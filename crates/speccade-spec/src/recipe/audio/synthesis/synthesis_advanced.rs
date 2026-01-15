@@ -1,6 +1,21 @@
-//! Advanced synthesis types: Phase Distortion, Modal, Vocoder, Formant, and Vector synthesis.
+//! Advanced synthesis types: Phase Distortion, Modal, Vocoder, Formant, Vector, and Supersaw/Unison synthesis.
 
 use serde::{Deserialize, Serialize};
+
+/// Detune distribution curve for unison synthesis.
+///
+/// Controls how detune is distributed across voices in supersaw/unison synthesis.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
+#[serde(rename_all = "snake_case")]
+pub enum DetuneCurve {
+    /// Linear detune distribution.
+    /// Voices are evenly spaced in cents across the detune range.
+    #[default]
+    Linear,
+    /// Exponential (squared) detune distribution.
+    /// Outer voices are detuned more aggressively, creating a wider spread.
+    Exp2,
+}
 
 /// Phase distortion waveform shape.
 ///

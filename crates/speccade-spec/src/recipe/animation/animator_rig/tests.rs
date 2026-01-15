@@ -52,8 +52,7 @@ fn test_bone_collection_serde() {
 
 #[test]
 fn test_bone_collection_with_bones() {
-    let collection =
-        BoneCollection::new("Deform").with_bones(["arm_l", "arm_r", "leg_l", "leg_r"]);
+    let collection = BoneCollection::new("Deform").with_bones(["arm_l", "arm_r", "leg_l", "leg_r"]);
 
     assert_eq!(collection.bones.len(), 4);
     assert!(collection.bones.contains(&"arm_l".to_string()));

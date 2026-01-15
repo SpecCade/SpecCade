@@ -23,7 +23,7 @@ use std::collections::HashMap;
 use std::path::Path;
 use thiserror::Error;
 
-use speccade_spec::recipe::texture::{TextureMaterialV1Params, TextureMapType};
+use speccade_spec::recipe::texture::{TextureMapType, TextureMaterialV1Params};
 use speccade_spec::BackendError;
 
 use crate::color::Color;

@@ -1,6 +1,6 @@
 //! Tests for animation recipe types.
 
-mod ik_setup;
 mod constraints;
-mod rig_components;
+mod ik_setup;
 mod integration;
+mod rig_components;

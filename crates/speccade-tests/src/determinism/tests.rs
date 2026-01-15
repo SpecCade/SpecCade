@@ -1,6 +1,7 @@
 //! Unit tests for determinism framework.
 
 #[cfg(test)]
+#[allow(clippy::module_inception)]
 mod tests {
     use std::path::PathBuf;
     use std::sync::atomic::{AtomicU32, Ordering};

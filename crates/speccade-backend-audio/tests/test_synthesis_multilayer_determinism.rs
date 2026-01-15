@@ -28,8 +28,8 @@ fn test_multi_layer_with_delay() {
                 volume: 0.8,
                 pan: 0.0,
                 delay: None,
-            filter: None,
-            lfo: None,
+                filter: None,
+                lfo: None,
             },
             AudioLayer {
                 synthesis: Synthesis::NoiseBurst {
@@ -49,8 +49,8 @@ fn test_multi_layer_with_delay() {
                 volume: 0.3,
                 pan: 0.0,
                 delay: Some(0.05),
-            filter: None,
-            lfo: None,
+                filter: None,
+                lfo: None,
             },
         ],
         master_filter: None,
@@ -58,6 +58,7 @@ fn test_multi_layer_with_delay() {
         pitch_envelope: None,
         base_note: None,
         generate_loop_points: false,
+        post_fx_lfos: vec![],
     };
 
     let result = generate_from_params(&params, 42);
@@ -82,8 +83,8 @@ fn test_multi_layer_with_panning() {
                 volume: 0.8,
                 pan: -0.5, // Left
                 delay: None,
-            filter: None,
-            lfo: None,
+                filter: None,
+                lfo: None,
             },
             AudioLayer {
                 synthesis: Synthesis::Oscillator {
@@ -97,8 +98,8 @@ fn test_multi_layer_with_panning() {
                 volume: 0.8,
                 pan: 0.5, // Right
                 delay: None,
-            filter: None,
-            lfo: None,
+                filter: None,
+                lfo: None,
             },
         ],
         master_filter: None,
@@ -106,6 +107,7 @@ fn test_multi_layer_with_panning() {
         pitch_envelope: None,
         base_note: None,
         generate_loop_points: false,
+        post_fx_lfos: vec![],
     };
 
     let result = generate_from_params(&params, 42);
@@ -138,6 +140,7 @@ fn test_determinism_noise() {
         pitch_envelope: None,
         base_note: None,
         generate_loop_points: false,
+        post_fx_lfos: vec![],
     };
 
     let result1 = generate_from_params(&params, 42).expect("first generation");
@@ -170,6 +173,7 @@ fn test_determinism_karplus() {
         pitch_envelope: None,
         base_note: None,
         generate_loop_points: false,
+        post_fx_lfos: vec![],
     };
 
     let result1 = generate_from_params(&params, 42).expect("first generation");

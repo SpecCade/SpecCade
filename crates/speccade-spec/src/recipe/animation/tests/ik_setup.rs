@@ -1,9 +1,6 @@
 //! Tests for IK chain setup and configuration.
 
-use crate::recipe::{
-    animation::*,
-    character::SkeletonPreset,
-};
+use crate::recipe::{animation::*, character::SkeletonPreset};
 
 // =========================================================================
 // IK Chain Tests

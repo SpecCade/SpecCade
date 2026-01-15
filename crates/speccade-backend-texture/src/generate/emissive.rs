@@ -2,7 +2,9 @@
 //!
 //! Generates emissive (glow) maps from various layer types.
 
-use speccade_spec::recipe::texture::{GradientDirection, StripeDirection, TextureLayer, TextureMapType};
+use speccade_spec::recipe::texture::{
+    GradientDirection, StripeDirection, TextureLayer, TextureMapType,
+};
 
 use crate::color::Color;
 use crate::maps::TextureBuffer;

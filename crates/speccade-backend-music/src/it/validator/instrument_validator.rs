@@ -214,16 +214,13 @@ fn validate_single_instrument(
     // We skip detailed validation here but could check that sample indices are valid
 
     // Volume envelope starts at 0x130 (offset 304)
-    let volume_envelope =
-        parse_envelope(&inst[0x130..], "volume", index, offset + 0x130, report);
+    let volume_envelope = parse_envelope(&inst[0x130..], "volume", index, offset + 0x130, report);
 
     // Panning envelope at 0x182 (offset 386)
-    let panning_envelope =
-        parse_envelope(&inst[0x182..], "panning", index, offset + 0x182, report);
+    let panning_envelope = parse_envelope(&inst[0x182..], "panning", index, offset + 0x182, report);
 
     // Pitch envelope at 0x1D4 (offset 468)
-    let pitch_envelope =
-        parse_envelope(&inst[0x1D4..], "pitch", index, offset + 0x1D4, report);
+    let pitch_envelope = parse_envelope(&inst[0x1D4..], "pitch", index, offset + 0x1D4, report);
 
     Ok(ItInstrumentInfo {
         index,

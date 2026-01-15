@@ -3,6 +3,7 @@
 //! This module combines multiple audio layers with independent volume and pan
 //! controls, producing either mono or stereo output.
 
+#[allow(clippy::module_inception)]
 mod mixer;
 mod processing;
 mod types;

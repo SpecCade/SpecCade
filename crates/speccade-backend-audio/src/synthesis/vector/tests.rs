@@ -37,15 +37,15 @@ fn test_vector_mix_weights_corners() {
     // Corner A (top-left)
     let weights_a = VectorSynth::calculate_mix_weights(&VectorPosition::corner_a());
     assert!((weights_a[0] - 1.0).abs() < 0.001); // A = 1.0
-    assert!(weights_a[1].abs() < 0.001);         // B = 0.0
-    assert!(weights_a[2].abs() < 0.001);         // C = 0.0
-    assert!(weights_a[3].abs() < 0.001);         // D = 0.0
+    assert!(weights_a[1].abs() < 0.001); // B = 0.0
+    assert!(weights_a[2].abs() < 0.001); // C = 0.0
+    assert!(weights_a[3].abs() < 0.001); // D = 0.0
 
     // Corner D (bottom-right)
     let weights_d = VectorSynth::calculate_mix_weights(&VectorPosition::corner_d());
-    assert!(weights_d[0].abs() < 0.001);         // A = 0.0
-    assert!(weights_d[1].abs() < 0.001);         // B = 0.0
-    assert!(weights_d[2].abs() < 0.001);         // C = 0.0
+    assert!(weights_d[0].abs() < 0.001); // A = 0.0
+    assert!(weights_d[1].abs() < 0.001); // B = 0.0
+    assert!(weights_d[2].abs() < 0.001); // C = 0.0
     assert!((weights_d[3] - 1.0).abs() < 0.001); // D = 1.0
 }
 
@@ -57,8 +57,7 @@ fn test_vector_synth_basic() {
         VectorSource::triangle(1.0),
         VectorSource::square(1.0),
     ];
-    let synth = VectorSynth::new(440.0, sources)
-        .with_position(VectorPosition::center());
+    let synth = VectorSynth::new(440.0, sources).with_position(VectorPosition::center());
 
     let mut rng = create_rng(42);
     let samples = synth.synthesize(1000, 44100.0, &mut rng);
@@ -84,8 +83,7 @@ fn test_vector_synth_with_path() {
         VectorPathPoint::new(VectorPosition::corner_d(), 0.1),
     ]);
 
-    let synth = VectorSynth::new(440.0, sources)
-        .with_path(path, false);
+    let synth = VectorSynth::new(440.0, sources).with_path(path, false);
 
     let mut rng = create_rng(42);
     let samples = synth.synthesize(1000, 44100.0, &mut rng);
@@ -105,8 +103,7 @@ fn test_vector_synth_determinism() {
         VectorSource::triangle(1.0),
         VectorSource::wavetable(1.0),
     ];
-    let synth = VectorSynth::new(440.0, sources)
-        .with_position(VectorPosition::new(0.3, 0.7));
+    let synth = VectorSynth::new(440.0, sources).with_position(VectorPosition::new(0.3, 0.7));
 
     let mut rng1 = create_rng(42);
     let mut rng2 = create_rng(42);

@@ -127,6 +127,7 @@ fn test_generate_audio_from_params() {
         generate_loop_points: false,
         master_filter: None,
         effects: vec![],
+        post_fx_lfos: vec![],
     };
 
     let result = speccade_backend_audio::generate_from_params(&params, 42);
@@ -171,6 +172,7 @@ fn test_generate_audio_with_loop_points() {
         generate_loop_points: true,
         master_filter: None,
         effects: vec![],
+        post_fx_lfos: vec![],
     };
 
     let result = speccade_backend_audio::generate_from_params(&params, 42);

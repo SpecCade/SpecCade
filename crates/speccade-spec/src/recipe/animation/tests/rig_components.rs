@@ -20,8 +20,7 @@ fn test_foot_system() {
 
 #[test]
 fn test_foot_system_serde() {
-    let foot =
-        FootSystem::new("foot_l", "ik_foot_l", "heel_l", "toe_l").with_ball_bone("ball_l");
+    let foot = FootSystem::new("foot_l", "ik_foot_l", "heel_l", "toe_l").with_ball_bone("ball_l");
 
     let json = serde_json::to_string(&foot).unwrap();
     assert!(json.contains("foot_l"));

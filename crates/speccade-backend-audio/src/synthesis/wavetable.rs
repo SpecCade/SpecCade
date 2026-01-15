@@ -92,7 +92,7 @@ impl Synthesizer for WavetableSynth {
             let mut phase_acc = PhaseAccumulator::new(sample_rate);
             let voice_freq = self.frequency * detune_mult;
 
-            for i in 0..num_samples {
+            for (i, out_sample) in output.iter_mut().enumerate().take(num_samples) {
                 // Calculate position (with optional sweep)
                 let position = if let Some(ref sweep) = self.position_sweep {
                     let t = i as f64 / num_samples.max(1) as f64;
@@ -107,7 +107,7 @@ impl Synthesizer for WavetableSynth {
                 let phase = phase_acc.advance(voice_freq);
                 let sample = sample_wavetable(&self.wavetable, phase, position);
 
-                output[i] += sample;
+                *out_sample += sample;
             }
         }
 
@@ -183,7 +183,7 @@ fn generate_basic_wavetable() -> Vec<Vec<f64>> {
         let t = frame_idx as f64 / (NUM_FRAMES - 1) as f64;
         let mut frame = vec![0.0; FRAME_SIZE];
 
-        for i in 0..FRAME_SIZE {
+        for (i, frame_sample) in frame.iter_mut().enumerate().take(FRAME_SIZE) {
             let phase = 2.0 * PI * i as f64 / FRAME_SIZE as f64;
 
             let sample = if t < 0.33 {
@@ -209,7 +209,7 @@ fn generate_basic_wavetable() -> Vec<Vec<f64>> {
                 }
             };
 
-            frame[i] = sample;
+            *frame_sample = sample;
         }
 
         frames.push(frame);
@@ -226,7 +226,7 @@ fn generate_analog_wavetable() -> Vec<Vec<f64>> {
         let t = frame_idx as f64 / (NUM_FRAMES - 1) as f64;
         let mut frame = vec![0.0; FRAME_SIZE];
 
-        for i in 0..FRAME_SIZE {
+        for (i, frame_sample) in frame.iter_mut().enumerate().take(FRAME_SIZE) {
             let phase = 2.0 * PI * i as f64 / FRAME_SIZE as f64;
 
             // Mix between sine, triangle, and saw with harmonic content
@@ -240,7 +240,7 @@ fn generate_analog_wavetable() -> Vec<Vec<f64>> {
 
             // Normalize
             sample *= 0.5;
-            frame[i] = sample.clamp(-1.0, 1.0);
+            *frame_sample = sample.clamp(-1.0, 1.0);
         }
 
         frames.push(frame);
@@ -257,7 +257,7 @@ fn generate_digital_wavetable() -> Vec<Vec<f64>> {
         let t = frame_idx as f64 / (NUM_FRAMES - 1) as f64;
         let mut frame = vec![0.0; FRAME_SIZE];
 
-        for i in 0..FRAME_SIZE {
+        for (i, frame_sample) in frame.iter_mut().enumerate().take(FRAME_SIZE) {
             let phase = 2.0 * PI * i as f64 / FRAME_SIZE as f64;
 
             // Mix of high harmonics with sharp transitions
@@ -274,7 +274,7 @@ fn generate_digital_wavetable() -> Vec<Vec<f64>> {
             let quantize = 2.0_f64.powf(bit_depth);
             sample = (sample * quantize).round() / quantize;
 
-            frame[i] = sample.clamp(-1.0, 1.0);
+            *frame_sample = sample.clamp(-1.0, 1.0);
         }
 
         frames.push(frame);
@@ -294,9 +294,9 @@ fn generate_pwm_wavetable() -> Vec<Vec<f64>> {
         // Duty cycle sweeps from 0.05 to 0.95
         let duty = 0.05 + t * 0.9;
 
-        for i in 0..FRAME_SIZE {
+        for (i, frame_sample) in frame.iter_mut().enumerate().take(FRAME_SIZE) {
             let phase_norm = i as f64 / FRAME_SIZE as f64;
-            frame[i] = if phase_norm < duty { 1.0 } else { -1.0 };
+            *frame_sample = if phase_norm < duty { 1.0 } else { -1.0 };
         }
 
         frames.push(frame);
@@ -311,11 +311,11 @@ fn generate_formant_wavetable() -> Vec<Vec<f64>> {
 
     // Formant frequencies for different vowels (simplified)
     let formants = [
-        (800.0, 1200.0),  // "ah"
-        (400.0, 2000.0),  // "ee"
-        (500.0, 1000.0),  // "oo"
-        (600.0, 1500.0),  // "oh"
-        (700.0, 1800.0),  // "eh"
+        (800.0, 1200.0), // "ah"
+        (400.0, 2000.0), // "ee"
+        (500.0, 1000.0), // "oo"
+        (600.0, 1500.0), // "oh"
+        (700.0, 1800.0), // "eh"
     ];
 
     for frame_idx in 0..NUM_FRAMES {
@@ -333,7 +333,7 @@ fn generate_formant_wavetable() -> Vec<Vec<f64>> {
         let f1 = f1_a + (f1_b - f1_a) * formant_frac;
         let f2 = f2_a + (f2_b - f2_a) * formant_frac;
 
-        for i in 0..FRAME_SIZE {
+        for (i, frame_sample) in frame.iter_mut().enumerate().take(FRAME_SIZE) {
             let phase = 2.0 * PI * i as f64 / FRAME_SIZE as f64;
 
             // Fundamental + two formants
@@ -341,7 +341,7 @@ fn generate_formant_wavetable() -> Vec<Vec<f64>> {
             let formant1 = 0.5 * (phase * (f1 / 100.0)).sin();
             let formant2 = 0.3 * (phase * (f2 / 100.0)).sin();
 
-            frame[i] = (fundamental + formant1 + formant2).clamp(-1.0, 1.0);
+            *frame_sample = (fundamental + formant1 + formant2).clamp(-1.0, 1.0);
         }
 
         frames.push(frame);
@@ -362,21 +362,21 @@ fn generate_organ_wavetable() -> Vec<Vec<f64>> {
 
         // Drawbar amplitudes (simulate different registrations)
         let drawbars = [
-            0.5 + t * 0.5,      // 16' (sub-octave)
-            0.8,                // 8' (fundamental)
-            0.3 + t * 0.4,      // 4' (octave)
-            0.2,                // 2 2/3' (fifth)
-            0.4 * (1.0 - t),    // 2' (two octaves)
-            0.2,                // 1 3/5' (third)
-            0.3 * t,            // 1 1/3' (fifth + octave)
-            0.1,                // 1' (three octaves)
-            0.2 * (1.0 - t),    // 2/3' (twelfth)
+            0.5 + t * 0.5,   // 16' (sub-octave)
+            0.8,             // 8' (fundamental)
+            0.3 + t * 0.4,   // 4' (octave)
+            0.2,             // 2 2/3' (fifth)
+            0.4 * (1.0 - t), // 2' (two octaves)
+            0.2,             // 1 3/5' (third)
+            0.3 * t,         // 1 1/3' (fifth + octave)
+            0.1,             // 1' (three octaves)
+            0.2 * (1.0 - t), // 2/3' (twelfth)
         ];
 
         // Harmonic ratios for drawbars
         let ratios = [0.5, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 8.0, 10.0];
 
-        for i in 0..FRAME_SIZE {
+        for (i, frame_sample) in frame.iter_mut().enumerate().take(FRAME_SIZE) {
             let phase = 2.0 * PI * i as f64 / FRAME_SIZE as f64;
             let mut sample = 0.0;
 
@@ -386,7 +386,7 @@ fn generate_organ_wavetable() -> Vec<Vec<f64>> {
 
             // Normalize
             sample *= 0.2;
-            frame[i] = sample.clamp(-1.0, 1.0);
+            *frame_sample = sample.clamp(-1.0, 1.0);
         }
 
         frames.push(frame);
@@ -402,14 +402,7 @@ mod tests {
 
     #[test]
     fn test_wavetable_basic() {
-        let synth = WavetableSynth::new(
-            WavetableSource::Basic,
-            440.0,
-            0.0,
-            None,
-            None,
-            None,
-        );
+        let synth = WavetableSynth::new(WavetableSource::Basic, 440.0, 0.0, None, None, None);
         let mut rng = create_rng(42);
         let samples = synth.synthesize(1000, 44100.0, &mut rng);
 
@@ -429,14 +422,8 @@ mod tests {
             curve: SweepCurve::Linear,
         };
 
-        let synth = WavetableSynth::new(
-            WavetableSource::Analog,
-            440.0,
-            0.0,
-            Some(sweep),
-            None,
-            None,
-        );
+        let synth =
+            WavetableSynth::new(WavetableSource::Analog, 440.0, 0.0, Some(sweep), None, None);
         let mut rng = create_rng(42);
         let samples = synth.synthesize(1000, 44100.0, &mut rng);
 

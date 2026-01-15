@@ -82,10 +82,16 @@ pub fn generate_it(
             .patterns
             .get(name)
             .ok_or_else(|| GenerateError::PatternNotFound(name.clone()))?;
-        let mut it_pattern = pattern::convert_pattern_to_it(pattern, params.channels, &params.instruments)?;
+        let mut it_pattern =
+            pattern::convert_pattern_to_it(pattern, params.channels, &params.instruments)?;
 
         // Apply automation to this pattern
-        automation::apply_automation_to_pattern(&mut it_pattern, name, &params.automation, params.channels)?;
+        automation::apply_automation_to_pattern(
+            &mut it_pattern,
+            name,
+            &params.automation,
+            params.channels,
+        )?;
 
         let pattern_idx_u8 = u8::try_from(pattern_idx).map_err(|_| {
             GenerateError::InvalidParameter(format!(

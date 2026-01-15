@@ -104,6 +104,7 @@ mod integration_tests {
             base_note: None,
             generate_loop_points: false,
             effects: vec![],
+            post_fx_lfos: vec![],
         };
 
         Spec::builder("laser-blast-01", AssetType::Audio)
@@ -187,6 +188,7 @@ mod integration_tests {
             base_note: None,
             generate_loop_points: false,
             effects: vec![],
+            post_fx_lfos: vec![],
         };
 
         let spec = Spec::builder("noise-test", AssetType::Audio)
@@ -228,6 +230,7 @@ mod integration_tests {
                 base_note: None,
                 generate_loop_points: false,
                 effects: vec![],
+                post_fx_lfos: vec![],
             };
 
             Spec::builder("noise-test", AssetType::Audio)
@@ -293,6 +296,7 @@ mod integration_tests {
                 },
             ],
             effects: vec![],
+            post_fx_lfos: vec![],
         };
 
         let spec = Spec::builder("stereo-test", AssetType::Audio)
@@ -339,6 +343,7 @@ mod integration_tests {
             base_note: None,
             generate_loop_points: false,
             effects: vec![],
+            post_fx_lfos: vec![],
         };
 
         let spec = Spec::builder("pluck-test", AssetType::Audio)
@@ -377,6 +382,7 @@ mod integration_tests {
             base_note: None,
             generate_loop_points: false,
             effects: vec![],
+            post_fx_lfos: vec![],
         };
 
         let spec = Spec::builder("additive-test", AssetType::Audio)

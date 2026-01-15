@@ -18,9 +18,7 @@ pub fn parse_axis(axis: Option<&str>) -> Result<Axis, &'static str> {
     }
 }
 
-pub fn parse_worley_distance_fn(
-    value: Option<&str>,
-) -> Result<DistanceFunction, GenerateError> {
+pub fn parse_worley_distance_fn(value: Option<&str>) -> Result<DistanceFunction, GenerateError> {
     let Some(raw) = value else {
         return Ok(DistanceFunction::Euclidean);
     };
@@ -36,7 +34,9 @@ pub fn parse_worley_distance_fn(
     }
 }
 
-pub fn parse_noise_type(value: Option<&str>) -> Result<super::pattern_generators::NoiseKind, GenerateError> {
+pub fn parse_noise_type(
+    value: Option<&str>,
+) -> Result<super::pattern_generators::NoiseKind, GenerateError> {
     use super::pattern_generators::NoiseKind;
 
     let Some(raw) = value else {

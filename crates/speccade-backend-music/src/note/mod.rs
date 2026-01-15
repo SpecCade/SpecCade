@@ -13,8 +13,8 @@ mod tests;
 
 // Re-export all public items to preserve API
 pub use constants::{
-    it, xm, DEFAULT_IT_SYNTH_MIDI_NOTE, DEFAULT_SAMPLE_RATE, DEFAULT_SYNTH_MIDI_NOTE,
-    IT_BASE_FREQ, XM_BASE_FREQ,
+    it, xm, DEFAULT_IT_SYNTH_MIDI_NOTE, DEFAULT_SAMPLE_RATE, DEFAULT_SYNTH_MIDI_NOTE, IT_BASE_FREQ,
+    XM_BASE_FREQ,
 };
 
 pub use conversion::{

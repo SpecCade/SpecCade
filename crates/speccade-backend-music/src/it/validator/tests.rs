@@ -417,8 +417,7 @@ fn test_format_error_display() {
         "IT sample error at offset 0x0100: at offset"
     );
 
-    let err =
-        ItFormatError::field_at_offset(ItErrorCategory::Pattern, "num_rows", "invalid", 0x50);
+    let err = ItFormatError::field_at_offset(ItErrorCategory::Pattern, "num_rows", "invalid", 0x50);
     assert!(format!("{}", err).contains("field 'num_rows'"));
     assert!(format!("{}", err).contains("0x0050"));
 }

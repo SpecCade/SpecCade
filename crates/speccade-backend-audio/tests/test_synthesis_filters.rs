@@ -35,6 +35,7 @@ fn test_filter_lowpass() {
         pitch_envelope: None,
         base_note: None,
         generate_loop_points: false,
+        post_fx_lfos: vec![],
     };
 
     let result = generate_from_params(&params, 42);
@@ -70,6 +71,7 @@ fn test_filter_lowpass_with_sweep() {
         pitch_envelope: None,
         base_note: None,
         generate_loop_points: false,
+        post_fx_lfos: vec![],
     };
 
     let result = generate_from_params(&params, 42);
@@ -102,6 +104,7 @@ fn test_filter_highpass() {
         pitch_envelope: None,
         base_note: None,
         generate_loop_points: false,
+        post_fx_lfos: vec![],
     };
 
     let result = generate_from_params(&params, 42);
@@ -134,6 +137,7 @@ fn test_filter_highpass_with_sweep() {
         pitch_envelope: None,
         base_note: None,
         generate_loop_points: false,
+        post_fx_lfos: vec![],
     };
 
     let result = generate_from_params(&params, 42);
@@ -166,6 +170,7 @@ fn test_filter_bandpass() {
         pitch_envelope: None,
         base_note: None,
         generate_loop_points: false,
+        post_fx_lfos: vec![],
     };
 
     let result = generate_from_params(&params, 42);
@@ -198,6 +203,7 @@ fn test_filter_bandpass_with_sweep() {
         pitch_envelope: None,
         base_note: None,
         generate_loop_points: false,
+        post_fx_lfos: vec![],
     };
 
     let result = generate_from_params(&params, 42);

@@ -18,15 +18,18 @@ use serde::{Deserialize, Serialize};
 
 // Re-export synthesis types
 pub use synthesis::{
-    midi_to_frequency, parse_note_name, Envelope, Filter, FormantConfig, FormantVowel, FreqSweep,
-    GranularSource, LfoConfig, LfoModulation, ModalExcitation, ModalMode, ModulationTarget,
-    NoiseType, NoteSpec, OscillatorConfig, PdWaveform, PitchEnvelope, PositionSweep, SweepCurve,
-    Synthesis, VectorPathPoint, VectorSource, VectorSourceType, VocoderBand, VocoderBandSpacing,
+    midi_to_frequency, parse_note_name, CombExcitation, DetuneCurve, Envelope, Filter,
+    FormantConfig, FormantVowel, FreqSweep, GranularSource, LfoConfig, LfoModulation,
+    ModalExcitation, ModalMode, ModulationTarget, NoiseType, NoteSpec, OscillatorConfig,
+    PdWaveform, PitchEnvelope, PositionSweep, SpectralSource, SweepCurve, Synthesis,
+    VectorPathPoint, VectorSource, VectorSourceType, VocoderBand, VocoderBandSpacing,
     VocoderCarrierType, Waveform, WavetableSource,
 };
 
 // Re-export effect types
-pub use effects::{Effect, WaveshaperCurve};
+pub use effects::{
+    CabinetType, DelayTap, Effect, EqBand, EqBandType, StereoWidenerMode, WaveshaperCurve,
+};
 
 /// A single synthesis layer in an audio recipe.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -90,6 +93,13 @@ pub struct AudioV1Params {
     /// Effect chain applied after mixing all layers.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub effects: Vec<Effect>,
+    /// Post-FX LFO modulations applied to the effect chain.
+    ///
+    /// These LFOs modulate parameters of effects in `effects[]` over time.
+    /// Valid targets: `delay_time`, `reverb_size`, `distortion_drive`.
+    /// Each target may appear at most once.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub post_fx_lfos: Vec<LfoModulation>,
 }
 
 fn default_sample_rate() -> u32 {
@@ -171,6 +181,7 @@ mod tests {
             generate_loop_points: false,
             master_filter: None,
             effects: vec![],
+            post_fx_lfos: vec![],
         };
 
         assert_eq!(params.base_note, None);
@@ -203,6 +214,7 @@ mod tests {
             generate_loop_points: false,
             master_filter: None,
             effects: vec![],
+            post_fx_lfos: vec![],
         };
 
         let json = serde_json::to_string(&params).unwrap();
@@ -223,6 +235,7 @@ mod tests {
             generate_loop_points: false,
             master_filter: None,
             effects: vec![],
+            post_fx_lfos: vec![],
         };
 
         let json = serde_json::to_string(&params).unwrap();
@@ -260,6 +273,7 @@ mod tests {
             generate_loop_points: true,
             master_filter: None,
             effects: vec![],
+            post_fx_lfos: vec![],
         };
 
         let json = serde_json::to_string(&params).unwrap();
@@ -284,6 +298,7 @@ mod tests {
                 cutoff_end: None,
             }),
             effects: vec![],
+            post_fx_lfos: vec![],
         };
 
         let json = serde_json::to_string(&params).unwrap();
@@ -358,6 +373,7 @@ mod tests {
                 cutoff_end: None,
             }),
             effects: vec![],
+            post_fx_lfos: vec![],
         };
 
         let json = serde_json::to_string_pretty(&params).unwrap();
@@ -408,6 +424,7 @@ mod tests {
             generate_loop_points: true,
             master_filter: None,
             effects: vec![],
+            post_fx_lfos: vec![],
         };
 
         let json = serde_json::to_string_pretty(&params).unwrap();

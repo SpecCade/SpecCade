@@ -5,8 +5,8 @@ use std::f64::consts::PI;
 use rand::Rng;
 use rand_pcg::Pcg32;
 
-use crate::oscillator::PhaseAccumulator;
 use super::types::{BandSpacing, CarrierType, VocoderBand};
+use crate::oscillator::PhaseAccumulator;
 
 /// Vocoder synthesizer.
 ///

@@ -4,10 +4,10 @@ use std::collections::HashMap;
 
 use rand::Rng;
 use speccade_spec::recipe::music::{
-    BeatDelta, BeatPos, CellTemplate, ChannelRef, ChordSpec, ComposePattern, Harmony,
-    HarmonyScale, InstrumentRef, MergePolicy, MusicTrackerSongComposeV1Params, PatternExpr,
-    PitchSeq, PitchSeqKind, Seq, SeqMode, TimeBase, TimeExpr, TrackerFormat, TrackerInstrument,
-    TransformOp, WeightedChoice,
+    BeatDelta, BeatPos, CellTemplate, ChannelRef, ChordSpec, ComposePattern, Harmony, HarmonyScale,
+    InstrumentRef, MergePolicy, MusicTrackerSongComposeV1Params, PatternExpr, PitchSeq,
+    PitchSeqKind, Seq, SeqMode, TimeBase, TimeExpr, TrackerFormat, TrackerInstrument, TransformOp,
+    WeightedChoice,
 };
 
 use super::super::{expand_compose, ExpandError};

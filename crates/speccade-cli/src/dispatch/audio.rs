@@ -5,7 +5,10 @@ use speccade_spec::{OutputFormat, OutputKind, OutputResult, Spec};
 use std::path::{Path, PathBuf};
 
 /// Generate audio using the unified audio backend
-pub(super) fn generate_audio(spec: &Spec, out_root: &Path) -> Result<Vec<OutputResult>, DispatchError> {
+pub(super) fn generate_audio(
+    spec: &Spec,
+    out_root: &Path,
+) -> Result<Vec<OutputResult>, DispatchError> {
     let result = speccade_backend_audio::generate(spec)
         .map_err(|e| DispatchError::BackendError(format!("Audio generation failed: {}", e)))?;
 

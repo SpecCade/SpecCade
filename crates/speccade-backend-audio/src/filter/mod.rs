@@ -1,10 +1,22 @@
-//! Biquad filter implementations.
+//! Filter implementations.
 //!
-//! This module provides lowpass, highpass, and bandpass filters using
-//! the standard biquad filter topology. Coefficients are calculated
-//! using the Audio EQ Cookbook formulas.
+//! This module provides various filter types:
+//! - Biquad filters (lowpass, highpass, bandpass, notch, allpass)
+//! - One-pole filter (simple RC filter)
+//! - DC blocker
+//! - Comb filter (delay-based resonant filter)
+//! - Formant filter (vowel-shaping resonant filter bank)
+//! - Ladder filter (Moog-style 4-pole lowpass with resonance)
+
+mod comb;
+mod formant;
+mod ladder;
 
 use std::f64::consts::PI;
+
+pub use comb::CombFilter;
+pub use formant::FormantFilter;
+pub use ladder::LadderFilter;
 
 /// Biquad filter coefficients.
 #[derive(Debug, Clone, Copy)]
@@ -297,6 +309,11 @@ impl BiquadFilter {
         Self::new(BiquadCoeffs::bandpass(center, q, sample_rate))
     }
 
+    /// Creates a notch (band-reject) filter.
+    pub fn notch(center: f64, q: f64, sample_rate: f64) -> Self {
+        Self::new(BiquadCoeffs::notch(center, q, sample_rate))
+    }
+
     /// Updates the filter coefficients.
     pub fn set_coeffs(&mut self, coeffs: BiquadCoeffs) {
         self.coeffs = coeffs;
@@ -538,5 +555,33 @@ mod tests {
 
         // Should approach 1.0 (passes DC)
         assert!((output[999] - 1.0).abs() < 0.01);
+    }
+
+    #[test]
+    fn test_notch_filter() {
+        let mut filter = BiquadFilter::notch(1000.0, 2.0, 44100.0);
+
+        // Process DC input (constant 1.0)
+        let mut output = Vec::new();
+        for _ in 0..1000 {
+            output.push(filter.process(1.0));
+        }
+
+        // Notch filter should pass DC (only attenuates around center frequency)
+        assert!((output[999] - 1.0).abs() < 0.1);
+    }
+
+    #[test]
+    fn test_allpass_filter() {
+        let mut filter = BiquadFilter::new(BiquadCoeffs::allpass(1000.0, 2.0, 44100.0));
+
+        // Process DC input (constant 1.0)
+        let mut output = Vec::new();
+        for _ in 0..1000 {
+            output.push(filter.process(1.0));
+        }
+
+        // Allpass filter should pass DC (passes all frequencies, only affects phase)
+        assert!((output[999] - 1.0).abs() < 0.1);
     }
 }

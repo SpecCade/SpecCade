@@ -94,7 +94,11 @@ pub(super) fn apply_volume_fade_it(
 }
 
 /// Apply tempo change automation to an IT pattern.
-pub(super) fn apply_tempo_change_it(pattern: &mut ItPattern, row: u16, bpm: u8) -> Result<(), GenerateError> {
+pub(super) fn apply_tempo_change_it(
+    pattern: &mut ItPattern,
+    row: u16,
+    bpm: u8,
+) -> Result<(), GenerateError> {
     if bpm < 32 {
         return Err(GenerateError::AutomationError(format!(
             "BPM {} is too low (min 32)",

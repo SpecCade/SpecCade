@@ -2,7 +2,8 @@
 
 use speccade_backend_audio::generate;
 use speccade_spec::recipe::audio::{
-    AudioV1Params, Envelope, NoteSpec, OscillatorConfig, PitchEnvelope, Synthesis, Waveform,
+    AudioV1Params, Envelope, NoiseType, NoteSpec, OscillatorConfig, PitchEnvelope, SpectralSource,
+    Synthesis, Waveform,
 };
 use speccade_spec::{AssetType, OutputFormat, OutputSpec, Recipe, Spec};
 
@@ -46,6 +47,7 @@ fn test_instrument_with_detune() {
         pitch_envelope: None,
         base_note: Some(NoteSpec::MidiNote(69)), // A4
         generate_loop_points: false,
+        post_fx_lfos: vec![],
     };
 
     let spec = create_instrument_spec(params, 42, "test-detune");
@@ -82,6 +84,7 @@ fn test_instrument_with_duty_cycle() {
         pitch_envelope: None,
         base_note: Some(NoteSpec::MidiNote(60)), // C4
         generate_loop_points: false,
+        post_fx_lfos: vec![],
     };
 
     let spec = create_instrument_spec(params, 42, "test-duty");
@@ -124,6 +127,7 @@ fn test_instrument_with_pitch_envelope() {
         }),
         base_note: Some(NoteSpec::MidiNote(69)),
         generate_loop_points: false,
+        post_fx_lfos: vec![],
     };
 
     let spec = create_instrument_spec(params, 42, "test-pitch-env");
@@ -180,6 +184,7 @@ fn test_instrument_multi_oscillator() {
         pitch_envelope: None,
         base_note: Some(NoteSpec::MidiNote(60)), // C4
         generate_loop_points: false,
+        post_fx_lfos: vec![],
     };
 
     let spec = create_instrument_spec(params, 42, "test-multi-osc");
@@ -235,6 +240,7 @@ fn test_instrument_multi_oscillator_with_pitch_envelope() {
         }),
         base_note: Some(NoteSpec::MidiNote(69)),
         generate_loop_points: false,
+        post_fx_lfos: vec![],
     };
 
     let spec = create_instrument_spec(params, 42, "test-multi-osc-pitch");
@@ -277,10 +283,121 @@ fn test_instrument_determinism_with_new_features() {
         }),
         base_note: Some(NoteSpec::MidiNote(60)),
         generate_loop_points: false,
+        post_fx_lfos: vec![],
     };
 
     let spec1 = create_instrument_spec(params.clone(), 42, "test-determinism-1");
     let spec2 = create_instrument_spec(params, 42, "test-determinism-2");
+
+    let result1 = generate(&spec1).expect("first generation");
+    let result2 = generate(&spec2).expect("second generation");
+
+    // Should produce identical output with same seed
+    assert_eq!(result1.wav.pcm_hash, result2.wav.pcm_hash);
+}
+
+#[test]
+fn test_spectral_freeze_noise() {
+    let params = AudioV1Params {
+        duration_seconds: 0.5,
+        sample_rate: 44100,
+        layers: vec![speccade_spec::recipe::audio::AudioLayer {
+            synthesis: Synthesis::SpectralFreeze {
+                source: SpectralSource::Noise {
+                    noise_type: NoiseType::Pink,
+                },
+            },
+            envelope: Envelope {
+                attack: 0.1,
+                decay: 0.1,
+                sustain: 0.7,
+                release: 0.2,
+            },
+            volume: 0.8,
+            pan: 0.0,
+            delay: None,
+            filter: None,
+            lfo: None,
+        }],
+        master_filter: None,
+        effects: vec![],
+        pitch_envelope: None,
+        base_note: None,
+        generate_loop_points: false,
+        post_fx_lfos: vec![],
+    };
+
+    let spec = create_instrument_spec(params, 42, "test-spectral-freeze-noise");
+    let result = generate(&spec);
+    assert!(result.is_ok());
+
+    let result = result.unwrap();
+    assert!(!result.wav.wav_data.is_empty());
+}
+
+#[test]
+fn test_spectral_freeze_tone() {
+    let params = AudioV1Params {
+        duration_seconds: 0.5,
+        sample_rate: 44100,
+        layers: vec![speccade_spec::recipe::audio::AudioLayer {
+            synthesis: Synthesis::SpectralFreeze {
+                source: SpectralSource::Tone {
+                    waveform: Waveform::Sawtooth,
+                    frequency: 220.0,
+                },
+            },
+            envelope: Envelope::default(),
+            volume: 0.8,
+            pan: 0.0,
+            delay: None,
+            filter: None,
+            lfo: None,
+        }],
+        master_filter: None,
+        effects: vec![],
+        pitch_envelope: None,
+        base_note: Some(NoteSpec::NoteName("A3".to_string())),
+        generate_loop_points: false,
+        post_fx_lfos: vec![],
+    };
+
+    let spec = create_instrument_spec(params, 42, "test-spectral-freeze-tone");
+    let result = generate(&spec);
+    assert!(result.is_ok());
+
+    let result = result.unwrap();
+    assert!(!result.wav.wav_data.is_empty());
+}
+
+#[test]
+fn test_spectral_freeze_determinism() {
+    let params = AudioV1Params {
+        duration_seconds: 0.3,
+        sample_rate: 44100,
+        layers: vec![speccade_spec::recipe::audio::AudioLayer {
+            synthesis: Synthesis::SpectralFreeze {
+                source: SpectralSource::Noise {
+                    noise_type: NoiseType::Brown,
+                },
+            },
+            envelope: Envelope::default(),
+            volume: 0.8,
+            pan: 0.0,
+            delay: None,
+            filter: None,
+            lfo: None,
+        }],
+        master_filter: None,
+        effects: vec![],
+        pitch_envelope: None,
+        base_note: None,
+        generate_loop_points: false,
+        post_fx_lfos: vec![],
+    };
+
+    let spec1 = create_instrument_spec(params.clone(), 123, "test-spectral-determinism-1");
+    let spec2 = create_instrument_spec(params, 123, "test-spectral-determinism-2");
 
     let result1 = generate(&spec1).expect("first generation");
     let result2 = generate(&spec2).expect("second generation");

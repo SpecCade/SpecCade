@@ -5,6 +5,8 @@
 mod converters;
 mod filters;
 mod layer;
+mod lfo_granular;
+mod lfo_modulation;
 mod modulation;
 mod oscillators;
 
@@ -149,12 +151,46 @@ fn generate_from_unified_params(params: &AudioV1Params, seed: u32) -> AudioResul
     // Process each layer
     for (layer_idx, layer) in params.layers.iter().enumerate() {
         let layer_seed = crate::rng::derive_layer_seed(seed, layer_idx as u32);
+
+        // Check if this is a SupersawUnison layer that needs expansion
+        if let speccade_spec::recipe::audio::Synthesis::SupersawUnison {
+            frequency,
+            voices,
+            detune_cents,
+            spread,
+            detune_curve,
+        } = &layer.synthesis
+        {
+            // Expand SupersawUnison into N virtual layers
+            let supersaw_params = SupersawParams {
+                frequency: *frequency,
+                voices: *voices,
+                detune_cents: *detune_cents,
+                spread: *spread,
+                detune_curve: *detune_curve,
+            };
+            let virtual_layers = generate_supersaw_virtual_layers(
+                layer,
+                layer_idx,
+                num_samples,
+                sample_rate,
+                layer_seed,
+                supersaw_params,
+            )?;
+
+            for virtual_layer in virtual_layers {
+                mixer.add_layer(virtual_layer);
+            }
+            continue;
+        }
+
         let mut layer_samples =
             generate_layer(layer, layer_idx, num_samples, sample_rate, layer_seed)?;
 
         // Apply pitch envelope if specified
         if let Some(ref pitch_env) = params.pitch_envelope {
-            let pitch_curve = modulation::generate_pitch_envelope_curve(pitch_env, sample_rate, num_samples);
+            let pitch_curve =
+                modulation::generate_pitch_envelope_curve(pitch_env, sample_rate, num_samples);
             layer_samples = modulation::apply_pitch_envelope_to_layer_samples(
                 layer,
                 layer_idx,
@@ -191,14 +227,10 @@ fn generate_from_unified_params(params: &AudioV1Params, seed: u32) -> AudioResul
                     .min(num_samples);
 
                 let mut pan_curve = vec![layer.pan.clamp(-1.0, 1.0); num_samples];
-                for i in delay_samples..num_samples {
+                for pan_sample in pan_curve.iter_mut().take(num_samples).skip(delay_samples) {
                     let lfo_value = lfo.next_sample(&mut lfo_rng);
-                    pan_curve[i] = apply_pan_modulation(
-                        layer.pan,
-                        lfo_value,
-                        *amount,
-                        lfo_mod.config.depth,
-                    );
+                    *pan_sample =
+                        apply_pan_modulation(layer.pan, lfo_value, *amount, lfo_mod.config.depth);
                 }
 
                 mix_layer = mix_layer.with_pan_curve(pan_curve);
@@ -228,7 +260,17 @@ fn generate_from_unified_params(params: &AudioV1Params, seed: u32) -> AudioResul
 
     // Apply effect chain if specified
     if !params.effects.is_empty() {
-        mixed = crate::effects::apply_effect_chain(mixed, &params.effects, sample_rate)?;
+        if params.post_fx_lfos.is_empty() {
+            mixed = crate::effects::apply_effect_chain(mixed, &params.effects, sample_rate, seed)?;
+        } else {
+            mixed = crate::effects::apply_effect_chain_with_lfos(
+                mixed,
+                &params.effects,
+                &params.post_fx_lfos,
+                sample_rate,
+                seed,
+            )?;
+        }
     }
 
     // Determine loop point if requested
@@ -258,4 +300,117 @@ fn generate_from_unified_params(params: &AudioV1Params, seed: u32) -> AudioResul
         base_note: base_note_midi,
         loop_point,
     })
+}
+
+/// Parameters for supersaw voice expansion.
+struct SupersawParams {
+    frequency: f64,
+    voices: u8,
+    detune_cents: f64,
+    spread: f64,
+    detune_curve: speccade_spec::recipe::audio::DetuneCurve,
+}
+
+/// Generates virtual layers for SupersawUnison synthesis.
+///
+/// Expands a single SupersawUnison layer into N virtual layers (one per voice),
+/// each with appropriate detuning and panning.
+fn generate_supersaw_virtual_layers(
+    layer: &speccade_spec::recipe::audio::AudioLayer,
+    layer_idx: usize,
+    num_samples: usize,
+    sample_rate: f64,
+    layer_seed: u32,
+    params: SupersawParams,
+) -> AudioResult<Vec<Layer>> {
+    use crate::synthesis::oscillators::SawSynth;
+    use crate::synthesis::Synthesizer;
+    use speccade_spec::recipe::audio::DetuneCurve;
+
+    let n = (params.voices as usize).max(1);
+    let voice_volume = layer.volume / (n as f64);
+
+    let mut virtual_layers = Vec::with_capacity(n);
+
+    // Calculate delay samples once
+    let delay_samples = match layer.delay {
+        Some(delay) => {
+            if !delay.is_finite() || delay < 0.0 {
+                return Err(AudioError::invalid_param(
+                    format!("layers[{}].delay", layer_idx),
+                    format!("must be finite and non-negative, got {}", delay),
+                ));
+            }
+            let delay_samples_f = delay * sample_rate;
+            if !delay_samples_f.is_finite() || delay_samples_f < 0.0 {
+                return Err(AudioError::invalid_param(
+                    format!("layers[{}].delay", layer_idx),
+                    "produced an invalid sample count",
+                ));
+            }
+            let delay_samples = delay_samples_f.floor() as usize;
+            if delay_samples > num_samples {
+                return Err(AudioError::invalid_param(
+                    format!("layers[{}].delay", layer_idx),
+                    format!(
+                        "delay exceeds duration ({} samples > {} total)",
+                        delay_samples, num_samples
+                    ),
+                ));
+            }
+            delay_samples
+        }
+        None => 0,
+    };
+    let synthesis_samples = num_samples.saturating_sub(delay_samples);
+
+    // Generate envelope once for reuse
+    let envelope = modulation::generate_envelope(&layer.envelope, sample_rate, synthesis_samples);
+
+    for voice_idx in 0..n {
+        // Derive unique seed for this voice
+        let voice_seed =
+            crate::rng::derive_component_seed(layer_seed, &format!("supersaw_voice_{}", voice_idx));
+        let mut rng = crate::rng::create_rng(voice_seed);
+
+        // Calculate normalized position x in [-1, 1]
+        let x = if n == 1 {
+            0.0
+        } else {
+            -1.0 + 2.0 * (voice_idx as f64) / ((n - 1) as f64)
+        };
+
+        // Calculate detune offset based on curve
+        let detune_offset_cents = match params.detune_curve {
+            DetuneCurve::Linear => x * params.detune_cents,
+            DetuneCurve::Exp2 => x.signum() * (x.abs() * x.abs()) * params.detune_cents,
+        };
+
+        // Calculate voice frequency with detune
+        let voice_freq = params.frequency * 2.0_f64.powf(detune_offset_cents / 1200.0);
+
+        // Calculate voice pan
+        let voice_pan = (layer.pan + x * params.spread).clamp(-1.0, 1.0);
+
+        // Synthesize sawtooth oscillator
+        let synth = SawSynth::new(voice_freq);
+        let mut samples = synth.synthesize(synthesis_samples, sample_rate, &mut rng);
+
+        // Apply envelope
+        for (sample, env) in samples.iter_mut().zip(envelope.iter()) {
+            *sample *= env;
+        }
+
+        // Pad with delay at the start if needed
+        if delay_samples > 0 {
+            let mut padded = vec![0.0; delay_samples];
+            padded.extend(samples);
+            samples = padded;
+        }
+
+        let mix_layer = Layer::new(samples, voice_volume, voice_pan);
+        virtual_layers.push(mix_layer);
+    }
+
+    Ok(virtual_layers)
 }

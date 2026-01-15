@@ -219,6 +219,9 @@ impl VectorPath {
         }
 
         // Return last position
-        self.points.last().map(|p| p.position).unwrap_or(VectorPosition::center())
+        self.points
+            .last()
+            .map(|p| p.position)
+            .unwrap_or(VectorPosition::center())
     }
 }

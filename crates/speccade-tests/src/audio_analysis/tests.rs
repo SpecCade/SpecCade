@@ -1,9 +1,9 @@
 //! Tests for audio analysis functionality.
 
 use super::channel::*;
+use super::error::AudioAnalysisError;
 use super::signal::*;
 use super::wav::*;
-use super::error::AudioAnalysisError;
 
 // ==========================================================================
 // RMS Tests

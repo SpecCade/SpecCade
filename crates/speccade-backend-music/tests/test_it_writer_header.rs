@@ -4,8 +4,8 @@
 //! channel configuration, NNA modes, envelope handling, and instrument settings.
 
 use speccade_backend_music::it::{
-    dca, dct, env_flags, flags, nna, ItEnvelope, ItEnvelopePoint, ItHeader, ItInstrument,
-    ItModule, ItPattern, ItSample, IT_INSTRUMENT_MAGIC,
+    dca, dct, env_flags, flags, nna, ItEnvelope, ItEnvelopePoint, ItHeader, ItInstrument, ItModule,
+    ItPattern, ItSample, IT_INSTRUMENT_MAGIC,
 };
 
 // =============================================================================

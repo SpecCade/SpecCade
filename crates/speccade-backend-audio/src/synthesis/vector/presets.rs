@@ -9,9 +9,9 @@ use super::types::{VectorPath, VectorPathPoint, VectorPosition, VectorSource};
 /// Uses a path that slowly moves around the vector space.
 pub fn evolving_pad(frequency: f64, duration: f64) -> VectorSynth {
     let sources = [
-        VectorSource::sine(1.0),     // A: Pure sine (fundamental)
-        VectorSource::saw(1.0),      // B: Saw wave (bright)
-        VectorSource::triangle(2.0), // C: Triangle (soft, octave up)
+        VectorSource::sine(1.0),      // A: Pure sine (fundamental)
+        VectorSource::saw(1.0),       // B: Saw wave (bright)
+        VectorSource::triangle(2.0),  // C: Triangle (soft, octave up)
         VectorSource::wavetable(1.0), // D: Wavetable (complex)
     ];
 
@@ -35,10 +35,10 @@ pub fn evolving_pad(frequency: f64, duration: f64) -> VectorSynth {
 /// creating interesting evolving textures.
 pub fn morph_texture(frequency: f64, duration: f64) -> VectorSynth {
     let sources = [
-        VectorSource::sine(1.0),       // A: Pure tone
-        VectorSource::noise(),         // B: Noise
-        VectorSource::square(0.5),     // C: Sub-octave square
-        VectorSource::wavetable(2.0),  // D: Wavetable at octave
+        VectorSource::sine(1.0),      // A: Pure tone
+        VectorSource::noise(),        // B: Noise
+        VectorSource::square(0.5),    // C: Sub-octave square
+        VectorSource::wavetable(2.0), // D: Wavetable at octave
     ];
 
     // Path that sweeps from tonal to noisy and back
@@ -59,10 +59,10 @@ pub fn morph_texture(frequency: f64, duration: f64) -> VectorSynth {
 /// in sequence, showcasing each source distinctly.
 pub fn sweep_corners(frequency: f64, duration: f64) -> VectorSynth {
     let sources = [
-        VectorSource::sine(1.0),      // A: Sine
-        VectorSource::saw(1.0),       // B: Saw
-        VectorSource::triangle(1.0),  // C: Triangle
-        VectorSource::square(1.0),    // D: Square
+        VectorSource::sine(1.0),     // A: Sine
+        VectorSource::saw(1.0),      // B: Saw
+        VectorSource::triangle(1.0), // C: Triangle
+        VectorSource::square(1.0),   // D: Square
     ];
 
     // Path that visits each corner

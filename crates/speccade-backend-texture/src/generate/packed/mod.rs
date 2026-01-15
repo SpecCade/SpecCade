@@ -18,8 +18,7 @@ mod tests;
 
 use parsers::parse_noise_type;
 use pattern_generators::{
-    build_noise, generate_gradient_map, generate_grid_map, generate_noise_map,
-    generate_stripes_map,
+    build_noise, generate_gradient_map, generate_grid_map, generate_noise_map, generate_stripes_map,
 };
 
 const DEFAULT_NOISE_SCALE: f64 = 0.05;

@@ -9,8 +9,8 @@ use speccade_spec::recipe::music::{
 
 use super::error::ExpandError;
 use super::harmony::{
-    build_chord_context, build_key_context, chord_tone_note_name, scale_degree_note_name,
-    ChordAt, KeyContext,
+    build_chord_context, build_key_context, chord_tone_note_name, scale_degree_note_name, ChordAt,
+    KeyContext,
 };
 
 pub(super) const MAX_RECURSION_DEPTH: usize = 64;
@@ -190,9 +190,7 @@ impl<'a> Expander<'a> {
             })
     }
 
-    pub(super) fn harmony(
-        &self,
-    ) -> Result<&speccade_spec::recipe::music::Harmony, ExpandError> {
+    pub(super) fn harmony(&self) -> Result<&speccade_spec::recipe::music::Harmony, ExpandError> {
         self.params
             .harmony
             .as_ref()

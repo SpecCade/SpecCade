@@ -12,8 +12,10 @@ use crate::rng::DeterministicRng;
 
 use super::super::helpers::create_noise_generator;
 use super::super::GenerateError;
+use super::helpers::{
+    expect_color, expect_gray, nearest_palette_color, parse_hex_color_list, sample_color_ramp,
+};
 use super::GraphValue;
-use super::helpers::{expect_color, expect_gray, parse_hex_color_list, nearest_palette_color, sample_color_ramp};
 
 #[allow(clippy::too_many_arguments)]
 pub(super) fn eval_node<'a>(

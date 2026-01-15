@@ -12,9 +12,11 @@ All currently supported `recipe.params.layers[].synthesis.type` variants are imp
 - `oscillator` — DONE
 - `multi_oscillator` — DONE
 - `fm_synth` — DONE
+- `feedback_fm` — DONE
 - `am_synth` — DONE
 - `ring_mod_synth` — DONE
 - `karplus_strong` — DONE
+- `bowed_string` — DONE
 - `noise_burst` — DONE
 - `additive` — DONE
 - `pitched_body` — DONE
@@ -26,3 +28,10 @@ All currently supported `recipe.params.layers[].synthesis.type` variants are imp
 - `vocoder` — DONE
 - `formant` — DONE
 - `vector` — DONE
+- `supersaw_unison` — DONE
+- `waveguide` — DONE
+- `membrane_drum` — DONE
+- `comb_filter_synth` — DONE
+- `pulsar` — DONE
+- `vosim` — DONE
+- `spectral_freeze` — DONE

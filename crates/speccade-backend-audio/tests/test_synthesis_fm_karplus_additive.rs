@@ -2,8 +2,8 @@
 
 use speccade_backend_audio::generate::generate_from_params;
 use speccade_spec::recipe::audio::{
-    AudioLayer, AudioV1Params as AudioSfxLayeredSynthV1Params, Envelope, FreqSweep, Synthesis,
-    SweepCurve,
+    AudioLayer, AudioV1Params as AudioSfxLayeredSynthV1Params, Envelope, FreqSweep, SweepCurve,
+    Synthesis,
 };
 
 // ============================================================================
@@ -34,6 +34,7 @@ fn test_fm_synth_basic() {
         pitch_envelope: None,
         base_note: None,
         generate_loop_points: false,
+        post_fx_lfos: vec![],
     };
 
     let result = generate_from_params(&params, 42);
@@ -67,6 +68,7 @@ fn test_fm_synth_with_sweep() {
         pitch_envelope: None,
         base_note: None,
         generate_loop_points: false,
+        post_fx_lfos: vec![],
     };
 
     let result = generate_from_params(&params, 42);
@@ -100,6 +102,7 @@ fn test_karplus_strong() {
         pitch_envelope: None,
         base_note: None,
         generate_loop_points: false,
+        post_fx_lfos: vec![],
     };
 
     let result = generate_from_params(&params, 42);
@@ -129,6 +132,7 @@ fn test_karplus_strong_high_damping() {
         pitch_envelope: None,
         base_note: None,
         generate_loop_points: false,
+        post_fx_lfos: vec![],
     };
 
     let result = generate_from_params(&params, 42);
@@ -161,6 +165,7 @@ fn test_additive_synthesis() {
         pitch_envelope: None,
         base_note: None,
         generate_loop_points: false,
+        post_fx_lfos: vec![],
     };
 
     let result = generate_from_params(&params, 42);
@@ -189,6 +194,7 @@ fn test_additive_synthesis_single_harmonic() {
         pitch_envelope: None,
         base_note: None,
         generate_loop_points: false,
+        post_fx_lfos: vec![],
     };
 
     let result = generate_from_params(&params, 42);

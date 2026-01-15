@@ -1,16 +1,20 @@
 //! Envelope generation and modulation utilities.
 
-use speccade_spec::recipe::audio::{AudioLayer, Envelope, Filter, PitchEnvelope, Synthesis, Waveform};
+use speccade_spec::recipe::audio::{AudioLayer, Envelope, PitchEnvelope, Synthesis, Waveform};
 
 use crate::envelope::{AdsrEnvelope, AdsrParams};
 use crate::error::AudioResult;
-use crate::filter::{BiquadCoeffs, BiquadFilter};
-use crate::modulation::lfo::{
-    apply_filter_cutoff_modulation, apply_pitch_modulation_with_depth, Lfo,
-};
 use crate::oscillator::{PhaseAccumulator, TWO_PI};
 
 use super::layer::generate_layer;
+
+// Re-export LFO modulation functions from the dedicated module
+pub use super::lfo_modulation::{
+    apply_lfo_filter_modulation, apply_lfo_fm_index_modulation, apply_lfo_grain_density_modulation,
+    apply_lfo_grain_size_modulation, apply_lfo_pitch_modulation, apply_lfo_pitch_warp,
+    apply_lfo_pulse_width_modulation, LfoFmIndexParams, LfoGrainDensityParams, LfoGrainSizeParams,
+    LfoPitchParams, LfoPulseWidthParams,
+};
 
 /// Generates an ADSR envelope for the given duration.
 pub fn generate_envelope(env: &Envelope, sample_rate: f64, num_samples: usize) -> Vec<f64> {
@@ -173,219 +177,4 @@ pub fn apply_pitch_envelope_to_layer_samples(
     }
 
     Ok(output)
-}
-
-/// Applies LFO pitch modulation to a layer by regenerating with modulated frequency.
-pub fn apply_lfo_pitch_modulation(
-    layer: &AudioLayer,
-    layer_idx: usize,
-    num_samples: usize,
-    sample_rate: f64,
-    seed: u32,
-    lfo: &mut Lfo,
-    semitones: f64,
-    depth: f64,
-    rng: &mut rand_pcg::Pcg32,
-) -> AudioResult<Vec<f64>> {
-    let mut output = vec![0.0; num_samples];
-
-    // Only oscillator-based synthesis can be pitch-modulated per-sample
-    match &layer.synthesis {
-        Synthesis::Oscillator {
-            waveform,
-            frequency,
-            detune,
-            duty,
-            ..
-        } => {
-            let base_frequency = *frequency;
-            let detune_mult = if let Some(detune_cents) = detune {
-                2.0_f64.powf(*detune_cents / 1200.0)
-            } else {
-                1.0
-            };
-            let duty_cycle = duty.unwrap_or(0.5);
-            let mut phase_acc = PhaseAccumulator::new(sample_rate);
-
-            for i in 0..num_samples {
-                let lfo_value = lfo.next_sample(rng);
-                let freq = apply_pitch_modulation_with_depth(
-                    base_frequency * detune_mult,
-                    lfo_value,
-                    semitones,
-                    depth,
-                );
-                let phase = phase_acc.advance(freq);
-                let sample = match waveform {
-                    Waveform::Sine => crate::oscillator::sine(phase),
-                    Waveform::Square | Waveform::Pulse => {
-                        crate::oscillator::square(phase, duty_cycle)
-                    }
-                    Waveform::Sawtooth => crate::oscillator::sawtooth(phase),
-                    Waveform::Triangle => crate::oscillator::triangle(phase),
-                };
-                output[i] = sample;
-            }
-        }
-        Synthesis::MultiOscillator {
-            frequency,
-            oscillators,
-            ..
-        } => {
-            let base_frequency = *frequency;
-            for osc_config in oscillators {
-                let detune_mult = if let Some(detune_cents) = osc_config.detune {
-                    2.0_f64.powf(detune_cents / 1200.0)
-                } else {
-                    1.0
-                };
-                let duty = osc_config.duty.unwrap_or(0.5);
-                let phase_offset = osc_config.phase.unwrap_or(0.0);
-                let volume = osc_config.volume;
-                let mut phase_acc = PhaseAccumulator::new(sample_rate);
-
-                // Reset LFO for each oscillator
-                let mut lfo_clone = lfo.clone();
-
-                for i in 0..num_samples {
-                    let lfo_value = lfo_clone.next_sample(rng);
-                    let freq = apply_pitch_modulation_with_depth(
-                        base_frequency * detune_mult,
-                        lfo_value,
-                        semitones,
-                        depth,
-                    );
-                    let mut phase = phase_acc.advance(freq);
-                    phase += phase_offset;
-                    while phase >= TWO_PI {
-                        phase -= TWO_PI;
-                    }
-                    let sample = match osc_config.waveform {
-                        Waveform::Sine => crate::oscillator::sine(phase),
-                        Waveform::Square | Waveform::Pulse => {
-                            crate::oscillator::square(phase, duty)
-                        }
-                        Waveform::Sawtooth => crate::oscillator::sawtooth(phase),
-                        Waveform::Triangle => crate::oscillator::triangle(phase),
-                    };
-                    output[i] += sample * volume;
-                }
-            }
-            let count = oscillators.len().max(1) as f64;
-            for sample in &mut output {
-                *sample /= count;
-            }
-        }
-        _ => {
-            // For other synthesis types, generate without pitch modulation
-            return generate_layer(layer, layer_idx, num_samples, sample_rate, seed);
-        }
-    }
-
-    Ok(output)
-}
-
-/// Applies LFO pitch modulation to an existing sample buffer by time-warping (variable-rate resampling).
-///
-/// This makes pitch LFO usable for synthesis modes that don't support per-sample frequency modulation
-/// directly. It preserves the buffer length by normalizing the cumulative playback position so the
-/// last output sample maps to the last input sample.
-pub fn apply_lfo_pitch_warp(
-    input: &[f64],
-    lfo: &mut Lfo,
-    semitones: f64,
-    depth: f64,
-    rng: &mut rand_pcg::Pcg32,
-) -> Vec<f64> {
-    let n = input.len();
-    if n <= 1 {
-        return input.to_vec();
-    }
-
-    // Generate per-interval pitch multipliers (N-1 intervals for N samples).
-    let mut multipliers = Vec::with_capacity(n - 1);
-    for _ in 0..(n - 1) {
-        let lfo_value = lfo.next_sample(rng);
-        // Using a base frequency of 1.0 gives a pure multiplier.
-        multipliers.push(apply_pitch_modulation_with_depth(1.0, lfo_value, semitones, depth));
-    }
-
-    let total: f64 = multipliers.iter().sum();
-    let scale = if total.is_finite() && total > 0.0 {
-        (n as f64 - 1.0) / total
-    } else {
-        1.0
-    };
-
-    let mut output = Vec::with_capacity(n);
-    output.push(input[0]);
-
-    let mut pos = 0.0_f64;
-    for m in multipliers {
-        pos += m * scale;
-        let pos = pos.clamp(0.0, n as f64 - 1.0);
-
-        let i0 = pos.floor() as usize;
-        let i1 = (i0 + 1).min(n - 1);
-        let frac = pos - i0 as f64;
-
-        let sample = input[i0] * (1.0 - frac) + input[i1] * frac;
-        output.push(sample);
-    }
-
-    output
-}
-
-/// Applies LFO-modulated filter to a sample buffer.
-pub fn apply_lfo_filter_modulation(
-    samples: &mut [f64],
-    filter: &Filter,
-    lfo: &mut Lfo,
-    amount: f64,
-    depth: f64,
-    sample_rate: f64,
-    rng: &mut rand_pcg::Pcg32,
-) {
-    match filter {
-        Filter::Lowpass {
-            cutoff, resonance, ..
-        } => {
-            let mut filter_state = BiquadFilter::lowpass(*cutoff, *resonance, sample_rate);
-            for sample in samples.iter_mut() {
-                let lfo_value = lfo.next_sample(rng);
-                let modulated_cutoff =
-                    apply_filter_cutoff_modulation(*cutoff, lfo_value, amount, depth);
-                let coeffs = BiquadCoeffs::lowpass(modulated_cutoff, *resonance, sample_rate);
-                filter_state.set_coeffs(coeffs);
-                *sample = filter_state.process(*sample);
-            }
-        }
-        Filter::Highpass {
-            cutoff, resonance, ..
-        } => {
-            let mut filter_state = BiquadFilter::highpass(*cutoff, *resonance, sample_rate);
-            for sample in samples.iter_mut() {
-                let lfo_value = lfo.next_sample(rng);
-                let modulated_cutoff =
-                    apply_filter_cutoff_modulation(*cutoff, lfo_value, amount, depth);
-                let coeffs = BiquadCoeffs::highpass(modulated_cutoff, *resonance, sample_rate);
-                filter_state.set_coeffs(coeffs);
-                *sample = filter_state.process(*sample);
-            }
-        }
-        Filter::Bandpass {
-            center, resonance, ..
-        } => {
-            let q = *resonance;
-            let mut filter_state = BiquadFilter::bandpass(*center, q, sample_rate);
-            for sample in samples.iter_mut() {
-                let lfo_value = lfo.next_sample(rng);
-                let modulated_center =
-                    apply_filter_cutoff_modulation(*center, lfo_value, amount, depth);
-                let coeffs = BiquadCoeffs::bandpass(modulated_center, q, sample_rate);
-                filter_state.set_coeffs(coeffs);
-                *sample = filter_state.process(*sample);
-            }
-        }
-    }
 }

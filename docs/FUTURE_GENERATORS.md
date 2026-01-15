@@ -139,10 +139,9 @@ Priority 3 — Nice to Have:
 
 ### Missing Effects (significant gap in V1 library)
 
-Current effects: `reverb`, `compressor`, `chorus`, `phaser`, `delay`, `waveshaper`, `bitcrush`
+Current effects: `reverb`, `compressor`, `chorus`, `phaser`, `delay`, `waveshaper`, `bitcrush`, `flanger`
 
 Priority 1 — Essential (big coverage gaps):
-- `[Q]` **Flanger**: Distinct from chorus/phaser. Jet sweeps, metallic textures. Params: `rate`, `depth`, `feedback`, `delay_ms`, `wet`.
 - `[Q]` **Parametric EQ**: No frequency sculpting beyond per-layer filters. Essential for tonal shaping. Params: `bands[]` with `frequency`, `gain_db`, `q`, `type` (lowshelf/highshelf/peak/notch).
 - `[Q]` **Limiter**: Distinct from compressor. Brick-wall limiting for loudness/clipping prevention. Params: `threshold_db`, `release_ms`, `lookahead_ms`, `ceiling_db`.
 - `[Q]` **Gate/Expander**: No dynamics gate for drum tightening, noise reduction. Params: `threshold_db`, `ratio`, `attack_ms`, `hold_ms`, `release_ms`, `range_db`.

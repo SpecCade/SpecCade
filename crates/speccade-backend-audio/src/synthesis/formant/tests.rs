@@ -121,8 +121,8 @@ fn test_formant_empty_samples() {
 
 #[test]
 fn test_formant_vowel_morph() {
-    let synth = FormantSynth::with_vowel(110.0, VowelPreset::A)
-        .with_vowel_morph(VowelPreset::I, 0.5);
+    let synth =
+        FormantSynth::with_vowel(110.0, VowelPreset::A).with_vowel_morph(VowelPreset::I, 0.5);
 
     let mut rng = create_rng(42);
     let samples = synth.synthesize(4410, 44100.0, &mut rng);

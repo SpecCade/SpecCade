@@ -6,11 +6,15 @@
 use rand::Rng;
 use std::f64::consts::PI;
 
-use crate::note::midi_to_freq;
 use super::utils::create_rng;
+use crate::note::midi_to_freq;
 
 /// Generate a pulse wave with the specified duty cycle.
-pub(super) fn generate_pulse_wave(duty_cycle: f64, sample_rate: u32, num_samples: usize) -> Vec<f64> {
+pub(super) fn generate_pulse_wave(
+    duty_cycle: f64,
+    sample_rate: u32,
+    num_samples: usize,
+) -> Vec<f64> {
     // Reference frequency for C-4 (middle C)
     let freq = midi_to_freq(60);
     let samples_per_cycle = (sample_rate as f64 / freq) as usize;
@@ -70,7 +74,12 @@ pub(super) fn generate_sine_wave(sample_rate: u32, num_samples: usize) -> Vec<f6
 }
 
 /// Generate noise (white noise, optionally periodic for looping).
-pub(super) fn generate_noise(periodic: bool, sample_rate: u32, num_samples: usize, seed: u32) -> Vec<f64> {
+pub(super) fn generate_noise(
+    periodic: bool,
+    sample_rate: u32,
+    num_samples: usize,
+    seed: u32,
+) -> Vec<f64> {
     let mut rng = create_rng(seed);
 
     if periodic {

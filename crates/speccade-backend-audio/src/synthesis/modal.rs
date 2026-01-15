@@ -92,14 +92,14 @@ impl ModalSynth {
     /// typical church bell partial ratios.
     pub fn bell(frequency: f64) -> Self {
         let modes = vec![
-            Mode::new(1.0, 1.0, 4.0),     // Fundamental (hum)
-            Mode::new(2.0, 0.8, 3.5),     // Prime/strike tone
-            Mode::new(2.4, 0.6, 3.0),     // Tierce (minor third)
-            Mode::new(3.0, 0.5, 2.5),     // Quint (fifth)
-            Mode::new(4.0, 0.4, 2.0),     // Nominal (octave)
-            Mode::new(5.0, 0.25, 1.5),    // Deciem
-            Mode::new(6.0, 0.15, 1.2),    // Upper partial
-            Mode::new(8.0, 0.1, 1.0),     // High partial
+            Mode::new(1.0, 1.0, 4.0),  // Fundamental (hum)
+            Mode::new(2.0, 0.8, 3.5),  // Prime/strike tone
+            Mode::new(2.4, 0.6, 3.0),  // Tierce (minor third)
+            Mode::new(3.0, 0.5, 2.5),  // Quint (fifth)
+            Mode::new(4.0, 0.4, 2.0),  // Nominal (octave)
+            Mode::new(5.0, 0.25, 1.5), // Deciem
+            Mode::new(6.0, 0.15, 1.2), // Upper partial
+            Mode::new(8.0, 0.1, 1.0),  // High partial
         ];
         Self::new(frequency, modes, Excitation::Impulse)
     }
@@ -111,12 +111,12 @@ impl ModalSynth {
     /// a characteristic shimmer from higher partials.
     pub fn chime(frequency: f64) -> Self {
         let modes = vec![
-            Mode::new(1.0, 1.0, 3.0),     // Fundamental
-            Mode::new(2.76, 0.7, 2.5),    // Second partial (tube characteristic)
-            Mode::new(5.4, 0.5, 2.0),     // Third partial
-            Mode::new(8.93, 0.3, 1.5),    // Fourth partial
-            Mode::new(13.34, 0.15, 1.0),  // Fifth partial
-            Mode::new(18.64, 0.08, 0.7),  // Sixth partial
+            Mode::new(1.0, 1.0, 3.0),    // Fundamental
+            Mode::new(2.76, 0.7, 2.5),   // Second partial (tube characteristic)
+            Mode::new(5.4, 0.5, 2.0),    // Third partial
+            Mode::new(8.93, 0.3, 1.5),   // Fourth partial
+            Mode::new(13.34, 0.15, 1.0), // Fifth partial
+            Mode::new(18.64, 0.08, 0.7), // Sixth partial
         ];
         Self::new(frequency, modes, Excitation::Impulse)
     }
@@ -128,10 +128,10 @@ impl ModalSynth {
     /// The bar itself produces near-harmonic partials.
     pub fn marimba(frequency: f64) -> Self {
         let modes = vec![
-            Mode::new(1.0, 1.0, 1.5),     // Fundamental (strong)
-            Mode::new(4.0, 0.3, 0.8),     // 2nd partial (near 4:1 for bars)
-            Mode::new(9.0, 0.15, 0.5),    // 3rd partial
-            Mode::new(16.0, 0.05, 0.3),   // 4th partial (weak)
+            Mode::new(1.0, 1.0, 1.5),   // Fundamental (strong)
+            Mode::new(4.0, 0.3, 0.8),   // 2nd partial (near 4:1 for bars)
+            Mode::new(9.0, 0.15, 0.5),  // 3rd partial
+            Mode::new(16.0, 0.05, 0.3), // 4th partial (weak)
         ];
         Self::new(frequency, modes, Excitation::Pluck)
     }
@@ -142,12 +142,12 @@ impl ModalSynth {
     /// high partials and long sustain due to their metal construction.
     pub fn glockenspiel(frequency: f64) -> Self {
         let modes = vec![
-            Mode::new(1.0, 1.0, 2.5),     // Fundamental
-            Mode::new(2.71, 0.7, 2.2),    // Characteristic bar partial
-            Mode::new(5.28, 0.5, 1.8),    // Higher partial
-            Mode::new(8.65, 0.35, 1.4),   // Bright partial
-            Mode::new(12.81, 0.2, 1.0),   // Very high partial
-            Mode::new(17.77, 0.1, 0.7),   // Shimmer
+            Mode::new(1.0, 1.0, 2.5),   // Fundamental
+            Mode::new(2.71, 0.7, 2.2),  // Characteristic bar partial
+            Mode::new(5.28, 0.5, 1.8),  // Higher partial
+            Mode::new(8.65, 0.35, 1.4), // Bright partial
+            Mode::new(12.81, 0.2, 1.0), // Very high partial
+            Mode::new(17.77, 0.1, 0.7), // Shimmer
         ];
         Self::new(frequency, modes, Excitation::Impulse)
     }
@@ -158,10 +158,10 @@ impl ModalSynth {
     /// vibrato (not modeled here, just the basic tone).
     pub fn vibraphone(frequency: f64) -> Self {
         let modes = vec![
-            Mode::new(1.0, 1.0, 3.5),     // Fundamental (very sustained)
-            Mode::new(4.0, 0.4, 2.5),     // 2nd partial
-            Mode::new(10.0, 0.15, 1.5),   // 3rd partial
-            Mode::new(20.0, 0.05, 0.8),   // High partial
+            Mode::new(1.0, 1.0, 3.5),   // Fundamental (very sustained)
+            Mode::new(4.0, 0.4, 2.5),   // 2nd partial
+            Mode::new(10.0, 0.15, 1.5), // 3rd partial
+            Mode::new(20.0, 0.05, 0.8), // High partial
         ];
         Self::new(frequency, modes, Excitation::Pluck)
     }
@@ -172,11 +172,11 @@ impl ModalSynth {
     /// due to their hard mallets and lack of resonators.
     pub fn xylophone(frequency: f64) -> Self {
         let modes = vec![
-            Mode::new(1.0, 1.0, 0.8),     // Fundamental
-            Mode::new(3.0, 0.6, 0.6),     // Strong 3rd harmonic
-            Mode::new(6.0, 0.4, 0.4),     // Higher partial
-            Mode::new(10.0, 0.2, 0.25),   // Bright partial
-            Mode::new(15.0, 0.1, 0.15),   // Attack transient
+            Mode::new(1.0, 1.0, 0.8),   // Fundamental
+            Mode::new(3.0, 0.6, 0.6),   // Strong 3rd harmonic
+            Mode::new(6.0, 0.4, 0.4),   // Higher partial
+            Mode::new(10.0, 0.2, 0.25), // Bright partial
+            Mode::new(15.0, 0.1, 0.15), // Attack transient
         ];
         Self::new(frequency, modes, Excitation::Impulse)
     }

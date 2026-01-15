@@ -37,6 +37,7 @@ fn test_noise_white() {
         pitch_envelope: None,
         base_note: None,
         generate_loop_points: false,
+        post_fx_lfos: vec![],
     };
 
     let result = generate_from_params(&params, 42);
@@ -70,6 +71,7 @@ fn test_noise_pink() {
         pitch_envelope: None,
         base_note: None,
         generate_loop_points: false,
+        post_fx_lfos: vec![],
     };
 
     let result = generate_from_params(&params, 42);
@@ -103,6 +105,7 @@ fn test_noise_brown() {
         pitch_envelope: None,
         base_note: None,
         generate_loop_points: false,
+        post_fx_lfos: vec![],
     };
 
     let result = generate_from_params(&params, 42);
@@ -140,6 +143,7 @@ fn test_noise_with_filter() {
         pitch_envelope: None,
         base_note: None,
         generate_loop_points: false,
+        post_fx_lfos: vec![],
     };
 
     let result = generate_from_params(&params, 42);
@@ -179,6 +183,7 @@ fn test_multi_oscillator_basic() {
         pitch_envelope: None,
         base_note: None,
         generate_loop_points: false,
+        post_fx_lfos: vec![],
     };
 
     let result = generate_from_params(&params, 42);
@@ -223,6 +228,7 @@ fn test_multi_oscillator_detuned() {
         pitch_envelope: None,
         base_note: None,
         generate_loop_points: false,
+        post_fx_lfos: vec![],
     };
 
     let result = generate_from_params(&params, 42);
@@ -267,6 +273,7 @@ fn test_multi_oscillator_with_phase() {
         pitch_envelope: None,
         base_note: None,
         generate_loop_points: false,
+        post_fx_lfos: vec![],
     };
 
     let result = generate_from_params(&params, 42);
@@ -311,6 +318,7 @@ fn test_multi_oscillator_with_duty() {
         pitch_envelope: None,
         base_note: None,
         generate_loop_points: false,
+        post_fx_lfos: vec![],
     };
 
     let result = generate_from_params(&params, 42);

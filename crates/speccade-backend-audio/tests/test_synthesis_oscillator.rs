@@ -2,8 +2,8 @@
 
 use speccade_backend_audio::generate::generate_from_params;
 use speccade_spec::recipe::audio::{
-    AudioLayer, AudioV1Params as AudioSfxLayeredSynthV1Params, Envelope, FreqSweep, Synthesis,
-    SweepCurve, Waveform,
+    AudioLayer, AudioV1Params as AudioSfxLayeredSynthV1Params, Envelope, FreqSweep, SweepCurve,
+    Synthesis, Waveform,
 };
 
 #[test]
@@ -31,6 +31,7 @@ fn test_oscillator_sine() {
         pitch_envelope: None,
         base_note: None,
         generate_loop_points: false,
+        post_fx_lfos: vec![],
     };
 
     let result = generate_from_params(&params, 42);
@@ -64,6 +65,7 @@ fn test_oscillator_square() {
         pitch_envelope: None,
         base_note: None,
         generate_loop_points: false,
+        post_fx_lfos: vec![],
     };
 
     let result = generate_from_params(&params, 42);
@@ -95,6 +97,7 @@ fn test_oscillator_sawtooth() {
         pitch_envelope: None,
         base_note: None,
         generate_loop_points: false,
+        post_fx_lfos: vec![],
     };
 
     let result = generate_from_params(&params, 42);
@@ -126,6 +129,7 @@ fn test_oscillator_triangle() {
         pitch_envelope: None,
         base_note: None,
         generate_loop_points: false,
+        post_fx_lfos: vec![],
     };
 
     let result = generate_from_params(&params, 42);
@@ -157,6 +161,7 @@ fn test_oscillator_pulse_with_duty() {
         pitch_envelope: None,
         base_note: None,
         generate_loop_points: false,
+        post_fx_lfos: vec![],
     };
 
     let result = generate_from_params(&params, 42);
@@ -188,6 +193,7 @@ fn test_oscillator_with_detune() {
         pitch_envelope: None,
         base_note: None,
         generate_loop_points: false,
+        post_fx_lfos: vec![],
     };
 
     let result = generate_from_params(&params, 42);
@@ -222,6 +228,7 @@ fn test_oscillator_with_freq_sweep_linear() {
         pitch_envelope: None,
         base_note: None,
         generate_loop_points: false,
+        post_fx_lfos: vec![],
     };
 
     let result = generate_from_params(&params, 42);
@@ -256,6 +263,7 @@ fn test_oscillator_with_freq_sweep_exponential() {
         pitch_envelope: None,
         base_note: None,
         generate_loop_points: false,
+        post_fx_lfos: vec![],
     };
 
     let result = generate_from_params(&params, 42);
@@ -290,6 +298,7 @@ fn test_oscillator_with_freq_sweep_logarithmic() {
         pitch_envelope: None,
         base_note: None,
         generate_loop_points: false,
+        post_fx_lfos: vec![],
     };
 
     let result = generate_from_params(&params, 42);

@@ -305,6 +305,7 @@ fn test_instrument_synthesis_audio_v1_serialization() {
             generate_loop_points: false,
             master_filter: None,
             effects: vec![],
+            post_fx_lfos: vec![],
         }),
         ..Default::default()
     };

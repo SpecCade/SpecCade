@@ -636,6 +636,997 @@
       "type": "string",
       "pattern": "^(?!.*\\.\\.)[^/\\\\:*?\"<>|]+(/[^/\\\\:*?\"<>|]+)*$",
       "description": "Relative output path (no `..`, no backslashes)."
+    },
+    "filter": {
+      "description": "Audio filter configuration.",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "cutoff", "resonance"],
+          "properties": {
+            "type": { "const": "lowpass" },
+            "cutoff": { "type": "number", "description": "Cutoff frequency in Hz." },
+            "resonance": { "type": "number", "description": "Resonance (Q factor)." },
+            "cutoff_end": { "type": "number", "description": "Optional target cutoff frequency for sweep." }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "cutoff", "resonance"],
+          "properties": {
+            "type": { "const": "highpass" },
+            "cutoff": { "type": "number", "description": "Cutoff frequency in Hz." },
+            "resonance": { "type": "number", "description": "Resonance (Q factor)." },
+            "cutoff_end": { "type": "number", "description": "Optional target cutoff frequency for sweep." }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "center", "resonance"],
+          "properties": {
+            "type": { "const": "bandpass" },
+            "center": { "type": "number", "description": "Center frequency in Hz." },
+            "resonance": { "type": "number", "description": "Resonance (Q factor)." },
+            "center_end": { "type": "number", "description": "Optional target center frequency for sweep." }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "center", "resonance"],
+          "properties": {
+            "type": { "const": "notch" },
+            "center": { "type": "number", "description": "Center frequency in Hz." },
+            "resonance": { "type": "number", "description": "Resonance (Q factor)." },
+            "center_end": { "type": "number", "description": "Optional target center frequency for sweep." }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "frequency", "resonance"],
+          "properties": {
+            "type": { "const": "allpass" },
+            "frequency": { "type": "number", "description": "Center frequency in Hz." },
+            "resonance": { "type": "number", "description": "Resonance (Q factor)." },
+            "frequency_end": { "type": "number", "description": "Optional target frequency for sweep." }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "delay_ms", "feedback", "wet"],
+          "properties": {
+            "type": { "const": "comb" },
+            "delay_ms": { "type": "number", "description": "Delay time in milliseconds." },
+            "feedback": { "type": "number", "minimum": 0, "maximum": 0.99, "description": "Feedback amount (0.0 to 0.99, clamped for stability)." },
+            "wet": { "type": "number", "minimum": 0, "maximum": 1, "description": "Wet/dry mix (0.0 to 1.0)." }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "vowel", "intensity"],
+          "properties": {
+            "type": { "const": "formant" },
+            "vowel": { "type": "string", "enum": ["a", "e", "i", "o", "u"], "description": "Target vowel shape for the formant filter." },
+            "intensity": { "type": "number", "minimum": 0, "maximum": 1, "description": "Intensity of the formant shaping (0.0 = dry, 1.0 = full vowel shape)." }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "cutoff", "resonance"],
+          "properties": {
+            "type": { "const": "ladder" },
+            "cutoff": { "type": "number", "description": "Cutoff frequency in Hz." },
+            "resonance": { "type": "number", "minimum": 0, "maximum": 1, "description": "Resonance amount (0.0-1.0, internally maps to 0-4x feedback)." },
+            "cutoff_end": { "type": "number", "description": "Optional target cutoff frequency for sweep." }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "frequency", "gain_db"],
+          "properties": {
+            "type": { "const": "shelf_low" },
+            "frequency": { "type": "number", "description": "Shelf frequency in Hz." },
+            "gain_db": { "type": "number", "minimum": -24, "maximum": 24, "description": "Gain in dB (positive for bass boost, negative for bass cut)." }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "frequency", "gain_db"],
+          "properties": {
+            "type": { "const": "shelf_high" },
+            "frequency": { "type": "number", "description": "Shelf frequency in Hz." },
+            "gain_db": { "type": "number", "minimum": -24, "maximum": 24, "description": "Gain in dB (positive for treble boost, negative for treble cut)." }
+          }
+        }
+      ]
+    },
+    "lfo_config": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["waveform", "rate", "depth"],
+      "properties": {
+        "waveform": { "type": "string", "enum": ["sine", "square", "sawtooth", "triangle", "pulse"], "description": "LFO waveform type." },
+        "rate": { "type": "number", "exclusiveMinimum": 0, "description": "LFO rate in Hz (typically 0.1-20)." },
+        "depth": { "type": "number", "minimum": 0, "maximum": 1, "exclusiveMinimum": 0, "description": "Modulation depth (0.0-1.0). Must be > 0.0." },
+        "phase": { "type": "number", "minimum": 0, "maximum": 1, "description": "Initial phase offset (0.0-1.0)." }
+      },
+      "description": "LFO configuration for modulation."
+    },
+    "modulation_target": {
+      "description": "Modulation target specification. Layer targets: pitch, volume, filter_cutoff, pan, pulse_width, fm_index, grain_size, grain_density. Post-FX targets: delay_time, reverb_size, distortion_drive.",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["target", "semitones"],
+          "properties": {
+            "target": { "const": "pitch" },
+            "semitones": { "type": "number", "exclusiveMinimum": 0, "description": "Maximum pitch deviation in semitones." }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["target", "amount"],
+          "properties": {
+            "target": { "const": "volume" },
+            "amount": { "type": "number", "minimum": 0, "maximum": 1, "exclusiveMinimum": 0, "description": "Maximum amplitude reduction (0.0-1.0)." }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["target", "amount"],
+          "properties": {
+            "target": { "const": "filter_cutoff" },
+            "amount": { "type": "number", "exclusiveMinimum": 0, "description": "Maximum cutoff frequency change in Hz." }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["target", "amount"],
+          "properties": {
+            "target": { "const": "pan" },
+            "amount": { "type": "number", "minimum": 0, "maximum": 1, "exclusiveMinimum": 0, "description": "Maximum pan delta (0.0-1.0)." }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["target", "amount"],
+          "properties": {
+            "target": { "const": "pulse_width" },
+            "amount": { "type": "number", "minimum": 0, "maximum": 0.49, "exclusiveMinimum": 0, "description": "Maximum duty cycle delta (0.0-0.49)." }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["target", "amount"],
+          "properties": {
+            "target": { "const": "fm_index" },
+            "amount": { "type": "number", "exclusiveMinimum": 0, "description": "Maximum FM modulation index delta." }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["target", "amount_ms"],
+          "properties": {
+            "target": { "const": "grain_size" },
+            "amount_ms": { "type": "number", "exclusiveMinimum": 0, "description": "Maximum grain size delta in milliseconds." }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["target", "amount"],
+          "properties": {
+            "target": { "const": "grain_density" },
+            "amount": { "type": "number", "exclusiveMinimum": 0, "description": "Maximum grain density delta in grains/sec." }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["target", "amount_ms"],
+          "properties": {
+            "target": { "const": "delay_time" },
+            "amount_ms": { "type": "number", "exclusiveMinimum": 0, "description": "Maximum delay time delta in milliseconds." }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["target", "amount"],
+          "properties": {
+            "target": { "const": "reverb_size" },
+            "amount": { "type": "number", "exclusiveMinimum": 0, "description": "Maximum room size delta." }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["target", "amount"],
+          "properties": {
+            "target": { "const": "distortion_drive" },
+            "amount": { "type": "number", "exclusiveMinimum": 0, "description": "Maximum drive delta." }
+          }
+        }
+      ]
+    },
+    "lfo_modulation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["config", "target"],
+      "properties": {
+        "config": { "$ref": "#/definitions/lfo_config" },
+        "target": { "$ref": "#/definitions/modulation_target" }
+      },
+      "description": "LFO modulation configuration with config and target."
+    },
+    "effect_parametric_eq": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "bands"],
+      "properties": {
+        "type": { "const": "parametric_eq" },
+        "bands": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/eq_band" },
+          "description": "EQ bands to apply in order."
+        }
+      },
+      "description": "Parametric EQ effect with cascaded biquad filters."
+    },
+    "eq_band": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["frequency", "gain_db", "q", "band_type"],
+      "properties": {
+        "frequency": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Center/corner frequency in Hz."
+        },
+        "gain_db": {
+          "type": "number",
+          "minimum": -24,
+          "maximum": 24,
+          "description": "Gain in dB (typically -24 to +24)."
+        },
+        "q": {
+          "type": "number",
+          "minimum": 0.1,
+          "maximum": 10,
+          "description": "Q factor (bandwidth). Higher Q = narrower band (typically 0.1 to 10)."
+        },
+        "band_type": { "$ref": "#/definitions/eq_band_type" }
+      },
+      "description": "A single band in a parametric EQ."
+    },
+    "eq_band_type": {
+      "type": "string",
+      "enum": ["lowshelf", "highshelf", "peak", "notch"],
+      "description": "Type of EQ band: lowshelf (boost/cut below), highshelf (boost/cut above), peak (bell curve), notch (cut at frequency)."
+    },
+    "effect_limiter": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "threshold_db", "release_ms", "lookahead_ms", "ceiling_db"],
+      "properties": {
+        "type": { "const": "limiter" },
+        "threshold_db": {
+          "type": "number",
+          "minimum": -24,
+          "maximum": 0,
+          "description": "Threshold in dB where limiting begins (-24 to 0)."
+        },
+        "release_ms": {
+          "type": "number",
+          "minimum": 10,
+          "maximum": 500,
+          "description": "Release time in ms for gain recovery (10-500)."
+        },
+        "lookahead_ms": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 10,
+          "description": "Lookahead time in ms for peak detection (1-10)."
+        },
+        "ceiling_db": {
+          "type": "number",
+          "minimum": -6,
+          "maximum": 0,
+          "description": "Maximum output level in dB (-6 to 0)."
+        }
+      },
+      "description": "Brick-wall limiter effect that prevents output from exceeding the ceiling level."
+    },
+    "effect_gate_expander": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "threshold_db", "ratio", "attack_ms", "hold_ms", "release_ms", "range_db"],
+      "properties": {
+        "type": { "const": "gate_expander" },
+        "threshold_db": {
+          "type": "number",
+          "minimum": -60,
+          "maximum": 0,
+          "description": "Threshold in dB where gate opens (-60 to 0)."
+        },
+        "ratio": {
+          "type": "number",
+          "minimum": 1,
+          "description": "Expansion ratio when below threshold (1.0=off, >1.0=expander, infinity=hard gate)."
+        },
+        "attack_ms": {
+          "type": "number",
+          "minimum": 0.1,
+          "maximum": 50,
+          "description": "Attack time in ms to open gate (0.1-50)."
+        },
+        "hold_ms": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 500,
+          "description": "Hold time in ms to stay open after signal drops (0-500)."
+        },
+        "release_ms": {
+          "type": "number",
+          "minimum": 10,
+          "maximum": 2000,
+          "description": "Release time in ms to close gate (10-2000)."
+        },
+        "range_db": {
+          "type": "number",
+          "minimum": -80,
+          "maximum": 0,
+          "description": "Maximum attenuation depth in dB (-80 to 0)."
+        }
+      },
+      "description": "Gate/expander effect for tightening drums and noise reduction."
+    },
+    "effect_stereo_widener": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "width"],
+      "properties": {
+        "type": { "const": "stereo_widener" },
+        "width": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 2,
+          "description": "Stereo width (0.0 = mono, 1.0 = normal, >1.0 = wider). Range: 0.0-2.0."
+        },
+        "mode": {
+          "type": "string",
+          "enum": ["simple", "haas", "mid_side"],
+          "default": "simple",
+          "description": "Processing algorithm: simple (L/R crossmix), haas (delay-based), mid_side (M/S processing)."
+        },
+        "delay_ms": {
+          "type": "number",
+          "minimum": 0.1,
+          "maximum": 50,
+          "default": 10,
+          "description": "Delay time in ms for Haas mode only (1-30 typical)."
+        }
+      },
+      "description": "Stereo widener effect for enhancing stereo image."
+    },
+    "stereo_widener_mode": {
+      "type": "string",
+      "enum": ["simple", "haas", "mid_side"],
+      "description": "Processing mode for stereo widener: simple (L/R crossmix), haas (delay-based psychoacoustic widening), mid_side (classic M/S processing)."
+    },
+    "effect_multi_tap_delay": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "taps"],
+      "properties": {
+        "type": { "const": "multi_tap_delay" },
+        "taps": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/delay_tap" },
+          "description": "Array of delay taps with independent settings."
+        }
+      },
+      "description": "Multi-tap delay effect with independent delay lines per tap."
+    },
+    "delay_tap": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["time_ms", "feedback", "pan", "level"],
+      "properties": {
+        "time_ms": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 2000,
+          "description": "Delay time for this tap in milliseconds (1-2000)."
+        },
+        "feedback": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 0.99,
+          "description": "Feedback amount for this tap (0.0-0.99)."
+        },
+        "pan": {
+          "type": "number",
+          "minimum": -1,
+          "maximum": 1,
+          "description": "Stereo pan position for this tap (-1.0 to 1.0)."
+        },
+        "level": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Output level for this tap (0.0-1.0)."
+        },
+        "filter_cutoff": {
+          "type": "number",
+          "minimum": 0,
+          "default": 0,
+          "description": "Low-pass filter cutoff in Hz. 0 means no filter."
+        }
+      },
+      "description": "A single tap in a multi-tap delay effect."
+    },
+    "effect_tape_saturation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "drive", "bias", "wow_rate", "flutter_rate", "hiss_level"],
+      "properties": {
+        "type": { "const": "tape_saturation" },
+        "drive": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 20,
+          "description": "Drive/saturation amount (1.0-20.0)."
+        },
+        "bias": {
+          "type": "number",
+          "minimum": -0.5,
+          "maximum": 0.5,
+          "description": "DC bias before saturation (-0.5 to 0.5). Affects harmonic content."
+        },
+        "wow_rate": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 3,
+          "description": "Wow rate in Hz (0.0-3.0). Low-frequency pitch modulation."
+        },
+        "flutter_rate": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 20,
+          "description": "Flutter rate in Hz (0.0-20.0). Higher-frequency pitch modulation."
+        },
+        "hiss_level": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 0.1,
+          "description": "Tape hiss level (0.0-0.1). Seeded noise added to output."
+        }
+      },
+      "description": "Tape saturation effect with warmth, wow/flutter, and deterministic hiss."
+    },
+    "effect_transient_shaper": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "attack", "sustain", "output_gain_db"],
+      "properties": {
+        "type": { "const": "transient_shaper" },
+        "attack": {
+          "type": "number",
+          "minimum": -1,
+          "maximum": 1,
+          "description": "Attack enhancement (-1.0 to 1.0). Negative = softer transients, positive = more punch."
+        },
+        "sustain": {
+          "type": "number",
+          "minimum": -1,
+          "maximum": 1,
+          "description": "Sustain enhancement (-1.0 to 1.0). Negative = tighter, positive = fuller."
+        },
+        "output_gain_db": {
+          "type": "number",
+          "minimum": -12,
+          "maximum": 12,
+          "description": "Output makeup gain in dB (-12 to +12)."
+        }
+      },
+      "description": "Transient shaper effect for controlling attack punch and sustain using dual envelope detection."
+    },
+    "effect_auto_filter": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "sensitivity", "attack_ms", "release_ms", "depth", "base_frequency"],
+      "properties": {
+        "type": { "const": "auto_filter" },
+        "sensitivity": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "How much signal level affects filter (0.0-1.0)."
+        },
+        "attack_ms": {
+          "type": "number",
+          "minimum": 0.1,
+          "maximum": 100,
+          "description": "Envelope attack time in ms (0.1-100)."
+        },
+        "release_ms": {
+          "type": "number",
+          "minimum": 10,
+          "maximum": 1000,
+          "description": "Envelope release time in ms (10-1000)."
+        },
+        "depth": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Filter sweep range (0.0-1.0)."
+        },
+        "base_frequency": {
+          "type": "number",
+          "minimum": 100,
+          "maximum": 8000,
+          "description": "Base cutoff frequency when signal is quiet (100-8000 Hz)."
+        }
+      },
+      "description": "Auto-filter / envelope follower effect for dynamic filter sweeps driven by signal level."
+    },
+    "effect_cabinet_sim": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "cabinet_type"],
+      "properties": {
+        "type": { "const": "cabinet_sim" },
+        "cabinet_type": {
+          "$ref": "#/definitions/cabinet_type",
+          "description": "Cabinet type defining the filter curve."
+        },
+        "mic_position": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "default": 0,
+          "description": "Mic position (0.0 = close/bright, 1.0 = far/dark)."
+        }
+      },
+      "description": "Cabinet simulation effect using cascaded biquad filters to approximate speaker cabinet frequency response."
+    },
+    "cabinet_type": {
+      "type": "string",
+      "enum": ["guitar_1x12", "guitar_4x12", "bass_1x15", "radio", "telephone"],
+      "description": "Cabinet type for cabinet simulation: guitar_1x12 (bright combo), guitar_4x12 (full stack), bass_1x15 (deep bass), radio (AM lo-fi), telephone (narrow bandwidth)."
+    },
+    "effect_rotary_speaker": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "rate", "depth", "wet"],
+      "properties": {
+        "type": { "const": "rotary_speaker" },
+        "rate": {
+          "type": "number",
+          "minimum": 0.1,
+          "maximum": 20,
+          "description": "Rotation rate in Hz (0.5-10.0 typical, 'slow' ~1 Hz, 'fast' ~6 Hz)."
+        },
+        "depth": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Effect intensity (0.0-1.0)."
+        },
+        "wet": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Wet/dry mix (0.0-1.0)."
+        }
+      },
+      "description": "Rotary speaker (Leslie) effect with amplitude modulation and Doppler pitch wobble for organ/psychedelic rotating motion."
+    },
+    "effect_ring_modulator": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "frequency", "mix"],
+      "properties": {
+        "type": { "const": "ring_modulator" },
+        "frequency": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 20000,
+          "description": "Carrier oscillator frequency in Hz (20-2000 typical)."
+        },
+        "mix": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Wet/dry mix (0.0 = dry input, 1.0 = full ring mod)."
+        }
+      },
+      "description": "Ring modulator effect that multiplies audio with a carrier sine oscillator to produce metallic, robotic, and sci-fi timbres."
+    },
+    "effect_granular_delay": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "time_ms", "feedback", "grain_size_ms", "pitch_semitones", "wet"],
+      "properties": {
+        "type": { "const": "granular_delay" },
+        "time_ms": {
+          "type": "number",
+          "minimum": 10,
+          "maximum": 2000,
+          "description": "Delay time in milliseconds (10-2000)."
+        },
+        "feedback": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 0.95,
+          "description": "Feedback amount (0.0-0.95)."
+        },
+        "grain_size_ms": {
+          "type": "number",
+          "minimum": 10,
+          "maximum": 200,
+          "description": "Grain window size in milliseconds (10-200)."
+        },
+        "pitch_semitones": {
+          "type": "number",
+          "minimum": -24,
+          "maximum": 24,
+          "description": "Pitch shift per grain pass in semitones (-24 to +24)."
+        },
+        "wet": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Wet/dry mix (0.0-1.0)."
+        }
+      },
+      "description": "Granular delay effect for shimmer and pitchy delays using pitch-shifted grains from a delay buffer."
+    },
+    "synthesis_supersaw_unison": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "frequency", "voices", "detune_cents", "spread"],
+      "properties": {
+        "type": { "const": "supersaw_unison" },
+        "frequency": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Base frequency in Hz."
+        },
+        "voices": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 16,
+          "description": "Number of unison voices (1-16)."
+        },
+        "detune_cents": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Maximum detune amount in cents (100 cents = 1 semitone)."
+        },
+        "spread": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Stereo spread (0.0 = mono, 1.0 = full stereo spread)."
+        },
+        "detune_curve": {
+          "$ref": "#/definitions/detune_curve",
+          "default": "linear",
+          "description": "Detune distribution curve."
+        }
+      },
+      "description": "Supersaw/Unison synthesis for thick, detuned sawtooth stacks commonly used in trance, EDM, and synthwave."
+    },
+    "detune_curve": {
+      "type": "string",
+      "enum": ["linear", "exp2"],
+      "default": "linear",
+      "description": "Detune distribution curve for unison synthesis. linear = evenly spaced in cents, exp2 = outer voices detuned more aggressively."
+    },
+    "synthesis_waveguide": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "frequency", "breath", "noise", "damping", "resonance"],
+      "properties": {
+        "type": { "const": "waveguide" },
+        "frequency": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Base frequency in Hz."
+        },
+        "breath": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Breath/excitation strength (0.0-1.0)."
+        },
+        "noise": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Noise mix in excitation (0.0 = pure tone, 1.0 = pure noise)."
+        },
+        "damping": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Delay line damping / high-frequency absorption (0.0-1.0)."
+        },
+        "resonance": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Feedback/resonance amount (0.0-1.0)."
+        }
+      },
+      "description": "Waveguide synthesis for wind/brass physical modeling using delay-line waveguide with filtered noise excitation."
+    },
+    "synthesis_bowed_string": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "frequency", "bow_pressure", "bow_position", "damping"],
+      "properties": {
+        "type": { "const": "bowed_string" },
+        "frequency": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Base frequency in Hz."
+        },
+        "bow_pressure": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Bow pressure / force on string (0.0-1.0)."
+        },
+        "bow_position": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Bow position along string (0.0 = bridge, 1.0 = nut)."
+        },
+        "damping": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "String damping / high-frequency absorption (0.0-1.0)."
+        }
+      },
+      "description": "Bowed string synthesis for violin/cello-like sounds using bidirectional waveguide with stick-slip friction model."
+    },
+    "synthesis_membrane_drum": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "frequency", "decay", "tone", "strike"],
+      "properties": {
+        "type": { "const": "membrane_drum" },
+        "frequency": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Fundamental frequency in Hz."
+        },
+        "decay": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Decay rate (0.0-1.0). Higher values decay faster."
+        },
+        "tone": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Tone/brightness (0.0-1.0). Low = fundamental emphasis, high = more overtones."
+        },
+        "strike": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Strike strength (0.0-1.0). Affects attack transient intensity."
+        }
+      },
+      "description": "Membrane drum synthesis for toms, hand drums, congas, bongos using modal synthesis based on circular membrane modes (Bessel function zeros)."
+    },
+    "synthesis_feedback_fm": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "frequency", "feedback", "modulation_index"],
+      "properties": {
+        "type": { "const": "feedback_fm" },
+        "frequency": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Base frequency in Hz."
+        },
+        "feedback": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Self-modulation amount (0.0-1.0). Internally clamped to max 0.99 for stability."
+        },
+        "modulation_index": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Modulation depth/index controlling harmonic richness."
+        },
+        "freq_sweep": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["end_freq"],
+          "properties": {
+            "end_freq": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "description": "Target frequency at end of sweep."
+            },
+            "curve": {
+              "type": "string",
+              "enum": ["linear", "exponential", "logarithmic"],
+              "default": "linear",
+              "description": "Sweep curve type."
+            }
+          },
+          "description": "Optional frequency sweep."
+        }
+      },
+      "description": "Feedback FM synthesis with self-modulating operator. Creates screaming/gritty timbres at high feedback, similar to DX7 operator 1 self-feedback."
+    },
+    "synthesis_comb_filter_synth": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "frequency", "decay"],
+      "properties": {
+        "type": { "const": "comb_filter_synth" },
+        "frequency": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Base frequency in Hz (determines delay line length)."
+        },
+        "decay": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Feedback decay amount (0.0-1.0). Higher values = longer resonance."
+        },
+        "excitation": {
+          "$ref": "#/definitions/comb_excitation",
+          "default": "impulse",
+          "description": "Excitation type for the comb filter."
+        }
+      },
+      "description": "Comb filter synthesis for resonant metallic tones. Uses a delay-line comb filter with feedback to create pitched resonant sounds. Distinct from Karplus-Strong (which uses lowpass in feedback) and metallic synthesis (inharmonic additive partials)."
+    },
+    "comb_excitation": {
+      "type": "string",
+      "enum": ["impulse", "noise", "saw"],
+      "default": "impulse",
+      "description": "Excitation type for comb filter synthesis: impulse (single sample spike), noise (short noise burst), saw (short sawtooth burst)."
+    },
+    "synthesis_pulsar": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "frequency", "pulse_rate", "grain_size_ms", "shape"],
+      "properties": {
+        "type": { "const": "pulsar" },
+        "frequency": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Fundamental frequency of each grain in Hz."
+        },
+        "pulse_rate": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Grains per second (pulsaret rate)."
+        },
+        "grain_size_ms": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Duration of each grain in milliseconds."
+        },
+        "shape": {
+          "type": "string",
+          "enum": ["sine", "square", "sawtooth", "triangle", "pulse"],
+          "description": "Waveform shape for grains."
+        }
+      },
+      "description": "Pulsar synthesis (synchronized grain trains). Generates discrete pulsarets at a fixed pulse rate. Each pulsaret is a windowed waveform running at the specified frequency. Creates rhythmic tonal textures where both the fundamental frequency and pulse rate are heard as separate perceptual elements."
+    },
+    "synthesis_vosim": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "frequency", "formant_freq", "pulses"],
+      "properties": {
+        "type": { "const": "vosim" },
+        "frequency": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Fundamental frequency (pitch) in Hz."
+        },
+        "formant_freq": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Formant frequency (spectral peak) in Hz."
+        },
+        "pulses": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 16,
+          "description": "Number of pulses per period (1-16)."
+        },
+        "breathiness": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "default": 0,
+          "description": "Noise amount for breathiness (0.0-1.0)."
+        }
+      },
+      "description": "VOSIM synthesis (voice simulation) using squared-sine pulse trains. Each fundamental period contains N pulses at the formant frequency with exponential decay, creating vowel-like and robotic timbres. Efficient for speech synthesis because the formant is generated directly through the pulse rate rather than filtering."
+    },
+    "synthesis_spectral_freeze": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "source"],
+      "properties": {
+        "type": { "const": "spectral_freeze" },
+        "source": {
+          "$ref": "#/definitions/spectral_source",
+          "description": "Source material for spectral capture."
+        }
+      },
+      "description": "Spectral freeze synthesis using FFT. Captures the spectral content of a short source signal and sustains it indefinitely, creating frozen, pad-like tones. The source frame's spectrum (magnitude and phase) is stored and repeatedly synthesized via inverse FFT with overlap-add."
+    },
+    "spectral_source": {
+      "description": "Source material for spectral freeze synthesis.",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "noise_type"],
+          "properties": {
+            "type": { "const": "noise" },
+            "noise_type": {
+              "type": "string",
+              "enum": ["white", "pink", "brown"],
+              "description": "Type of noise to capture spectrum from."
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "waveform", "frequency"],
+          "properties": {
+            "type": { "const": "tone" },
+            "waveform": {
+              "type": "string",
+              "enum": ["sine", "square", "sawtooth", "triangle", "pulse"],
+              "description": "Waveform type for the tone source."
+            },
+            "frequency": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "description": "Frequency of the tone source in Hz."
+            }
+          }
+        }
+      ]
     }
   }
 }

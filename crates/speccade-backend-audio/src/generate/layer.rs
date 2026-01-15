@@ -5,22 +5,30 @@ use speccade_spec::recipe::audio::{AudioLayer, Filter, ModulationTarget, Synthes
 use crate::error::{AudioError, AudioResult};
 use crate::rng::create_rng;
 use crate::synthesis::am::AmSynth;
+use crate::synthesis::bowed_string::BowedStringSynth;
+use crate::synthesis::comb_synth::CombFilterSynth;
+use crate::synthesis::feedback_fm::FeedbackFmSynth;
 use crate::synthesis::fm::FmSynth;
 use crate::synthesis::formant::{Formant as FormantImpl, FormantSynth};
 use crate::synthesis::granular::GranularSynth;
 use crate::synthesis::harmonics::HarmonicSynth;
 use crate::synthesis::karplus::KarplusStrong;
+use crate::synthesis::membrane::MembraneDrumSynth;
 use crate::synthesis::metallic::MetallicSynth;
-use crate::synthesis::modal::{Mode, ModalSynth};
+use crate::synthesis::modal::{ModalSynth, Mode};
 use crate::synthesis::noise::NoiseSynth;
 use crate::synthesis::phase_distortion::PhaseDistortionSynth;
 use crate::synthesis::pitched_body::PitchedBody;
+use crate::synthesis::pulsar::PulsarSynth;
 use crate::synthesis::ring_mod::RingModSynth;
+use crate::synthesis::spectral::SpectralFreezeSynth;
 use crate::synthesis::vector::{
     VectorPath, VectorPathPoint as VectorPathPointImpl, VectorPosition,
     VectorSource as VectorSourceImpl, VectorSynth,
 };
 use crate::synthesis::vocoder::{VocoderBand as VocoderBandImpl, VocoderSynth};
+use crate::synthesis::vosim::VosimSynth;
+use crate::synthesis::waveguide::WaveguideSynth;
 use crate::synthesis::wavetable::{PositionSweep as WavetablePositionSweep, WavetableSynth};
 use crate::synthesis::{FrequencySweep, Synthesizer};
 
@@ -140,6 +148,13 @@ pub fn generate_layer(
                     Filter::Lowpass { cutoff_end, .. } => cutoff_end.is_some(),
                     Filter::Highpass { cutoff_end, .. } => cutoff_end.is_some(),
                     Filter::Bandpass { center_end, .. } => center_end.is_some(),
+                    Filter::Notch { center_end, .. } => center_end.is_some(),
+                    Filter::Allpass { frequency_end, .. } => frequency_end.is_some(),
+                    Filter::Comb { .. } => false, // Comb filter has no sweep support
+                    Filter::Formant { .. } => false, // Formant filter has no sweep support
+                    Filter::Ladder { cutoff_end, .. } => cutoff_end.is_some(),
+                    Filter::ShelfLow { .. } => false, // Shelf filters have no sweep support
+                    Filter::ShelfHigh { .. } => false, // Shelf filters have no sweep support
                 })
                 .unwrap_or(false);
 
@@ -280,9 +295,8 @@ pub fn generate_layer(
             freq_sweep,
         } => {
             let pd_waveform = convert_pd_waveform(waveform);
-            let mut synth =
-                PhaseDistortionSynth::new(*frequency, *distortion, pd_waveform)
-                    .with_distortion_decay(*distortion_decay);
+            let mut synth = PhaseDistortionSynth::new(*frequency, *distortion, pd_waveform)
+                .with_distortion_decay(*distortion_decay);
 
             if let Some(sweep) = freq_sweep {
                 let curve = convert_sweep_curve(&sweep.curve);
@@ -340,11 +354,7 @@ pub fn generate_layer(
                 let bands_impl: Vec<VocoderBandImpl> = bands
                     .iter()
                     .map(|b| {
-                        VocoderBandImpl::new(
-                            b.center_freq,
-                            b.bandwidth,
-                            b.envelope_pattern.clone(),
-                        )
+                        VocoderBandImpl::new(b.center_freq, b.bandwidth, b.envelope_pattern.clone())
                     })
                     .collect();
                 synth = synth.with_bands(bands_impl);
@@ -413,15 +423,103 @@ pub fn generate_layer(
             if !path.is_empty() {
                 let path_points: Vec<VectorPathPointImpl> = path
                     .iter()
-                    .map(|p| {
-                        VectorPathPointImpl::new(VectorPosition::new(p.x, p.y), p.duration)
-                    })
+                    .map(|p| VectorPathPointImpl::new(VectorPosition::new(p.x, p.y), p.duration))
                     .collect();
-                let path_impl = VectorPath::new(path_points)
-                    .with_curve(convert_sweep_curve(path_curve));
+                let path_impl =
+                    VectorPath::new(path_points).with_curve(convert_sweep_curve(path_curve));
                 synth = synth.with_path(path_impl, *path_loop);
             }
 
+            synth.synthesize(synthesis_samples, sample_rate, &mut rng)
+        }
+
+        Synthesis::SupersawUnison { .. } => {
+            // SupersawUnison is handled by virtual layer expansion in generate_from_unified_params.
+            // This branch should never be reached.
+            return Err(AudioError::invalid_param(
+                format!("layers[{}].synthesis", layer_idx),
+                "SupersawUnison should be expanded to virtual layers, not processed directly",
+            ));
+        }
+
+        Synthesis::Waveguide {
+            frequency,
+            breath,
+            noise,
+            damping,
+            resonance,
+        } => {
+            let synth = WaveguideSynth::new(*frequency, *breath, *noise, *damping, *resonance);
+            synth.synthesize(synthesis_samples, sample_rate, &mut rng)
+        }
+
+        Synthesis::BowedString {
+            frequency,
+            bow_pressure,
+            bow_position,
+            damping,
+        } => {
+            let synth = BowedStringSynth::new(*frequency, *bow_pressure, *bow_position, *damping);
+            synth.synthesize(synthesis_samples, sample_rate, &mut rng)
+        }
+
+        Synthesis::MembraneDrum {
+            frequency,
+            decay,
+            tone,
+            strike,
+        } => {
+            let synth = MembraneDrumSynth::new(*frequency, *decay, *tone, *strike);
+            synth.synthesize(synthesis_samples, sample_rate, &mut rng)
+        }
+
+        Synthesis::FeedbackFm {
+            frequency,
+            feedback,
+            modulation_index,
+            freq_sweep,
+        } => {
+            let mut synth = FeedbackFmSynth::new(*frequency, *feedback, *modulation_index);
+
+            if let Some(sweep) = freq_sweep {
+                let curve = convert_sweep_curve(&sweep.curve);
+                synth = synth.with_sweep(FrequencySweep::new(*frequency, sweep.end_freq, curve));
+            }
+
+            synth.synthesize(synthesis_samples, sample_rate, &mut rng)
+        }
+
+        Synthesis::CombFilterSynth {
+            frequency,
+            decay,
+            excitation,
+        } => {
+            let synth = CombFilterSynth::new(*frequency, *decay, *excitation);
+            synth.synthesize(synthesis_samples, sample_rate, &mut rng)
+        }
+
+        Synthesis::Pulsar {
+            frequency,
+            pulse_rate,
+            grain_size_ms,
+            shape,
+        } => {
+            let synth = PulsarSynth::new(*frequency, *pulse_rate, *grain_size_ms, *shape);
+            synth.synthesize(synthesis_samples, sample_rate, &mut rng)
+        }
+
+        Synthesis::Vosim {
+            frequency,
+            formant_freq,
+            pulses,
+            breathiness,
+        } => {
+            let synth = VosimSynth::new(*frequency, *formant_freq, *pulses, *breathiness);
+            synth.synthesize(synthesis_samples, sample_rate, &mut rng)
+        }
+
+        Synthesis::SpectralFreeze { source } => {
+            let synth = SpectralFreezeSynth::new(source.clone());
             synth.synthesize(synthesis_samples, sample_rate, &mut rng)
         }
     };
@@ -445,17 +543,17 @@ pub fn generate_layer(
                     Synthesis::Oscillator { .. } | Synthesis::MultiOscillator { .. }
                 ) {
                     // Regenerate with per-sample frequency modulation for oscillator-based synthesis.
-                    samples = modulation::apply_lfo_pitch_modulation(
+                    samples = modulation::apply_lfo_pitch_modulation(modulation::LfoPitchParams {
                         layer,
                         layer_idx,
-                        synthesis_samples,
+                        num_samples: synthesis_samples,
                         sample_rate,
                         seed,
-                        &mut lfo,
-                        *semitones,
-                        lfo_mod.config.depth,
-                        &mut rng,
-                    )?;
+                        lfo: &mut lfo,
+                        semitones: *semitones,
+                        depth: lfo_mod.config.depth,
+                        rng: &mut rng,
+                    })?;
                 } else {
                     // Fallback: apply pitch modulation via deterministic time-warp (variable-rate resampling).
                     samples = modulation::apply_lfo_pitch_warp(
@@ -492,6 +590,68 @@ pub fn generate_layer(
             }
             ModulationTarget::Pan { .. } => {
                 // Pan modulation is applied during mixing (not during layer synthesis).
+            }
+            ModulationTarget::PulseWidth { amount } => {
+                // Pulse width modulation requires per-sample duty cycle changes.
+                // Only valid for oscillator-based synthesis with square/pulse waveforms.
+                samples =
+                    modulation::apply_lfo_pulse_width_modulation(modulation::LfoPulseWidthParams {
+                        layer,
+                        num_samples: synthesis_samples,
+                        sample_rate,
+                        lfo: &mut lfo,
+                        amount: *amount,
+                        depth: lfo_mod.config.depth,
+                        rng: &mut rng,
+                    });
+            }
+            ModulationTarget::FmIndex { amount } => {
+                // FM index modulation requires per-sample modulation index changes.
+                // Only valid for FmSynth synthesis.
+                samples = modulation::apply_lfo_fm_index_modulation(modulation::LfoFmIndexParams {
+                    layer,
+                    num_samples: synthesis_samples,
+                    sample_rate,
+                    lfo: &mut lfo,
+                    amount: *amount,
+                    depth: lfo_mod.config.depth,
+                    rng: &mut rng,
+                });
+            }
+            ModulationTarget::GrainSize { amount_ms } => {
+                // Grain size modulation for granular synthesis.
+                // Modulates grain size per-grain by sampling LFO at grain start.
+                samples =
+                    modulation::apply_lfo_grain_size_modulation(modulation::LfoGrainSizeParams {
+                        layer,
+                        num_samples: synthesis_samples,
+                        sample_rate,
+                        lfo: &mut lfo,
+                        amount_ms: *amount_ms,
+                        depth: lfo_mod.config.depth,
+                        rng: &mut rng,
+                    });
+            }
+            ModulationTarget::GrainDensity { amount } => {
+                // Grain density modulation for granular synthesis.
+                // Modulates grain density per-grain by sampling LFO at grain start.
+                samples = modulation::apply_lfo_grain_density_modulation(
+                    modulation::LfoGrainDensityParams {
+                        layer,
+                        num_samples: synthesis_samples,
+                        sample_rate,
+                        lfo: &mut lfo,
+                        amount: *amount,
+                        depth: lfo_mod.config.depth,
+                        rng: &mut rng,
+                    },
+                );
+            }
+            ModulationTarget::DelayTime { .. }
+            | ModulationTarget::ReverbSize { .. }
+            | ModulationTarget::DistortionDrive { .. } => {
+                // Post-FX only targets - no-op at layer level.
+                // Validation should reject these on layer LFOs, but we handle them gracefully.
             }
         }
     }

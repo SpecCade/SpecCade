@@ -261,6 +261,149 @@ pub enum Synthesis {
         #[serde(default = "default_linear_curve")]
         path_curve: super::basic_types::SweepCurve,
     },
+    /// Supersaw/Unison synthesis for thick, detuned sawtooth stacks.
+    ///
+    /// Creates multiple detuned sawtooth oscillators with stereo spread,
+    /// commonly used in trance leads, supersaw pads, and EDM sounds.
+    SupersawUnison {
+        /// Base frequency in Hz.
+        frequency: f64,
+        /// Number of unison voices (1-16).
+        voices: u8,
+        /// Maximum detune amount in cents (100 cents = 1 semitone).
+        detune_cents: f64,
+        /// Stereo spread (0.0 = mono, 1.0 = full stereo spread).
+        spread: f64,
+        /// Detune distribution curve.
+        #[serde(default)]
+        detune_curve: super::synthesis_advanced::DetuneCurve,
+    },
+    /// Waveguide synthesis for wind/brass physical modeling.
+    ///
+    /// Uses a delay-line waveguide with filtered noise excitation to simulate
+    /// wind and brass instruments. The breath parameter controls excitation
+    /// strength, noise controls the air/noise mix, damping controls high-frequency
+    /// absorption in the delay line, and resonance controls feedback amount.
+    Waveguide {
+        /// Base frequency in Hz.
+        frequency: f64,
+        /// Breath/excitation strength (0.0-1.0).
+        breath: f64,
+        /// Noise mix in excitation (0.0-1.0, 0.0 = pure tone, 1.0 = pure noise).
+        noise: f64,
+        /// Delay line damping / high-frequency absorption (0.0-1.0).
+        damping: f64,
+        /// Feedback/resonance amount (0.0-1.0).
+        resonance: f64,
+    },
+    /// Bowed string synthesis for violin/cello-like sounds.
+    ///
+    /// Uses a bidirectional delay line (waveguide) with continuous bow excitation
+    /// using a stick-slip friction model. Unlike plucked strings (Karplus-Strong),
+    /// bowed strings have continuous excitation during the entire duration.
+    BowedString {
+        /// Base frequency in Hz.
+        frequency: f64,
+        /// Bow pressure / force on string (0.0-1.0).
+        bow_pressure: f64,
+        /// Bow position along string (0.0 = bridge, 1.0 = nut).
+        bow_position: f64,
+        /// String damping / high-frequency absorption (0.0-1.0).
+        damping: f64,
+    },
+    /// Membrane drum synthesis for toms, hand drums, congas, bongos, etc.
+    ///
+    /// Uses modal synthesis based on circular membrane mode frequencies derived
+    /// from Bessel function zeros. Creates pitched/tonal drum sounds with clear
+    /// modal character distinct from simple noise-based synthesis.
+    MembraneDrum {
+        /// Fundamental frequency in Hz.
+        frequency: f64,
+        /// Decay rate (0.0-1.0). Higher values decay faster.
+        decay: f64,
+        /// Tone/brightness (0.0-1.0). Low = fundamental emphasis, high = more overtones.
+        tone: f64,
+        /// Strike strength (0.0-1.0). Affects attack transient intensity.
+        strike: f64,
+    },
+    /// Feedback FM synthesis with self-modulating operator.
+    ///
+    /// A single oscillator that modulates itself by feeding its output back
+    /// into its own phase. Creates characteristic "screaming" or "gritty"
+    /// timbres at high feedback values, similar to DX7 operator 1 self-feedback.
+    /// Distinct from standard 2-operator FM because the output feeds back into itself.
+    FeedbackFm {
+        /// Base frequency in Hz.
+        frequency: f64,
+        /// Self-modulation amount (0.0-1.0). Internally clamped to max 0.99 for stability.
+        feedback: f64,
+        /// Modulation depth/index controlling harmonic richness.
+        modulation_index: f64,
+        /// Optional frequency sweep.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        freq_sweep: Option<FreqSweep>,
+    },
+    /// Comb filter synthesis for resonant metallic tones.
+    ///
+    /// Uses a delay-line comb filter with feedback to create pitched resonant
+    /// sounds. The delay line length determines the pitch (sample_rate / frequency).
+    /// An excitation signal is fed through the comb filter to produce metallic,
+    /// resonant, and bell-like timbres. Distinct from Karplus-Strong (which uses
+    /// lowpass filtering in the feedback loop) and metallic synthesis (which uses
+    /// inharmonic additive partials).
+    CombFilterSynth {
+        /// Base frequency in Hz (determines delay line length).
+        frequency: f64,
+        /// Feedback decay amount (0.0-1.0). Higher values = longer resonance.
+        decay: f64,
+        /// Excitation type for the comb filter.
+        #[serde(default)]
+        excitation: CombExcitation,
+    },
+    /// Pulsar synthesis (synchronized grain trains).
+    ///
+    /// Generates discrete "pulsarets" (grain bursts) at a fixed pulse rate.
+    /// Each pulsaret is a windowed waveform of a specified duration running at
+    /// the given frequency. Creates distinctive rhythmic tonal textures where
+    /// both the fundamental frequency AND the pulse rate are heard as separate
+    /// perceptual elements. Classic technique for granular/rhythmic sounds.
+    Pulsar {
+        /// Fundamental frequency of each grain in Hz.
+        frequency: f64,
+        /// Grains per second (pulsaret rate).
+        pulse_rate: f64,
+        /// Duration of each grain in milliseconds.
+        grain_size_ms: f64,
+        /// Waveform shape for grains.
+        shape: Waveform,
+    },
+    /// VOSIM synthesis (voice simulation).
+    ///
+    /// Generates formant-rich sounds using squared-sine pulse trains. Each
+    /// fundamental period contains N pulses at the formant frequency, creating
+    /// vowel-like and robotic timbres. Efficient for speech synthesis because
+    /// the formant is generated directly through the pulse rate rather than filtering.
+    Vosim {
+        /// Fundamental frequency (pitch) in Hz.
+        frequency: f64,
+        /// Formant frequency (spectral peak) in Hz.
+        formant_freq: f64,
+        /// Number of pulses per period (1-16).
+        pulses: u8,
+        /// Noise amount for breathiness (0.0-1.0).
+        #[serde(default)]
+        breathiness: f64,
+    },
+    /// Spectral freeze synthesis using FFT.
+    ///
+    /// Captures the spectral content of a short source signal and sustains it
+    /// indefinitely, creating frozen, pad-like tones. The source frame's
+    /// spectrum (magnitude and phase) is stored and repeatedly synthesized
+    /// via inverse FFT with overlap-add.
+    SpectralFreeze {
+        /// Source material for spectral capture.
+        source: SpectralSource,
+    },
 }
 
 /// Granular synthesis source material.
@@ -273,6 +416,16 @@ pub enum GranularSource {
     Tone { waveform: Waveform, frequency: f64 },
     /// Formant-based grains.
     Formant { frequency: f64, formant_freq: f64 },
+}
+
+/// Spectral synthesis source material.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "type", rename_all = "snake_case")]
+pub enum SpectralSource {
+    /// Noise-based spectral content.
+    Noise { noise_type: NoiseType },
+    /// Tone-based spectral content.
+    Tone { waveform: Waveform, frequency: f64 },
 }
 
 /// Wavetable source for wavetable synthesis.
@@ -314,4 +467,17 @@ fn default_formant_rate() -> f64 {
 
 fn default_vector_position() -> f64 {
     0.5
+}
+
+/// Excitation type for comb filter synthesis.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
+#[serde(rename_all = "snake_case")]
+pub enum CombExcitation {
+    /// Single impulse excitation (sharp attack).
+    #[default]
+    Impulse,
+    /// Short noise burst excitation.
+    Noise,
+    /// Short sawtooth burst excitation.
+    Saw,
 }

@@ -36,6 +36,7 @@ fn main() {
         pitch_envelope: None,
         base_note: Some(NoteSpec::MidiNote(69)), // A4
         generate_loop_points: true,
+        post_fx_lfos: vec![],
     };
 
     let spec = Spec::builder("test-instrument", AssetType::Audio)

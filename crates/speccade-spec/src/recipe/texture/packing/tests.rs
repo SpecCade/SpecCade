@@ -2,8 +2,8 @@
 
 use std::collections::HashSet;
 
-use super::types::{ColorComponent, ChannelSource};
 use super::packed::PackedChannels;
+use super::types::{ChannelSource, ColorComponent};
 
 // ========================================================================
 // ColorComponent Tests

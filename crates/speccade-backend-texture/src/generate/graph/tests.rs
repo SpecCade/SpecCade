@@ -1,7 +1,10 @@
 //! Tests for procedural texture graph generation.
 
 use crate::color::Color;
-use speccade_spec::recipe::texture::{NoiseAlgorithm, NoiseConfig, TextureProceduralNode, TextureProceduralV1Params, TextureProceduralOp};
+use speccade_spec::recipe::texture::{
+    NoiseAlgorithm, NoiseConfig, TextureProceduralNode, TextureProceduralOp,
+    TextureProceduralV1Params,
+};
 
 use super::{encode_graph_value_png, generate_graph};
 
@@ -124,8 +127,7 @@ fn obvious_type_mismatch_is_error() {
 
     let err = generate_graph(&params, 1).unwrap_err();
     assert!(
-        err.to_string().contains("color output")
-            || err.to_string().contains("color was required")
+        err.to_string().contains("color output") || err.to_string().contains("color was required")
     );
 }
 

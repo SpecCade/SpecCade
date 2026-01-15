@@ -2,8 +2,10 @@
 
 use super::constants::*;
 use super::error::{XmFormatError, XmWarning};
-use super::types::{XmEnvelopeInfo, XmHeaderInfo, XmInstrumentInfo, XmSampleInfo, XmValidationReport};
 use super::header::extract_string;
+use super::types::{
+    XmEnvelopeInfo, XmHeaderInfo, XmInstrumentInfo, XmSampleInfo, XmValidationReport,
+};
 use crate::xm::instrument::XM_SAMPLE_HEADER_SIZE;
 
 /// Validate all instruments.
@@ -60,13 +62,8 @@ pub(super) fn validate_instruments(
                     });
                 }
 
-                let sample_info = parse_sample_header(
-                    data,
-                    sample_offset,
-                    inst_idx,
-                    sample_idx,
-                    report,
-                )?;
+                let sample_info =
+                    parse_sample_header(data, sample_offset, inst_idx, sample_idx, report)?;
                 total_sample_data_size += sample_info.length as usize;
 
                 // Create a mutable copy of inst_info for samples

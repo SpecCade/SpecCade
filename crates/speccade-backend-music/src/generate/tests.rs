@@ -171,8 +171,7 @@ fn test_external_ref_file_not_found() {
         ..Default::default()
     };
 
-    let err =
-        bake_instrument_sample(&instr, 42, 0, Path::new("."), TrackerFormat::Xm).unwrap_err();
+    let err = bake_instrument_sample(&instr, 42, 0, Path::new("."), TrackerFormat::Xm).unwrap_err();
     assert!(err
         .to_string()
         .contains("Failed to read external instrument spec"));
@@ -187,15 +186,13 @@ fn test_bake_instrument_sample_rejects_multiple_sources() {
         ..Default::default()
     };
 
-    let err =
-        bake_instrument_sample(&instr, 42, 0, Path::new("."), TrackerFormat::Xm).unwrap_err();
+    let err = bake_instrument_sample(&instr, 42, 0, Path::new("."), TrackerFormat::Xm).unwrap_err();
     assert!(err.to_string().contains("exactly one of"));
 }
 
 #[test]
 fn test_bake_instrument_sample_from_ref_supports_advanced_audio_v1() {
-    let spec_dir =
-        Path::new(env!("CARGO_MANIFEST_DIR")).join("../../golden/speccade/specs/music");
+    let spec_dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../golden/speccade/specs/music");
 
     let instr = TrackerInstrument {
         name: "FM Ref".to_string(),
@@ -210,8 +207,7 @@ fn test_bake_instrument_sample_from_ref_supports_advanced_audio_v1() {
         ..Default::default()
     };
 
-    let (baked, _) =
-        bake_instrument_sample(&instr, 42, 0, &spec_dir, TrackerFormat::Xm).unwrap();
+    let (baked, _) = bake_instrument_sample(&instr, 42, 0, &spec_dir, TrackerFormat::Xm).unwrap();
     assert!(!baked.pcm16_mono.is_empty());
     assert!(
         baked.loop_region.is_some(),
@@ -263,6 +259,7 @@ fn test_bake_instrument_sample_inline_audio_v1_downmixes_stereo() {
             generate_loop_points: false,
             master_filter: None,
             effects: vec![],
+            post_fx_lfos: vec![],
         }),
         envelope: Envelope {
             attack: 0.01,
@@ -307,6 +304,7 @@ fn test_loop_policy_uses_tracker_envelope_sustain() {
         generate_loop_points: true,
         master_filter: None,
         effects: vec![],
+        post_fx_lfos: vec![],
     };
 
     let one_shot = TrackerInstrument {
@@ -370,6 +368,7 @@ fn test_audio_v1_base_note_midi_note_is_used_for_pitch_mapping() {
             generate_loop_points: false,
             master_filter: None,
             effects: vec![],
+            post_fx_lfos: vec![],
         }),
         envelope: Envelope {
             attack: 0.01,
@@ -412,6 +411,7 @@ fn test_sustained_sine_prefers_forward_loop_with_crossfade() {
             generate_loop_points: false,
             master_filter: None,
             effects: vec![],
+            post_fx_lfos: vec![],
         }),
         envelope: Envelope {
             attack: 0.05,
@@ -455,6 +455,7 @@ fn test_sustained_noise_falls_back_to_pingpong_loop() {
             generate_loop_points: false,
             master_filter: None,
             effects: vec![],
+            post_fx_lfos: vec![],
         }),
         envelope: Envelope {
             attack: 0.05,

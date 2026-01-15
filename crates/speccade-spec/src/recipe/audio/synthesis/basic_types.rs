@@ -129,6 +129,8 @@ pub enum NoiseType {
     Brown,
 }
 
+use super::FormantVowel;
+
 /// Filter configuration.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "snake_case", deny_unknown_fields)]
@@ -162,6 +164,78 @@ pub enum Filter {
         /// Optional target center frequency for sweep.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         center_end: Option<f64>,
+    },
+    /// Notch (band-reject) filter.
+    Notch {
+        /// Center frequency in Hz.
+        center: f64,
+        /// Resonance (Q factor).
+        resonance: f64,
+        /// Optional target center frequency for sweep.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        center_end: Option<f64>,
+    },
+    /// Allpass filter (phase shifting, no magnitude change).
+    Allpass {
+        /// Center frequency in Hz.
+        frequency: f64,
+        /// Resonance (Q factor).
+        resonance: f64,
+        /// Optional target frequency for sweep.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        frequency_end: Option<f64>,
+    },
+    /// Comb filter (delay-based resonant filter).
+    Comb {
+        /// Delay time in milliseconds.
+        delay_ms: f64,
+        /// Feedback amount (0.0 to 0.99, clamped for stability).
+        feedback: f64,
+        /// Wet/dry mix (0.0 to 1.0).
+        wet: f64,
+    },
+    /// Formant filter (vowel-shaping resonant filter bank).
+    ///
+    /// Applies a bank of resonant bandpass filters tuned to vowel formant frequencies.
+    /// The filter shapes the input signal to sound like a specific vowel.
+    Formant {
+        /// Target vowel shape for the formant filter.
+        vowel: FormantVowel,
+        /// Intensity of the formant shaping (0.0 = dry, 1.0 = full vowel shape).
+        intensity: f64,
+    },
+    /// Ladder filter (Moog-style 4-pole lowpass with resonance).
+    ///
+    /// Classic analog-style 24 dB/octave lowpass filter with resonance feedback.
+    /// At high resonance, the filter can self-oscillate. Uses tanh saturation for stability.
+    Ladder {
+        /// Cutoff frequency in Hz.
+        cutoff: f64,
+        /// Resonance amount (0.0-1.0, maps internally to 0-4x feedback).
+        resonance: f64,
+        /// Optional target cutoff frequency for sweep.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        cutoff_end: Option<f64>,
+    },
+    /// Low shelf filter (bass boost/cut).
+    ///
+    /// Boosts or cuts frequencies below the shelf frequency.
+    /// Positive gain_db boosts bass, negative cuts bass.
+    ShelfLow {
+        /// Shelf frequency in Hz.
+        frequency: f64,
+        /// Gain in dB (positive for boost, negative for cut). Typical range: -24 to +24 dB.
+        gain_db: f64,
+    },
+    /// High shelf filter (treble boost/cut).
+    ///
+    /// Boosts or cuts frequencies above the shelf frequency.
+    /// Positive gain_db boosts treble, negative cuts treble.
+    ShelfHigh {
+        /// Shelf frequency in Hz.
+        frequency: f64,
+        /// Gain in dB (positive for boost, negative for cut). Typical range: -24 to +24 dB.
+        gain_db: f64,
     },
 }
 

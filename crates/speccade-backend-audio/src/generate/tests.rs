@@ -1,6 +1,8 @@
 //! Tests for audio generation.
 
-use speccade_spec::recipe::audio::{AudioLayer, AudioV1Params, Envelope, NoiseType, Synthesis, Waveform};
+use speccade_spec::recipe::audio::{
+    AudioLayer, AudioV1Params, DetuneCurve, Envelope, NoiseType, Synthesis, Waveform,
+};
 use speccade_spec::recipe::Recipe;
 use speccade_spec::{AssetType, OutputFormat, OutputSpec, Spec};
 
@@ -34,6 +36,7 @@ fn create_test_spec() -> Spec {
         base_note: None,
         generate_loop_points: false,
         effects: vec![],
+        post_fx_lfos: vec![],
     };
 
     Spec::builder("test-sfx", AssetType::Audio)
@@ -89,6 +92,7 @@ fn test_generate_different_seeds() {
         base_note: None,
         generate_loop_points: false,
         effects: vec![],
+        post_fx_lfos: vec![],
     };
 
     let spec1 = Spec::builder("test-sfx", AssetType::Audio)
@@ -152,8 +156,151 @@ fn test_generate_stereo() {
             },
         ],
         effects: vec![],
+        post_fx_lfos: vec![],
     };
 
     let result = generate_from_params(&params, 42).expect("should generate");
     assert!(result.wav.is_stereo);
+}
+
+#[test]
+fn test_generate_supersaw_unison() {
+    let params = AudioV1Params {
+        duration_seconds: 0.5,
+        sample_rate: 44100,
+        master_filter: None,
+        layers: vec![AudioLayer {
+            synthesis: Synthesis::SupersawUnison {
+                frequency: 440.0,
+                voices: 7,
+                detune_cents: 25.0,
+                spread: 0.8,
+                detune_curve: DetuneCurve::Linear,
+            },
+            envelope: Envelope {
+                attack: 0.01,
+                decay: 0.1,
+                sustain: 0.7,
+                release: 0.2,
+            },
+            volume: 0.8,
+            pan: 0.0,
+            delay: None,
+            filter: None,
+            lfo: None,
+        }],
+        pitch_envelope: None,
+        base_note: None,
+        generate_loop_points: false,
+        effects: vec![],
+        post_fx_lfos: vec![],
+    };
+
+    let result = generate_from_params(&params, 42).expect("should generate");
+
+    // Supersaw with spread should produce stereo output
+    assert!(result.wav.is_stereo);
+    assert!(!result.wav.wav_data.is_empty());
+}
+
+#[test]
+fn test_generate_supersaw_unison_determinism() {
+    let params = AudioV1Params {
+        duration_seconds: 0.2,
+        sample_rate: 22050,
+        master_filter: None,
+        layers: vec![AudioLayer {
+            synthesis: Synthesis::SupersawUnison {
+                frequency: 220.0,
+                voices: 5,
+                detune_cents: 20.0,
+                spread: 0.5,
+                detune_curve: DetuneCurve::Exp2,
+            },
+            envelope: Envelope::default(),
+            volume: 1.0,
+            pan: 0.0,
+            delay: None,
+            filter: None,
+            lfo: None,
+        }],
+        pitch_envelope: None,
+        base_note: None,
+        generate_loop_points: false,
+        effects: vec![],
+        post_fx_lfos: vec![],
+    };
+
+    let result1 = generate_from_params(&params, 42).expect("should generate");
+    let result2 = generate_from_params(&params, 42).expect("should generate");
+
+    // Same seed should produce identical output
+    assert_eq!(result1.wav.pcm_hash, result2.wav.pcm_hash);
+}
+
+#[test]
+fn test_generate_supersaw_unison_single_voice() {
+    // A single voice should be mono (unless spread forces stereo, which it wont for 1 voice)
+    let params = AudioV1Params {
+        duration_seconds: 0.1,
+        sample_rate: 44100,
+        master_filter: None,
+        layers: vec![AudioLayer {
+            synthesis: Synthesis::SupersawUnison {
+                frequency: 440.0,
+                voices: 1,
+                detune_cents: 25.0, // Ignored for single voice
+                spread: 0.8,        // Ignored for single voice
+                detune_curve: DetuneCurve::Linear,
+            },
+            envelope: Envelope::default(),
+            volume: 0.8,
+            pan: 0.0, // Center pan
+            delay: None,
+            filter: None,
+            lfo: None,
+        }],
+        pitch_envelope: None,
+        base_note: None,
+        generate_loop_points: false,
+        effects: vec![],
+        post_fx_lfos: vec![],
+    };
+
+    let result = generate_from_params(&params, 42).expect("should generate");
+    assert!(!result.wav.wav_data.is_empty());
+    // Single voice with center pan should be mono
+    assert!(!result.wav.is_stereo);
+}
+
+#[test]
+fn test_generate_supersaw_unison_with_delay() {
+    let params = AudioV1Params {
+        duration_seconds: 0.5,
+        sample_rate: 44100,
+        master_filter: None,
+        layers: vec![AudioLayer {
+            synthesis: Synthesis::SupersawUnison {
+                frequency: 330.0,
+                voices: 3,
+                detune_cents: 15.0,
+                spread: 0.6,
+                detune_curve: DetuneCurve::Linear,
+            },
+            envelope: Envelope::default(),
+            volume: 0.8,
+            pan: 0.0,
+            delay: Some(0.1), // 100ms delay
+            filter: None,
+            lfo: None,
+        }],
+        pitch_envelope: None,
+        base_note: None,
+        generate_loop_points: false,
+        effects: vec![],
+        post_fx_lfos: vec![],
+    };
+
+    let result = generate_from_params(&params, 42).expect("should generate");
+    assert!(!result.wav.wav_data.is_empty());
 }

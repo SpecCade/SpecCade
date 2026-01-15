@@ -93,7 +93,9 @@ pub fn convert_vector_source_type(source_type: &VectorSourceType) -> VectorSourc
 }
 
 /// Converts spec vector source to internal representation.
-pub fn convert_vector_source(source: &speccade_spec::recipe::audio::VectorSource) -> VectorSourceImpl {
+pub fn convert_vector_source(
+    source: &speccade_spec::recipe::audio::VectorSource,
+) -> VectorSourceImpl {
     VectorSourceImpl::new(
         convert_vector_source_type(&source.source_type),
         source.frequency_ratio,

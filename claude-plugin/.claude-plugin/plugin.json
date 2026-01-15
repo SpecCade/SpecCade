@@ -1,0 +1,9 @@
+{
+  "name": "speccade-dev",
+  "version": "1.0.0",
+  "description": "SpecCade asset development - spec authoring, synthesis, and debugging",
+  "author": {
+    "name": "Nethercore"
+  },
+  "keywords": ["audio", "synthesis", "texture", "procedural", "asset-pipeline"]
+}

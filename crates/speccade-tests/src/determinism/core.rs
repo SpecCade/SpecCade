@@ -184,7 +184,11 @@ where
 }
 
 /// Find the first byte difference between two slices.
-pub(crate) fn find_first_difference(expected: &[u8], actual: &[u8], run_index: usize) -> Option<DiffInfo> {
+pub(crate) fn find_first_difference(
+    expected: &[u8],
+    actual: &[u8],
+    run_index: usize,
+) -> Option<DiffInfo> {
     for (offset, (&e, &a)) in expected.iter().zip(actual.iter()).enumerate() {
         if e != a {
             let context = extract_context(expected, offset);

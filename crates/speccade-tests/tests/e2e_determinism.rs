@@ -181,6 +181,7 @@ fn test_audio_params_determinism() {
         generate_loop_points: false,
         master_filter: None,
         effects: vec![],
+        post_fx_lfos: vec![],
     };
 
     let result1 = speccade_backend_audio::generate_from_params(&params, 999).unwrap();

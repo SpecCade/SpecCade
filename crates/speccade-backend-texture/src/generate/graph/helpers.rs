@@ -35,7 +35,10 @@ pub(super) fn expect_color<'a>(
     })
 }
 
-pub(super) fn parse_hex_color_list(colors: &[String], name: &str) -> Result<Vec<Color>, GenerateError> {
+pub(super) fn parse_hex_color_list(
+    colors: &[String],
+    name: &str,
+) -> Result<Vec<Color>, GenerateError> {
     if colors.is_empty() {
         return Err(GenerateError::InvalidParameter(format!(
             "{} must contain at least 1 color",

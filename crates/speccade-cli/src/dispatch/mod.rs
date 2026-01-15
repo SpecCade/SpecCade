@@ -89,13 +89,17 @@ pub fn dispatch_generate(
 
         // Music backend
         "music.tracker_song_v1" => music::generate_music(spec, out_root_path, spec_dir),
-        "music.tracker_song_compose_v1" => music::generate_music_compose(spec, out_root_path, spec_dir),
+        "music.tracker_song_compose_v1" => {
+            music::generate_music_compose(spec, out_root_path, spec_dir)
+        }
 
         // Unified procedural texture backend
         "texture.procedural_v1" => texture::generate_texture_procedural(spec, out_root_path),
 
         // Blender static mesh backend
-        "static_mesh.blender_primitives_v1" => blender::generate_blender_static_mesh(spec, out_root_path),
+        "static_mesh.blender_primitives_v1" => {
+            blender::generate_blender_static_mesh(spec, out_root_path)
+        }
 
         // Blender skeletal mesh backend
         "skeletal_mesh.blender_rigged_mesh_v1" => {
@@ -103,7 +107,9 @@ pub fn dispatch_generate(
         }
 
         // Blender animation backend
-        "skeletal_animation.blender_clip_v1" => blender::generate_blender_animation(spec, out_root_path),
+        "skeletal_animation.blender_clip_v1" => {
+            blender::generate_blender_animation(spec, out_root_path)
+        }
 
         // Unknown recipe kind
         _ => Err(DispatchError::BackendNotImplemented(kind.clone())),
@@ -117,7 +123,11 @@ pub(crate) fn get_primary_output(spec: &Spec) -> Result<&speccade_spec::OutputSp
         .ok_or_else(|| DispatchError::BackendError("No primary output specified".to_string()))
 }
 
-pub(crate) fn write_output_bytes(out_root: &Path, rel_path: &str, bytes: &[u8]) -> Result<(), DispatchError> {
+pub(crate) fn write_output_bytes(
+    out_root: &Path,
+    rel_path: &str,
+    bytes: &[u8],
+) -> Result<(), DispatchError> {
     let output_path = out_root.join(rel_path);
     if let Some(parent) = output_path.parent() {
         fs::create_dir_all(parent).map_err(|e| {

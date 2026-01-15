@@ -7,9 +7,12 @@
 //! - `triangle` - Triangle wave
 //! - `noise` - White/pink/brown noise with optional filter
 //! - `fm` - FM synthesis (carrier + modulator)
+//! - `feedback_fm` - Feedback FM synthesis (self-modulating operator)
 //! - `am` - AM synthesis (amplitude modulation)
 //! - `ring_mod` - Ring modulation synthesis (carrier * modulator)
 //! - `karplus` - Karplus-Strong plucked string synthesis
+//! - `bowed_string` - Bowed string synthesis for violin/cello-like sounds
+//! - `comb_synth` - Comb filter synthesis for resonant metallic tones
 //! - `pitched_body` - Frequency sweep for impact sounds
 //! - `metallic` - Inharmonic partials for metallic sounds
 //! - `harmonics` - Additive synthesis with multiple harmonics
@@ -17,25 +20,38 @@
 //! - `wavetable` - Wavetable synthesis with morphing
 //! - `phase_distortion` - Phase distortion (Casio CZ style) synthesis
 //! - `modal` - Modal synthesis for struck/bowed objects (bells, chimes, bars)
+//! - `membrane` - Membrane drum synthesis for toms, hand drums, congas, etc.
 //! - `vocoder` - Vocoder synthesis with filter bank and formant animation
 //! - `formant` - Formant synthesis for vowel and voice sounds
 //! - `vector` - Vector synthesis with 2D crossfading between multiple sources
+//! - `waveguide` - Waveguide synthesis for wind/brass physical modeling
+//! - `pulsar` - Pulsar synthesis (synchronized grain trains for rhythmic/tonal granular)
+//! - `vosim` - VOSIM synthesis (voice simulation with squared-sine pulse trains)
+//! - `spectral` - Spectral freeze synthesis (FFT-based frozen spectral content)
 
 pub mod am;
+pub mod bowed_string;
+pub mod comb_synth;
+pub mod feedback_fm;
 pub mod fm;
 pub mod formant;
 pub mod granular;
 pub mod harmonics;
 pub mod karplus;
+pub mod membrane;
 pub mod metallic;
 pub mod modal;
 pub mod noise;
 pub mod oscillators;
 pub mod phase_distortion;
 pub mod pitched_body;
+pub mod pulsar;
 pub mod ring_mod;
+pub mod spectral;
 pub mod vector;
 pub mod vocoder;
+pub mod vosim;
+pub mod waveguide;
 pub mod wavetable;
 
 use rand_pcg::Pcg32;

@@ -3,8 +3,9 @@
 //! Generates various colors of noise (white, pink, brown) with optional filtering.
 
 use rand_pcg::Pcg32;
+use speccade_spec::recipe::audio::FormantVowel;
 
-use crate::filter::BiquadFilter;
+use crate::filter::{BiquadCoeffs, BiquadFilter, CombFilter, FormantFilter, LadderFilter};
 use crate::oscillator;
 
 use super::Synthesizer;
@@ -31,6 +32,24 @@ pub enum NoiseFilter {
     Highpass { cutoff: f64, resonance: f64 },
     /// Bandpass filter.
     Bandpass { center: f64, resonance: f64 },
+    /// Notch (band-reject) filter.
+    Notch { center: f64, resonance: f64 },
+    /// Allpass filter (phase shifting).
+    Allpass { frequency: f64, resonance: f64 },
+    /// Comb filter (delay-based resonant filter).
+    Comb {
+        delay_ms: f64,
+        feedback: f64,
+        wet: f64,
+    },
+    /// Formant filter (vowel-shaping resonant filter bank).
+    Formant { vowel: FormantVowel, intensity: f64 },
+    /// Ladder filter (Moog-style 4-pole lowpass with resonance).
+    Ladder { cutoff: f64, resonance: f64 },
+    /// Low shelf filter (bass boost/cut).
+    ShelfLow { frequency: f64, gain_db: f64 },
+    /// High shelf filter (treble boost/cut).
+    ShelfHigh { frequency: f64, gain_db: f64 },
 }
 
 /// Noise burst synthesizer.
@@ -92,6 +111,55 @@ impl NoiseSynth {
         self.filter = NoiseFilter::Bandpass { center, resonance };
         self
     }
+
+    /// Adds a notch (band-reject) filter.
+    pub fn with_notch(mut self, center: f64, resonance: f64) -> Self {
+        self.filter = NoiseFilter::Notch { center, resonance };
+        self
+    }
+
+    /// Adds an allpass filter (phase shifting).
+    pub fn with_allpass(mut self, frequency: f64, resonance: f64) -> Self {
+        self.filter = NoiseFilter::Allpass {
+            frequency,
+            resonance,
+        };
+        self
+    }
+
+    /// Adds a comb filter (delay-based resonant filter).
+    pub fn with_comb(mut self, delay_ms: f64, feedback: f64, wet: f64) -> Self {
+        self.filter = NoiseFilter::Comb {
+            delay_ms,
+            feedback,
+            wet,
+        };
+        self
+    }
+
+    /// Adds a formant filter (vowel-shaping resonant filter bank).
+    pub fn with_formant(mut self, vowel: FormantVowel, intensity: f64) -> Self {
+        self.filter = NoiseFilter::Formant { vowel, intensity };
+        self
+    }
+
+    /// Adds a ladder filter (Moog-style 4-pole lowpass with resonance).
+    pub fn with_ladder(mut self, cutoff: f64, resonance: f64) -> Self {
+        self.filter = NoiseFilter::Ladder { cutoff, resonance };
+        self
+    }
+
+    /// Adds a low shelf filter (bass boost/cut).
+    pub fn with_shelf_low(mut self, frequency: f64, gain_db: f64) -> Self {
+        self.filter = NoiseFilter::ShelfLow { frequency, gain_db };
+        self
+    }
+
+    /// Adds a high shelf filter (treble boost/cut).
+    pub fn with_shelf_high(mut self, frequency: f64, gain_db: f64) -> Self {
+        self.filter = NoiseFilter::ShelfHigh { frequency, gain_db };
+        self
+    }
 }
 
 impl Synthesizer for NoiseSynth {
@@ -116,6 +184,44 @@ impl Synthesizer for NoiseSynth {
             }
             NoiseFilter::Bandpass { center, resonance } => {
                 let mut filter = BiquadFilter::bandpass(center, resonance, sample_rate);
+                filter.process_buffer(&mut samples);
+            }
+            NoiseFilter::Notch { center, resonance } => {
+                let mut filter = BiquadFilter::notch(center, resonance, sample_rate);
+                filter.process_buffer(&mut samples);
+            }
+            NoiseFilter::Allpass {
+                frequency,
+                resonance,
+            } => {
+                let mut filter =
+                    BiquadFilter::new(BiquadCoeffs::allpass(frequency, resonance, sample_rate));
+                filter.process_buffer(&mut samples);
+            }
+            NoiseFilter::Comb {
+                delay_ms,
+                feedback,
+                wet,
+            } => {
+                let mut filter = CombFilter::new(delay_ms, feedback, wet, sample_rate);
+                filter.process_buffer(&mut samples);
+            }
+            NoiseFilter::Formant { vowel, intensity } => {
+                let mut filter = FormantFilter::new(vowel, intensity, sample_rate);
+                filter.process_buffer(&mut samples);
+            }
+            NoiseFilter::Ladder { cutoff, resonance } => {
+                let mut filter = LadderFilter::new(cutoff, resonance, sample_rate);
+                filter.process_buffer(&mut samples);
+            }
+            NoiseFilter::ShelfLow { frequency, gain_db } => {
+                let mut filter =
+                    BiquadFilter::new(BiquadCoeffs::low_shelf(frequency, gain_db, sample_rate));
+                filter.process_buffer(&mut samples);
+            }
+            NoiseFilter::ShelfHigh { frequency, gain_db } => {
+                let mut filter =
+                    BiquadFilter::new(BiquadCoeffs::high_shelf(frequency, gain_db, sample_rate));
                 filter.process_buffer(&mut samples);
             }
         }
@@ -251,5 +357,161 @@ mod tests {
         assert!(samples[0].abs() < 0.1);
         // Release should end near zero
         assert!(samples[999].abs() < 0.1);
+    }
+
+    #[test]
+    fn test_notch_filtered_noise() {
+        let synth = NoiseSynth::white().with_notch(1000.0, 2.0);
+        let mut rng = create_rng(42);
+        let samples = synth.synthesize(1000, 44100.0, &mut rng);
+
+        assert_eq!(samples.len(), 1000);
+        // Verify normalized output range
+        for &s in &samples {
+            assert!((-1.0..=1.0).contains(&s));
+        }
+    }
+
+    #[test]
+    fn test_notch_filter_determinism() {
+        let synth = NoiseSynth::white().with_notch(800.0, 1.5);
+
+        let mut rng1 = create_rng(42);
+        let mut rng2 = create_rng(42);
+
+        let samples1 = synth.synthesize(100, 44100.0, &mut rng1);
+        let samples2 = synth.synthesize(100, 44100.0, &mut rng2);
+
+        assert_eq!(samples1, samples2);
+    }
+
+    #[test]
+    fn test_allpass_filtered_noise() {
+        let synth = NoiseSynth::white().with_allpass(1000.0, 2.0);
+        let mut rng = create_rng(42);
+        let samples = synth.synthesize(1000, 44100.0, &mut rng);
+
+        assert_eq!(samples.len(), 1000);
+        // Verify normalized output range
+        for &s in &samples {
+            assert!((-1.0..=1.0).contains(&s));
+        }
+    }
+
+    #[test]
+    fn test_allpass_filter_determinism() {
+        let synth = NoiseSynth::white().with_allpass(800.0, 1.5);
+
+        let mut rng1 = create_rng(42);
+        let mut rng2 = create_rng(42);
+
+        let samples1 = synth.synthesize(100, 44100.0, &mut rng1);
+        let samples2 = synth.synthesize(100, 44100.0, &mut rng2);
+
+        assert_eq!(samples1, samples2);
+    }
+
+    #[test]
+    fn test_formant_filtered_noise() {
+        let synth = NoiseSynth::white().with_formant(FormantVowel::A, 0.8);
+        let mut rng = create_rng(42);
+        let samples = synth.synthesize(1000, 44100.0, &mut rng);
+
+        assert_eq!(samples.len(), 1000);
+        // Verify normalized output range
+        for &s in &samples {
+            assert!((-1.0..=1.0).contains(&s));
+        }
+    }
+
+    #[test]
+    fn test_formant_filter_determinism() {
+        let synth = NoiseSynth::white().with_formant(FormantVowel::I, 0.7);
+
+        let mut rng1 = create_rng(42);
+        let mut rng2 = create_rng(42);
+
+        let samples1 = synth.synthesize(100, 44100.0, &mut rng1);
+        let samples2 = synth.synthesize(100, 44100.0, &mut rng2);
+
+        assert_eq!(samples1, samples2);
+    }
+
+    #[test]
+    fn test_ladder_filtered_noise() {
+        let synth = NoiseSynth::white().with_ladder(1000.0, 0.7);
+        let mut rng = create_rng(42);
+        let samples = synth.synthesize(1000, 44100.0, &mut rng);
+
+        assert_eq!(samples.len(), 1000);
+        // Verify normalized output range
+        for &s in &samples {
+            assert!((-1.0..=1.0).contains(&s));
+        }
+    }
+
+    #[test]
+    fn test_ladder_filter_determinism() {
+        let synth = NoiseSynth::white().with_ladder(800.0, 0.5);
+
+        let mut rng1 = create_rng(42);
+        let mut rng2 = create_rng(42);
+
+        let samples1 = synth.synthesize(100, 44100.0, &mut rng1);
+        let samples2 = synth.synthesize(100, 44100.0, &mut rng2);
+
+        assert_eq!(samples1, samples2);
+    }
+
+    #[test]
+    fn test_shelf_low_filtered_noise() {
+        let synth = NoiseSynth::white().with_shelf_low(200.0, 6.0);
+        let mut rng = create_rng(42);
+        let samples = synth.synthesize(1000, 44100.0, &mut rng);
+
+        assert_eq!(samples.len(), 1000);
+        // Verify normalized output range
+        for &s in &samples {
+            assert!((-1.0..=1.0).contains(&s));
+        }
+    }
+
+    #[test]
+    fn test_shelf_low_filter_determinism() {
+        let synth = NoiseSynth::white().with_shelf_low(200.0, 6.0);
+
+        let mut rng1 = create_rng(42);
+        let mut rng2 = create_rng(42);
+
+        let samples1 = synth.synthesize(100, 44100.0, &mut rng1);
+        let samples2 = synth.synthesize(100, 44100.0, &mut rng2);
+
+        assert_eq!(samples1, samples2);
+    }
+
+    #[test]
+    fn test_shelf_high_filtered_noise() {
+        let synth = NoiseSynth::white().with_shelf_high(4000.0, -3.0);
+        let mut rng = create_rng(42);
+        let samples = synth.synthesize(1000, 44100.0, &mut rng);
+
+        assert_eq!(samples.len(), 1000);
+        // Verify normalized output range
+        for &s in &samples {
+            assert!((-1.0..=1.0).contains(&s));
+        }
+    }
+
+    #[test]
+    fn test_shelf_high_filter_determinism() {
+        let synth = NoiseSynth::white().with_shelf_high(4000.0, -3.0);
+
+        let mut rng1 = create_rng(42);
+        let mut rng2 = create_rng(42);
+
+        let samples1 = synth.synthesize(100, 44100.0, &mut rng1);
+        let samples2 = synth.synthesize(100, 44100.0, &mut rng2);
+
+        assert_eq!(samples1, samples2);
     }
 }

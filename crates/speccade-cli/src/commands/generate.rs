@@ -411,6 +411,7 @@ mod tests {
             generate_loop_points: false,
             master_filter: None,
             effects: vec![],
+            post_fx_lfos: vec![],
         };
 
         let spec = Spec::builder("test-asset-01", AssetType::Audio)
@@ -468,6 +469,7 @@ mod tests {
             generate_loop_points: false,
             master_filter: None,
             effects: vec![],
+            post_fx_lfos: vec![],
         };
 
         let spec = Spec::builder("test-variants-01", AssetType::Audio)

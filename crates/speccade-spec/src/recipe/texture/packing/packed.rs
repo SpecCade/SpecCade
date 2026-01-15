@@ -3,8 +3,8 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 
-use crate::validation::common::CommonValidationError;
 use super::types::ChannelSource;
+use crate::validation::common::CommonValidationError;
 
 /// Packed output specification defining how to pack map channels into RGBA.
 ///

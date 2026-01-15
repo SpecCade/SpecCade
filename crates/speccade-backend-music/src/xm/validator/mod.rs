@@ -32,14 +32,12 @@ mod tests;
 pub use constants::{
     XM_FULL_HEADER_SIZE, XM_ID_TEXT, XM_MAGIC_BYTE, XM_MAX_BPM, XM_MAX_ENVELOPE_POINTS,
     XM_MAX_NOTE, XM_MAX_PANNING, XM_MAX_TEMPO, XM_MAX_VOLUME, XM_MIN_BPM, XM_MIN_CHANNELS,
-    XM_MIN_FILE_SIZE, XM_MIN_NOTE, XM_MIN_PATTERN_ROWS, XM_MIN_TEMPO, XM_NOTE_OFF,
-    XM_PACKING_FLAG, XM_PATTERN_HEADER_SIZE, XM_STANDARD_HEADER_SIZE, XM_VALIDATOR_MAX_CHANNELS,
-    XM_VERSION_104,
+    XM_MIN_FILE_SIZE, XM_MIN_NOTE, XM_MIN_PATTERN_ROWS, XM_MIN_TEMPO, XM_NOTE_OFF, XM_PACKING_FLAG,
+    XM_PATTERN_HEADER_SIZE, XM_STANDARD_HEADER_SIZE, XM_VALIDATOR_MAX_CHANNELS, XM_VERSION_104,
 };
 pub use error::{XmFormatError, XmWarning};
 pub use types::{
-    XmEnvelopeInfo, XmHeaderInfo, XmInstrumentInfo, XmPatternInfo, XmSampleInfo,
-    XmValidationReport,
+    XmEnvelopeInfo, XmHeaderInfo, XmInstrumentInfo, XmPatternInfo, XmSampleInfo, XmValidationReport,
 };
 
 /// XM file format validator.

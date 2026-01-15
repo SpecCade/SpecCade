@@ -325,8 +325,7 @@ mod tests {
     #[test]
     fn test_pd_with_sweep() {
         let sweep = FrequencySweep::new(440.0, 880.0, SweepCurve::Linear);
-        let synth =
-            PhaseDistortionSynth::new(440.0, 3.0, PdWaveform::Resonant).with_sweep(sweep);
+        let synth = PhaseDistortionSynth::new(440.0, 3.0, PdWaveform::Resonant).with_sweep(sweep);
         let mut rng = create_rng(42);
         let samples = synth.synthesize(1000, 44100.0, &mut rng);
 
@@ -421,7 +420,10 @@ mod tests {
 
         // At zero distortion, phase should pass through unchanged
         let phase_0 = synth.distort_phase(0.5, 0.0);
-        assert!((phase_0 - 0.5).abs() < 0.001, "Zero distortion should be linear");
+        assert!(
+            (phase_0 - 0.5).abs() < 0.001,
+            "Zero distortion should be linear"
+        );
 
         // At high distortion, low phases should be compressed
         let phase_high = synth.distort_phase(0.5, 5.0);
@@ -441,8 +443,8 @@ mod tests {
 
         // Early phase should be stretched (mapped higher than linear)
         // Late phase should still map to a valid value
-        assert!(phase_early >= 0.0 && phase_early <= 1.0);
-        assert!(phase_late >= 0.0 && phase_late <= 1.0);
+        assert!((0.0..=1.0).contains(&phase_early));
+        assert!((0.0..=1.0).contains(&phase_late));
     }
 
     #[test]
@@ -454,9 +456,9 @@ mod tests {
         let phase_mid = synth.distort_phase(0.5, 5.0);
         let phase_1 = synth.distort_phase(1.0, 5.0);
 
-        assert!(phase_0 >= 0.0 && phase_0 <= 1.0);
-        assert!(phase_mid >= 0.0 && phase_mid <= 1.0);
-        assert!(phase_1 >= 0.0 && phase_1 <= 1.0);
+        assert!((0.0..=1.0).contains(&phase_0));
+        assert!((0.0..=1.0).contains(&phase_mid));
+        assert!((0.0..=1.0).contains(&phase_1));
 
         // At center, pulse distortion should be near 0.5
         assert!(

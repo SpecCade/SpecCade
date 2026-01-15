@@ -2,7 +2,9 @@
 //!
 //! Generates metallic maps with pattern-based variations for metallic regions.
 
-use speccade_spec::recipe::texture::{GradientDirection, StripeDirection, TextureLayer, TextureMapType};
+use speccade_spec::recipe::texture::{
+    GradientDirection, StripeDirection, TextureLayer, TextureMapType,
+};
 
 use crate::maps::{GrayscaleBuffer, MetallicGenerator};
 use crate::pattern::{CheckerPattern, GradientPattern, Pattern2D, StripesPattern};

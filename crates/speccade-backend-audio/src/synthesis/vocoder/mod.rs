@@ -11,13 +11,13 @@
 //! 3. Applying those envelopes to the corresponding carrier bands
 //! 4. Summing all bands to create the output
 
-mod types;
-mod synth;
 mod processor;
+mod synth;
+mod types;
 
 #[cfg(test)]
 mod tests;
 
 // Re-export public API
-pub use types::{BandSpacing, CarrierType, VocoderBand};
 pub use synth::VocoderSynth;
+pub use types::{BandSpacing, CarrierType, VocoderBand};

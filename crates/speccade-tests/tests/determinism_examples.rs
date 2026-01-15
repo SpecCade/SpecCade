@@ -31,6 +31,7 @@ mod audio {
             pitch_envelope: None,
             generate_loop_points: false,
             effects: vec![],
+            post_fx_lfos: vec![],
             layers: vec![AudioLayer {
                 synthesis: Synthesis::Oscillator {
                     waveform: Waveform::Sine,
@@ -58,6 +59,7 @@ mod audio {
             pitch_envelope: None,
             generate_loop_points: false,
             effects: vec![],
+            post_fx_lfos: vec![],
             layers: vec![AudioLayer {
                 synthesis: Synthesis::NoiseBurst {
                     noise_type: NoiseType::White,
@@ -82,6 +84,7 @@ mod audio {
             pitch_envelope: None,
             generate_loop_points: false,
             effects: vec![],
+            post_fx_lfos: vec![],
             layers: vec![AudioLayer {
                 synthesis: Synthesis::FmSynth {
                     carrier_freq: 440.0,
@@ -170,6 +173,7 @@ mod audio {
             pitch_envelope: None,
             generate_loop_points: false,
             effects: vec![],
+            post_fx_lfos: vec![],
             layers: vec![AudioLayer {
                 synthesis: Synthesis::Oscillator {
                     waveform: Waveform::Square,
@@ -200,6 +204,7 @@ mod audio {
             pitch_envelope: None,
             generate_loop_points: false,
             effects: vec![],
+            post_fx_lfos: vec![],
             layers: vec![AudioLayer {
                 synthesis: Synthesis::NoiseBurst {
                     noise_type: NoiseType::Pink,

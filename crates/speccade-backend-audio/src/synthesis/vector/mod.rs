@@ -25,6 +25,4 @@ mod tests;
 // Re-export public items to preserve the API
 pub use presets::{evolving_pad, morph_texture, sweep_corners};
 pub use synth::VectorSynth;
-pub use types::{
-    VectorPath, VectorPathPoint, VectorPosition, VectorSource, VectorSourceType,
-};
+pub use types::{VectorPath, VectorPathPoint, VectorPosition, VectorSource, VectorSourceType};
