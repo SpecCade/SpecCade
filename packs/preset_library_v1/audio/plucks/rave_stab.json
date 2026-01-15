@@ -1,100 +1,194 @@
 {
-  "spec_version": 1,
-  "asset_id": "rave_stab",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 20048,
-  "description": "Rave stab - classic 90s rave chord stab sound",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/plucks/rave_stab.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "duration_seconds": 0.6,
-      "sample_rate": 44100,
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "rave_stab",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 20048,
+    "description": "Professional rave stab - classic 90s hoover-style chord stab with massive detuned oscillators and aggressive modulation",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "multi_oscillator",
-            "frequency": 261.63,
-            "oscillators": [
-              {
-                "waveform": "sawtooth",
-                "volume": 1.0,
-                "detune": 0.0
-              },
-              {
-                "waveform": "sawtooth",
-                "volume": 0.98,
-                "detune": 12.0
-              },
-              {
-                "waveform": "sawtooth",
-                "volume": 0.98,
-                "detune": -12.0
-              },
-              {
-                "waveform": "sawtooth",
-                "volume": 0.92,
-                "detune": 22.0
-              },
-              {
-                "waveform": "sawtooth",
-                "volume": 0.92,
-                "detune": -22.0
-              },
-              {
-                "waveform": "square",
-                "volume": 0.65,
-                "detune": 7.0
-              }
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/plucks/rave_stab.wav"
+        }
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "duration_seconds": 0.75,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "multi_oscillator",
+                        "frequency": 261.63,
+                        "oscillators": [
+                            {
+                                "waveform": "sawtooth",
+                                "volume": 1.0,
+                                "detune": 0.0
+                            },
+                            {
+                                "waveform": "sawtooth",
+                                "volume": 0.98,
+                                "detune": 12.0
+                            },
+                            {
+                                "waveform": "sawtooth",
+                                "volume": 0.98,
+                                "detune": -12.0
+                            },
+                            {
+                                "waveform": "sawtooth",
+                                "volume": 0.94,
+                                "detune": 19.0
+                            },
+                            {
+                                "waveform": "sawtooth",
+                                "volume": 0.94,
+                                "detune": -19.0
+                            },
+                            {
+                                "waveform": "sawtooth",
+                                "volume": 0.88,
+                                "detune": 26.0
+                            },
+                            {
+                                "waveform": "sawtooth",
+                                "volume": 0.88,
+                                "detune": -26.0
+                            },
+                            {
+                                "waveform": "square",
+                                "volume": 0.72,
+                                "detune": 7.0
+                            },
+                            {
+                                "waveform": "square",
+                                "volume": 0.68,
+                                "detune": -5.0
+                            }
+                        ]
+                    },
+                    "envelope": {
+                        "attack": 0.001,
+                        "decay": 0.12,
+                        "sustain": 0.35,
+                        "release": 0.22
+                    },
+                    "volume": 0.85,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 3200.0,
+                        "resonance": 1.2,
+                        "cutoff_end": 800.0
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "triangle",
+                            "rate": 9.5,
+                            "depth": 0.75
+                        },
+                        "target": {
+                            "target": "filter_cutoff",
+                            "amount": 2400.0
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "multi_oscillator",
+                        "frequency": 130.815,
+                        "oscillators": [
+                            {
+                                "waveform": "sawtooth",
+                                "volume": 0.75,
+                                "detune": 0.0
+                            },
+                            {
+                                "waveform": "sawtooth",
+                                "volume": 0.7,
+                                "detune": 8.0
+                            },
+                            {
+                                "waveform": "sawtooth",
+                                "volume": 0.7,
+                                "detune": -8.0
+                            }
+                        ]
+                    },
+                    "envelope": {
+                        "attack": 0.001,
+                        "decay": 0.15,
+                        "sustain": 0.3,
+                        "release": 0.25
+                    },
+                    "volume": 0.55,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 2400.0,
+                        "resonance": 0.8
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "noise_burst",
+                        "noise_type": "white"
+                    },
+                    "envelope": {
+                        "attack": 0,
+                        "decay": 0.02,
+                        "sustain": 0,
+                        "release": 0.01
+                    },
+                    "volume": 0.18,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "highpass",
+                        "cutoff": 3000.0,
+                        "resonance": 0.4
+                    }
+                }
+            ],
+            "effects": [
+                {
+                    "type": "waveshaper",
+                    "drive": 2.2,
+                    "wet": 0.35,
+                    "curve": "tanh"
+                },
+                {
+                    "type": "chorus",
+                    "rate": 3.2,
+                    "depth": 0.6,
+                    "wet": 0.45,
+                    "voices": 2
+                },
+                {
+                    "type": "phaser",
+                    "rate": 0.3,
+                    "depth": 0.5,
+                    "stages": 8,
+                    "wet": 0.25
+                },
+                {
+                    "type": "compressor",
+                    "threshold_db": -12.0,
+                    "ratio": 4.0,
+                    "attack_ms": 1.0,
+                    "release_ms": 100.0,
+                    "makeup_db": 0
+                },
+                {
+                    "type": "reverb",
+                    "room_size": 0.3,
+                    "damping": 0.6,
+                    "wet": 0.12,
+                    "width": 0.5
+                }
             ]
-          },
-          "envelope": {
-            "attack": 0.002,
-            "decay": 0.08,
-            "sustain": 0.25,
-            "release": 0.15
-          },
-          "filter": {
-            "type": "lowpass",
-            "cutoff": 2200.0,
-            "resonance": 0.9
-          },
-          "lfo": {
-            "config": {
-              "waveform": "triangle",
-              "rate": 8.0,
-              "depth": 0.6
-            },
-            "target": {
-              "target": "filter_cutoff",
-              "amount": 1800.0
-            }
-          },
-          "volume": 1.0,
-          "pan": 0.0
         }
-      ],
-      "effects": [
-        {
-          "type": "waveshaper",
-          "drive": 1.5,
-          "curve": "tanh",
-          "wet": 0.2
-        },
-        {
-          "type": "chorus",
-          "rate": 2.5,
-          "depth": 0.45,
-          "wet": 0.35
-        }
-      ]
     }
-  }
 }

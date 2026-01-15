@@ -15,46 +15,69 @@
   "recipe": {
     "kind": "audio_v1",
     "params": {
-      "duration_seconds": 0.4,
+      "duration_seconds": 0.6,
       "sample_rate": 44100,
       "layers": [
         {
           "synthesis": {
-            "type": "oscillator",
-            "waveform": "triangle",
-            "frequency": 320.0,
-            "freq_sweep": {
-              "end_freq": 300.0,
-              "curve": "exponential"
-            }
+            "type": "modal",
+            "frequency": 280.0,
+            "modes": [
+              {
+                "freq_ratio": 1.0,
+                "amplitude": 1.0,
+                "decay_time": 0.45
+              },
+              {
+                "freq_ratio": 2.15,
+                "amplitude": 0.6,
+                "decay_time": 0.28
+              },
+              {
+                "freq_ratio": 3.42,
+                "amplitude": 0.35,
+                "decay_time": 0.18
+              },
+              {
+                "freq_ratio": 4.85,
+                "amplitude": 0.2,
+                "decay_time": 0.12
+              },
+              {
+                "freq_ratio": 6.25,
+                "amplitude": 0.12,
+                "decay_time": 0.08
+              }
+            ],
+            "excitation": "impulse"
           },
           "envelope": {
-            "attack": 0.002,
-            "decay": 0.08,
-            "sustain": 0.35,
-            "release": 0.12
+            "attack": 0.0005,
+            "decay": 0.45,
+            "sustain": 0,
+            "release": 0.15
           },
-          "volume": 0.7,
+          "volume": 0.85,
           "pan": 0
         },
         {
           "synthesis": {
             "type": "oscillator",
             "waveform": "sine",
-            "frequency": 160.0,
+            "frequency": 140.0,
             "freq_sweep": {
-              "end_freq": 150.0,
+              "end_freq": 135.0,
               "curve": "exponential"
             }
           },
           "envelope": {
             "attack": 0.001,
-            "decay": 0.06,
-            "sustain": 0.2,
-            "release": 0.1
+            "decay": 0.08,
+            "sustain": 0.15,
+            "release": 0.12
           },
-          "volume": 0.5,
-          "pan": 0
+          "volume": 0.45,
+          "pan": -0.12
         },
         {
           "synthesis": {
@@ -62,18 +85,18 @@
             "noise_type": "white",
             "filter": {
               "type": "highpass",
-              "cutoff": 3000.0,
-              "resonance": 0.3
+              "cutoff": 4000.0,
+              "resonance": 0.4
             }
           },
           "envelope": {
-            "attack": 0.001,
-            "decay": 0.025,
-            "sustain": 0.0,
-            "release": 0.02
+            "attack": 0.0003,
+            "decay": 0.015,
+            "sustain": 0,
+            "release": 0.012
           },
-          "volume": 0.25,
-          "pan": 0
+          "volume": 0.35,
+          "pan": 0.08
         },
         {
           "synthesis": {
@@ -81,18 +104,51 @@
             "noise_type": "white",
             "filter": {
               "type": "bandpass",
-              "center": 800.0,
-              "resonance": 0.6
+              "center": 1200.0,
+              "resonance": 0.8
             }
           },
           "envelope": {
-            "attack": 0.002,
-            "decay": 0.05,
-            "sustain": 0.15,
+            "attack": 0.001,
+            "decay": 0.035,
+            "sustain": 0.08,
+            "release": 0.06
+          },
+          "volume": 0.22,
+          "pan": -0.05
+        },
+        {
+          "synthesis": {
+            "type": "oscillator",
+            "waveform": "triangle",
+            "frequency": 560.0,
+            "freq_sweep": {
+              "end_freq": 520.0,
+              "curve": "exponential"
+            }
+          },
+          "envelope": {
+            "attack": 0.0008,
+            "decay": 0.04,
+            "sustain": 0.1,
             "release": 0.08
           },
-          "volume": 0.15,
-          "pan": 0
+          "volume": 0.28,
+          "pan": 0.15
+        }
+      ],
+      "effects": [
+        {
+          "type": "reverb",
+          "room_size": 0.35,
+          "damping": 0.6,
+          "wet": 0.18
+        },
+        {
+          "type": "delay",
+          "time_ms": 85,
+          "feedback": 0.15,
+          "wet": 0.12
         }
       ]
     }

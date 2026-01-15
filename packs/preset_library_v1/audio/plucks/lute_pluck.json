@@ -1,40 +1,186 @@
 {
-  "spec_version": 1,
-  "asset_id": "lute_pluck",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 20051,
-  "description": "Lute pluck - medieval/renaissance plucked string sound with warm, rounded tone",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/plucks/lute_pluck.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "duration_seconds": 1.2,
-      "sample_rate": 44100,
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "lute_pluck",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 20051,
+    "description": "Professional Renaissance lute pluck - warm gut strings with body resonance, rounded intimate tone, medieval character",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "karplus_strong",
-            "frequency": 329.63,
-            "decay": 0.996,
-            "blend": 0.5
-          },
-          "envelope": {
-            "attack": 0.001,
-            "decay": 0.08,
-            "sustain": 0.7,
-            "release": 0.45
-          },
-          "volume": 1.0,
-          "pan": 0.0
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/plucks/lute_pluck.wav"
         }
-      ]
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "duration_seconds": 2.5,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "karplus_strong",
+                        "frequency": 329.63,
+                        "decay": 0.9965,
+                        "blend": 0.42
+                    },
+                    "envelope": {
+                        "attack": 0.001,
+                        "decay": 0.12,
+                        "sustain": 0.68,
+                        "release": 0.85
+                    },
+                    "volume": 0.85,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 3800.0,
+                        "resonance": 0.25,
+                        "cutoff_end": 2200.0
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "pitched_body",
+                        "start_freq": 329.63,
+                        "end_freq": 164.815
+                    },
+                    "envelope": {
+                        "attack": 0.002,
+                        "decay": 0.15,
+                        "sustain": 0.5,
+                        "release": 0.95
+                    },
+                    "volume": 0.32,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "bandpass",
+                        "center": 620.0,
+                        "resonance": 0.55
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "modal",
+                        "frequency": 329.63,
+                        "modes": [
+                            {
+                                "freq_ratio": 1.0,
+                                "amplitude": 1.0,
+                                "decay_time": 0.5
+                            },
+                            {
+                                "freq_ratio": 2.0,
+                                "amplitude": 0.5,
+                                "decay_time": 0.3
+                            }
+                        ],
+                        "excitation": "impulse"
+                    },
+                    "envelope": {
+                        "attack": 0.003,
+                        "decay": 0.18,
+                        "sustain": 0.35,
+                        "release": 1.1
+                    },
+                    "volume": 0.18,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 2800.0,
+                        "resonance": 0.15
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "karplus_strong",
+                        "frequency": 329.63,
+                        "decay": 0.9958,
+                        "blend": 0.38
+                    },
+                    "envelope": {
+                        "attack": 0.001,
+                        "decay": 0.11,
+                        "sustain": 0.65,
+                        "release": 0.82
+                    },
+                    "volume": 0.15,
+                    "pan": -0.18,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 4200.0,
+                        "resonance": 0.18
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 5.2,
+                            "depth": 0.008
+                        },
+                        "target": {
+                            "target": "pitch",
+                            "semitones": 0.008
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "karplus_strong",
+                        "frequency": 329.63,
+                        "decay": 0.9962,
+                        "blend": 0.44
+                    },
+                    "envelope": {
+                        "attack": 0.001,
+                        "decay": 0.13,
+                        "sustain": 0.66,
+                        "release": 0.88
+                    },
+                    "volume": 0.15,
+                    "pan": 0.18,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 3900.0,
+                        "resonance": 0.2
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 5.8,
+                            "depth": 0.01
+                        },
+                        "target": {
+                            "target": "pitch",
+                            "semitones": 0.01
+                        }
+                    }
+                }
+            ],
+            "effects": [
+                {
+                    "type": "chorus",
+                    "rate": 0.42,
+                    "depth": 0.18,
+                    "wet": 0.22,
+                    "voices": 2
+                },
+                {
+                    "type": "reverb",
+                    "room_size": 0.38,
+                    "damping": 0.5,
+                    "wet": 0.28,
+                    "width": 0.5
+                },
+                {
+                    "type": "compressor",
+                    "threshold_db": -18.0,
+                    "ratio": 2.5,
+                    "attack_ms": 8.0,
+                    "release_ms": 120.0,
+                    "makeup_db": 0
+                }
+            ]
+        }
     }
-  }
 }

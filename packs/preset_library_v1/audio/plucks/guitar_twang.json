@@ -1,48 +1,171 @@
 {
-  "spec_version": 1,
-  "asset_id": "guitar_twang",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 20060,
-  "description": "Twangy guitar - country/surf style bright guitar with characteristic spring reverb twang",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/plucks/guitar_twang.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "duration_seconds": 0.8,
-      "sample_rate": 44100,
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "guitar_twang",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 20060,
+    "description": "Professional twangy guitar - country/surf style bright guitar with characteristic spring reverb twang, pitch bend, and sparkle",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "karplus_strong",
-            "frequency": 493.88,
-            "decay": 0.992,
-            "blend": 0.08
-          },
-          "envelope": {
-            "attack": 0.0005,
-            "decay": 0.05,
-            "sustain": 0.55,
-            "release": 0.25
-          },
-          "volume": 1.0,
-          "pan": 0.0
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/plucks/guitar_twang.wav"
         }
-      ],
-      "effects": [
-        {
-          "type": "delay",
-          "time_ms": 45.0,
-          "feedback": 0.35,
-          "wet": 0.25
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "duration_seconds": 1.2,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "karplus_strong",
+                        "frequency": 493.88,
+                        "decay": 0.9955,
+                        "blend": 0.12
+                    },
+                    "envelope": {
+                        "attack": 0.0002,
+                        "decay": 0.035,
+                        "sustain": 0.65,
+                        "release": 0.4
+                    },
+                    "volume": 0.92,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 6800.0,
+                        "resonance": 0.4,
+                        "cutoff_end": 4200.0
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "karplus_strong",
+                        "frequency": 493.88,
+                        "decay": 0.994,
+                        "blend": 0.15
+                    },
+                    "envelope": {
+                        "attack": 0.0003,
+                        "decay": 0.03,
+                        "sustain": 0.55,
+                        "release": 0.35
+                    },
+                    "volume": 0.25,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "highpass",
+                        "cutoff": 180.0,
+                        "resonance": 0.2
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "oscillator",
+                        "waveform": "sine",
+                        "frequency": 246.94
+                    },
+                    "envelope": {
+                        "attack": 0.012,
+                        "decay": 0.18,
+                        "sustain": 0.12,
+                        "release": 0.45
+                    },
+                    "volume": 0.18,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "bandpass",
+                        "center": 380.0,
+                        "resonance": 2.8
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "noise_burst",
+                        "noise_type": "white"
+                    },
+                    "envelope": {
+                        "attack": 0.0001,
+                        "decay": 0.008,
+                        "sustain": 0,
+                        "release": 0.004
+                    },
+                    "volume": 0.15,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "bandpass",
+                        "center": 3200.0,
+                        "resonance": 1.2
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "oscillator",
+                        "waveform": "sine",
+                        "frequency": 1481.64
+                    },
+                    "envelope": {
+                        "attack": 0.0004,
+                        "decay": 0.055,
+                        "sustain": 0.08,
+                        "release": 0.25
+                    },
+                    "volume": 0.12,
+                    "pan": 0.08,
+                    "filter": {
+                        "type": "highpass",
+                        "cutoff": 1200.0,
+                        "resonance": 0.3
+                    }
+                }
+            ],
+            "effects": [
+                {
+                    "type": "compressor",
+                    "threshold_db": -6.4,
+                    "ratio": 3.5,
+                    "attack_ms": 0.8,
+                    "release_ms": 85.0,
+                    "makeup_db": 0
+                },
+                {
+                    "type": "chorus",
+                    "rate": 1.2,
+                    "depth": 0.15,
+                    "wet": 0.22,
+                    "voices": 2
+                },
+                {
+                    "type": "phaser",
+                    "rate": 0.45,
+                    "depth": 0.18,
+                    "stages": 4,
+                    "wet": 0.25
+                },
+                {
+                    "type": "delay",
+                    "time_ms": 38.0,
+                    "feedback": 0.42,
+                    "wet": 0.28,
+                    "ping_pong": false
+                },
+                {
+                    "type": "delay",
+                    "time_ms": 95.0,
+                    "feedback": 0.22,
+                    "wet": 0.15,
+                    "ping_pong": false
+                },
+                {
+                    "type": "reverb",
+                    "room_size": 0.55,
+                    "damping": 0.35,
+                    "wet": 0.32,
+                    "width": 0.5
+                }
+            ]
         }
-      ]
     }
-  }
 }

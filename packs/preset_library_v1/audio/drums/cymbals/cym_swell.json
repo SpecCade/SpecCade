@@ -1,107 +1,175 @@
 {
-  "spec_version": 1,
-  "asset_id": "preset_cym_swell",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 20020,
-  "description": "Cymbal swell - building cymbal wash that crescendos",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/drums/cymbals/cym_swell.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "duration_seconds": 2.0,
-      "sample_rate": 44100,
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "preset_cym_swell",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 20020,
+    "description": "Cymbal swell - building cymbal wash that crescendos",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "noise_burst",
-            "noise_type": "pink"
-          },
-          "envelope": {
-            "attack": 0.8,
-            "decay": 0.0,
-            "sustain": 1.0,
-            "release": 0.5
-          },
-          "volume": 0.35,
-          "pan": 0.0,
-          "filter": {
-            "type": "highpass",
-            "cutoff": 3000.0,
-            "resonance": 0.3
-          }
-        },
-        {
-          "synthesis": {
-            "type": "noise_burst",
-            "noise_type": "white"
-          },
-          "envelope": {
-            "attack": 1.0,
-            "decay": 0.0,
-            "sustain": 1.0,
-            "release": 0.4
-          },
-          "volume": 0.25,
-          "pan": 0.0,
-          "filter": {
-            "type": "highpass",
-            "cutoff": 6000.0,
-            "resonance": 0.2
-          }
-        },
-        {
-          "synthesis": {
-            "type": "oscillator",
-            "waveform": "sine",
-            "frequency": 4200.0
-          },
-          "envelope": {
-            "attack": 0.7,
-            "decay": 0.0,
-            "sustain": 0.8,
-            "release": 0.5
-          },
-          "volume": 0.08,
-          "pan": 0.0
-        },
-        {
-          "synthesis": {
-            "type": "oscillator",
-            "waveform": "sine",
-            "frequency": 7800.0
-          },
-          "envelope": {
-            "attack": 0.9,
-            "decay": 0.0,
-            "sustain": 0.7,
-            "release": 0.4
-          },
-          "volume": 0.06,
-          "pan": 0.0
-        },
-        {
-          "synthesis": {
-            "type": "oscillator",
-            "waveform": "sine",
-            "frequency": 11500.0
-          },
-          "envelope": {
-            "attack": 1.1,
-            "decay": 0.0,
-            "sustain": 0.6,
-            "release": 0.3
-          },
-          "volume": 0.04,
-          "pan": 0.0
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/drums/cymbals/cym_swell.wav"
         }
-      ]
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "duration_seconds": 2.5,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "noise_burst",
+                        "noise_type": "pink",
+                        "filter": {
+                            "type": "lowpass",
+                            "cutoff": 2000.0,
+                            "resonance": 0.4,
+                            "cutoff_end": 9000.0
+                        }
+                    },
+                    "envelope": {
+                        "attack": 1.5,
+                        "decay": 0,
+                        "sustain": 1,
+                        "release": 0.3
+                    },
+                    "volume": 0.4,
+                    "pan": -0.15
+                },
+                {
+                    "synthesis": {
+                        "type": "noise_burst",
+                        "noise_type": "white",
+                        "filter": {
+                            "type": "bandpass",
+                            "center": 4000.0,
+                            "resonance": 0.6,
+                            "center_end": 12000.0
+                        }
+                    },
+                    "envelope": {
+                        "attack": 1.7,
+                        "decay": 0,
+                        "sustain": 1,
+                        "release": 0.25
+                    },
+                    "volume": 0.35,
+                    "pan": 0.15
+                },
+                {
+                    "synthesis": {
+                        "type": "noise_burst",
+                        "noise_type": "white",
+                        "filter": {
+                            "type": "highpass",
+                            "cutoff": 6000.0,
+                            "resonance": 0.3,
+                            "cutoff_end": 14000.0
+                        }
+                    },
+                    "envelope": {
+                        "attack": 1.8,
+                        "decay": 0,
+                        "sustain": 1,
+                        "release": 0.2
+                    },
+                    "volume": 0.25,
+                    "pan": 0.0
+                },
+                {
+                    "synthesis": {
+                        "type": "oscillator",
+                        "waveform": "sine",
+                        "frequency": 3800.0
+                    },
+                    "envelope": {
+                        "attack": 1.2,
+                        "decay": 0,
+                        "sustain": 0.85,
+                        "release": 0.3
+                    },
+                    "volume": 0.1,
+                    "pan": -0.2
+                },
+                {
+                    "synthesis": {
+                        "type": "oscillator",
+                        "waveform": "sine",
+                        "frequency": 5600.0
+                    },
+                    "envelope": {
+                        "attack": 1.4,
+                        "decay": 0,
+                        "sustain": 0.8,
+                        "release": 0.25
+                    },
+                    "volume": 0.08,
+                    "pan": 0.1
+                },
+                {
+                    "synthesis": {
+                        "type": "oscillator",
+                        "waveform": "sine",
+                        "frequency": 8200.0
+                    },
+                    "envelope": {
+                        "attack": 1.6,
+                        "decay": 0,
+                        "sustain": 0.75,
+                        "release": 0.2
+                    },
+                    "volume": 0.06,
+                    "pan": 0.25
+                },
+                {
+                    "synthesis": {
+                        "type": "oscillator",
+                        "waveform": "sine",
+                        "frequency": 11700.0
+                    },
+                    "envelope": {
+                        "attack": 1.8,
+                        "decay": 0,
+                        "sustain": 0.7,
+                        "release": 0.15
+                    },
+                    "volume": 0.05,
+                    "pan": -0.1
+                },
+                {
+                    "synthesis": {
+                        "type": "oscillator",
+                        "waveform": "triangle",
+                        "frequency": 14300.0
+                    },
+                    "envelope": {
+                        "attack": 1.9,
+                        "decay": 0,
+                        "sustain": 0.65,
+                        "release": 0.12
+                    },
+                    "volume": 0.04,
+                    "pan": 0.3
+                }
+            ],
+            "effects": [
+                {
+                    "type": "reverb",
+                    "room_size": 0.92,
+                    "damping": 0.35,
+                    "wet": 0.55,
+                    "width": 0.95
+                },
+                {
+                    "type": "delay",
+                    "time_ms": 100,
+                    "feedback": 0.15,
+                    "wet": 0.12,
+                    "ping_pong": false
+                }
+            ]
+        }
     }
-  }
 }

@@ -1,59 +1,171 @@
 {
-  "spec_version": 1,
-  "asset_id": "texture_bubbles",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 20067,
-  "description": "Bubble texture - underwater bubbling effect",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/textures/texture_bubbles.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "duration_seconds": 4.0,
-      "sample_rate": 44100,
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "texture_bubbles",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 20067,
+    "description": "Bubble texture - underwater bubbling effect",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "granular",
-            "source": {
-              "type": "noise",
-              "noise_type": "white"
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/textures/texture_bubbles.wav"
+        }
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "duration_seconds": 4.0,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "granular",
+                        "source": {
+                            "type": "noise",
+                            "noise_type": "white"
+                        },
+                        "grain_size_ms": 8,
+                        "grain_density": 55.0,
+                        "pitch_spread": 0.7,
+                        "position_spread": 0.9,
+                        "pan_spread": 0.8
+                    },
+                    "envelope": {
+                        "attack": 0.15,
+                        "decay": 0.25,
+                        "sustain": 0.4,
+                        "release": 0.35
+                    },
+                    "filter": {
+                        "type": "bandpass",
+                        "center": 1400.0,
+                        "resonance": 0.5
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 4.2,
+                            "depth": 0.6
+                        },
+                        "target": {
+                            "target": "pitch",
+                            "semitones": 8
+                        }
+                    },
+                    "volume": 0.4,
+                    "pan": 0.0
+                },
+                {
+                    "synthesis": {
+                        "type": "granular",
+                        "source": {
+                            "type": "noise",
+                            "noise_type": "pink"
+                        },
+                        "grain_size_ms": 12,
+                        "grain_density": 38.0,
+                        "pitch_spread": 0.5,
+                        "position_spread": 0.75,
+                        "pan_spread": 0.6
+                    },
+                    "envelope": {
+                        "attack": 0.2,
+                        "decay": 0.3,
+                        "sustain": 0.5,
+                        "release": 0.4
+                    },
+                    "filter": {
+                        "type": "highpass",
+                        "cutoff": 800.0,
+                        "resonance": 0.3
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 3.1,
+                            "depth": 0.5
+                        },
+                        "target": {
+                            "target": "pitch",
+                            "semitones": 5
+                        }
+                    },
+                    "volume": 0.35,
+                    "pan": 0.2
+                },
+                {
+                    "synthesis": {
+                        "type": "multi_oscillator",
+                        "frequency": 880.0,
+                        "oscillators": [
+                            {
+                                "waveform": "sine",
+                                "volume": 0.6,
+                                "detune": 0.0
+                            },
+                            {
+                                "waveform": "sine",
+                                "volume": 0.4,
+                                "detune": 7.0
+                            }
+                        ]
+                    },
+                    "envelope": {
+                        "attack": 0.1,
+                        "decay": 0.2,
+                        "sustain": 0.3,
+                        "release": 0.3
+                    },
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 2200.0,
+                        "resonance": 0.4
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "triangle",
+                            "rate": 5.7,
+                            "depth": 0.7
+                        },
+                        "target": {
+                            "target": "pitch",
+                            "semitones": 12
+                        }
+                    },
+                    "volume": 0.25,
+                    "pan": -0.15
+                }
+            ],
+            "master_filter": {
+                "type": "bandpass",
+                "center": 1200.0,
+                "resonance": 0.45
             },
-            "grain_size_ms": 8.0,
-            "grain_density": 45.0,
-            "pitch_spread": 0.6,
-            "position_spread": 0.85,
-            "pan_spread": 0.7
-          },
-          "envelope": {
-            "attack": 0.2,
-            "decay": 0.3,
-            "sustain": 0.5,
-            "release": 0.4
-          },
-          "volume": 0.5,
-          "pan": 0.0
+            "effects": [
+                {
+                    "type": "chorus",
+                    "rate": 0.4,
+                    "depth": 0.35,
+                    "feedback": 0.25,
+                    "wet": 0.4
+                },
+                {
+                    "type": "phaser",
+                    "rate": 0.6,
+                    "depth": 0.5,
+                    "feedback": 0.3,
+                    "stages": 4,
+                    "wet": 0.35
+                },
+                {
+                    "type": "reverb",
+                    "room_size": 0.8,
+                    "damping": 0.75,
+                    "wet": 0.5,
+                    "width": 0.6
+                }
+            ]
         }
-      ],
-      "master_filter": {
-        "type": "bandpass",
-        "center": 1200.0,
-        "resonance": 0.4
-      },
-      "effects": [
-        {
-          "type": "reverb",
-          "room_size": 0.75,
-          "damping": 0.7,
-          "wet": 0.45
-        }
-      ]
     }
-  }
 }

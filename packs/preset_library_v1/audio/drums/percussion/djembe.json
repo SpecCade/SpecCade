@@ -4,7 +4,7 @@
   "asset_type": "audio",
   "license": "CC0-1.0",
   "seed": 10090,
-  "description": "Djembe - pitched body with sharp slap character",
+  "description": "Djembe - West African goblet drum with deep bass fundamental and rich modal resonance",
   "outputs": [
     {
       "kind": "primary",
@@ -15,46 +15,171 @@
   "recipe": {
     "kind": "audio_v1",
     "params": {
-      "duration_seconds": 0.4,
+      "duration_seconds": 1.2,
       "sample_rate": 44100,
       "layers": [
         {
           "synthesis": {
-            "type": "oscillator",
-            "waveform": "sine",
-            "frequency": 280,
-            "freq_sweep": {
-              "end_freq": 120,
-              "curve": "exponential"
-            }
+            "type": "modal",
+            "frequency": 185,
+            "modes": [
+              {
+                "freq_ratio": 1.0,
+                "amplitude": 1.0,
+                "decay_time": 0.85
+              },
+              {
+                "freq_ratio": 1.72,
+                "amplitude": 0.75,
+                "decay_time": 0.65
+              },
+              {
+                "freq_ratio": 2.38,
+                "amplitude": 0.58,
+                "decay_time": 0.52
+              },
+              {
+                "freq_ratio": 3.15,
+                "amplitude": 0.42,
+                "decay_time": 0.38
+              },
+              {
+                "freq_ratio": 4.02,
+                "amplitude": 0.28,
+                "decay_time": 0.28
+              },
+              {
+                "freq_ratio": 5.21,
+                "amplitude": 0.18,
+                "decay_time": 0.22
+              }
+            ],
+            "excitation": "impulse"
           },
           "envelope": {
             "attack": 0.001,
-            "decay": 0.22,
+            "decay": 0.95,
+            "sustain": 0,
+            "release": 0.22
+          },
+          "volume": 0.92,
+          "pan": -0.08,
+          "lfo": {
+            "config": {
+              "waveform": "sine",
+              "rate": 5.8,
+              "depth": 0.4
+            },
+            "target": {
+              "target": "pitch",
+              "semitones": 0.08
+            }
+          }
+        },
+        {
+          "synthesis": {
+            "type": "modal",
+            "frequency": 370,
+            "modes": [
+              {
+                "freq_ratio": 1.0,
+                "amplitude": 0.68,
+                "decay_time": 0.48
+              },
+              {
+                "freq_ratio": 2.15,
+                "amplitude": 0.45,
+                "decay_time": 0.32
+              },
+              {
+                "freq_ratio": 3.42,
+                "amplitude": 0.28,
+                "decay_time": 0.24
+              }
+            ],
+            "excitation": "impulse"
+          },
+          "envelope": {
+            "attack": 0.001,
+            "decay": 0.55,
             "sustain": 0,
             "release": 0.15
           },
-          "volume": 0.8,
-          "pan": 0
+          "volume": 0.58,
+          "pan": 0.06
+        },
+        {
+          "synthesis": {
+            "type": "noise_burst",
+            "noise_type": "pink",
+            "filter": {
+              "type": "bandpass",
+              "center": 3200,
+              "resonance": 0.72
+            }
+          },
+          "envelope": {
+            "attack": 0,
+            "decay": 0.015,
+            "sustain": 0,
+            "release": 0.008
+          },
+          "volume": 0.38,
+          "pan": -0.12
         },
         {
           "synthesis": {
             "type": "noise_burst",
             "noise_type": "white",
             "filter": {
-              "type": "bandpass",
-              "center": 2500,
-              "resonance": 0.6
+              "type": "highpass",
+              "cutoff": 5500,
+              "resonance": 0.35
             }
           },
           "envelope": {
             "attack": 0,
-            "decay": 0.03,
+            "decay": 0.008,
             "sustain": 0,
-            "release": 0.02
+            "release": 0.004
           },
-          "volume": 0.35,
+          "volume": 0.22,
+          "pan": 0.1
+        },
+        {
+          "synthesis": {
+            "type": "modal",
+            "frequency": 92.5,
+            "modes": [
+              {
+                "freq_ratio": 1.0,
+                "amplitude": 0.48,
+                "decay_time": 0.95
+              },
+              {
+                "freq_ratio": 2.0,
+                "amplitude": 0.22,
+                "decay_time": 0.65
+              }
+            ],
+            "excitation": "impulse"
+          },
+          "envelope": {
+            "attack": 0.002,
+            "decay": 1.0,
+            "sustain": 0,
+            "release": 0.18
+          },
+          "volume": 0.52,
           "pan": 0
+        }
+      ],
+      "effects": [
+        {
+          "type": "reverb",
+          "room_size": 0.48,
+          "damping": 0.62,
+          "wet": 0.22
         }
       ]
     }

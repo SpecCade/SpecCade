@@ -1,62 +1,179 @@
 {
-  "spec_version": 1,
-  "asset_id": "preset_dx7_marimba",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 20022,
-  "description": "DX7-style FM marimba - warm wooden mallet FM sound",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/keys/dx7_marimba.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "base_note": "C4",
-      "duration_seconds": 1.5,
-      "sample_rate": 44100,
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "preset_dx7_marimba",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 20022,
+    "description": "DX7-style FM marimba - warm wooden mallet FM sound",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "fm_synth",
-            "carrier_freq": 261.63,
-            "modulator_freq": 1046.5,
-            "modulation_index": 2.2
-          },
-          "envelope": {
-            "attack": 0.005,
-            "decay": 0.3,
-            "sustain": 0.2,
-            "release": 0.6
-          },
-          "volume": 0.7,
-          "pan": 0.0
-        },
-        {
-          "synthesis": {
-            "type": "fm_synth",
-            "carrier_freq": 130.81,
-            "modulator_freq": 261.63,
-            "modulation_index": 1.8
-          },
-          "envelope": {
-            "attack": 0.008,
-            "decay": 0.35,
-            "sustain": 0.15,
-            "release": 0.65
-          },
-          "volume": 0.3,
-          "pan": 0.0
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/keys/dx7_marimba.wav"
         }
-      ],
-      "master_filter": {
-        "type": "lowpass",
-        "cutoff": 3500,
-        "resonance": 0.3
-      }
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "base_note": "C4",
+            "duration_seconds": 2.5,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "karplus_strong",
+                        "frequency": 261.63,
+                        "decay": 0.995,
+                        "blend": 0.5
+                    },
+                    "envelope": {
+                        "attack": 0.001,
+                        "decay": 0.08,
+                        "sustain": 0,
+                        "release": 0.15
+                    },
+                    "volume": 0.45,
+                    "pan": 0.0
+                },
+                {
+                    "synthesis": {
+                        "type": "fm_synth",
+                        "carrier_freq": 261.63,
+                        "modulator_freq": 1308.15,
+                        "modulation_index": 3.8
+                    },
+                    "envelope": {
+                        "attack": 0.003,
+                        "decay": 0.25,
+                        "sustain": 0.12,
+                        "release": 0.9
+                    },
+                    "volume": 0.65,
+                    "pan": 0.0
+                },
+                {
+                    "synthesis": {
+                        "type": "fm_synth",
+                        "carrier_freq": 523.25,
+                        "modulator_freq": 261.63,
+                        "modulation_index": 2.4
+                    },
+                    "envelope": {
+                        "attack": 0.002,
+                        "decay": 0.18,
+                        "sustain": 0.08,
+                        "release": 0.7
+                    },
+                    "volume": 0.35,
+                    "pan": 0.15,
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 4.2,
+                            "depth": 0.08
+                        },
+                        "target": {
+                            "target": "volume",
+                            "amount": 0.3
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "modal",
+                        "frequency": 261.63,
+                        "modes": [
+                            {
+                                "freq_ratio": 1.0,
+                                "amplitude": 1.0,
+                                "decay_time": 0.5
+                            },
+                            {
+                                "freq_ratio": 2.0,
+                                "amplitude": 0.5,
+                                "decay_time": 0.3
+                            }
+                        ],
+                        "excitation": "impulse"
+                    },
+                    "envelope": {
+                        "attack": 0.004,
+                        "decay": 0.5,
+                        "sustain": 0.18,
+                        "release": 1.2
+                    },
+                    "volume": 0.28,
+                    "pan": -0.12,
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 5.8,
+                            "depth": 0.12
+                        },
+                        "target": {
+                            "target": "pitch",
+                            "semitones": 0.08
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "fm_synth",
+                        "carrier_freq": 130.81,
+                        "modulator_freq": 392.44,
+                        "modulation_index": 1.9
+                    },
+                    "envelope": {
+                        "attack": 0.005,
+                        "decay": 0.4,
+                        "sustain": 0.15,
+                        "release": 1.0
+                    },
+                    "volume": 0.22,
+                    "pan": -0.08,
+                    "lfo": {
+                        "config": {
+                            "waveform": "triangle",
+                            "rate": 3.2,
+                            "depth": 0.15
+                        },
+                        "target": {
+                            "target": "filter_cutoff",
+                            "amount": 0.25
+                        }
+                    }
+                }
+            ],
+            "master_filter": {
+                "type": "lowpass",
+                "cutoff": 4200,
+                "resonance": 0.42,
+                "cutoff_end": 2800
+            },
+            "effects": [
+                {
+                    "type": "chorus",
+                    "rate": 0.72,
+                    "depth": 0.35,
+                    "wet": 0.18,
+                    "voices": 3
+                },
+                {
+                    "type": "compressor",
+                    "threshold_db": -18.0,
+                    "ratio": 3.5,
+                    "attack_ms": 8.0,
+                    "release_ms": 120.0,
+                    "makeup_db": 4.5
+                },
+                {
+                    "type": "reverb",
+                    "room_size": 0.48,
+                    "damping": 0.55,
+                    "wet": 0.28,
+                    "width": 0.8
+                }
+            ]
+        }
     }
-  }
 }

@@ -1,71 +1,199 @@
 {
-  "spec_version": 1,
-  "asset_id": "preset_pad_tremolo",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 10122,
-  "description": "Pulsing tremolo pad - warm pad with volume LFO for rhythmic, organic pulsing character",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/pads/pad_tremolo.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "base_note": "C4",
-      "duration_seconds": 2.0,
-      "sample_rate": 44100,
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "preset_pad_tremolo",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 10122,
+    "description": "Professional tremolo pad - lush multi-layer pad with rhythmic volume pulsing via LFO, perfect for atmospheric textures",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "multi_oscillator",
-            "frequency": 261.63,
-            "oscillators": [
-              {
-                "waveform": "sawtooth",
-                "volume": 1.0,
-                "detune": 0.0
-              },
-              {
-                "waveform": "sawtooth",
-                "volume": 0.8,
-                "detune": 4.0
-              },
-              {
-                "waveform": "sawtooth",
-                "volume": 0.8,
-                "detune": -4.0
-              }
-            ]
-          },
-          "envelope": {
-            "attack": 0.1,
-            "decay": 0.2,
-            "sustain": 0.85,
-            "release": 0.3
-          },
-          "filter": {
-            "type": "lowpass",
-            "cutoff": 2500.0,
-            "resonance": 0.3
-          },
-          "lfo": {
-            "config": {
-              "waveform": "sine",
-              "rate": 4.0,
-              "depth": 0.4
-            },
-            "target": {
-              "target": "volume"
-            }
-          },
-          "volume": 0.85,
-          "pan": 0.0
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/pads/pad_tremolo.wav"
         }
-      ]
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "base_note": "C4",
+            "duration_seconds": 2.0,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "wavetable",
+                        "table": "analog",
+                        "frequency": 261.63
+                    },
+                    "envelope": {
+                        "attack": 0.4,
+                        "decay": 0.3,
+                        "sustain": 0.8,
+                        "release": 0.8
+                    },
+                    "volume": 0.65,
+                    "pan": -0.15,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 1800.0,
+                        "resonance": 0.2,
+                        "cutoff_end": 1400.0
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 4.5,
+                            "depth": 0.55
+                        },
+                        "target": {
+                            "target": "volume",
+                            "amount": 0.3
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "multi_oscillator",
+                        "frequency": 261.63,
+                        "oscillators": [
+                            {
+                                "waveform": "sawtooth",
+                                "volume": 1.0,
+                                "detune": 0.0
+                            },
+                            {
+                                "waveform": "sawtooth",
+                                "volume": 0.75,
+                                "detune": 7.0
+                            },
+                            {
+                                "waveform": "sawtooth",
+                                "volume": 0.75,
+                                "detune": -7.0
+                            }
+                        ]
+                    },
+                    "envelope": {
+                        "attack": 0.5,
+                        "decay": 0.4,
+                        "sustain": 0.75,
+                        "release": 0.9
+                    },
+                    "volume": 0.55,
+                    "pan": 0.15,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 2200.0,
+                        "resonance": 0.35,
+                        "cutoff_end": 1600.0
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 4.5,
+                            "depth": 0.55
+                        },
+                        "target": {
+                            "target": "volume",
+                            "amount": 0.3
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "wavetable",
+                        "table": "analog",
+                        "frequency": 523.26
+                    },
+                    "envelope": {
+                        "attack": 0.6,
+                        "decay": 0.5,
+                        "sustain": 0.7,
+                        "release": 1.0
+                    },
+                    "volume": 0.28,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 3500.0,
+                        "resonance": 0.15
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 4.5,
+                            "depth": 0.55
+                        },
+                        "target": {
+                            "target": "volume",
+                            "amount": 0.3
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "fm_synth",
+                        "carrier_freq": 130.815,
+                        "modulator_freq": 440,
+                        "modulation_index": 0.8
+                    },
+                    "envelope": {
+                        "attack": 0.7,
+                        "decay": 0.6,
+                        "sustain": 0.65,
+                        "release": 1.2
+                    },
+                    "volume": 0.35,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 1200.0,
+                        "resonance": 0.1
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 4.5,
+                            "depth": 0.55
+                        },
+                        "target": {
+                            "target": "volume",
+                            "amount": 0.3
+                        }
+                    }
+                }
+            ],
+            "effects": [
+                {
+                    "type": "chorus",
+                    "rate": 0.6,
+                    "depth": 0.35,
+                    "wet": 0.4,
+                    "voices": 2
+                },
+                {
+                    "type": "reverb",
+                    "room_size": 0.85,
+                    "damping": 0.4,
+                    "wet": 0.45,
+                    "width": 0.9
+                },
+                {
+                    "type": "delay",
+                    "time_ms": 375.0,
+                    "feedback": 0.25,
+                    "wet": 0.2,
+                    "ping_pong": false
+                },
+                {
+                    "type": "compressor",
+                    "threshold_db": -18.0,
+                    "ratio": 3.0,
+                    "attack_ms": 15.0,
+                    "release_ms": 150.0,
+                    "makeup_db": 0
+                }
+            ]
+        }
     }
-  }
 }

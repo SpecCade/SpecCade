@@ -1,48 +1,202 @@
 {
-  "spec_version": 1,
-  "asset_id": "koto_pluck",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 20052,
-  "description": "Koto pluck - Japanese zither pluck with bright, clear attack",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/plucks/koto_pluck.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "duration_seconds": 1.8,
-      "sample_rate": 44100,
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "koto_pluck",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 20052,
+    "description": "Professional koto pluck - Japanese zither with characteristic pitch bend, bright metallic strings, and rich harmonic resonance",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "karplus_strong",
-            "frequency": 523.25,
-            "decay": 0.9965,
-            "blend": 0.25
-          },
-          "envelope": {
-            "attack": 0.0008,
-            "decay": 0.04,
-            "sustain": 0.7,
-            "release": 0.8
-          },
-          "volume": 1.0,
-          "pan": 0.0
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/plucks/koto_pluck.wav"
         }
-      ],
-      "effects": [
-        {
-          "type": "delay",
-          "time_ms": 65.0,
-          "feedback": 0.18,
-          "wet": 0.1
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "duration_seconds": 2.5,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "karplus_strong",
+                        "frequency": 523.25,
+                        "decay": 0.9975,
+                        "blend": 0.15
+                    },
+                    "envelope": {
+                        "attack": 0.0005,
+                        "decay": 0.08,
+                        "sustain": 0.65,
+                        "release": 1.2
+                    },
+                    "volume": 0.85,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 8500.0,
+                        "resonance": 0.35,
+                        "cutoff_end": 2800.0
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "karplus_strong",
+                        "frequency": 1046.5,
+                        "decay": 0.995,
+                        "blend": 0.22
+                    },
+                    "envelope": {
+                        "attack": 0.0003,
+                        "decay": 0.05,
+                        "sustain": 0.5,
+                        "release": 0.9
+                    },
+                    "volume": 0.35,
+                    "pan": 0.12,
+                    "filter": {
+                        "type": "bandpass",
+                        "center": 4200.0,
+                        "resonance": 0.55
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "karplus_strong",
+                        "frequency": 261.625,
+                        "decay": 0.9982,
+                        "blend": 0.18
+                    },
+                    "envelope": {
+                        "attack": 0.0008,
+                        "decay": 0.1,
+                        "sustain": 0.72,
+                        "release": 1.4
+                    },
+                    "volume": 0.45,
+                    "pan": -0.1,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 5500.0,
+                        "resonance": 0.28
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "metallic",
+                        "base_freq": 523.25,
+                        "num_partials": 8,
+                        "inharmonicity": 0.15
+                    },
+                    "envelope": {
+                        "attack": 0.0002,
+                        "decay": 0.035,
+                        "sustain": 0.25,
+                        "release": 0.6
+                    },
+                    "volume": 0.22,
+                    "pan": 0.08,
+                    "filter": {
+                        "type": "highpass",
+                        "cutoff": 1200.0,
+                        "resonance": 0.18
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "modal",
+                        "frequency": 523.25,
+                        "modes": [
+                            {
+                                "freq_ratio": 1.0,
+                                "amplitude": 1.0,
+                                "decay_time": 0.5
+                            },
+                            {
+                                "freq_ratio": 1.5,
+                                "amplitude": 0.5,
+                                "decay_time": 0.4166666666666667
+                            },
+                            {
+                                "freq_ratio": 2.0,
+                                "amplitude": 0.3333333333333333,
+                                "decay_time": 0.35714285714285715
+                            },
+                            {
+                                "freq_ratio": 2.5,
+                                "amplitude": 0.25,
+                                "decay_time": 0.3125
+                            },
+                            {
+                                "freq_ratio": 3.0,
+                                "amplitude": 0.2,
+                                "decay_time": 0.2777777777777778
+                            },
+                            {
+                                "freq_ratio": 3.5,
+                                "amplitude": 0.16666666666666666,
+                                "decay_time": 0.25
+                            },
+                            {
+                                "freq_ratio": 4.0,
+                                "amplitude": 0.14285714285714285,
+                                "decay_time": 0.22727272727272727
+                            },
+                            {
+                                "freq_ratio": 4.5,
+                                "amplitude": 0.125,
+                                "decay_time": 0.20833333333333331
+                            }
+                        ],
+                        "excitation": "impulse"
+                    },
+                    "envelope": {
+                        "attack": 0.0004,
+                        "decay": 0.06,
+                        "sustain": 0.4,
+                        "release": 0.85
+                    },
+                    "volume": 0.15,
+                    "pan": -0.05,
+                    "filter": {
+                        "type": "bandpass",
+                        "center": 3800.0,
+                        "resonance": 0.42
+                    }
+                }
+            ],
+            "effects": [
+                {
+                    "type": "chorus",
+                    "rate": 0.85,
+                    "depth": 0.15,
+                    "wet": 0.12,
+                    "voices": 2
+                },
+                {
+                    "type": "delay",
+                    "time_ms": 45.0,
+                    "feedback": 0.15,
+                    "wet": 0.08,
+                    "ping_pong": false
+                },
+                {
+                    "type": "reverb",
+                    "room_size": 0.28,
+                    "damping": 0.55,
+                    "wet": 0.18,
+                    "width": 0.5
+                },
+                {
+                    "type": "compressor",
+                    "threshold_db": -18.0,
+                    "ratio": 2.8,
+                    "attack_ms": 1.5,
+                    "release_ms": 85.0,
+                    "makeup_db": 0
+                }
+            ]
         }
-      ]
     }
-  }
 }

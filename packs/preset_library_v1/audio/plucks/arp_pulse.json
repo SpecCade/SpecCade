@@ -1,41 +1,150 @@
 {
-  "spec_version": 1,
-  "asset_id": "preset_arp_pulse",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 10104,
-  "description": "Pulse wave arp lead - bright and snappy (loop-safe)",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/plucks/arp_pulse.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "base_note": "C5",
-      "duration_seconds": 0.8,
-      "sample_rate": 44100,
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "preset_arp_pulse",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 10104,
+    "description": "Professional pulse wave arp pluck - hollow, nasal character with PWM movement and classic synth arpeggiator quality",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "oscillator",
-            "waveform": "pulse",
-            "frequency": 523.25,
-            "duty": 0.25
-          },
-          "envelope": {
-            "attack": 0.005,
-            "decay": 0.1,
-            "sustain": 1,
-            "release": 0.1
-          },
-          "volume": 0.9,
-          "pan": 0
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/plucks/arp_pulse.wav"
         }
-      ]
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "base_note": "C5",
+            "duration_seconds": 0.8,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "oscillator",
+                        "waveform": "pulse",
+                        "frequency": 523.25,
+                        "duty": 0.25
+                    },
+                    "envelope": {
+                        "attack": 0.003,
+                        "decay": 0.12,
+                        "sustain": 0.4,
+                        "release": 0.15
+                    },
+                    "volume": 0.7,
+                    "pan": -0.15,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 8000,
+                        "resonance": 0.6,
+                        "cutoff_end": 2800
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 5.2,
+                            "depth": 0.15
+                        },
+                        "target": {
+                            "target": "filter_cutoff",
+                            "amount": 500
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "wavetable",
+                        "table": "pwm",
+                        "frequency": 523.25
+                    },
+                    "envelope": {
+                        "attack": 0.004,
+                        "decay": 0.14,
+                        "sustain": 0.35,
+                        "release": 0.16
+                    },
+                    "volume": 0.65,
+                    "pan": 0.15,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 7500,
+                        "resonance": 0.55,
+                        "cutoff_end": 2600
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "triangle",
+                            "rate": 4.8,
+                            "depth": 0.08
+                        },
+                        "target": {
+                            "target": "volume",
+                            "amount": 0.3
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "oscillator",
+                        "waveform": "pulse",
+                        "frequency": 1046.5,
+                        "duty": 0.15
+                    },
+                    "envelope": {
+                        "attack": 0.001,
+                        "decay": 0.06,
+                        "sustain": 0.15,
+                        "release": 0.08
+                    },
+                    "volume": 0.25,
+                    "pan": 0,
+                    "filter": {
+                        "type": "highpass",
+                        "cutoff": 1200,
+                        "resonance": 0.3
+                    }
+                }
+            ],
+            "effects": [
+                {
+                    "type": "chorus",
+                    "rate": 0.8,
+                    "depth": 0.35,
+                    "wet": 0.28,
+                    "voices": 2
+                },
+                {
+                    "type": "phaser",
+                    "rate": 0.4,
+                    "depth": 0.25,
+                    "feedback": 0.3,
+                    "stages": 4,
+                    "wet": 0.18
+                },
+                {
+                    "type": "delay",
+                    "time_ms": 125.0,
+                    "feedback": 0.2,
+                    "wet": 0.12,
+                    "ping_pong": false
+                },
+                {
+                    "type": "reverb",
+                    "room_size": 0.4,
+                    "damping": 0.6,
+                    "wet": 0.15,
+                    "width": 0.5
+                },
+                {
+                    "type": "compressor",
+                    "threshold_db": -18,
+                    "ratio": 3.5,
+                    "attack_ms": 3.0,
+                    "release_ms": 80.0,
+                    "makeup_db": 0
+                }
+            ]
+        }
     }
-  }
 }

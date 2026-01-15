@@ -1,62 +1,104 @@
 {
-  "spec_version": 1,
-  "asset_id": "preset_woodblock",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 10083,
-  "description": "Woodblock - short bright click with wood-like character",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/drums/percussion/woodblock.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "duration_seconds": 0.12,
-      "sample_rate": 44100,
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "preset_woodblock",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 10083,
+    "description": "Woodblock - professional modal synthesis with hollow woody resonance and sharp attack",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "oscillator",
-            "waveform": "triangle",
-            "frequency": 800,
-            "freq_sweep": {
-              "end_freq": 600,
-              "curve": "exponential"
-            }
-          },
-          "envelope": {
-            "attack": 0.001,
-            "decay": 0.06,
-            "sustain": 0,
-            "release": 0.04
-          },
-          "volume": 0.7,
-          "pan": 0
-        },
-        {
-          "synthesis": {
-            "type": "noise_burst",
-            "noise_type": "white",
-            "filter": {
-              "type": "highpass",
-              "cutoff": 2000,
-              "resonance": 0.5
-            }
-          },
-          "envelope": {
-            "attack": 0,
-            "decay": 0.01,
-            "sustain": 0,
-            "release": 0.005
-          },
-          "volume": 0.3,
-          "pan": 0
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/drums/percussion/woodblock.wav"
         }
-      ]
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "duration_seconds": 0.18,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "modal",
+                        "frequency": 1200,
+                        "modes": [
+                            {
+                                "freq_ratio": 1.0,
+                                "amplitude": 1.0,
+                                "decay_time": 0.15
+                            },
+                            {
+                                "freq_ratio": 2.47,
+                                "amplitude": 0.65,
+                                "decay_time": 0.12
+                            },
+                            {
+                                "freq_ratio": 4.13,
+                                "amplitude": 0.38,
+                                "decay_time": 0.08
+                            },
+                            {
+                                "freq_ratio": 5.89,
+                                "amplitude": 0.22,
+                                "decay_time": 0.06
+                            },
+                            {
+                                "freq_ratio": 7.71,
+                                "amplitude": 0.14,
+                                "decay_time": 0.04
+                            }
+                        ],
+                        "excitation": "impulse"
+                    },
+                    "envelope": {
+                        "attack": 0.0005,
+                        "decay": 0.15,
+                        "sustain": 0,
+                        "release": 0.02
+                    },
+                    "volume": 0.85,
+                    "pan": 0
+                },
+                {
+                    "synthesis": {
+                        "type": "noise_burst",
+                        "noise_type": "white",
+                        "filter": {
+                            "type": "bandpass",
+                            "center": 3500,
+                            "resonance": 0.7
+                        }
+                    },
+                    "envelope": {
+                        "attack": 0,
+                        "decay": 0.003,
+                        "sustain": 0,
+                        "release": 0.002
+                    },
+                    "volume": 0.35,
+                    "pan": 0
+                },
+                {
+                    "synthesis": {
+                        "type": "oscillator",
+                        "waveform": "sine",
+                        "frequency": 280,
+                        "freq_sweep": {
+                            "end_freq": 180,
+                            "curve": "exponential"
+                        }
+                    },
+                    "envelope": {
+                        "attack": 0.001,
+                        "decay": 0.04,
+                        "sustain": 0,
+                        "release": 0.01
+                    },
+                    "volume": 0.15,
+                    "pan": 0
+                }
+            ]
+        }
     }
-  }
 }

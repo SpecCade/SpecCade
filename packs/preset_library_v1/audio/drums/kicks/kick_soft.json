@@ -4,7 +4,7 @@
   "asset_type": "audio",
   "license": "CC0-1.0",
   "seed": 10001,
-  "description": "Soft kick drum - warm pillowy body with gentle attack, ideal for lo-fi and ambient",
+  "description": "Professional soft kick - deep sub-focused body with gentle attack, warm round character for ambient, downtempo, and jazz",
   "outputs": [
     {
       "kind": "primary",
@@ -15,27 +15,114 @@
   "recipe": {
     "kind": "audio_v1",
     "params": {
-      "duration_seconds": 0.4,
+      "duration_seconds": 0.6,
       "sample_rate": 44100,
       "layers": [
         {
           "synthesis": {
             "type": "oscillator",
             "waveform": "sine",
-            "frequency": 140,
+            "frequency": 65,
             "freq_sweep": {
-              "end_freq": 35,
+              "end_freq": 38,
+              "curve": "exponential"
+            }
+          },
+          "envelope": {
+            "attack": 0.012,
+            "decay": 0.35,
+            "sustain": 0.08,
+            "release": 0.25
+          },
+          "volume": 0.85,
+          "pan": 0,
+          "lfo": {
+            "config": {
+              "waveform": "sine",
+              "rate": 6.0,
+              "depth": 0.15
+            },
+            "target": {
+              "target": "pitch",
+              "semitones": 0.3
+            }
+          }
+        },
+        {
+          "synthesis": {
+            "type": "oscillator",
+            "waveform": "sine",
+            "frequency": 45,
+            "freq_sweep": {
+              "end_freq": 32,
+              "curve": "exponential"
+            }
+          },
+          "envelope": {
+            "attack": 0.008,
+            "decay": 0.4,
+            "sustain": 0.1,
+            "release": 0.28
+          },
+          "volume": 0.4,
+          "pan": 0
+        },
+        {
+          "synthesis": {
+            "type": "oscillator",
+            "waveform": "sine",
+            "frequency": 130,
+            "freq_sweep": {
+              "end_freq": 76,
               "curve": "exponential"
             }
           },
           "envelope": {
             "attack": 0.005,
-            "decay": 0.25,
+            "decay": 0.15,
+            "sustain": 0,
+            "release": 0.12
+          },
+          "filter": {
+            "type": "lowpass",
+            "cutoff": 2400,
+            "resonance": 0.4
+          },
+          "volume": 0.25,
+          "pan": 0
+        },
+        {
+          "synthesis": {
+            "type": "oscillator",
+            "waveform": "triangle",
+            "frequency": 85,
+            "freq_sweep": {
+              "end_freq": 50,
+              "curve": "exponential"
+            }
+          },
+          "envelope": {
+            "attack": 0.01,
+            "decay": 0.28,
             "sustain": 0.05,
             "release": 0.2
           },
-          "volume": 0.9,
+          "volume": 0.18,
           "pan": 0
+        }
+      ],
+      "effects": [
+        {
+          "type": "reverb",
+          "room_size": 0.25,
+          "damping": 0.6,
+          "wet": 0.12
+        },
+        {
+          "type": "waveshaper",
+          "drive": 1.8,
+          "curve": "tanh",
+          "wet": 0.25
         }
       ]
     }

@@ -1,86 +1,244 @@
 {
-  "spec_version": 1,
-  "asset_id": "preset_keys_ep",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 10203,
-  "description": "Electric piano - Rhodes/Fender Rhodes style FM synthesis with bell-like attack and warm decay",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/keys/keys_ep.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "base_note": "C4",
-      "duration_seconds": 2.0,
-      "sample_rate": 44100,
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "preset_keys_ep",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 10203,
+    "description": "Professional Electric Piano - Rhodes-style tine piano with FM bell tone, physical modeling, modal resonance, tremolo, chorus and warm reverb",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "fm_synth",
-            "carrier_freq": 261.63,
-            "modulator_freq": 261.63,
-            "modulation_index": 1.5
-          },
-          "envelope": {
-            "attack": 0.001,
-            "decay": 0.8,
-            "sustain": 0.25,
-            "release": 0.6
-          },
-          "volume": 0.85,
-          "pan": 0.0
-        },
-        {
-          "synthesis": {
-            "type": "fm_synth",
-            "carrier_freq": 523.26,
-            "modulator_freq": 523.26,
-            "modulation_index": 0.8
-          },
-          "envelope": {
-            "attack": 0.0008,
-            "decay": 0.4,
-            "sustain": 0.1,
-            "release": 0.3
-          },
-          "volume": 0.35,
-          "pan": 0.0
-        },
-        {
-          "synthesis": {
-            "type": "fm_synth",
-            "carrier_freq": 261.63,
-            "modulator_freq": 3663.82,
-            "modulation_index": 0.3
-          },
-          "envelope": {
-            "attack": 0.0005,
-            "decay": 0.15,
-            "sustain": 0.0,
-            "release": 0.1
-          },
-          "volume": 0.2,
-          "pan": 0.0
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/keys/keys_ep.wav"
         }
-      ],
-      "effects": [
-        {
-          "type": "chorus",
-          "rate": 0.8,
-          "depth": 0.25,
-          "wet": 0.2
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "base_note": "C4",
+            "duration_seconds": 3.5,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "fm_synth",
+                        "carrier_freq": 261.63,
+                        "modulator_freq": 261.63,
+                        "modulation_index": 2.8
+                    },
+                    "envelope": {
+                        "attack": 0.002,
+                        "decay": 1.2,
+                        "sustain": 0.3,
+                        "release": 0.8
+                    },
+                    "volume": 0.75,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 8000,
+                        "resonance": 0.35,
+                        "cutoff_end": 3500
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "fm_synth",
+                        "carrier_freq": 523.26,
+                        "modulator_freq": 1046.5,
+                        "modulation_index": 1.2
+                    },
+                    "envelope": {
+                        "attack": 0.001,
+                        "decay": 0.5,
+                        "sustain": 0.15,
+                        "release": 0.4
+                    },
+                    "volume": 0.28,
+                    "pan": 0.15,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 6000,
+                        "resonance": 0.25
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "karplus_strong",
+                        "frequency": 261.63,
+                        "decay": 0.995,
+                        "blend": 0.5
+                    },
+                    "envelope": {
+                        "attack": 0.0005,
+                        "decay": 0.3,
+                        "sustain": 0.05,
+                        "release": 0.2
+                    },
+                    "volume": 0.22,
+                    "pan": -0.1,
+                    "filter": {
+                        "type": "bandpass",
+                        "center": 4500,
+                        "resonance": 0.4
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "additive",
+                        "base_freq": 440,
+                        "harmonics": [
+                            1.0,
+                            0.65,
+                            0.35,
+                            0.22,
+                            0.15,
+                            0.08,
+                            0.05
+                        ]
+                    },
+                    "envelope": {
+                        "attack": 0.004,
+                        "decay": 1.4,
+                        "sustain": 0.28,
+                        "release": 0.9
+                    },
+                    "volume": 0.35,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 5500,
+                        "resonance": 0.2,
+                        "cutoff_end": 3000
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "modal",
+                        "frequency": 440,
+                        "modes": [
+                            {
+                                "freq_ratio": 0.5946136363636364,
+                                "amplitude": 0.8,
+                                "decay_time": 1.5
+                            },
+                            {
+                                "freq_ratio": 0.8919318181818181,
+                                "amplitude": 0.5,
+                                "decay_time": 1.2
+                            },
+                            {
+                                "freq_ratio": 1.4865,
+                                "amplitude": 0.3,
+                                "decay_time": 0.9
+                            },
+                            {
+                                "freq_ratio": 2.378409090909091,
+                                "amplitude": 0.15,
+                                "decay_time": 0.6
+                            }
+                        ],
+                        "excitation": "impulse"
+                    },
+                    "envelope": {
+                        "attack": 0.003,
+                        "decay": 1.0,
+                        "sustain": 0.2,
+                        "release": 0.7
+                    },
+                    "volume": 0.25,
+                    "pan": 0.05,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 4000,
+                        "resonance": 0.3
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "fm_synth",
+                        "carrier_freq": 261.63,
+                        "modulator_freq": 4200.0,
+                        "modulation_index": 0.45
+                    },
+                    "envelope": {
+                        "attack": 0.0003,
+                        "decay": 0.08,
+                        "sustain": 0,
+                        "release": 0.05
+                    },
+                    "volume": 0.18,
+                    "pan": -0.2,
+                    "filter": {
+                        "type": "highpass",
+                        "cutoff": 2000,
+                        "resonance": 0.15
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "additive",
+                        "base_freq": 440,
+                        "harmonics": [
+                            0.0,
+                            0.0,
+                            0.0,
+                            0.0,
+                            0.0,
+                            0.0,
+                            0.0,
+                            0.12,
+                            0.08,
+                            0.0,
+                            0.06,
+                            0.0,
+                            0.04
+                        ]
+                    },
+                    "envelope": {
+                        "attack": 0.005,
+                        "decay": 0.8,
+                        "sustain": 0.1,
+                        "release": 0.5
+                    },
+                    "volume": 0.16,
+                    "pan": 0.2,
+                    "filter": {
+                        "type": "bandpass",
+                        "center": 3500,
+                        "resonance": 0.45
+                    }
+                }
+            ],
+            "master_filter": {
+                "type": "lowpass",
+                "cutoff": 8500,
+                "resonance": 0.15
+            },
+            "effects": [
+                {
+                    "type": "chorus",
+                    "rate": 0.65,
+                    "depth": 0.35,
+                    "wet": 0.28,
+                    "voices": 2
+                },
+                {
+                    "type": "reverb",
+                    "room_size": 0.55,
+                    "damping": 0.65,
+                    "wet": 0.22,
+                    "width": 0.5
+                },
+                {
+                    "type": "compressor",
+                    "threshold_db": -18.0,
+                    "ratio": 3.5,
+                    "attack_ms": 5.0,
+                    "release_ms": 80.0,
+                    "makeup_db": 0
+                }
+            ]
         }
-      ],
-      "master_filter": {
-        "type": "lowpass",
-        "cutoff": 5000,
-        "resonance": 0.2
-      }
     }
-  }
 }

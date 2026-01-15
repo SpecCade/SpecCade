@@ -1,70 +1,85 @@
 {
-  "spec_version": 1,
-  "asset_id": "preset_ocarina",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 10355,
-  "description": "Ocarina - pure, round sine tone with subtle vibrato (Zelda-esque)",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/leads/acoustic/ocarina.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "base_note": "A4",
-      "duration_seconds": 2.2,
-      "sample_rate": 44100,
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "preset_ocarina",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 10355,
+    "description": "Clay ocarina - pure, slightly hollow tone with gentle breath noise and light vibrato. Nostalgic, simple character.",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "oscillator",
-            "waveform": "sine",
-            "frequency": 440.0
-          },
-          "envelope": {
-            "attack": 0.06,
-            "decay": 0.12,
-            "sustain": 0.9,
-            "release": 0.18
-          },
-          "lfo": {
-            "config": {
-              "waveform": "sine",
-              "rate": 4.0,
-              "depth": 0.25
-            },
-            "target": {
-              "target": "pitch",
-              "semitones": 0.18
-            }
-          },
-          "volume": 0.85,
-          "pan": 0
-        },
-        {
-          "synthesis": {
-            "type": "additive",
-            "base_freq": 440.0,
-            "harmonics": [
-              1.0,
-              0.0,
-              0.05
-            ]
-          },
-          "envelope": {
-            "attack": 0.06,
-            "decay": 0.1,
-            "sustain": 0.8,
-            "release": 0.15
-          },
-          "volume": 0.2,
-          "pan": 0
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/leads/acoustic/ocarina.wav"
         }
-      ]
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "base_note": "A4",
+            "duration_seconds": 2.2,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "oscillator",
+                        "waveform": "sine",
+                        "frequency": 440.0
+                    },
+                    "envelope": {
+                        "attack": 0.08,
+                        "decay": 0.1,
+                        "sustain": 0.9,
+                        "release": 0.3
+                    },
+                    "volume": 0.75,
+                    "pan": 0,
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 5.0,
+                            "depth": 0.4
+                        },
+                        "target": {
+                            "target": "pitch",
+                            "semitones": 0.1
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "noise_burst",
+                        "noise_type": "white"
+                    },
+                    "envelope": {
+                        "attack": 0.12,
+                        "decay": 0.08,
+                        "sustain": 0.15,
+                        "release": 0.2
+                    },
+                    "volume": 0.06,
+                    "pan": 0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 3000.0,
+                        "resonance": 0.3
+                    }
+                }
+            ],
+            "effects": [
+                {
+                    "type": "delay",
+                    "time_ms": 220.0,
+                    "feedback": 0.2,
+                    "wet": 0.15
+                },
+                {
+                    "type": "reverb",
+                    "room_size": 0.6,
+                    "damping": 0.5,
+                    "wet": 0.25,
+                    "width": 0.7
+                }
+            ]
+        }
     }
-  }
 }

@@ -1,40 +1,117 @@
 {
-  "spec_version": 1,
-  "asset_id": "preset_bass_triangle",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 10109,
-  "description": "Triangle bass - pure triangle wave for clean chiptune sub bass with soft odd harmonics",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/bass/bass_triangle.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "base_note": "C2",
-      "duration_seconds": 1.0,
-      "sample_rate": 44100,
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "preset_bass_triangle",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 10109,
+    "description": "Professional triangle bass - warm, hollow character with multi-oscillator detuning, sub sine foundation, and gentle saturation for tracker music production",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "oscillator",
-            "waveform": "triangle",
-            "frequency": 65.41
-          },
-          "envelope": {
-            "attack": 0.008,
-            "decay": 0.1,
-            "sustain": 0.9,
-            "release": 0.1
-          },
-          "volume": 1.0,
-          "pan": 0
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/bass/bass_triangle.wav"
         }
-      ]
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "base_note": "C2",
+            "duration_seconds": 1.0,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "oscillator",
+                        "waveform": "sine",
+                        "frequency": 65.41
+                    },
+                    "envelope": {
+                        "attack": 0.015,
+                        "decay": 0.08,
+                        "sustain": 0.85,
+                        "release": 0.18
+                    },
+                    "volume": 0.55,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 120.0,
+                        "resonance": 0.0
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "multi_oscillator",
+                        "frequency": 65.41,
+                        "oscillators": [
+                            {
+                                "waveform": "triangle",
+                                "volume": 0.9,
+                                "detune": -6.0
+                            },
+                            {
+                                "waveform": "triangle",
+                                "volume": 1.0,
+                                "detune": 0.0
+                            },
+                            {
+                                "waveform": "triangle",
+                                "volume": 0.9,
+                                "detune": 6.0
+                            }
+                        ]
+                    },
+                    "envelope": {
+                        "attack": 0.012,
+                        "decay": 0.15,
+                        "sustain": 0.75,
+                        "release": 0.2
+                    },
+                    "volume": 0.7,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 800.0,
+                        "resonance": 0.15
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "oscillator",
+                        "waveform": "triangle",
+                        "frequency": 130.82
+                    },
+                    "envelope": {
+                        "attack": 0.02,
+                        "decay": 0.12,
+                        "sustain": 0.3,
+                        "release": 0.15
+                    },
+                    "volume": 0.18,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 1200.0,
+                        "resonance": 0.1
+                    }
+                }
+            ],
+            "effects": [
+                {
+                    "type": "waveshaper",
+                    "drive": 2.0,
+                    "wet": 0.5,
+                    "curve": "tanh"
+                },
+                {
+                    "type": "compressor",
+                    "threshold_db": -12.0,
+                    "ratio": 3.5,
+                    "attack_ms": 8.0,
+                    "release_ms": 150.0,
+                    "makeup_db": 0.0
+                }
+            ]
+        }
     }
-  }
 }

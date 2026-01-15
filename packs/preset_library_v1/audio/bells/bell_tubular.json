@@ -1,49 +1,123 @@
 {
-  "spec_version": 1,
-  "asset_id": "preset_bell_tubular",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 10253,
-  "description": "Tubular bell - deep, resonant chime with long sustain and moderate inharmonicity",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/bells/bell_tubular.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "duration_seconds": 3.0,
-      "sample_rate": 44100,
-      "base_note": "C4",
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "preset_bell_tubular",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 10253,
+    "description": "Professional orchestral tubular bell - bright, singing chime with long sustain and authentic inharmonic partials",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "metallic",
-            "base_freq": 440.0,
-            "num_partials": 10,
-            "inharmonicity": 1.25
-          },
-          "envelope": {
-            "attack": 0.002,
-            "decay": 1.0,
-            "sustain": 0.3,
-            "release": 2.0
-          },
-          "volume": 0.9,
-          "pan": 0.0
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/bells/bell_tubular.wav"
         }
-      ],
-      "effects": [
-        {
-          "type": "reverb",
-          "room_size": 0.8,
-          "damping": 0.35,
-          "wet": 0.45
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "base_note": "C4",
+            "duration_seconds": 6.0,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "modal",
+                        "frequency": 261.63,
+                        "modes": [
+                            {
+                                "freq_ratio": 1.0,
+                                "amplitude": 1.0,
+                                "decay_time": 5.5
+                            },
+                            {
+                                "freq_ratio": 2.76,
+                                "amplitude": 0.75,
+                                "decay_time": 4.8
+                            },
+                            {
+                                "freq_ratio": 5.404,
+                                "amplitude": 0.55,
+                                "decay_time": 4.0
+                            },
+                            {
+                                "freq_ratio": 8.933,
+                                "amplitude": 0.38,
+                                "decay_time": 3.2
+                            },
+                            {
+                                "freq_ratio": 13.344,
+                                "amplitude": 0.25,
+                                "decay_time": 2.5
+                            },
+                            {
+                                "freq_ratio": 18.64,
+                                "amplitude": 0.18,
+                                "decay_time": 2.0
+                            },
+                            {
+                                "freq_ratio": 24.81,
+                                "amplitude": 0.12,
+                                "decay_time": 1.5
+                            },
+                            {
+                                "freq_ratio": 31.87,
+                                "amplitude": 0.08,
+                                "decay_time": 1.0
+                            }
+                        ],
+                        "excitation": "impulse"
+                    },
+                    "envelope": {
+                        "attack": 0.001,
+                        "decay": 0.1,
+                        "sustain": 0.95,
+                        "release": 5.5
+                    },
+                    "volume": 0.85,
+                    "pan": 0.0
+                },
+                {
+                    "synthesis": {
+                        "type": "metallic",
+                        "base_freq": 261.63,
+                        "num_partials": 8,
+                        "inharmonicity": 3.5
+                    },
+                    "envelope": {
+                        "attack": 0.0005,
+                        "decay": 0.015,
+                        "sustain": 0,
+                        "release": 0.025
+                    },
+                    "volume": 0.35,
+                    "pan": 0.0
+                },
+                {
+                    "synthesis": {
+                        "type": "fm_synth",
+                        "carrier_freq": 523.26,
+                        "modulator_freq": 1308.15,
+                        "modulation_index": 2.5
+                    },
+                    "envelope": {
+                        "attack": 0.0003,
+                        "decay": 0.01,
+                        "sustain": 0,
+                        "release": 0.015
+                    },
+                    "volume": 0.25,
+                    "pan": 0.0
+                }
+            ],
+            "effects": [
+                {
+                    "type": "reverb",
+                    "room_size": 0.92,
+                    "damping": 0.28,
+                    "wet": 0.55,
+                    "width": 0.5
+                }
+            ]
         }
-      ]
     }
-  }
 }

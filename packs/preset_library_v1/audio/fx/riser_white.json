@@ -1,52 +1,162 @@
 {
-  "spec_version": 1,
-  "asset_id": "riser_white",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 10551,
-  "description": "Classic white noise riser - bandpass sweep upward for tension build",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/fx/riser_white.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "duration_seconds": 1.5,
-      "sample_rate": 44100,
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "riser_white",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 10551,
+    "description": "Professional white noise riser - multi-layer noise sweep with dramatic filter automation, resonance peaks, and spatial effects for maximum tension building",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "noise_burst",
-            "noise_type": "white",
-            "filter": {
-              "type": "bandpass",
-              "center": 300,
-              "resonance": 0.7,
-              "center_end": 6000
-            }
-          },
-          "envelope": {
-            "attack": 0.05,
-            "decay": 0,
-            "sustain": 1,
-            "release": 0.2
-          },
-          "volume": 1,
-          "pan": 0
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/fx/riser_white.wav"
         }
-      ],
-      "effects": [
-        {
-          "type": "reverb",
-          "room_size": 0.75,
-          "damping": 0.35,
-          "wet": 0.4
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "duration_seconds": 2.0,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "noise_burst",
+                        "noise_type": "white",
+                        "filter": {
+                            "type": "lowpass",
+                            "cutoff": 200,
+                            "resonance": 1.8,
+                            "cutoff_end": 12000
+                        }
+                    },
+                    "envelope": {
+                        "attack": 0.02,
+                        "decay": 0,
+                        "sustain": 1,
+                        "release": 0.15
+                    },
+                    "volume": 0.7,
+                    "pan": 0
+                },
+                {
+                    "synthesis": {
+                        "type": "noise_burst",
+                        "noise_type": "pink",
+                        "filter": {
+                            "type": "highpass",
+                            "cutoff": 150,
+                            "resonance": 1.2,
+                            "cutoff_end": 8000
+                        }
+                    },
+                    "envelope": {
+                        "attack": 0.1,
+                        "decay": 0,
+                        "sustain": 1,
+                        "release": 0.2
+                    },
+                    "volume": 0.5,
+                    "pan": 0
+                },
+                {
+                    "synthesis": {
+                        "type": "noise_burst",
+                        "noise_type": "white",
+                        "filter": {
+                            "type": "bandpass",
+                            "center": 400,
+                            "resonance": 2.5,
+                            "center_end": 10000
+                        }
+                    },
+                    "envelope": {
+                        "attack": 0.3,
+                        "decay": 0,
+                        "sustain": 1,
+                        "release": 0.25
+                    },
+                    "volume": 0.6,
+                    "pan": -0.3
+                },
+                {
+                    "synthesis": {
+                        "type": "noise_burst",
+                        "noise_type": "pink",
+                        "filter": {
+                            "type": "bandpass",
+                            "center": 600,
+                            "resonance": 2.2,
+                            "center_end": 9000
+                        }
+                    },
+                    "envelope": {
+                        "attack": 0.25,
+                        "decay": 0,
+                        "sustain": 1,
+                        "release": 0.25
+                    },
+                    "volume": 0.55,
+                    "pan": 0.3
+                },
+                {
+                    "synthesis": {
+                        "type": "noise_burst",
+                        "noise_type": "white",
+                        "filter": {
+                            "type": "highpass",
+                            "cutoff": 5000,
+                            "resonance": 1.5,
+                            "cutoff_end": 15000
+                        }
+                    },
+                    "envelope": {
+                        "attack": 0.5,
+                        "decay": 0,
+                        "sustain": 1,
+                        "release": 0.3
+                    },
+                    "volume": 0.4,
+                    "pan": 0
+                }
+            ],
+            "effects": [
+                {
+                    "type": "chorus",
+                    "rate": 0.8,
+                    "depth": 0.45,
+                    "wet": 0.35,
+                    "voices": 2
+                },
+                {
+                    "type": "phaser",
+                    "rate": 0.6,
+                    "depth": 0.7,
+                    "stages": 4,
+                    "wet": 0.3
+                },
+                {
+                    "type": "reverb",
+                    "room_size": 0.85,
+                    "damping": 0.25,
+                    "wet": 0.5,
+                    "width": 0.5
+                },
+                {
+                    "type": "delay",
+                    "time_ms": 125.0,
+                    "feedback": 0.35,
+                    "wet": 0.25,
+                    "ping_pong": false
+                },
+                {
+                    "type": "compressor",
+                    "threshold_db": -6.000000000000001,
+                    "ratio": 3.0,
+                    "attack_ms": 5.0,
+                    "release_ms": 100.0,
+                    "makeup_db": 0
+                }
+            ]
         }
-      ]
     }
-  }
 }

@@ -1,62 +1,109 @@
 {
-  "spec_version": 1,
-  "asset_id": "preset_bongo_high",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 10077,
-  "description": "High bongo - bright short pitched body",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/drums/percussion/bongo_high.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "duration_seconds": 0.25,
-      "sample_rate": 44100,
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "preset_bongo_high",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 10077,
+    "description": "High bongo - bright short pitched body with modal synthesis",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "oscillator",
-            "waveform": "sine",
-            "frequency": 400,
-            "freq_sweep": {
-              "end_freq": 200,
-              "curve": "exponential"
-            }
-          },
-          "envelope": {
-            "attack": 0.001,
-            "decay": 0.1,
-            "sustain": 0,
-            "release": 0.08
-          },
-          "volume": 0.75,
-          "pan": 0
-        },
-        {
-          "synthesis": {
-            "type": "noise_burst",
-            "noise_type": "white",
-            "filter": {
-              "type": "highpass",
-              "cutoff": 3000,
-              "resonance": 0.4
-            }
-          },
-          "envelope": {
-            "attack": 0,
-            "decay": 0.015,
-            "sustain": 0,
-            "release": 0.01
-          },
-          "volume": 0.2,
-          "pan": 0
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/drums/percussion/bongo_high.wav"
         }
-      ]
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "duration_seconds": 0.35,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "modal",
+                        "frequency": 420,
+                        "modes": [
+                            {
+                                "freq_ratio": 1.0,
+                                "amplitude": 1.0,
+                                "decay_time": 0.25
+                            },
+                            {
+                                "freq_ratio": 1.82,
+                                "amplitude": 0.65,
+                                "decay_time": 0.18
+                            },
+                            {
+                                "freq_ratio": 2.14,
+                                "amplitude": 0.48,
+                                "decay_time": 0.14
+                            },
+                            {
+                                "freq_ratio": 2.68,
+                                "amplitude": 0.35,
+                                "decay_time": 0.11
+                            },
+                            {
+                                "freq_ratio": 3.11,
+                                "amplitude": 0.22,
+                                "decay_time": 0.09
+                            },
+                            {
+                                "freq_ratio": 4.23,
+                                "amplitude": 0.14,
+                                "decay_time": 0.07
+                            }
+                        ],
+                        "excitation": "impulse"
+                    },
+                    "envelope": {
+                        "attack": 0,
+                        "decay": 0.28,
+                        "sustain": 0,
+                        "release": 0.07
+                    },
+                    "volume": 0.85,
+                    "pan": 0
+                },
+                {
+                    "synthesis": {
+                        "type": "noise_burst",
+                        "noise_type": "white",
+                        "filter": {
+                            "type": "bandpass",
+                            "center": 2800,
+                            "resonance": 0.6
+                        }
+                    },
+                    "envelope": {
+                        "attack": 0,
+                        "decay": 0.008,
+                        "sustain": 0,
+                        "release": 0.006
+                    },
+                    "volume": 0.28,
+                    "pan": 0
+                },
+                {
+                    "synthesis": {
+                        "type": "noise_burst",
+                        "noise_type": "brown",
+                        "filter": {
+                            "type": "lowpass",
+                            "cutoff": 800,
+                            "resonance": 0.3
+                        }
+                    },
+                    "envelope": {
+                        "attack": 0,
+                        "decay": 0.012,
+                        "sustain": 0,
+                        "release": 0.008
+                    },
+                    "volume": 0.18,
+                    "pan": 0
+                }
+            ]
+        }
     }
-  }
 }

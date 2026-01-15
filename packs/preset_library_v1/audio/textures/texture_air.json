@@ -37,16 +37,98 @@
             "sustain": 0.6,
             "release": 1.5
           },
-          "volume": 0.5,
-          "pan": 0.0
+          "volume": 0.4,
+          "pan": 0.0,
+          "lfo": {
+            "config": {
+              "waveform": "sine",
+              "rate": 0.3,
+              "depth": 0.4
+            },
+            "target": {
+              "target": "volume",
+              "amount": 0.25
+            }
+          }
+        },
+        {
+          "synthesis": {
+            "type": "granular",
+            "source": {
+              "type": "noise",
+              "noise_type": "pink"
+            },
+            "grain_size_ms": 40.0,
+            "grain_density": 5.0,
+            "pitch_spread": 0.15,
+            "position_spread": 0.5,
+            "pan_spread": 0.85
+          },
+          "envelope": {
+            "attack": 2.0,
+            "decay": 0.4,
+            "sustain": 0.5,
+            "release": 2.0
+          },
+          "volume": 0.3,
+          "pan": 0.0,
+          "lfo": {
+            "config": {
+              "waveform": "triangle",
+              "rate": 0.18,
+              "depth": 0.5
+            },
+            "target": {
+              "target": "pan",
+              "amount": 0.4
+            }
+          }
+        },
+        {
+          "synthesis": {
+            "type": "oscillator",
+            "waveform": "sine",
+            "frequency": 4400.0
+          },
+          "envelope": {
+            "attack": 1.8,
+            "decay": 0.3,
+            "sustain": 0.5,
+            "release": 2.0
+          },
+          "volume": 0.15,
+          "pan": 0.0,
+          "lfo": {
+            "config": {
+              "waveform": "sine",
+              "rate": 0.5,
+              "depth": 0.6
+            },
+            "target": {
+              "target": "pitch",
+              "semitones": 2.0
+            }
+          }
         }
       ],
       "effects": [
         {
           "type": "reverb",
-          "room_size": 0.8,
-          "damping": 0.5,
-          "wet": 0.5
+          "room_size": 0.85,
+          "damping": 0.4,
+          "wet": 0.6
+        },
+        {
+          "type": "chorus",
+          "rate": 0.4,
+          "depth": 0.35,
+          "wet": 0.3
+        },
+        {
+          "type": "delay",
+          "time_ms": 350.0,
+          "feedback": 0.25,
+          "wet": 0.2
         }
       ]
     }

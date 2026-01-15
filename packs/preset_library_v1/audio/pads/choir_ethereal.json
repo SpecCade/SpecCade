@@ -1,55 +1,210 @@
 {
-  "spec_version": 1,
-  "asset_id": "choir_ethereal",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 10408,
-  "description": "Ghostly vocal / choir texture - formant source with medium grains and subtle pitch variation",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/pads/choir_ethereal.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "duration_seconds": 4.0,
-      "sample_rate": 44100,
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "choir_ethereal",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 10408,
+    "description": "Professional ethereal choir pad with angelic vowel formants, shimmering modulation, and cathedral reverb",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "granular",
-            "source": {
-              "type": "formant",
-              "frequency": 220.0,
-              "formant_freq": 600.0
-            },
-            "grain_size_ms": 70.0,
-            "grain_density": 20.0,
-            "pitch_spread": 0.35,
-            "position_spread": 0.25,
-            "pan_spread": 0.6
-          },
-          "envelope": {
-            "attack": 1.5,
-            "decay": 0.5,
-            "sustain": 0.75,
-            "release": 2.0
-          },
-          "volume": 0.6,
-          "pan": 0.0
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/pads/choir_ethereal.wav"
         }
-      ],
-      "effects": [
-        {
-          "type": "reverb",
-          "room_size": 0.85,
-          "damping": 0.35,
-          "wet": 0.55
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "duration_seconds": 4.0,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "formant",
+                        "frequency": 220.0
+                    },
+                    "envelope": {
+                        "attack": 2.0,
+                        "decay": 0.8,
+                        "sustain": 0.85,
+                        "release": 2.5
+                    },
+                    "volume": 0.4,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 4000.0,
+                        "resonance": 0.2,
+                        "cutoff_end": 3500.0
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 0.3,
+                            "depth": 0.08
+                        },
+                        "target": {
+                            "target": "pitch",
+                            "semitones": 0.08
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "formant",
+                        "frequency": 329.63
+                    },
+                    "envelope": {
+                        "attack": 2.2,
+                        "decay": 0.9,
+                        "sustain": 0.82,
+                        "release": 2.8
+                    },
+                    "volume": 0.35,
+                    "pan": -0.25,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 4200.0,
+                        "resonance": 0.2,
+                        "cutoff_end": 3700.0
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 0.25,
+                            "depth": 0.06
+                        },
+                        "target": {
+                            "target": "pitch",
+                            "semitones": 0.06
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "formant",
+                        "frequency": 392.0
+                    },
+                    "envelope": {
+                        "attack": 2.5,
+                        "decay": 1.0,
+                        "sustain": 0.8,
+                        "release": 3.0
+                    },
+                    "volume": 0.3,
+                    "pan": 0.25,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 3800.0,
+                        "resonance": 0.25,
+                        "cutoff_end": 3300.0
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 0.35,
+                            "depth": 0.07
+                        },
+                        "target": {
+                            "target": "pitch",
+                            "semitones": 0.07
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "formant",
+                        "frequency": 110.0
+                    },
+                    "envelope": {
+                        "attack": 2.8,
+                        "decay": 1.2,
+                        "sustain": 0.9,
+                        "release": 3.5
+                    },
+                    "volume": 0.25,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 3500.0,
+                        "resonance": 0.3,
+                        "cutoff_end": 3000.0
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 0.4,
+                            "depth": 0.15
+                        },
+                        "target": {
+                            "target": "volume",
+                            "amount": 0.3
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "oscillator",
+                        "waveform": "sine",
+                        "frequency": 220.0
+                    },
+                    "envelope": {
+                        "attack": 3.0,
+                        "decay": 1.5,
+                        "sustain": 0.75,
+                        "release": 4.0
+                    },
+                    "volume": 0.15,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "bandpass",
+                        "center": 1200.0,
+                        "resonance": 1.5
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "triangle",
+                            "rate": 0.2,
+                            "depth": 0.3
+                        },
+                        "target": {
+                            "target": "filter_cutoff",
+                            "amount": 500
+                        }
+                    }
+                }
+            ],
+            "effects": [
+                {
+                    "type": "chorus",
+                    "rate": 0.4,
+                    "depth": 0.35,
+                    "wet": 0.3,
+                    "voices": 2
+                },
+                {
+                    "type": "reverb",
+                    "room_size": 0.95,
+                    "damping": 0.25,
+                    "wet": 0.7,
+                    "width": 0.5
+                },
+                {
+                    "type": "delay",
+                    "time_ms": 375.0,
+                    "feedback": 0.25,
+                    "wet": 0.15,
+                    "ping_pong": false
+                },
+                {
+                    "type": "compressor",
+                    "threshold_db": -18.0,
+                    "ratio": 3.0,
+                    "attack_ms": 30.0,
+                    "release_ms": 200.0,
+                    "makeup_db": 0
+                }
+            ]
         }
-      ]
     }
-  }
 }

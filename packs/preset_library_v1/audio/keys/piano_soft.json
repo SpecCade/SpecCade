@@ -1,65 +1,195 @@
 {
-  "spec_version": 1,
-  "asset_id": "preset_piano_soft",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 10201,
-  "description": "Soft acoustic piano - warmer Karplus-Strong with gentle attack and subtle hammer",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/keys/piano_soft.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "base_note": "C4",
-      "duration_seconds": 2.5,
-      "sample_rate": 44100,
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "preset_piano_soft",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 10201,
+    "description": "Professional soft acoustic piano - modal synthesis with additive harmonics, warm resonance, delicate touch character",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "karplus_strong",
-            "frequency": 261.63,
-            "decay": 0.9985,
-            "blend": 0.5
-          },
-          "envelope": {
-            "attack": 0.008,
-            "decay": 1.0,
-            "sustain": 0.35,
-            "release": 0.8
-          },
-          "volume": 0.9,
-          "pan": 0.0
-        },
-        {
-          "synthesis": {
-            "type": "noise_burst",
-            "noise_type": "pink",
-            "filter": {
-              "type": "bandpass",
-              "center": 1500.0,
-              "resonance": 0.4
-            }
-          },
-          "envelope": {
-            "attack": 0.002,
-            "decay": 0.02,
-            "sustain": 0.0,
-            "release": 0.015
-          },
-          "volume": 0.12,
-          "pan": 0.0
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/keys/piano_soft.wav"
         }
-      ],
-      "master_filter": {
-        "type": "lowpass",
-        "cutoff": 4000,
-        "resonance": 0.2
-      }
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "base_note": "C4",
+            "duration_seconds": 3.5,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "modal",
+                        "frequency": 261.63,
+                        "modes": [
+                            {
+                                "freq_ratio": 1.0,
+                                "amplitude": 1.0,
+                                "decay_time": 0.5
+                            },
+                            {
+                                "freq_ratio": 2.0,
+                                "amplitude": 0.5,
+                                "decay_time": 0.3
+                            }
+                        ],
+                        "excitation": "impulse"
+                    },
+                    "envelope": {
+                        "attack": 0.015,
+                        "decay": 1.8,
+                        "sustain": 0.28,
+                        "release": 1.2
+                    },
+                    "volume": 0.75,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 3500,
+                        "resonance": 0.15,
+                        "cutoff_end": 2200
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "additive",
+                        "base_freq": 261.63,
+                        "harmonics": [
+                            1.0,
+                            0.5,
+                            0.25,
+                            0.125
+                        ]
+                    },
+                    "envelope": {
+                        "attack": 0.018,
+                        "decay": 1.5,
+                        "sustain": 0.32,
+                        "release": 1.0
+                    },
+                    "volume": 0.55,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 2800,
+                        "resonance": 0.12,
+                        "cutoff_end": 1800
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "karplus_strong",
+                        "frequency": 261.63,
+                        "decay": 0.9982,
+                        "blend": 0.35
+                    },
+                    "envelope": {
+                        "attack": 0.012,
+                        "decay": 1.2,
+                        "sustain": 0.25,
+                        "release": 0.9
+                    },
+                    "volume": 0.38,
+                    "pan": 0.02,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 4200,
+                        "resonance": 0.1
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "fm_synth",
+                        "carrier_freq": 523.26,
+                        "modulator_freq": 261.63,
+                        "modulation_index": 0.35
+                    },
+                    "envelope": {
+                        "attack": 0.014,
+                        "decay": 0.8,
+                        "sustain": 0.15,
+                        "release": 0.6
+                    },
+                    "volume": 0.22,
+                    "pan": -0.02,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 3000,
+                        "resonance": 0.08
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "noise_burst",
+                        "noise_type": "pink",
+                        "filter": {
+                            "type": "bandpass",
+                            "center": 1200.0,
+                            "resonance": 0.35
+                        }
+                    },
+                    "envelope": {
+                        "attack": 0.001,
+                        "decay": 0.018,
+                        "sustain": 0,
+                        "release": 0.012
+                    },
+                    "volume": 0.08,
+                    "pan": 0.0
+                },
+                {
+                    "synthesis": {
+                        "type": "pitched_body",
+                        "start_freq": 261.63,
+                        "end_freq": 130.815
+                    },
+                    "envelope": {
+                        "attack": 0.02,
+                        "decay": 1.0,
+                        "sustain": 0.18,
+                        "release": 0.8
+                    },
+                    "volume": 0.28,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 2500,
+                        "resonance": 0.1
+                    }
+                }
+            ],
+            "master_filter": {
+                "type": "lowpass",
+                "cutoff": 5500,
+                "resonance": 0.18,
+                "cutoff_end": 3800
+            },
+            "effects": [
+                {
+                    "type": "compressor",
+                    "threshold_db": -18.0,
+                    "ratio": 3.0,
+                    "attack_ms": 8.0,
+                    "release_ms": 150.0,
+                    "makeup_db": 0
+                },
+                {
+                    "type": "chorus",
+                    "rate": 0.8,
+                    "depth": 0.15,
+                    "wet": 0.12,
+                    "voices": 2
+                },
+                {
+                    "type": "reverb",
+                    "room_size": 0.65,
+                    "damping": 0.7,
+                    "wet": 0.28,
+                    "width": 0.5
+                }
+            ]
+        }
     }
-  }
 }

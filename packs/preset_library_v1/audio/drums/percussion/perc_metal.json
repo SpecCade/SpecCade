@@ -1,70 +1,187 @@
 {
-  "spec_version": 1,
-  "asset_id": "preset_perc_metal",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 20014,
-  "description": "Metallic percussion - high-frequency metallic hit with shimmer",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/drums/percussion/perc_metal.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "duration_seconds": 0.5,
-      "sample_rate": 44100,
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "preset_perc_metal",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 20014,
+    "description": "Professional metallic percussion - complex inharmonic bell tone with shimmer and depth",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "metallic",
-            "base_freq": 2000.0,
-            "num_partials": 8,
-            "inharmonicity": 2.1
-          },
-          "envelope": {
-            "attack": 0.001,
-            "decay": 0.3,
-            "sustain": 0.0,
-            "release": 0.15
-          },
-          "volume": 0.7,
-          "pan": 0.0
-        },
-        {
-          "synthesis": {
-            "type": "oscillator",
-            "waveform": "sine",
-            "frequency": 4200
-          },
-          "envelope": {
-            "attack": 0.001,
-            "decay": 0.2,
-            "sustain": 0.0,
-            "release": 0.1
-          },
-          "volume": 0.4,
-          "pan": -0.1
-        },
-        {
-          "synthesis": {
-            "type": "oscillator",
-            "waveform": "sine",
-            "frequency": 7800
-          },
-          "envelope": {
-            "attack": 0.001,
-            "decay": 0.15,
-            "sustain": 0.0,
-            "release": 0.08
-          },
-          "volume": 0.3,
-          "pan": 0.1
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/drums/percussion/perc_metal.wav"
         }
-      ]
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "duration_seconds": 2.5,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "metallic",
+                        "base_freq": 1850.0,
+                        "num_partials": 12,
+                        "inharmonicity": 2.3
+                    },
+                    "envelope": {
+                        "attack": 0.002,
+                        "decay": 0.6,
+                        "sustain": 0.15,
+                        "release": 0.8
+                    },
+                    "volume": 0.65,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "highpass",
+                        "cutoff": 800.0,
+                        "resonance": 0.4,
+                        "cutoff_end": 1200.0
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 5.2,
+                            "depth": 0.08
+                        },
+                        "target": {
+                            "target": "volume",
+                            "amount": 0.3
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "modal",
+                        "frequency": 2200.0,
+                        "modes": [
+                            {
+                                "freq_ratio": 1.0,
+                                "amplitude": 1.0,
+                                "decay_time": 0.5
+                            },
+                            {
+                                "freq_ratio": 2.76,
+                                "amplitude": 0.7,
+                                "decay_time": 0.4
+                            },
+                            {
+                                "freq_ratio": 5.4,
+                                "amplitude": 0.5,
+                                "decay_time": 0.3
+                            },
+                            {
+                                "freq_ratio": 8.93,
+                                "amplitude": 0.35,
+                                "decay_time": 0.25
+                            }
+                        ],
+                        "excitation": "impulse"
+                    },
+                    "envelope": {
+                        "attack": 0.001,
+                        "decay": 0.45,
+                        "sustain": 0.08,
+                        "release": 0.6
+                    },
+                    "volume": 0.5,
+                    "pan": -0.15,
+                    "filter": {
+                        "type": "bandpass",
+                        "center": 3500.0,
+                        "resonance": 0.6
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 3.8,
+                            "depth": 0.15
+                        },
+                        "target": {
+                            "target": "filter_cutoff",
+                            "amount": 500
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "ring_mod_synth",
+                        "carrier_freq": 4800.0,
+                        "modulator_freq": 587.0,
+                        "mix": 0.7
+                    },
+                    "envelope": {
+                        "attack": 0.003,
+                        "decay": 0.35,
+                        "sustain": 0,
+                        "release": 0.4
+                    },
+                    "volume": 0.4,
+                    "pan": 0.18,
+                    "filter": {
+                        "type": "highpass",
+                        "cutoff": 2500.0,
+                        "resonance": 0.3
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "noise_burst",
+                        "noise_type": "pink"
+                    },
+                    "envelope": {
+                        "attack": 0.001,
+                        "decay": 0.08,
+                        "sustain": 0,
+                        "release": 0.05
+                    },
+                    "volume": 0.22,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "highpass",
+                        "cutoff": 4000.0,
+                        "resonance": 0.5,
+                        "cutoff_end": 8000.0
+                    }
+                }
+            ],
+            "master_filter": {
+                "type": "highpass",
+                "cutoff": 600.0,
+                "resonance": 0.25
+            },
+            "effects": [
+                {
+                    "type": "compressor",
+                    "threshold_db": -12.0,
+                    "ratio": 3.5,
+                    "attack_ms": 2.0,
+                    "release_ms": 80.0,
+                    "makeup_db": 0
+                },
+                {
+                    "type": "chorus",
+                    "rate": 0.8,
+                    "depth": 0.25,
+                    "wet": 0.18,
+                    "voices": 3
+                },
+                {
+                    "type": "reverb",
+                    "room_size": 0.45,
+                    "damping": 0.6,
+                    "wet": 0.28,
+                    "width": 0.85
+                },
+                {
+                    "type": "delay",
+                    "time_ms": 120.0,
+                    "feedback": 0.25,
+                    "wet": 0.12,
+                    "ping_pong": true
+                }
+            ]
+        }
     }
-  }
 }

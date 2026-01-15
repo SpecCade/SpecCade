@@ -1,40 +1,182 @@
 {
-  "spec_version": 1,
-  "asset_id": "preset_fx_am_tremolo",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 30001,
-  "description": "AM tremolo effect - pulsating amplitude modulation creating rhythmic volume fluctuation",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/fx/am_tremolo.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "duration_seconds": 1.5,
-      "sample_rate": 44100,
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "preset_fx_am_tremolo",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 30001,
+    "description": "Professional AM tremolo effect - complex multi-rate amplitude modulation with stereo width, filtering, and spatial effects",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "am_synth",
-            "carrier_freq": 440.0,
-            "modulator_freq": 6.0,
-            "modulation_depth": 0.7
-          },
-          "envelope": {
-            "attack": 0.05,
-            "decay": 0.2,
-            "sustain": 0.7,
-            "release": 0.3
-          },
-          "volume": 0.8,
-          "pan": 0
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/fx/am_tremolo.wav"
         }
-      ]
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "duration_seconds": 1.5,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "am_synth",
+                        "carrier_freq": 440.0,
+                        "modulator_freq": 5.5,
+                        "modulation_depth": 0.85
+                    },
+                    "envelope": {
+                        "attack": 0.03,
+                        "decay": 0.15,
+                        "sustain": 0.8,
+                        "release": 0.35
+                    },
+                    "volume": 0.65,
+                    "pan": -0.3,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 3200.0,
+                        "resonance": 0.4,
+                        "cutoff_end": 5500.0
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "am_synth",
+                        "carrier_freq": 440.0,
+                        "modulator_freq": 11.0,
+                        "modulation_depth": 0.6
+                    },
+                    "envelope": {
+                        "attack": 0.02,
+                        "decay": 0.18,
+                        "sustain": 0.75,
+                        "release": 0.4
+                    },
+                    "volume": 0.45,
+                    "pan": 0.35,
+                    "filter": {
+                        "type": "bandpass",
+                        "center": 1800.0,
+                        "resonance": 0.6,
+                        "center_end": 3200.0
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "am_synth",
+                        "carrier_freq": 440.0,
+                        "modulator_freq": 8.3,
+                        "modulation_depth": 0.75
+                    },
+                    "envelope": {
+                        "attack": 0.025,
+                        "decay": 0.12,
+                        "sustain": 0.82,
+                        "release": 0.38
+                    },
+                    "volume": 0.5,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 4500.0,
+                        "resonance": 0.3
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "am_synth",
+                        "carrier_freq": 880.0,
+                        "modulator_freq": 6.7,
+                        "modulation_depth": 0.65
+                    },
+                    "envelope": {
+                        "attack": 0.04,
+                        "decay": 0.2,
+                        "sustain": 0.7,
+                        "release": 0.42
+                    },
+                    "volume": 0.35,
+                    "pan": -0.45,
+                    "filter": {
+                        "type": "highpass",
+                        "cutoff": 800.0,
+                        "resonance": 0.45,
+                        "cutoff_end": 1200.0
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "am_synth",
+                        "carrier_freq": 220.0,
+                        "modulator_freq": 4.2,
+                        "modulation_depth": 0.8
+                    },
+                    "envelope": {
+                        "attack": 0.05,
+                        "decay": 0.25,
+                        "sustain": 0.65,
+                        "release": 0.45
+                    },
+                    "volume": 0.4,
+                    "pan": 0.5,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 2200.0,
+                        "resonance": 0.55
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "ring_mod_synth",
+                        "carrier_freq": 440.0,
+                        "modulator_freq": 7.8,
+                        "mix": 0.5
+                    },
+                    "envelope": {
+                        "attack": 0.035,
+                        "decay": 0.16,
+                        "sustain": 0.72,
+                        "release": 0.4
+                    },
+                    "volume": 0.28,
+                    "pan": 0.2,
+                    "filter": {
+                        "type": "bandpass",
+                        "center": 2800.0,
+                        "resonance": 0.7,
+                        "center_end": 4200.0
+                    }
+                }
+            ],
+            "effects": [
+                {
+                    "type": "chorus",
+                    "rate": 0.8,
+                    "depth": 0.35,
+                    "wet": 0.25
+                },
+                {
+                    "type": "phaser",
+                    "rate": 0.4,
+                    "depth": 0.5,
+                    "feedback": 0.4,
+                    "stages": 4,
+                    "wet": 0.3
+                },
+                {
+                    "type": "delay",
+                    "time_ms": 220,
+                    "feedback": 0.35,
+                    "wet": 0.25
+                },
+                {
+                    "type": "reverb",
+                    "room_size": 0.45,
+                    "damping": 0.5,
+                    "wet": 0.3
+                }
+            ]
+        }
     }
-  }
 }

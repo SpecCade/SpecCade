@@ -1,86 +1,219 @@
 {
-  "spec_version": 1,
-  "asset_id": "preset_celesta",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 10207,
-  "description": "Celesta/music box - high metallic synthesis with crystalline bell-like quality",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/keys/celesta.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "base_note": "C5",
-      "duration_seconds": 1.8,
-      "sample_rate": 44100,
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "preset_celesta",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 10207,
+    "description": "Delicate celesta with bell-like FM attack, metallic struck-bar character, and modal resonance",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "metallic",
-            "base_freq": 523.25,
-            "num_partials": 8,
-            "inharmonicity": 1.25
-          },
-          "envelope": {
-            "attack": 0.0008,
-            "decay": 0.6,
-            "sustain": 0.08,
-            "release": 0.8
-          },
-          "volume": 0.85,
-          "pan": 0.0
-        },
-        {
-          "synthesis": {
-            "type": "metallic",
-            "base_freq": 1046.5,
-            "num_partials": 6,
-            "inharmonicity": 1.35
-          },
-          "envelope": {
-            "attack": 0.0005,
-            "decay": 0.35,
-            "sustain": 0.02,
-            "release": 0.4
-          },
-          "volume": 0.4,
-          "pan": 0.0
-        },
-        {
-          "synthesis": {
-            "type": "fm_synth",
-            "carrier_freq": 523.25,
-            "modulator_freq": 2093.0,
-            "modulation_index": 2.5
-          },
-          "envelope": {
-            "attack": 0.0003,
-            "decay": 0.2,
-            "sustain": 0.0,
-            "release": 0.15
-          },
-          "volume": 0.25,
-          "pan": 0.0
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/keys/celesta.wav"
         }
-      ],
-      "effects": [
-        {
-          "type": "reverb",
-          "room_size": 0.5,
-          "damping": 0.3,
-          "wet": 0.25
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "base_note": "C5",
+            "duration_seconds": 2.2,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "fm_synth",
+                        "carrier_freq": 523.25,
+                        "modulator_freq": 2617.5,
+                        "modulation_index": 3.5
+                    },
+                    "envelope": {
+                        "attack": 0.0002,
+                        "decay": 0.18,
+                        "sustain": 0.0,
+                        "release": 0.1
+                    },
+                    "volume": 0.38,
+                    "pan": 0.0
+                },
+                {
+                    "synthesis": {
+                        "type": "metallic",
+                        "base_freq": 523.25,
+                        "num_partials": 14,
+                        "inharmonicity": 1.32
+                    },
+                    "envelope": {
+                        "attack": 0.0005,
+                        "decay": 0.75,
+                        "sustain": 0.1,
+                        "release": 1.05
+                    },
+                    "volume": 0.68,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 7500,
+                        "resonance": 0.25,
+                        "cutoff_end": 3200
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "modal",
+                        "frequency": 523.25,
+                        "modes": [
+                            {
+                                "freq_ratio": 1.0,
+                                "amplitude": 1.0,
+                                "decay_time": 0.85
+                            },
+                            {
+                                "freq_ratio": 2.76,
+                                "amplitude": 0.68,
+                                "decay_time": 0.62
+                            },
+                            {
+                                "freq_ratio": 5.4,
+                                "amplitude": 0.42,
+                                "decay_time": 0.48
+                            },
+                            {
+                                "freq_ratio": 8.93,
+                                "amplitude": 0.28,
+                                "decay_time": 0.38
+                            },
+                            {
+                                "freq_ratio": 13.34,
+                                "amplitude": 0.16,
+                                "decay_time": 0.28
+                            }
+                        ],
+                        "excitation": "impulse"
+                    },
+                    "envelope": {
+                        "attack": 0.0003,
+                        "decay": 0.88,
+                        "sustain": 0.08,
+                        "release": 1.15
+                    },
+                    "volume": 0.62,
+                    "pan": 0.0
+                },
+                {
+                    "synthesis": {
+                        "type": "fm_synth",
+                        "carrier_freq": 1046.5,
+                        "modulator_freq": 5232.5,
+                        "modulation_index": 2.8
+                    },
+                    "envelope": {
+                        "attack": 0.0001,
+                        "decay": 0.12,
+                        "sustain": 0.0,
+                        "release": 0.08
+                    },
+                    "volume": 0.25,
+                    "pan": 0.12,
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 5.5,
+                            "depth": 0.85,
+                            "phase": 0.0
+                        },
+                        "target": {
+                            "target": "pitch",
+                            "semitones": 0.08
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "metallic",
+                        "base_freq": 1046.5,
+                        "num_partials": 10,
+                        "inharmonicity": 1.45
+                    },
+                    "envelope": {
+                        "attack": 0.0003,
+                        "decay": 0.42,
+                        "sustain": 0.04,
+                        "release": 0.52
+                    },
+                    "volume": 0.35,
+                    "pan": -0.12
+                },
+                {
+                    "synthesis": {
+                        "type": "fm_synth",
+                        "carrier_freq": 2093.0,
+                        "modulator_freq": 6279.0,
+                        "modulation_index": 2.5
+                    },
+                    "envelope": {
+                        "attack": 0.0001,
+                        "decay": 0.08,
+                        "sustain": 0.0,
+                        "release": 0.06
+                    },
+                    "volume": 0.18,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "highpass",
+                        "cutoff": 2400,
+                        "resonance": 0.18
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "metallic",
+                        "base_freq": 261.625,
+                        "num_partials": 8,
+                        "inharmonicity": 1.22
+                    },
+                    "envelope": {
+                        "attack": 0.001,
+                        "decay": 0.95,
+                        "sustain": 0.14,
+                        "release": 1.25
+                    },
+                    "volume": 0.28,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 4200,
+                        "resonance": 0.12
+                    }
+                }
+            ],
+            "master_filter": {
+                "type": "highpass",
+                "cutoff": 175,
+                "resonance": 0.1
+            },
+            "effects": [
+                {
+                    "type": "delay",
+                    "time_ms": 95,
+                    "feedback": 0.25,
+                    "wet": 0.16,
+                    "ping_pong": false
+                },
+                {
+                    "type": "chorus",
+                    "rate": 1.3,
+                    "depth": 0.32,
+                    "wet": 0.14,
+                    "voices": 2
+                },
+                {
+                    "type": "reverb",
+                    "room_size": 0.75,
+                    "damping": 0.32,
+                    "wet": 0.35,
+                    "width": 0.52
+                }
+            ]
         }
-      ],
-      "master_filter": {
-        "type": "highpass",
-        "cutoff": 300,
-        "resonance": 0.1
-      }
     }
-  }
 }

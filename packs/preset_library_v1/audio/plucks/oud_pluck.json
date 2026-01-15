@@ -1,40 +1,210 @@
 {
-  "spec_version": 1,
-  "asset_id": "oud_pluck",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 20053,
-  "description": "Oud pluck - Middle Eastern lute-like pluck with warm, defined character",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/plucks/oud_pluck.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "duration_seconds": 1.2,
-      "sample_rate": 44100,
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "oud_pluck",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 20053,
+    "description": "Professional oud pluck - Deep resonant Arabic lute with characteristic buzz, wooden body resonance, and fretless Middle Eastern character",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "karplus_strong",
-            "frequency": 220.0,
-            "decay": 0.996,
-            "blend": 0.5
-          },
-          "envelope": {
-            "attack": 0.002,
-            "decay": 0.08,
-            "sustain": 0.7,
-            "release": 0.4
-          },
-          "volume": 1.0,
-          "pan": 0.0
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/plucks/oud_pluck.wav"
         }
-      ]
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "duration_seconds": 2.0,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "karplus_strong",
+                        "frequency": 220.0,
+                        "decay": 0.9975,
+                        "blend": 0.65
+                    },
+                    "envelope": {
+                        "attack": 0.001,
+                        "decay": 0.12,
+                        "sustain": 0.65,
+                        "release": 0.6
+                    },
+                    "volume": 0.85,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 3800.0,
+                        "resonance": 0.4,
+                        "cutoff_end": 1800.0
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "karplus_strong",
+                        "frequency": 219.5,
+                        "decay": 0.9968,
+                        "blend": 0.58
+                    },
+                    "envelope": {
+                        "attack": 0.0015,
+                        "decay": 0.1,
+                        "sustain": 0.6,
+                        "release": 0.55
+                    },
+                    "volume": 0.35,
+                    "pan": -0.15,
+                    "filter": {
+                        "type": "bandpass",
+                        "center": 850.0,
+                        "resonance": 2.2
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "karplus_strong",
+                        "frequency": 220.8,
+                        "decay": 0.9972,
+                        "blend": 0.62
+                    },
+                    "envelope": {
+                        "attack": 0.0012,
+                        "decay": 0.11,
+                        "sustain": 0.62,
+                        "release": 0.58
+                    },
+                    "volume": 0.3,
+                    "pan": 0.15,
+                    "filter": {
+                        "type": "bandpass",
+                        "center": 1650.0,
+                        "resonance": 1.8
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "pitched_body",
+                        "start_freq": 220.0,
+                        "end_freq": 110.0
+                    },
+                    "envelope": {
+                        "attack": 0.003,
+                        "decay": 0.15,
+                        "sustain": 0.55,
+                        "release": 0.7
+                    },
+                    "volume": 0.45,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 2200.0,
+                        "resonance": 0.6
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "karplus_strong",
+                        "frequency": 440.0,
+                        "decay": 0.992,
+                        "blend": 0.48
+                    },
+                    "envelope": {
+                        "attack": 0.001,
+                        "decay": 0.05,
+                        "sustain": 0.3,
+                        "release": 0.25
+                    },
+                    "volume": 0.18,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "highpass",
+                        "cutoff": 1200.0,
+                        "resonance": 0.3
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "noise_burst",
+                        "noise_type": "white"
+                    },
+                    "envelope": {
+                        "attack": 0.0005,
+                        "decay": 0.006,
+                        "sustain": 0,
+                        "release": 0.002
+                    },
+                    "volume": 0.22,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "bandpass",
+                        "center": 3200.0,
+                        "resonance": 1.5
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "karplus_strong",
+                        "frequency": 110.0,
+                        "decay": 0.998,
+                        "blend": 0.7
+                    },
+                    "envelope": {
+                        "attack": 0.002,
+                        "decay": 0.18,
+                        "sustain": 0.7,
+                        "release": 0.8
+                    },
+                    "volume": 0.25,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 800.0,
+                        "resonance": 0.5
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 5.8,
+                            "depth": 0.08
+                        },
+                        "target": {
+                            "target": "filter_cutoff",
+                            "amount": 500
+                        }
+                    }
+                }
+            ],
+            "effects": [
+                {
+                    "type": "compressor",
+                    "threshold_db": -18.0,
+                    "ratio": 3.5,
+                    "attack_ms": 3.0,
+                    "release_ms": 80.0,
+                    "makeup_db": 0
+                },
+                {
+                    "type": "chorus",
+                    "rate": 0.6,
+                    "depth": 0.15,
+                    "wet": 0.12,
+                    "voices": 2
+                },
+                {
+                    "type": "reverb",
+                    "room_size": 0.35,
+                    "damping": 0.6,
+                    "wet": 0.18,
+                    "width": 0.5
+                },
+                {
+                    "type": "waveshaper",
+                    "drive": 2.0,
+                    "wet": 0.5,
+                    "curve": "tanh"
+                }
+            ]
+        }
     }
-  }
 }

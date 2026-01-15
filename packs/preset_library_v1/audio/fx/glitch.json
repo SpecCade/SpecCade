@@ -1,74 +1,225 @@
 {
-  "spec_version": 1,
-  "asset_id": "preset_glitch",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 20074,
-  "description": "Glitch effect - digital glitch/malfunction sound effect",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/fx/glitch.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "duration_seconds": 0.25,
-      "sample_rate": 44100,
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "preset_glitch",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 20074,
+    "description": "Professional glitch effect - chaotic digital artifacts with stutters, ring modulation, and heavy bitcrushing",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "pitched_body",
-            "start_freq": 1200,
-            "end_freq": 200
-          },
-          "envelope": {
-            "attack": 0.001,
-            "decay": 0.08,
-            "sustain": 0,
-            "release": 0.05
-          },
-          "volume": 0.8,
-          "pan": -0.3
-        },
-        {
-          "synthesis": {
-            "type": "noise_burst",
-            "noise_type": "white",
-            "filter": {
-              "type": "bandpass",
-              "center": 2500,
-              "resonance": 2.0,
-              "center_end": 800
-            }
-          },
-          "envelope": {
-            "attack": 0.001,
-            "decay": 0.06,
-            "sustain": 0,
-            "release": 0.04
-          },
-          "volume": 0.6,
-          "pan": 0.3
-        },
-        {
-          "synthesis": {
-            "type": "pitched_body",
-            "start_freq": 3500,
-            "end_freq": 1800
-          },
-          "envelope": {
-            "attack": 0.005,
-            "decay": 0.05,
-            "sustain": 0,
-            "release": 0.03
-          },
-          "volume": 0.5,
-          "pan": 0
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/fx/glitch.wav"
         }
-      ]
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "duration_seconds": 0.35,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "ring_mod_synth",
+                        "carrier_freq": 980,
+                        "modulator_freq": 127,
+                        "mix": 0.5
+                    },
+                    "envelope": {
+                        "attack": 0.001,
+                        "decay": 0.12,
+                        "sustain": 0,
+                        "release": 0.08
+                    },
+                    "volume": 0.75,
+                    "pan": -0.4,
+                    "filter": {
+                        "type": "bandpass",
+                        "center": 2200,
+                        "resonance": 4.5,
+                        "center_end": 450
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "granular",
+                        "source": {
+                            "type": "noise",
+                            "noise_type": "white"
+                        },
+                        "grain_size_ms": 10,
+                        "grain_density": 35,
+                        "pitch_spread": 0,
+                        "position_spread": 0,
+                        "pan_spread": 0
+                    },
+                    "envelope": {
+                        "attack": 0.002,
+                        "decay": 0.09,
+                        "sustain": 0.1,
+                        "release": 0.06
+                    },
+                    "volume": 0.65,
+                    "pan": 0.5
+                },
+                {
+                    "synthesis": {
+                        "type": "metallic",
+                        "base_freq": 3200,
+                        "num_partials": 14,
+                        "inharmonicity": 8.5
+                    },
+                    "envelope": {
+                        "attack": 0.001,
+                        "decay": 0.07,
+                        "sustain": 0,
+                        "release": 0.04
+                    },
+                    "volume": 0.55,
+                    "pan": 0.3,
+                    "filter": {
+                        "type": "highpass",
+                        "cutoff": 1800,
+                        "resonance": 2.8,
+                        "cutoff_end": 4500
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "noise_burst",
+                        "noise_type": "white",
+                        "filter": {
+                            "type": "bandpass",
+                            "center": 5500,
+                            "resonance": 6.0,
+                            "center_end": 1200
+                        }
+                    },
+                    "envelope": {
+                        "attack": 0.001,
+                        "decay": 0.05,
+                        "sustain": 0,
+                        "release": 0.03
+                    },
+                    "volume": 0.7,
+                    "pan": -0.6
+                },
+                {
+                    "synthesis": {
+                        "type": "fm_synth",
+                        "carrier_freq": 760,
+                        "modulator_freq": 2340,
+                        "modulation_index": 14.5
+                    },
+                    "envelope": {
+                        "attack": 0.003,
+                        "decay": 0.11,
+                        "sustain": 0,
+                        "release": 0.07
+                    },
+                    "volume": 0.6,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 3800,
+                        "resonance": 3.2,
+                        "cutoff_end": 600
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "ring_mod_synth",
+                        "carrier_freq": 4800,
+                        "modulator_freq": 213,
+                        "mix": 0.5
+                    },
+                    "envelope": {
+                        "attack": 0.001,
+                        "decay": 0.06,
+                        "sustain": 0,
+                        "release": 0.04
+                    },
+                    "volume": 0.5,
+                    "pan": 0.7,
+                    "filter": {
+                        "type": "highpass",
+                        "cutoff": 2500,
+                        "resonance": 5.0,
+                        "cutoff_end": 6000
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "noise_burst",
+                        "noise_type": "pink",
+                        "filter": {
+                            "type": "lowpass",
+                            "cutoff": 1000,
+                            "resonance": 3.5
+                        }
+                    },
+                    "envelope": {
+                        "attack": 0.002,
+                        "decay": 0.08,
+                        "sustain": 0,
+                        "release": 0.05
+                    },
+                    "volume": 0.45,
+                    "pan": -0.5
+                },
+                {
+                    "synthesis": {
+                        "type": "granular",
+                        "source": {
+                            "type": "noise",
+                            "noise_type": "white"
+                        },
+                        "grain_size_ms": 10,
+                        "grain_density": 48,
+                        "pitch_spread": 0,
+                        "position_spread": 0,
+                        "pan_spread": 0
+                    },
+                    "envelope": {
+                        "attack": 0.001,
+                        "decay": 0.1,
+                        "sustain": 0,
+                        "release": 0.06
+                    },
+                    "volume": 0.58,
+                    "pan": 0.2,
+                    "filter": {
+                        "type": "bandpass",
+                        "center": 3200,
+                        "resonance": 4.0,
+                        "center_end": 800
+                    }
+                }
+            ],
+            "effects": [
+                {
+                    "type": "bitcrush",
+                    "bits": 8,
+                    "wet": 0.6
+                },
+                {
+                    "type": "waveshaper",
+                    "drive": 2.8,
+                    "wet": 0.4
+                },
+                {
+                    "type": "delay",
+                    "time_ms": 45,
+                    "feedback": 0.25,
+                    "wet": 0.15
+                },
+                {
+                    "type": "reverb",
+                    "room_size": 0.3,
+                    "damping": 0.7,
+                    "wet": 0.12
+                }
+            ]
+        }
     }
-  }
 }

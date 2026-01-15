@@ -1,66 +1,228 @@
 {
-  "spec_version": 1,
-  "asset_id": "preset_bagpipe_chanter",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 10356,
-  "description": "Bagpipe chanter - nasal, buzzy with strong odd harmonics and drone-like sustain",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/leads/acoustic/bagpipe_chanter.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "base_note": "A4",
-      "duration_seconds": 2.5,
-      "sample_rate": 44100,
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "preset_bagpipe_chanter",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 10356,
+    "description": "Bagpipe chanter - nasal, buzzy with strong odd harmonics and drone-like sustain",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "additive",
-            "base_freq": 440.0,
-            "harmonics": [
-              0.8,
-              0.0,
-              0.9,
-              0.0,
-              0.7,
-              0.0,
-              0.5,
-              0.0,
-              0.3
-            ]
-          },
-          "envelope": {
-            "attack": 0.1,
-            "decay": 0.05,
-            "sustain": 1.0,
-            "release": 0.08
-          },
-          "volume": 0.85,
-          "pan": 0
-        },
-        {
-          "synthesis": {
-            "type": "fm_synth",
-            "carrier_freq": 440.0,
-            "modulator_freq": 880.0,
-            "modulation_index": 2.5
-          },
-          "envelope": {
-            "attack": 0.1,
-            "decay": 0.05,
-            "sustain": 0.95,
-            "release": 0.08
-          },
-          "volume": 0.35,
-          "pan": 0
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/leads/acoustic/bagpipe_chanter.wav"
         }
-      ]
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "base_note": "A4",
+            "duration_seconds": 2.5,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "additive",
+                        "base_freq": 440.0,
+                        "harmonics": [
+                            1.0,
+                            0.15,
+                            0.95,
+                            0.08,
+                            0.85,
+                            0.05,
+                            0.72,
+                            0.04,
+                            0.58,
+                            0.03,
+                            0.45,
+                            0.02,
+                            0.32,
+                            0.02,
+                            0.22,
+                            0.015
+                        ]
+                    },
+                    "envelope": {
+                        "attack": 0.12,
+                        "decay": 0.08,
+                        "sustain": 0.98,
+                        "release": 0.15
+                    },
+                    "volume": 0.68,
+                    "pan": 0,
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 5.2,
+                            "depth": 0.008
+                        },
+                        "target": {
+                            "target": "filter_cutoff",
+                            "amount": 500
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "formant",
+                        "frequency": 440,
+                        "formants": [
+                            {
+                                "frequency": 650.0,
+                                "amplitude": 0.92,
+                                "bandwidth": 120.0
+                            },
+                            {
+                                "frequency": 1450.0,
+                                "amplitude": 0.78,
+                                "bandwidth": 180.0
+                            },
+                            {
+                                "frequency": 2800.0,
+                                "amplitude": 0.45,
+                                "bandwidth": 220.0
+                            },
+                            {
+                                "frequency": 3500.0,
+                                "amplitude": 0.28,
+                                "bandwidth": 300.0
+                            }
+                        ]
+                    },
+                    "envelope": {
+                        "attack": 0.15,
+                        "decay": 0.1,
+                        "sustain": 0.96,
+                        "release": 0.18
+                    },
+                    "volume": 0.55,
+                    "pan": 0,
+                    "filter": {
+                        "type": "bandpass",
+                        "center": 1200.0,
+                        "resonance": 3.2,
+                        "center_end": 1400.0
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 4.8,
+                            "depth": 0.12
+                        },
+                        "target": {
+                            "target": "filter_cutoff",
+                            "amount": 500
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "fm_synth",
+                        "carrier_freq": 440.0,
+                        "modulator_freq": 1320.0,
+                        "modulation_index": 3.8
+                    },
+                    "envelope": {
+                        "attack": 0.1,
+                        "decay": 0.06,
+                        "sustain": 0.88,
+                        "release": 0.12
+                    },
+                    "volume": 0.32,
+                    "pan": 0.08,
+                    "filter": {
+                        "type": "highpass",
+                        "cutoff": 350.0,
+                        "resonance": 1.4
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "noise_burst",
+                        "noise_type": "pink"
+                    },
+                    "envelope": {
+                        "attack": 0.08,
+                        "decay": 0.15,
+                        "sustain": 0.22,
+                        "release": 0.25
+                    },
+                    "volume": 0.18,
+                    "pan": -0.05,
+                    "filter": {
+                        "type": "bandpass",
+                        "center": 2200.0,
+                        "resonance": 2.8,
+                        "center_end": 1800.0
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 6.5,
+                            "depth": 0.35
+                        },
+                        "target": {
+                            "target": "filter_cutoff",
+                            "amount": 500
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "additive",
+                        "base_freq": 440.0,
+                        "harmonics": [
+                            0.0,
+                            0.12,
+                            0.0,
+                            0.28,
+                            0.0,
+                            0.22,
+                            0.0,
+                            0.15,
+                            0.0,
+                            0.08
+                        ]
+                    },
+                    "envelope": {
+                        "attack": 0.14,
+                        "decay": 0.1,
+                        "sustain": 0.92,
+                        "release": 0.2
+                    },
+                    "volume": 0.38,
+                    "pan": 0.12,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 3500.0,
+                        "resonance": 1.8
+                    }
+                }
+            ],
+            "effects": [
+                {
+                    "type": "compressor",
+                    "threshold_db": -6.4,
+                    "ratio": 3.2,
+                    "attack_ms": 8.0,
+                    "release_ms": 80.0,
+                    "makeup_db": 0
+                },
+                {
+                    "type": "chorus",
+                    "rate": 0.85,
+                    "depth": 0.22,
+                    "wet": 0.25,
+                    "voices": 2
+                },
+                {
+                    "type": "reverb",
+                    "room_size": 0.42,
+                    "damping": 0.58,
+                    "wet": 0.28,
+                    "width": 0.5
+                }
+            ]
+        }
     }
-  }
 }

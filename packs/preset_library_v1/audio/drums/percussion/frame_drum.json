@@ -1,81 +1,131 @@
 {
-  "spec_version": 1,
-  "asset_id": "preset_frame_drum",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 20006,
-  "description": "Frame drum - deep resonant hand drum with warm body and natural decay",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/drums/percussion/frame_drum.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "duration_seconds": 0.8,
-      "sample_rate": 44100,
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "preset_frame_drum",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 20006,
+    "description": "Frame drum - deep resonant hand drum with warm body and natural decay",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "oscillator",
-            "waveform": "sine",
-            "frequency": 95,
-            "freq_sweep": {
-              "end_freq": 65,
-              "curve": "exponential"
-            }
-          },
-          "envelope": {
-            "attack": 0.008,
-            "decay": 0.45,
-            "sustain": 0.08,
-            "release": 0.25
-          },
-          "volume": 0.9,
-          "pan": 0
-        },
-        {
-          "synthesis": {
-            "type": "oscillator",
-            "waveform": "triangle",
-            "frequency": 180,
-            "freq_sweep": {
-              "end_freq": 120,
-              "curve": "exponential"
-            }
-          },
-          "envelope": {
-            "attack": 0.005,
-            "decay": 0.35,
-            "sustain": 0.05,
-            "release": 0.2
-          },
-          "volume": 0.4,
-          "pan": 0
-        },
-        {
-          "synthesis": {
-            "type": "noise_burst",
-            "noise_type": "white",
-            "filter": {
-              "type": "lowpass",
-              "cutoff": 800,
-              "resonance": 0.3
-            }
-          },
-          "envelope": {
-            "attack": 0.001,
-            "decay": 0.08,
-            "sustain": 0.0,
-            "release": 0.05
-          },
-          "volume": 0.15,
-          "pan": 0
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/drums/percussion/frame_drum.wav"
         }
-      ]
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "duration_seconds": 1.2,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "modal",
+                        "frequency": 140,
+                        "modes": [
+                            {
+                                "freq_ratio": 1.0,
+                                "amplitude": 1.0,
+                                "decay_time": 0.85
+                            },
+                            {
+                                "freq_ratio": 1.59,
+                                "amplitude": 0.55,
+                                "decay_time": 0.7
+                            },
+                            {
+                                "freq_ratio": 2.14,
+                                "amplitude": 0.38,
+                                "decay_time": 0.55
+                            },
+                            {
+                                "freq_ratio": 2.65,
+                                "amplitude": 0.28,
+                                "decay_time": 0.45
+                            },
+                            {
+                                "freq_ratio": 3.16,
+                                "amplitude": 0.18,
+                                "decay_time": 0.35
+                            },
+                            {
+                                "freq_ratio": 3.65,
+                                "amplitude": 0.12,
+                                "decay_time": 0.28
+                            },
+                            {
+                                "freq_ratio": 4.61,
+                                "amplitude": 0.08,
+                                "decay_time": 0.22
+                            }
+                        ],
+                        "excitation": "impulse"
+                    },
+                    "envelope": {
+                        "attack": 0.002,
+                        "decay": 0.95,
+                        "sustain": 0,
+                        "release": 0.25
+                    },
+                    "volume": 0.88,
+                    "pan": 0
+                },
+                {
+                    "synthesis": {
+                        "type": "noise_burst",
+                        "noise_type": "white",
+                        "filter": {
+                            "type": "lowpass",
+                            "cutoff": 1200,
+                            "resonance": 0.4
+                        }
+                    },
+                    "envelope": {
+                        "attack": 0.0005,
+                        "decay": 0.015,
+                        "sustain": 0,
+                        "release": 0.008
+                    },
+                    "volume": 0.22,
+                    "pan": 0
+                },
+                {
+                    "synthesis": {
+                        "type": "oscillator",
+                        "waveform": "triangle",
+                        "frequency": 70,
+                        "freq_sweep": {
+                            "end_freq": 58,
+                            "curve": "exponential"
+                        }
+                    },
+                    "envelope": {
+                        "attack": 0.01,
+                        "decay": 0.7,
+                        "sustain": 0.05,
+                        "release": 0.3
+                    },
+                    "volume": 0.28,
+                    "pan": 0
+                }
+            ],
+            "effects": [
+                {
+                    "type": "reverb",
+                    "room_size": 0.45,
+                    "damping": 0.6,
+                    "wet": 0.18,
+                    "width": 0.5
+                },
+                {
+                    "type": "compressor",
+                    "threshold_db": -12,
+                    "ratio": 3.5,
+                    "attack_ms": 5.0,
+                    "release_ms": 150.0,
+                    "makeup_db": 0
+                }
+            ]
+        }
     }
-  }
 }

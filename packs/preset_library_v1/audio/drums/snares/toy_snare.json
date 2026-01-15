@@ -4,7 +4,7 @@
   "asset_type": "audio",
   "license": "CC0-1.0",
   "seed": 10025,
-  "description": "Toy snare - playful, plastic-sounding with higher pitch",
+  "description": "Professional toy snare - thin, lo-fi, plastic character with bitcrushed digital charm",
   "outputs": [
     {
       "kind": "primary",
@@ -15,36 +15,60 @@
   "recipe": {
     "kind": "audio_v1",
     "params": {
-      "duration_seconds": 0.18,
+      "duration_seconds": 0.22,
       "sample_rate": 44100,
       "layers": [
         {
           "synthesis": {
-            "type": "oscillator",
-            "waveform": "triangle",
-            "frequency": 380,
-            "freq_sweep": {
-              "end_freq": 250,
-              "curve": "exponential"
-            }
+            "type": "fm_synth",
+            "carrier_freq": 340,
+            "modulator_freq": 115,
+            "modulation_index": 2.8
           },
           "envelope": {
-            "attack": 0.002,
+            "attack": 0.001,
+            "decay": 0.035,
+            "sustain": 0,
+            "release": 0.025
+          },
+          "volume": 0.72,
+          "pan": 0,
+          "filter": {
+            "type": "highpass",
+            "cutoff": 180,
+            "resonance": 0.4
+          }
+        },
+        {
+          "synthesis": {
+            "type": "metallic",
+            "base_freq": 440,
+            "num_partials": 6,
+            "inharmonicity": 0.85
+          },
+          "envelope": {
+            "attack": 0.001,
             "decay": 0.04,
             "sustain": 0,
             "release": 0.03
           },
-          "volume": 0.7,
-          "pan": 0
+          "volume": 0.38,
+          "pan": 0.08,
+          "filter": {
+            "type": "bandpass",
+            "center": 1800,
+            "resonance": 1.4,
+            "center_end": 900
+          }
         },
         {
           "synthesis": {
             "type": "noise_burst",
-            "noise_type": "pink",
+            "noise_type": "white",
             "filter": {
               "type": "bandpass",
-              "center": 5000,
-              "resonance": 1.1
+              "center": 6500,
+              "resonance": 1.6
             }
           },
           "envelope": {
@@ -53,8 +77,109 @@
             "sustain": 0,
             "release": 0.04
           },
-          "volume": 0.6,
-          "pan": 0
+          "volume": 0.48,
+          "pan": -0.06,
+          "filter": {
+            "type": "highpass",
+            "cutoff": 3200,
+            "resonance": 0.6
+          }
+        },
+        {
+          "synthesis": {
+            "type": "noise_burst",
+            "noise_type": "pink",
+            "filter": {
+              "type": "bandpass",
+              "center": 4200,
+              "resonance": 1.2
+            }
+          },
+          "envelope": {
+            "attack": 0.002,
+            "decay": 0.06,
+            "sustain": 0,
+            "release": 0.045
+          },
+          "volume": 0.42,
+          "pan": 0.05,
+          "filter": {
+            "type": "highpass",
+            "cutoff": 2400,
+            "resonance": 0.5
+          }
+        },
+        {
+          "synthesis": {
+            "type": "oscillator",
+            "waveform": "triangle",
+            "frequency": 185,
+            "freq_sweep": {
+              "end_freq": 110,
+              "curve": "exponential"
+            }
+          },
+          "envelope": {
+            "attack": 0.001,
+            "decay": 0.028,
+            "sustain": 0,
+            "release": 0.018
+          },
+          "volume": 0.35,
+          "pan": 0,
+          "filter": {
+            "type": "lowpass",
+            "cutoff": 850,
+            "resonance": 0.8
+          }
+        },
+        {
+          "synthesis": {
+            "type": "ring_mod_synth",
+            "carrier_freq": 280,
+            "modulator_freq": 620,
+            "mix": 0.5
+          },
+          "envelope": {
+            "attack": 0.001,
+            "decay": 0.032,
+            "sustain": 0,
+            "release": 0.022
+          },
+          "volume": 0.28,
+          "pan": -0.04,
+          "filter": {
+            "type": "bandpass",
+            "center": 1200,
+            "resonance": 1.1
+          }
+        }
+      ],
+      "effects": [
+        {
+          "type": "bitcrush",
+          "sample_rate_reduction": 4,
+          "wet": 0.72,
+          "bits": 8
+        },
+        {
+          "type": "waveshaper",
+          "drive": 1.6,
+          "wet": 0.45
+        },
+        {
+          "type": "compressor",
+          "threshold_db": -18,
+          "ratio": 6.5,
+          "attack_ms": 0.3,
+          "release_ms": 35,
+          "makeup_db": 5
+        },
+        {
+          "type": "reverb",
+          "room_size": 0.18,
+          "damping": 0.75,
+          "wet": 0.12
         }
       ]
     }

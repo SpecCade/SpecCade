@@ -1,48 +1,165 @@
 {
-  "spec_version": 1,
-  "asset_id": "arp_bright",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 10155,
-  "description": "Bright short pluck optimized for arpeggios - fast attack and decay with crystalline character",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/plucks/arp_bright.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "duration_seconds": 0.5,
-      "sample_rate": 44100,
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "arp_bright",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 10155,
+    "description": "Professional bright arpeggio pluck with sparkling saw/pulse layers, fast attack, high filter cutoff, delay trails, and crystalline resonance - perfect for cutting arpeggios",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "karplus_strong",
-            "frequency": 523.25,
-            "decay": 0.992,
-            "blend": 0.25
-          },
-          "envelope": {
-            "attack": 0.001,
-            "decay": 0.04,
-            "sustain": 0.4,
-            "release": 0.15
-          },
-          "volume": 1.0,
-          "pan": 0.0
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/plucks/arp_bright.wav"
         }
-      ],
-      "effects": [
-        {
-          "type": "delay",
-          "time_ms": 100.0,
-          "feedback": 0.2,
-          "wet": 0.1
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "duration_seconds": 0.8,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "oscillator",
+                        "waveform": "sawtooth",
+                        "frequency": 523.25
+                    },
+                    "envelope": {
+                        "attack": 0.002,
+                        "decay": 0.08,
+                        "sustain": 0.35,
+                        "release": 0.22
+                    },
+                    "volume": 0.65,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 6500.0,
+                        "resonance": 1.2,
+                        "cutoff_end": 3200.0
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "oscillator",
+                        "waveform": "pulse",
+                        "frequency": 523.25,
+                        "duty": 0.25
+                    },
+                    "envelope": {
+                        "attack": 0.001,
+                        "decay": 0.06,
+                        "sustain": 0.28,
+                        "release": 0.2
+                    },
+                    "volume": 0.48,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 7200.0,
+                        "resonance": 0.9,
+                        "cutoff_end": 3800.0
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "oscillator",
+                        "waveform": "sawtooth",
+                        "frequency": 1046.5
+                    },
+                    "envelope": {
+                        "attack": 0.001,
+                        "decay": 0.05,
+                        "sustain": 0.22,
+                        "release": 0.15
+                    },
+                    "volume": 0.35,
+                    "pan": 0.15,
+                    "filter": {
+                        "type": "highpass",
+                        "cutoff": 800.0,
+                        "resonance": 0.6
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "fm_synth",
+                        "carrier_freq": 1569.75,
+                        "modulator_freq": 4709.25,
+                        "modulation_index": 2.5
+                    },
+                    "envelope": {
+                        "attack": 0.001,
+                        "decay": 0.045,
+                        "sustain": 0.18,
+                        "release": 0.12
+                    },
+                    "volume": 0.32,
+                    "pan": -0.12,
+                    "filter": {
+                        "type": "bandpass",
+                        "center": 4500.0,
+                        "resonance": 1.5,
+                        "center_end": 2800.0
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "noise_burst",
+                        "noise_type": "white"
+                    },
+                    "envelope": {
+                        "attack": 0.0005,
+                        "decay": 0.012,
+                        "sustain": 0,
+                        "release": 0.015
+                    },
+                    "volume": 0.18,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "highpass",
+                        "cutoff": 2500.0,
+                        "resonance": 0.4
+                    }
+                }
+            ],
+            "effects": [
+                {
+                    "type": "compressor",
+                    "threshold_db": -14.0,
+                    "ratio": 3.0,
+                    "attack_ms": 0.8,
+                    "release_ms": 40.0,
+                    "makeup_db": 2.0
+                },
+                {
+                    "type": "chorus",
+                    "rate": 2.2,
+                    "depth": 0.28,
+                    "wet": 0.22,
+                    "voices": 2
+                },
+                {
+                    "type": "delay",
+                    "time_ms": 125.0,
+                    "feedback": 0.28,
+                    "wet": 0.25,
+                    "ping_pong": true
+                },
+                {
+                    "type": "reverb",
+                    "room_size": 0.35,
+                    "damping": 0.7,
+                    "wet": 0.18,
+                    "width": 0.6
+                },
+                {
+                    "type": "waveshaper",
+                    "drive": 1.12,
+                    "wet": 0.3,
+                    "curve": "tanh"
+                }
+            ]
         }
-      ]
     }
-  }
 }

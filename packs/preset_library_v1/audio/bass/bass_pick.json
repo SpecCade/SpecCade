@@ -1,41 +1,122 @@
 {
-  "spec_version": 1,
-  "asset_id": "preset_bass_pick",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 10103,
-  "description": "Picked bass - Karplus-Strong synthesis with fast attack and moderate decay for articulate plucked character",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/bass/bass_pick.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "base_note": "C2",
-      "duration_seconds": 0.8,
-      "sample_rate": 44100,
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "preset_bass_pick",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 10103,
+    "description": "Professional picked bass - Karplus-Strong plucked string with pick attack transient, sub sine foundation, amp-style saturation, and dynamic compression for authentic articulate bass guitar tone",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "karplus_strong",
-            "frequency": 65.41,
-            "decay": 0.995,
-            "blend": 0.7
-          },
-          "envelope": {
-            "attack": 0.001,
-            "decay": 0.25,
-            "sustain": 0.5,
-            "release": 0.15
-          },
-          "volume": 1.0,
-          "pan": 0
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/bass/bass_pick.wav"
         }
-      ]
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "base_note": "C2",
+            "duration_seconds": 1.2,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "noise_burst",
+                        "noise_type": "white"
+                    },
+                    "envelope": {
+                        "attack": 0.0005,
+                        "decay": 0.015,
+                        "sustain": 0,
+                        "release": 0.01
+                    },
+                    "volume": 0.35,
+                    "pan": 0,
+                    "filter": {
+                        "type": "bandpass",
+                        "center": 1000,
+                        "resonance": 1.0
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "karplus_strong",
+                        "frequency": 65.41,
+                        "decay": 0.996,
+                        "blend": 0.65
+                    },
+                    "envelope": {
+                        "attack": 0.002,
+                        "decay": 0.35,
+                        "sustain": 0.45,
+                        "release": 0.2
+                    },
+                    "volume": 0.85,
+                    "pan": 0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 1000,
+                        "resonance": 0.5
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "oscillator",
+                        "waveform": "sine",
+                        "frequency": 65.41
+                    },
+                    "envelope": {
+                        "attack": 0.008,
+                        "decay": 0.3,
+                        "sustain": 0.6,
+                        "release": 0.25
+                    },
+                    "volume": 0.5,
+                    "pan": 0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 1000,
+                        "resonance": 0.5
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "fm_synth",
+                        "carrier_freq": 65.41,
+                        "modulator_freq": 440,
+                        "modulation_index": 0.8
+                    },
+                    "envelope": {
+                        "attack": 0.003,
+                        "decay": 0.12,
+                        "sustain": 0.15,
+                        "release": 0.1
+                    },
+                    "volume": 0.18,
+                    "pan": 0,
+                    "filter": {
+                        "type": "highpass",
+                        "cutoff": 1000,
+                        "resonance": 0.5
+                    }
+                }
+            ],
+            "effects": [
+                {
+                    "type": "waveshaper",
+                    "drive": 1.0,
+                    "wet": 0.4,
+                    "curve": "soft_clip"
+                },
+                {
+                    "type": "compressor",
+                    "threshold_db": -12,
+                    "ratio": 4.0,
+                    "attack_ms": 5.0,
+                    "release_ms": 150.0,
+                    "makeup_db": 0
+                }
+            ]
+        }
     }
-  }
 }

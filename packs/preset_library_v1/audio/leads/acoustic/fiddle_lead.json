@@ -1,107 +1,106 @@
 {
-  "spec_version": 1,
-  "asset_id": "preset_fiddle_lead",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 20029,
-  "description": "Fiddle/violin lead - folk-style bowed string lead",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/leads/acoustic/fiddle_lead.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "base_note": "D4",
-      "duration_seconds": 2.0,
-      "sample_rate": 44100,
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "preset_fiddle_lead",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 20029,
+    "description": "Folk fiddle/violin lead - sawtooth-based with vibrato, karplus-strong bow resonance",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "oscillator",
-            "waveform": "sawtooth",
-            "frequency": 293.66
-          },
-          "envelope": {
-            "attack": 0.08,
-            "decay": 0.1,
-            "sustain": 0.88,
-            "release": 0.18
-          },
-          "filter": {
-            "type": "lowpass",
-            "cutoff": 3000.0,
-            "resonance": 0.35
-          },
-          "lfo": {
-            "config": {
-              "waveform": "sine",
-              "rate": 5.8,
-              "depth": 0.6
-            },
-            "target": {
-              "target": "pitch",
-              "semitones": 0.35
-            }
-          },
-          "volume": 0.65,
-          "pan": -0.1
-        },
-        {
-          "synthesis": {
-            "type": "oscillator",
-            "waveform": "sawtooth",
-            "frequency": 296.33
-          },
-          "envelope": {
-            "attack": 0.08,
-            "decay": 0.1,
-            "sustain": 0.88,
-            "release": 0.18
-          },
-          "filter": {
-            "type": "lowpass",
-            "cutoff": 2900.0,
-            "resonance": 0.35
-          },
-          "lfo": {
-            "config": {
-              "waveform": "sine",
-              "rate": 5.8,
-              "depth": 0.6,
-              "phase": 0.15
-            },
-            "target": {
-              "target": "pitch",
-              "semitones": 0.35
-            }
-          },
-          "volume": 0.6,
-          "pan": 0.1
-        },
-        {
-          "synthesis": {
-            "type": "noise_burst",
-            "noise_type": "white",
-            "filter": {
-              "type": "highpass",
-              "cutoff": 2500.0,
-              "resonance": 0.4
-            }
-          },
-          "envelope": {
-            "attack": 0.05,
-            "decay": 0.08,
-            "sustain": 0.15,
-            "release": 0.1
-          },
-          "volume": 0.08,
-          "pan": 0
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/leads/acoustic/fiddle_lead.wav"
         }
-      ]
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "base_note": "D4",
+            "duration_seconds": 2.0,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "oscillator",
+                        "waveform": "sawtooth",
+                        "frequency": 293.66
+                    },
+                    "envelope": {
+                        "attack": 0.08,
+                        "decay": 0.1,
+                        "sustain": 0.85,
+                        "release": 0.2
+                    },
+                    "volume": 0.65,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 4000.0,
+                        "resonance": 0.4
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 6.0,
+                            "depth": 0.8,
+                            "phase": 0.0
+                        },
+                        "target": {
+                            "target": "pitch",
+                            "semitones": 0.2
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "karplus_strong",
+                        "frequency": 293.66,
+                        "decay": 0.992,
+                        "blend": 0.6
+                    },
+                    "envelope": {
+                        "attack": 0.05,
+                        "decay": 0.12,
+                        "sustain": 0.8,
+                        "release": 0.25
+                    },
+                    "volume": 0.55,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 3500.0,
+                        "resonance": 0.3
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 6.0,
+                            "depth": 0.8,
+                            "phase": 0.0
+                        },
+                        "target": {
+                            "target": "pitch",
+                            "semitones": 0.2
+                        }
+                    }
+                }
+            ],
+            "effects": [
+                {
+                    "type": "chorus",
+                    "rate": 0.5,
+                    "depth": 0.3,
+                    "wet": 0.2,
+                    "voices": 2
+                },
+                {
+                    "type": "reverb",
+                    "room_size": 0.6,
+                    "damping": 0.5,
+                    "wet": 0.25,
+                    "width": 0.8
+                }
+            ]
+        }
     }
-  }
 }

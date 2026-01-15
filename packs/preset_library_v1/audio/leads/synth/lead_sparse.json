@@ -1,40 +1,152 @@
 {
-  "spec_version": 1,
-  "asset_id": "preset_lead_sparse",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 10307,
-  "description": "Sparse minimal lead - single naked sawtooth oscillator for raw character",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/leads/synth/lead_sparse.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "base_note": "A4",
-      "duration_seconds": 1.5,
-      "sample_rate": 44100,
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "preset_lead_sparse",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 10307,
+    "description": "Professional sparse ambient lead - pure sine core with subtle triangle harmonics, gentle vibrato, harmonic shimmer layer, organic filter movement, and spacious processing for minimal melodic presence",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "oscillator",
-            "waveform": "sawtooth",
-            "frequency": 440.0
-          },
-          "envelope": {
-            "attack": 0.01,
-            "decay": 0.1,
-            "sustain": 0.9,
-            "release": 0.15
-          },
-          "volume": 0.9,
-          "pan": 0
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/leads/synth/lead_sparse.wav"
         }
-      ]
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "base_note": "A4",
+            "duration_seconds": 1.5,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "oscillator",
+                        "waveform": "sine",
+                        "frequency": 440.0
+                    },
+                    "envelope": {
+                        "attack": 0.12,
+                        "decay": 0.08,
+                        "sustain": 0.85,
+                        "release": 0.4
+                    },
+                    "volume": 0.75,
+                    "pan": 0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 2800.0,
+                        "resonance": 0.15,
+                        "cutoff_end": 2200.0
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 4.2,
+                            "depth": 0.35
+                        },
+                        "target": {
+                            "target": "pitch",
+                            "semitones": 0.08
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "oscillator",
+                        "waveform": "triangle",
+                        "frequency": 440.0
+                    },
+                    "envelope": {
+                        "attack": 0.15,
+                        "decay": 0.1,
+                        "sustain": 0.75,
+                        "release": 0.45
+                    },
+                    "volume": 0.25,
+                    "pan": 0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 1800.0,
+                        "resonance": 0.1,
+                        "cutoff_end": 1400.0
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 0.28,
+                            "depth": 0.45
+                        },
+                        "target": {
+                            "target": "filter_cutoff",
+                            "amount": 200.0
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "oscillator",
+                        "waveform": "sine",
+                        "frequency": 880.0
+                    },
+                    "envelope": {
+                        "attack": 0.18,
+                        "decay": 0.15,
+                        "sustain": 0.65,
+                        "release": 0.5
+                    },
+                    "volume": 0.12,
+                    "pan": 0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 3500.0,
+                        "resonance": 0.08,
+                        "cutoff_end": 2800.0
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "triangle",
+                            "rate": 0.15,
+                            "depth": 0.6
+                        },
+                        "target": {
+                            "target": "volume",
+                            "amount": 0.08
+                        }
+                    }
+                }
+            ],
+            "effects": [
+                {
+                    "type": "chorus",
+                    "rate": 0.35,
+                    "depth": 0.15,
+                    "wet": 0.18,
+                    "voices": 2
+                },
+                {
+                    "type": "delay",
+                    "time_ms": 100,
+                    "feedback": 0.22,
+                    "wet": 0.25,
+                    "ping_pong": false
+                },
+                {
+                    "type": "reverb",
+                    "room_size": 0.72,
+                    "damping": 0.45,
+                    "wet": 0.35,
+                    "width": 0.5
+                },
+                {
+                    "type": "compressor",
+                    "threshold_db": -18.0,
+                    "ratio": 2.5,
+                    "attack_ms": 8.0,
+                    "release_ms": 150.0,
+                    "makeup_db": 0
+                }
+            ]
+        }
     }
-  }
 }

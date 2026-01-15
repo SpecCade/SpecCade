@@ -1,13 +1,61 @@
 # Audio Preset Library — Master Inventory
 
-**Last updated:** 2026-01-13  
+**Last updated:** 2026-01-15
 **Location:** `packs/preset_library_v1/audio/`
+**Feature Analysis:** See [`FEATURE_ANALYSIS.md`](../packs/preset_library_v1/FEATURE_ANALYSIS.md) for detailed statistics
 
 This document inventories the preset-spec JSON files under `packs/preset_library_v1/audio/`.
 
 Notes:
 - Counts and tables include preset specs (`*.json`) and exclude derived `*.report.json`.
 - Files named `test_*.json` at the `audio/` root are integration/dev test specs, not presets.
+- Run `python analyze_presets.py` to regenerate feature analysis for this or future packs.
+
+---
+
+## Feature Summary
+
+| Metric | Value |
+|--------|-------|
+| Total Presets | 255 |
+| Presets with LFO modulation | 159 (62.4%) |
+| Presets with filters | 186 (72.9%) |
+| Presets with effects | 244 (95.7%) |
+
+### Top Synthesis Types
+| Type | Usage Count | % of Layers |
+|------|-------------|-------------|
+| noise_burst | 231 | 19.0% |
+| oscillator | 187 | 15.4% |
+| fm_synth | 142 | 11.7% |
+| multi_oscillator | 103 | 8.5% |
+| modal | 98 | 8.1% |
+| metallic | 90 | 7.4% |
+| additive | 75 | 6.2% |
+| karplus_strong | 74 | 6.1% |
+| granular | 60 | 4.9% |
+| wavetable | 53 | 4.4% |
+
+### Effects Usage
+| Effect | Usage Count | % of Effects |
+|--------|-------------|--------------|
+| reverb | 221 | 27.8% |
+| compressor | 183 | 23.0% |
+| chorus | 160 | 20.2% |
+| delay | 95 | 12.0% |
+| waveshaper | 75 | 9.4% |
+| phaser | 41 | 5.2% |
+| bitcrush | 19 | 2.4% |
+
+### Quality Metrics
+- **Average layers per preset:** 4.8
+- **Most common layer count:** 4 (29% of presets)
+- **Most common effect count:** 3 (34% of presets)
+- **Most used waveform:** sine (501 uses)
+- **Most used filter:** lowpass (490 uses)
+- **Most used LFO target:** filter_cutoff (175 uses)
+
+---
 
 ## Directory Structure
 

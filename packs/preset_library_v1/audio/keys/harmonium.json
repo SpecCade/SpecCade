@@ -1,51 +1,113 @@
 {
-  "spec_version": 1,
-  "asset_id": "harmonium",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 10210,
-  "description": "Warm harmonium or pump organ character with chorus for breath-like quality",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/keys/harmonium.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "duration_seconds": 3.0,
-      "sample_rate": 44100,
-      "base_note": "C4",
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "harmonium",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 10210,
+    "description": "Indian reed organ harmonium with rich odd harmonics and subtle bellows wavering",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "wavetable",
-            "table": "organ",
-            "frequency": 261.63,
-            "position": 0.3,
-            "voices": 3,
-            "detune": 10.0
-          },
-          "envelope": {
-            "attack": 0.15,
-            "decay": 0.2,
-            "sustain": 0.8,
-            "release": 0.4
-          },
-          "volume": 0.75,
-          "pan": 0.0
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/keys/harmonium.wav"
         }
-      ],
-      "effects": [
-        {
-          "type": "chorus",
-          "rate": 0.5,
-          "depth": 0.2,
-          "wet": 0.3
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "base_note": "C4",
+            "duration_seconds": 3.0,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "additive",
+                        "base_freq": 261.63,
+                        "harmonics": [1.0, 0.3, 0.8, 0.2, 0.7, 0.15, 0.5, 0.1, 0.4, 0.08, 0.3, 0.05]
+                    },
+                    "envelope": {
+                        "attack": 0.12,
+                        "decay": 0.15,
+                        "sustain": 0.85,
+                        "release": 0.35
+                    },
+                    "volume": 0.7,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 3200.0,
+                        "resonance": 0.35,
+                        "cutoff_end": 2800.0
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 4.5,
+                            "depth": 0.8
+                        },
+                        "target": {
+                            "target": "volume",
+                            "amount": 0.08
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "additive",
+                        "base_freq": 523.26,
+                        "harmonics": [0.5, 0.15, 0.35, 0.1, 0.25, 0.08]
+                    },
+                    "envelope": {
+                        "attack": 0.14,
+                        "decay": 0.18,
+                        "sustain": 0.75,
+                        "release": 0.38
+                    },
+                    "volume": 0.4,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 4500.0,
+                        "resonance": 0.25
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "oscillator",
+                        "waveform": "square",
+                        "frequency": 261.63
+                    },
+                    "envelope": {
+                        "attack": 0.15,
+                        "decay": 0.2,
+                        "sustain": 0.7,
+                        "release": 0.4
+                    },
+                    "volume": 0.25,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 2500.0,
+                        "resonance": 0.4
+                    }
+                }
+            ],
+            "effects": [
+                {
+                    "type": "chorus",
+                    "rate": 0.4,
+                    "depth": 0.2,
+                    "wet": 0.3,
+                    "voices": 2
+                },
+                {
+                    "type": "reverb",
+                    "room_size": 0.5,
+                    "damping": 0.65,
+                    "wet": 0.25,
+                    "width": 0.5
+                }
+            ]
         }
-      ]
     }
-  }
 }

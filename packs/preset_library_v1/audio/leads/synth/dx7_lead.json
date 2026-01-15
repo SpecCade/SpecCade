@@ -1,81 +1,177 @@
 {
-  "spec_version": 1,
-  "asset_id": "preset_dx7_lead",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 20034,
-  "description": "DX7-style FM lead - classic 80s FM synth lead with bright, cutting tone",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/leads/synth/dx7_lead.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "base_note": "C4",
-      "duration_seconds": 1.5,
-      "sample_rate": 44100,
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "preset_dx7_lead",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 20034,
+    "description": "DX7-style FM lead - classic 80s FM synth lead with bright, cutting tone",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "fm_synth",
-            "carrier_freq": 261.63,
-            "modulator_freq": 523.26,
-            "modulation_index": 4.5
-          },
-          "envelope": {
-            "attack": 0.05,
-            "decay": 0.15,
-            "sustain": 0.7,
-            "release": 0.3
-          },
-          "filter": {
-            "type": "lowpass",
-            "cutoff": 8000,
-            "resonance": 0.3
-          },
-          "lfo": {
-            "config": {
-              "waveform": "sine",
-              "rate": 5.5,
-              "depth": 0.25
-            },
-            "target": {
-              "target": "pitch",
-              "semitones": 0.15
-            }
-          },
-          "volume": 0.75,
-          "pan": 0
-        },
-        {
-          "synthesis": {
-            "type": "fm_synth",
-            "carrier_freq": 261.63,
-            "modulator_freq": 785.0,
-            "modulation_index": 3.2
-          },
-          "envelope": {
-            "attack": 0.08,
-            "decay": 0.2,
-            "sustain": 0.65,
-            "release": 0.35
-          },
-          "volume": 0.45,
-          "pan": 0
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/leads/synth/dx7_lead.wav"
         }
-      ],
-      "effects": [
-        {
-          "type": "delay",
-          "time_ms": 200.0,
-          "feedback": 0.2,
-          "wet": 0.15
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "base_note": "C4",
+            "duration_seconds": 1.5,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "fm_synth",
+                        "carrier_freq": 261.63,
+                        "modulator_freq": 523.26,
+                        "modulation_index": 5.2
+                    },
+                    "envelope": {
+                        "attack": 0.02,
+                        "decay": 0.18,
+                        "sustain": 0.72,
+                        "release": 0.28
+                    },
+                    "volume": 0.68,
+                    "pan": 0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 9500,
+                        "resonance": 0.42,
+                        "cutoff_end": 7200
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 5.8,
+                            "depth": 0.28
+                        },
+                        "target": {
+                            "target": "pitch",
+                            "semitones": 0.18
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "fm_synth",
+                        "carrier_freq": 262.15,
+                        "modulator_freq": 786.45,
+                        "modulation_index": 3.8
+                    },
+                    "envelope": {
+                        "attack": 0.025,
+                        "decay": 0.22,
+                        "sustain": 0.68,
+                        "release": 0.32
+                    },
+                    "volume": 0.52,
+                    "pan": -0.15,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 8800,
+                        "resonance": 0.38,
+                        "cutoff_end": 6800
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 6.1,
+                            "depth": 0.25
+                        },
+                        "target": {
+                            "target": "pitch",
+                            "semitones": 0.15
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "fm_synth",
+                        "carrier_freq": 261.11,
+                        "modulator_freq": 1046.52,
+                        "modulation_index": 2.9
+                    },
+                    "envelope": {
+                        "attack": 0.03,
+                        "decay": 0.25,
+                        "sustain": 0.65,
+                        "release": 0.35
+                    },
+                    "volume": 0.48,
+                    "pan": 0.15,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 10500,
+                        "resonance": 0.35,
+                        "cutoff_end": 7800
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 5.4,
+                            "depth": 0.22
+                        },
+                        "target": {
+                            "target": "pitch",
+                            "semitones": 0.12
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "fm_synth",
+                        "carrier_freq": 261.63,
+                        "modulator_freq": 1308.15,
+                        "modulation_index": 4.1
+                    },
+                    "envelope": {
+                        "attack": 0.035,
+                        "decay": 0.2,
+                        "sustain": 0.7,
+                        "release": 0.3
+                    },
+                    "volume": 0.38,
+                    "pan": 0,
+                    "filter": {
+                        "type": "bandpass",
+                        "center": 3200,
+                        "resonance": 0.55,
+                        "center_end": 2400
+                    }
+                }
+            ],
+            "effects": [
+                {
+                    "type": "chorus",
+                    "rate": 1.8,
+                    "depth": 0.45,
+                    "wet": 0.38,
+                    "voices": 2
+                },
+                {
+                    "type": "delay",
+                    "time_ms": 185.0,
+                    "feedback": 0.18,
+                    "wet": 0.12,
+                    "ping_pong": false
+                },
+                {
+                    "type": "reverb",
+                    "room_size": 0.52,
+                    "damping": 0.48,
+                    "wet": 0.28,
+                    "width": 0.5
+                },
+                {
+                    "type": "compressor",
+                    "threshold_db": -18.0,
+                    "ratio": 3.2,
+                    "attack_ms": 8.0,
+                    "release_ms": 85.0,
+                    "makeup_db": 0
+                }
+            ]
         }
-      ]
     }
-  }
 }

@@ -1,62 +1,165 @@
 {
-  "spec_version": 1,
-  "asset_id": "preset_opl_lead",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 10313,
-  "description": "OPL chip lead - FM synthesis mimicking Yamaha OPL for retro PC game character",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/leads/synth/opl_lead.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "base_note": "A4",
-      "duration_seconds": 1.5,
-      "sample_rate": 44100,
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "preset_opl_lead",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 10313,
+    "description": "Professional OPL chip lead - Classic FM synthesis with Yamaha OPL character, bitcrush lo-fi texture, vibrato, filter sweep, chorus width, and ambient reverb tail",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "fm_synth",
-            "carrier_freq": 440.0,
-            "modulator_freq": 440.0,
-            "modulation_index": 2.0
-          },
-          "envelope": {
-            "attack": 0.002,
-            "decay": 0.1,
-            "sustain": 0.6,
-            "release": 0.12
-          },
-          "volume": 0.7,
-          "pan": 0
-        },
-        {
-          "synthesis": {
-            "type": "fm_synth",
-            "carrier_freq": 880.0,
-            "modulator_freq": 1760.0,
-            "modulation_index": 1.5
-          },
-          "envelope": {
-            "attack": 0.002,
-            "decay": 0.08,
-            "sustain": 0.4,
-            "release": 0.1
-          },
-          "volume": 0.5,
-          "pan": 0
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/leads/synth/opl_lead.wav"
         }
-      ],
-      "master_filter": {
-        "type": "lowpass",
-        "cutoff": 8000,
-        "resonance": 0.2
-      }
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "base_note": "A4",
+            "duration_seconds": 1.5,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "fm_synth",
+                        "carrier_freq": 440.0,
+                        "modulator_freq": 440.0,
+                        "modulation_index": 3.2
+                    },
+                    "envelope": {
+                        "attack": 0.001,
+                        "decay": 0.15,
+                        "sustain": 0.65,
+                        "release": 0.18
+                    },
+                    "volume": 0.62,
+                    "pan": 0.0,
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 5.2,
+                            "depth": 0.18
+                        },
+                        "target": {
+                            "target": "pitch",
+                            "semitones": 0.12
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "fm_synth",
+                        "carrier_freq": 440.0,
+                        "modulator_freq": 880.0,
+                        "modulation_index": 2.8
+                    },
+                    "envelope": {
+                        "attack": 0.001,
+                        "decay": 0.12,
+                        "sustain": 0.58,
+                        "release": 0.16
+                    },
+                    "volume": 0.48,
+                    "pan": 0.0,
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 5.4,
+                            "depth": 0.15
+                        },
+                        "target": {
+                            "target": "pitch",
+                            "semitones": 0.1
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "fm_synth",
+                        "carrier_freq": 880.0,
+                        "modulator_freq": 1760.0,
+                        "modulation_index": 2.2
+                    },
+                    "envelope": {
+                        "attack": 0.002,
+                        "decay": 0.09,
+                        "sustain": 0.42,
+                        "release": 0.14
+                    },
+                    "volume": 0.38,
+                    "pan": 0.0,
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 5.8,
+                            "depth": 0.12
+                        },
+                        "target": {
+                            "target": "volume",
+                            "amount": 0.08
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "fm_synth",
+                        "carrier_freq": 440.0,
+                        "modulator_freq": 1320.0,
+                        "modulation_index": 1.8
+                    },
+                    "envelope": {
+                        "attack": 0.003,
+                        "decay": 0.1,
+                        "sustain": 0.35,
+                        "release": 0.12
+                    },
+                    "volume": 0.32,
+                    "pan": -0.15
+                },
+                {
+                    "synthesis": {
+                        "type": "fm_synth",
+                        "carrier_freq": 440.0,
+                        "modulator_freq": 660.0,
+                        "modulation_index": 2.5
+                    },
+                    "envelope": {
+                        "attack": 0.003,
+                        "decay": 0.11,
+                        "sustain": 0.38,
+                        "release": 0.13
+                    },
+                    "volume": 0.32,
+                    "pan": 0.15
+                }
+            ],
+            "master_filter": {
+                "type": "lowpass",
+                "cutoff": 9500,
+                "resonance": 0.45,
+                "cutoff_end": 6200
+            },
+            "effects": [
+                {
+                    "type": "bitcrush",
+                    "bits": 8,
+                    "sample_rate_reduction": 1.8
+                },
+                {
+                    "type": "chorus",
+                    "rate": 0.45,
+                    "depth": 0.28,
+                    "wet": 0.3,
+                    "voices": 3
+                },
+                {
+                    "type": "reverb",
+                    "room_size": 0.42,
+                    "damping": 0.55,
+                    "wet": 0.3,
+                    "width": 0.5
+                }
+            ]
+        }
     }
-  }
 }

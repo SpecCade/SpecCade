@@ -1,56 +1,202 @@
 {
-  "spec_version": 1,
-  "asset_id": "preset_stinger",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 10204,
-  "description": "Musical stinger - quick bright hit with tail",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/fx/stinger.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "base_note": "C5",
-      "duration_seconds": 0.8,
-      "sample_rate": 44100,
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "preset_stinger",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 10204,
+    "description": "Professional orchestral stinger - dramatic brass hit with harmonic richness and spatial depth",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "metallic",
-            "base_freq": 1200,
-            "num_partials": 6,
-            "inharmonicity": 1.2
-          },
-          "envelope": {
-            "attack": 0.001,
-            "decay": 0.25,
-            "sustain": 0,
-            "release": 0.4
-          },
-          "volume": 0.8,
-          "pan": 0
-        },
-        {
-          "synthesis": {
-            "type": "oscillator",
-            "waveform": "triangle",
-            "frequency": 523.25
-          },
-          "envelope": {
-            "attack": 0.001,
-            "decay": 0.15,
-            "sustain": 0,
-            "release": 0.3
-          },
-          "volume": 0.6,
-          "pan": 0
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/fx/stinger.wav"
         }
-      ]
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "base_note": "C4",
+            "duration_seconds": 1.2,
+            "sample_rate": 44100,
+            "effects": [
+                {
+                    "type": "compressor",
+                    "threshold_db": -18.0,
+                    "ratio": 3.5,
+                    "attack_ms": 2.0,
+                    "release_ms": 80.0,
+                    "makeup_db": 2.0
+                },
+                {
+                    "type": "chorus",
+                    "rate": 0.8,
+                    "depth": 0.25,
+                    "wet": 0.18
+                },
+                {
+                    "type": "reverb",
+                    "room_size": 0.72,
+                    "damping": 0.55,
+                    "wet": 0.32
+                }
+            ],
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "fm_synth",
+                        "carrier_freq": 261.63,
+                        "modulator_freq": 523.25,
+                        "modulation_index": 3.8
+                    },
+                    "envelope": {
+                        "attack": 0.002,
+                        "decay": 0.18,
+                        "sustain": 0.15,
+                        "release": 0.45
+                    },
+                    "volume": 0.85,
+                    "pan": 0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 3800,
+                        "resonance": 0.4,
+                        "cutoff_end": 1200
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "additive",
+                        "base_freq": 440,
+                        "harmonics": [
+                            1.0,
+                            0.5,
+                            0.25,
+                            0.125
+                        ]
+                    },
+                    "envelope": {
+                        "attack": 0.005,
+                        "decay": 0.22,
+                        "sustain": 0.12,
+                        "release": 0.5
+                    },
+                    "volume": 0.7,
+                    "pan": 0,
+                    "filter": {
+                        "type": "bandpass",
+                        "center": 1800,
+                        "resonance": 0.6,
+                        "center_end": 900
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 6.5,
+                            "depth": 0.15
+                        },
+                        "target": {
+                            "target": "volume",
+                            "amount": 0.3
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "fm_synth",
+                        "carrier_freq": 523.25,
+                        "modulator_freq": 392.0,
+                        "modulation_index": 2.4
+                    },
+                    "envelope": {
+                        "attack": 0.001,
+                        "decay": 0.15,
+                        "sustain": 0.08,
+                        "release": 0.35
+                    },
+                    "volume": 0.55,
+                    "pan": -0.25,
+                    "filter": {
+                        "type": "highpass",
+                        "cutoff": 800,
+                        "resonance": 0.3
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "modal",
+                        "frequency": 261.63,
+                        "modes": [
+                            {
+                                "freq_ratio": 1.0,
+                                "amplitude": 1.0,
+                                "decay_time": 0.5
+                            },
+                            {
+                                "freq_ratio": 2.0,
+                                "amplitude": 0.5,
+                                "decay_time": 0.3
+                            }
+                        ],
+                        "excitation": "impulse"
+                    },
+                    "envelope": {
+                        "attack": 0.003,
+                        "decay": 0.28,
+                        "sustain": 0.1,
+                        "release": 0.6
+                    },
+                    "volume": 0.6,
+                    "pan": 0.25,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 4200,
+                        "resonance": 0.25,
+                        "cutoff_end": 1600
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "metallic",
+                        "base_freq": 1046.5,
+                        "num_partials": 8,
+                        "inharmonicity": 1.8
+                    },
+                    "envelope": {
+                        "attack": 0.001,
+                        "decay": 0.12,
+                        "sustain": 0.05,
+                        "release": 0.3
+                    },
+                    "volume": 0.45,
+                    "pan": 0,
+                    "filter": {
+                        "type": "bandpass",
+                        "center": 3500,
+                        "resonance": 0.7,
+                        "center_end": 2200
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "noise_burst",
+                        "noise_type": "white"
+                    },
+                    "envelope": {
+                        "attack": 0.001,
+                        "decay": 0.08,
+                        "sustain": 0,
+                        "release": 0.15
+                    },
+                    "volume": 0.3,
+                    "pan": 0,
+                    "filter": {
+                        "type": "bandpass",
+                        "center": 2800,
+                        "resonance": 0.8,
+                        "center_end": 1500
+                    }
+                }
+            ]
+        }
     }
-  }
 }

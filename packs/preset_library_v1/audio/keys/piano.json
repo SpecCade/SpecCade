@@ -1,60 +1,117 @@
 {
-  "spec_version": 1,
-  "asset_id": "preset_piano",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 10200,
-  "description": "Acoustic piano - Karplus-Strong physical modeling with hammer noise transient",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/keys/piano.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "base_note": "C4",
-      "duration_seconds": 2.0,
-      "sample_rate": 44100,
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "preset_piano",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 10200,
+    "description": "Acoustic piano - Karplus-Strong string resonance, additive body harmonics, FM hammer attack, rich harmonic decay with medium reverb",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "karplus_strong",
-            "frequency": 261.63,
-            "decay": 0.998,
-            "blend": 0.35
-          },
-          "envelope": {
-            "attack": 0.001,
-            "decay": 0.8,
-            "sustain": 0.3,
-            "release": 0.6
-          },
-          "volume": 1.0,
-          "pan": 0.0
-        },
-        {
-          "synthesis": {
-            "type": "noise_burst",
-            "noise_type": "white",
-            "filter": {
-              "type": "highpass",
-              "cutoff": 3000.0,
-              "resonance": 0.3
-            }
-          },
-          "envelope": {
-            "attack": 0.0005,
-            "decay": 0.015,
-            "sustain": 0.0,
-            "release": 0.01
-          },
-          "volume": 0.25,
-          "pan": 0.0
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/keys/piano.wav"
         }
-      ]
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "base_note": "C4",
+            "duration_seconds": 3.5,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "karplus_strong",
+                        "frequency": 261.63,
+                        "decay": 0.92,
+                        "blend": 0.35
+                    },
+                    "envelope": {
+                        "attack": 0.001,
+                        "decay": 1.5,
+                        "sustain": 0.3,
+                        "release": 1.2
+                    },
+                    "volume": 0.7,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 8000.0,
+                        "resonance": 0.3,
+                        "cutoff_end": 3000.0
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 0.5,
+                            "depth": 0.08
+                        },
+                        "target": {
+                            "target": "filter_cutoff",
+                            "amount": 150
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "additive",
+                        "base_freq": 261.63,
+                        "harmonics": [1.0, 0.7, 0.5, 0.35, 0.25, 0.18, 0.12, 0.08]
+                    },
+                    "envelope": {
+                        "attack": 0.002,
+                        "decay": 1.2,
+                        "sustain": 0.25,
+                        "release": 1.0
+                    },
+                    "volume": 0.5,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 6000.0,
+                        "resonance": 0.25,
+                        "cutoff_end": 2500.0
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "fm_synth",
+                        "carrier_freq": 261.63,
+                        "modulator_freq": 523.26,
+                        "modulation_index": 2.5
+                    },
+                    "envelope": {
+                        "attack": 0.0005,
+                        "decay": 0.15,
+                        "sustain": 0.0,
+                        "release": 0.05
+                    },
+                    "volume": 0.3,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "bandpass",
+                        "center": 4000.0,
+                        "resonance": 0.4
+                    }
+                }
+            ],
+            "effects": [
+                {
+                    "type": "compressor",
+                    "threshold_db": -16.0,
+                    "ratio": 3.0,
+                    "attack_ms": 5.0,
+                    "release_ms": 120.0,
+                    "makeup_db": 2
+                },
+                {
+                    "type": "reverb",
+                    "room_size": 0.65,
+                    "damping": 0.5,
+                    "wet": 0.25,
+                    "width": 0.5
+                }
+            ]
+        }
     }
-  }
 }

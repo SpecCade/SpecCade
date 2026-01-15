@@ -1,85 +1,222 @@
 {
-  "spec_version": 1,
-  "asset_id": "preset_stinger_horror",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 20069,
-  "description": "Horror stinger - scary, dissonant accent for horror games",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/fx/stinger_horror.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "base_note": "C5",
-      "duration_seconds": 1.2,
-      "sample_rate": 44100,
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "preset_stinger_horror",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 20069,
+    "description": "Horror stinger - scary, dissonant accent for horror games",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "oscillator",
-            "waveform": "sawtooth",
-            "frequency": 220.0
-          },
-          "envelope": {
-            "attack": 0.002,
-            "decay": 0.3,
-            "sustain": 0.15,
-            "release": 0.6
-          },
-          "volume": 0.7,
-          "pan": -0.3
-        },
-        {
-          "synthesis": {
-            "type": "oscillator",
-            "waveform": "sawtooth",
-            "frequency": 233.08
-          },
-          "envelope": {
-            "attack": 0.001,
-            "decay": 0.35,
-            "sustain": 0.1,
-            "release": 0.7
-          },
-          "volume": 0.65,
-          "pan": 0.3
-        },
-        {
-          "synthesis": {
-            "type": "metallic",
-            "base_freq": 880,
-            "num_partials": 8,
-            "inharmonicity": 2.8
-          },
-          "envelope": {
-            "attack": 0.001,
-            "decay": 0.2,
-            "sustain": 0.05,
-            "release": 0.5
-          },
-          "volume": 0.5,
-          "pan": 0
-        },
-        {
-          "synthesis": {
-            "type": "noise_burst",
-            "noise_type": "white"
-          },
-          "envelope": {
-            "attack": 0.001,
-            "decay": 0.1,
-            "sustain": 0,
-            "release": 0.2
-          },
-          "volume": 0.3,
-          "pan": 0
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/fx/stinger_horror.wav"
         }
-      ]
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "base_note": "C2",
+            "duration_seconds": 2.0,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "ring_mod_synth",
+                        "carrier_freq": 55.0,
+                        "modulator_freq": 47.0,
+                        "mix": 0.5
+                    },
+                    "envelope": {
+                        "attack": 0.015,
+                        "decay": 0.8,
+                        "sustain": 0.3,
+                        "release": 0.9
+                    },
+                    "volume": 0.85,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 180.0,
+                        "resonance": 0.7,
+                        "cutoff_end": 95.0
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "additive",
+                        "base_freq": 233.08,
+                        "harmonics": [
+                            0.4
+                        ]
+                    },
+                    "envelope": {
+                        "attack": 0.008,
+                        "decay": 0.4,
+                        "sustain": 0.25,
+                        "release": 0.8
+                    },
+                    "volume": 0.65,
+                    "pan": -0.4,
+                    "filter": {
+                        "type": "bandpass",
+                        "center": 520.0,
+                        "resonance": 1.2,
+                        "center_end": 340.0
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "metallic",
+                        "base_freq": 1320.0,
+                        "num_partials": 12,
+                        "inharmonicity": 4.5
+                    },
+                    "envelope": {
+                        "attack": 0.001,
+                        "decay": 0.15,
+                        "sustain": 0.08,
+                        "release": 0.6
+                    },
+                    "volume": 0.55,
+                    "pan": 0.5,
+                    "filter": {
+                        "type": "highpass",
+                        "cutoff": 800.0,
+                        "resonance": 0.8
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "modal",
+                        "frequency": 110.0,
+                        "modes": [
+                            {
+                                "freq_ratio": 4.0,
+                                "amplitude": 0.9,
+                                "decay_time": 0.8
+                            },
+                            {
+                                "freq_ratio": 4.0,
+                                "amplitude": 0.7,
+                                "decay_time": 0.6
+                            },
+                            {
+                                "freq_ratio": 4.0,
+                                "amplitude": 0.5,
+                                "decay_time": 0.4
+                            },
+                            {
+                                "freq_ratio": 4.0,
+                                "amplitude": 0.35,
+                                "decay_time": 0.3
+                            }
+                        ],
+                        "excitation": "impulse"
+                    },
+                    "envelope": {
+                        "attack": 0.02,
+                        "decay": 0.5,
+                        "sustain": 0.15,
+                        "release": 1.2
+                    },
+                    "volume": 0.6,
+                    "pan": 0.35,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 450.0,
+                        "resonance": 1.5,
+                        "cutoff_end": 280.0
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "granular",
+                        "source": {
+                            "type": "noise",
+                            "noise_type": "white"
+                        },
+                        "grain_size_ms": 10,
+                        "grain_density": 20,
+                        "pitch_spread": 0,
+                        "position_spread": 0,
+                        "pan_spread": 0
+                    },
+                    "envelope": {
+                        "attack": 0.1,
+                        "decay": 0.6,
+                        "sustain": 0.2,
+                        "release": 0.7
+                    },
+                    "volume": 0.5,
+                    "pan": -0.3,
+                    "filter": {
+                        "type": "bandpass",
+                        "center": 380.0,
+                        "resonance": 1.8
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "fm_synth",
+                        "carrier_freq": 87.31,
+                        "modulator_freq": 61.74,
+                        "modulation_index": 8.5
+                    },
+                    "envelope": {
+                        "attack": 0.005,
+                        "decay": 0.35,
+                        "sustain": 0.18,
+                        "release": 0.85
+                    },
+                    "volume": 0.7,
+                    "pan": 0.2,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 220.0,
+                        "resonance": 0.9
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "noise_burst",
+                        "noise_type": "pink"
+                    },
+                    "envelope": {
+                        "attack": 0.002,
+                        "decay": 0.08,
+                        "sustain": 0,
+                        "release": 0.15
+                    },
+                    "volume": 0.4,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "bandpass",
+                        "center": 1200.0,
+                        "resonance": 2.5
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "metallic",
+                        "base_freq": 2640.0,
+                        "num_partials": 16,
+                        "inharmonicity": 6.8
+                    },
+                    "envelope": {
+                        "attack": 0.001,
+                        "decay": 0.12,
+                        "sustain": 0,
+                        "release": 0.4
+                    },
+                    "volume": 0.45,
+                    "pan": -0.6,
+                    "filter": {
+                        "type": "highpass",
+                        "cutoff": 1800.0,
+                        "resonance": 1.2
+                    }
+                }
+            ]
+        }
     }
-  }
 }

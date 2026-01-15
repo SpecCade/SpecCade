@@ -1,124 +1,286 @@
 {
-  "spec_version": 1,
-  "asset_id": "preset_strings_ensemble",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 10123,
-  "description": "Lush string ensemble - multi-oscillator strings with slow pitch vibrato and filter movement for orchestral character",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/pads/strings_ensemble.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "base_note": "C4",
-      "duration_seconds": 3.0,
-      "sample_rate": 44100,
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "preset_strings_ensemble",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 10123,
+    "description": "Professional orchestral strings ensemble - full orchestra section with 4-layer multi-octave spread, lush chorus, subtle vibrato, and cinematic reverb",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "multi_oscillator",
-            "frequency": 261.63,
-            "oscillators": [
-              {
-                "waveform": "sawtooth",
-                "volume": 1.0,
-                "detune": 0.0
-              },
-              {
-                "waveform": "sawtooth",
-                "volume": 0.9,
-                "detune": 8.0
-              },
-              {
-                "waveform": "sawtooth",
-                "volume": 0.9,
-                "detune": -8.0
-              },
-              {
-                "waveform": "sawtooth",
-                "volume": 0.7,
-                "detune": 15.0
-              },
-              {
-                "waveform": "sawtooth",
-                "volume": 0.7,
-                "detune": -15.0
-              }
-            ]
-          },
-          "envelope": {
-            "attack": 0.15,
-            "decay": 0.3,
-            "sustain": 0.85,
-            "release": 0.4
-          },
-          "filter": {
-            "type": "lowpass",
-            "cutoff": 3500.0,
-            "resonance": 0.25
-          },
-          "lfo": {
-            "config": {
-              "waveform": "sine",
-              "rate": 5.0,
-              "depth": 0.25
-            },
-            "target": {
-              "target": "pitch",
-              "semitones": 0.15
-            }
-          },
-          "volume": 0.8,
-          "pan": 0.0
-        },
-        {
-          "synthesis": {
-            "type": "multi_oscillator",
-            "frequency": 261.63,
-            "oscillators": [
-              {
-                "waveform": "sawtooth",
-                "volume": 1.0,
-                "detune": 3.0
-              },
-              {
-                "waveform": "sawtooth",
-                "volume": 0.85,
-                "detune": -3.0
-              }
-            ]
-          },
-          "envelope": {
-            "attack": 0.2,
-            "decay": 0.35,
-            "sustain": 0.8,
-            "release": 0.45
-          },
-          "filter": {
-            "type": "lowpass",
-            "cutoff": 2800.0,
-            "resonance": 0.2
-          },
-          "lfo": {
-            "config": {
-              "waveform": "sine",
-              "rate": 0.3,
-              "depth": 0.5
-            },
-            "target": {
-              "target": "filter_cutoff",
-              "amount": 600.0
-            }
-          },
-          "volume": 0.5,
-          "pan": 0.0
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/pads/strings_ensemble.wav"
         }
-      ]
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "base_note": "C4",
+            "duration_seconds": 3.0,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "multi_oscillator",
+                        "frequency": 261.63,
+                        "oscillators": [
+                            {
+                                "waveform": "sawtooth",
+                                "volume": 1.0,
+                                "detune": 0.0
+                            },
+                            {
+                                "waveform": "sawtooth",
+                                "volume": 0.95,
+                                "detune": 7.0
+                            },
+                            {
+                                "waveform": "sawtooth",
+                                "volume": 0.95,
+                                "detune": -7.0
+                            },
+                            {
+                                "waveform": "sawtooth",
+                                "volume": 0.85,
+                                "detune": 14.0
+                            },
+                            {
+                                "waveform": "sawtooth",
+                                "volume": 0.85,
+                                "detune": -14.0
+                            },
+                            {
+                                "waveform": "sawtooth",
+                                "volume": 0.7,
+                                "detune": 21.0
+                            },
+                            {
+                                "waveform": "sawtooth",
+                                "volume": 0.7,
+                                "detune": -21.0
+                            }
+                        ]
+                    },
+                    "envelope": {
+                        "attack": 0.18,
+                        "decay": 0.4,
+                        "sustain": 0.88,
+                        "release": 0.6
+                    },
+                    "volume": 0.72,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 4200.0,
+                        "resonance": 0.3,
+                        "cutoff_end": 3800.0
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 5.2,
+                            "depth": 0.28
+                        },
+                        "target": {
+                            "target": "pitch",
+                            "semitones": 0.12
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "multi_oscillator",
+                        "frequency": 523.26,
+                        "oscillators": [
+                            {
+                                "waveform": "sawtooth",
+                                "volume": 1.0,
+                                "detune": 0.0
+                            },
+                            {
+                                "waveform": "sawtooth",
+                                "volume": 0.9,
+                                "detune": 5.0
+                            },
+                            {
+                                "waveform": "sawtooth",
+                                "volume": 0.9,
+                                "detune": -5.0
+                            },
+                            {
+                                "waveform": "sawtooth",
+                                "volume": 0.75,
+                                "detune": 12.0
+                            },
+                            {
+                                "waveform": "sawtooth",
+                                "volume": 0.75,
+                                "detune": -12.0
+                            }
+                        ]
+                    },
+                    "envelope": {
+                        "attack": 0.22,
+                        "decay": 0.38,
+                        "sustain": 0.85,
+                        "release": 0.65
+                    },
+                    "volume": 0.55,
+                    "pan": 0.15,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 5000.0,
+                        "resonance": 0.25,
+                        "cutoff_end": 4500.0
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 5.5,
+                            "depth": 0.3
+                        },
+                        "target": {
+                            "target": "pitch",
+                            "semitones": 0.1
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "multi_oscillator",
+                        "frequency": 130.815,
+                        "oscillators": [
+                            {
+                                "waveform": "sawtooth",
+                                "volume": 1.0,
+                                "detune": 0.0
+                            },
+                            {
+                                "waveform": "sawtooth",
+                                "volume": 0.92,
+                                "detune": 9.0
+                            },
+                            {
+                                "waveform": "sawtooth",
+                                "volume": 0.92,
+                                "detune": -9.0
+                            },
+                            {
+                                "waveform": "sawtooth",
+                                "volume": 0.8,
+                                "detune": 18.0
+                            },
+                            {
+                                "waveform": "sawtooth",
+                                "volume": 0.8,
+                                "detune": -18.0
+                            }
+                        ]
+                    },
+                    "envelope": {
+                        "attack": 0.25,
+                        "decay": 0.45,
+                        "sustain": 0.9,
+                        "release": 0.7
+                    },
+                    "volume": 0.58,
+                    "pan": -0.15,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 2800.0,
+                        "resonance": 0.28,
+                        "cutoff_end": 2500.0
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 4.8,
+                            "depth": 0.25
+                        },
+                        "target": {
+                            "target": "pitch",
+                            "semitones": 0.14
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "multi_oscillator",
+                        "frequency": 261.63,
+                        "oscillators": [
+                            {
+                                "waveform": "sawtooth",
+                                "volume": 1.0,
+                                "detune": 3.5
+                            },
+                            {
+                                "waveform": "sawtooth",
+                                "volume": 0.88,
+                                "detune": -3.5
+                            },
+                            {
+                                "waveform": "sawtooth",
+                                "volume": 0.75,
+                                "detune": 10.5
+                            },
+                            {
+                                "waveform": "sawtooth",
+                                "volume": 0.75,
+                                "detune": -10.5
+                            }
+                        ]
+                    },
+                    "envelope": {
+                        "attack": 0.28,
+                        "decay": 0.42,
+                        "sustain": 0.83,
+                        "release": 0.68
+                    },
+                    "volume": 0.48,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 3200.0,
+                        "resonance": 0.22,
+                        "cutoff_end": 2900.0
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 0.4,
+                            "depth": 0.6
+                        },
+                        "target": {
+                            "target": "filter_cutoff",
+                            "amount": 700.0
+                        }
+                    }
+                }
+            ],
+            "effects": [
+                {
+                    "type": "chorus",
+                    "rate": 1.0,
+                    "depth": 0.3,
+                    "wet": 0.3,
+                    "voices": 2
+                },
+                {
+                    "type": "reverb",
+                    "room_size": 0.5,
+                    "damping": 0.5,
+                    "wet": 0.3,
+                    "width": 0.5
+                },
+                {
+                    "type": "compressor",
+                    "threshold_db": -12,
+                    "ratio": 4.0,
+                    "attack_ms": 50.0,
+                    "release_ms": 1000,
+                    "makeup_db": 0
+                }
+            ]
+        }
     }
-  }
 }

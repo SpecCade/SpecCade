@@ -1,63 +1,156 @@
 {
-  "spec_version": 1,
-  "asset_id": "preset_pickup",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 10205,
-  "description": "Pickup/collect - bright ascending tone",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/fx/pickup.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "duration_seconds": 0.3,
-      "sample_rate": 44100,
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "preset_pickup",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 10205,
+    "description": "Pickup/collect - bright ascending tone with bell-like shimmer",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "oscillator",
-            "waveform": "square",
-            "frequency": 600,
-            "freq_sweep": {
-              "end_freq": 1200,
-              "curve": "linear"
-            },
-            "duty": 0.5
-          },
-          "envelope": {
-            "attack": 0.001,
-            "decay": 0.08,
-            "sustain": 0,
-            "release": 0.15
-          },
-          "volume": 0.7,
-          "pan": 0
-        },
-        {
-          "synthesis": {
-            "type": "oscillator",
-            "waveform": "sine",
-            "frequency": 1200,
-            "freq_sweep": {
-              "end_freq": 2400,
-              "curve": "linear"
-            }
-          },
-          "envelope": {
-            "attack": 0.001,
-            "decay": 0.06,
-            "sustain": 0,
-            "release": 0.1
-          },
-          "volume": 0.5,
-          "pan": 0
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/fx/pickup.wav"
         }
-      ]
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "duration_seconds": 0.4,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "oscillator",
+                        "waveform": "sine",
+                        "frequency": 520.0,
+                        "freq_sweep": {
+                            "end_freq": 1560.0,
+                            "curve": "exponential"
+                        }
+                    },
+                    "envelope": {
+                        "attack": 0.002,
+                        "decay": 0.08,
+                        "sustain": 0.4,
+                        "release": 0.2
+                    },
+                    "volume": 0.7,
+                    "pan": 0.0
+                },
+                {
+                    "synthesis": {
+                        "type": "fm_synth",
+                        "carrier_freq": 1040.0,
+                        "modulator_freq": 1560.0,
+                        "modulation_index": 2.8
+                    },
+                    "envelope": {
+                        "attack": 0.001,
+                        "decay": 0.06,
+                        "sustain": 0.3,
+                        "release": 0.15
+                    },
+                    "volume": 0.5,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "highpass",
+                        "cutoff": 800.0,
+                        "resonance": 0.2
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "metallic",
+                        "base_freq": 2080.0,
+                        "num_partials": 10,
+                        "inharmonicity": 2.5
+                    },
+                    "envelope": {
+                        "attack": 0.001,
+                        "decay": 0.05,
+                        "sustain": 0.2,
+                        "release": 0.12
+                    },
+                    "volume": 0.4,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "bandpass",
+                        "center": 3000.0,
+                        "resonance": 0.4
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 8.0,
+                            "depth": 1.0
+                        },
+                        "target": {
+                            "target": "pitch",
+                            "semitones": 0.3
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "oscillator",
+                        "waveform": "triangle",
+                        "frequency": 260.0,
+                        "freq_sweep": {
+                            "end_freq": 520.0,
+                            "curve": "exponential"
+                        }
+                    },
+                    "envelope": {
+                        "attack": 0.002,
+                        "decay": 0.1,
+                        "sustain": 0.35,
+                        "release": 0.18
+                    },
+                    "volume": 0.45,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 2500.0,
+                        "resonance": 0.3
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "oscillator",
+                        "waveform": "sine",
+                        "frequency": 3120.0
+                    },
+                    "envelope": {
+                        "attack": 0.001,
+                        "decay": 0.04,
+                        "sustain": 0.0,
+                        "release": 0.08
+                    },
+                    "volume": 0.25,
+                    "pan": 0.1,
+                    "filter": {
+                        "type": "bandpass",
+                        "center": 4000.0,
+                        "resonance": 0.6
+                    }
+                }
+            ],
+            "effects": [
+                {
+                    "type": "chorus",
+                    "rate": 3.0,
+                    "depth": 0.3,
+                    "wet": 0.2,
+                    "voices": 2
+                },
+                {
+                    "type": "reverb",
+                    "room_size": 0.3,
+                    "damping": 0.65,
+                    "wet": 0.15,
+                    "width": 0.5
+                }
+            ]
+        }
     }
-  }
 }

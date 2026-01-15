@@ -4,7 +4,7 @@
   "asset_type": "audio",
   "license": "CC0-1.0",
   "seed": 10055,
-  "description": "Ride cymbal - bell-like attack with sustained wash",
+  "description": "Professional ride cymbal - defined bell ping with controlled wash and sustain",
   "outputs": [
     {
       "kind": "primary",
@@ -15,40 +15,136 @@
   "recipe": {
     "kind": "audio_v1",
     "params": {
-      "duration_seconds": 1.5,
+      "duration_seconds": 2.0,
       "sample_rate": 44100,
       "layers": [
         {
           "synthesis": {
             "type": "metallic",
-            "base_freq": 2000,
-            "num_partials": 8,
-            "inharmonicity": 1.2
+            "base_freq": 520,
+            "num_partials": 16,
+            "inharmonicity": 1.3
           },
           "envelope": {
-            "attack": 0.001,
-            "decay": 0.15,
-            "sustain": 0.25,
-            "release": 0.8
+            "attack": 0.0005,
+            "decay": 0.08,
+            "sustain": 0.4,
+            "release": 1.5
           },
-          "volume": 0.6,
+          "filter": {
+            "type": "lowpass",
+            "cutoff": 5000,
+            "resonance": 0.3
+          },
+          "lfo": {
+            "config": {
+              "waveform": "sine",
+              "rate": 0.8,
+              "depth": 0.15
+            },
+            "target": {
+              "target": "filter_cutoff",
+              "amount": 200
+            }
+          },
+          "volume": 0.75,
           "pan": 0
         },
         {
           "synthesis": {
             "type": "metallic",
-            "base_freq": 5500,
+            "base_freq": 1560,
+            "num_partials": 14,
+            "inharmonicity": 1.5
+          },
+          "envelope": {
+            "attack": 0.001,
+            "decay": 0.12,
+            "sustain": 0.35,
+            "release": 1.3
+          },
+          "filter": {
+            "type": "bandpass",
+            "center": 1800,
+            "resonance": 0.4
+          },
+          "lfo": {
+            "config": {
+              "waveform": "triangle",
+              "rate": 1.2,
+              "depth": 0.18
+            },
+            "target": {
+              "target": "filter_cutoff",
+              "amount": 250
+            }
+          },
+          "volume": 0.55,
+          "pan": 0.15
+        },
+        {
+          "synthesis": {
+            "type": "metallic",
+            "base_freq": 780,
+            "num_partials": 12,
+            "inharmonicity": 1.4
+          },
+          "envelope": {
+            "attack": 0.0008,
+            "decay": 0.1,
+            "sustain": 0.38,
+            "release": 1.4
+          },
+          "filter": {
+            "type": "lowpass",
+            "cutoff": 4200,
+            "resonance": 0.35
+          },
+          "lfo": {
+            "config": {
+              "waveform": "sine",
+              "rate": 0.6,
+              "depth": 0.12
+            },
+            "target": {
+              "target": "filter_cutoff",
+              "amount": 180
+            }
+          },
+          "volume": 0.65,
+          "pan": -0.15
+        },
+        {
+          "synthesis": {
+            "type": "metallic",
+            "base_freq": 3900,
             "num_partials": 10,
-            "inharmonicity": 2.1
+            "inharmonicity": 1.7
           },
           "envelope": {
             "attack": 0.002,
-            "decay": 0.5,
-            "sustain": 0.18,
-            "release": 0.6
+            "decay": 0.25,
+            "sustain": 0.22,
+            "release": 0.9
           },
-          "volume": 0.45,
-          "pan": 0
+          "filter": {
+            "type": "highpass",
+            "cutoff": 2800,
+            "resonance": 0.25
+          },
+          "lfo": {
+            "config": {
+              "waveform": "triangle",
+              "rate": 1.5,
+              "depth": 0.22
+            },
+            "target": {
+              "target": "filter_cutoff",
+              "amount": 320
+            }
+          },
+          "volume": 0.35,
+          "pan": 0.1
         },
         {
           "synthesis": {
@@ -56,18 +152,57 @@
             "noise_type": "white",
             "filter": {
               "type": "highpass",
-              "cutoff": 4500,
-              "resonance": 0.3
+              "cutoff": 5500,
+              "resonance": 0.25
             }
           },
           "envelope": {
-            "attack": 0.002,
-            "decay": 0.4,
-            "sustain": 0.12,
-            "release": 0.5
+            "attack": 0.0003,
+            "decay": 0.18,
+            "sustain": 0.15,
+            "release": 0.7
           },
-          "volume": 0.3,
+          "volume": 0.28,
           "pan": 0
+        },
+        {
+          "synthesis": {
+            "type": "noise_burst",
+            "noise_type": "white",
+            "filter": {
+              "type": "bandpass",
+              "center": 2800,
+              "resonance": 0.4
+            }
+          },
+          "envelope": {
+            "attack": 0.001,
+            "decay": 0.3,
+            "sustain": 0.18,
+            "release": 1.0
+          },
+          "volume": 0.2,
+          "pan": -0.1
+        }
+      ],
+      "effects": [
+        {
+          "type": "reverb",
+          "room_size": 0.45,
+          "damping": 0.5,
+          "wet": 0.25
+        },
+        {
+          "type": "chorus",
+          "rate": 0.8,
+          "depth": 0.15,
+          "wet": 0.18
+        },
+        {
+          "type": "delay",
+          "time_ms": 85,
+          "feedback": 0.15,
+          "wet": 0.08
         }
       ]
     }

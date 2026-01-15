@@ -1,104 +1,200 @@
 {
-  "spec_version": 1,
-  "asset_id": "tanpura_drone",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 20063,
-  "description": "Tanpura drone - Indian drone instrument with continuous resonance",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/plucks/tanpura_drone.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "duration_seconds": 4.0,
-      "sample_rate": 44100,
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "tanpura_drone",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 20063,
+    "description": "Tanpura drone - Indian drone instrument with continuous resonance",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "karplus_strong",
-            "frequency": 220.0,
-            "decay": 0.9995,
-            "blend": 0.3
-          },
-          "envelope": {
-            "attack": 0.005,
-            "decay": 0.3,
-            "sustain": 0.95,
-            "release": 2.5
-          },
-          "volume": 1.0,
-          "pan": -0.1
-        },
-        {
-          "synthesis": {
-            "type": "karplus_strong",
-            "frequency": 220.0,
-            "decay": 0.9993,
-            "blend": 0.35
-          },
-          "envelope": {
-            "attack": 0.008,
-            "decay": 0.25,
-            "sustain": 0.93,
-            "release": 2.3
-          },
-          "volume": 0.8,
-          "pan": 0.1
-        },
-        {
-          "synthesis": {
-            "type": "karplus_strong",
-            "frequency": 330.0,
-            "decay": 0.9994,
-            "blend": 0.32
-          },
-          "envelope": {
-            "attack": 0.006,
-            "decay": 0.28,
-            "sustain": 0.94,
-            "release": 2.4
-          },
-          "volume": 0.7,
-          "pan": 0.0
-        },
-        {
-          "synthesis": {
-            "type": "karplus_strong",
-            "frequency": 440.0,
-            "decay": 0.999,
-            "blend": 0.38
-          },
-          "envelope": {
-            "attack": 0.01,
-            "decay": 0.2,
-            "sustain": 0.88,
-            "release": 2.0
-          },
-          "volume": 0.5,
-          "pan": -0.05
-        },
-        {
-          "synthesis": {
-            "type": "karplus_strong",
-            "frequency": 660.0,
-            "decay": 0.9988,
-            "blend": 0.4
-          },
-          "envelope": {
-            "attack": 0.012,
-            "decay": 0.18,
-            "sustain": 0.85,
-            "release": 1.8
-          },
-          "volume": 0.35,
-          "pan": 0.05
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/plucks/tanpura_drone.wav"
         }
-      ]
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "duration_seconds": 4.0,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "karplus_strong",
+                        "frequency": 220.0,
+                        "decay": 0.9995,
+                        "blend": 0.3
+                    },
+                    "envelope": {
+                        "attack": 0.005,
+                        "decay": 0.3,
+                        "sustain": 0.95,
+                        "release": 2.5
+                    },
+                    "volume": 1.0,
+                    "pan": -0.1,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 4000.0,
+                        "resonance": 0.3
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 1.0,
+                            "depth": 0.5
+                        },
+                        "target": {
+                            "target": "filter_cutoff",
+                            "amount": 0.08
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "karplus_strong",
+                        "frequency": 220.0,
+                        "decay": 0.9993,
+                        "blend": 0.35
+                    },
+                    "envelope": {
+                        "attack": 0.008,
+                        "decay": 0.25,
+                        "sustain": 0.93,
+                        "release": 2.3
+                    },
+                    "volume": 0.8,
+                    "pan": 0.1,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 4200.0,
+                        "resonance": 0.25
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 1.0,
+                            "depth": 0.5
+                        },
+                        "target": {
+                            "target": "filter_cutoff",
+                            "amount": 0.06
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "karplus_strong",
+                        "frequency": 330.0,
+                        "decay": 0.9994,
+                        "blend": 0.32
+                    },
+                    "envelope": {
+                        "attack": 0.006,
+                        "decay": 0.28,
+                        "sustain": 0.94,
+                        "release": 2.4
+                    },
+                    "volume": 0.7,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 3800.0,
+                        "resonance": 0.35
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 1.0,
+                            "depth": 0.5
+                        },
+                        "target": {
+                            "target": "filter_cutoff",
+                            "amount": 0.07
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "karplus_strong",
+                        "frequency": 440.0,
+                        "decay": 0.999,
+                        "blend": 0.38
+                    },
+                    "envelope": {
+                        "attack": 0.01,
+                        "decay": 0.2,
+                        "sustain": 0.88,
+                        "release": 2.0
+                    },
+                    "volume": 0.5,
+                    "pan": -0.05,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 4500.0,
+                        "resonance": 0.28
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 1.0,
+                            "depth": 0.5
+                        },
+                        "target": {
+                            "target": "filter_cutoff",
+                            "amount": 0.05
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "karplus_strong",
+                        "frequency": 660.0,
+                        "decay": 0.9988,
+                        "blend": 0.4
+                    },
+                    "envelope": {
+                        "attack": 0.012,
+                        "decay": 0.18,
+                        "sustain": 0.85,
+                        "release": 1.8
+                    },
+                    "volume": 0.35,
+                    "pan": 0.05,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 5000.0,
+                        "resonance": 0.22
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 1.0,
+                            "depth": 0.5
+                        },
+                        "target": {
+                            "target": "filter_cutoff",
+                            "amount": 0.04
+                        }
+                    }
+                }
+            ],
+            "effects": [
+                {
+                    "type": "chorus",
+                    "rate": 0.4,
+                    "depth": 0.3,
+                    "wet": 0.35,
+                    "voices": 2
+                },
+                {
+                    "type": "reverb",
+                    "room_size": 0.92,
+                    "damping": 0.35,
+                    "wet": 0.55,
+                    "width": 0.5
+                }
+            ]
+        }
     }
-  }
 }

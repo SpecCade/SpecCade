@@ -1,57 +1,198 @@
 {
-  "spec_version": 1,
-  "asset_id": "supersaw_pad",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 10405,
-  "description": "Classic supersaw pad with massive unison spread for thick saw-based texture",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/pads/supersaw_pad.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "duration_seconds": 3.0,
-      "sample_rate": 44100,
-      "base_note": "C4",
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "supersaw_pad",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 10405,
+    "description": "Professional supersaw pad with 7 detuned oscillators, stereo spread, lush modulation, and premium effects chain for massive EDM/trance pad sounds",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "wavetable",
-            "table": "analog",
-            "frequency": 261.63,
-            "position": 0.4,
-            "voices": 7,
-            "detune": 18.0
-          },
-          "envelope": {
-            "attack": 0.5,
-            "decay": 0.3,
-            "sustain": 0.7,
-            "release": 0.8
-          },
-          "volume": 0.65,
-          "pan": 0.0
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/pads/supersaw_pad.wav"
         }
-      ],
-      "effects": [
-        {
-          "type": "chorus",
-          "rate": 0.7,
-          "depth": 0.3,
-          "wet": 0.25
-        },
-        {
-          "type": "reverb",
-          "room_size": 0.5,
-          "damping": 0.5,
-          "wet": 0.2
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "base_note": "C4",
+            "duration_seconds": 3.0,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "multi_oscillator",
+                        "frequency": 440,
+                        "oscillators": [
+                            {
+                                "waveform": "sawtooth",
+                                "volume": 0.18
+                            },
+                            {
+                                "waveform": "sawtooth",
+                                "volume": 0.16
+                            },
+                            {
+                                "waveform": "sawtooth",
+                                "volume": 0.16
+                            },
+                            {
+                                "waveform": "sawtooth",
+                                "volume": 0.14
+                            },
+                            {
+                                "waveform": "sawtooth",
+                                "volume": 0.14
+                            },
+                            {
+                                "waveform": "sawtooth",
+                                "volume": 0.12
+                            },
+                            {
+                                "waveform": "sawtooth",
+                                "volume": 0.12
+                            }
+                        ]
+                    },
+                    "envelope": {
+                        "attack": 0.6,
+                        "decay": 0.4,
+                        "sustain": 0.75,
+                        "release": 1.0
+                    },
+                    "volume": 0.55,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 4800.0,
+                        "resonance": 0.3,
+                        "cutoff_end": 3600.0
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 0.25,
+                            "depth": 0.15
+                        },
+                        "target": {
+                            "target": "filter_cutoff",
+                            "amount": 500
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "multi_oscillator",
+                        "frequency": 440,
+                        "oscillators": [
+                            {
+                                "waveform": "sawtooth",
+                                "volume": 0.25
+                            },
+                            {
+                                "waveform": "sawtooth",
+                                "volume": 0.22
+                            },
+                            {
+                                "waveform": "sawtooth",
+                                "volume": 0.22
+                            },
+                            {
+                                "waveform": "sawtooth",
+                                "volume": 0.18
+                            },
+                            {
+                                "waveform": "sawtooth",
+                                "volume": 0.18
+                            }
+                        ]
+                    },
+                    "envelope": {
+                        "attack": 0.7,
+                        "decay": 0.5,
+                        "sustain": 0.7,
+                        "release": 1.2
+                    },
+                    "volume": 0.35,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 800.0,
+                        "resonance": 0.2
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "multi_oscillator",
+                        "frequency": 440,
+                        "oscillators": [
+                            {
+                                "waveform": "sawtooth",
+                                "volume": 0.2
+                            },
+                            {
+                                "waveform": "sawtooth",
+                                "volume": 0.2
+                            }
+                        ]
+                    },
+                    "envelope": {
+                        "attack": 0.65,
+                        "decay": 0.35,
+                        "sustain": 0.72,
+                        "release": 1.1
+                    },
+                    "volume": 0.28,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 5500.0,
+                        "resonance": 0.25
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 0.18,
+                            "depth": 0.008
+                        },
+                        "target": {
+                            "target": "pitch",
+                            "semitones": 0.008
+                        }
+                    }
+                }
+            ],
+            "effects": [
+                {
+                    "type": "chorus",
+                    "rate": 0.55,
+                    "depth": 0.4,
+                    "wet": 0.35,
+                    "voices": 2
+                },
+                {
+                    "type": "delay",
+                    "time_ms": 100,
+                    "feedback": 0.25,
+                    "wet": 0.15,
+                    "ping_pong": false
+                },
+                {
+                    "type": "reverb",
+                    "room_size": 0.72,
+                    "damping": 0.45,
+                    "wet": 0.28,
+                    "width": 0.5
+                },
+                {
+                    "type": "compressor",
+                    "threshold_db": -18.0,
+                    "ratio": 3.0,
+                    "attack_ms": 10.0,
+                    "release_ms": 150.0,
+                    "makeup_db": 0
+                }
+            ]
         }
-      ]
     }
-  }
 }

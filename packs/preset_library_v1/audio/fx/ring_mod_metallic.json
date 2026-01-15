@@ -1,40 +1,313 @@
 {
-  "spec_version": 1,
-  "asset_id": "preset_fx_ring_mod_metallic",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 30002,
-  "description": "Metallic ring modulation with inharmonic sidebands - creates bell-like metallic timbres through frequency multiplication",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/fx/ring_mod_metallic.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "duration_seconds": 1.5,
-      "sample_rate": 44100,
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "preset_fx_ring_mod_metallic",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 30002,
+    "description": "Professional metallic ring modulation showcase - multiple RM layers with FM complexity, metallic synthesis, LFO modulation, and dramatic spatial effects creating evolving inharmonic metallic textures",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "ring_mod_synth",
-            "carrier_freq": 440.0,
-            "modulator_freq": 622.25,
-            "mix": 0.8
-          },
-          "envelope": {
-            "attack": 0.01,
-            "decay": 0.4,
-            "sustain": 0.3,
-            "release": 0.5
-          },
-          "volume": 0.7,
-          "pan": 0.0
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/fx/ring_mod_metallic.wav"
         }
-      ]
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "duration_seconds": 3.5,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "ring_mod_synth",
+                        "carrier_freq": 440.0,
+                        "modulator_freq": 622.25,
+                        "mix": 0.9
+                    },
+                    "envelope": {
+                        "attack": 0.005,
+                        "decay": 0.8,
+                        "sustain": 0.2,
+                        "release": 1.2
+                    },
+                    "volume": 0.65,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "bandpass",
+                        "center": 2200.0,
+                        "resonance": 0.7,
+                        "center_end": 800.0
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 4.5,
+                            "depth": 0.35
+                        },
+                        "target": {
+                            "target": "pitch",
+                            "semitones": 0.35
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "ring_mod_synth",
+                        "carrier_freq": 440.0,
+                        "modulator_freq": 935.4,
+                        "mix": 0.85
+                    },
+                    "envelope": {
+                        "attack": 0.008,
+                        "decay": 0.6,
+                        "sustain": 0.25,
+                        "release": 1.0
+                    },
+                    "volume": 0.55,
+                    "pan": -0.4,
+                    "filter": {
+                        "type": "highpass",
+                        "cutoff": 800.0,
+                        "resonance": 0.5,
+                        "cutoff_end": 1500.0
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 3.2,
+                            "depth": 0.28
+                        },
+                        "target": {
+                            "target": "pitch",
+                            "semitones": 0.28
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "ring_mod_synth",
+                        "carrier_freq": 440.0,
+                        "modulator_freq": 1320.0,
+                        "mix": 0.75
+                    },
+                    "envelope": {
+                        "attack": 0.012,
+                        "decay": 0.5,
+                        "sustain": 0.18,
+                        "release": 0.9
+                    },
+                    "volume": 0.48,
+                    "pan": 0.5,
+                    "filter": {
+                        "type": "bandpass",
+                        "center": 3500.0,
+                        "resonance": 0.8,
+                        "center_end": 1200.0
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 5.8,
+                            "depth": 0.42
+                        },
+                        "target": {
+                            "target": "pitch",
+                            "semitones": 0.42
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "metallic",
+                        "base_freq": 440.0,
+                        "num_partials": 12,
+                        "inharmonicity": 0.85
+                    },
+                    "envelope": {
+                        "attack": 0.002,
+                        "decay": 1.2,
+                        "sustain": 0.15,
+                        "release": 1.5
+                    },
+                    "volume": 0.42,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "highpass",
+                        "cutoff": 600.0,
+                        "resonance": 0.4
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 6.5,
+                            "depth": 0.15
+                        },
+                        "target": {
+                            "target": "filter_cutoff",
+                            "amount": 500
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "fm_synth",
+                        "carrier_freq": 880.0,
+                        "modulator_freq": 1760.0,
+                        "modulation_index": 3.5
+                    },
+                    "envelope": {
+                        "attack": 0.01,
+                        "decay": 0.7,
+                        "sustain": 0.2,
+                        "release": 1.1
+                    },
+                    "volume": 0.38,
+                    "pan": -0.3,
+                    "filter": {
+                        "type": "bandpass",
+                        "center": 2800.0,
+                        "resonance": 0.65,
+                        "center_end": 1800.0
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "ring_mod_synth",
+                        "carrier_freq": 220.0,
+                        "modulator_freq": 467.5,
+                        "mix": 0.8
+                    },
+                    "envelope": {
+                        "attack": 0.015,
+                        "decay": 1.0,
+                        "sustain": 0.22,
+                        "release": 1.4
+                    },
+                    "volume": 0.5,
+                    "pan": 0.3,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 1800.0,
+                        "resonance": 0.6,
+                        "cutoff_end": 600.0
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 2.8,
+                            "depth": 0.25
+                        },
+                        "target": {
+                            "target": "pitch",
+                            "semitones": 0.25
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "metallic",
+                        "base_freq": 880.0,
+                        "num_partials": 16,
+                        "inharmonicity": 1.2
+                    },
+                    "envelope": {
+                        "attack": 0.003,
+                        "decay": 0.9,
+                        "sustain": 0.12,
+                        "release": 1.3
+                    },
+                    "volume": 0.35,
+                    "pan": 0.6,
+                    "filter": {
+                        "type": "bandpass",
+                        "center": 4200.0,
+                        "resonance": 0.75,
+                        "center_end": 2000.0
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 7.2,
+                            "depth": 0.3
+                        },
+                        "target": {
+                            "target": "filter_cutoff",
+                            "amount": 500
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "ring_mod_synth",
+                        "carrier_freq": 330.0,
+                        "modulator_freq": 555.0,
+                        "mix": 0.82
+                    },
+                    "envelope": {
+                        "attack": 0.02,
+                        "decay": 0.85,
+                        "sustain": 0.2,
+                        "release": 1.2
+                    },
+                    "volume": 0.4,
+                    "pan": -0.5,
+                    "filter": {
+                        "type": "highpass",
+                        "cutoff": 1200.0,
+                        "resonance": 0.55
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 4.0,
+                            "depth": 0.32
+                        },
+                        "target": {
+                            "target": "pitch",
+                            "semitones": 0.32
+                        }
+                    }
+                }
+            ],
+            "effects": [
+                {
+                    "type": "compressor",
+                    "threshold_db": -18.0,
+                    "ratio": 3.5,
+                    "attack_ms": 3.0,
+                    "release_ms": 80.0,
+                    "makeup_db": 0
+                },
+                {
+                    "type": "chorus",
+                    "rate": 0.8,
+                    "depth": 0.4,
+                    "wet": 0.35,
+                    "voices": 2
+                },
+                {
+                    "type": "phaser",
+                    "rate": 0.35,
+                    "depth": 0.6,
+                    "stages": 4,
+                    "wet": 0.28
+                },
+                {
+                    "type": "reverb",
+                    "room_size": 0.75,
+                    "damping": 0.4,
+                    "wet": 0.45,
+                    "width": 0.5
+                },
+                {
+                    "type": "delay",
+                    "time_ms": 100,
+                    "feedback": 0.35,
+                    "wet": 0.25,
+                    "ping_pong": false
+                }
+            ]
+        }
     }
-  }
 }

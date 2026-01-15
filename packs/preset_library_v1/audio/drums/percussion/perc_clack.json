@@ -1,81 +1,161 @@
 {
-  "spec_version": 1,
-  "asset_id": "preset_perc_clack",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 20012,
-  "description": "Percussion clack - woody mid-frequency clacking sound like sticks hitting",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/drums/percussion/perc_clack.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "duration_seconds": 0.15,
-      "sample_rate": 44100,
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "preset_perc_clack",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 20012,
+    "description": "Professional percussion clack - woody mid-frequency clacking sound with rich harmonic content and spatial depth",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "oscillator",
-            "waveform": "triangle",
-            "frequency": 1330,
-            "freq_sweep": {
-              "end_freq": 950,
-              "curve": "exponential"
-            }
-          },
-          "envelope": {
-            "attack": 0.001,
-            "decay": 0.08,
-            "sustain": 0.0,
-            "release": 0.02
-          },
-          "volume": 0.7,
-          "pan": 0
-        },
-        {
-          "synthesis": {
-            "type": "oscillator",
-            "waveform": "triangle",
-            "frequency": 2470,
-            "freq_sweep": {
-              "end_freq": 1900,
-              "curve": "exponential"
-            }
-          },
-          "envelope": {
-            "attack": 0.001,
-            "decay": 0.05,
-            "sustain": 0.0,
-            "release": 0.015
-          },
-          "volume": 0.25,
-          "pan": 0
-        },
-        {
-          "synthesis": {
-            "type": "noise_burst",
-            "noise_type": "white",
-            "filter": {
-              "type": "bandpass",
-              "center": 2500,
-              "resonance": 1.5
-            }
-          },
-          "envelope": {
-            "attack": 0.001,
-            "decay": 0.015,
-            "sustain": 0.0,
-            "release": 0.005
-          },
-          "volume": 0.15,
-          "pan": 0
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/drums/percussion/perc_clack.wav"
         }
-      ]
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "duration_seconds": 0.3,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "modal",
+                        "frequency": 1200,
+                        "modes": [
+                            {
+                                "freq_ratio": 1.0,
+                                "amplitude": 1.0,
+                                "decay_time": 0.12
+                            },
+                            {
+                                "freq_ratio": 2.76,
+                                "amplitude": 0.6,
+                                "decay_time": 0.08
+                            },
+                            {
+                                "freq_ratio": 4.23,
+                                "amplitude": 0.4,
+                                "decay_time": 0.06
+                            },
+                            {
+                                "freq_ratio": 6.87,
+                                "amplitude": 0.25,
+                                "decay_time": 0.04
+                            }
+                        ],
+                        "excitation": "impulse"
+                    },
+                    "envelope": {
+                        "attack": 0.001,
+                        "decay": 0.09,
+                        "sustain": 0,
+                        "release": 0.02
+                    },
+                    "volume": 0.75,
+                    "pan": -0.15,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 4500,
+                        "resonance": 1.2,
+                        "cutoff_end": 2800
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "fm_synth",
+                        "carrier_freq": 2400,
+                        "modulator_freq": 1680,
+                        "modulation_index": 3.2
+                    },
+                    "envelope": {
+                        "attack": 0.001,
+                        "decay": 0.06,
+                        "sustain": 0,
+                        "release": 0.015
+                    },
+                    "volume": 0.4,
+                    "pan": 0.15,
+                    "filter": {
+                        "type": "highpass",
+                        "cutoff": 800,
+                        "resonance": 0.8
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "ring_mod_synth",
+                        "carrier_freq": 1850,
+                        "modulator_freq": 3200,
+                        "mix": 0.65
+                    },
+                    "envelope": {
+                        "attack": 0.001,
+                        "decay": 0.055,
+                        "sustain": 0,
+                        "release": 0.012
+                    },
+                    "volume": 0.28,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "bandpass",
+                        "center": 2800,
+                        "resonance": 2.1
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "noise_burst",
+                        "noise_type": "white",
+                        "filter": {
+                            "type": "bandpass",
+                            "center": 3200,
+                            "resonance": 2.8
+                        }
+                    },
+                    "envelope": {
+                        "attack": 0.0005,
+                        "decay": 0.018,
+                        "sustain": 0,
+                        "release": 0.006
+                    },
+                    "volume": 0.22,
+                    "pan": 0.05,
+                    "filter": {
+                        "type": "highpass",
+                        "cutoff": 2000,
+                        "resonance": 0.5
+                    }
+                }
+            ],
+            "master_filter": {
+                "type": "lowpass",
+                "cutoff": 8000,
+                "resonance": 0.3
+            },
+            "effects": [
+                {
+                    "type": "compressor",
+                    "threshold_db": -18,
+                    "ratio": 3.5,
+                    "attack_ms": 0.5,
+                    "release_ms": 45,
+                    "makeup_db": 0
+                },
+                {
+                    "type": "reverb",
+                    "room_size": 0.25,
+                    "damping": 0.7,
+                    "wet": 0.08,
+                    "width": 0.6
+                },
+                {
+                    "type": "waveshaper",
+                    "drive": 1.4,
+                    "wet": 0.3,
+                    "curve": "soft_clip"
+                }
+            ]
+        }
     }
-  }
 }

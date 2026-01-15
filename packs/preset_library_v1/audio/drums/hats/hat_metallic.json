@@ -4,7 +4,7 @@
   "asset_type": "audio",
   "license": "CC0-1.0",
   "seed": 10052,
-  "description": "Metallic hi-hat - emphasizes inharmonic partials for pronounced metal character",
+  "description": "Professional metallic hi-hat with high inharmonicity and bright, cutting character",
   "outputs": [
     {
       "kind": "primary",
@@ -15,39 +15,90 @@
   "recipe": {
     "kind": "audio_v1",
     "params": {
-      "duration_seconds": 0.2,
+      "duration_seconds": 0.35,
       "sample_rate": 44100,
       "layers": [
         {
           "synthesis": {
             "type": "metallic",
-            "base_freq": 8000,
-            "num_partials": 10,
-            "inharmonicity": 2.8
+            "base_freq": 9200,
+            "num_partials": 14,
+            "inharmonicity": 5.2
           },
           "envelope": {
-            "attack": 0.001,
-            "decay": 0.08,
+            "attack": 0.0005,
+            "decay": 0.12,
             "sustain": 0,
-            "release": 0.1
+            "release": 0.15
           },
-          "volume": 0.6,
+          "volume": 0.65,
           "pan": 0
         },
         {
           "synthesis": {
             "type": "metallic",
-            "base_freq": 6000,
-            "num_partials": 8,
-            "inharmonicity": 3.2
+            "base_freq": 6800,
+            "num_partials": 12,
+            "inharmonicity": 4.8
+          },
+          "envelope": {
+            "attack": 0.001,
+            "decay": 0.1,
+            "sustain": 0,
+            "release": 0.13
+          },
+          "volume": 0.5,
+          "pan": -0.15
+        },
+        {
+          "synthesis": {
+            "type": "metallic",
+            "base_freq": 4500,
+            "num_partials": 10,
+            "inharmonicity": 5.8
           },
           "envelope": {
             "attack": 0.002,
+            "decay": 0.08,
+            "sustain": 0,
+            "release": 0.11
+          },
+          "volume": 0.42,
+          "pan": 0.15
+        },
+        {
+          "synthesis": {
+            "type": "metallic",
+            "base_freq": 11500,
+            "num_partials": 16,
+            "inharmonicity": 6.0
+          },
+          "envelope": {
+            "attack": 0.0003,
             "decay": 0.06,
             "sustain": 0,
             "release": 0.08
           },
-          "volume": 0.4,
+          "volume": 0.38,
+          "pan": 0
+        },
+        {
+          "synthesis": {
+            "type": "noise_burst",
+            "noise_type": "white",
+            "filter": {
+              "type": "bandpass",
+              "center": 10000,
+              "resonance": 0.7
+            }
+          },
+          "envelope": {
+            "attack": 0.0002,
+            "decay": 0.04,
+            "sustain": 0,
+            "release": 0.05
+          },
+          "volume": 0.28,
           "pan": 0
         },
         {
@@ -56,18 +107,44 @@
             "noise_type": "white",
             "filter": {
               "type": "highpass",
-              "cutoff": 7500,
-              "resonance": 0.6
+              "cutoff": 8500,
+              "resonance": 0.5
             }
           },
           "envelope": {
-            "attack": 0.001,
-            "decay": 0.05,
+            "attack": 0.0005,
+            "decay": 0.035,
             "sustain": 0,
-            "release": 0.07
+            "release": 0.045
           },
-          "volume": 0.35,
-          "pan": 0
+          "volume": 0.25,
+          "pan": 0,
+          "lfo": {
+            "config": {
+              "waveform": "sine",
+              "rate": 8.5,
+              "depth": 0.3
+            },
+            "target": {
+              "target": "filter_cutoff",
+              "amount": 0.12
+            }
+          }
+        }
+      ],
+      "effects": [
+        {
+          "type": "chorus",
+          "rate": 1.8,
+          "depth": 0.15,
+          "feedback": 0.15,
+          "wet": 0.18
+        },
+        {
+          "type": "reverb",
+          "room_size": 0.28,
+          "damping": 0.7,
+          "wet": 0.12
         }
       ]
     }

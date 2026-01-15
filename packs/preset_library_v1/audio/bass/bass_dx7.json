@@ -1,56 +1,129 @@
 {
-  "spec_version": 1,
-  "asset_id": "preset_bass_dx7",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 10112,
-  "description": "DX7 bass - classic Yamaha DX7 FM bass with high modulation index for glassy, complex harmonic spectrum",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/bass/bass_dx7.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "base_note": "C2",
-      "duration_seconds": 1.0,
-      "sample_rate": 44100,
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "preset_bass_dx7",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 10112,
+    "description": "DX7 bass - professional Yamaha DX7 FM bass with decaying modulation index, sub-sine layer, and classic 80s character. Features 1:1 carrier/modulator ratio for rich harmonics with modulation decay for that signature FM punch and bloom.",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "fm_synth",
-            "carrier_freq": 65.41,
-            "modulator_freq": 65.41,
-            "modulation_index": 5.0
-          },
-          "envelope": {
-            "attack": 0.003,
-            "decay": 0.25,
-            "sustain": 0.55,
-            "release": 0.18
-          },
-          "volume": 0.75,
-          "pan": 0
-        },
-        {
-          "synthesis": {
-            "type": "oscillator",
-            "waveform": "sine",
-            "frequency": 65.41
-          },
-          "envelope": {
-            "attack": 0.01,
-            "decay": 0.1,
-            "sustain": 0.8,
-            "release": 0.15
-          },
-          "volume": 0.35,
-          "pan": 0
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/bass/bass_dx7.wav"
         }
-      ]
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "base_note": "C2",
+            "duration_seconds": 1.0,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "fm_synth",
+                        "carrier_freq": 65.41,
+                        "modulator_freq": 65.41,
+                        "modulation_index": 8.0
+                    },
+                    "envelope": {
+                        "attack": 0.001,
+                        "decay": 0.35,
+                        "sustain": 0.45,
+                        "release": 0.15
+                    },
+                    "volume": 0.7,
+                    "pan": 0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 3500,
+                        "resonance": 0.15
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "fm_synth",
+                        "carrier_freq": 130.82,
+                        "modulator_freq": 130.82,
+                        "modulation_index": 4.0
+                    },
+                    "envelope": {
+                        "attack": 0.001,
+                        "decay": 0.12,
+                        "sustain": 0,
+                        "release": 0.08
+                    },
+                    "volume": 0.25,
+                    "pan": 0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 2800,
+                        "resonance": 0.2
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "oscillator",
+                        "waveform": "sine",
+                        "frequency": 65.41,
+                        "freq_sweep": {
+                            "end_freq": 65.41,
+                            "curve": "linear"
+                        }
+                    },
+                    "envelope": {
+                        "attack": 0.005,
+                        "decay": 0.2,
+                        "sustain": 0.7,
+                        "release": 0.2
+                    },
+                    "volume": 0.4,
+                    "pan": 0
+                },
+                {
+                    "synthesis": {
+                        "type": "oscillator",
+                        "waveform": "sine",
+                        "frequency": 32.7,
+                        "freq_sweep": {
+                            "end_freq": 32.7,
+                            "curve": "linear"
+                        }
+                    },
+                    "envelope": {
+                        "attack": 0.008,
+                        "decay": 0.3,
+                        "sustain": 0.6,
+                        "release": 0.25
+                    },
+                    "volume": 0.3,
+                    "pan": 0
+                }
+            ],
+            "effects": [
+                {
+                    "type": "chorus",
+                    "rate": 0.8,
+                    "depth": 0.15,
+                    "wet": 0.12,
+                    "voices": 2
+                },
+                {
+                    "type": "compressor",
+                    "threshold_db": -12,
+                    "ratio": 3.0,
+                    "attack_ms": 5.0,
+                    "release_ms": 100.0,
+                    "makeup_db": 0
+                },
+                {
+                    "type": "reverb",
+                    "room_size": 0.15,
+                    "damping": 0.7,
+                    "wet": 0.08,
+                    "width": 0.5
+                }
+            ]
+        }
     }
-  }
 }

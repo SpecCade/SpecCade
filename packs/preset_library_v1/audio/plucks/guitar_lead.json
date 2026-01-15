@@ -1,72 +1,145 @@
 {
-  "spec_version": 1,
-  "asset_id": "guitar_lead",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 20058,
-  "description": "Lead guitar - electric guitar lead with sustain",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/plucks/guitar_lead.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "duration_seconds": 1.2,
-      "sample_rate": 44100,
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "guitar_lead",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 20058,
+    "description": "Professional lead guitar - electric guitar with expressive vibrato and sustain",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "multi_oscillator",
-            "frequency": 329.63,
-            "oscillators": [
-              {
-                "waveform": "sawtooth",
-                "volume": 1.0,
-                "detune": -8.0
-              },
-              {
-                "waveform": "sawtooth",
-                "volume": 1.0,
-                "detune": 8.0
-              },
-              {
-                "waveform": "sawtooth",
-                "volume": 0.9,
-                "detune": 0.0
-              },
-              {
-                "waveform": "square",
-                "volume": 0.35,
-                "detune": 0.0
-              }
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/plucks/guitar_lead.wav"
+        }
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "duration_seconds": 2.5,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "karplus_strong",
+                        "frequency": 329.63,
+                        "decay": 0.995,
+                        "blend": 0.5
+                    },
+                    "envelope": {
+                        "attack": 0.002,
+                        "decay": 0.25,
+                        "sustain": 0.78,
+                        "release": 0.6
+                    },
+                    "volume": 0.95,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 4200.0,
+                        "resonance": 0.55,
+                        "cutoff_end": 2800.0
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 5.8,
+                            "depth": 0.25
+                        },
+                        "target": {
+                            "target": "pitch",
+                            "semitones": 0.25
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "oscillator",
+                        "waveform": "sawtooth",
+                        "frequency": 329.63
+                    },
+                    "envelope": {
+                        "attack": 0.002,
+                        "decay": 0.3,
+                        "sustain": 0.15,
+                        "release": 0.4
+                    },
+                    "volume": 0.28,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "bandpass",
+                        "center": 2400.0,
+                        "resonance": 1.2
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 5.8,
+                            "depth": 0.25
+                        },
+                        "target": {
+                            "target": "pitch",
+                            "semitones": 0.25
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "oscillator",
+                        "waveform": "triangle",
+                        "frequency": 659.26
+                    },
+                    "envelope": {
+                        "attack": 0.01,
+                        "decay": 0.15,
+                        "sustain": 0.08,
+                        "release": 0.3
+                    },
+                    "volume": 0.18,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "highpass",
+                        "cutoff": 1200.0,
+                        "resonance": 0.3
+                    }
+                }
+            ],
+            "effects": [
+                {
+                    "type": "waveshaper",
+                    "drive": 3.2,
+                    "wet": 0.58,
+                    "curve": "tanh"
+                },
+                {
+                    "type": "chorus",
+                    "rate": 0.45,
+                    "depth": 0.35,
+                    "wet": 0.22,
+                    "voices": 2
+                },
+                {
+                    "type": "compressor",
+                    "threshold_db": -18.0,
+                    "ratio": 3.5,
+                    "attack_ms": 3.0,
+                    "release_ms": 80.0,
+                    "makeup_db": 0
+                },
+                {
+                    "type": "delay",
+                    "time_ms": 180.0,
+                    "feedback": 0.15,
+                    "wet": 0.12,
+                    "ping_pong": false
+                },
+                {
+                    "type": "reverb",
+                    "room_size": 0.35,
+                    "damping": 0.6,
+                    "wet": 0.15,
+                    "width": 0.5
+                }
             ]
-          },
-          "envelope": {
-            "attack": 0.004,
-            "decay": 0.15,
-            "sustain": 0.7,
-            "release": 0.25
-          },
-          "filter": {
-            "type": "lowpass",
-            "cutoff": 3200.0,
-            "resonance": 0.6
-          },
-          "volume": 1.0,
-          "pan": 0.0
         }
-      ],
-      "effects": [
-        {
-          "type": "waveshaper",
-          "drive": 2.2,
-          "wet": 0.45
-        }
-      ]
     }
-  }
 }

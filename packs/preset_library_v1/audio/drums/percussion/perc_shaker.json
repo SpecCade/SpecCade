@@ -1,81 +1,255 @@
 {
-  "spec_version": 1,
-  "asset_id": "preset_perc_shaker",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 20013,
-  "description": "Percussion shaker variant - alternative shaker texture with different character",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/drums/percussion/perc_shaker.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "duration_seconds": 0.2,
-      "sample_rate": 44100,
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "preset_perc_shaker",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 20013,
+    "description": "Professional shaker - multi-layered percussion with realistic shake texture, organic movement, and spatial presence",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "noise_burst",
-            "noise_type": "white",
-            "filter": {
-              "type": "highpass",
-              "cutoff": 3000,
-              "resonance": 0.7
-            }
-          },
-          "envelope": {
-            "attack": 0.015,
-            "decay": 0.08,
-            "sustain": 0.3,
-            "release": 0.105
-          },
-          "volume": 0.7,
-          "pan": 0
-        },
-        {
-          "synthesis": {
-            "type": "noise_burst",
-            "noise_type": "white",
-            "filter": {
-              "type": "bandpass",
-              "center": 1800,
-              "resonance": 0.5
-            }
-          },
-          "envelope": {
-            "attack": 0.02,
-            "decay": 0.06,
-            "sustain": 0.2,
-            "release": 0.12
-          },
-          "volume": 0.4,
-          "pan": 0
-        },
-        {
-          "synthesis": {
-            "type": "noise_burst",
-            "noise_type": "white",
-            "filter": {
-              "type": "highpass",
-              "cutoff": 5000,
-              "resonance": 0.4
-            }
-          },
-          "envelope": {
-            "attack": 0.01,
-            "decay": 0.05,
-            "sustain": 0.1,
-            "release": 0.14
-          },
-          "volume": 0.3,
-          "pan": 0
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/drums/percussion/perc_shaker.wav"
         }
-      ]
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "duration_seconds": 0.35,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "noise_burst",
+                        "noise_type": "white"
+                    },
+                    "envelope": {
+                        "attack": 0.008,
+                        "decay": 0.095,
+                        "sustain": 0.45,
+                        "release": 0.12
+                    },
+                    "volume": 0.75,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "bandpass",
+                        "center": 4500,
+                        "resonance": 1.8,
+                        "center_end": 3800
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 85,
+                            "depth": 0.35
+                        },
+                        "target": {
+                            "target": "filter_cutoff",
+                            "amount": 500
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "noise_burst",
+                        "noise_type": "white"
+                    },
+                    "envelope": {
+                        "attack": 0.005,
+                        "decay": 0.08,
+                        "sustain": 0.3,
+                        "release": 0.1
+                    },
+                    "volume": 0.5,
+                    "pan": 0.15,
+                    "filter": {
+                        "type": "highpass",
+                        "cutoff": 7000,
+                        "resonance": 1.2,
+                        "cutoff_end": 6200
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 110,
+                            "depth": 0.25
+                        },
+                        "target": {
+                            "target": "filter_cutoff",
+                            "amount": 500
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "granular",
+                        "source": {
+                            "type": "noise",
+                            "noise_type": "white"
+                        },
+                        "grain_size_ms": 10,
+                        "grain_density": 1,
+                        "pitch_spread": 0.15,
+                        "position_spread": 0,
+                        "pan_spread": 0
+                    },
+                    "envelope": {
+                        "attack": 0.012,
+                        "decay": 0.11,
+                        "sustain": 0.35,
+                        "release": 0.14
+                    },
+                    "volume": 0.42,
+                    "pan": -0.12,
+                    "filter": {
+                        "type": "bandpass",
+                        "center": 2800,
+                        "resonance": 0.9,
+                        "center_end": 2200
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 75,
+                            "depth": 0.22
+                        },
+                        "target": {
+                            "target": "volume",
+                            "amount": 0.3
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "modal",
+                        "frequency": 440,
+                        "modes": [
+                            {
+                                "freq_ratio": 1.0,
+                                "amplitude": 0.8,
+                                "decay_time": 0.15
+                            },
+                            {
+                                "freq_ratio": 2.3,
+                                "amplitude": 0.5,
+                                "decay_time": 0.12
+                            },
+                            {
+                                "freq_ratio": 3.8,
+                                "amplitude": 0.3,
+                                "decay_time": 0.09
+                            },
+                            {
+                                "freq_ratio": 5.5,
+                                "amplitude": 0.2,
+                                "decay_time": 0.07
+                            }
+                        ],
+                        "excitation": "impulse"
+                    },
+                    "envelope": {
+                        "attack": 0.002,
+                        "decay": 0.09,
+                        "sustain": 0.25,
+                        "release": 0.11
+                    },
+                    "volume": 0.32,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 1800,
+                        "resonance": 0.6,
+                        "cutoff_end": 1200
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "noise_burst",
+                        "noise_type": "pink"
+                    },
+                    "envelope": {
+                        "attack": 0.001,
+                        "decay": 0.025,
+                        "sustain": 0,
+                        "release": 0.035
+                    },
+                    "volume": 0.58,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "bandpass",
+                        "center": 6500,
+                        "resonance": 2.1,
+                        "center_end": 4000
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "ring_mod_synth",
+                        "carrier_freq": 8500,
+                        "modulator_freq": 12000,
+                        "mix": 0.7
+                    },
+                    "envelope": {
+                        "attack": 0.003,
+                        "decay": 0.06,
+                        "sustain": 0.15,
+                        "release": 0.09
+                    },
+                    "volume": 0.22,
+                    "pan": -0.2,
+                    "filter": {
+                        "type": "highpass",
+                        "cutoff": 9000,
+                        "resonance": 0.8
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 120,
+                            "depth": 0.08
+                        },
+                        "target": {
+                            "target": "pitch",
+                            "semitones": 0.08
+                        }
+                    }
+                }
+            ],
+            "master_filter": {
+                "type": "highpass",
+                "cutoff": 180,
+                "resonance": 0.3
+            },
+            "effects": [
+                {
+                    "type": "compressor",
+                    "threshold_db": -12,
+                    "ratio": 3.5,
+                    "attack_ms": 1.5,
+                    "release_ms": 45,
+                    "makeup_db": 0
+                },
+                {
+                    "type": "chorus",
+                    "rate": 0.8,
+                    "depth": 0.15,
+                    "wet": 0.12,
+                    "voices": 2
+                },
+                {
+                    "type": "reverb",
+                    "room_size": 0.35,
+                    "damping": 0.6,
+                    "wet": 0.18,
+                    "width": 0.85
+                },
+                {
+                    "type": "waveshaper",
+                    "drive": 1.15,
+                    "wet": 0.25,
+                    "curve": "soft_clip"
+                }
+            ]
+        }
     }
-  }
 }

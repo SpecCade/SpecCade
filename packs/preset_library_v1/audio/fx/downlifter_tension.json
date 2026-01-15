@@ -1,115 +1,220 @@
 {
-  "spec_version": 1,
-  "asset_id": "downlifter_tension",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 20071,
-  "description": "Tension downlifter - dramatic descending sweep that builds unease",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/fx/downlifter_tension.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "duration_seconds": 2.5,
-      "sample_rate": 44100,
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "downlifter_tension",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 20071,
+    "description": "Tension downlifter - dramatic descending sweep that builds unease",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "noise_burst",
-            "noise_type": "white",
-            "filter": {
-              "type": "lowpass",
-              "cutoff": 8000,
-              "resonance": 0.75,
-              "cutoff_end": 200
-            }
-          },
-          "envelope": {
-            "attack": 0.02,
-            "decay": 0,
-            "sustain": 1,
-            "release": 0.5
-          },
-          "volume": 0.7,
-          "pan": 0
-        },
-        {
-          "synthesis": {
-            "type": "oscillator",
-            "waveform": "sawtooth",
-            "frequency": 600,
-            "freq_sweep": {
-              "end_freq": 60,
-              "curve": "exponential"
-            }
-          },
-          "envelope": {
-            "attack": 0.05,
-            "decay": 0,
-            "sustain": 0.9,
-            "release": 0.4
-          },
-          "volume": 0.5,
-          "pan": -0.2
-        },
-        {
-          "synthesis": {
-            "type": "oscillator",
-            "waveform": "triangle",
-            "frequency": 457,
-            "freq_sweep": {
-              "end_freq": 45,
-              "curve": "exponential"
-            }
-          },
-          "envelope": {
-            "attack": 0.08,
-            "decay": 0,
-            "sustain": 0.85,
-            "release": 0.4
-          },
-          "volume": 0.35,
-          "pan": 0.2
-        },
-        {
-          "synthesis": {
-            "type": "oscillator",
-            "waveform": "square",
-            "frequency": 300,
-            "freq_sweep": {
-              "end_freq": 30,
-              "curve": "exponential"
-            }
-          },
-          "envelope": {
-            "attack": 0.1,
-            "decay": 0,
-            "sustain": 0.7,
-            "release": 0.6
-          },
-          "volume": 0.25,
-          "pan": 0
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/fx/downlifter_tension.wav"
         }
-      ],
-      "effects": [
-        {
-          "type": "reverb",
-          "room_size": 0.75,
-          "damping": 0.35,
-          "wet": 0.35
-        },
-        {
-          "type": "delay",
-          "time_ms": 180,
-          "feedback": 0.25,
-          "wet": 0.2
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "duration_seconds": 3.0,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "ring_mod_synth",
+                        "carrier_freq": 880,
+                        "modulator_freq": 987,
+                        "mix": 0.5
+                    },
+                    "envelope": {
+                        "attack": 0.01,
+                        "decay": 0.3,
+                        "sustain": 0.9,
+                        "release": 0.8
+                    },
+                    "volume": 0.55,
+                    "pan": 0
+                },
+                {
+                    "synthesis": {
+                        "type": "fm_synth",
+                        "carrier_freq": 440,
+                        "modulator_freq": 623,
+                        "modulation_index": 5.5
+                    },
+                    "envelope": {
+                        "attack": 0.05,
+                        "decay": 0.2,
+                        "sustain": 0.85,
+                        "release": 0.7
+                    },
+                    "volume": 0.48,
+                    "pan": -0.35
+                },
+                {
+                    "synthesis": {
+                        "type": "metallic",
+                        "base_freq": 440,
+                        "num_partials": 12,
+                        "inharmonicity": 0.85
+                    },
+                    "envelope": {
+                        "attack": 0.08,
+                        "decay": 0.25,
+                        "sustain": 0.75,
+                        "release": 0.9
+                    },
+                    "volume": 0.38,
+                    "pan": 0.35
+                },
+                {
+                    "synthesis": {
+                        "type": "granular",
+                        "source": {
+                            "type": "noise",
+                            "noise_type": "white"
+                        },
+                        "grain_size_ms": 85,
+                        "grain_density": 20,
+                        "pitch_spread": 0,
+                        "position_spread": 0,
+                        "pan_spread": 0
+                    },
+                    "envelope": {
+                        "attack": 0.15,
+                        "decay": 0.1,
+                        "sustain": 0.95,
+                        "release": 0.6
+                    },
+                    "volume": 0.42,
+                    "pan": -0.15
+                },
+                {
+                    "synthesis": {
+                        "type": "additive",
+                        "base_freq": 440,
+                        "harmonics": [
+                            1.0,
+                            0.5,
+                            0.25,
+                            0.125
+                        ]
+                    },
+                    "envelope": {
+                        "attack": 0.12,
+                        "decay": 0.15,
+                        "sustain": 0.88,
+                        "release": 0.75
+                    },
+                    "volume": 0.35,
+                    "pan": 0.2
+                },
+                {
+                    "synthesis": {
+                        "type": "noise_burst",
+                        "noise_type": "brown",
+                        "filter": {
+                            "type": "bandpass",
+                            "center": 4500,
+                            "resonance": 2.5,
+                            "center_end": 120
+                        }
+                    },
+                    "envelope": {
+                        "attack": 0.02,
+                        "decay": 0.2,
+                        "sustain": 0.8,
+                        "release": 0.85
+                    },
+                    "volume": 0.32,
+                    "pan": 0
+                },
+                {
+                    "synthesis": {
+                        "type": "modal",
+                        "frequency": 440,
+                        "modes": [
+                            {
+                                "freq_ratio": 1.0,
+                                "amplitude": 1.0,
+                                "decay_time": 0.5
+                            },
+                            {
+                                "freq_ratio": 2.0,
+                                "amplitude": 0.5,
+                                "decay_time": 0.3
+                            }
+                        ],
+                        "excitation": "impulse"
+                    },
+                    "envelope": {
+                        "attack": 0.2,
+                        "decay": 0.1,
+                        "sustain": 0.92,
+                        "release": 1.0
+                    },
+                    "volume": 0.28,
+                    "pan": -0.25
+                },
+                {
+                    "synthesis": {
+                        "type": "formant",
+                        "frequency": 440,
+                        "vowel": "o"
+                    },
+                    "envelope": {
+                        "attack": 0.25,
+                        "decay": 0.05,
+                        "sustain": 0.95,
+                        "release": 0.65
+                    },
+                    "volume": 0.24,
+                    "pan": 0.4
+                }
+            ],
+            "effects": [
+                {
+                    "type": "chorus",
+                    "rate": 0.85,
+                    "depth": 0.45,
+                    "wet": 0.28,
+                    "voices": 2
+                },
+                {
+                    "type": "phaser",
+                    "rate": 0.35,
+                    "depth": 0.7,
+                    "stages": 4,
+                    "wet": 0.32
+                },
+                {
+                    "type": "waveshaper",
+                    "drive": 1.8,
+                    "wet": 0.25,
+                    "curve": "tanh"
+                },
+                {
+                    "type": "reverb",
+                    "room_size": 0.85,
+                    "damping": 0.42,
+                    "wet": 0.45,
+                    "width": 0.5
+                },
+                {
+                    "type": "delay",
+                    "time_ms": 220,
+                    "feedback": 0.38,
+                    "wet": 0.25,
+                    "ping_pong": false
+                },
+                {
+                    "type": "compressor",
+                    "threshold_db": -12.0,
+                    "ratio": 3.5,
+                    "attack_ms": 5.0,
+                    "release_ms": 150.0,
+                    "makeup_db": 0
+                }
+            ]
         }
-      ]
     }
-  }
 }

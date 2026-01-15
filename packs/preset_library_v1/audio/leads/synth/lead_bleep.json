@@ -1,51 +1,149 @@
 {
-  "spec_version": 1,
-  "asset_id": "preset_lead_bleep",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 10304,
-  "description": "Clean digital bleep - simple sine and triangle for pure tones",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/leads/synth/lead_bleep.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "base_note": "A4",
-      "duration_seconds": 1.0,
-      "sample_rate": 44100,
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "preset_lead_bleep",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 10304,
+    "description": "Professional bleep lead - chippy digital character with bitcrushed harmonics, ideal for chipcore and retro-futuristic leads",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "multi_oscillator",
-            "frequency": 440.0,
-            "oscillators": [
-              {
-                "waveform": "sine",
-                "volume": 1.0,
-                "detune": 0
-              },
-              {
-                "waveform": "triangle",
-                "volume": 0.5,
-                "detune": 0
-              }
-            ]
-          },
-          "envelope": {
-            "attack": 0.001,
-            "decay": 0.08,
-            "sustain": 0.7,
-            "release": 0.15
-          },
-          "volume": 0.9,
-          "pan": 0
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/leads/synth/lead_bleep.wav"
         }
-      ]
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "base_note": "A4",
+            "duration_seconds": 1.0,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "multi_oscillator",
+                        "frequency": 440.0,
+                        "oscillators": [
+                            {
+                                "waveform": "square",
+                                "volume": 1.0,
+                                "detune": 0
+                            },
+                            {
+                                "waveform": "pulse",
+                                "volume": 0.4,
+                                "detune": 12
+                            },
+                            {
+                                "waveform": "square",
+                                "volume": 0.25,
+                                "detune": 24
+                            }
+                        ]
+                    },
+                    "envelope": {
+                        "attack": 0.002,
+                        "decay": 0.06,
+                        "sustain": 0.5,
+                        "release": 0.08
+                    },
+                    "volume": 0.85,
+                    "pan": 0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 3200.0,
+                        "resonance": 0.35,
+                        "cutoff_end": 1800.0
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 5.5,
+                            "depth": 0.15
+                        },
+                        "target": {
+                            "target": "filter_cutoff",
+                            "amount": 280.0
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "additive",
+                        "base_freq": 440.0,
+                        "harmonics": [
+                            1.0,
+                            0.0,
+                            0.3,
+                            0.0,
+                            0.15,
+                            0.0,
+                            0.08,
+                            0.0
+                        ]
+                    },
+                    "envelope": {
+                        "attack": 0.001,
+                        "decay": 0.04,
+                        "sustain": 0.3,
+                        "release": 0.06
+                    },
+                    "volume": 0.35,
+                    "pan": -0.15,
+                    "filter": {
+                        "type": "bandpass",
+                        "center": 2800.0,
+                        "resonance": 0.5,
+                        "center_end": 1600.0
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "noise_burst",
+                        "noise_type": "white"
+                    },
+                    "envelope": {
+                        "attack": 0,
+                        "decay": 0.015,
+                        "sustain": 0,
+                        "release": 0.01
+                    },
+                    "volume": 0.18,
+                    "pan": 0.15,
+                    "filter": {
+                        "type": "highpass",
+                        "cutoff": 4000.0,
+                        "resonance": 0.2
+                    }
+                }
+            ],
+            "effects": [
+                {
+                    "type": "bitcrush",
+                    "bits": 12,
+                    "wet": 0.55
+                },
+                {
+                    "type": "phaser",
+                    "rate": 0.35,
+                    "depth": 0.4,
+                    "feedback": 0.3,
+                    "stages": 4,
+                    "wet": 0.25
+                },
+                {
+                    "type": "delay",
+                    "time_ms": 185.0,
+                    "feedback": 0.22,
+                    "wet": 0.15
+                },
+                {
+                    "type": "reverb",
+                    "room_size": 0.25,
+                    "damping": 0.6,
+                    "wet": 0.08
+                }
+            ]
+        }
     }
-  }
 }

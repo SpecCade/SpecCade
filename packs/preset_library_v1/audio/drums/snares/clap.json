@@ -4,7 +4,7 @@
   "asset_type": "audio",
   "license": "CC0-1.0",
   "seed": 10003,
-  "description": "Electronic clap - layered noise bursts with slight delays",
+  "description": "Professional hand clap - multiple layered noise bursts simulating 4-6 hands with room reverb",
   "outputs": [
     {
       "kind": "primary",
@@ -15,47 +15,28 @@
   "recipe": {
     "kind": "audio_v1",
     "params": {
-      "duration_seconds": 0.25,
+      "duration_seconds": 0.4,
       "sample_rate": 44100,
       "layers": [
         {
           "synthesis": {
             "type": "noise_burst",
-            "noise_type": "pink",
+            "noise_type": "white",
             "filter": {
               "type": "bandpass",
-              "center": 1200,
-              "resonance": 1
+              "center": 1800,
+              "resonance": 0.6
             }
           },
           "envelope": {
-            "attack": 0.001,
-            "decay": 0.02,
+            "attack": 0.0005,
+            "decay": 0.015,
             "sustain": 0,
             "release": 0.02
           },
-          "volume": 0.7,
-          "pan": 0
-        },
-        {
-          "synthesis": {
-            "type": "noise_burst",
-            "noise_type": "pink",
-            "filter": {
-              "type": "bandpass",
-              "center": 1400,
-              "resonance": 0.9
-            }
-          },
-          "envelope": {
-            "attack": 0.001,
-            "decay": 0.03,
-            "sustain": 0,
-            "release": 0.03
-          },
-          "volume": 0.6,
-          "pan": 0,
-          "delay": 0.012
+          "volume": 0.85,
+          "pan": -0.15,
+          "delay": 0
         },
         {
           "synthesis": {
@@ -63,19 +44,153 @@
             "noise_type": "white",
             "filter": {
               "type": "bandpass",
-              "center": 2000,
-              "resonance": 0.7
+              "center": 1650,
+              "resonance": 0.55
+            }
+          },
+          "envelope": {
+            "attack": 0.0005,
+            "decay": 0.018,
+            "sustain": 0,
+            "release": 0.025
+          },
+          "volume": 0.75,
+          "pan": 0.1,
+          "delay": 0.008
+        },
+        {
+          "synthesis": {
+            "type": "noise_burst",
+            "noise_type": "white",
+            "filter": {
+              "type": "bandpass",
+              "center": 2100,
+              "resonance": 0.5
+            }
+          },
+          "envelope": {
+            "attack": 0.0005,
+            "decay": 0.02,
+            "sustain": 0,
+            "release": 0.03
+          },
+          "volume": 0.7,
+          "pan": -0.05,
+          "delay": 0.015
+        },
+        {
+          "synthesis": {
+            "type": "noise_burst",
+            "noise_type": "pink",
+            "filter": {
+              "type": "bandpass",
+              "center": 1500,
+              "resonance": 0.65
+            }
+          },
+          "envelope": {
+            "attack": 0.0005,
+            "decay": 0.022,
+            "sustain": 0,
+            "release": 0.035
+          },
+          "volume": 0.65,
+          "pan": 0.2,
+          "delay": 0.023
+        },
+        {
+          "synthesis": {
+            "type": "noise_burst",
+            "noise_type": "white",
+            "filter": {
+              "type": "bandpass",
+              "center": 1900,
+              "resonance": 0.58
+            }
+          },
+          "envelope": {
+            "attack": 0.0005,
+            "decay": 0.025,
+            "sustain": 0,
+            "release": 0.04
+          },
+          "volume": 0.6,
+          "pan": -0.1,
+          "delay": 0.03
+        },
+        {
+          "synthesis": {
+            "type": "noise_burst",
+            "noise_type": "pink",
+            "filter": {
+              "type": "bandpass",
+              "center": 2300,
+              "resonance": 0.52
+            }
+          },
+          "envelope": {
+            "attack": 0.0005,
+            "decay": 0.028,
+            "sustain": 0,
+            "release": 0.045
+          },
+          "volume": 0.55,
+          "pan": 0.05,
+          "delay": 0.037
+        },
+        {
+          "synthesis": {
+            "type": "noise_burst",
+            "noise_type": "white",
+            "filter": {
+              "type": "bandpass",
+              "center": 2500,
+              "resonance": 0.4
             }
           },
           "envelope": {
             "attack": 0.001,
-            "decay": 0.08,
-            "sustain": 0.02,
-            "release": 0.1
+            "decay": 0.12,
+            "sustain": 0.015,
+            "release": 0.15
           },
-          "volume": 0.8,
+          "volume": 0.3,
           "pan": 0,
-          "delay": 0.025
+          "delay": 0
+        },
+        {
+          "synthesis": {
+            "type": "noise_burst",
+            "noise_type": "pink",
+            "filter": {
+              "type": "bandpass",
+              "center": 1200,
+              "resonance": 0.35
+            }
+          },
+          "envelope": {
+            "attack": 0.002,
+            "decay": 0.15,
+            "sustain": 0.01,
+            "release": 0.18
+          },
+          "volume": 0.25,
+          "pan": 0,
+          "delay": 0.01
+        }
+      ],
+      "effects": [
+        {
+          "type": "reverb",
+          "room_size": 0.45,
+          "damping": 0.6,
+          "wet": 0.28
+        },
+        {
+          "type": "chorus",
+          "rate": 0.8,
+          "depth": 0.15,
+          "wet": 0.18
         }
       ]
     }

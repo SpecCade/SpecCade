@@ -1,49 +1,173 @@
 {
-  "spec_version": 1,
-  "asset_id": "preset_bell",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 10250,
-  "description": "Standard bell - medium-sized bell with clear fundamental and metallic overtones",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/bells/bell.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "duration_seconds": 2.0,
-      "sample_rate": 44100,
-      "base_note": "A5",
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "preset_bell",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 10250,
+    "description": "Professional studio bell - rich multi-layered bell combining FM, modal, and metallic synthesis with carefully tuned inharmonic partials, strike transient, and spatial reverb",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "metallic",
-            "base_freq": 880.0,
-            "num_partials": 12,
-            "inharmonicity": 1.35
-          },
-          "envelope": {
-            "attack": 0.001,
-            "decay": 0.6,
-            "sustain": 0.15,
-            "release": 1.2
-          },
-          "volume": 0.85,
-          "pan": 0.0
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/bells/bell.wav"
         }
-      ],
-      "effects": [
-        {
-          "type": "reverb",
-          "room_size": 0.7,
-          "damping": 0.4,
-          "wet": 0.35
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "base_note": "A5",
+            "duration_seconds": 4.0,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "metallic",
+                        "base_freq": 880.0,
+                        "num_partials": 16,
+                        "inharmonicity": 2.8
+                    },
+                    "envelope": {
+                        "attack": 0.0005,
+                        "decay": 0.08,
+                        "sustain": 0,
+                        "release": 0.12
+                    },
+                    "volume": 0.45,
+                    "pan": 0.0
+                },
+                {
+                    "synthesis": {
+                        "type": "fm_synth",
+                        "carrier_freq": 880.0,
+                        "modulator_freq": 1232.0,
+                        "modulation_index": 4.5
+                    },
+                    "envelope": {
+                        "attack": 0.001,
+                        "decay": 0.8,
+                        "sustain": 0.12,
+                        "release": 2.0
+                    },
+                    "volume": 0.65,
+                    "pan": 0.0
+                },
+                {
+                    "synthesis": {
+                        "type": "modal",
+                        "frequency": 880.0,
+                        "modes": [
+                            {
+                                "freq_ratio": 1.0,
+                                "amplitude": 1.0,
+                                "decay_time": 3.5
+                            },
+                            {
+                                "freq_ratio": 2.0,
+                                "amplitude": 0.7,
+                                "decay_time": 2.8
+                            },
+                            {
+                                "freq_ratio": 2.42,
+                                "amplitude": 0.55,
+                                "decay_time": 2.2
+                            },
+                            {
+                                "freq_ratio": 3.0,
+                                "amplitude": 0.45,
+                                "decay_time": 1.8
+                            },
+                            {
+                                "freq_ratio": 3.56,
+                                "amplitude": 0.35,
+                                "decay_time": 1.5
+                            },
+                            {
+                                "freq_ratio": 4.24,
+                                "amplitude": 0.25,
+                                "decay_time": 1.2
+                            },
+                            {
+                                "freq_ratio": 5.12,
+                                "amplitude": 0.18,
+                                "decay_time": 0.9
+                            },
+                            {
+                                "freq_ratio": 6.28,
+                                "amplitude": 0.12,
+                                "decay_time": 0.7
+                            }
+                        ],
+                        "excitation": "impulse"
+                    },
+                    "envelope": {
+                        "attack": 0.0008,
+                        "decay": 1.2,
+                        "sustain": 0.08,
+                        "release": 2.5
+                    },
+                    "volume": 0.75,
+                    "pan": 0.0
+                },
+                {
+                    "synthesis": {
+                        "type": "metallic",
+                        "base_freq": 1760.0,
+                        "num_partials": 10,
+                        "inharmonicity": 1.8
+                    },
+                    "envelope": {
+                        "attack": 0.002,
+                        "decay": 0.5,
+                        "sustain": 0.05,
+                        "release": 1.8
+                    },
+                    "volume": 0.28,
+                    "pan": 0.0
+                },
+                {
+                    "synthesis": {
+                        "type": "modal",
+                        "frequency": 440.0,
+                        "modes": [
+                            {
+                                "freq_ratio": 1.0,
+                                "amplitude": 1.0,
+                                "decay_time": 4.0
+                            },
+                            {
+                                "freq_ratio": 2.0,
+                                "amplitude": 0.4,
+                                "decay_time": 3.0
+                            }
+                        ],
+                        "excitation": "impulse"
+                    },
+                    "envelope": {
+                        "attack": 0.005,
+                        "decay": 1.5,
+                        "sustain": 0.1,
+                        "release": 3.0
+                    },
+                    "volume": 0.22,
+                    "pan": 0.0
+                }
+            ],
+            "effects": [
+                {
+                    "type": "reverb",
+                    "room_size": 0.75,
+                    "damping": 0.35,
+                    "wet": 0.42,
+                    "width": 0.5
+                },
+                {
+                    "type": "delay",
+                    "time_ms": 180.0,
+                    "feedback": 0.15,
+                    "wet": 0.12,
+                    "ping_pong": false
+                }
+            ]
         }
-      ]
     }
-  }
 }

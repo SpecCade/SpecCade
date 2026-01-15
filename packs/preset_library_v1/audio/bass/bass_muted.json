@@ -1,60 +1,121 @@
 {
-  "spec_version": 1,
-  "asset_id": "preset_bass_muted",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 10104,
-  "description": "Muted bass - heavily filtered at 300Hz with short decay for dull, muffled palm-muted character",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/bass/bass_muted.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "base_note": "C2",
-      "duration_seconds": 0.6,
-      "sample_rate": 44100,
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "preset_bass_muted",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 10104,
+    "description": "Professional muted bass - palm-muted funk character with karplus pluck, heavily filtered multi-oscillator body, and tight sub foundation. Ideal for pocket grooves and staccato bass lines.",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "oscillator",
-            "waveform": "sawtooth",
-            "frequency": 65.41
-          },
-          "filter": {
-            "type": "lowpass",
-            "cutoff": 300.0,
-            "resonance": 0.2
-          },
-          "envelope": {
-            "attack": 0.005,
-            "decay": 0.15,
-            "sustain": 0.3,
-            "release": 0.1
-          },
-          "volume": 0.9,
-          "pan": 0
-        },
-        {
-          "synthesis": {
-            "type": "oscillator",
-            "waveform": "sine",
-            "frequency": 65.41
-          },
-          "envelope": {
-            "attack": 0.01,
-            "decay": 0.1,
-            "sustain": 0.4,
-            "release": 0.1
-          },
-          "volume": 0.5,
-          "pan": 0
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/bass/bass_muted.wav"
         }
-      ]
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "base_note": "C2",
+            "duration_seconds": 0.5,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "karplus_strong",
+                        "frequency": 65.41,
+                        "decay": 0.995,
+                        "blend": 0.5
+                    },
+                    "envelope": {
+                        "attack": 0.001,
+                        "decay": 0.08,
+                        "sustain": 0.1,
+                        "release": 0.06
+                    },
+                    "volume": 0.55,
+                    "pan": 0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 450.0,
+                        "resonance": 0.15
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "multi_oscillator",
+                        "frequency": 65.41,
+                        "oscillators": [
+                            {
+                                "waveform": "sawtooth",
+                                "volume": 1.0
+                            }
+                        ]
+                    },
+                    "envelope": {
+                        "attack": 0.003,
+                        "decay": 0.12,
+                        "sustain": 0.2,
+                        "release": 0.08
+                    },
+                    "volume": 0.65,
+                    "pan": 0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 380.0,
+                        "resonance": 0.25
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "oscillator",
+                        "waveform": "sine",
+                        "frequency": 65.41
+                    },
+                    "envelope": {
+                        "attack": 0.005,
+                        "decay": 0.1,
+                        "sustain": 0.35,
+                        "release": 0.1
+                    },
+                    "volume": 0.5,
+                    "pan": 0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 200.0,
+                        "resonance": 0.0
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "oscillator",
+                        "waveform": "triangle",
+                        "frequency": 130.82
+                    },
+                    "envelope": {
+                        "attack": 0.001,
+                        "decay": 0.025,
+                        "sustain": 0,
+                        "release": 0.02
+                    },
+                    "volume": 0.25,
+                    "pan": 0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 600.0,
+                        "resonance": 0.1
+                    }
+                }
+            ],
+            "effects": [
+                {
+                    "type": "compressor",
+                    "threshold_db": -12.0,
+                    "ratio": 4.0,
+                    "attack_ms": 5.0,
+                    "release_ms": 80.0,
+                    "makeup_db": 0
+                }
+            ]
+        }
     }
-  }
 }

@@ -1,76 +1,141 @@
 {
-  "spec_version": 1,
-  "asset_id": "preset_lead_cute",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 10305,
-  "description": "Cute playful lead - soft triangle and pulse for charming melodies",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/leads/synth/lead_cute.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "base_note": "C5",
-      "duration_seconds": 1.2,
-      "sample_rate": 44100,
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "preset_lead_cute",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 10305,
+    "description": "Cute chiptune-style lead with pure sine and triangle waves, bouncy vibrato, and playful character for kawaii melodies and video game charm",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "multi_oscillator",
-            "frequency": 523.25,
-            "oscillators": [
-              {
-                "waveform": "triangle",
-                "volume": 1.0,
-                "detune": 0
-              },
-              {
-                "waveform": "pulse",
-                "volume": 0.4,
-                "detune": 5,
-                "duty": 0.35
-              }
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/leads/synth/lead_cute.wav"
+        }
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "base_note": "C5",
+            "duration_seconds": 1.2,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "oscillator",
+                        "waveform": "triangle",
+                        "frequency": 523.25
+                    },
+                    "envelope": {
+                        "attack": 0.01,
+                        "decay": 0.08,
+                        "sustain": 0.75,
+                        "release": 0.15
+                    },
+                    "volume": 0.65,
+                    "pan": 0,
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 6.5,
+                            "depth": 0.6
+                        },
+                        "target": {
+                            "target": "pitch",
+                            "semitones": 0.15
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "oscillator",
+                        "waveform": "sine",
+                        "frequency": 1046.5
+                    },
+                    "envelope": {
+                        "attack": 0.005,
+                        "decay": 0.05,
+                        "sustain": 0.3,
+                        "release": 0.1
+                    },
+                    "volume": 0.28,
+                    "pan": 0,
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 6.5,
+                            "depth": 0.6
+                        },
+                        "target": {
+                            "target": "pitch",
+                            "semitones": 0.15
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "fm_synth",
+                        "carrier_freq": 523.25,
+                        "modulator_freq": 2093.0,
+                        "modulation_index": 0.4
+                    },
+                    "envelope": {
+                        "attack": 0.008,
+                        "decay": 0.06,
+                        "sustain": 0.2,
+                        "release": 0.12
+                    },
+                    "volume": 0.22,
+                    "pan": 0
+                },
+                {
+                    "synthesis": {
+                        "type": "oscillator",
+                        "waveform": "sine",
+                        "frequency": 2093.0
+                    },
+                    "envelope": {
+                        "attack": 0.003,
+                        "decay": 0.04,
+                        "sustain": 0.15,
+                        "release": 0.08
+                    },
+                    "volume": 0.12,
+                    "pan": 0,
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 8.0,
+                            "depth": 0.7
+                        },
+                        "target": {
+                            "target": "pan",
+                            "amount": 0.4
+                        }
+                    }
+                }
+            ],
+            "effects": [
+                {
+                    "type": "chorus",
+                    "rate": 3.2,
+                    "depth": 0.25,
+                    "wet": 0.38,
+                    "voices": 2
+                },
+                {
+                    "type": "reverb",
+                    "room_size": 0.35,
+                    "damping": 0.6,
+                    "wet": 0.22,
+                    "width": 0.5
+                },
+                {
+                    "type": "delay",
+                    "time_ms": 125.0,
+                    "feedback": 0.15,
+                    "wet": 0.12
+                }
             ]
-          },
-          "envelope": {
-            "attack": 0.01,
-            "decay": 0.12,
-            "sustain": 0.6,
-            "release": 0.2
-          },
-          "filter": {
-            "type": "lowpass",
-            "cutoff": 3000,
-            "resonance": 0.35
-          },
-          "lfo": {
-            "config": {
-              "waveform": "sine",
-              "rate": 6.0,
-              "depth": 0.4
-            },
-            "target": {
-              "target": "pitch",
-              "semitones": 0.35
-            }
-          },
-          "volume": 0.85,
-          "pan": 0
         }
-      ],
-      "effects": [
-        {
-          "type": "chorus",
-          "rate": 2.0,
-          "depth": 0.2,
-          "wet": 0.15
-        }
-      ]
     }
-  }
 }

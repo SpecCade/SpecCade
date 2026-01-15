@@ -1,58 +1,186 @@
 {
-  "spec_version": 1,
-  "asset_id": "downlifter",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 10552,
-  "description": "Downlifter - falling noise sweep for descending energy and tension release",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/fx/downlifter.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "duration_seconds": 1.5,
-      "sample_rate": 44100,
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "downlifter",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 10552,
+    "description": "Classic downlifter effect - dramatic falling pitch sweep from high to low with filtered noise layers for tension release and buildups",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "noise_burst",
-            "noise_type": "white",
-            "filter": {
-              "type": "lowpass",
-              "cutoff": 8000,
-              "resonance": 0.6,
-              "cutoff_end": 200
-            }
-          },
-          "envelope": {
-            "attack": 0.02,
-            "decay": 0,
-            "sustain": 1,
-            "release": 0.25
-          },
-          "volume": 1,
-          "pan": 0
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/fx/downlifter.wav"
         }
-      ],
-      "effects": [
-        {
-          "type": "reverb",
-          "room_size": 0.7,
-          "damping": 0.4,
-          "wet": 0.35
-        },
-        {
-          "type": "delay",
-          "time_ms": 150,
-          "feedback": 0.3,
-          "wet": 0.2
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "duration_seconds": 3.0,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "oscillator",
+                        "waveform": "sawtooth",
+                        "frequency": 2400.0,
+                        "freq_sweep": {
+                            "end_freq": 60.0,
+                            "curve": "exponential"
+                        }
+                    },
+                    "envelope": {
+                        "attack": 0.01,
+                        "decay": 0.1,
+                        "sustain": 0.95,
+                        "release": 0.3
+                    },
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 8000.0,
+                        "resonance": 0.7
+                    },
+                    "volume": 0.7,
+                    "pan": 0.0
+                },
+                {
+                    "synthesis": {
+                        "type": "oscillator",
+                        "waveform": "square",
+                        "frequency": 2800.0,
+                        "freq_sweep": {
+                            "end_freq": 50.0,
+                            "curve": "exponential"
+                        }
+                    },
+                    "envelope": {
+                        "attack": 0.02,
+                        "decay": 0.15,
+                        "sustain": 0.9,
+                        "release": 0.4
+                    },
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 6000.0,
+                        "resonance": 0.5
+                    },
+                    "volume": 0.5,
+                    "pan": -0.3
+                },
+                {
+                    "synthesis": {
+                        "type": "oscillator",
+                        "waveform": "triangle",
+                        "frequency": 3200.0,
+                        "freq_sweep": {
+                            "end_freq": 70.0,
+                            "curve": "exponential"
+                        }
+                    },
+                    "envelope": {
+                        "attack": 0.015,
+                        "decay": 0.12,
+                        "sustain": 0.92,
+                        "release": 0.35
+                    },
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 7000.0,
+                        "resonance": 0.6
+                    },
+                    "volume": 0.5,
+                    "pan": 0.3
+                },
+                {
+                    "synthesis": {
+                        "type": "noise_burst",
+                        "noise_type": "white"
+                    },
+                    "envelope": {
+                        "attack": 0.01,
+                        "decay": 0.2,
+                        "sustain": 0.85,
+                        "release": 0.4
+                    },
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 12000.0,
+                        "resonance": 0.8
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 0.5,
+                            "depth": 0.8
+                        },
+                        "target": {
+                            "target": "filter_cutoff",
+                            "amount": -10000.0
+                        }
+                    },
+                    "volume": 0.6,
+                    "pan": 0.0
+                },
+                {
+                    "synthesis": {
+                        "type": "noise_burst",
+                        "noise_type": "pink"
+                    },
+                    "envelope": {
+                        "attack": 0.02,
+                        "decay": 0.25,
+                        "sustain": 0.8,
+                        "release": 0.45
+                    },
+                    "filter": {
+                        "type": "bandpass",
+                        "center": 8000.0,
+                        "resonance": 1.2
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 0.4,
+                            "depth": 0.7
+                        },
+                        "target": {
+                            "target": "filter_cutoff",
+                            "amount": -6000.0
+                        }
+                    },
+                    "volume": 0.45,
+                    "pan": -0.2
+                }
+            ],
+            "effects": [
+                {
+                    "type": "chorus",
+                    "rate": 0.6,
+                    "depth": 0.4,
+                    "wet": 0.25,
+                    "voices": 2
+                },
+                {
+                    "type": "phaser",
+                    "rate": 0.3,
+                    "depth": 0.5,
+                    "stages": 4,
+                    "wet": 0.2
+                },
+                {
+                    "type": "delay",
+                    "time_ms": 200,
+                    "feedback": 0.4,
+                    "wet": 0.3,
+                    "ping_pong": false
+                },
+                {
+                    "type": "reverb",
+                    "room_size": 0.8,
+                    "damping": 0.4,
+                    "wet": 0.4,
+                    "width": 0.5
+                }
+            ]
         }
-      ]
     }
-  }
 }

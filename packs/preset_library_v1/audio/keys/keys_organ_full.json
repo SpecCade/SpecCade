@@ -1,44 +1,153 @@
 {
-  "spec_version": 1,
-  "asset_id": "keys_organ_full",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 10209,
-  "description": "Full powerful organ with rich registration and subtle unison for body",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/keys/keys_organ_full.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "duration_seconds": 3.0,
-      "sample_rate": 44100,
-      "base_note": "C4",
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "keys_organ_full",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 10209,
+    "description": "Full drawbar organ with all stops pulled - maximum harmonics, Leslie-like chorus/phaser, thick and rich",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "wavetable",
-            "table": "organ",
-            "frequency": 261.63,
-            "position": 0.8,
-            "voices": 2,
-            "detune": 8.0
-          },
-          "envelope": {
-            "attack": 0.05,
-            "decay": 0.1,
-            "sustain": 0.9,
-            "release": 0.2
-          },
-          "volume": 0.85,
-          "pan": 0.0
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/keys/keys_organ_full.wav"
         }
-      ],
-      "effects": []
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "base_note": "C4",
+            "duration_seconds": 3.0,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "additive",
+                        "base_freq": 261.63,
+                        "harmonics": [1.0, 1.0, 0.9, 0.88, 0.85, 0.82, 0.78, 0.75, 0.7, 0.65, 0.6, 0.55]
+                    },
+                    "envelope": {
+                        "attack": 0.005,
+                        "decay": 0.03,
+                        "sustain": 1.0,
+                        "release": 0.12
+                    },
+                    "volume": 0.48,
+                    "pan": 0.0
+                },
+                {
+                    "synthesis": {
+                        "type": "additive",
+                        "base_freq": 523.26,
+                        "harmonics": [0.75, 0.7, 0.65, 0.6, 0.55, 0.5, 0.45, 0.4]
+                    },
+                    "envelope": {
+                        "attack": 0.005,
+                        "decay": 0.03,
+                        "sustain": 1.0,
+                        "release": 0.12
+                    },
+                    "volume": 0.38,
+                    "pan": 0.0
+                },
+                {
+                    "synthesis": {
+                        "type": "additive",
+                        "base_freq": 130.815,
+                        "harmonics": [0.9, 0.85, 0.8, 0.75, 0.7, 0.65]
+                    },
+                    "envelope": {
+                        "attack": 0.005,
+                        "decay": 0.03,
+                        "sustain": 1.0,
+                        "release": 0.12
+                    },
+                    "volume": 0.42,
+                    "pan": 0.0
+                },
+                {
+                    "synthesis": {
+                        "type": "oscillator",
+                        "waveform": "sine",
+                        "frequency": 261.63
+                    },
+                    "envelope": {
+                        "attack": 0.005,
+                        "decay": 0.03,
+                        "sustain": 1.0,
+                        "release": 0.12
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 6.8,
+                            "depth": 1.0
+                        },
+                        "target": {
+                            "target": "pitch",
+                            "semitones": 0.08
+                        }
+                    },
+                    "volume": 0.32,
+                    "pan": -0.15
+                },
+                {
+                    "synthesis": {
+                        "type": "oscillator",
+                        "waveform": "sine",
+                        "frequency": 261.63
+                    },
+                    "envelope": {
+                        "attack": 0.005,
+                        "decay": 0.03,
+                        "sustain": 1.0,
+                        "release": 0.12
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 7.2,
+                            "depth": 1.0
+                        },
+                        "target": {
+                            "target": "pitch",
+                            "semitones": 0.08
+                        }
+                    },
+                    "volume": 0.32,
+                    "pan": 0.15
+                }
+            ],
+            "effects": [
+                {
+                    "type": "chorus",
+                    "rate": 0.48,
+                    "depth": 0.22,
+                    "wet": 0.45,
+                    "voices": 3
+                },
+                {
+                    "type": "phaser",
+                    "rate": 0.38,
+                    "depth": 0.6,
+                    "stages": 6,
+                    "wet": 0.42
+                },
+                {
+                    "type": "reverb",
+                    "room_size": 0.68,
+                    "damping": 0.55,
+                    "wet": 0.28,
+                    "width": 0.9
+                },
+                {
+                    "type": "compressor",
+                    "threshold_db": -16.0,
+                    "ratio": 3.0,
+                    "attack_ms": 5.0,
+                    "release_ms": 120.0,
+                    "makeup_db": 2
+                }
+            ]
+        }
     }
-  }
 }

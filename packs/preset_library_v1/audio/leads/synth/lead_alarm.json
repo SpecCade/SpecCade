@@ -1,56 +1,160 @@
 {
-  "spec_version": 1,
-  "asset_id": "preset_lead_alarm",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 10303,
-  "description": "Alarm lead - bright square wave that demands attention",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/leads/synth/lead_alarm.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "base_note": "A4",
-      "duration_seconds": 1.5,
-      "sample_rate": 44100,
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "preset_lead_alarm",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 10303,
+    "description": "Alarm lead - bright square wave that demands attention",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "multi_oscillator",
-            "frequency": 440.0,
-            "oscillators": [
-              {
-                "waveform": "square",
-                "volume": 1.0,
-                "detune": 0
-              },
-              {
-                "waveform": "square",
-                "volume": 0.6,
-                "detune": 1200
-              }
-            ]
-          },
-          "envelope": {
-            "attack": 0.002,
-            "decay": 0.05,
-            "sustain": 0.95,
-            "release": 0.08
-          },
-          "filter": {
-            "type": "lowpass",
-            "cutoff": 5000,
-            "resonance": 0.4
-          },
-          "volume": 0.8,
-          "pan": 0
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/leads/synth/lead_alarm.wav"
         }
-      ]
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "base_note": "A4",
+            "duration_seconds": 1.5,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "multi_oscillator",
+                        "frequency": 440.0,
+                        "oscillators": [
+                            {
+                                "waveform": "square",
+                                "volume": 1.0,
+                                "detune": 0
+                            },
+                            {
+                                "waveform": "pulse",
+                                "volume": 0.65,
+                                "detune": -7
+                            },
+                            {
+                                "waveform": "square",
+                                "volume": 0.5,
+                                "detune": 1200
+                            }
+                        ]
+                    },
+                    "envelope": {
+                        "attack": 0.001,
+                        "decay": 0.04,
+                        "sustain": 0.92,
+                        "release": 0.06
+                    },
+                    "volume": 0.72,
+                    "pan": 0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 8000,
+                        "resonance": 0.55,
+                        "cutoff_end": 6200
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "ring_mod_synth",
+                        "carrier_freq": 440.0,
+                        "modulator_freq": 880.0,
+                        "mix": 0.5
+                    },
+                    "envelope": {
+                        "attack": 0.002,
+                        "decay": 0.06,
+                        "sustain": 0.88,
+                        "release": 0.08
+                    },
+                    "volume": 0.38,
+                    "pan": 0,
+                    "filter": {
+                        "type": "highpass",
+                        "cutoff": 1800,
+                        "resonance": 0.4
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "fm_synth",
+                        "carrier_freq": 440.0,
+                        "modulator_freq": 440,
+                        "modulation_index": 1.8
+                    },
+                    "envelope": {
+                        "attack": 0.003,
+                        "decay": 0.08,
+                        "sustain": 0.85,
+                        "release": 0.1
+                    },
+                    "volume": 0.42,
+                    "pan": 0,
+                    "filter": {
+                        "type": "bandpass",
+                        "center": 4000,
+                        "resonance": 0.65,
+                        "center_end": 3200
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "noise_burst",
+                        "noise_type": "white"
+                    },
+                    "envelope": {
+                        "attack": 0.001,
+                        "decay": 0.03,
+                        "sustain": 0.25,
+                        "release": 0.05
+                    },
+                    "volume": 0.18,
+                    "pan": 0,
+                    "filter": {
+                        "type": "highpass",
+                        "cutoff": 5000,
+                        "resonance": 0.3
+                    }
+                }
+            ],
+            "effects": [
+                {
+                    "type": "delay",
+                    "time_ms": 100,
+                    "feedback": 0.22,
+                    "wet": 0.15,
+                    "ping_pong": false
+                },
+                {
+                    "type": "chorus",
+                    "rate": 0.8,
+                    "depth": 0.25,
+                    "wet": 0.18,
+                    "voices": 2
+                },
+                {
+                    "type": "bitcrush",
+                    "bits": 12,
+                    "sample_rate_reduction": 1.4
+                },
+                {
+                    "type": "compressor",
+                    "threshold_db": -18.0,
+                    "ratio": 3.5,
+                    "attack_ms": 3.0,
+                    "release_ms": 80.0,
+                    "makeup_db": 0
+                },
+                {
+                    "type": "reverb",
+                    "room_size": 0.28,
+                    "damping": 0.65,
+                    "wet": 0.08,
+                    "width": 0.5
+                }
+            ]
+        }
     }
-  }
 }

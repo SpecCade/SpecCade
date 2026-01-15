@@ -1,77 +1,99 @@
 {
-  "spec_version": 1,
-  "asset_id": "preset_lead_bright",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 10301,
-  "description": "Bright unfiltered saw stack - cuts through any mix with full harmonic content",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/leads/synth/lead_bright.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "base_note": "A4",
-      "duration_seconds": 1.5,
-      "sample_rate": 44100,
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "preset_lead_bright",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 10301,
+    "description": "Bright, sparkly synth lead with high-frequency content, minimal filtering, and shimmery character",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "multi_oscillator",
-            "frequency": 440.0,
-            "oscillators": [
-              {
-                "waveform": "sawtooth",
-                "volume": 1.0,
-                "detune": 0
-              },
-              {
-                "waveform": "sawtooth",
-                "volume": 0.9,
-                "detune": 12
-              },
-              {
-                "waveform": "sawtooth",
-                "volume": 0.9,
-                "detune": -12
-              },
-              {
-                "waveform": "sawtooth",
-                "volume": 0.7,
-                "detune": 5
-              },
-              {
-                "waveform": "sawtooth",
-                "volume": 0.7,
-                "detune": -5
-              }
-            ]
-          },
-          "envelope": {
-            "attack": 0.005,
-            "decay": 0.1,
-            "sustain": 0.9,
-            "release": 0.15
-          },
-          "lfo": {
-            "config": {
-              "waveform": "sine",
-              "rate": 5.8,
-              "depth": 0.25
-            },
-            "target": {
-              "target": "pitch",
-              "semitones": 0.2
-            }
-          },
-          "volume": 0.85,
-          "pan": 0
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/leads/synth/lead_bright.wav"
         }
-      ]
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "base_note": "A4",
+            "duration_seconds": 1.5,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "oscillator",
+                        "waveform": "sawtooth",
+                        "frequency": 440.0
+                    },
+                    "envelope": {
+                        "attack": 0.01,
+                        "decay": 0.1,
+                        "sustain": 0.9,
+                        "release": 0.15
+                    },
+                    "volume": 0.75,
+                    "pan": 0,
+                    "filter": {
+                        "type": "highpass",
+                        "cutoff": 300.0,
+                        "resonance": 0.1
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 5.5,
+                            "depth": 0.25
+                        },
+                        "target": {
+                            "target": "pitch",
+                            "semitones": 0.08
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "fm_synth",
+                        "carrier_freq": 440.0,
+                        "modulator_freq": 1320.0,
+                        "modulation_index": 2.2
+                    },
+                    "envelope": {
+                        "attack": 0.008,
+                        "decay": 0.12,
+                        "sustain": 0.85,
+                        "release": 0.18
+                    },
+                    "volume": 0.4,
+                    "pan": 0,
+                    "filter": {
+                        "type": "highpass",
+                        "cutoff": 800.0,
+                        "resonance": 0.15
+                    }
+                }
+            ],
+            "effects": [
+                {
+                    "type": "chorus",
+                    "rate": 1.2,
+                    "depth": 0.35,
+                    "wet": 0.3,
+                    "voices": 2
+                },
+                {
+                    "type": "delay",
+                    "time_ms": 120.0,
+                    "feedback": 0.25,
+                    "wet": 0.15
+                },
+                {
+                    "type": "reverb",
+                    "room_size": 0.3,
+                    "damping": 0.6,
+                    "wet": 0.18,
+                    "width": 0.9
+                }
+            ]
+        }
     }
-  }
 }

@@ -1,69 +1,113 @@
 {
-  "spec_version": 1,
-  "asset_id": "preset_triangle_perc",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 10086,
-  "description": "Triangle - high metallic with long sustain",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/drums/percussion/triangle_perc.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "duration_seconds": 0.6,
-      "sample_rate": 44100,
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "preset_triangle_perc",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 10086,
+    "description": "Professional orchestral triangle - bright metallic shimmer with long ring",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "oscillator",
-            "waveform": "sine",
-            "frequency": 4000
-          },
-          "envelope": {
-            "attack": 0.001,
-            "decay": 0.3,
-            "sustain": 0.2,
-            "release": 0.25
-          },
-          "volume": 0.4,
-          "pan": 0
-        },
-        {
-          "synthesis": {
-            "type": "oscillator",
-            "waveform": "sine",
-            "frequency": 5200
-          },
-          "envelope": {
-            "attack": 0.001,
-            "decay": 0.25,
-            "sustain": 0.15,
-            "release": 0.2
-          },
-          "volume": 0.35,
-          "pan": 0
-        },
-        {
-          "synthesis": {
-            "type": "oscillator",
-            "waveform": "sine",
-            "frequency": 6800
-          },
-          "envelope": {
-            "attack": 0.001,
-            "decay": 0.2,
-            "sustain": 0.1,
-            "release": 0.18
-          },
-          "volume": 0.3,
-          "pan": 0
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/drums/percussion/triangle_perc.wav"
         }
-      ]
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "duration_seconds": 2.5,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "metallic",
+                        "base_freq": 5200.0,
+                        "num_partials": 18,
+                        "inharmonicity": 3.2
+                    },
+                    "envelope": {
+                        "attack": 0.001,
+                        "decay": 1.8,
+                        "sustain": 0.12,
+                        "release": 0.65
+                    },
+                    "volume": 0.45,
+                    "pan": 0.0
+                },
+                {
+                    "synthesis": {
+                        "type": "metallic",
+                        "base_freq": 4800.0,
+                        "num_partials": 16,
+                        "inharmonicity": 3.8
+                    },
+                    "envelope": {
+                        "attack": 0.0015,
+                        "decay": 1.6,
+                        "sustain": 0.1,
+                        "release": 0.55
+                    },
+                    "volume": 0.38,
+                    "pan": -0.15
+                },
+                {
+                    "synthesis": {
+                        "type": "metallic",
+                        "base_freq": 6400.0,
+                        "num_partials": 14,
+                        "inharmonicity": 2.9
+                    },
+                    "envelope": {
+                        "attack": 0.0008,
+                        "decay": 1.4,
+                        "sustain": 0.08,
+                        "release": 0.5
+                    },
+                    "volume": 0.35,
+                    "pan": 0.15
+                },
+                {
+                    "synthesis": {
+                        "type": "metallic",
+                        "base_freq": 7200.0,
+                        "num_partials": 12,
+                        "inharmonicity": 3.5
+                    },
+                    "envelope": {
+                        "attack": 0.0005,
+                        "decay": 1.2,
+                        "sustain": 0.06,
+                        "release": 0.45
+                    },
+                    "volume": 0.28,
+                    "pan": 0.0
+                },
+                {
+                    "synthesis": {
+                        "type": "metallic",
+                        "base_freq": 8600.0,
+                        "num_partials": 10,
+                        "inharmonicity": 4.2
+                    },
+                    "envelope": {
+                        "attack": 0.0003,
+                        "decay": 0.9,
+                        "sustain": 0.04,
+                        "release": 0.35
+                    },
+                    "volume": 0.22,
+                    "pan": 0.0
+                }
+            ],
+            "effects": [
+                {
+                    "type": "reverb",
+                    "room_size": 0.35,
+                    "damping": 0.4,
+                    "wet": 0.18,
+                    "width": 0.5
+                }
+            ]
+        }
     }
-  }
 }

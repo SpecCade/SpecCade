@@ -4,7 +4,7 @@
   "asset_type": "audio",
   "license": "CC0-1.0",
   "seed": 10076,
-  "description": "Low conga - deep pitched body with moderate resonance",
+  "description": "Low conga (tumba) - professional modal synthesis with deep body resonance and hand slap attack",
   "outputs": [
     {
       "kind": "primary",
@@ -15,26 +15,54 @@
   "recipe": {
     "kind": "audio_v1",
     "params": {
-      "duration_seconds": 0.35,
+      "duration_seconds": 1.2,
       "sample_rate": 44100,
       "layers": [
         {
           "synthesis": {
-            "type": "oscillator",
-            "waveform": "sine",
-            "frequency": 200,
-            "freq_sweep": {
-              "end_freq": 100,
-              "curve": "exponential"
-            }
+            "type": "modal",
+            "frequency": 210,
+            "modes": [
+              {
+                "freq_ratio": 1.0,
+                "amplitude": 1.0,
+                "decay_time": 0.85
+              },
+              {
+                "freq_ratio": 2.03,
+                "amplitude": 0.65,
+                "decay_time": 0.62
+              },
+              {
+                "freq_ratio": 3.12,
+                "amplitude": 0.38,
+                "decay_time": 0.45
+              },
+              {
+                "freq_ratio": 4.28,
+                "amplitude": 0.22,
+                "decay_time": 0.35
+              },
+              {
+                "freq_ratio": 5.51,
+                "amplitude": 0.15,
+                "decay_time": 0.28
+              },
+              {
+                "freq_ratio": 6.82,
+                "amplitude": 0.09,
+                "decay_time": 0.22
+              }
+            ],
+            "excitation": "impulse"
           },
           "envelope": {
-            "attack": 0.001,
-            "decay": 0.18,
+            "attack": 0,
+            "decay": 0.95,
             "sustain": 0,
-            "release": 0.12
+            "release": 0.25
           },
-          "volume": 0.85,
+          "volume": 0.9,
           "pan": 0
         },
         {
@@ -42,19 +70,60 @@
             "type": "noise_burst",
             "noise_type": "white",
             "filter": {
-              "type": "highpass",
-              "cutoff": 1500,
-              "resonance": 0.3
+              "type": "bandpass",
+              "center": 2200,
+              "resonance": 0.5
             }
           },
           "envelope": {
             "attack": 0,
-            "decay": 0.025,
+            "decay": 0.008,
             "sustain": 0,
-            "release": 0.015
+            "release": 0.012
           },
-          "volume": 0.12,
+          "volume": 0.28,
           "pan": 0
+        },
+        {
+          "synthesis": {
+            "type": "noise_burst",
+            "noise_type": "pink",
+            "filter": {
+              "type": "lowpass",
+              "cutoff": 800,
+              "resonance": 0.3
+            }
+          },
+          "envelope": {
+            "attack": 0.001,
+            "decay": 0.035,
+            "sustain": 0,
+            "release": 0.025
+          },
+          "volume": 0.15,
+          "pan": 0
+        }
+      ],
+      "effects": [
+        {
+          "type": "compressor",
+          "ratio": 3.5,
+          "threshold_db": -18,
+          "attack_ms": 0.002,
+          "release_ms": 0.08,
+          "makeup_db": 0
+        },
+        {
+          "type": "reverb",
+          "room_size": 0.22,
+          "damping": 0.65,
+          "wet": 0.12
+        },
+        {
+          "type": "delay",
+          "time_ms": 85,
+          "feedback": 0.08,
+          "wet": 0.06
         }
       ]
     }

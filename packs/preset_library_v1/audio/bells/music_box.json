@@ -1,49 +1,147 @@
 {
-  "spec_version": 1,
-  "asset_id": "preset_music_box",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 10256,
-  "description": "Music box - delicate, high-pitched bell with toy-like character and quick decay",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/bells/music_box.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "duration_seconds": 1.5,
-      "sample_rate": 44100,
-      "base_note": "G6",
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "preset_music_box",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 10256,
+    "description": "Professional music box - delicate plucked tines with bright harmonic overtones, vintage mechanical character, and intimate reverb",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "metallic",
-            "base_freq": 1568.0,
-            "num_partials": 9,
-            "inharmonicity": 1.55
-          },
-          "envelope": {
-            "attack": 0.001,
-            "decay": 0.2,
-            "sustain": 0.03,
-            "release": 0.4
-          },
-          "volume": 0.7,
-          "pan": 0.0
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/bells/music_box.wav"
         }
-      ],
-      "effects": [
-        {
-          "type": "reverb",
-          "room_size": 0.45,
-          "damping": 0.5,
-          "wet": 0.25
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "base_note": "G6",
+            "duration_seconds": 2.0,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "modal",
+                        "frequency": 1568.0,
+                        "modes": [
+                            {
+                                "freq_ratio": 1.0,
+                                "amplitude": 1.0,
+                                "decay_time": 1.2
+                            },
+                            {
+                                "freq_ratio": 2.76,
+                                "amplitude": 0.45,
+                                "decay_time": 0.8
+                            },
+                            {
+                                "freq_ratio": 5.4,
+                                "amplitude": 0.28,
+                                "decay_time": 0.6
+                            },
+                            {
+                                "freq_ratio": 8.93,
+                                "amplitude": 0.15,
+                                "decay_time": 0.45
+                            },
+                            {
+                                "freq_ratio": 13.34,
+                                "amplitude": 0.08,
+                                "decay_time": 0.35
+                            }
+                        ],
+                        "excitation": "pluck"
+                    },
+                    "envelope": {
+                        "attack": 0.001,
+                        "decay": 0.15,
+                        "sustain": 0.2,
+                        "release": 0.6
+                    },
+                    "volume": 0.75,
+                    "pan": 0.0
+                },
+                {
+                    "synthesis": {
+                        "type": "modal",
+                        "frequency": 1574.5,
+                        "modes": [
+                            {
+                                "freq_ratio": 1.0,
+                                "amplitude": 0.6,
+                                "decay_time": 1.15
+                            },
+                            {
+                                "freq_ratio": 2.8,
+                                "amplitude": 0.3,
+                                "decay_time": 0.75
+                            },
+                            {
+                                "freq_ratio": 5.5,
+                                "amplitude": 0.18,
+                                "decay_time": 0.55
+                            }
+                        ],
+                        "excitation": "pluck"
+                    },
+                    "envelope": {
+                        "attack": 0.002,
+                        "decay": 0.18,
+                        "sustain": 0.15,
+                        "release": 0.65
+                    },
+                    "volume": 0.25,
+                    "pan": -0.15
+                },
+                {
+                    "synthesis": {
+                        "type": "modal",
+                        "frequency": 1561.8,
+                        "modes": [
+                            {
+                                "freq_ratio": 1.0,
+                                "amplitude": 0.55,
+                                "decay_time": 1.25
+                            },
+                            {
+                                "freq_ratio": 2.72,
+                                "amplitude": 0.28,
+                                "decay_time": 0.82
+                            },
+                            {
+                                "freq_ratio": 5.35,
+                                "amplitude": 0.16,
+                                "decay_time": 0.58
+                            }
+                        ],
+                        "excitation": "pluck"
+                    },
+                    "envelope": {
+                        "attack": 0.0015,
+                        "decay": 0.16,
+                        "sustain": 0.18,
+                        "release": 0.62
+                    },
+                    "volume": 0.22,
+                    "pan": 0.15
+                }
+            ],
+            "effects": [
+                {
+                    "type": "reverb",
+                    "room_size": 0.28,
+                    "damping": 0.65,
+                    "wet": 0.18,
+                    "width": 0.5
+                },
+                {
+                    "type": "delay",
+                    "time_ms": 100,
+                    "feedback": 0.12,
+                    "wet": 0.06,
+                    "ping_pong": false
+                }
+            ]
         }
-      ]
     }
-  }
 }

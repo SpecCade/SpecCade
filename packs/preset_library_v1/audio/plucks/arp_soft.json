@@ -1,54 +1,180 @@
 {
-  "spec_version": 1,
-  "asset_id": "arp_soft",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 10156,
-  "description": "Soft gentle arpeggio pluck with triangle waveform - smooth melodic character",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/plucks/arp_soft.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "duration_seconds": 0.5,
-      "sample_rate": 44100,
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "arp_soft",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 10156,
+    "description": "Professional soft arpeggio pluck - gentle multi-layer synthesis with analog warmth, filtered harmonics, chorus width, and ambient reverb tail",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "oscillator",
-            "waveform": "triangle",
-            "frequency": 440.0
-          },
-          "envelope": {
-            "attack": 0.01,
-            "decay": 0.08,
-            "sustain": 0.5,
-            "release": 0.2
-          },
-          "volume": 1.0,
-          "pan": 0.0
-        },
-        {
-          "synthesis": {
-            "type": "oscillator",
-            "waveform": "sine",
-            "frequency": 880.0
-          },
-          "envelope": {
-            "attack": 0.01,
-            "decay": 0.06,
-            "sustain": 0.3,
-            "release": 0.15
-          },
-          "volume": 0.4,
-          "pan": 0.0
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/plucks/arp_soft.wav"
         }
-      ]
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "duration_seconds": 1.2,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "wavetable",
+                        "table": "analog",
+                        "frequency": 440.0
+                    },
+                    "envelope": {
+                        "attack": 0.025,
+                        "decay": 0.18,
+                        "sustain": 0.35,
+                        "release": 0.45
+                    },
+                    "volume": 0.75,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 1800.0,
+                        "resonance": 0.3,
+                        "cutoff_end": 900.0
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "fm_synth",
+                        "carrier_freq": 440.0,
+                        "modulator_freq": 880.0,
+                        "modulation_index": 1.2
+                    },
+                    "envelope": {
+                        "attack": 0.03,
+                        "decay": 0.22,
+                        "sustain": 0.25,
+                        "release": 0.5
+                    },
+                    "volume": 0.35,
+                    "pan": -0.15,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 2200.0,
+                        "resonance": 0.25,
+                        "cutoff_end": 1100.0
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 4.5,
+                            "depth": 0.006
+                        },
+                        "target": {
+                            "target": "pitch",
+                            "semitones": 0.006
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "additive",
+                        "base_freq": 440,
+                        "harmonics": [
+                            1.0,
+                            0.5,
+                            0.25,
+                            0.125
+                        ]
+                    },
+                    "envelope": {
+                        "attack": 0.035,
+                        "decay": 0.2,
+                        "sustain": 0.28,
+                        "release": 0.55
+                    },
+                    "volume": 0.28,
+                    "pan": 0.15,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 1400.0,
+                        "resonance": 0.2,
+                        "cutoff_end": 800.0
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "triangle",
+                            "rate": 3.2,
+                            "depth": 0.12
+                        },
+                        "target": {
+                            "target": "filter_cutoff",
+                            "amount": 500
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "oscillator",
+                        "waveform": "sine",
+                        "frequency": 220.0
+                    },
+                    "envelope": {
+                        "attack": 0.02,
+                        "decay": 0.25,
+                        "sustain": 0.4,
+                        "release": 0.6
+                    },
+                    "volume": 0.22,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 1200.0,
+                        "resonance": 0.15
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "wavetable",
+                        "table": "analog",
+                        "frequency": 880.0
+                    },
+                    "envelope": {
+                        "attack": 0.04,
+                        "decay": 0.15,
+                        "sustain": 0.18,
+                        "release": 0.38
+                    },
+                    "volume": 0.15,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 3500.0,
+                        "resonance": 0.35,
+                        "cutoff_end": 1600.0
+                    }
+                }
+            ],
+            "effects": [
+                {
+                    "type": "chorus",
+                    "rate": 0.35,
+                    "depth": 0.25,
+                    "wet": 0.28,
+                    "voices": 2
+                },
+                {
+                    "type": "compressor",
+                    "threshold_db": -18.0,
+                    "ratio": 3.5,
+                    "attack_ms": 8.0,
+                    "release_ms": 120.0,
+                    "makeup_db": 0
+                },
+                {
+                    "type": "reverb",
+                    "room_size": 0.45,
+                    "damping": 0.6,
+                    "wet": 0.22,
+                    "width": 0.5
+                }
+            ]
+        }
     }
-  }
 }

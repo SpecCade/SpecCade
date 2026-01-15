@@ -1,70 +1,204 @@
 {
-  "spec_version": 1,
-  "asset_id": "guitar_skank",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 20061,
-  "description": "Skank guitar - reggae/ska offbeat guitar stab",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/plucks/guitar_skank.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "duration_seconds": 0.25,
-      "sample_rate": 44100,
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "guitar_skank",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 20061,
+    "description": "Skank guitar - reggae/ska offbeat guitar stab with authentic muted character",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "multi_oscillator",
-            "frequency": 392.0,
-            "oscillators": [
-              {
-                "waveform": "sawtooth",
-                "volume": 1.0,
-                "detune": 0.0
-              },
-              {
-                "waveform": "sawtooth",
-                "volume": 0.8,
-                "detune": 5.0
-              },
-              {
-                "waveform": "sawtooth",
-                "volume": 0.8,
-                "detune": -5.0
-              },
-              {
-                "waveform": "square",
-                "volume": 0.6,
-                "detune": 0.0
-              },
-              {
-                "waveform": "triangle",
-                "volume": 0.4,
-                "detune": 0.0
-              }
-            ]
-          },
-          "envelope": {
-            "attack": 0.001,
-            "decay": 0.08,
-            "sustain": 0.1,
-            "release": 0.05
-          },
-          "filter": {
-            "type": "lowpass",
-            "cutoff": 2200,
-            "resonance": 0.3
-          },
-          "volume": 1.0,
-          "pan": 0.0
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/plucks/guitar_skank.wav"
         }
-      ]
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "duration_seconds": 0.35,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "karplus_strong",
+                        "frequency": 392.0,
+                        "decay": 0.995,
+                        "blend": 0.5
+                    },
+                    "envelope": {
+                        "attack": 0.001,
+                        "decay": 0.055,
+                        "sustain": 0.08,
+                        "release": 0.065
+                    },
+                    "volume": 0.95,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "bandpass",
+                        "center": 1800,
+                        "resonance": 0.72,
+                        "center_end": 950
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 5.2,
+                            "depth": 0.15
+                        },
+                        "target": {
+                            "target": "pitch",
+                            "semitones": 0.08
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "noise_burst",
+                        "noise_type": "white"
+                    },
+                    "envelope": {
+                        "attack": 0.0005,
+                        "decay": 0.015,
+                        "sustain": 0,
+                        "release": 0.008
+                    },
+                    "volume": 0.28,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "highpass",
+                        "cutoff": 2200,
+                        "resonance": 0.4
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "karplus_strong",
+                        "frequency": 784.0,
+                        "decay": 0.995,
+                        "blend": 0.5
+                    },
+                    "envelope": {
+                        "attack": 0.001,
+                        "decay": 0.045,
+                        "sustain": 0.04,
+                        "release": 0.055
+                    },
+                    "volume": 0.42,
+                    "pan": 0.12,
+                    "filter": {
+                        "type": "bandpass",
+                        "center": 3200,
+                        "resonance": 0.65,
+                        "center_end": 1600
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 5.35,
+                            "depth": 0.18
+                        },
+                        "target": {
+                            "target": "pitch",
+                            "semitones": 0.07
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "karplus_strong",
+                        "frequency": 196.0,
+                        "decay": 0.995,
+                        "blend": 0.5
+                    },
+                    "envelope": {
+                        "attack": 0.0015,
+                        "decay": 0.05,
+                        "sustain": 0.06,
+                        "release": 0.07
+                    },
+                    "volume": 0.55,
+                    "pan": -0.08,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 1200,
+                        "resonance": 0.5,
+                        "cutoff_end": 800
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 5.1,
+                            "depth": 0.12
+                        },
+                        "target": {
+                            "target": "pitch",
+                            "semitones": 0.06
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "karplus_strong",
+                        "frequency": 588.0,
+                        "decay": 0.995,
+                        "blend": 0.5
+                    },
+                    "envelope": {
+                        "attack": 0.0012,
+                        "decay": 0.048,
+                        "sustain": 0.05,
+                        "release": 0.06
+                    },
+                    "volume": 0.38,
+                    "pan": -0.15,
+                    "filter": {
+                        "type": "bandpass",
+                        "center": 2400,
+                        "resonance": 0.68,
+                        "center_end": 1300
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 5.25,
+                            "depth": 0.14
+                        },
+                        "target": {
+                            "target": "pitch",
+                            "semitones": 0.075
+                        }
+                    }
+                }
+            ],
+            "effects": [
+                {
+                    "type": "compressor",
+                    "threshold_db": -18.0,
+                    "ratio": 3.5,
+                    "attack_ms": 2.0,
+                    "release_ms": 45.0,
+                    "makeup_db": 3.5
+                },
+                {
+                    "type": "chorus",
+                    "rate": 1.8,
+                    "depth": 0.25,
+                    "wet": 0.18,
+                    "voices": 3
+                },
+                {
+                    "type": "delay",
+                    "time_ms": 85,
+                    "feedback": 0.18,
+                    "wet": 0.08
+                },
+                {
+                    "type": "reverb",
+                    "room_size": 0.28,
+                    "damping": 0.65,
+                    "wet": 0.15
+                }
+            ]
+        }
     }
-  }
 }

@@ -6,7 +6,8 @@
       "Bash(test -f:*)",
       "Bash(for:*)",
       "Bash(cargo doc:*)",
-      "Bash(powershell -Command \"Get-ChildItem -Path . -Recurse -Filter ''*.json'' -Exclude ''target'',''node_modules'' | Where-Object { $_FullName -notmatch ''target|node_modules|\\\\.git'' } | Measure-Object | Select-Object -ExpandProperty Count\")"
+      "Bash(powershell -Command \"Get-ChildItem -Path . -Recurse -Filter ''*.json'' -Exclude ''target'',''node_modules'' | Where-Object { $_FullName -notmatch ''target|node_modules|\\\\.git'' } | Measure-Object | Select-Object -ExpandProperty Count\")",
+      "Bash(python validate_all.py:*)"
     ]
   }
 }

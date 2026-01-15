@@ -1,62 +1,166 @@
 {
-  "spec_version": 1,
-  "asset_id": "preset_rimshot",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 10024,
-  "description": "Rimshot - short, bright, metallic click with high-pitched body",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/drums/snares/rimshot.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "duration_seconds": 0.08,
-      "sample_rate": 44100,
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "preset_rimshot",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 10024,
+    "description": "Professional rimshot - crisp stick attack with metallic ring and shell resonance",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "oscillator",
-            "waveform": "sine",
-            "frequency": 500,
-            "freq_sweep": {
-              "end_freq": 350,
-              "curve": "exponential"
-            }
-          },
-          "envelope": {
-            "attack": 0.001,
-            "decay": 0.03,
-            "sustain": 0,
-            "release": 0.02
-          },
-          "volume": 0.6,
-          "pan": 0
-        },
-        {
-          "synthesis": {
-            "type": "noise_burst",
-            "noise_type": "white",
-            "filter": {
-              "type": "highpass",
-              "cutoff": 4000,
-              "resonance": 0.8
-            }
-          },
-          "envelope": {
-            "attack": 0.0005,
-            "decay": 0.02,
-            "sustain": 0,
-            "release": 0.01
-          },
-          "volume": 0.7,
-          "pan": 0
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/drums/snares/rimshot.wav"
         }
-      ]
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "duration_seconds": 0.35,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "noise_burst",
+                        "noise_type": "white",
+                        "filter": {
+                            "type": "bandpass",
+                            "center": 6500,
+                            "resonance": 2.2,
+                            "center_end": 4800
+                        }
+                    },
+                    "envelope": {
+                        "attack": 0.0001,
+                        "decay": 0.008,
+                        "sustain": 0,
+                        "release": 0.004
+                    },
+                    "volume": 0.85,
+                    "pan": 0.0
+                },
+                {
+                    "synthesis": {
+                        "type": "modal",
+                        "frequency": 440,
+                        "modes": [
+                            {
+                                "freq_ratio": 4.181818181818182,
+                                "amplitude": 0.9,
+                                "decay_time": 0.12
+                            },
+                            {
+                                "freq_ratio": 5.568181818181818,
+                                "amplitude": 0.7,
+                                "decay_time": 0.09
+                            },
+                            {
+                                "freq_ratio": 7.295454545454546,
+                                "amplitude": 0.5,
+                                "decay_time": 0.06
+                            },
+                            {
+                                "freq_ratio": 10.636363636363637,
+                                "amplitude": 0.4,
+                                "decay_time": 0.04
+                            },
+                            {
+                                "freq_ratio": 13.454545454545455,
+                                "amplitude": 0.3,
+                                "decay_time": 0.03
+                            }
+                        ],
+                        "excitation": "impulse"
+                    },
+                    "envelope": {
+                        "attack": 0.0002,
+                        "decay": 0.15,
+                        "sustain": 0,
+                        "release": 0.08
+                    },
+                    "volume": 0.72,
+                    "pan": 0.08
+                },
+                {
+                    "synthesis": {
+                        "type": "fm_synth",
+                        "carrier_freq": 890,
+                        "modulator_freq": 3420,
+                        "modulation_index": 4.8
+                    },
+                    "envelope": {
+                        "attack": 0.0001,
+                        "decay": 0.018,
+                        "sustain": 0,
+                        "release": 0.012
+                    },
+                    "volume": 0.58,
+                    "pan": -0.06
+                },
+                {
+                    "synthesis": {
+                        "type": "pitched_body",
+                        "start_freq": 200,
+                        "end_freq": 100.0
+                    },
+                    "envelope": {
+                        "attack": 0.0003,
+                        "decay": 0.11,
+                        "sustain": 0,
+                        "release": 0.06
+                    },
+                    "volume": 0.48,
+                    "pan": 0.0
+                },
+                {
+                    "synthesis": {
+                        "type": "metallic",
+                        "base_freq": 2880,
+                        "num_partials": 8,
+                        "inharmonicity": 3.2
+                    },
+                    "envelope": {
+                        "attack": 0.0001,
+                        "decay": 0.025,
+                        "sustain": 0,
+                        "release": 0.015
+                    },
+                    "volume": 0.42,
+                    "pan": 0.12
+                },
+                {
+                    "synthesis": {
+                        "type": "ring_mod_synth",
+                        "carrier_freq": 640,
+                        "modulator_freq": 4120,
+                        "mix": 0.5
+                    },
+                    "envelope": {
+                        "attack": 0.0002,
+                        "decay": 0.012,
+                        "sustain": 0,
+                        "release": 0.008
+                    },
+                    "volume": 0.32,
+                    "pan": -0.1
+                },
+                {
+                    "synthesis": {
+                        "type": "additive",
+                        "base_freq": 440,
+                        "harmonics": [
+                            0.25
+                        ]
+                    },
+                    "envelope": {
+                        "attack": 0.0001,
+                        "decay": 0.015,
+                        "sustain": 0,
+                        "release": 0.01
+                    },
+                    "volume": 0.38,
+                    "pan": 0.05
+                }
+            ]
+        }
     }
-  }
 }

@@ -1,43 +1,110 @@
 {
-  "spec_version": 1,
-  "asset_id": "preset_electronic_tom",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 10074,
-  "description": "Electronic tom - synth body with triangle wave for harmonics",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/drums/toms/electronic_tom.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "duration_seconds": 0.35,
-      "sample_rate": 44100,
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "preset_electronic_tom",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 10074,
+    "description": "Professional 808-style electronic tom - pitched body with harmonic sweep, noise transient, waveshaping warmth, and compression punch",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "oscillator",
-            "waveform": "triangle",
-            "frequency": 220,
-            "freq_sweep": {
-              "end_freq": 90,
-              "curve": "exponential"
-            }
-          },
-          "envelope": {
-            "attack": 0.001,
-            "decay": 0.2,
-            "sustain": 0,
-            "release": 0.12
-          },
-          "volume": 0.75,
-          "pan": 0
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/drums/toms/electronic_tom.wav"
         }
-      ]
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "duration_seconds": 0.6,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "pitched_body",
+                        "start_freq": 180,
+                        "end_freq": 90.0
+                    },
+                    "envelope": {
+                        "attack": 0.001,
+                        "decay": 0.35,
+                        "sustain": 0.15,
+                        "release": 0.22
+                    },
+                    "volume": 0.85,
+                    "pan": 0
+                },
+                {
+                    "synthesis": {
+                        "type": "oscillator",
+                        "waveform": "sine",
+                        "frequency": 180
+                    },
+                    "envelope": {
+                        "attack": 0.0005,
+                        "decay": 0.28,
+                        "sustain": 0.08,
+                        "release": 0.18
+                    },
+                    "volume": 0.72,
+                    "pan": 0
+                },
+                {
+                    "synthesis": {
+                        "type": "oscillator",
+                        "waveform": "triangle",
+                        "frequency": 360
+                    },
+                    "envelope": {
+                        "attack": 0.001,
+                        "decay": 0.22,
+                        "sustain": 0.05,
+                        "release": 0.15
+                    },
+                    "volume": 0.38,
+                    "pan": 0
+                },
+                {
+                    "synthesis": {
+                        "type": "noise_burst",
+                        "noise_type": "pink"
+                    },
+                    "envelope": {
+                        "attack": 0,
+                        "decay": 0.012,
+                        "sustain": 0,
+                        "release": 0.008
+                    },
+                    "volume": 0.42,
+                    "pan": 0
+                },
+                {
+                    "synthesis": {
+                        "type": "modal",
+                        "frequency": 180,
+                        "modes": [
+                            {
+                                "freq_ratio": 1.0,
+                                "amplitude": 1.0,
+                                "decay_time": 0.5
+                            },
+                            {
+                                "freq_ratio": 2.0,
+                                "amplitude": 0.5,
+                                "decay_time": 0.3
+                            }
+                        ],
+                        "excitation": "impulse"
+                    },
+                    "envelope": {
+                        "attack": 0.002,
+                        "decay": 0.3,
+                        "sustain": 0.08,
+                        "release": 0.18
+                    },
+                    "volume": 0.32,
+                    "pan": 0
+                }
+            ]
+        }
     }
-  }
 }

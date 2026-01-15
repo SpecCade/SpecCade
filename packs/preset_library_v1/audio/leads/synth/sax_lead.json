@@ -1,91 +1,191 @@
 {
-  "spec_version": 1,
-  "asset_id": "preset_sax_lead",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 20028,
-  "description": "Synth saxophone lead - breathy, expressive sax-like synth",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/leads/synth/sax_lead.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "base_note": "C4",
-      "duration_seconds": 2.0,
-      "sample_rate": 44100,
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "preset_sax_lead",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 20028,
+    "description": "Professional synth saxophone lead - breathy formant character, expressive vibrato, warm body resonance",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "multi_oscillator",
-            "frequency": 261.63,
-            "oscillators": [
-              {
-                "waveform": "sawtooth",
-                "volume": 1.0,
-                "detune": 0.0
-              },
-              {
-                "waveform": "sawtooth",
-                "volume": 0.8,
-                "detune": 4.0
-              },
-              {
-                "waveform": "sawtooth",
-                "volume": 0.8,
-                "detune": -4.0
-              }
-            ]
-          },
-          "envelope": {
-            "attack": 0.12,
-            "decay": 0.25,
-            "sustain": 0.75,
-            "release": 0.35
-          },
-          "filter": {
-            "type": "lowpass",
-            "cutoff": 2200.0,
-            "resonance": 0.5
-          },
-          "lfo": {
-            "config": {
-              "waveform": "sine",
-              "rate": 5.0,
-              "depth": 0.5
-            },
-            "target": {
-              "target": "pitch",
-              "semitones": 0.35
-            }
-          },
-          "volume": 0.75,
-          "pan": 0.0
-        },
-        {
-          "synthesis": {
-            "type": "noise_burst",
-            "noise_type": "white"
-          },
-          "envelope": {
-            "attack": 0.12,
-            "decay": 0.25,
-            "sustain": 0.75,
-            "release": 0.35
-          },
-          "filter": {
-            "type": "bandpass",
-            "center": 3500.0,
-            "resonance": 0.6
-          },
-          "volume": 0.15,
-          "pan": 0.0
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/leads/synth/sax_lead.wav"
         }
-      ]
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "base_note": "C4",
+            "duration_seconds": 2.0,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "formant",
+                        "frequency": 261.63,
+                        "vowel": "o"
+                    },
+                    "envelope": {
+                        "attack": 0.08,
+                        "decay": 0.18,
+                        "sustain": 0.82,
+                        "release": 0.25
+                    },
+                    "volume": 0.72,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 2800.0,
+                        "resonance": 0.45,
+                        "cutoff_end": 2200.0
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 5.8,
+                            "depth": 0.6
+                        },
+                        "target": {
+                            "target": "pitch",
+                            "semitones": 0.42
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "multi_oscillator",
+                        "frequency": 261.63,
+                        "oscillators": [
+                            {
+                                "waveform": "sawtooth",
+                                "volume": 1.0,
+                                "detune": 0.0
+                            },
+                            {
+                                "waveform": "square",
+                                "volume": 0.4,
+                                "detune": 5.2
+                            },
+                            {
+                                "waveform": "sawtooth",
+                                "volume": 0.85,
+                                "detune": -5.2
+                            }
+                        ]
+                    },
+                    "envelope": {
+                        "attack": 0.08,
+                        "decay": 0.18,
+                        "sustain": 0.82,
+                        "release": 0.25
+                    },
+                    "volume": 0.55,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 2400.0,
+                        "resonance": 0.38,
+                        "cutoff_end": 1900.0
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 5.8,
+                            "depth": 0.6
+                        },
+                        "target": {
+                            "target": "pitch",
+                            "semitones": 0.42
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "modal",
+                        "frequency": 261.63,
+                        "modes": [
+                            {
+                                "freq_ratio": 1.0,
+                                "amplitude": 1.0,
+                                "decay_time": 0.5
+                            },
+                            {
+                                "freq_ratio": 2.0,
+                                "amplitude": 0.5,
+                                "decay_time": 0.3
+                            }
+                        ],
+                        "excitation": "impulse"
+                    },
+                    "envelope": {
+                        "attack": 0.06,
+                        "decay": 0.35,
+                        "sustain": 0.45,
+                        "release": 0.4
+                    },
+                    "volume": 0.28,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "bandpass",
+                        "center": 1800.0,
+                        "resonance": 0.5
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "noise_burst",
+                        "noise_type": "pink"
+                    },
+                    "envelope": {
+                        "attack": 0.08,
+                        "decay": 0.22,
+                        "sustain": 0.65,
+                        "release": 0.25
+                    },
+                    "volume": 0.18,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "bandpass",
+                        "center": 3800.0,
+                        "resonance": 0.72
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 5.8,
+                            "depth": 0.4
+                        },
+                        "target": {
+                            "target": "filter_cutoff",
+                            "amount": 500
+                        }
+                    }
+                }
+            ],
+            "effects": [
+                {
+                    "type": "chorus",
+                    "rate": 0.65,
+                    "depth": 0.35,
+                    "wet": 0.28,
+                    "voices": 2
+                },
+                {
+                    "type": "compressor",
+                    "threshold_db": -14.0,
+                    "ratio": 3.5,
+                    "attack_ms": 8.0,
+                    "release_ms": 120.0,
+                    "makeup_db": 0
+                },
+                {
+                    "type": "reverb",
+                    "room_size": 0.45,
+                    "damping": 0.55,
+                    "wet": 0.22,
+                    "width": 0.5
+                }
+            ]
+        }
     }
-  }
 }

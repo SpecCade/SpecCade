@@ -1,59 +1,114 @@
 {
-  "spec_version": 1,
-  "asset_id": "preset_hat_tick",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 10050,
-  "description": "Tick hi-hat - very short, bright click with metallic character",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/drums/hats/hat_tick.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "duration_seconds": 0.03,
-      "sample_rate": 44100,
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "preset_hat_tick",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 10050,
+    "description": "Tick hi-hat - ultra-short percussive click with piercing high-frequency attack, ideal for fast hi-hat patterns",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "metallic",
-            "base_freq": 9000,
-            "num_partials": 5,
-            "inharmonicity": 2.5
-          },
-          "envelope": {
-            "attack": 0.0005,
-            "decay": 0.01,
-            "sustain": 0,
-            "release": 0.015
-          },
-          "volume": 0.65,
-          "pan": 0
-        },
-        {
-          "synthesis": {
-            "type": "noise_burst",
-            "noise_type": "white",
-            "filter": {
-              "type": "highpass",
-              "cutoff": 10000,
-              "resonance": 0.7
-            }
-          },
-          "envelope": {
-            "attack": 0.0005,
-            "decay": 0.008,
-            "sustain": 0,
-            "release": 0.01
-          },
-          "volume": 0.5,
-          "pan": 0
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/drums/hats/hat_tick.wav"
         }
-      ]
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "duration_seconds": 0.04,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "metallic",
+                        "base_freq": 11000,
+                        "num_partials": 6,
+                        "inharmonicity": 5.2
+                    },
+                    "envelope": {
+                        "attack": 0.0001,
+                        "decay": 0.015,
+                        "sustain": 0,
+                        "release": 0.01
+                    },
+                    "volume": 0.7,
+                    "pan": 0.08,
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 95,
+                            "depth": 1.0
+                        },
+                        "target": {
+                            "target": "filter_cutoff",
+                            "amount": 0.15
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "noise_burst",
+                        "noise_type": "white",
+                        "filter": {
+                            "type": "bandpass",
+                            "center": 10500,
+                            "resonance": 0.55
+                        }
+                    },
+                    "envelope": {
+                        "attack": 0.0001,
+                        "decay": 0.012,
+                        "sustain": 0,
+                        "release": 0.008
+                    },
+                    "volume": 0.6,
+                    "pan": -0.06
+                },
+                {
+                    "synthesis": {
+                        "type": "noise_burst",
+                        "noise_type": "white",
+                        "filter": {
+                            "type": "highpass",
+                            "cutoff": 14000,
+                            "resonance": 0.3
+                        }
+                    },
+                    "envelope": {
+                        "attack": 0.0001,
+                        "decay": 0.005,
+                        "sustain": 0,
+                        "release": 0.003
+                    },
+                    "volume": 0.45,
+                    "pan": 0.04,
+                    "lfo": {
+                        "config": {
+                            "waveform": "triangle",
+                            "rate": 110,
+                            "depth": 1.0
+                        },
+                        "target": {
+                            "target": "pitch",
+                            "semitones": 0.2
+                        }
+                    }
+                }
+            ],
+            "effects": [
+                {
+                    "type": "delay",
+                    "time_ms": 12,
+                    "feedback": 0.08,
+                    "wet": 0.12
+                },
+                {
+                    "type": "reverb",
+                    "room_size": 0.15,
+                    "damping": 0.7,
+                    "wet": 0.08
+                }
+            ]
+        }
     }
-  }
 }

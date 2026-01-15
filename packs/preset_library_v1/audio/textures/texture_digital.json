@@ -1,54 +1,184 @@
 {
-  "spec_version": 1,
-  "asset_id": "texture_digital",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 10602,
-  "description": "Glitchy digital artifacts - square wave tone with very small grains and high pitch spread",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/textures/texture_digital.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "duration_seconds": 4.0,
-      "sample_rate": 44100,
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "texture_digital",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 10602,
+    "description": "Evolving digital texture with glitchy artifacts, bit-crushed grains, and rhythmic modulation - creates a complex computer-generated soundscape",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "granular",
-            "source": {
-              "type": "tone",
-              "waveform": "square",
-              "frequency": 440.0
-            },
-            "grain_size_ms": 12.0,
-            "grain_density": 45.0,
-            "pitch_spread": 2.5,
-            "position_spread": 0.6,
-            "pan_spread": 0.7
-          },
-          "envelope": {
-            "attack": 0.5,
-            "decay": 0.3,
-            "sustain": 0.7,
-            "release": 1.0
-          },
-          "volume": 0.45,
-          "pan": 0.0
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/textures/texture_digital.wav"
         }
-      ],
-      "effects": [
-        {
-          "type": "bitcrush",
-          "bits": 12,
-          "sample_rate_reduction": 2
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "duration_seconds": 4.0,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "granular",
+                        "source": {
+                            "type": "tone",
+                            "waveform": "square",
+                            "frequency": 440.0
+                        },
+                        "grain_size_ms": 12.0,
+                        "grain_density": 45.0,
+                        "pitch_spread": 2.5,
+                        "position_spread": 0.6,
+                        "pan_spread": 0.7
+                    },
+                    "envelope": {
+                        "attack": 0.5,
+                        "decay": 0.3,
+                        "sustain": 0.7,
+                        "release": 1.0
+                    },
+                    "volume": 0.4,
+                    "pan": 0.0,
+                    "lfo": {
+                        "config": {
+                            "waveform": "square",
+                            "rate": 8.0,
+                            "depth": 0.7
+                        },
+                        "target": {
+                            "target": "volume",
+                            "amount": 0.4
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "granular",
+                        "source": {
+                            "type": "tone",
+                            "waveform": "pulse",
+                            "frequency": 220.0,
+                            "pulse_width": 0.15
+                        },
+                        "grain_size_ms": 8.0,
+                        "grain_density": 60.0,
+                        "pitch_spread": 3.2,
+                        "position_spread": 0.8,
+                        "pan_spread": 0.9
+                    },
+                    "envelope": {
+                        "attack": 0.6,
+                        "decay": 0.2,
+                        "sustain": 0.6,
+                        "release": 1.2
+                    },
+                    "volume": 0.35,
+                    "pan": 0.3,
+                    "lfo": {
+                        "config": {
+                            "waveform": "triangle",
+                            "rate": 0.4,
+                            "depth": 0.6
+                        },
+                        "target": {
+                            "target": "pitch",
+                            "semitones": 7.0
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "oscillator",
+                        "waveform": "square",
+                        "frequency": 880.0
+                    },
+                    "envelope": {
+                        "attack": 0.8,
+                        "decay": 0.4,
+                        "sustain": 0.5,
+                        "release": 1.5
+                    },
+                    "volume": 0.25,
+                    "pan": -0.3,
+                    "lfo": {
+                        "config": {
+                            "waveform": "sawtooth",
+                            "rate": 12.0,
+                            "depth": 0.8
+                        },
+                        "target": {
+                            "target": "volume",
+                            "amount": 0.5
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "noise_burst",
+                        "noise_type": "white"
+                    },
+                    "filter": {
+                        "type": "highpass",
+                        "cutoff": 8000.0,
+                        "resonance": 0.3
+                    },
+                    "envelope": {
+                        "attack": 0.4,
+                        "decay": 0.5,
+                        "sustain": 0.3,
+                        "release": 0.8
+                    },
+                    "volume": 0.18,
+                    "pan": 0.0,
+                    "lfo": {
+                        "config": {
+                            "waveform": "square",
+                            "rate": 16.0,
+                            "depth": 0.9
+                        },
+                        "target": {
+                            "target": "filter_cutoff",
+                            "amount": 0.6
+                        }
+                    }
+                }
+            ],
+            "effects": [
+                {
+                    "type": "bitcrush",
+                    "bits": 10,
+                    "sample_rate_reduction": 3
+                },
+                {
+                    "type": "phaser",
+                    "rate": 0.35,
+                    "depth": 0.6,
+                    "feedback": 0.4,
+                    "stages": 6,
+                    "wet": 0.35
+                },
+                {
+                    "type": "delay",
+                    "time_ms": 125.0,
+                    "feedback": 0.25,
+                    "wet": 0.2
+                },
+                {
+                    "type": "reverb",
+                    "room_size": 0.4,
+                    "damping": 0.6,
+                    "wet": 0.15
+                },
+                {
+                    "type": "compressor",
+                    "threshold_db": -18.0,
+                    "ratio": 3.0,
+                    "attack_ms": 5.0,
+                    "release_ms": 50.0,
+                    "makeup_db": 4.0
+                }
+            ]
         }
-      ]
     }
-  }
 }

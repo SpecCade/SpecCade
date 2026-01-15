@@ -1,75 +1,157 @@
 {
-  "spec_version": 1,
-  "asset_id": "preset_cymbal",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 10054,
-  "description": "Cymbal - long decay with complex metallic partials",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/drums/cymbals/cymbal.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "duration_seconds": 2,
-      "sample_rate": 44100,
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "preset_cymbal",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 10054,
+    "description": "Professional general-purpose cymbal with complex metallic partials and natural decay",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "metallic",
-            "base_freq": 4000,
-            "num_partials": 12,
-            "inharmonicity": 2
-          },
-          "envelope": {
-            "attack": 0.005,
-            "decay": 1,
-            "sustain": 0.15,
-            "release": 0.8
-          },
-          "volume": 0.5,
-          "pan": 0
-        },
-        {
-          "synthesis": {
-            "type": "metallic",
-            "base_freq": 6500,
-            "num_partials": 10,
-            "inharmonicity": 2.3
-          },
-          "envelope": {
-            "attack": 0.003,
-            "decay": 0.8,
-            "sustain": 0.12,
-            "release": 0.7
-          },
-          "volume": 0.45,
-          "pan": 0
-        },
-        {
-          "synthesis": {
-            "type": "noise_burst",
-            "noise_type": "white",
-            "filter": {
-              "type": "highpass",
-              "cutoff": 5000,
-              "resonance": 0.4
-            }
-          },
-          "envelope": {
-            "attack": 0.002,
-            "decay": 0.6,
-            "sustain": 0.08,
-            "release": 0.5
-          },
-          "volume": 0.35,
-          "pan": 0
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/drums/cymbals/cymbal.wav"
         }
-      ]
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "duration_seconds": 3,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "metallic",
+                        "base_freq": 380,
+                        "num_partials": 18,
+                        "inharmonicity": 1.9
+                    },
+                    "envelope": {
+                        "attack": 0.002,
+                        "decay": 1.8,
+                        "sustain": 0.08,
+                        "release": 1.0
+                    },
+                    "volume": 0.42,
+                    "pan": -0.15
+                },
+                {
+                    "synthesis": {
+                        "type": "metallic",
+                        "base_freq": 820,
+                        "num_partials": 16,
+                        "inharmonicity": 2.1
+                    },
+                    "envelope": {
+                        "attack": 0.001,
+                        "decay": 1.5,
+                        "sustain": 0.1,
+                        "release": 0.9
+                    },
+                    "volume": 0.38,
+                    "pan": 0.12
+                },
+                {
+                    "synthesis": {
+                        "type": "metallic",
+                        "base_freq": 3200,
+                        "num_partials": 14,
+                        "inharmonicity": 2.3
+                    },
+                    "envelope": {
+                        "attack": 0.001,
+                        "decay": 1.2,
+                        "sustain": 0.06,
+                        "release": 0.8
+                    },
+                    "volume": 0.36,
+                    "pan": 0
+                },
+                {
+                    "synthesis": {
+                        "type": "metallic",
+                        "base_freq": 7500,
+                        "num_partials": 12,
+                        "inharmonicity": 1.8
+                    },
+                    "envelope": {
+                        "attack": 0.001,
+                        "decay": 0.9,
+                        "sustain": 0.04,
+                        "release": 0.6
+                    },
+                    "volume": 0.32,
+                    "pan": -0.08,
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 4.8,
+                            "depth": 0.35
+                        },
+                        "target": {
+                            "target": "pitch",
+                            "semitones": 0.08
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "noise_burst",
+                        "noise_type": "white",
+                        "filter": {
+                            "type": "bandpass",
+                            "center": 6500,
+                            "resonance": 0.25
+                        }
+                    },
+                    "envelope": {
+                        "attack": 0.001,
+                        "decay": 0.8,
+                        "sustain": 0.05,
+                        "release": 0.7
+                    },
+                    "volume": 0.28,
+                    "pan": 0.05
+                },
+                {
+                    "synthesis": {
+                        "type": "noise_burst",
+                        "noise_type": "white",
+                        "filter": {
+                            "type": "highpass",
+                            "cutoff": 8000,
+                            "resonance": 0.15
+                        }
+                    },
+                    "envelope": {
+                        "attack": 0.001,
+                        "decay": 0.5,
+                        "sustain": 0.03,
+                        "release": 0.4
+                    },
+                    "volume": 0.22,
+                    "pan": -0.1,
+                    "lfo": {
+                        "config": {
+                            "waveform": "triangle",
+                            "rate": 6.2,
+                            "depth": 0.4
+                        },
+                        "target": {
+                            "target": "filter_cutoff",
+                            "amount": 0.15
+                        }
+                    }
+                }
+            ],
+            "effects": [
+                {
+                    "type": "reverb",
+                    "room_size": 0.3,
+                    "damping": 0.6,
+                    "wet": 0.12,
+                    "width": 0.5
+                }
+            ]
+        }
     }
-  }
 }

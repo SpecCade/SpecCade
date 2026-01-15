@@ -1,60 +1,220 @@
 {
-  "spec_version": 1,
-  "asset_id": "drone_dark",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 10650,
-  "description": "Dark, ominous drone - low sawtooth tone with large grains and high density",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/textures/drone_dark.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "duration_seconds": 4.0,
-      "sample_rate": 44100,
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "drone_dark",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 10650,
+    "description": "Professional dark atmospheric drone - ominous multi-layer synthesis with sub-bass foundation, evolving granular textures, and heavy filtering",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "granular",
-            "source": {
-              "type": "tone",
-              "waveform": "sawtooth",
-              "frequency": 55.0
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/textures/drone_dark.wav"
+        }
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "duration_seconds": 4.0,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "oscillator",
+                        "waveform": "sine",
+                        "frequency": 27.5,
+                        "detune": 0.0
+                    },
+                    "envelope": {
+                        "attack": 2.0,
+                        "decay": 0.5,
+                        "sustain": 0.95,
+                        "release": 3.0
+                    },
+                    "volume": 0.7,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 120.0,
+                        "resonance": 0.1
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "wavetable",
+                        "frequency": 55.0,
+                        "table": "analog",
+                        "position": 0.65
+                    },
+                    "envelope": {
+                        "attack": 1.8,
+                        "decay": 0.6,
+                        "sustain": 0.85,
+                        "release": 2.5
+                    },
+                    "volume": 0.5,
+                    "pan": -0.15,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 350.0,
+                        "resonance": 0.5
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 0.15,
+                            "depth": 0.4
+                        },
+                        "target": {
+                            "target": "filter_cutoff",
+                            "amount": 600.0
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "granular",
+                        "source": {
+                            "type": "tone",
+                            "waveform": "sawtooth",
+                            "frequency": 82.5
+                        },
+                        "grain_size_ms": 180.0,
+                        "grain_density": 25.0,
+                        "pitch_spread": 0.12,
+                        "position_spread": 0.3,
+                        "pan_spread": 0.5
+                    },
+                    "envelope": {
+                        "attack": 2.2,
+                        "decay": 0.4,
+                        "sustain": 0.8,
+                        "release": 2.8
+                    },
+                    "volume": 0.45,
+                    "pan": 0.2,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 450.0,
+                        "resonance": 0.4
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "triangle",
+                            "rate": 0.08,
+                            "depth": 0.35
+                        },
+                        "target": {
+                            "target": "filter_cutoff",
+                            "amount": 400.0
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "granular",
+                        "source": {
+                            "type": "noise",
+                            "noise_type": "brown"
+                        },
+                        "grain_size_ms": 220.0,
+                        "grain_density": 15.0,
+                        "pitch_spread": 0.06,
+                        "position_spread": 0.5,
+                        "pan_spread": 0.8
+                    },
+                    "envelope": {
+                        "attack": 2.5,
+                        "decay": 0.3,
+                        "sustain": 0.65,
+                        "release": 3.2
+                    },
+                    "volume": 0.35,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 300.0,
+                        "resonance": 0.25
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 0.2,
+                            "depth": 0.3
+                        },
+                        "target": {
+                            "target": "pan",
+                            "amount": 0.4
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "wavetable",
+                        "frequency": 110.0,
+                        "table": "analog",
+                        "position": 0.75
+                    },
+                    "envelope": {
+                        "attack": 1.5,
+                        "decay": 0.5,
+                        "sustain": 0.75,
+                        "release": 2.2
+                    },
+                    "volume": 0.3,
+                    "pan": -0.25,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 550.0,
+                        "resonance": 0.35
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 0.12,
+                            "depth": 0.25
+                        },
+                        "target": {
+                            "target": "volume",
+                            "amount": 0.15
+                        }
+                    }
+                }
+            ],
+            "master_filter": {
+                "type": "lowpass",
+                "cutoff": 650.0,
+                "resonance": 0.5
             },
-            "grain_size_ms": 150.0,
-            "grain_density": 30.0,
-            "pitch_spread": 0.15,
-            "position_spread": 0.2,
-            "pan_spread": 0.6
-          },
-          "envelope": {
-            "attack": 1.5,
-            "decay": 0.5,
-            "sustain": 0.85,
-            "release": 2.0
-          },
-          "volume": 0.7,
-          "pan": 0.0
+            "effects": [
+                {
+                    "type": "chorus",
+                    "rate": 0.1,
+                    "depth": 0.25,
+                    "wet": 0.2,
+                    "voices": 3
+                },
+                {
+                    "type": "bitcrush",
+                    "sample_rate_reduction": 1.5,
+                    "wet": 0.15,
+                    "bits": 10
+                },
+                {
+                    "type": "reverb",
+                    "room_size": 0.95,
+                    "damping": 0.2,
+                    "wet": 0.6,
+                    "width": 0.7
+                },
+                {
+                    "type": "delay",
+                    "time_ms": 850.0,
+                    "feedback": 0.4,
+                    "wet": 0.18,
+                    "ping_pong": true
+                }
+            ]
         }
-      ],
-      "master_filter": {
-        "type": "lowpass",
-        "cutoff": 800.0,
-        "resonance": 0.4
-      },
-      "effects": [
-        {
-          "type": "reverb",
-          "room_size": 0.9,
-          "damping": 0.3,
-          "wet": 0.5
-        }
-      ]
     }
-  }
 }

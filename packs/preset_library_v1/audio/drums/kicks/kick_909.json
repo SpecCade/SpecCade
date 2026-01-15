@@ -4,7 +4,7 @@
   "asset_type": "audio",
   "license": "CC0-1.0",
   "seed": 10102,
-  "description": "Classic 909 kick - punchy with click transient",
+  "description": "Professional TR-909 kick - punchy transient, tight decay, perfect for house and techno",
   "outputs": [
     {
       "kind": "primary",
@@ -15,24 +15,24 @@
   "recipe": {
     "kind": "audio_v1",
     "params": {
-      "duration_seconds": 0.35,
+      "duration_seconds": 0.3,
       "sample_rate": 44100,
       "layers": [
         {
           "synthesis": {
             "type": "oscillator",
             "waveform": "sine",
-            "frequency": 180,
+            "frequency": 165,
             "freq_sweep": {
-              "end_freq": 50,
+              "end_freq": 45,
               "curve": "exponential"
             }
           },
           "envelope": {
-            "attack": 0.001,
-            "decay": 0.12,
+            "attack": 0.0005,
+            "decay": 0.08,
             "sustain": 0,
-            "release": 0.15
+            "release": 0.11
           },
           "volume": 1,
           "pan": 0
@@ -43,18 +43,62 @@
             "noise_type": "white",
             "filter": {
               "type": "bandpass",
-              "center": 5000,
-              "resonance": 0.8
+              "center": 4200,
+              "resonance": 0.65
             }
           },
           "envelope": {
             "attack": 0,
-            "decay": 0.01,
+            "decay": 0.003,
             "sustain": 0,
-            "release": 0.01
+            "release": 0.002
           },
-          "volume": 0.35,
+          "volume": 0.45,
           "pan": 0
+        },
+        {
+          "synthesis": {
+            "type": "oscillator",
+            "waveform": "sine",
+            "frequency": 65,
+            "freq_sweep": {
+              "end_freq": 55,
+              "curve": "exponential"
+            }
+          },
+          "envelope": {
+            "attack": 0.001,
+            "decay": 0.06,
+            "sustain": 0,
+            "release": 0.08
+          },
+          "volume": 0.3,
+          "pan": 0,
+          "lfo": {
+            "config": {
+              "waveform": "sine",
+              "rate": 45,
+              "depth": 0.15
+            },
+            "target": {
+              "target": "pitch",
+              "semitones": 0.08
+            }
+          }
+        }
+      ],
+      "effects": [
+        {
+          "type": "waveshaper",
+          "drive": 1.6,
+          "curve": "tanh",
+          "wet": 0.35
+        },
+        {
+          "type": "reverb",
+          "room_size": 0.18,
+          "damping": 0.75,
+          "wet": 0.08
         }
       ]
     }

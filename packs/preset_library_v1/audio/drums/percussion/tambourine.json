@@ -4,7 +4,7 @@
   "asset_type": "audio",
   "license": "CC0-1.0",
   "seed": 10081,
-  "description": "Tambourine - metallic jingles with noise shake",
+  "description": "Tambourine - professional metallic jingles with bright shake character",
   "outputs": [
     {
       "kind": "primary",
@@ -15,42 +15,130 @@
   "recipe": {
     "kind": "audio_v1",
     "params": {
-      "duration_seconds": 0.3,
+      "duration_seconds": 0.25,
       "sample_rate": 44100,
       "layers": [
+        {
+          "synthesis": {
+            "type": "metallic",
+            "base_freq": 2800,
+            "num_partials": 14,
+            "inharmonicity": 4.2
+          },
+          "envelope": {
+            "attack": 0.001,
+            "decay": 0.18,
+            "sustain": 0.05,
+            "release": 0.08
+          },
+          "volume": 0.65,
+          "pan": -0.2
+        },
+        {
+          "synthesis": {
+            "type": "metallic",
+            "base_freq": 3400,
+            "num_partials": 12,
+            "inharmonicity": 4.5
+          },
+          "envelope": {
+            "attack": 0.001,
+            "decay": 0.15,
+            "sustain": 0.03,
+            "release": 0.07
+          },
+          "volume": 0.55,
+          "pan": 0.2
+        },
+        {
+          "synthesis": {
+            "type": "metallic",
+            "base_freq": 4200,
+            "num_partials": 10,
+            "inharmonicity": 5.0
+          },
+          "envelope": {
+            "attack": 0.001,
+            "decay": 0.12,
+            "sustain": 0.02,
+            "release": 0.06
+          },
+          "volume": 0.45,
+          "pan": 0
+        },
+        {
+          "synthesis": {
+            "type": "noise_burst",
+            "noise_type": "white",
+            "filter": {
+              "type": "highpass",
+              "cutoff": 4500,
+              "resonance": 0.5
+            }
+          },
+          "envelope": {
+            "attack": 0.001,
+            "decay": 0.08,
+            "sustain": 0.04,
+            "release": 0.06
+          },
+          "volume": 0.4,
+          "pan": 0
+        },
         {
           "synthesis": {
             "type": "noise_burst",
             "noise_type": "white",
             "filter": {
               "type": "bandpass",
-              "center": 6000,
+              "center": 6500,
               "resonance": 0.8
             }
           },
           "envelope": {
             "attack": 0.001,
-            "decay": 0.15,
-            "sustain": 0.05,
-            "release": 0.12
+            "decay": 0.06,
+            "sustain": 0.02,
+            "release": 0.05
           },
-          "volume": 0.7,
+          "volume": 0.35,
           "pan": 0
         },
         {
           "synthesis": {
-            "type": "oscillator",
-            "waveform": "sine",
-            "frequency": 3000
+            "type": "metallic",
+            "base_freq": 5800,
+            "num_partials": 8,
+            "inharmonicity": 6.0
           },
           "envelope": {
             "attack": 0.001,
             "decay": 0.08,
-            "sustain": 0,
-            "release": 0.06
+            "sustain": 0.01,
+            "release": 0.04
           },
           "volume": 0.3,
-          "pan": 0
+          "pan": -0.15
+        }
+      ],
+      "effects": [
+        {
+          "type": "chorus",
+          "rate": 1.8,
+          "depth": 0.3,
+          "wet": 0.15
+        },
+        {
+          "type": "reverb",
+          "room_size": 0.25,
+          "damping": 0.6,
+          "wet": 0.18
+        },
+        {
+          "type": "delay",
+          "time_ms": 45,
+          "feedback": 0.12,
+          "wet": 0.08
         }
       ]
     }

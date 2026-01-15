@@ -1,96 +1,152 @@
 {
-  "spec_version": 1,
-  "asset_id": "preset_bansuri_lead",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 20033,
-  "description": "Bansuri flute lead - Indian bamboo flute with warm, flowing character",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/leads/acoustic/bansuri_lead.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "base_note": "D4",
-      "duration_seconds": 2.0,
-      "sample_rate": 44100,
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "preset_bansuri_lead",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 20033,
+    "description": "Bansuri - Indian bamboo flute with breathy, warm tone and slow vibrato",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "oscillator",
-            "waveform": "sine",
-            "frequency": 293.66
-          },
-          "envelope": {
-            "attack": 0.12,
-            "decay": 0.15,
-            "sustain": 0.88,
-            "release": 0.25
-          },
-          "lfo": {
-            "config": {
-              "waveform": "sine",
-              "rate": 4.8,
-              "depth": 0.45
-            },
-            "target": {
-              "target": "pitch",
-              "semitones": 0.3
-            }
-          },
-          "volume": 0.7,
-          "pan": 0
-        },
-        {
-          "synthesis": {
-            "type": "oscillator",
-            "waveform": "triangle",
-            "frequency": 293.66
-          },
-          "envelope": {
-            "attack": 0.12,
-            "decay": 0.15,
-            "sustain": 0.88,
-            "release": 0.25
-          },
-          "lfo": {
-            "config": {
-              "waveform": "sine",
-              "rate": 4.8,
-              "depth": 0.45
-            },
-            "target": {
-              "target": "pitch",
-              "semitones": 0.3
-            }
-          },
-          "volume": 0.15,
-          "pan": 0
-        },
-        {
-          "synthesis": {
-            "type": "noise_burst",
-            "noise_type": "white",
-            "filter": {
-              "type": "bandpass",
-              "center": 2800.0,
-              "resonance": 0.45
-            }
-          },
-          "envelope": {
-            "attack": 0.08,
-            "decay": 0.14,
-            "sustain": 0.35,
-            "release": 0.18
-          },
-          "volume": 0.15,
-          "pan": 0
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/leads/acoustic/bansuri_lead.wav"
         }
-      ]
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "base_note": "D4",
+            "duration_seconds": 2.0,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "oscillator",
+                        "waveform": "sine",
+                        "frequency": 293.66
+                    },
+                    "envelope": {
+                        "attack": 0.15,
+                        "decay": 0.2,
+                        "sustain": 0.88,
+                        "release": 0.4
+                    },
+                    "volume": 0.65,
+                    "pan": 0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 3500,
+                        "resonance": 0.3
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 4.8,
+                            "depth": 0.7
+                        },
+                        "target": {
+                            "target": "pitch",
+                            "semitones": 0.3
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "oscillator",
+                        "waveform": "sine",
+                        "frequency": 587.32
+                    },
+                    "envelope": {
+                        "attack": 0.18,
+                        "decay": 0.25,
+                        "sustain": 0.75,
+                        "release": 0.42
+                    },
+                    "volume": 0.18,
+                    "pan": 0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 5000,
+                        "resonance": 0.25
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 4.8,
+                            "depth": 0.7,
+                            "phase": 0.1
+                        },
+                        "target": {
+                            "target": "pitch",
+                            "semitones": 0.3
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "noise_burst",
+                        "noise_type": "pink",
+                        "filter": {
+                            "type": "bandpass",
+                            "center": 2200,
+                            "resonance": 0.6
+                        }
+                    },
+                    "envelope": {
+                        "attack": 0.08,
+                        "decay": 0.15,
+                        "sustain": 0.35,
+                        "release": 0.25
+                    },
+                    "volume": 0.15,
+                    "pan": 0,
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 4.8,
+                            "depth": 0.4
+                        },
+                        "target": {
+                            "target": "filter_cutoff",
+                            "amount": 400
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "noise_burst",
+                        "noise_type": "white",
+                        "filter": {
+                            "type": "highpass",
+                            "cutoff": 4500,
+                            "resonance": 0.4
+                        }
+                    },
+                    "envelope": {
+                        "attack": 0.05,
+                        "decay": 0.1,
+                        "sustain": 0.2,
+                        "release": 0.18
+                    },
+                    "volume": 0.08,
+                    "pan": 0
+                }
+            ],
+            "effects": [
+                {
+                    "type": "reverb",
+                    "room_size": 0.65,
+                    "damping": 0.55,
+                    "wet": 0.28,
+                    "width": 0.85
+                },
+                {
+                    "type": "delay",
+                    "time_ms": 350,
+                    "feedback": 0.18,
+                    "wet": 0.12
+                }
+            ]
+        }
     }
-  }
 }

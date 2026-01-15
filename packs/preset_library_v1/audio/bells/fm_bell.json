@@ -1,49 +1,127 @@
 {
-  "spec_version": 1,
-  "asset_id": "preset_fm_bell",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 10255,
-  "description": "FM bell - experimental FM synthesis bell with 1:3.5 ratio for unique timbre",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/bells/fm_bell.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "duration_seconds": 2.0,
-      "sample_rate": 44100,
-      "base_note": "A5",
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "preset_fm_bell",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 10255,
+    "description": "Professional FM bell - complex multi-layer FM synthesis with metallic overtones, evolving timbre, and lush spatial processing",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "fm_synth",
-            "carrier_freq": 880.0,
-            "modulator_freq": 3080.0,
-            "modulation_index": 3.5
-          },
-          "envelope": {
-            "attack": 0.001,
-            "decay": 0.5,
-            "sustain": 0.12,
-            "release": 1.0
-          },
-          "volume": 0.8,
-          "pan": 0.0
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/bells/fm_bell.wav"
         }
-      ],
-      "effects": [
-        {
-          "type": "reverb",
-          "room_size": 0.65,
-          "damping": 0.38,
-          "wet": 0.32
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "base_note": "A5",
+            "duration_seconds": 4.0,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "fm_synth",
+                        "carrier_freq": 880.0,
+                        "modulator_freq": 2200.0,
+                        "modulation_index": 8.0
+                    },
+                    "envelope": {
+                        "attack": 0.002,
+                        "decay": 2.8,
+                        "sustain": 0.08,
+                        "release": 1.2
+                    },
+                    "volume": 0.65,
+                    "pan": 0.0
+                },
+                {
+                    "synthesis": {
+                        "type": "fm_synth",
+                        "carrier_freq": 880.0,
+                        "modulator_freq": 2640.0,
+                        "modulation_index": 6.5
+                    },
+                    "envelope": {
+                        "attack": 0.003,
+                        "decay": 2.2,
+                        "sustain": 0.1,
+                        "release": 1.0
+                    },
+                    "volume": 0.45,
+                    "pan": -0.15
+                },
+                {
+                    "synthesis": {
+                        "type": "fm_synth",
+                        "carrier_freq": 880.0,
+                        "modulator_freq": 6160.0,
+                        "modulation_index": 4.2
+                    },
+                    "envelope": {
+                        "attack": 0.001,
+                        "decay": 1.8,
+                        "sustain": 0.05,
+                        "release": 0.9
+                    },
+                    "volume": 0.3,
+                    "pan": 0.15
+                },
+                {
+                    "synthesis": {
+                        "type": "fm_synth",
+                        "carrier_freq": 1760.0,
+                        "modulator_freq": 4400.0,
+                        "modulation_index": 3.5
+                    },
+                    "envelope": {
+                        "attack": 0.001,
+                        "decay": 1.5,
+                        "sustain": 0.04,
+                        "release": 0.8
+                    },
+                    "volume": 0.25,
+                    "pan": 0.0
+                },
+                {
+                    "synthesis": {
+                        "type": "oscillator",
+                        "waveform": "sine",
+                        "frequency": 880.0
+                    },
+                    "envelope": {
+                        "attack": 0.0005,
+                        "decay": 0.08,
+                        "sustain": 0,
+                        "release": 0.05
+                    },
+                    "volume": 0.35,
+                    "pan": 0.0
+                }
+            ],
+            "effects": [
+                {
+                    "type": "chorus",
+                    "rate": 1.2,
+                    "depth": 0.15,
+                    "wet": 0.18,
+                    "voices": 2
+                },
+                {
+                    "type": "delay",
+                    "time_ms": 100,
+                    "feedback": 0.22,
+                    "wet": 0.12,
+                    "ping_pong": false
+                },
+                {
+                    "type": "reverb",
+                    "room_size": 0.78,
+                    "damping": 0.25,
+                    "wet": 0.42,
+                    "width": 0.5
+                }
+            ]
         }
-      ]
     }
-  }
 }

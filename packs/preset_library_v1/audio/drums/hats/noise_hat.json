@@ -4,7 +4,7 @@
   "asset_type": "audio",
   "license": "CC0-1.0",
   "seed": 10053,
-  "description": "Noise hi-hat - pure filtered noise, chiptune digital character",
+  "description": "Professional noise hi-hat - multi-layer filtered noise with filter sweep, electronic/synthetic character",
   "outputs": [
     {
       "kind": "primary",
@@ -15,7 +15,7 @@
   "recipe": {
     "kind": "audio_v1",
     "params": {
-      "duration_seconds": 0.08,
+      "duration_seconds": 0.15,
       "sample_rate": 44100,
       "layers": [
         {
@@ -24,18 +24,29 @@
             "noise_type": "white",
             "filter": {
               "type": "highpass",
-              "cutoff": 9000,
-              "resonance": 0.8
+              "cutoff": 10000,
+              "resonance": 1.0
             }
           },
           "envelope": {
             "attack": 0.001,
-            "decay": 0.025,
-            "sustain": 0,
-            "release": 0.03
+            "decay": 0.04,
+            "sustain": 0.15,
+            "release": 0.06
           },
-          "volume": 0.6,
-          "pan": 0
+          "volume": 0.65,
+          "pan": -0.15,
+          "lfo": {
+            "config": {
+              "waveform": "sine",
+              "rate": 30.0,
+              "depth": 0.5
+            },
+            "target": {
+              "target": "filter_cutoff",
+              "amount": 3000
+            }
+          }
         },
         {
           "synthesis": {
@@ -43,18 +54,97 @@
             "noise_type": "white",
             "filter": {
               "type": "bandpass",
-              "center": 12000,
-              "resonance": 1.2
+              "center": 14000,
+              "resonance": 1.5
             }
           },
           "envelope": {
-            "attack": 0.001,
-            "decay": 0.02,
-            "sustain": 0,
-            "release": 0.025
+            "attack": 0.0005,
+            "decay": 0.025,
+            "sustain": 0.1,
+            "release": 0.045
           },
-          "volume": 0.5,
-          "pan": 0
+          "volume": 0.55,
+          "pan": 0.15,
+          "lfo": {
+            "config": {
+              "waveform": "sine",
+              "rate": 45.0,
+              "depth": 0.6
+            },
+            "target": {
+              "target": "filter_cutoff",
+              "amount": 4000
+            }
+          }
+        },
+        {
+          "synthesis": {
+            "type": "noise_burst",
+            "noise_type": "pink",
+            "filter": {
+              "type": "highpass",
+              "cutoff": 6000,
+              "resonance": 0.6
+            }
+          },
+          "envelope": {
+            "attack": 0.002,
+            "decay": 0.035,
+            "sustain": 0.08,
+            "release": 0.05
+          },
+          "volume": 0.3,
+          "pan": 0,
+          "lfo": {
+            "config": {
+              "waveform": "sine",
+              "rate": 20.0,
+              "depth": 0.4
+            },
+            "target": {
+              "target": "filter_cutoff",
+              "amount": 2000
+            }
+          }
+        },
+        {
+          "synthesis": {
+            "type": "noise_burst",
+            "noise_type": "white",
+            "filter": {
+              "type": "highpass",
+              "cutoff": 16000,
+              "resonance": 0.8
+            }
+          },
+          "envelope": {
+            "attack": 0.0003,
+            "decay": 0.015,
+            "sustain": 0,
+            "release": 0.02
+          },
+          "volume": 0.4,
+          "pan": 0,
+          "lfo": {
+            "config": {
+              "waveform": "sine",
+              "rate": 80.0,
+              "depth": 0.5
+            },
+            "target": {
+              "target": "pitch",
+              "semitones": 2.0
+            }
+          }
+        }
+      ],
+      "effects": [
+        {
+          "type": "reverb",
+          "room_size": 0.15,
+          "damping": 0.8,
+          "wet": 0.12
         }
       ]
     }

@@ -1,85 +1,182 @@
 {
-  "spec_version": 1,
-  "asset_id": "preset_modal_bell",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 30350,
-  "description": "Modal synthesis bell with physically-modeled resonant modes - crystalline and realistic",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/bells/modal_bell.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "duration_seconds": 2.5,
-      "sample_rate": 44100,
-      "base_note": "A4",
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "preset_modal_bell",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 30350,
+    "description": "Professional multi-layer modal synthesis bell with physically-accurate resonant modes, metallic shimmer, and spatial depth - warm church bell character with long decay and organic movement",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "modal",
-            "frequency": 440.0,
-            "modes": [
-              {
-                "freq_ratio": 1.0,
-                "amplitude": 1.0,
-                "decay_time": 1.8
-              },
-              {
-                "freq_ratio": 2.0,
-                "amplitude": 0.65,
-                "decay_time": 1.5
-              },
-              {
-                "freq_ratio": 2.4,
-                "amplitude": 0.55,
-                "decay_time": 1.3
-              },
-              {
-                "freq_ratio": 3.0,
-                "amplitude": 0.45,
-                "decay_time": 1.0
-              },
-              {
-                "freq_ratio": 4.2,
-                "amplitude": 0.35,
-                "decay_time": 0.8
-              },
-              {
-                "freq_ratio": 5.1,
-                "amplitude": 0.28,
-                "decay_time": 0.6
-              },
-              {
-                "freq_ratio": 6.5,
-                "amplitude": 0.22,
-                "decay_time": 0.5
-              }
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/bells/modal_bell.wav"
+        }
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "base_note": "A4",
+            "duration_seconds": 6.0,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "modal",
+                        "frequency": 440.0,
+                        "modes": [
+                            {
+                                "freq_ratio": 1.0,
+                                "amplitude": 1.0,
+                                "decay_time": 5.5
+                            },
+                            {
+                                "freq_ratio": 2.0,
+                                "amplitude": 0.8,
+                                "decay_time": 4.8
+                            },
+                            {
+                                "freq_ratio": 2.42,
+                                "amplitude": 0.72,
+                                "decay_time": 4.2
+                            },
+                            {
+                                "freq_ratio": 3.0,
+                                "amplitude": 0.58,
+                                "decay_time": 3.8
+                            },
+                            {
+                                "freq_ratio": 3.56,
+                                "amplitude": 0.52,
+                                "decay_time": 3.5
+                            },
+                            {
+                                "freq_ratio": 4.24,
+                                "amplitude": 0.45,
+                                "decay_time": 3.0
+                            },
+                            {
+                                "freq_ratio": 4.92,
+                                "amplitude": 0.38,
+                                "decay_time": 2.6
+                            },
+                            {
+                                "freq_ratio": 5.88,
+                                "amplitude": 0.32,
+                                "decay_time": 2.2
+                            },
+                            {
+                                "freq_ratio": 6.76,
+                                "amplitude": 0.26,
+                                "decay_time": 1.9
+                            },
+                            {
+                                "freq_ratio": 8.14,
+                                "amplitude": 0.18,
+                                "decay_time": 1.5
+                            }
+                        ],
+                        "excitation": "impulse"
+                    },
+                    "envelope": {
+                        "attack": 0.0005,
+                        "decay": 4.5,
+                        "sustain": 0,
+                        "release": 1.2
+                    },
+                    "volume": 0.6,
+                    "pan": 0.0,
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 0.42,
+                            "depth": 0.06
+                        },
+                        "target": {
+                            "target": "pitch",
+                            "semitones": 0.015
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "modal",
+                        "frequency": 440.0,
+                        "modes": [
+                            {
+                                "freq_ratio": 1.78,
+                                "amplitude": 0.45,
+                                "decay_time": 4.2
+                            },
+                            {
+                                "freq_ratio": 3.14,
+                                "amplitude": 0.38,
+                                "decay_time": 3.6
+                            },
+                            {
+                                "freq_ratio": 4.68,
+                                "amplitude": 0.32,
+                                "decay_time": 3.1
+                            },
+                            {
+                                "freq_ratio": 6.28,
+                                "amplitude": 0.26,
+                                "decay_time": 2.8
+                            },
+                            {
+                                "freq_ratio": 7.92,
+                                "amplitude": 0.22,
+                                "decay_time": 2.4
+                            },
+                            {
+                                "freq_ratio": 9.84,
+                                "amplitude": 0.18,
+                                "decay_time": 2.0
+                            }
+                        ],
+                        "excitation": "impulse"
+                    },
+                    "envelope": {
+                        "attack": 0.001,
+                        "decay": 3.8,
+                        "sustain": 0,
+                        "release": 1.0
+                    },
+                    "volume": 0.28,
+                    "pan": 0.15,
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 0.68,
+                            "depth": 0.08
+                        },
+                        "target": {
+                            "target": "pitch",
+                            "semitones": 0.022
+                        }
+                    }
+                }
             ],
-            "excitation": "impulse"
-          },
-          "envelope": {
-            "attack": 0.001,
-            "decay": 1.5,
-            "sustain": 0.0,
-            "release": 0.5
-          },
-          "volume": 0.75,
-          "pan": 0.0
+            "effects": [
+                {
+                    "type": "chorus",
+                    "rate": 0.32,
+                    "depth": 0.18,
+                    "wet": 0.22
+                },
+                {
+                    "type": "delay",
+                    "time_ms": 385,
+                    "feedback": 0.28,
+                    "wet": 0.18
+                },
+                {
+                    "type": "reverb",
+                    "room_size": 0.88,
+                    "damping": 0.35,
+                    "wet": 0.48,
+                    "width": 0.5
+                }
+            ]
         }
-      ],
-      "effects": [
-        {
-          "type": "reverb",
-          "room_size": 0.72,
-          "damping": 0.42,
-          "wet": 0.38
-        }
-      ]
     }
-  }
 }

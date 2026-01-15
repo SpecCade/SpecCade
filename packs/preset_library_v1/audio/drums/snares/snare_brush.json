@@ -1,62 +1,205 @@
 {
-  "spec_version": 1,
-  "asset_id": "preset_snare_brush",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 10029,
-  "description": "Brush snare - noise-based with longer envelope, swishing character",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/drums/snares/snare_brush.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "duration_seconds": 0.45,
-      "sample_rate": 44100,
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "preset_snare_brush",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 10029,
+    "description": "Professional brush snare - granular brush swish, wire texture, modal drum resonance, intimate jazz character",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "noise_burst",
-            "noise_type": "pink",
-            "filter": {
-              "type": "bandpass",
-              "center": 3000,
-              "resonance": 0.6
-            }
-          },
-          "envelope": {
-            "attack": 0.008,
-            "decay": 0.2,
-            "sustain": 0.1,
-            "release": 0.2
-          },
-          "volume": 0.5,
-          "pan": 0
-        },
-        {
-          "synthesis": {
-            "type": "noise_burst",
-            "noise_type": "pink",
-            "filter": {
-              "type": "highpass",
-              "cutoff": 2500,
-              "resonance": 0.4
-            }
-          },
-          "envelope": {
-            "attack": 0.01,
-            "decay": 0.18,
-            "sustain": 0.08,
-            "release": 0.18
-          },
-          "volume": 0.4,
-          "pan": 0
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/drums/snares/snare_brush.wav"
         }
-      ]
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "duration_seconds": 0.65,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "granular",
+                        "source": {
+                            "type": "noise",
+                            "noise_type": "white"
+                        },
+                        "grain_size_ms": 10,
+                        "grain_density": 100,
+                        "pitch_spread": 0,
+                        "position_spread": 0,
+                        "pan_spread": 0
+                    },
+                    "envelope": {
+                        "attack": 0.004,
+                        "decay": 0.25,
+                        "sustain": 0.08,
+                        "release": 0.35
+                    },
+                    "volume": 0.55,
+                    "pan": -0.08
+                },
+                {
+                    "synthesis": {
+                        "type": "noise_burst",
+                        "noise_type": "white",
+                        "filter": {
+                            "type": "highpass",
+                            "cutoff": 4500,
+                            "resonance": 0.65,
+                            "cutoff_end": 6200
+                        }
+                    },
+                    "envelope": {
+                        "attack": 0.002,
+                        "decay": 0.12,
+                        "sustain": 0.04,
+                        "release": 0.18
+                    },
+                    "volume": 0.42,
+                    "pan": 0.06
+                },
+                {
+                    "synthesis": {
+                        "type": "noise_burst",
+                        "noise_type": "brown",
+                        "filter": {
+                            "type": "bandpass",
+                            "center": 850,
+                            "resonance": 0.55,
+                            "center_end": 650
+                        }
+                    },
+                    "envelope": {
+                        "attack": 0.006,
+                        "decay": 0.22,
+                        "sustain": 0.06,
+                        "release": 0.28
+                    },
+                    "volume": 0.38,
+                    "pan": 0.02
+                },
+                {
+                    "synthesis": {
+                        "type": "modal",
+                        "frequency": 180,
+                        "modes": [
+                            {
+                                "freq_ratio": 1.0,
+                                "amplitude": 0.85,
+                                "decay_time": 0.18
+                            },
+                            {
+                                "freq_ratio": 1.56,
+                                "amplitude": 0.62,
+                                "decay_time": 0.15
+                            },
+                            {
+                                "freq_ratio": 2.13,
+                                "amplitude": 0.45,
+                                "decay_time": 0.12
+                            },
+                            {
+                                "freq_ratio": 2.94,
+                                "amplitude": 0.28,
+                                "decay_time": 0.09
+                            },
+                            {
+                                "freq_ratio": 3.72,
+                                "amplitude": 0.18,
+                                "decay_time": 0.07
+                            }
+                        ],
+                        "excitation": "impulse"
+                    },
+                    "envelope": {
+                        "attack": 0.003,
+                        "decay": 0.16,
+                        "sustain": 0.05,
+                        "release": 0.22
+                    },
+                    "volume": 0.48,
+                    "pan": 0
+                },
+                {
+                    "synthesis": {
+                        "type": "metallic",
+                        "base_freq": 440,
+                        "num_partials": 18,
+                        "inharmonicity": 2.2
+                    },
+                    "envelope": {
+                        "attack": 0.002,
+                        "decay": 0.14,
+                        "sustain": 0.03,
+                        "release": 0.2
+                    },
+                    "volume": 0.32,
+                    "pan": -0.04
+                },
+                {
+                    "synthesis": {
+                        "type": "pitched_body",
+                        "start_freq": 200,
+                        "end_freq": 100.0
+                    },
+                    "envelope": {
+                        "attack": 0.004,
+                        "decay": 0.2,
+                        "sustain": 0.04,
+                        "release": 0.25
+                    },
+                    "volume": 0.4,
+                    "pan": 0
+                },
+                {
+                    "synthesis": {
+                        "type": "granular",
+                        "source": {
+                            "type": "noise",
+                            "noise_type": "white"
+                        },
+                        "grain_size_ms": 10,
+                        "grain_density": 100,
+                        "pitch_spread": 0,
+                        "position_spread": 0,
+                        "pan_spread": 0
+                    },
+                    "envelope": {
+                        "attack": 0.001,
+                        "decay": 0.08,
+                        "sustain": 0.02,
+                        "release": 0.12
+                    },
+                    "volume": 0.28,
+                    "pan": 0.1
+                }
+            ],
+            "effects": [
+                {
+                    "type": "compressor",
+                    "threshold_db": -7.0,
+                    "ratio": 2.8,
+                    "attack_ms": 2.0,
+                    "release_ms": 80.0,
+                    "makeup_db": 0
+                },
+                {
+                    "type": "reverb",
+                    "room_size": 0.28,
+                    "damping": 0.55,
+                    "wet": 0.18,
+                    "width": 0.6
+                },
+                {
+                    "type": "chorus",
+                    "rate": 0.8,
+                    "depth": 0.08,
+                    "wet": 0.12,
+                    "voices": 2
+                }
+            ]
+        }
     }
-  }
 }

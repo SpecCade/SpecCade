@@ -1,77 +1,144 @@
 {
-  "spec_version": 1,
-  "asset_id": "preset_brass_swell",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 10124,
-  "description": "Swelling brass lead - sawtooth stack with filter LFO for breathing, dynamic brass character",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/leads/synth/brass_swell.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "base_note": "C4",
-      "duration_seconds": 2.0,
-      "sample_rate": 44100,
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "preset_brass_swell",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 10124,
+    "description": "Synth brass lead that swells - sawtooth-based with filter opening over time, ensemble-like character",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "multi_oscillator",
-            "frequency": 261.63,
-            "oscillators": [
-              {
-                "waveform": "sawtooth",
-                "volume": 1.0,
-                "detune": 0.0
-              },
-              {
-                "waveform": "sawtooth",
-                "volume": 0.95,
-                "detune": 3.0
-              },
-              {
-                "waveform": "sawtooth",
-                "volume": 0.95,
-                "detune": -3.0
-              },
-              {
-                "waveform": "square",
-                "volume": 0.5,
-                "detune": 0.0
-              }
-            ]
-          },
-          "envelope": {
-            "attack": 0.08,
-            "decay": 0.2,
-            "sustain": 0.8,
-            "release": 0.3
-          },
-          "filter": {
-            "type": "lowpass",
-            "cutoff": 2800.0,
-            "resonance": 0.45
-          },
-          "lfo": {
-            "config": {
-              "waveform": "sine",
-              "rate": 0.8,
-              "depth": 0.6
-            },
-            "target": {
-              "target": "filter_cutoff",
-              "amount": 1200.0
-            }
-          },
-          "volume": 0.85,
-          "pan": 0.0
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/leads/synth/brass_swell.wav"
         }
-      ]
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "base_note": "C4",
+            "duration_seconds": 2.0,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "oscillator",
+                        "waveform": "sawtooth",
+                        "frequency": 261.63
+                    },
+                    "envelope": {
+                        "attack": 0.4,
+                        "decay": 0.25,
+                        "sustain": 0.85,
+                        "release": 0.5
+                    },
+                    "volume": 0.65,
+                    "pan": 0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 600.0,
+                        "resonance": 0.7,
+                        "cutoff_end": 4000.0
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 4.5,
+                            "depth": 0.4
+                        },
+                        "target": {
+                            "target": "filter_cutoff",
+                            "amount": 500.0
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "additive",
+                        "base_freq": 261.63,
+                        "harmonics": [1.0, 0.7, 0.6, 0.45, 0.35, 0.25, 0.2, 0.15]
+                    },
+                    "envelope": {
+                        "attack": 0.45,
+                        "decay": 0.3,
+                        "sustain": 0.82,
+                        "release": 0.55
+                    },
+                    "volume": 0.5,
+                    "pan": 0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 800.0,
+                        "resonance": 0.6,
+                        "cutoff_end": 3500.0
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "oscillator",
+                        "waveform": "sawtooth",
+                        "frequency": 264.0
+                    },
+                    "envelope": {
+                        "attack": 0.42,
+                        "decay": 0.28,
+                        "sustain": 0.83,
+                        "release": 0.52
+                    },
+                    "volume": 0.4,
+                    "pan": -0.3,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 650.0,
+                        "resonance": 0.65,
+                        "cutoff_end": 3800.0
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "oscillator",
+                        "waveform": "sawtooth",
+                        "frequency": 259.5
+                    },
+                    "envelope": {
+                        "attack": 0.43,
+                        "decay": 0.27,
+                        "sustain": 0.84,
+                        "release": 0.51
+                    },
+                    "volume": 0.4,
+                    "pan": 0.3,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 620.0,
+                        "resonance": 0.68,
+                        "cutoff_end": 3700.0
+                    }
+                }
+            ],
+            "effects": [
+                {
+                    "type": "compressor",
+                    "threshold_db": -8.0,
+                    "ratio": 3.0,
+                    "attack_ms": 10.0,
+                    "release_ms": 100.0,
+                    "makeup_db": 2
+                },
+                {
+                    "type": "chorus",
+                    "rate": 0.5,
+                    "depth": 0.35,
+                    "wet": 0.3,
+                    "voices": 2
+                },
+                {
+                    "type": "reverb",
+                    "room_size": 0.65,
+                    "damping": 0.5,
+                    "wet": 0.35,
+                    "width": 0.5
+                }
+            ]
+        }
     }
-  }
 }

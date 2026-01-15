@@ -1,44 +1,156 @@
 {
-  "spec_version": 1,
-  "asset_id": "preset_bass_808",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 20001,
-  "description": "TR-808 style sub bass with long decay, classic boomy character",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/bass/bass_808.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "base_note": "C2",
-      "duration_seconds": 1.5,
-      "sample_rate": 44100,
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "preset_bass_808",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 20001,
+    "description": "TR-808 style sub bass with long decay, classic boomy character",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "oscillator",
-            "waveform": "sine",
-            "frequency": 120,
-            "freq_sweep": {
-              "end_freq": 45,
-              "curve": "exponential"
-            }
-          },
-          "envelope": {
-            "attack": 0.001,
-            "decay": 0.7,
-            "sustain": 0.35,
-            "release": 0.3
-          },
-          "volume": 1,
-          "pan": 0
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/bass/bass_808.wav"
         }
-      ]
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "base_note": "C2",
+            "duration_seconds": 2.0,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "oscillator",
+                        "waveform": "sine",
+                        "frequency": 55,
+                        "freq_sweep": {
+                            "end_freq": 55,
+                            "curve": "exponential"
+                        }
+                    },
+                    "envelope": {
+                        "attack": 0.001,
+                        "decay": 1.2,
+                        "sustain": 0.2,
+                        "release": 0.6
+                    },
+                    "volume": 0.85,
+                    "pan": 0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 120,
+                        "resonance": 0.1
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "oscillator",
+                        "waveform": "triangle",
+                        "frequency": 55,
+                        "freq_sweep": {
+                            "end_freq": 55,
+                            "curve": "exponential"
+                        }
+                    },
+                    "envelope": {
+                        "attack": 0.001,
+                        "decay": 0.8,
+                        "sustain": 0.15,
+                        "release": 0.4
+                    },
+                    "volume": 0.35,
+                    "pan": 0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 400,
+                        "resonance": 0.2
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "fm_synth",
+                        "carrier_freq": 55,
+                        "modulator_freq": 55,
+                        "modulation_index": 0.3
+                    },
+                    "envelope": {
+                        "attack": 0.001,
+                        "decay": 0.5,
+                        "sustain": 0.05,
+                        "release": 0.25
+                    },
+                    "volume": 0.15,
+                    "pan": 0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 800,
+                        "resonance": 0.15
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "oscillator",
+                        "waveform": "sine",
+                        "frequency": 800,
+                        "freq_sweep": {
+                            "end_freq": 55,
+                            "curve": "exponential"
+                        }
+                    },
+                    "envelope": {
+                        "attack": 0,
+                        "decay": 0.025,
+                        "sustain": 0,
+                        "release": 0.01
+                    },
+                    "volume": 0.2,
+                    "pan": 0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 2500,
+                        "resonance": 0.3
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "pd_synth",
+                        "frequency": 110,
+                        "distortion": 5.0,
+                        "distortion_decay": 0,
+                        "waveform": "resonant"
+                    },
+                    "envelope": {
+                        "attack": 0,
+                        "decay": 0.015,
+                        "sustain": 0,
+                        "release": 0.005
+                    },
+                    "volume": 0.12,
+                    "pan": 0,
+                    "filter": {
+                        "type": "highpass",
+                        "cutoff": 200,
+                        "resonance": 0.4
+                    }
+                }
+            ],
+            "effects": [
+                {
+                    "type": "waveshaper",
+                    "drive": 2.5,
+                    "wet": 0.25,
+                    "curve": "tanh"
+                },
+                {
+                    "type": "compressor",
+                    "threshold_db": -12,
+                    "ratio": 4,
+                    "attack_ms": 5,
+                    "release_ms": 100,
+                    "makeup_db": 0
+                }
+            ]
+        }
     }
-  }
 }

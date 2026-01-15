@@ -1,49 +1,194 @@
 {
-  "spec_version": 1,
-  "asset_id": "preset_bell_glass",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 10252,
-  "description": "Glass bell - crystalline, bright bell with high inharmonicity and quick decay",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/bells/bell_glass.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "duration_seconds": 1.5,
-      "sample_rate": 44100,
-      "base_note": "C6",
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "preset_bell_glass",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 10252,
+    "description": "Glass bell - crystalline resonance with extended decay, high inharmonicity modal synthesis, and shimmering harmonics for professional tracker production",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "metallic",
-            "base_freq": 1046.5,
-            "num_partials": 14,
-            "inharmonicity": 1.7
-          },
-          "envelope": {
-            "attack": 0.001,
-            "decay": 0.3,
-            "sustain": 0.05,
-            "release": 0.5
-          },
-          "volume": 0.8,
-          "pan": 0.0
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/bells/bell_glass.wav"
         }
-      ],
-      "effects": [
-        {
-          "type": "reverb",
-          "room_size": 0.5,
-          "damping": 0.3,
-          "wet": 0.3
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "base_note": "C6",
+            "duration_seconds": 6.0,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "modal",
+                        "frequency": 1046.5,
+                        "modes": [
+                            {
+                                "freq_ratio": 1.0,
+                                "amplitude": 1.0,
+                                "decay_time": 4.5
+                            },
+                            {
+                                "freq_ratio": 2.756,
+                                "amplitude": 0.75,
+                                "decay_time": 3.8
+                            },
+                            {
+                                "freq_ratio": 5.404,
+                                "amplitude": 0.55,
+                                "decay_time": 3.2
+                            },
+                            {
+                                "freq_ratio": 8.933,
+                                "amplitude": 0.35,
+                                "decay_time": 2.6
+                            },
+                            {
+                                "freq_ratio": 13.344,
+                                "amplitude": 0.22,
+                                "decay_time": 2.1
+                            },
+                            {
+                                "freq_ratio": 18.637,
+                                "amplitude": 0.12,
+                                "decay_time": 1.6
+                            }
+                        ],
+                        "excitation": "impulse"
+                    },
+                    "envelope": {
+                        "attack": 0.0005,
+                        "decay": 2.5,
+                        "sustain": 0.15,
+                        "release": 3.5
+                    },
+                    "volume": 0.7,
+                    "pan": 0.0
+                },
+                {
+                    "synthesis": {
+                        "type": "modal",
+                        "frequency": 2093.0,
+                        "modes": [
+                            {
+                                "freq_ratio": 1.0,
+                                "amplitude": 1.0,
+                                "decay_time": 3.2
+                            },
+                            {
+                                "freq_ratio": 2.414,
+                                "amplitude": 0.6,
+                                "decay_time": 2.8
+                            },
+                            {
+                                "freq_ratio": 4.236,
+                                "amplitude": 0.35,
+                                "decay_time": 2.3
+                            },
+                            {
+                                "freq_ratio": 6.854,
+                                "amplitude": 0.18,
+                                "decay_time": 1.8
+                            }
+                        ],
+                        "excitation": "impulse"
+                    },
+                    "envelope": {
+                        "attack": 0.0003,
+                        "decay": 1.8,
+                        "sustain": 0.08,
+                        "release": 2.8
+                    },
+                    "volume": 0.35,
+                    "pan": -0.15
+                },
+                {
+                    "synthesis": {
+                        "type": "fm_synth",
+                        "carrier_freq": 4186.0,
+                        "modulator_freq": 6279.0,
+                        "modulation_index": 1.2
+                    },
+                    "envelope": {
+                        "attack": 0.001,
+                        "decay": 0.8,
+                        "sustain": 0.02,
+                        "release": 1.5
+                    },
+                    "volume": 0.15,
+                    "pan": 0.2
+                },
+                {
+                    "synthesis": {
+                        "type": "noise_burst",
+                        "noise_type": "white"
+                    },
+                    "envelope": {
+                        "attack": 0.0001,
+                        "decay": 0.008,
+                        "sustain": 0,
+                        "release": 0.015
+                    },
+                    "volume": 0.12,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "highpass",
+                        "cutoff": 6000,
+                        "resonance": 0.4
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "modal",
+                        "frequency": 523.25,
+                        "modes": [
+                            {
+                                "freq_ratio": 1.0,
+                                "amplitude": 1.0,
+                                "decay_time": 5.0
+                            },
+                            {
+                                "freq_ratio": 3.0,
+                                "amplitude": 0.3,
+                                "decay_time": 3.5
+                            }
+                        ],
+                        "excitation": "impulse"
+                    },
+                    "envelope": {
+                        "attack": 0.002,
+                        "decay": 3.0,
+                        "sustain": 0.1,
+                        "release": 4.0
+                    },
+                    "volume": 0.2,
+                    "pan": 0.0
+                }
+            ],
+            "effects": [
+                {
+                    "type": "chorus",
+                    "rate": 0.8,
+                    "depth": 0.15,
+                    "wet": 0.2,
+                    "voices": 2
+                },
+                {
+                    "type": "delay",
+                    "time_ms": 45.0,
+                    "feedback": 0.25,
+                    "wet": 0.18,
+                    "ping_pong": false
+                },
+                {
+                    "type": "reverb",
+                    "room_size": 0.75,
+                    "damping": 0.15,
+                    "wet": 0.45,
+                    "width": 0.5
+                }
+            ]
         }
-      ]
     }
-  }
 }

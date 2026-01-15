@@ -1,72 +1,277 @@
 {
-  "spec_version": 1,
-  "asset_id": "sitar_pluck",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 20054,
-  "description": "Sitar pluck - Indian sitar-style pluck with sympathetic resonance",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/plucks/sitar_pluck.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "duration_seconds": 2.5,
-      "sample_rate": 44100,
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "sitar_pluck",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 20054,
+    "description": "Professional sitar pluck - Authentic Indian sitar with sympathetic string resonance, characteristic pitch bend, and buzzy timbre",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "karplus_strong",
-            "frequency": 440.0,
-            "decay": 0.9985,
-            "blend": 0.35
-          },
-          "envelope": {
-            "attack": 0.001,
-            "decay": 0.15,
-            "sustain": 0.85,
-            "release": 1.2
-          },
-          "volume": 1.0,
-          "pan": 0.0
-        },
-        {
-          "synthesis": {
-            "type": "karplus_strong",
-            "frequency": 880.0,
-            "decay": 0.997,
-            "blend": 0.4
-          },
-          "envelope": {
-            "attack": 0.002,
-            "decay": 0.12,
-            "sustain": 0.7,
-            "release": 1.0
-          },
-          "volume": 0.4,
-          "pan": -0.15
-        },
-        {
-          "synthesis": {
-            "type": "karplus_strong",
-            "frequency": 1320.0,
-            "decay": 0.996,
-            "blend": 0.45
-          },
-          "envelope": {
-            "attack": 0.003,
-            "decay": 0.1,
-            "sustain": 0.6,
-            "release": 0.9
-          },
-          "volume": 0.25,
-          "pan": 0.15
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/plucks/sitar_pluck.wav"
         }
-      ]
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "duration_seconds": 3.5,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "karplus_strong",
+                        "frequency": 440.0,
+                        "decay": 0.9988,
+                        "blend": 0.28
+                    },
+                    "envelope": {
+                        "attack": 0.0008,
+                        "decay": 0.18,
+                        "sustain": 0.88,
+                        "release": 1.8
+                    },
+                    "volume": 1.0,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "bandpass",
+                        "center": 2800.0,
+                        "resonance": 0.45,
+                        "center_end": 1800.0
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "karplus_strong",
+                        "frequency": 880.0,
+                        "decay": 0.998,
+                        "blend": 0.32
+                    },
+                    "envelope": {
+                        "attack": 0.0012,
+                        "decay": 0.15,
+                        "sustain": 0.75,
+                        "release": 1.6
+                    },
+                    "volume": 0.48,
+                    "pan": -0.22,
+                    "filter": {
+                        "type": "bandpass",
+                        "center": 3500.0,
+                        "resonance": 0.5,
+                        "center_end": 2200.0
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "modal",
+                        "frequency": 1320.0,
+                        "modes": [
+                            {
+                                "freq_ratio": 0.3333333333333333,
+                                "amplitude": 1.0,
+                                "decay_time": 0.85
+                            },
+                            {
+                                "freq_ratio": 0.3333333333333333,
+                                "amplitude": 0.65,
+                                "decay_time": 0.72
+                            },
+                            {
+                                "freq_ratio": 0.3333333333333333,
+                                "amplitude": 0.45,
+                                "decay_time": 0.58
+                            },
+                            {
+                                "freq_ratio": 0.3333333333333333,
+                                "amplitude": 0.32,
+                                "decay_time": 0.45
+                            }
+                        ],
+                        "excitation": "impulse"
+                    },
+                    "envelope": {
+                        "attack": 0.0015,
+                        "decay": 0.12,
+                        "sustain": 0.65,
+                        "release": 1.4
+                    },
+                    "volume": 0.35,
+                    "pan": 0.22,
+                    "filter": {
+                        "type": "bandpass",
+                        "center": 4200.0,
+                        "resonance": 0.55,
+                        "center_end": 2800.0
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "karplus_strong",
+                        "frequency": 329.63,
+                        "decay": 0.9992,
+                        "blend": 0.25
+                    },
+                    "envelope": {
+                        "attack": 0.002,
+                        "decay": 0.25,
+                        "sustain": 0.9,
+                        "release": 2.2
+                    },
+                    "volume": 0.28,
+                    "pan": -0.12,
+                    "filter": {
+                        "type": "bandpass",
+                        "center": 2200.0,
+                        "resonance": 0.42,
+                        "center_end": 1500.0
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "karplus_strong",
+                        "frequency": 659.26,
+                        "decay": 0.999,
+                        "blend": 0.3
+                    },
+                    "envelope": {
+                        "attack": 0.0025,
+                        "decay": 0.2,
+                        "sustain": 0.82,
+                        "release": 2.0
+                    },
+                    "volume": 0.22,
+                    "pan": 0.12,
+                    "filter": {
+                        "type": "bandpass",
+                        "center": 2600.0,
+                        "resonance": 0.48,
+                        "center_end": 1700.0
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "modal",
+                        "frequency": 987.77,
+                        "modes": [
+                            {
+                                "freq_ratio": 0.4454478269232716,
+                                "amplitude": 1.0,
+                                "decay_time": 0.88
+                            },
+                            {
+                                "freq_ratio": 0.4454478269232716,
+                                "amplitude": 0.5,
+                                "decay_time": 0.68
+                            },
+                            {
+                                "freq_ratio": 0.4454478269232716,
+                                "amplitude": 0.3,
+                                "decay_time": 0.52
+                            }
+                        ],
+                        "excitation": "impulse"
+                    },
+                    "envelope": {
+                        "attack": 0.003,
+                        "decay": 0.16,
+                        "sustain": 0.7,
+                        "release": 1.7
+                    },
+                    "volume": 0.18,
+                    "pan": -0.08,
+                    "filter": {
+                        "type": "bandpass",
+                        "center": 3800.0,
+                        "resonance": 0.52,
+                        "center_end": 2400.0
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "karplus_strong",
+                        "frequency": 220.0,
+                        "decay": 0.9995,
+                        "blend": 0.22
+                    },
+                    "envelope": {
+                        "attack": 0.005,
+                        "decay": 0.3,
+                        "sustain": 0.95,
+                        "release": 2.5
+                    },
+                    "volume": 0.25,
+                    "pan": 0.05,
+                    "filter": {
+                        "type": "bandpass",
+                        "center": 1800.0,
+                        "resonance": 0.38,
+                        "center_end": 1200.0
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "modal",
+                        "frequency": 550.0,
+                        "modes": [
+                            {
+                                "freq_ratio": 0.8,
+                                "amplitude": 1.0,
+                                "decay_time": 0.9
+                            },
+                            {
+                                "freq_ratio": 0.8,
+                                "amplitude": 0.55,
+                                "decay_time": 0.75
+                            },
+                            {
+                                "freq_ratio": 0.8,
+                                "amplitude": 0.35,
+                                "decay_time": 0.6
+                            }
+                        ],
+                        "excitation": "impulse"
+                    },
+                    "envelope": {
+                        "attack": 0.004,
+                        "decay": 0.22,
+                        "sustain": 0.85,
+                        "release": 2.0
+                    },
+                    "volume": 0.15,
+                    "pan": 0.08,
+                    "filter": {
+                        "type": "bandpass",
+                        "center": 2400.0,
+                        "resonance": 0.45,
+                        "center_end": 1600.0
+                    }
+                }
+            ],
+            "effects": [
+                {
+                    "type": "chorus",
+                    "rate": 0.35,
+                    "depth": 0.15,
+                    "wet": 0.18,
+                    "voices": 2
+                },
+                {
+                    "type": "reverb",
+                    "room_size": 0.48,
+                    "damping": 0.55,
+                    "wet": 0.22,
+                    "width": 0.5
+                },
+                {
+                    "type": "compressor",
+                    "threshold_db": -18.0,
+                    "ratio": 3.5,
+                    "attack_ms": 5.0,
+                    "release_ms": 120.0,
+                    "makeup_db": 0
+                }
+            ]
+        }
     }
-  }
 }

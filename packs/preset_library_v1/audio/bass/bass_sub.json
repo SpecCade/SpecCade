@@ -1,40 +1,81 @@
 {
-  "spec_version": 1,
-  "asset_id": "preset_bass_sub",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 10006,
-  "description": "Sub bass - pure sine for clean low-end (loop-safe)",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/bass/bass_sub.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "base_note": "C2",
-      "duration_seconds": 1,
-      "sample_rate": 44100,
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "preset_bass_sub",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 10006,
+    "description": "Sub bass - pure sine for clean low-end (loop-safe)",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "oscillator",
-            "waveform": "sine",
-            "frequency": 65.41
-          },
-          "envelope": {
-            "attack": 0.01,
-            "decay": 0.1,
-            "sustain": 1,
-            "release": 0.1
-          },
-          "volume": 1,
-          "pan": 0
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/bass/bass_sub.wav"
         }
-      ]
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "base_note": "C2",
+            "duration_seconds": 1,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "oscillator",
+                        "waveform": "sine",
+                        "frequency": 65.41
+                    },
+                    "envelope": {
+                        "attack": 0.005,
+                        "decay": 0.08,
+                        "sustain": 0.95,
+                        "release": 0.25
+                    },
+                    "volume": 0.85,
+                    "pan": 0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 120,
+                        "resonance": 0.0
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "oscillator",
+                        "waveform": "triangle",
+                        "frequency": 65.41
+                    },
+                    "envelope": {
+                        "attack": 0.008,
+                        "decay": 0.12,
+                        "sustain": 0.3,
+                        "release": 0.2
+                    },
+                    "volume": 0.15,
+                    "pan": 0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 180,
+                        "resonance": 0.1
+                    }
+                }
+            ],
+            "effects": [
+                {
+                    "type": "waveshaper",
+                    "drive": 2.0,
+                    "wet": 0.5,
+                    "curve": "tanh"
+                },
+                {
+                    "type": "compressor",
+                    "threshold_db": -12,
+                    "ratio": 4,
+                    "attack_ms": 10.0,
+                    "release_ms": 150.0,
+                    "makeup_db": 0
+                }
+            ]
+        }
     }
-  }
 }

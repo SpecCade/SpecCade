@@ -117,7 +117,82 @@ Legend (informal triage tags used below):
   - `[G]` Convolution reverb IR generation + apply as effect (big realism jump)
   - `[G]` Impulse/decay modeling (room/plate/spring style) for more realistic tails without hand-tuning
   - `[G]` Batch SFX variation sets: seed sweeps + constraints + sample set export
-  - For additional synthesis methods, see `docs/audio_synthesis_methods.md`
+  - For synthesis method status, see `docs/audio_synthesis_methods.md`
+
+### Missing Synthesis Types (based on V1 library analysis)
+
+Priority 1 — High Impact:
+- `[G]` **Supersaw/Unison engine**: Dedicated voice stacking with detune curves, stereo spread. Current `multi_oscillator` works but lacks proper unison controls (detune_curve, voice_spread).
+- `[G]` **Waveguide synthesis**: Wind/brass physical modeling (flute, clarinet, trumpet). `karplus_strong` handles plucked strings but wind instruments need breath pressure, embouchure, bore resonance.
+- `[G]` **Bowed string synthesis**: Violin/cello physical modeling with bow pressure, position, velocity. Currently no sustained string physical model.
+- `[G]` **Membrane/drum synthesis**: True drumhead physics. Current drums use layered noise/oscillators; membrane model would improve realism for toms, congas, frame drums.
+
+Priority 2 — Medium Impact:
+- `[I]` **Feedback FM**: Self-modulating operator creates different timbres than standard 2-op FM.
+- `[I]` **Comb filter synthesis**: Resonant metallic tones, Karplus-Strong variants.
+- `[I]` **Sample playback**: For instruments requiring recordings. Would unlock realistic sounds beyond synthesis.
+
+Priority 3 — Nice to Have:
+- `[I]` **Pulsar synthesis**: Synchronized grain trains for rhythmic/tonal granular.
+- `[I]` **VOSIM**: Efficient formant pulse trains for robotic voices.
+- `[I]` **Spectral synthesis**: FFT-based freeze/morph/filter effects.
+
+### Missing Effects (significant gap in V1 library)
+
+Current effects: `reverb`, `compressor`, `chorus`, `phaser`, `delay`, `waveshaper`, `bitcrush`
+
+Priority 1 — Essential (big coverage gaps):
+- `[Q]` **Flanger**: Distinct from chorus/phaser. Jet sweeps, metallic textures. Params: `rate`, `depth`, `feedback`, `delay_ms`, `wet`.
+- `[Q]` **Parametric EQ**: No frequency sculpting beyond per-layer filters. Essential for tonal shaping. Params: `bands[]` with `frequency`, `gain_db`, `q`, `type` (lowshelf/highshelf/peak/notch).
+- `[Q]` **Limiter**: Distinct from compressor. Brick-wall limiting for loudness/clipping prevention. Params: `threshold_db`, `release_ms`, `lookahead_ms`, `ceiling_db`.
+- `[Q]` **Gate/Expander**: No dynamics gate for drum tightening, noise reduction. Params: `threshold_db`, `ratio`, `attack_ms`, `hold_ms`, `release_ms`, `range_db`.
+- `[Q]` **Stereo widener**: No dedicated stereo enhancement. Params: `width` (0-2), `mode` (simple/haas/mid_side), `delay_ms`.
+
+Priority 2 — Important:
+- `[I]` **Multi-tap delay**: Current delay is single-tap. Params: `taps[]` with `time_ms`, `feedback`, `pan`, `level`, `filter_cutoff`.
+- `[I]` **Tape saturation**: Warmth waveshaper can't achieve. Params: `drive`, `bias`, `wow_rate`, `flutter_rate`, `hiss_level`.
+- `[I]` **Transient shaper**: Attack/sustain control for punch. Params: `attack` (-100 to +100), `sustain`, `output_gain_db`.
+- `[I]` **Auto-filter/Envelope follower**: Auto-wah, dynamic filter sweeps. Params: `sensitivity`, `attack_ms`, `release_ms`, `depth`, `base_frequency`.
+- `[I]` **Cabinet simulation**: Speaker/amp modeling. Params: `cabinet_type` (guitar_1x12/4x12/bass_1x15/radio/telephone), `mic_position`.
+
+Priority 3 — Nice to Have:
+- `[I]` **Rotary speaker (Leslie)**: Organ sounds, psychedelic effects.
+- `[I]` **Ring modulator effect**: Process input (distinct from ring_mod_synth).
+- `[I]` **Granular delay**: Shimmer, pitch-shifted delays.
+- `[G]` **Convolution reverb**: Realistic spaces via impulse responses.
+
+### Missing LFO Targets
+
+Current: `pitch`, `volume`, `filter_cutoff`, `pan`
+
+Suggested additions:
+- `[Q]` `pulse_width` — PWM synthesis
+- `[Q]` `fm_index` — FM depth modulation
+- `[I]` `grain_size` — Granular texture variation
+- `[I]` `grain_density` — Granular rhythm
+- `[I]` `delay_time` — Chorus/flanger simulation
+- `[I]` `reverb_size` — Evolving spaces
+- `[I]` `distortion_drive` — Dynamic saturation
+
+### Missing Filter Types
+
+Current: `lowpass`, `bandpass`, `highpass`
+
+Suggested additions:
+- `[Q]` `notch` — Remove specific frequencies
+- `[Q]` `allpass` — Phase shifting (phaser building block)
+- `[I]` `comb` — Resonant/metallic effects
+- `[I]` `formant` — Vowel filtering
+- `[I]` `ladder` — Classic Moog character (4-pole with resonance)
+- `[I]` `shelf_low` / `shelf_high` — Bass/treble boost/cut
+
+### V1 Library Statistics (for reference)
+
+From `analyze_presets.py` run on 2026-01-15:
+- 255 presets, 62% have LFO, 73% have filters, 96% have effects
+- Top synth types: noise_burst (19%), oscillator (15%), fm_synth (12%)
+- Top effects: reverb (28%), compressor (23%), chorus (20%), delay (12%)
+- Average 4.8 layers per preset, most common effect count is 3
 - Music (tracker + compose IR):
   - `[Q]` Expand `effect_name` support + validation (arp, porta, vibrato, retrig, vol slide, etc.)
   - `[Q]` Deterministic swing/humanize macros in Pattern IR (timing + velocity ranges)

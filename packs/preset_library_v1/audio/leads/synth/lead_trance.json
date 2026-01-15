@@ -1,89 +1,124 @@
 {
-  "spec_version": 1,
-  "asset_id": "preset_lead_trance",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 10127,
-  "description": "Classic trance lead - supersaw style with fast square wave LFO for gated tremolo effect",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/leads/synth/lead_trance.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "base_note": "A4",
-      "duration_seconds": 2.0,
-      "sample_rate": 44100,
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "preset_lead_trance",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 10127,
+    "description": "Professional euphoric trance lead - 7-voice supersaw with pitch envelope, vibrato, stereo chorus, and lush reverb/delay tail",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "multi_oscillator",
-            "frequency": 440.0,
-            "oscillators": [
-              {
-                "waveform": "sawtooth",
-                "volume": 1.0,
-                "detune": 0.0
-              },
-              {
-                "waveform": "sawtooth",
-                "volume": 0.9,
-                "detune": 10.0
-              },
-              {
-                "waveform": "sawtooth",
-                "volume": 0.9,
-                "detune": -10.0
-              },
-              {
-                "waveform": "sawtooth",
-                "volume": 0.75,
-                "detune": 20.0
-              },
-              {
-                "waveform": "sawtooth",
-                "volume": 0.75,
-                "detune": -20.0
-              }
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/leads/synth/lead_trance.wav"
+        }
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "base_note": "A4",
+            "duration_seconds": 2.5,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "multi_oscillator",
+                        "frequency": 440.0,
+                        "oscillators": [
+                            {
+                                "waveform": "sawtooth",
+                                "volume": 1.0,
+                                "detune": 0.0
+                            },
+                            {
+                                "waveform": "sawtooth",
+                                "volume": 0.92,
+                                "detune": 12.0
+                            },
+                            {
+                                "waveform": "sawtooth",
+                                "volume": 0.92,
+                                "detune": -12.0
+                            },
+                            {
+                                "waveform": "sawtooth",
+                                "volume": 0.85,
+                                "detune": 24.0
+                            },
+                            {
+                                "waveform": "sawtooth",
+                                "volume": 0.85,
+                                "detune": -24.0
+                            },
+                            {
+                                "waveform": "sawtooth",
+                                "volume": 0.7,
+                                "detune": 38.0
+                            },
+                            {
+                                "waveform": "sawtooth",
+                                "volume": 0.7,
+                                "detune": -38.0
+                            }
+                        ]
+                    },
+                    "envelope": {
+                        "attack": 0.015,
+                        "decay": 0.15,
+                        "sustain": 0.85,
+                        "release": 0.35
+                    },
+                    "volume": 0.7,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 8000.0,
+                        "resonance": 0.45,
+                        "cutoff_end": 6000.0
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 5.8,
+                            "depth": 0.35
+                        },
+                        "target": {
+                            "target": "pitch",
+                            "semitones": 1.0
+                        }
+                    }
+                }
+            ],
+            "effects": [
+                {
+                    "type": "chorus",
+                    "rate": 0.8,
+                    "depth": 0.6,
+                    "wet": 0.45,
+                    "voices": 2
+                },
+                {
+                    "type": "delay",
+                    "time_ms": 375.0,
+                    "feedback": 0.35,
+                    "wet": 0.25,
+                    "ping_pong": false
+                },
+                {
+                    "type": "reverb",
+                    "room_size": 0.65,
+                    "damping": 0.4,
+                    "wet": 0.28,
+                    "width": 0.5
+                },
+                {
+                    "type": "compressor",
+                    "threshold_db": -12.0,
+                    "ratio": 3.0,
+                    "attack_ms": 5.0,
+                    "release_ms": 50.0,
+                    "makeup_db": 0
+                }
             ]
-          },
-          "envelope": {
-            "attack": 0.01,
-            "decay": 0.1,
-            "sustain": 0.9,
-            "release": 0.2
-          },
-          "filter": {
-            "type": "lowpass",
-            "cutoff": 5000.0,
-            "resonance": 0.3
-          },
-          "lfo": {
-            "config": {
-              "waveform": "square",
-              "rate": 8.0,
-              "depth": 0.5
-            },
-            "target": {
-              "target": "volume"
-            }
-          },
-          "volume": 0.8,
-          "pan": 0.0
         }
-      ],
-      "effects": [
-        {
-          "type": "delay",
-          "time_ms": 150.0,
-          "feedback": 0.3,
-          "wet": 0.2
-        }
-      ]
     }
-  }
 }

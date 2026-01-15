@@ -15,26 +15,49 @@
   "recipe": {
     "kind": "audio_v1",
     "params": {
-      "duration_seconds": 0.35,
+      "duration_seconds": 0.5,
       "sample_rate": 44100,
       "layers": [
         {
           "synthesis": {
-            "type": "oscillator",
-            "waveform": "sine",
-            "frequency": 180,
-            "freq_sweep": {
-              "end_freq": 80,
-              "curve": "exponential"
-            }
+            "type": "modal",
+            "frequency": 95,
+            "modes": [
+              {
+                "freq_ratio": 1.0,
+                "amplitude": 1.0,
+                "decay_time": 0.45
+              },
+              {
+                "freq_ratio": 2.17,
+                "amplitude": 0.55,
+                "decay_time": 0.32
+              },
+              {
+                "freq_ratio": 3.41,
+                "amplitude": 0.38,
+                "decay_time": 0.25
+              },
+              {
+                "freq_ratio": 4.89,
+                "amplitude": 0.28,
+                "decay_time": 0.18
+              },
+              {
+                "freq_ratio": 6.71,
+                "amplitude": 0.18,
+                "decay_time": 0.14
+              }
+            ],
+            "excitation": "impulse"
           },
           "envelope": {
             "attack": 0.001,
-            "decay": 0.15,
+            "decay": 0.45,
             "sustain": 0,
-            "release": 0.12
+            "release": 0.05
           },
-          "volume": 0.75,
+          "volume": 0.85,
           "pan": 0
         },
         {
@@ -43,18 +66,75 @@
             "noise_type": "white",
             "filter": {
               "type": "bandpass",
-              "center": 3000,
-              "resonance": 0.7
+              "center": 2200,
+              "resonance": 0.5
+            }
+          },
+          "envelope": {
+            "attack": 0.0005,
+            "decay": 0.035,
+            "sustain": 0,
+            "release": 0.025
+          },
+          "lfo": {
+            "config": {
+              "waveform": "sine",
+              "rate": 4.2,
+              "depth": 0.12
+            },
+            "target": {
+              "target": "filter_cutoff",
+              "amount": 180
+            }
+          },
+          "volume": 0.65,
+          "pan": 0
+        },
+        {
+          "synthesis": {
+            "type": "noise_burst",
+            "noise_type": "pink",
+            "filter": {
+              "type": "highpass",
+              "cutoff": 800,
+              "resonance": 0.5
             }
           },
           "envelope": {
             "attack": 0.001,
             "decay": 0.08,
             "sustain": 0,
-            "release": 0.06
+            "release": 0.04
           },
-          "volume": 0.5,
+          "lfo": {
+            "config": {
+              "waveform": "triangle",
+              "rate": 3.8,
+              "depth": 0.09
+            },
+            "target": {
+              "target": "filter_cutoff",
+              "amount": 220
+            }
+          },
+          "volume": 0.35,
           "pan": 0
+        }
+      ],
+      "effects": [
+        {
+          "type": "reverb",
+          "room_size": 0.25,
+          "damping": 0.6,
+          "wet": 0.15
+        },
+        {
+          "type": "compressor",
+          "ratio": 3.5,
+          "threshold_db": -18,
+          "attack_ms": 0.002,
+          "release_ms": 0.08,
+          "makeup_db": 0
         }
       ]
     }

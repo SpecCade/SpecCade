@@ -1,81 +1,162 @@
 {
-  "spec_version": 1,
-  "asset_id": "preset_piano_bright",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 10202,
-  "description": "Bright honky-tonk piano - percussive attack, slight detuning for character",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/keys/piano_bright.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "base_note": "C4",
-      "duration_seconds": 2.0,
-      "sample_rate": 44100,
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "preset_piano_bright",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 10202,
+    "description": "Bright, sparkly piano - enhanced upper harmonics, crisp attack, minimal filtering for modern pop sound",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "karplus_strong",
-            "frequency": 261.63,
-            "decay": 0.996,
-            "blend": 0.2
-          },
-          "envelope": {
-            "attack": 0.0005,
-            "decay": 0.6,
-            "sustain": 0.2,
-            "release": 0.4
-          },
-          "volume": 1.0,
-          "pan": 0.0
-        },
-        {
-          "synthesis": {
-            "type": "karplus_strong",
-            "frequency": 263.5,
-            "decay": 0.995,
-            "blend": 0.25
-          },
-          "envelope": {
-            "attack": 0.0005,
-            "decay": 0.55,
-            "sustain": 0.15,
-            "release": 0.35
-          },
-          "volume": 0.4,
-          "pan": 0.1
-        },
-        {
-          "synthesis": {
-            "type": "noise_burst",
-            "noise_type": "white",
-            "filter": {
-              "type": "highpass",
-              "cutoff": 4000.0,
-              "resonance": 0.5
-            }
-          },
-          "envelope": {
-            "attack": 0.0003,
-            "decay": 0.012,
-            "sustain": 0.0,
-            "release": 0.008
-          },
-          "volume": 0.35,
-          "pan": 0.0
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/keys/piano_bright.wav"
         }
-      ],
-      "master_filter": {
-        "type": "highpass",
-        "cutoff": 120,
-        "resonance": 0.1
-      }
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "base_note": "C4",
+            "duration_seconds": 2.5,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "karplus_strong",
+                        "frequency": 261.63,
+                        "decay": 0.92,
+                        "blend": 0.35
+                    },
+                    "envelope": {
+                        "attack": 0.0001,
+                        "decay": 0.6,
+                        "sustain": 0.3,
+                        "release": 0.45
+                    },
+                    "volume": 0.9,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "highpass",
+                        "cutoff": 60.0,
+                        "resonance": 0.1
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "additive",
+                        "base_freq": 261.63,
+                        "harmonics": [1.0, 0.85, 0.72, 0.68, 0.58, 0.52, 0.48, 0.45, 0.38, 0.35, 0.3, 0.28, 0.24, 0.22, 0.18]
+                    },
+                    "envelope": {
+                        "attack": 0.0002,
+                        "decay": 0.65,
+                        "sustain": 0.28,
+                        "release": 0.5
+                    },
+                    "volume": 0.75,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "highpass",
+                        "cutoff": 50.0,
+                        "resonance": 0.08
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 5.5,
+                            "depth": 0.6
+                        },
+                        "target": {
+                            "target": "filter_cutoff",
+                            "amount": 300.0
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "karplus_strong",
+                        "frequency": 523.26,
+                        "decay": 0.88,
+                        "blend": 0.25
+                    },
+                    "envelope": {
+                        "attack": 0.0001,
+                        "decay": 0.45,
+                        "sustain": 0.18,
+                        "release": 0.35
+                    },
+                    "volume": 0.45,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "highpass",
+                        "cutoff": 1000.0,
+                        "resonance": 0.15
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "noise_burst",
+                        "noise_type": "white",
+                        "filter": {
+                            "type": "bandpass",
+                            "center": 4500.0,
+                            "resonance": 0.7
+                        }
+                    },
+                    "envelope": {
+                        "attack": 0.0001,
+                        "decay": 0.012,
+                        "sustain": 0,
+                        "release": 0.006
+                    },
+                    "volume": 0.5,
+                    "pan": 0.0
+                },
+                {
+                    "synthesis": {
+                        "type": "karplus_strong",
+                        "frequency": 262.8,
+                        "decay": 0.91,
+                        "blend": 0.3
+                    },
+                    "envelope": {
+                        "attack": 0.0002,
+                        "decay": 0.58,
+                        "sustain": 0.26,
+                        "release": 0.42
+                    },
+                    "volume": 0.35,
+                    "pan": -0.2
+                }
+            ],
+            "master_filter": {
+                "type": "highpass",
+                "cutoff": 70.0,
+                "resonance": 0.1
+            },
+            "effects": [
+                {
+                    "type": "compressor",
+                    "threshold_db": -8.0,
+                    "ratio": 3.0,
+                    "attack_ms": 2.0,
+                    "release_ms": 60.0,
+                    "makeup_db": 2.0
+                },
+                {
+                    "type": "chorus",
+                    "rate": 1.2,
+                    "depth": 0.18,
+                    "wet": 0.15,
+                    "voices": 2
+                },
+                {
+                    "type": "reverb",
+                    "room_size": 0.38,
+                    "damping": 0.25,
+                    "wet": 0.16,
+                    "width": 0.9
+                }
+            ]
+        }
     }
-  }
 }

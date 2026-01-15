@@ -15,26 +15,66 @@
   "recipe": {
     "kind": "audio_v1",
     "params": {
-      "duration_seconds": 0.2,
+      "duration_seconds": 0.15,
       "sample_rate": 44100,
       "layers": [
         {
           "synthesis": {
             "type": "oscillator",
-            "waveform": "sine",
-            "frequency": 200,
+            "waveform": "triangle",
+            "frequency": 280,
             "freq_sweep": {
-              "end_freq": 80,
+              "end_freq": 120,
               "curve": "exponential"
             }
           },
           "envelope": {
             "attack": 0.001,
-            "decay": 0.1,
+            "decay": 0.06,
             "sustain": 0,
-            "release": 0.08
+            "release": 0.04
+          },
+          "filter": {
+            "type": "highpass",
+            "cutoff": 40,
+            "resonance": 0.3
           },
           "volume": 1,
+          "pan": 0
+        },
+        {
+          "synthesis": {
+            "type": "oscillator",
+            "waveform": "square",
+            "frequency": 420,
+            "freq_sweep": {
+              "end_freq": 180,
+              "curve": "exponential"
+            }
+          },
+          "envelope": {
+            "attack": 0,
+            "decay": 0.04,
+            "sustain": 0,
+            "release": 0.02
+          },
+          "lfo": {
+            "config": {
+              "waveform": "sine",
+              "rate": 8.5,
+              "depth": 0.35
+            },
+            "target": {
+              "target": "filter_cutoff",
+              "amount": 0.15
+            }
+          },
+          "filter": {
+            "type": "lowpass",
+            "cutoff": 2800,
+            "resonance": 0.4
+          },
+          "volume": 0.3,
           "pan": 0
         },
         {
@@ -43,18 +83,32 @@
             "noise_type": "white",
             "filter": {
               "type": "bandpass",
-              "center": 3000,
-              "resonance": 0.7
+              "center": 4500,
+              "resonance": 0.9
             }
           },
           "envelope": {
             "attack": 0,
-            "decay": 0.01,
+            "decay": 0.008,
             "sustain": 0,
-            "release": 0.008
+            "release": 0.006
           },
-          "volume": 0.2,
+          "volume": 0.25,
           "pan": 0
+        }
+      ],
+      "effects": [
+        {
+          "type": "waveshaper",
+          "drive": 1.3,
+          "curve": "tanh",
+          "wet": 0.2
+        },
+        {
+          "type": "reverb",
+          "room_size": 0.25,
+          "damping": 0.7,
+          "wet": 0.08
         }
       ]
     }

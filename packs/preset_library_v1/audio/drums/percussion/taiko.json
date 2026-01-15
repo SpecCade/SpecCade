@@ -1,81 +1,182 @@
 {
-  "spec_version": 1,
-  "asset_id": "preset_taiko",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 10092,
-  "description": "Taiko - large pitched body with sub emphasis and long decay",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/drums/percussion/taiko.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "duration_seconds": 1,
-      "sample_rate": 44100,
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "preset_taiko",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 10092,
+    "description": "Professional Japanese taiko drum - deep modal body with epic decay and powerful beater attack",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "oscillator",
-            "waveform": "sine",
-            "frequency": 100,
-            "freq_sweep": {
-              "end_freq": 45,
-              "curve": "exponential"
-            }
-          },
-          "envelope": {
-            "attack": 0.003,
-            "decay": 0.6,
-            "sustain": 0.1,
-            "release": 0.35
-          },
-          "volume": 0.95,
-          "pan": 0
-        },
-        {
-          "synthesis": {
-            "type": "oscillator",
-            "waveform": "sine",
-            "frequency": 300,
-            "freq_sweep": {
-              "end_freq": 135,
-              "curve": "exponential"
-            }
-          },
-          "envelope": {
-            "attack": 0.003,
-            "decay": 0.25,
-            "sustain": 0,
-            "release": 0.15
-          },
-          "volume": 0.4,
-          "pan": 0
-        },
-        {
-          "synthesis": {
-            "type": "noise_burst",
-            "noise_type": "white",
-            "filter": {
-              "type": "highpass",
-              "cutoff": 2000,
-              "resonance": 0.3
-            }
-          },
-          "envelope": {
-            "attack": 0,
-            "decay": 0.03,
-            "sustain": 0,
-            "release": 0.02
-          },
-          "volume": 0.15,
-          "pan": 0
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/drums/percussion/taiko.wav"
         }
-      ]
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "duration_seconds": 3.5,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "modal",
+                        "frequency": 65,
+                        "modes": [
+                            {
+                                "freq_ratio": 1.0,
+                                "amplitude": 1.0,
+                                "decay_time": 2.8
+                            },
+                            {
+                                "freq_ratio": 1.42,
+                                "amplitude": 0.65,
+                                "decay_time": 2.2
+                            },
+                            {
+                                "freq_ratio": 2.13,
+                                "amplitude": 0.45,
+                                "decay_time": 1.8
+                            },
+                            {
+                                "freq_ratio": 2.87,
+                                "amplitude": 0.32,
+                                "decay_time": 1.4
+                            },
+                            {
+                                "freq_ratio": 3.61,
+                                "amplitude": 0.22,
+                                "decay_time": 1.0
+                            },
+                            {
+                                "freq_ratio": 4.88,
+                                "amplitude": 0.15,
+                                "decay_time": 0.7
+                            }
+                        ],
+                        "excitation": "impulse"
+                    },
+                    "envelope": {
+                        "attack": 0.001,
+                        "decay": 2.5,
+                        "sustain": 0.05,
+                        "release": 0.8
+                    },
+                    "volume": 1.0,
+                    "pan": 0
+                },
+                {
+                    "synthesis": {
+                        "type": "modal",
+                        "frequency": 180,
+                        "modes": [
+                            {
+                                "freq_ratio": 1.0,
+                                "amplitude": 1.0,
+                                "decay_time": 1.2
+                            },
+                            {
+                                "freq_ratio": 1.68,
+                                "amplitude": 0.7,
+                                "decay_time": 0.9
+                            },
+                            {
+                                "freq_ratio": 2.41,
+                                "amplitude": 0.5,
+                                "decay_time": 0.6
+                            },
+                            {
+                                "freq_ratio": 3.29,
+                                "amplitude": 0.3,
+                                "decay_time": 0.4
+                            }
+                        ],
+                        "excitation": "impulse"
+                    },
+                    "envelope": {
+                        "attack": 0.001,
+                        "decay": 1.0,
+                        "sustain": 0.02,
+                        "release": 0.4
+                    },
+                    "volume": 0.55,
+                    "pan": 0
+                },
+                {
+                    "synthesis": {
+                        "type": "oscillator",
+                        "waveform": "sine",
+                        "frequency": 35,
+                        "freq_sweep": {
+                            "end_freq": 28,
+                            "curve": "exponential"
+                        }
+                    },
+                    "envelope": {
+                        "attack": 0.008,
+                        "decay": 2.2,
+                        "sustain": 0.08,
+                        "release": 0.9
+                    },
+                    "volume": 0.75,
+                    "pan": 0
+                },
+                {
+                    "synthesis": {
+                        "type": "noise_burst",
+                        "noise_type": "white",
+                        "filter": {
+                            "type": "bandpass",
+                            "center": 3500,
+                            "resonance": 0.6
+                        }
+                    },
+                    "envelope": {
+                        "attack": 0,
+                        "decay": 0.012,
+                        "sustain": 0,
+                        "release": 0.008
+                    },
+                    "volume": 0.65,
+                    "pan": 0
+                },
+                {
+                    "synthesis": {
+                        "type": "noise_burst",
+                        "noise_type": "pink",
+                        "filter": {
+                            "type": "lowpass",
+                            "cutoff": 800,
+                            "resonance": 0.4
+                        }
+                    },
+                    "envelope": {
+                        "attack": 0.002,
+                        "decay": 0.15,
+                        "sustain": 0.05,
+                        "release": 0.25
+                    },
+                    "volume": 0.35,
+                    "pan": 0
+                }
+            ],
+            "effects": [
+                {
+                    "type": "compressor",
+                    "threshold_db": -18,
+                    "ratio": 4.0,
+                    "attack_ms": 3.0,
+                    "release_ms": 80.0,
+                    "makeup_db": 0
+                },
+                {
+                    "type": "reverb",
+                    "room_size": 0.85,
+                    "damping": 0.4,
+                    "wet": 0.3,
+                    "width": 0.9
+                }
+            ]
+        }
     }
-  }
 }

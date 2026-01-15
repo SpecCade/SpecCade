@@ -1,66 +1,198 @@
 {
-  "spec_version": 1,
-  "asset_id": "impact_sub",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 10500,
-  "description": "Big sub impact with pitch drop - trailer-style deep hit",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/fx/impact_sub.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "duration_seconds": 0.8,
-      "sample_rate": 44100,
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "impact_sub",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 10500,
+    "description": "Professional cinematic sub impact - chest-hitting low-end with pitch drop, harmonic richness, and compressed punch for trailers and game audio",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "pitched_body",
-            "start_freq": 80,
-            "end_freq": 30
-          },
-          "envelope": {
-            "attack": 0.001,
-            "decay": 0.3,
-            "sustain": 0,
-            "release": 0.45
-          },
-          "volume": 1,
-          "pan": 0
-        },
-        {
-          "synthesis": {
-            "type": "oscillator",
-            "waveform": "sine",
-            "frequency": 80,
-            "freq_sweep": {
-              "end_freq": 25,
-              "curve": "exponential"
-            }
-          },
-          "envelope": {
-            "attack": 0.001,
-            "decay": 0.35,
-            "sustain": 0,
-            "release": 0.4
-          },
-          "volume": 0.8,
-          "pan": 0
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/fx/impact_sub.wav"
         }
-      ],
-      "effects": [
-        {
-          "type": "reverb",
-          "room_size": 0.85,
-          "damping": 0.2,
-          "wet": 0.25
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "duration_seconds": 1.2,
+            "sample_rate": 48000,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "oscillator",
+                        "waveform": "sine",
+                        "frequency": 45
+                    },
+                    "envelope": {
+                        "attack": 0.001,
+                        "decay": 0.5,
+                        "sustain": 0.15,
+                        "release": 0.65
+                    },
+                    "volume": 1.0,
+                    "pan": 0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 180,
+                        "resonance": 0.4,
+                        "cutoff_end": 60
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "pitched_body",
+                        "start_freq": 55,
+                        "end_freq": 28
+                    },
+                    "envelope": {
+                        "attack": 0.002,
+                        "decay": 0.4,
+                        "sustain": 0.1,
+                        "release": 0.58
+                    },
+                    "volume": 0.85,
+                    "pan": 0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 250,
+                        "resonance": 0.6,
+                        "cutoff_end": 80
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "fm_synth",
+                        "carrier_freq": 50,
+                        "modulator_freq": 25,
+                        "modulation_index": 1.8
+                    },
+                    "envelope": {
+                        "attack": 0.003,
+                        "decay": 0.35,
+                        "sustain": 0.08,
+                        "release": 0.5
+                    },
+                    "volume": 0.65,
+                    "pan": 0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 200,
+                        "resonance": 0.5,
+                        "cutoff_end": 70
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "additive",
+                        "base_freq": 48,
+                        "harmonics": [
+                            1.0,
+                            0.35,
+                            0.15,
+                            0.08
+                        ]
+                    },
+                    "envelope": {
+                        "attack": 0.002,
+                        "decay": 0.38,
+                        "sustain": 0.12,
+                        "release": 0.55
+                    },
+                    "volume": 0.7,
+                    "pan": 0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 220,
+                        "resonance": 0.45,
+                        "cutoff_end": 75
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "noise_burst",
+                        "noise_type": "white"
+                    },
+                    "envelope": {
+                        "attack": 0.0005,
+                        "decay": 0.08,
+                        "sustain": 0,
+                        "release": 0.15
+                    },
+                    "volume": 0.4,
+                    "pan": 0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 150,
+                        "resonance": 0.3,
+                        "cutoff_end": 80
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "modal",
+                        "frequency": 42,
+                        "modes": [
+                            {
+                                "freq_ratio": 1.0,
+                                "amplitude": 1.0,
+                                "decay_time": 0.5
+                            },
+                            {
+                                "freq_ratio": 2.0,
+                                "amplitude": 0.5,
+                                "decay_time": 0.3
+                            }
+                        ],
+                        "excitation": "impulse"
+                    },
+                    "envelope": {
+                        "attack": 0.002,
+                        "decay": 0.45,
+                        "sustain": 0.1,
+                        "release": 0.6
+                    },
+                    "volume": 0.55,
+                    "pan": 0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 190,
+                        "resonance": 0.5,
+                        "cutoff_end": 65
+                    }
+                }
+            ],
+            "effects": [
+                {
+                    "type": "compressor",
+                    "threshold_db": -18,
+                    "ratio": 6.0,
+                    "attack_ms": 1.0,
+                    "release_ms": 80.0,
+                    "makeup_db": 0
+                },
+                {
+                    "type": "waveshaper",
+                    "drive": 1.3,
+                    "wet": 0.25,
+                    "curve": "tanh"
+                },
+                {
+                    "type": "reverb",
+                    "room_size": 0.92,
+                    "damping": 0.15,
+                    "wet": 0.18,
+                    "width": 0.5
+                },
+                {
+                    "type": "compressor",
+                    "threshold_db": -12,
+                    "ratio": 3.5,
+                    "attack_ms": 2.0,
+                    "release_ms": 120.0,
+                    "makeup_db": 0
+                }
+            ]
         }
-      ]
     }
-  }
 }

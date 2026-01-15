@@ -1,56 +1,109 @@
 {
-  "spec_version": 1,
-  "asset_id": "preset_lead_1",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 10008,
-  "description": "Classic synth lead - detuned sawtooths (loop-safe)",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/leads/synth/lead_1.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "base_note": "C4",
-      "duration_seconds": 1,
-      "sample_rate": 44100,
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "preset_lead_1",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 10008,
+    "description": "Classic analog-style synth lead - sawtooth oscillator with resonant filter and vibrato",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "multi_oscillator",
-            "frequency": 261.63,
-            "oscillators": [
-              {
-                "waveform": "sawtooth",
-                "volume": 1,
-                "detune": 0
-              },
-              {
-                "waveform": "sawtooth",
-                "volume": 0.8,
-                "detune": 7
-              },
-              {
-                "waveform": "sawtooth",
-                "volume": 0.8,
-                "detune": -7
-              }
-            ]
-          },
-          "envelope": {
-            "attack": 0.01,
-            "decay": 0.1,
-            "sustain": 1,
-            "release": 0.1
-          },
-          "volume": 1,
-          "pan": 0
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/leads/synth/lead_1.wav"
         }
-      ]
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "base_note": "C4",
+            "duration_seconds": 1,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "oscillator",
+                        "waveform": "sawtooth",
+                        "frequency": 261.63
+                    },
+                    "envelope": {
+                        "attack": 0.01,
+                        "decay": 0.15,
+                        "sustain": 0.75,
+                        "release": 0.12
+                    },
+                    "volume": 0.8,
+                    "pan": 0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 4500,
+                        "resonance": 0.4,
+                        "cutoff_end": 2800
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 5.5,
+                            "depth": 0.15
+                        },
+                        "target": {
+                            "target": "pitch",
+                            "semitones": 0.1
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "fm_synth",
+                        "carrier_freq": 261.63,
+                        "modulator_freq": 785.0,
+                        "modulation_index": 1.8
+                    },
+                    "envelope": {
+                        "attack": 0.015,
+                        "decay": 0.2,
+                        "sustain": 0.6,
+                        "release": 0.15
+                    },
+                    "volume": 0.3,
+                    "pan": 0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 5000,
+                        "resonance": 0.3
+                    }
+                }
+            ],
+            "effects": [
+                {
+                    "type": "chorus",
+                    "rate": 0.8,
+                    "depth": 0.3,
+                    "wet": 0.25,
+                    "voices": 2
+                },
+                {
+                    "type": "reverb",
+                    "room_size": 0.35,
+                    "damping": 0.6,
+                    "wet": 0.15,
+                    "width": 0.5
+                },
+                {
+                    "type": "delay",
+                    "time_ms": 100,
+                    "feedback": 0.25,
+                    "wet": 0.12,
+                    "ping_pong": false
+                },
+                {
+                    "type": "compressor",
+                    "threshold_db": -12,
+                    "ratio": 3.0,
+                    "attack_ms": 3.0,
+                    "release_ms": 80.0,
+                    "makeup_db": 0
+                }
+            ]
+        }
     }
-  }
 }

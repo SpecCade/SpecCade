@@ -4,7 +4,7 @@
   "asset_type": "audio",
   "license": "CC0-1.0",
   "seed": 10020,
-  "description": "Soft snare - gentle, brushed character with filtered highs",
+  "description": "Professional soft snare - warm ghost-note character with brushed texture, studio-quality ambience",
   "outputs": [
     {
       "kind": "primary",
@@ -15,46 +15,146 @@
   "recipe": {
     "kind": "audio_v1",
     "params": {
-      "duration_seconds": 0.4,
+      "duration_seconds": 0.55,
       "sample_rate": 44100,
       "layers": [
         {
           "synthesis": {
-            "type": "oscillator",
-            "waveform": "sine",
-            "frequency": 200,
-            "freq_sweep": {
-              "end_freq": 120,
-              "curve": "exponential"
+            "type": "modal",
+            "frequency": 440,
+            "modes": [
+              {
+                "freq_ratio": 0.42045454545454547,
+                "amplitude": 0.85,
+                "decay_time": 0.18
+              },
+              {
+                "freq_ratio": 0.5568181818181818,
+                "amplitude": 0.6,
+                "decay_time": 0.14
+              },
+              {
+                "freq_ratio": 0.8636363636363636,
+                "amplitude": 0.35,
+                "decay_time": 0.08
+              },
+              {
+                "freq_ratio": 1.1818181818181819,
+                "amplitude": 0.22,
+                "decay_time": 0.05
+              }
+            ],
+            "excitation": "impulse"
+          },
+          "envelope": {
+            "attack": 0.008,
+            "decay": 0.18,
+            "sustain": 0,
+            "release": 0.12
+          },
+          "volume": 0.48,
+          "pan": 0.0
+        },
+        {
+          "synthesis": {
+            "type": "noise_burst",
+            "noise_type": "white",
+            "filter": {
+              "type": "bandpass",
+              "center": 4200,
+              "resonance": 0.6
             }
           },
           "envelope": {
-            "attack": 0.003,
-            "decay": 0.12,
-            "sustain": 0,
-            "release": 0.08
+            "attack": 0.012,
+            "decay": 0.22,
+            "sustain": 0.08,
+            "release": 0.18
           },
-          "volume": 0.5,
-          "pan": 0
+          "volume": 0.26,
+          "pan": 0.0
         },
         {
           "synthesis": {
             "type": "noise_burst",
             "noise_type": "pink",
             "filter": {
-              "type": "lowpass",
-              "cutoff": 3500,
-              "resonance": 0.4
+              "type": "bandpass",
+              "center": 2800,
+              "resonance": 0.5
             }
           },
           "envelope": {
-            "attack": 0.005,
-            "decay": 0.15,
-            "sustain": 0.05,
-            "release": 0.15
+            "attack": 0.015,
+            "decay": 0.25,
+            "sustain": 0.06,
+            "release": 0.22
           },
-          "volume": 0.4,
-          "pan": 0
+          "volume": 0.22,
+          "pan": 0.0
+        },
+        {
+          "synthesis": {
+            "type": "metallic",
+            "base_freq": 440,
+            "num_partials": 8,
+            "inharmonicity": 2.8
+          },
+          "envelope": {
+            "attack": 0.006,
+            "decay": 0.15,
+            "sustain": 0,
+            "release": 0.08
+          },
+          "volume": 0.18,
+          "pan": 0.0
+        },
+        {
+          "synthesis": {
+            "type": "karplus_strong",
+            "frequency": 175.0,
+            "decay": 0.995,
+            "blend": 0.5
+          },
+          "envelope": {
+            "attack": 0.004,
+            "decay": 0.12,
+            "sustain": 0,
+            "release": 0.06
+          },
+          "volume": 0.14,
+          "pan": 0.0
+        }
+      ],
+      "effects": [
+        {
+          "type": "compressor",
+          "threshold_db": -18.0,
+          "ratio": 2.5,
+          "attack_ms": 3.0,
+          "release_ms": 65.0,
+          "makeup_db": 2.0
+        },
+        {
+          "type": "chorus",
+          "rate": 0.8,
+          "depth": 0.3,
+          "feedback": 0.15,
+          "mix": 0.22,
+          "wet": 0.3
+        },
+        {
+          "type": "bitcrush",
+          "bits": 14,
+          "sample_rate_reduction": 1.0,
+          "mix": 0.08,
+          "wet": 0.5
+        },
+        {
+          "type": "reverb",
+          "room_size": 0.3,
+          "damping": 0.65,
+          "wet": 0.25
         }
       ]
     }

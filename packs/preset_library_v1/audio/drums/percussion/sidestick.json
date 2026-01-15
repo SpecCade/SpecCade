@@ -4,7 +4,7 @@
   "asset_type": "audio",
   "license": "CC0-1.0",
   "seed": 10084,
-  "description": "Sidestick - very short bright click/pop",
+  "description": "Professional sidestick/cross-stick - sharp woody click with rim resonance",
   "outputs": [
     {
       "kind": "primary",
@@ -15,27 +15,82 @@
   "recipe": {
     "kind": "audio_v1",
     "params": {
-      "duration_seconds": 0.08,
+      "duration_seconds": 0.1,
       "sample_rate": 44100,
       "layers": [
         {
           "synthesis": {
-            "type": "oscillator",
-            "waveform": "sine",
+            "type": "modal",
             "frequency": 1200,
-            "freq_sweep": {
-              "end_freq": 800,
-              "curve": "exponential"
+            "modes": [
+              {
+                "freq_ratio": 1.0,
+                "amplitude": 1.0,
+                "decay_time": 0.06
+              },
+              {
+                "freq_ratio": 2.4,
+                "amplitude": 0.7,
+                "decay_time": 0.04
+              },
+              {
+                "freq_ratio": 4.1,
+                "amplitude": 0.4,
+                "decay_time": 0.03
+              }
+            ],
+            "excitation": "impulse"
+          },
+          "envelope": {
+            "attack": 0,
+            "decay": 0.05,
+            "sustain": 0,
+            "release": 0.02
+          },
+          "volume": 0.65,
+          "pan": -0.08,
+          "lfo": {
+            "config": {
+              "waveform": "sine",
+              "rate": 6.2,
+              "depth": 1.0
+            },
+            "target": {
+              "target": "pitch",
+              "semitones": 0.12
+            }
+          }
+        },
+        {
+          "synthesis": {
+            "type": "noise_burst",
+            "noise_type": "white",
+            "filter": {
+              "type": "bandpass",
+              "center": 2800,
+              "resonance": 0.7
             }
           },
           "envelope": {
             "attack": 0,
-            "decay": 0.04,
+            "decay": 0.008,
             "sustain": 0,
-            "release": 0.02
+            "release": 0.008
           },
-          "volume": 0.5,
-          "pan": 0
+          "volume": 0.8,
+          "pan": 0.12,
+          "lfo": {
+            "config": {
+              "waveform": "triangle",
+              "rate": 8.5,
+              "depth": 1.0
+            },
+            "target": {
+              "target": "filter_cutoff",
+              "semitones": 0.3,
+              "amount": 0.5
+            }
+          }
         },
         {
           "synthesis": {
@@ -43,18 +98,78 @@
             "noise_type": "white",
             "filter": {
               "type": "highpass",
-              "cutoff": 4000,
-              "resonance": 0.6
+              "cutoff": 5000,
+              "resonance": 0.4
             }
           },
           "envelope": {
             "attack": 0,
-            "decay": 0.015,
+            "decay": 0.005,
             "sustain": 0,
-            "release": 0.01
+            "release": 0.003
           },
-          "volume": 0.6,
-          "pan": 0
+          "volume": 0.5,
+          "pan": -0.15
+        },
+        {
+          "synthesis": {
+            "type": "modal",
+            "frequency": 850,
+            "modes": [
+              {
+                "freq_ratio": 1.0,
+                "amplitude": 0.6,
+                "decay_time": 0.08
+              },
+              {
+                "freq_ratio": 1.8,
+                "amplitude": 0.3,
+                "decay_time": 0.05
+              }
+            ],
+            "excitation": "impulse"
+          },
+          "envelope": {
+            "attack": 0,
+            "decay": 0.06,
+            "sustain": 0,
+            "release": 0.02
+          },
+          "volume": 0.4,
+          "pan": 0.05,
+          "lfo": {
+            "config": {
+              "waveform": "sine",
+              "rate": 4.8,
+              "depth": 1.0
+            },
+            "target": {
+              "target": "pitch",
+              "semitones": 0.08
+            }
+          }
+        }
+      ],
+      "effects": [
+        {
+          "type": "reverb",
+          "room_size": 0.18,
+          "damping": 0.65,
+          "wet": 0.12
+        },
+        {
+          "type": "compressor",
+          "ratio": 3.5,
+          "threshold_db": -12,
+          "attack_ms": 0.001,
+          "release_ms": 0.035,
+          "makeup_db": 0
+        },
+        {
+          "type": "delay",
+          "time_ms": 8,
+          "feedback": 0.08,
+          "wet": 0.06
         }
       ]
     }

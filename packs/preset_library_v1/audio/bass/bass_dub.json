@@ -4,7 +4,7 @@
   "asset_type": "audio",
   "license": "CC0-1.0",
   "seed": 20002,
-  "description": "Dub reggae bass - warm, round, and deep with slight filtering",
+  "description": "Professional dub reggae bass - massive sub foundation with warm harmonics, classic dub delay, and slow filter movement for authentic roots sound",
   "outputs": [
     {
       "kind": "primary",
@@ -16,68 +16,151 @@
     "kind": "audio_v1",
     "params": {
       "base_note": "C2",
-      "duration_seconds": 1.2,
+      "duration_seconds": 2.5,
       "sample_rate": 44100,
       "layers": [
-        {
-          "synthesis": {
-            "type": "oscillator",
-            "waveform": "triangle",
-            "frequency": 65.41
-          },
-          "filter": {
-            "type": "lowpass",
-            "cutoff": 1000.0,
-            "resonance": 0.2
-          },
-          "envelope": {
-            "attack": 0.015,
-            "decay": 0.35,
-            "sustain": 0.65,
-            "release": 0.2
-          },
-          "volume": 0.8,
-          "pan": 0
-        },
         {
           "synthesis": {
             "type": "oscillator",
             "waveform": "sine",
             "frequency": 65.41
           },
+          "envelope": {
+            "attack": 0.04,
+            "decay": 0.6,
+            "sustain": 0.8,
+            "release": 0.8
+          },
+          "volume": 0.9,
+          "pan": 0,
           "filter": {
             "type": "lowpass",
-            "cutoff": 800.0,
+            "cutoff": 180.0,
             "resonance": 0.1
-          },
-          "envelope": {
-            "attack": 0.01,
-            "decay": 0.3,
-            "sustain": 0.7,
-            "release": 0.25
-          },
-          "volume": 0.5,
-          "pan": 0
+          }
         },
         {
           "synthesis": {
             "type": "oscillator",
-            "waveform": "sawtooth",
+            "waveform": "triangle",
             "frequency": 65.41
           },
+          "envelope": {
+            "attack": 0.05,
+            "decay": 0.5,
+            "sustain": 0.7,
+            "release": 0.7
+          },
+          "volume": 0.65,
+          "pan": 0,
           "filter": {
             "type": "lowpass",
-            "cutoff": 600.0,
-            "resonance": 0.15
+            "cutoff": 350.0,
+            "resonance": 0.25
+          },
+          "lfo": {
+            "config": {
+              "waveform": "sine",
+              "rate": 0.15,
+              "depth": 80.0
+            },
+            "target": {
+              "target": "filter_cutoff",
+              "amount": 80.0
+            }
+          }
+        },
+        {
+          "synthesis": {
+            "type": "multi_oscillator",
+            "frequency": 130.82,
+            "oscillators": [
+              {
+                "waveform": "sawtooth",
+                "volume": 1.0,
+                "detune": -8.0
+              },
+              {
+                "waveform": "sawtooth",
+                "volume": 0.9,
+                "detune": 8.0
+              }
+            ]
           },
           "envelope": {
-            "attack": 0.02,
+            "attack": 0.06,
             "decay": 0.4,
             "sustain": 0.5,
-            "release": 0.15
+            "release": 0.6
           },
-          "volume": 0.25,
-          "pan": 0
+          "volume": 0.3,
+          "pan": 0,
+          "filter": {
+            "type": "lowpass",
+            "cutoff": 520.0,
+            "resonance": 0.22
+          },
+          "lfo": {
+            "config": {
+              "waveform": "sine",
+              "rate": 0.18,
+              "depth": 120.0
+            },
+            "target": {
+              "target": "filter_cutoff",
+              "amount": 120.0
+            }
+          }
+        },
+        {
+          "synthesis": {
+            "type": "oscillator",
+            "waveform": "sine",
+            "frequency": 196.0
+          },
+          "envelope": {
+            "attack": 0.002,
+            "decay": 0.08,
+            "sustain": 0,
+            "release": 0.05
+          },
+          "volume": 0.15,
+          "pan": 0,
+          "filter": {
+            "type": "lowpass",
+            "cutoff": 800.0,
+            "resonance": 0.3
+          }
+        }
+      ],
+      "effects": [
+        {
+          "type": "waveshaper",
+          "drive": 1.2,
+          "curve": "tanh",
+          "wet": 0.25
+        },
+        {
+          "type": "compressor",
+          "threshold_db": -14.0,
+          "ratio": 3.5,
+          "attack_ms": 18.0,
+          "release_ms": 220.0,
+          "makeup_db": 1.5
+        },
+        {
+          "type": "delay",
+          "time_ms": 375.0,
+          "feedback": 0.38,
+          "wet": 0.22,
+          "ping_pong": false
+        },
+        {
+          "type": "reverb",
+          "room_size": 0.38,
+          "damping": 0.65,
+          "wet": 0.14,
+          "width": 0.5
         }
       ]
     }

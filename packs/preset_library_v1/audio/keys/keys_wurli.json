@@ -1,86 +1,174 @@
 {
-  "spec_version": 1,
-  "asset_id": "preset_keys_wurli",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 10204,
-  "description": "Wurlitzer electric piano - brighter FM synthesis with more bark and shorter decay",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/keys/keys_wurli.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "base_note": "C4",
-      "duration_seconds": 1.8,
-      "sample_rate": 44100,
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "preset_keys_wurli",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 10204,
+    "description": "Wurlitzer 200A electric piano - reed-based tone with bark and grit, triangle/sine oscillators with tremolo",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "fm_synth",
-            "carrier_freq": 261.63,
-            "modulator_freq": 523.26,
-            "modulation_index": 2.2
-          },
-          "envelope": {
-            "attack": 0.0008,
-            "decay": 0.5,
-            "sustain": 0.15,
-            "release": 0.4
-          },
-          "volume": 0.9,
-          "pan": 0.0
-        },
-        {
-          "synthesis": {
-            "type": "fm_synth",
-            "carrier_freq": 523.26,
-            "modulator_freq": 1046.52,
-            "modulation_index": 1.8
-          },
-          "envelope": {
-            "attack": 0.0005,
-            "decay": 0.25,
-            "sustain": 0.05,
-            "release": 0.2
-          },
-          "volume": 0.45,
-          "pan": 0.0
-        },
-        {
-          "synthesis": {
-            "type": "fm_synth",
-            "carrier_freq": 261.63,
-            "modulator_freq": 1831.41,
-            "modulation_index": 0.6
-          },
-          "envelope": {
-            "attack": 0.0003,
-            "decay": 0.08,
-            "sustain": 0.0,
-            "release": 0.05
-          },
-          "volume": 0.3,
-          "pan": 0.0
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/keys/keys_wurli.wav"
         }
-      ],
-      "effects": [
-        {
-          "type": "chorus",
-          "rate": 4.5,
-          "depth": 0.15,
-          "wet": 0.15
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "base_note": "C4",
+            "duration_seconds": 2.5,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "oscillator",
+                        "waveform": "triangle",
+                        "frequency": 261.63
+                    },
+                    "envelope": {
+                        "attack": 0.002,
+                        "decay": 0.4,
+                        "sustain": 0.3,
+                        "release": 0.6
+                    },
+                    "volume": 0.65,
+                    "pan": 0.0,
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 5.5,
+                            "depth": 0.12
+                        },
+                        "target": {
+                            "target": "volume"
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "fm_synth",
+                        "carrier_freq": 261.63,
+                        "modulator_freq": 523.26,
+                        "modulation_index": 2.8
+                    },
+                    "envelope": {
+                        "attack": 0.001,
+                        "decay": 0.35,
+                        "sustain": 0.25,
+                        "release": 0.55
+                    },
+                    "volume": 0.55,
+                    "pan": 0.02,
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 5.5,
+                            "depth": 0.12
+                        },
+                        "target": {
+                            "target": "volume"
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "oscillator",
+                        "waveform": "sine",
+                        "frequency": 523.26
+                    },
+                    "envelope": {
+                        "attack": 0.0005,
+                        "decay": 0.15,
+                        "sustain": 0.1,
+                        "release": 0.25
+                    },
+                    "volume": 0.35,
+                    "pan": -0.03,
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 5.5,
+                            "depth": 0.12
+                        },
+                        "target": {
+                            "target": "volume"
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "fm_synth",
+                        "carrier_freq": 261.63,
+                        "modulator_freq": 1308.15,
+                        "modulation_index": 1.5
+                    },
+                    "envelope": {
+                        "attack": 0.0008,
+                        "decay": 0.25,
+                        "sustain": 0.15,
+                        "release": 0.4
+                    },
+                    "volume": 0.42,
+                    "pan": 0.05,
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 5.5,
+                            "depth": 0.12
+                        },
+                        "target": {
+                            "target": "volume"
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "oscillator",
+                        "waveform": "triangle",
+                        "frequency": 130.815
+                    },
+                    "envelope": {
+                        "attack": 0.003,
+                        "decay": 0.5,
+                        "sustain": 0.2,
+                        "release": 0.7
+                    },
+                    "volume": 0.28,
+                    "pan": -0.02,
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 5.5,
+                            "depth": 0.12
+                        },
+                        "target": {
+                            "target": "volume"
+                        }
+                    }
+                }
+            ],
+            "effects": [
+                {
+                    "type": "waveshaper",
+                    "drive": 1.2,
+                    "wet": 0.5,
+                    "curve": "tanh"
+                },
+                {
+                    "type": "chorus",
+                    "rate": 0.8,
+                    "depth": 0.18,
+                    "wet": 0.25,
+                    "voices": 2
+                },
+                {
+                    "type": "reverb",
+                    "room_size": 0.35,
+                    "damping": 0.6,
+                    "wet": 0.15,
+                    "width": 0.5
+                }
+            ]
         }
-      ],
-      "master_filter": {
-        "type": "lowpass",
-        "cutoff": 6500,
-        "resonance": 0.35
-      }
     }
-  }
 }

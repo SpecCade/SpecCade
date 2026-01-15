@@ -1,60 +1,248 @@
 {
-  "spec_version": 1,
-  "asset_id": "stab_dark",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 10158,
-  "description": "Dark filtered stab with lowpass filter - deep and moody character",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/plucks/stab_dark.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "duration_seconds": 0.6,
-      "sample_rate": 44100,
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "stab_dark",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 10158,
+    "description": "Professional dark aggressive synth stab - detuned multi-layer oscillators with heavy filtering, waveshaper grit, and dark reverb",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "multi_oscillator",
-            "frequency": 130.81,
-            "oscillators": [
-              {
-                "waveform": "sawtooth",
-                "volume": 1.0,
-                "detune": 0.0
-              },
-              {
-                "waveform": "sawtooth",
-                "volume": 0.8,
-                "detune": 7.0
-              },
-              {
-                "waveform": "square",
-                "volume": 0.6,
-                "detune": -7.0
-              }
-            ]
-          },
-          "envelope": {
-            "attack": 0.005,
-            "decay": 0.2,
-            "sustain": 0.4,
-            "release": 0.15
-          },
-          "volume": 1.0,
-          "pan": 0.0
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/plucks/stab_dark.wav"
         }
-      ],
-      "master_filter": {
-        "type": "lowpass",
-        "cutoff": 1000.0,
-        "resonance": 1.5
-      }
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "duration_seconds": 1.2,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "multi_oscillator",
+                        "frequency": 55.0,
+                        "oscillators": [
+                            {
+                                "waveform": "sawtooth",
+                                "volume": 1.0,
+                                "detune": 0.0
+                            },
+                            {
+                                "waveform": "sawtooth",
+                                "volume": 0.95,
+                                "detune": -8.0
+                            },
+                            {
+                                "waveform": "sawtooth",
+                                "volume": 0.92,
+                                "detune": 8.0
+                            },
+                            {
+                                "waveform": "square",
+                                "volume": 0.75,
+                                "detune": -3.5
+                            },
+                            {
+                                "waveform": "square",
+                                "volume": 0.72,
+                                "detune": 3.5
+                            }
+                        ]
+                    },
+                    "envelope": {
+                        "attack": 0.001,
+                        "decay": 0.25,
+                        "sustain": 0.15,
+                        "release": 0.55
+                    },
+                    "volume": 1.0,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 320.0,
+                        "resonance": 4.2,
+                        "cutoff_end": 100.0
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "multi_oscillator",
+                        "frequency": 110.0,
+                        "oscillators": [
+                            {
+                                "waveform": "sawtooth",
+                                "volume": 1.0,
+                                "detune": 0.0
+                            },
+                            {
+                                "waveform": "sawtooth",
+                                "volume": 0.88,
+                                "detune": -5.0
+                            },
+                            {
+                                "waveform": "sawtooth",
+                                "volume": 0.85,
+                                "detune": 5.0
+                            }
+                        ]
+                    },
+                    "envelope": {
+                        "attack": 0.001,
+                        "decay": 0.22,
+                        "sustain": 0.12,
+                        "release": 0.5
+                    },
+                    "volume": 0.85,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 420.0,
+                        "resonance": 3.8,
+                        "cutoff_end": 140.0
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "multi_oscillator",
+                        "frequency": 220.0,
+                        "oscillators": [
+                            {
+                                "waveform": "sawtooth",
+                                "volume": 1.0,
+                                "detune": 0.0
+                            },
+                            {
+                                "waveform": "sawtooth",
+                                "volume": 0.82,
+                                "detune": -12.0
+                            },
+                            {
+                                "waveform": "sawtooth",
+                                "volume": 0.8,
+                                "detune": 12.0
+                            }
+                        ]
+                    },
+                    "envelope": {
+                        "attack": 0.002,
+                        "decay": 0.18,
+                        "sustain": 0.08,
+                        "release": 0.45
+                    },
+                    "volume": 0.65,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 580.0,
+                        "resonance": 3.2,
+                        "cutoff_end": 180.0
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "fm_synth",
+                        "carrier_freq": 82.41,
+                        "modulator_freq": 27.5,
+                        "modulation_index": 5.5
+                    },
+                    "envelope": {
+                        "attack": 0.001,
+                        "decay": 0.28,
+                        "sustain": 0.1,
+                        "release": 0.52
+                    },
+                    "volume": 0.75,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 380.0,
+                        "resonance": 3.5,
+                        "cutoff_end": 120.0
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 0.25,
+                            "depth": 0.3
+                        },
+                        "target": {
+                            "target": "filter_cutoff",
+                            "amount": 450
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "metallic",
+                        "base_freq": 55.0,
+                        "num_partials": 10,
+                        "inharmonicity": 1.2
+                    },
+                    "envelope": {
+                        "attack": 0,
+                        "decay": 0.35,
+                        "sustain": 0.06,
+                        "release": 0.4
+                    },
+                    "volume": 0.45,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 480.0,
+                        "resonance": 2.2,
+                        "cutoff_end": 150.0
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "noise_burst",
+                        "noise_type": "brown"
+                    },
+                    "envelope": {
+                        "attack": 0,
+                        "decay": 0.06,
+                        "sustain": 0,
+                        "release": 0.04
+                    },
+                    "volume": 0.25,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 380.0,
+                        "resonance": 1.5,
+                        "cutoff_end": 90.0
+                    }
+                }
+            ],
+            "master_filter": {
+                "type": "lowpass",
+                "cutoff": 650.0,
+                "resonance": 3.5
+            },
+            "effects": [
+                {
+                    "type": "waveshaper",
+                    "drive": 2.8,
+                    "wet": 0.45,
+                    "curve": "tanh"
+                },
+                {
+                    "type": "reverb",
+                    "room_size": 0.85,
+                    "damping": 0.75,
+                    "wet": 0.4,
+                    "width": 0.6
+                },
+                {
+                    "type": "compressor",
+                    "threshold_db": -16.0,
+                    "ratio": 6.0,
+                    "attack_ms": 3.0,
+                    "release_ms": 80.0,
+                    "makeup_db": 2
+                }
+            ]
+        }
     }
-  }
 }

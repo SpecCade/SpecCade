@@ -1,58 +1,178 @@
 {
-  "spec_version": 1,
-  "asset_id": "riser_tension",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 10550,
-  "description": "Building tension riser - noise with highpass filter sweep for rising pitch feel",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/fx/riser_tension.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "duration_seconds": 2.0,
-      "sample_rate": 44100,
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "riser_tension",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 10550,
+    "description": "Professional cinematic tension riser - dissonant ring modulation with rising pitch, accelerating LFOs, and building filter resonance for maximum suspense",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "noise_burst",
-            "noise_type": "white",
-            "filter": {
-              "type": "highpass",
-              "cutoff": 200,
-              "resonance": 0.5,
-              "cutoff_end": 8000
-            }
-          },
-          "envelope": {
-            "attack": 0.1,
-            "decay": 0,
-            "sustain": 1,
-            "release": 0.3
-          },
-          "volume": 1,
-          "pan": 0
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/fx/riser_tension.wav"
         }
-      ],
-      "effects": [
-        {
-          "type": "reverb",
-          "room_size": 0.85,
-          "damping": 0.3,
-          "wet": 0.45
-        },
-        {
-          "type": "delay",
-          "time_ms": 120,
-          "feedback": 0.25,
-          "wet": 0.15
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "duration_seconds": 3.5,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "ring_mod_synth",
+                        "carrier_freq": 110.0,
+                        "modulator_freq": 147.0,
+                        "mix": 0.5
+                    },
+                    "envelope": {
+                        "attack": 0.05,
+                        "decay": 0.1,
+                        "sustain": 0.95,
+                        "release": 0.4
+                    },
+                    "volume": 0.75,
+                    "pan": 0
+                },
+                {
+                    "synthesis": {
+                        "type": "fm_synth",
+                        "carrier_freq": 165.0,
+                        "modulator_freq": 223.0,
+                        "modulation_index": 3.8
+                    },
+                    "envelope": {
+                        "attack": 0.2,
+                        "decay": 0.15,
+                        "sustain": 0.9,
+                        "release": 0.5
+                    },
+                    "volume": 0.65,
+                    "pan": -0.3
+                },
+                {
+                    "synthesis": {
+                        "type": "additive",
+                        "base_freq": 440,
+                        "harmonics": [
+                            1.0,
+                            0.5,
+                            0.25,
+                            0.125
+                        ]
+                    },
+                    "envelope": {
+                        "attack": 0.3,
+                        "decay": 0.2,
+                        "sustain": 0.85,
+                        "release": 0.6
+                    },
+                    "volume": 0.55,
+                    "pan": 0.3
+                },
+                {
+                    "synthesis": {
+                        "type": "metallic",
+                        "base_freq": 440,
+                        "num_partials": 7,
+                        "inharmonicity": 2.8
+                    },
+                    "envelope": {
+                        "attack": 0.15,
+                        "decay": 0.25,
+                        "sustain": 0.8,
+                        "release": 0.7
+                    },
+                    "volume": 0.45,
+                    "pan": -0.5
+                },
+                {
+                    "synthesis": {
+                        "type": "noise_burst",
+                        "noise_type": "pink",
+                        "filter": {
+                            "type": "bandpass",
+                            "center": 500,
+                            "resonance": 0.85,
+                            "center_end": 8500
+                        }
+                    },
+                    "envelope": {
+                        "attack": 0.4,
+                        "decay": 0.1,
+                        "sustain": 0.9,
+                        "release": 0.5
+                    },
+                    "volume": 0.5,
+                    "pan": 0.6
+                },
+                {
+                    "synthesis": {
+                        "type": "granular",
+                        "source": {
+                            "type": "noise",
+                            "noise_type": "white"
+                        },
+                        "grain_size_ms": 45,
+                        "grain_density": 1,
+                        "pitch_spread": 0,
+                        "position_spread": 0,
+                        "pan_spread": 0
+                    },
+                    "envelope": {
+                        "attack": 0.5,
+                        "decay": 0.2,
+                        "sustain": 0.88,
+                        "release": 0.8
+                    },
+                    "volume": 0.4,
+                    "pan": 0
+                }
+            ],
+            "effects": [
+                {
+                    "type": "chorus",
+                    "rate": 0.8,
+                    "depth": 0.35,
+                    "wet": 0.25,
+                    "voices": 4
+                },
+                {
+                    "type": "phaser",
+                    "rate": 0.6,
+                    "depth": 0.5,
+                    "stages": 6,
+                    "wet": 0.3
+                },
+                {
+                    "type": "waveshaper",
+                    "drive": 1.8,
+                    "wet": 0.35,
+                    "curve": "tanh"
+                },
+                {
+                    "type": "reverb",
+                    "room_size": 0.9,
+                    "damping": 0.25,
+                    "wet": 0.5,
+                    "width": 0.5
+                },
+                {
+                    "type": "delay",
+                    "time_ms": 180,
+                    "feedback": 0.35,
+                    "wet": 0.2,
+                    "ping_pong": false
+                },
+                {
+                    "type": "compressor",
+                    "threshold_db": -18,
+                    "ratio": 3.5,
+                    "attack_ms": 5,
+                    "release_ms": 150,
+                    "makeup_db": 0
+                }
+            ]
         }
-      ]
     }
-  }
 }

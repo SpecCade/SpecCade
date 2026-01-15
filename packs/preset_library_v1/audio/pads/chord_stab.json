@@ -1,67 +1,197 @@
 {
-  "spec_version": 1,
-  "asset_id": "preset_chord_stab",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 10105,
-  "description": "Bright chord stab - multi-osc stack (loop-safe)",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/pads/chord_stab.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "base_note": "C4",
-      "duration_seconds": 1,
-      "sample_rate": 44100,
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "preset_chord_stab",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 10105,
+    "description": "Professional chord stab - multi-layer synth with super saw, PWM, and sub bass - classic house/techno stab",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "multi_oscillator",
-            "frequency": 261.63,
-            "oscillators": [
-              {
-                "waveform": "sawtooth",
-                "volume": 1,
-                "detune": 0
-              },
-              {
-                "waveform": "sawtooth",
-                "volume": 0.9,
-                "detune": 10
-              },
-              {
-                "waveform": "sawtooth",
-                "volume": 0.9,
-                "detune": -10
-              },
-              {
-                "waveform": "square",
-                "volume": 0.5,
-                "detune": 0,
-                "duty": 0.5
-              }
-            ]
-          },
-          "envelope": {
-            "attack": 0.002,
-            "decay": 0.15,
-            "sustain": 1,
-            "release": 0.1
-          },
-          "volume": 0.85,
-          "pan": 0
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/pads/chord_stab.wav"
         }
-      ],
-      "master_filter": {
-        "type": "lowpass",
-        "cutoff": 4000,
-        "resonance": 0.5
-      }
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "base_note": "C4",
+            "duration_seconds": 1.5,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "multi_oscillator",
+                        "frequency": 261.63,
+                        "oscillators": [
+                            {
+                                "waveform": "sawtooth",
+                                "volume": 1.0,
+                                "detune": 0
+                            },
+                            {
+                                "waveform": "sawtooth",
+                                "volume": 0.85,
+                                "detune": 12
+                            },
+                            {
+                                "waveform": "sawtooth",
+                                "volume": 0.85,
+                                "detune": -12
+                            },
+                            {
+                                "waveform": "sawtooth",
+                                "volume": 0.7,
+                                "detune": 24
+                            },
+                            {
+                                "waveform": "sawtooth",
+                                "volume": 0.7,
+                                "detune": -24
+                            },
+                            {
+                                "waveform": "sawtooth",
+                                "volume": 0.6,
+                                "detune": 7
+                            },
+                            {
+                                "waveform": "sawtooth",
+                                "volume": 0.6,
+                                "detune": -7
+                            }
+                        ]
+                    },
+                    "envelope": {
+                        "attack": 0.001,
+                        "decay": 0.3,
+                        "sustain": 0,
+                        "release": 0.15
+                    },
+                    "volume": 0.7,
+                    "pan": 0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 8000,
+                        "resonance": 0.7,
+                        "cutoff_end": 2000
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "wavetable",
+                        "table": "pwm",
+                        "frequency": 261.63
+                    },
+                    "envelope": {
+                        "attack": 0.002,
+                        "decay": 0.25,
+                        "sustain": 0,
+                        "release": 0.12
+                    },
+                    "volume": 0.5,
+                    "pan": 0.25,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 5000,
+                        "resonance": 0.5,
+                        "cutoff_end": 1500
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 5.5,
+                            "depth": 0.15
+                        },
+                        "target": {
+                            "target": "pitch",
+                            "semitones": 0.15
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "wavetable",
+                        "table": "pwm",
+                        "frequency": 261.63
+                    },
+                    "envelope": {
+                        "attack": 0.002,
+                        "decay": 0.25,
+                        "sustain": 0,
+                        "release": 0.12
+                    },
+                    "volume": 0.5,
+                    "pan": -0.25,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 5000,
+                        "resonance": 0.5,
+                        "cutoff_end": 1500
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 5.5,
+                            "depth": 0.15,
+                            "phase": 0.5
+                        },
+                        "target": {
+                            "target": "pitch",
+                            "semitones": 0.15
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "oscillator",
+                        "waveform": "sine",
+                        "frequency": 130.815
+                    },
+                    "envelope": {
+                        "attack": 0.001,
+                        "decay": 0.2,
+                        "sustain": 0,
+                        "release": 0.1
+                    },
+                    "volume": 0.6,
+                    "pan": 0
+                }
+            ],
+            "master_filter": {
+                "type": "lowpass",
+                "cutoff": 12000,
+                "resonance": 0.3
+            },
+            "effects": [
+                {
+                    "type": "compressor",
+                    "threshold_db": -12,
+                    "ratio": 4,
+                    "attack_ms": 1.0,
+                    "release_ms": 50.0,
+                    "makeup_db": 0
+                },
+                {
+                    "type": "chorus",
+                    "rate": 0.8,
+                    "depth": 0.3,
+                    "wet": 0.25,
+                    "voices": 2
+                },
+                {
+                    "type": "reverb",
+                    "room_size": 0.4,
+                    "damping": 0.6,
+                    "wet": 0.15,
+                    "width": 0.8
+                },
+                {
+                    "type": "waveshaper",
+                    "drive": 1.5,
+                    "wet": 0.3,
+                    "curve": "tanh"
+                }
+            ]
+        }
     }
-  }
 }

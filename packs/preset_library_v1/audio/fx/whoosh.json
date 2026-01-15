@@ -1,44 +1,164 @@
 {
-  "spec_version": 1,
-  "asset_id": "preset_whoosh",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 10203,
-  "description": "Whoosh sweep - filtered noise passing through",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/fx/whoosh.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "duration_seconds": 0.6,
-      "sample_rate": 44100,
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "preset_whoosh",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 10203,
+    "description": "Professional whoosh sweep - multi-layer filtered noise with stereo motion and tonal content",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "noise_burst",
-            "noise_type": "pink",
-            "filter": {
-              "type": "bandpass",
-              "center": 800,
-              "resonance": 1.2,
-              "center_end": 4000
-            }
-          },
-          "envelope": {
-            "attack": 0.1,
-            "decay": 0.2,
-            "sustain": 0.3,
-            "release": 0.2
-          },
-          "volume": 0.85,
-          "pan": 0
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/fx/whoosh.wav"
         }
-      ]
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "duration_seconds": 0.85,
+            "sample_rate": 48000,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "noise_burst",
+                        "noise_type": "white",
+                        "filter": {
+                            "type": "bandpass",
+                            "center": 400,
+                            "resonance": 2.8,
+                            "center_end": 6500
+                        }
+                    },
+                    "envelope": {
+                        "attack": 0.05,
+                        "decay": 0.25,
+                        "sustain": 0.4,
+                        "release": 0.3
+                    },
+                    "volume": 0.72,
+                    "pan": -0.4
+                },
+                {
+                    "synthesis": {
+                        "type": "noise_burst",
+                        "noise_type": "pink",
+                        "filter": {
+                            "type": "bandpass",
+                            "center": 8000,
+                            "resonance": 3.5,
+                            "center_end": 1200
+                        }
+                    },
+                    "envelope": {
+                        "attack": 0.08,
+                        "decay": 0.28,
+                        "sustain": 0.35,
+                        "release": 0.25
+                    },
+                    "volume": 0.65,
+                    "pan": 0.5
+                },
+                {
+                    "synthesis": {
+                        "type": "fm_synth",
+                        "carrier_freq": 220,
+                        "modulator_freq": 880,
+                        "modulation_index": 4.5
+                    },
+                    "envelope": {
+                        "attack": 0.12,
+                        "decay": 0.3,
+                        "sustain": 0.25,
+                        "release": 0.35
+                    },
+                    "volume": 0.55,
+                    "pan": 0.0,
+                    "lfo": {
+                        "config": {
+                            "waveform": "triangle",
+                            "rate": 3.2,
+                            "depth": 0.45
+                        },
+                        "target": {
+                            "target": "volume",
+                            "amount": 0.3
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "granular",
+                        "source": {
+                            "type": "noise",
+                            "noise_type": "white"
+                        },
+                        "grain_size_ms": 10,
+                        "grain_density": 45,
+                        "pitch_spread": 0,
+                        "position_spread": 0,
+                        "pan_spread": 0
+                    },
+                    "envelope": {
+                        "attack": 0.18,
+                        "decay": 0.35,
+                        "sustain": 0.3,
+                        "release": 0.28
+                    },
+                    "volume": 0.48,
+                    "pan": -0.2,
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 2.5,
+                            "depth": 0.6
+                        },
+                        "target": {
+                            "target": "pan",
+                            "amount": 0.8
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "additive",
+                        "base_freq": 300,
+                        "harmonics": [
+                            1.0,
+                            0.5,
+                            0.25,
+                            0.125
+                        ]
+                    },
+                    "envelope": {
+                        "attack": 0.06,
+                        "decay": 0.22,
+                        "sustain": 0.4,
+                        "release": 0.32
+                    },
+                    "volume": 0.42,
+                    "pan": 0.3
+                }
+            ],
+            "effects": [
+                {
+                    "type": "chorus",
+                    "rate": 0.8,
+                    "depth": 0.35,
+                    "wet": 0.4
+                },
+                {
+                    "type": "reverb",
+                    "room_size": 0.6,
+                    "damping": 0.5,
+                    "wet": 0.25
+                },
+                {
+                    "type": "delay",
+                    "time_ms": 150,
+                    "feedback": 0.25,
+                    "wet": 0.2
+                }
+            ]
+        }
     }
-  }
 }

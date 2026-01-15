@@ -1,88 +1,221 @@
 {
-  "spec_version": 1,
-  "asset_id": "preset_opl_brass",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 20025,
-  "description": "OPL/AdLib style FM brass - retro PC game brass sound",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/leads/synth/opl_brass.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "base_note": "C4",
-      "duration_seconds": 1.5,
-      "sample_rate": 44100,
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "preset_opl_brass",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 20025,
+    "description": "OPL/AdLib style FM brass - retro PC game brass sound",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "fm_synth",
-            "carrier_freq": 261.63,
-            "modulator_freq": 261.63,
-            "modulation_index": 6.5
-          },
-          "envelope": {
-            "attack": 0.035,
-            "decay": 0.15,
-            "sustain": 0.7,
-            "release": 0.25
-          },
-          "filter": {
-            "type": "lowpass",
-            "cutoff": 5500.0,
-            "resonance": 0.4
-          },
-          "volume": 0.5,
-          "pan": 0
-        },
-        {
-          "synthesis": {
-            "type": "fm_synth",
-            "carrier_freq": 262.41,
-            "modulator_freq": 262.41,
-            "modulation_index": 6.8
-          },
-          "envelope": {
-            "attack": 0.04,
-            "decay": 0.18,
-            "sustain": 0.65,
-            "release": 0.28
-          },
-          "filter": {
-            "type": "lowpass",
-            "cutoff": 5300.0,
-            "resonance": 0.35
-          },
-          "volume": 0.45,
-          "pan": 0
-        },
-        {
-          "synthesis": {
-            "type": "fm_synth",
-            "carrier_freq": 523.25,
-            "modulator_freq": 261.63,
-            "modulation_index": 3.2
-          },
-          "envelope": {
-            "attack": 0.03,
-            "decay": 0.12,
-            "sustain": 0.5,
-            "release": 0.2
-          },
-          "filter": {
-            "type": "lowpass",
-            "cutoff": 7000.0,
-            "resonance": 0.25
-          },
-          "volume": 0.15,
-          "pan": 0
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/leads/synth/opl_brass.wav"
         }
-      ]
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "base_note": "C4",
+            "duration_seconds": 1.5,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "fm_synth",
+                        "carrier_freq": 261.63,
+                        "modulator_freq": 523.26,
+                        "modulation_index": 8.5
+                    },
+                    "envelope": {
+                        "attack": 0.025,
+                        "decay": 0.12,
+                        "sustain": 0.72,
+                        "release": 0.18
+                    },
+                    "volume": 0.58,
+                    "pan": 0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 6200.0,
+                        "resonance": 0.45,
+                        "cutoff_end": 4800.0
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 4.8,
+                            "depth": 0.5
+                        },
+                        "target": {
+                            "target": "filter_cutoff",
+                            "amount": 500
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "fm_synth",
+                        "carrier_freq": 261.63,
+                        "modulator_freq": 785.89,
+                        "modulation_index": 5.2
+                    },
+                    "envelope": {
+                        "attack": 0.028,
+                        "decay": 0.15,
+                        "sustain": 0.68,
+                        "release": 0.2
+                    },
+                    "volume": 0.42,
+                    "pan": 0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 7500.0,
+                        "resonance": 0.35,
+                        "cutoff_end": 5800.0
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 4.8,
+                            "depth": 0.5
+                        },
+                        "target": {
+                            "target": "filter_cutoff",
+                            "amount": 500
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "fm_synth",
+                        "carrier_freq": 523.26,
+                        "modulator_freq": 261.63,
+                        "modulation_index": 4.8
+                    },
+                    "envelope": {
+                        "attack": 0.022,
+                        "decay": 0.1,
+                        "sustain": 0.58,
+                        "release": 0.15
+                    },
+                    "volume": 0.32,
+                    "pan": 0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 8500.0,
+                        "resonance": 0.28,
+                        "cutoff_end": 6200.0
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 4.8,
+                            "depth": 0.5
+                        },
+                        "target": {
+                            "target": "filter_cutoff",
+                            "amount": 500
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "fm_synth",
+                        "carrier_freq": 261.63,
+                        "modulator_freq": 392.44,
+                        "modulation_index": 6.2
+                    },
+                    "envelope": {
+                        "attack": 0.03,
+                        "decay": 0.14,
+                        "sustain": 0.65,
+                        "release": 0.22
+                    },
+                    "volume": 0.28,
+                    "pan": 0,
+                    "filter": {
+                        "type": "bandpass",
+                        "center": 2800.0,
+                        "resonance": 0.55
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 4.8,
+                            "depth": 0.5
+                        },
+                        "target": {
+                            "target": "filter_cutoff",
+                            "amount": 500
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "additive",
+                        "base_freq": 440,
+                        "harmonics": [
+                            1.0,
+                            0.5,
+                            0.25,
+                            0.125
+                        ]
+                    },
+                    "envelope": {
+                        "attack": 0.035,
+                        "decay": 0.18,
+                        "sustain": 0.6,
+                        "release": 0.25
+                    },
+                    "volume": 0.22,
+                    "pan": 0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 5200.0,
+                        "resonance": 0.38
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 4.8,
+                            "depth": 0.5
+                        },
+                        "target": {
+                            "target": "filter_cutoff",
+                            "amount": 500
+                        }
+                    }
+                }
+            ],
+            "effects": [
+                {
+                    "type": "bitcrush",
+                    "bits": 8,
+                    "sample_rate_reduction": 1.8
+                },
+                {
+                    "type": "chorus",
+                    "rate": 0.45,
+                    "depth": 0.28,
+                    "wet": 0.32,
+                    "voices": 2
+                },
+                {
+                    "type": "compressor",
+                    "threshold_db": -18.0,
+                    "ratio": 3.2,
+                    "attack_ms": 8.0,
+                    "release_ms": 150.0,
+                    "makeup_db": 0
+                },
+                {
+                    "type": "reverb",
+                    "room_size": 0.35,
+                    "damping": 0.55,
+                    "wet": 0.18,
+                    "width": 0.5
+                }
+            ]
+        }
     }
-  }
 }

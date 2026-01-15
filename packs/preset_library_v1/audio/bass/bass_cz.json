@@ -1,42 +1,149 @@
 {
-  "spec_version": 1,
-  "asset_id": "preset_bass_cz",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 30250,
-  "description": "Casio CZ-style bass with resonant phase distortion and envelope decay",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/bass/bass_cz.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "base_note": "C2",
-      "duration_seconds": 1.5,
-      "sample_rate": 44100,
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "preset_bass_cz",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 30250,
+    "description": "Professional Casio CZ-style phase distortion bass with layered sub, resonant harmonic sweep, chorus width, and filtered warmth for tracker production",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "pd_synth",
-            "frequency": 65.41,
-            "distortion": 3.0,
-            "distortion_decay": 4.0,
-            "waveform": "resonant"
-          },
-          "envelope": {
-            "attack": 0.005,
-            "decay": 0.3,
-            "sustain": 0.4,
-            "release": 0.2
-          },
-          "volume": 0.9,
-          "pan": 0
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/bass/bass_cz.wav"
         }
-      ]
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "base_note": "C2",
+            "duration_seconds": 1.5,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "pd_synth",
+                        "frequency": 65.41,
+                        "distortion": 4.5,
+                        "distortion_decay": 3.5,
+                        "waveform": "resonant"
+                    },
+                    "envelope": {
+                        "attack": 0.008,
+                        "decay": 0.35,
+                        "sustain": 0.45,
+                        "release": 0.25
+                    },
+                    "volume": 0.65,
+                    "pan": 0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 3500,
+                        "resonance": 0.35,
+                        "cutoff_end": 1200
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 4.5,
+                            "depth": 0.003
+                        },
+                        "target": {
+                            "target": "pitch",
+                            "semitones": 0.003
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "pd_synth",
+                        "frequency": 65.41,
+                        "distortion": 2.8,
+                        "distortion_decay": 5.0,
+                        "waveform": "sawtooth"
+                    },
+                    "envelope": {
+                        "attack": 0.003,
+                        "decay": 0.25,
+                        "sustain": 0.3,
+                        "release": 0.2
+                    },
+                    "volume": 0.35,
+                    "pan": 0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 2800,
+                        "resonance": 0.25,
+                        "cutoff_end": 900
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "oscillator",
+                        "waveform": "sine",
+                        "frequency": 65.41
+                    },
+                    "envelope": {
+                        "attack": 0.012,
+                        "decay": 0.4,
+                        "sustain": 0.6,
+                        "release": 0.3
+                    },
+                    "volume": 0.55,
+                    "pan": 0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 250,
+                        "resonance": 0.0
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "pd_synth",
+                        "frequency": 130.81,
+                        "distortion": 2.0,
+                        "distortion_decay": 6.0,
+                        "waveform": "resonant"
+                    },
+                    "envelope": {
+                        "attack": 0.015,
+                        "decay": 0.2,
+                        "sustain": 0.15,
+                        "release": 0.15
+                    },
+                    "volume": 0.18,
+                    "pan": 0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 2000,
+                        "resonance": 0.4,
+                        "cutoff_end": 600
+                    }
+                }
+            ],
+            "effects": [
+                {
+                    "type": "chorus",
+                    "rate": 0.8,
+                    "depth": 0.25,
+                    "wet": 0.2,
+                    "voices": 2
+                },
+                {
+                    "type": "compressor",
+                    "threshold_db": -12,
+                    "ratio": 3.5,
+                    "attack_ms": 5.0,
+                    "release_ms": 100.0,
+                    "makeup_db": 0
+                },
+                {
+                    "type": "reverb",
+                    "room_size": 0.15,
+                    "damping": 0.7,
+                    "wet": 0.08,
+                    "width": 0.5
+                }
+            ]
+        }
     }
-  }
 }

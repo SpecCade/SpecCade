@@ -1,47 +1,181 @@
 {
-  "spec_version": 1,
-  "asset_id": "low_hit",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 10503,
-  "description": "Deep punchy low-end hit - 60Hz to 25Hz pitch drop",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/fx/low_hit.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "duration_seconds": 0.4,
-      "sample_rate": 44100,
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "low_hit",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 10503,
+    "description": "Professional low-frequency impact - layered pitched body, FM harmonics, transient attack, and heavy compression",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "pitched_body",
-            "start_freq": 60,
-            "end_freq": 25
-          },
-          "envelope": {
-            "attack": 0.001,
-            "decay": 0.18,
-            "sustain": 0,
-            "release": 0.2
-          },
-          "volume": 1,
-          "pan": 0
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/fx/low_hit.wav"
         }
-      ],
-      "effects": [
-        {
-          "type": "reverb",
-          "room_size": 0.5,
-          "damping": 0.3,
-          "wet": 0.2
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "duration_seconds": 0.65,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "pitched_body",
+                        "start_freq": 65,
+                        "end_freq": 28
+                    },
+                    "envelope": {
+                        "attack": 0.002,
+                        "decay": 0.25,
+                        "sustain": 0.15,
+                        "release": 0.35
+                    },
+                    "volume": 0.85,
+                    "pan": 0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 220,
+                        "resonance": 0.35,
+                        "cutoff_end": 80
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "oscillator",
+                        "waveform": "sine",
+                        "frequency": 55
+                    },
+                    "envelope": {
+                        "attack": 0.001,
+                        "decay": 0.15,
+                        "sustain": 0,
+                        "release": 0.12
+                    },
+                    "volume": 0.75,
+                    "pan": 0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 180,
+                        "resonance": 0.2
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "fm_synth",
+                        "carrier_freq": 62,
+                        "modulator_freq": 31,
+                        "modulation_index": 2.8
+                    },
+                    "envelope": {
+                        "attack": 0.003,
+                        "decay": 0.2,
+                        "sustain": 0.08,
+                        "release": 0.22
+                    },
+                    "volume": 0.42,
+                    "pan": 0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 420,
+                        "resonance": 0.45,
+                        "cutoff_end": 120
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "noise_burst",
+                        "noise_type": "white"
+                    },
+                    "envelope": {
+                        "attack": 0.0005,
+                        "decay": 0.025,
+                        "sustain": 0,
+                        "release": 0.035
+                    },
+                    "volume": 0.35,
+                    "pan": 0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 280,
+                        "resonance": 0.3
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "modal",
+                        "frequency": 58,
+                        "modes": [
+                            {
+                                "freq_ratio": 1.0,
+                                "amplitude": 1.0,
+                                "decay_time": 0.5
+                            },
+                            {
+                                "freq_ratio": 2.0,
+                                "amplitude": 0.5,
+                                "decay_time": 0.3
+                            }
+                        ],
+                        "excitation": "impulse"
+                    },
+                    "envelope": {
+                        "attack": 0.004,
+                        "decay": 0.3,
+                        "sustain": 0.05,
+                        "release": 0.28
+                    },
+                    "volume": 0.28,
+                    "pan": 0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 380,
+                        "resonance": 0.25
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "oscillator",
+                        "waveform": "triangle",
+                        "frequency": 110
+                    },
+                    "envelope": {
+                        "attack": 0.001,
+                        "decay": 0.08,
+                        "sustain": 0,
+                        "release": 0.06
+                    },
+                    "volume": 0.22,
+                    "pan": 0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 650,
+                        "resonance": 0.15
+                    }
+                }
+            ],
+            "effects": [
+                {
+                    "type": "compressor",
+                    "threshold_db": -18,
+                    "ratio": 6.5,
+                    "attack_ms": 2.0,
+                    "release_ms": 80.0,
+                    "makeup_db": 0
+                },
+                {
+                    "type": "waveshaper",
+                    "drive": 1.4,
+                    "wet": 0.25,
+                    "curve": "tanh"
+                },
+                {
+                    "type": "reverb",
+                    "room_size": 0.35,
+                    "damping": 0.65,
+                    "wet": 0.12,
+                    "width": 0.5
+                }
+            ]
         }
-      ]
     }
-  }
 }

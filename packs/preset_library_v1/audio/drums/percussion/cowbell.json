@@ -4,7 +4,7 @@
   "asset_type": "audio",
   "license": "CC0-1.0",
   "seed": 10080,
-  "description": "Cowbell - two inharmonic metallic partials, classic 808 style",
+  "description": "Cowbell - professional metallic percussion with high inharmonicity, classic tracker sound",
   "outputs": [
     {
       "kind": "primary",
@@ -15,38 +15,126 @@
   "recipe": {
     "kind": "audio_v1",
     "params": {
-      "duration_seconds": 0.25,
+      "duration_seconds": 0.35,
       "sample_rate": 44100,
       "layers": [
         {
           "synthesis": {
-            "type": "oscillator",
-            "waveform": "square",
-            "frequency": 540
+            "type": "metallic",
+            "base_freq": 800,
+            "num_partials": 10,
+            "inharmonicity": 3.5
           },
           "envelope": {
             "attack": 0.001,
-            "decay": 0.15,
+            "decay": 0.25,
             "sustain": 0,
             "release": 0.1
           },
-          "volume": 0.6,
-          "pan": 0
+          "volume": 0.7,
+          "pan": -0.15,
+          "lfo": {
+            "config": {
+              "waveform": "sine",
+              "rate": 5.5,
+              "depth": 0.3
+            },
+            "target": {
+              "target": "pitch",
+              "semitones": 0.08
+            }
+          }
         },
         {
           "synthesis": {
-            "type": "oscillator",
-            "waveform": "square",
-            "frequency": 800
+            "type": "metallic",
+            "base_freq": 540,
+            "num_partials": 8,
+            "inharmonicity": 4.2
           },
           "envelope": {
             "attack": 0.001,
-            "decay": 0.12,
+            "decay": 0.22,
             "sustain": 0,
             "release": 0.08
           },
-          "volume": 0.5,
-          "pan": 0
+          "volume": 0.6,
+          "pan": 0.15,
+          "lfo": {
+            "config": {
+              "waveform": "sine",
+              "rate": 6.2,
+              "depth": 0.25
+            },
+            "target": {
+              "target": "pitch",
+              "semitones": 0.06
+            }
+          }
+        },
+        {
+          "synthesis": {
+            "type": "fm_synth",
+            "carrier_freq": 1100,
+            "modulator_freq": 1540,
+            "modulation_index": 3.0
+          },
+          "envelope": {
+            "attack": 0.0005,
+            "decay": 0.15,
+            "sustain": 0,
+            "release": 0.05
+          },
+          "volume": 0.4,
+          "pan": -0.1
+        },
+        {
+          "synthesis": {
+            "type": "noise_burst",
+            "noise_type": "white"
+          },
+          "envelope": {
+            "attack": 0.0005,
+            "decay": 0.02,
+            "sustain": 0,
+            "release": 0.01
+          },
+          "volume": 0.15,
+          "pan": 0.05,
+          "filter": {
+            "type": "highpass",
+            "cutoff": 3000,
+            "resonance": 0.3
+          }
+        }
+      ],
+      "effects": [
+        {
+          "type": "waveshaper",
+          "drive": 0.15,
+          "curve": "tanh",
+          "wet": 0.3
+        },
+        {
+          "type": "delay",
+          "time_ms": 85,
+          "feedback": 0.15,
+          "wet": 0.08
+        },
+        {
+          "type": "reverb",
+          "room_size": 0.25,
+          "damping": 0.6,
+          "wet": 0.18
+        },
+        {
+          "type": "compressor",
+          "ratio": 3.0,
+          "wet": 0.7,
+          "threshold_db": -12,
+          "attack_ms": 0.003,
+          "release_ms": 0.05,
+          "makeup_db": 0
         }
       ]
     }

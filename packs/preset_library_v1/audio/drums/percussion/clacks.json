@@ -4,7 +4,7 @@
   "asset_type": "audio",
   "license": "CC0-1.0",
   "seed": 20018,
-  "description": "Clacks - double wooden click/clack sound like castanets or stick clicks",
+  "description": "Professional clacks - wooden percussion with modal resonance for stick clicks, castanets, or clave sounds",
   "outputs": [
     {
       "kind": "primary",
@@ -20,65 +20,177 @@
       "layers": [
         {
           "synthesis": {
-            "type": "oscillator",
-            "waveform": "triangle",
-            "frequency": 1200.0
+            "type": "modal",
+            "frequency": 1800.0,
+            "modes": [
+              {
+                "freq_ratio": 1.0,
+                "amplitude": 1.0,
+                "decay_time": 0.06
+              },
+              {
+                "freq_ratio": 2.4,
+                "amplitude": 0.7,
+                "decay_time": 0.045
+              },
+              {
+                "freq_ratio": 3.8,
+                "amplitude": 0.5,
+                "decay_time": 0.035
+              },
+              {
+                "freq_ratio": 5.2,
+                "amplitude": 0.3,
+                "decay_time": 0.025
+              }
+            ],
+            "excitation": "impulse"
           },
           "envelope": {
-            "attack": 0.001,
-            "decay": 0.03,
-            "sustain": 0.0,
-            "release": 0.01
+            "attack": 0,
+            "decay": 0.08,
+            "sustain": 0,
+            "release": 0
           },
-          "volume": 0.5,
+          "volume": 0.8,
+          "pan": -0.1
+        },
+        {
+          "synthesis": {
+            "type": "modal",
+            "frequency": 2200.0,
+            "modes": [
+              {
+                "freq_ratio": 1.0,
+                "amplitude": 1.0,
+                "decay_time": 0.055
+              },
+              {
+                "freq_ratio": 2.6,
+                "amplitude": 0.65,
+                "decay_time": 0.04
+              },
+              {
+                "freq_ratio": 4.1,
+                "amplitude": 0.45,
+                "decay_time": 0.03
+              }
+            ],
+            "excitation": "impulse"
+          },
+          "envelope": {
+            "attack": 0,
+            "decay": 0.07,
+            "sustain": 0,
+            "release": 0
+          },
+          "volume": 0.6,
+          "pan": 0.1
+        },
+        {
+          "synthesis": {
+            "type": "modal",
+            "frequency": 1650.0,
+            "modes": [
+              {
+                "freq_ratio": 1.0,
+                "amplitude": 1.0,
+                "decay_time": 0.065
+              },
+              {
+                "freq_ratio": 2.3,
+                "amplitude": 0.75,
+                "decay_time": 0.05
+              },
+              {
+                "freq_ratio": 3.9,
+                "amplitude": 0.5,
+                "decay_time": 0.038
+              }
+            ],
+            "excitation": "impulse"
+          },
+          "envelope": {
+            "attack": 0,
+            "decay": 0.075,
+            "sustain": 0,
+            "release": 0
+          },
+          "volume": 0.65,
+          "pan": -0.15,
+          "delay": 0.035
+        },
+        {
+          "synthesis": {
+            "type": "modal",
+            "frequency": 2000.0,
+            "modes": [
+              {
+                "freq_ratio": 1.0,
+                "amplitude": 1.0,
+                "decay_time": 0.058
+              },
+              {
+                "freq_ratio": 2.5,
+                "amplitude": 0.68,
+                "decay_time": 0.042
+              },
+              {
+                "freq_ratio": 4.3,
+                "amplitude": 0.48,
+                "decay_time": 0.032
+              }
+            ],
+            "excitation": "impulse"
+          },
+          "envelope": {
+            "attack": 0,
+            "decay": 0.072,
+            "sustain": 0,
+            "release": 0
+          },
+          "volume": 0.55,
+          "pan": 0.12,
+          "delay": 0.035
+        },
+        {
+          "synthesis": {
+            "type": "noise_burst",
+            "noise_type": "white",
+            "filter": {
+              "type": "bandpass",
+              "center": 3500.0,
+              "resonance": 0.6
+            }
+          },
+          "envelope": {
+            "attack": 0,
+            "decay": 0.008,
+            "sustain": 0,
+            "release": 0.002
+          },
+          "volume": 0.25,
           "pan": 0.0
         },
         {
           "synthesis": {
-            "type": "oscillator",
-            "waveform": "triangle",
-            "frequency": 900.0
+            "type": "noise_burst",
+            "noise_type": "white",
+            "filter": {
+              "type": "bandpass",
+              "center": 3500.0,
+              "resonance": 0.6
+            }
           },
           "envelope": {
-            "attack": 0.001,
-            "decay": 0.025,
-            "sustain": 0.0,
-            "release": 0.008
+            "attack": 0,
+            "decay": 0.008,
+            "sustain": 0,
+            "release": 0.002
           },
-          "volume": 0.4,
-          "pan": 0.0
-        },
-        {
-          "synthesis": {
-            "type": "oscillator",
-            "waveform": "triangle",
-            "frequency": 1200.0
-          },
-          "envelope": {
-            "attack": 0.001,
-            "decay": 0.03,
-            "sustain": 0.0,
-            "release": 0.01
-          },
-          "volume": 0.45,
+          "volume": 0.18,
           "pan": 0.0,
-          "delay": 0.04
-        },
-        {
-          "synthesis": {
-            "type": "oscillator",
-            "waveform": "triangle",
-            "frequency": 900.0
-          },
-          "envelope": {
-            "attack": 0.001,
-            "decay": 0.025,
-            "sustain": 0.0,
-            "release": 0.008
-          },
-          "volume": 0.35,
-          "pan": 0.0,
-          "delay": 0.04
+          "delay": 0.035
         },
         {
           "synthesis": {
@@ -86,15 +198,15 @@
             "noise_type": "white",
             "filter": {
               "type": "highpass",
-              "cutoff": 1500.0,
-              "resonance": 0.3
+              "cutoff": 6000.0,
+              "resonance": 0.4
             }
           },
           "envelope": {
-            "attack": 0.001,
-            "decay": 0.015,
-            "sustain": 0.0,
-            "release": 0.005
+            "attack": 0,
+            "decay": 0.005,
+            "sustain": 0,
+            "release": 0.001
           },
           "volume": 0.15,
           "pan": 0.0
@@ -105,19 +217,39 @@
             "noise_type": "white",
             "filter": {
               "type": "highpass",
-              "cutoff": 1500.0,
-              "resonance": 0.3
+              "cutoff": 6000.0,
+              "resonance": 0.4
             }
           },
           "envelope": {
-            "attack": 0.001,
-            "decay": 0.015,
-            "sustain": 0.0,
-            "release": 0.005
+            "attack": 0,
+            "decay": 0.005,
+            "sustain": 0,
+            "release": 0.001
           },
           "volume": 0.12,
           "pan": 0.0,
-          "delay": 0.04
+          "delay": 0.035
+        }
+      ],
+      "effects": [
+        {
+          "type": "reverb",
+          "room_size": 0.22,
+          "damping": 0.65,
+          "wet": 0.18
+        },
+        {
+          "type": "delay",
+          "time_ms": 85,
+          "feedback": 0.12,
+          "wet": 0.08
+        },
+        {
+          "type": "chorus",
+          "rate": 1.2,
+          "depth": 0.15,
+          "wet": 0.12
         }
       ]
     }

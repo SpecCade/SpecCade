@@ -1,59 +1,163 @@
 {
-  "spec_version": 1,
-  "asset_id": "preset_hat_open",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 10005,
-  "description": "Open hi-hat - longer decay metallic sound",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/drums/hats/hat_open.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "duration_seconds": 0.5,
-      "sample_rate": 44100,
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "preset_hat_open",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 10005,
+    "description": "Professional open hi-hat - washy, sustained metallic sound with long decay",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "metallic",
-            "base_freq": 7000,
-            "num_partials": 8,
-            "inharmonicity": 2
-          },
-          "envelope": {
-            "attack": 0.001,
-            "decay": 0.25,
-            "sustain": 0.1,
-            "release": 0.2
-          },
-          "volume": 0.5,
-          "pan": 0
-        },
-        {
-          "synthesis": {
-            "type": "noise_burst",
-            "noise_type": "white",
-            "filter": {
-              "type": "highpass",
-              "cutoff": 7000,
-              "resonance": 0.5
-            }
-          },
-          "envelope": {
-            "attack": 0.001,
-            "decay": 0.2,
-            "sustain": 0.1,
-            "release": 0.18
-          },
-          "volume": 0.45,
-          "pan": 0
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/drums/hats/hat_open.wav"
         }
-      ]
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "duration_seconds": 0.8,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "metallic",
+                        "base_freq": 380,
+                        "num_partials": 14,
+                        "inharmonicity": 3.5
+                    },
+                    "envelope": {
+                        "attack": 0.001,
+                        "decay": 0.45,
+                        "sustain": 0.22,
+                        "release": 0.35
+                    },
+                    "volume": 0.48,
+                    "pan": -0.1,
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 6.2,
+                            "depth": 0.3
+                        },
+                        "target": {
+                            "target": "pitch",
+                            "semitones": 0.08
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "metallic",
+                        "base_freq": 420,
+                        "num_partials": 12,
+                        "inharmonicity": 4.2
+                    },
+                    "envelope": {
+                        "attack": 0.002,
+                        "decay": 0.5,
+                        "sustain": 0.18,
+                        "release": 0.4
+                    },
+                    "volume": 0.42,
+                    "pan": 0.1,
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 7.8,
+                            "depth": 0.35
+                        },
+                        "target": {
+                            "target": "filter_cutoff",
+                            "amount": 0.15
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "noise_burst",
+                        "noise_type": "white",
+                        "filter": {
+                            "type": "highpass",
+                            "cutoff": 6000,
+                            "resonance": 0.3
+                        }
+                    },
+                    "envelope": {
+                        "attack": 0.001,
+                        "decay": 0.4,
+                        "sustain": 0.2,
+                        "release": 0.3
+                    },
+                    "volume": 0.38,
+                    "pan": 0
+                },
+                {
+                    "synthesis": {
+                        "type": "noise_burst",
+                        "noise_type": "white",
+                        "filter": {
+                            "type": "highpass",
+                            "cutoff": 8500,
+                            "resonance": 0.4
+                        }
+                    },
+                    "envelope": {
+                        "attack": 0.001,
+                        "decay": 0.35,
+                        "sustain": 0.15,
+                        "release": 0.32
+                    },
+                    "volume": 0.32,
+                    "pan": -0.05
+                },
+                {
+                    "synthesis": {
+                        "type": "metallic",
+                        "base_freq": 520,
+                        "num_partials": 10,
+                        "inharmonicity": 5.8
+                    },
+                    "envelope": {
+                        "attack": 0.003,
+                        "decay": 0.6,
+                        "sustain": 0.12,
+                        "release": 0.5
+                    },
+                    "volume": 0.28,
+                    "pan": 0.08,
+                    "lfo": {
+                        "config": {
+                            "waveform": "triangle",
+                            "rate": 5.5,
+                            "depth": 0.25
+                        },
+                        "target": {
+                            "target": "pan",
+                            "amount": 0.12
+                        }
+                    }
+                }
+            ],
+            "effects": [
+                {
+                    "type": "reverb",
+                    "room_size": 0.45,
+                    "damping": 0.6,
+                    "wet": 0.28
+                },
+                {
+                    "type": "delay",
+                    "time_ms": 85,
+                    "feedback": 0.18,
+                    "wet": 0.15
+                },
+                {
+                    "type": "chorus",
+                    "rate": 1.2,
+                    "depth": 0.25,
+                    "wet": 0.22
+                }
+            ]
+        }
     }
-  }
 }

@@ -1,84 +1,221 @@
 {
-  "spec_version": 1,
-  "asset_id": "preset_pulse_chords",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 10311,
-  "description": "Pulse chord lead - thick pulse wave stack optimized for chord voicings",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/leads/synth/pulse_chords.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "base_note": "A4",
-      "duration_seconds": 1.5,
-      "sample_rate": 44100,
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "preset_pulse_chords",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 10311,
+    "description": "Professional PWM chord lead with evolving pulse waves, filter modulation, and lush stereo width - ideal for chord progressions and pad leads",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "multi_oscillator",
-            "frequency": 440.0,
-            "oscillators": [
-              {
-                "waveform": "pulse",
-                "volume": 1.0,
-                "detune": 0,
-                "duty": 0.4
-              },
-              {
-                "waveform": "pulse",
-                "volume": 0.9,
-                "detune": 10,
-                "duty": 0.45
-              },
-              {
-                "waveform": "pulse",
-                "volume": 0.9,
-                "detune": -10,
-                "duty": 0.35
-              },
-              {
-                "waveform": "pulse",
-                "volume": 0.7,
-                "detune": 15,
-                "duty": 0.5
-              },
-              {
-                "waveform": "pulse",
-                "volume": 0.7,
-                "detune": -15,
-                "duty": 0.3
-              }
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/leads/synth/pulse_chords.wav"
+        }
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "base_note": "A4",
+            "duration_seconds": 1.5,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "multi_oscillator",
+                        "frequency": 440.0,
+                        "oscillators": [
+                            {
+                                "waveform": "pulse",
+                                "volume": 1.0,
+                                "detune": 0
+                            },
+                            {
+                                "waveform": "pulse",
+                                "volume": 0.92,
+                                "detune": 7
+                            },
+                            {
+                                "waveform": "pulse",
+                                "volume": 0.92,
+                                "detune": -7
+                            },
+                            {
+                                "waveform": "pulse",
+                                "volume": 0.78,
+                                "detune": 13
+                            },
+                            {
+                                "waveform": "pulse",
+                                "volume": 0.78,
+                                "detune": -13
+                            },
+                            {
+                                "waveform": "pulse",
+                                "volume": 0.65,
+                                "detune": 19
+                            },
+                            {
+                                "waveform": "pulse",
+                                "volume": 0.65,
+                                "detune": -19
+                            }
+                        ]
+                    },
+                    "envelope": {
+                        "attack": 0.025,
+                        "decay": 0.2,
+                        "sustain": 0.82,
+                        "release": 0.35
+                    },
+                    "volume": 0.72,
+                    "pan": 0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 2800,
+                        "resonance": 0.48,
+                        "cutoff_end": 4500
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 0.35,
+                            "depth": 0.22
+                        },
+                        "target": {
+                            "target": "filter_cutoff",
+                            "amount": 500
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "multi_oscillator",
+                        "frequency": 440.0,
+                        "oscillators": [
+                            {
+                                "waveform": "pulse",
+                                "volume": 1.0,
+                                "detune": 0
+                            },
+                            {
+                                "waveform": "pulse",
+                                "volume": 0.85,
+                                "detune": 5
+                            },
+                            {
+                                "waveform": "pulse",
+                                "volume": 0.85,
+                                "detune": -5
+                            }
+                        ]
+                    },
+                    "envelope": {
+                        "attack": 0.03,
+                        "decay": 0.25,
+                        "sustain": 0.75,
+                        "release": 0.38
+                    },
+                    "volume": 0.48,
+                    "pan": 0.25,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 3200,
+                        "resonance": 0.42,
+                        "cutoff_end": 5200
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 0.42,
+                            "depth": 0.25
+                        },
+                        "target": {
+                            "target": "filter_cutoff",
+                            "amount": 500
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "multi_oscillator",
+                        "frequency": 440.0,
+                        "oscillators": [
+                            {
+                                "waveform": "pulse",
+                                "volume": 1.0,
+                                "detune": 0
+                            },
+                            {
+                                "waveform": "pulse",
+                                "volume": 0.88,
+                                "detune": 6
+                            },
+                            {
+                                "waveform": "pulse",
+                                "volume": 0.88,
+                                "detune": -6
+                            }
+                        ]
+                    },
+                    "envelope": {
+                        "attack": 0.035,
+                        "decay": 0.22,
+                        "sustain": 0.78,
+                        "release": 0.4
+                    },
+                    "volume": 0.46,
+                    "pan": -0.25,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 3000,
+                        "resonance": 0.45,
+                        "cutoff_end": 4800
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 0.38,
+                            "depth": 0.2
+                        },
+                        "target": {
+                            "target": "filter_cutoff",
+                            "amount": 500
+                        }
+                    }
+                }
+            ],
+            "effects": [
+                {
+                    "type": "chorus",
+                    "rate": 0.85,
+                    "depth": 0.35,
+                    "wet": 0.32,
+                    "voices": 2
+                },
+                {
+                    "type": "phaser",
+                    "rate": 0.28,
+                    "depth": 0.38,
+                    "feedback": 0.35,
+                    "stages": 4,
+                    "wet": 0.18
+                },
+                {
+                    "type": "reverb",
+                    "room_size": 0.55,
+                    "damping": 0.48,
+                    "wet": 0.28,
+                    "width": 0.5
+                },
+                {
+                    "type": "compressor",
+                    "threshold_db": -12,
+                    "ratio": 3.5,
+                    "attack_ms": 5.0,
+                    "release_ms": 80.0,
+                    "makeup_db": 0
+                }
             ]
-          },
-          "envelope": {
-            "attack": 0.01,
-            "decay": 0.15,
-            "sustain": 0.8,
-            "release": 0.25
-          },
-          "filter": {
-            "type": "lowpass",
-            "cutoff": 3500,
-            "resonance": 0.35
-          },
-          "volume": 0.85,
-          "pan": 0
         }
-      ],
-      "effects": [
-        {
-          "type": "chorus",
-          "rate": 1.0,
-          "depth": 0.25,
-          "wet": 0.2
-        }
-      ]
     }
-  }
 }

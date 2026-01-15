@@ -1,94 +1,200 @@
 {
-  "spec_version": 1,
-  "asset_id": "harmonium_keys",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 20026,
-  "description": "Harmonium keyboard variant - reed organ with rich, breathy character",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/keys/harmonium_keys.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "duration_seconds": 3.0,
-      "sample_rate": 44100,
-      "base_note": "C4",
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "harmonium_keys",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 20026,
+    "description": "Harmonium keyboard variant - reed organ with rich, breathy character",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "wavetable",
-            "table": "analog",
-            "frequency": 261.63,
-            "position": 0.4,
-            "voices": 4,
-            "detune": 12.0
-          },
-          "envelope": {
-            "attack": 0.12,
-            "decay": 0.15,
-            "sustain": 0.85,
-            "release": 0.45
-          },
-          "volume": 0.5,
-          "pan": 0.0
-        },
-        {
-          "synthesis": {
-            "type": "wavetable",
-            "table": "pwm",
-            "frequency": 261.63,
-            "position": 0.35,
-            "voices": 3,
-            "detune": 8.0
-          },
-          "envelope": {
-            "attack": 0.13,
-            "decay": 0.18,
-            "sustain": 0.82,
-            "release": 0.42
-          },
-          "volume": 0.35,
-          "pan": 0.0
-        },
-        {
-          "synthesis": {
-            "type": "wavetable",
-            "table": "organ",
-            "frequency": 261.63,
-            "position": 0.25,
-            "voices": 2,
-            "detune": 6.0
-          },
-          "envelope": {
-            "attack": 0.14,
-            "decay": 0.2,
-            "sustain": 0.8,
-            "release": 0.4
-          },
-          "volume": 0.3,
-          "pan": 0.0
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/keys/harmonium_keys.wav"
         }
-      ],
-      "effects": [
-        {
-          "type": "chorus",
-          "rate": 4.2,
-          "depth": 0.28,
-          "wet": 0.4
-        },
-        {
-          "type": "phaser",
-          "rate": 0.45,
-          "depth": 0.5,
-          "stages": 4,
-          "wet": 0.25
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "base_note": "C4",
+            "duration_seconds": 3.5,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "additive",
+                        "base_freq": 261.63,
+                        "harmonics": [
+                            1.0,
+                            0.5,
+                            0.25,
+                            0.125
+                        ]
+                    },
+                    "envelope": {
+                        "attack": 0.15,
+                        "decay": 0.25,
+                        "sustain": 0.88,
+                        "release": 0.55
+                    },
+                    "volume": 0.48,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "bandpass",
+                        "center": 1800.0,
+                        "resonance": 0.45,
+                        "center_end": 2200.0
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 3.5,
+                            "depth": 0.18
+                        },
+                        "target": {
+                            "target": "volume",
+                            "amount": 0.06
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "formant",
+                        "frequency": 261.63,
+                        "vowel": "a",
+                        "breathiness": 0.25
+                    },
+                    "envelope": {
+                        "attack": 0.18,
+                        "decay": 0.22,
+                        "sustain": 0.85,
+                        "release": 0.52
+                    },
+                    "volume": 0.32,
+                    "pan": -0.15,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 3500.0,
+                        "resonance": 0.3,
+                        "cutoff_end": 2800.0
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 5.2,
+                            "depth": 0.28
+                        },
+                        "target": {
+                            "target": "pitch",
+                            "semitones": 0.08
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "additive",
+                        "base_freq": 523.26,
+                        "harmonics": [
+                            1.0,
+                            0.5,
+                            0.25,
+                            0.125
+                        ]
+                    },
+                    "envelope": {
+                        "attack": 0.16,
+                        "decay": 0.28,
+                        "sustain": 0.82,
+                        "release": 0.5
+                    },
+                    "volume": 0.22,
+                    "pan": 0.15,
+                    "filter": {
+                        "type": "bandpass",
+                        "center": 2400.0,
+                        "resonance": 0.38,
+                        "center_end": 2800.0
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "wavetable",
+                        "table": "organ",
+                        "frequency": 261.63,
+                        "position": 0.3,
+                        "voices": 3,
+                        "detune": 7.5
+                    },
+                    "envelope": {
+                        "attack": 0.17,
+                        "decay": 0.2,
+                        "sustain": 0.86,
+                        "release": 0.48
+                    },
+                    "volume": 0.28,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 4200.0,
+                        "resonance": 0.25,
+                        "cutoff_end": 3600.0
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 2.8,
+                            "depth": 0.35
+                        },
+                        "target": {
+                            "target": "filter_cutoff",
+                            "amount": 380.0
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "noise_burst",
+                        "noise_type": "pink"
+                    },
+                    "envelope": {
+                        "attack": 0.08,
+                        "decay": 0.12,
+                        "sustain": 0.2,
+                        "release": 0.25
+                    },
+                    "volume": 0.08,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "bandpass",
+                        "center": 2800.0,
+                        "resonance": 0.55,
+                        "center_end": 3200.0
+                    }
+                }
+            ],
+            "effects": [
+                {
+                    "type": "chorus",
+                    "rate": 3.8,
+                    "depth": 0.32,
+                    "wet": 0.38,
+                    "voices": 2
+                },
+                {
+                    "type": "reverb",
+                    "room_size": 0.55,
+                    "damping": 0.45,
+                    "wet": 0.28,
+                    "width": 0.5
+                },
+                {
+                    "type": "compressor",
+                    "threshold_db": -18.0,
+                    "ratio": 2.8,
+                    "attack_ms": 8.0,
+                    "release_ms": 120.0,
+                    "makeup_db": 0
+                }
+            ]
         }
-      ]
     }
-  }
 }

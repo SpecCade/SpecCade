@@ -1,42 +1,169 @@
 {
-  "spec_version": 1,
-  "asset_id": "keys_organ",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 10208,
-  "description": "Classic rock organ with middle registration blend using wavetable synthesis",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/keys/keys_organ.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "duration_seconds": 3.0,
-      "sample_rate": 44100,
-      "base_note": "C4",
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "keys_organ",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 10208,
+    "description": "Classic Hammond-style drawbar organ with authentic additive synthesis harmonics simulating 16', 8', 4', 2' registrations, Leslie-inspired chorus/vibrato, and warm room reverb",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "wavetable",
-            "table": "organ",
-            "frequency": 261.63,
-            "position": 0.5
-          },
-          "envelope": {
-            "attack": 0.05,
-            "decay": 0.1,
-            "sustain": 0.9,
-            "release": 0.2
-          },
-          "volume": 0.8,
-          "pan": 0.0
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/keys/keys_organ.wav"
         }
-      ],
-      "effects": []
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "base_note": "C4",
+            "duration_seconds": 3.0,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "additive",
+                        "base_freq": 261.63,
+                        "harmonics": [1.0, 0.8, 0.6, 0.85, 0.5, 0.4, 0.3, 0.25, 0.2]
+                    },
+                    "envelope": {
+                        "attack": 0.001,
+                        "decay": 0,
+                        "sustain": 1,
+                        "release": 0.08
+                    },
+                    "volume": 0.7,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 5200.0,
+                        "resonance": 0.3
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 6.5,
+                            "depth": 0.8
+                        },
+                        "target": {
+                            "target": "pitch",
+                            "semitones": 0.05
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "additive",
+                        "base_freq": 130.815,
+                        "harmonics": [0.7, 0.55, 0.4, 0.3, 0.2]
+                    },
+                    "envelope": {
+                        "attack": 0.001,
+                        "decay": 0,
+                        "sustain": 1,
+                        "release": 0.08
+                    },
+                    "volume": 0.45,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 3500.0,
+                        "resonance": 0.25
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 6.5,
+                            "depth": 0.8
+                        },
+                        "target": {
+                            "target": "pitch",
+                            "semitones": 0.05
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "additive",
+                        "base_freq": 523.26,
+                        "harmonics": [0.85, 0.5, 0.35, 0.25, 0.15]
+                    },
+                    "envelope": {
+                        "attack": 0.001,
+                        "decay": 0,
+                        "sustain": 1,
+                        "release": 0.08
+                    },
+                    "volume": 0.35,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 6500.0,
+                        "resonance": 0.2
+                    },
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 6.5,
+                            "depth": 0.8
+                        },
+                        "target": {
+                            "target": "pitch",
+                            "semitones": 0.05
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "oscillator",
+                        "waveform": "sine",
+                        "frequency": 261.63
+                    },
+                    "envelope": {
+                        "attack": 0.001,
+                        "decay": 0,
+                        "sustain": 1,
+                        "release": 0.08
+                    },
+                    "volume": 0.3,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "highpass",
+                        "cutoff": 80.0,
+                        "resonance": 0.1
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "additive",
+                        "base_freq": 261.63,
+                        "harmonics": [0.4, 0.6, 0.3, 0.45, 0.2]
+                    },
+                    "envelope": {
+                        "attack": 0.002,
+                        "decay": 0.03,
+                        "sustain": 0,
+                        "release": 0.01
+                    },
+                    "volume": 0.18,
+                    "pan": 0.0
+                }
+            ],
+            "effects": [
+                {
+                    "type": "chorus",
+                    "rate": 0.5,
+                    "depth": 0.4,
+                    "wet": 0.55,
+                    "voices": 2
+                },
+                {
+                    "type": "reverb",
+                    "room_size": 0.4,
+                    "damping": 0.6,
+                    "wet": 0.15,
+                    "width": 0.5
+                }
+            ]
+        }
     }
-  }
 }

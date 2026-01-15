@@ -1,106 +1,197 @@
 {
-  "spec_version": 1,
-  "asset_id": "drone",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 20064,
-  "description": "Basic drone - sustained low-frequency drone texture",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/textures/drone.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "duration_seconds": 4.0,
-      "sample_rate": 44100,
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "drone",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 20064,
+    "description": "Evolving granular drone with slow modulation and spatial depth",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "granular",
-            "source": {
-              "type": "tone",
-              "waveform": "sawtooth",
-              "frequency": 110.0
-            },
-            "grain_size_ms": 200.0,
-            "grain_density": 20.0,
-            "pitch_spread": 0.08,
-            "position_spread": 0.15,
-            "pan_spread": 0.4
-          },
-          "envelope": {
-            "attack": 2.0,
-            "decay": 0.3,
-            "sustain": 0.9,
-            "release": 2.5
-          },
-          "volume": 0.6,
-          "pan": -0.2
-        },
-        {
-          "synthesis": {
-            "type": "granular",
-            "source": {
-              "type": "tone",
-              "waveform": "sawtooth",
-              "frequency": 109.5
-            },
-            "grain_size_ms": 220.0,
-            "grain_density": 18.0,
-            "pitch_spread": 0.1,
-            "position_spread": 0.2,
-            "pan_spread": 0.45
-          },
-          "envelope": {
-            "attack": 2.2,
-            "decay": 0.3,
-            "sustain": 0.88,
-            "release": 2.3
-          },
-          "volume": 0.55,
-          "pan": 0.2
-        },
-        {
-          "synthesis": {
-            "type": "granular",
-            "source": {
-              "type": "tone",
-              "waveform": "triangle",
-              "frequency": 55.0
-            },
-            "grain_size_ms": 250.0,
-            "grain_density": 15.0,
-            "pitch_spread": 0.05,
-            "position_spread": 0.1,
-            "pan_spread": 0.3
-          },
-          "envelope": {
-            "attack": 2.5,
-            "decay": 0.2,
-            "sustain": 0.92,
-            "release": 2.8
-          },
-          "volume": 0.5,
-          "pan": 0.0
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/textures/drone.wav"
         }
-      ],
-      "master_filter": {
-        "type": "lowpass",
-        "cutoff": 1200.0,
-        "resonance": 0.2
-      },
-      "effects": [
-        {
-          "type": "reverb",
-          "room_size": 0.8,
-          "damping": 0.35,
-          "wet": 0.45
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "duration_seconds": 4.0,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "granular",
+                        "source": {
+                            "type": "tone",
+                            "waveform": "sawtooth",
+                            "frequency": 110.0
+                        },
+                        "grain_size_ms": 200.0,
+                        "grain_density": 20.0,
+                        "pitch_spread": 0.08,
+                        "position_spread": 0.15,
+                        "pan_spread": 0.4
+                    },
+                    "envelope": {
+                        "attack": 2.0,
+                        "decay": 0.3,
+                        "sustain": 0.9,
+                        "release": 2.5
+                    },
+                    "volume": 0.6,
+                    "pan": -0.2,
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 0.15,
+                            "depth": 0.6
+                        },
+                        "target": {
+                            "target": "filter_cutoff",
+                            "amount": 0.3
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "granular",
+                        "source": {
+                            "type": "tone",
+                            "waveform": "sawtooth",
+                            "frequency": 109.5
+                        },
+                        "grain_size_ms": 220.0,
+                        "grain_density": 18.0,
+                        "pitch_spread": 0.1,
+                        "position_spread": 0.2,
+                        "pan_spread": 0.45
+                    },
+                    "envelope": {
+                        "attack": 2.2,
+                        "decay": 0.3,
+                        "sustain": 0.88,
+                        "release": 2.3
+                    },
+                    "volume": 0.55,
+                    "pan": 0.2,
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 0.11,
+                            "depth": 0.5
+                        },
+                        "target": {
+                            "target": "pitch",
+                            "semitones": 0.08
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "granular",
+                        "source": {
+                            "type": "tone",
+                            "waveform": "triangle",
+                            "frequency": 55.0
+                        },
+                        "grain_size_ms": 250.0,
+                        "grain_density": 15.0,
+                        "pitch_spread": 0.05,
+                        "position_spread": 0.1,
+                        "pan_spread": 0.3
+                    },
+                    "envelope": {
+                        "attack": 2.5,
+                        "decay": 0.2,
+                        "sustain": 0.92,
+                        "release": 2.8
+                    },
+                    "volume": 0.5,
+                    "pan": 0.0,
+                    "lfo": {
+                        "config": {
+                            "waveform": "triangle",
+                            "rate": 0.08,
+                            "depth": 0.4
+                        },
+                        "target": {
+                            "target": "volume",
+                            "amount": 0.18
+                        }
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "granular",
+                        "source": {
+                            "type": "tone",
+                            "waveform": "sine",
+                            "frequency": 220.0
+                        },
+                        "grain_size_ms": 300.0,
+                        "grain_density": 12.0,
+                        "pitch_spread": 0.03,
+                        "position_spread": 0.08,
+                        "pan_spread": 0.5
+                    },
+                    "envelope": {
+                        "attack": 3.0,
+                        "decay": 0.2,
+                        "sustain": 0.85,
+                        "release": 3.0
+                    },
+                    "volume": 0.35,
+                    "pan": 0.0,
+                    "lfo": {
+                        "config": {
+                            "waveform": "sine",
+                            "rate": 0.2,
+                            "depth": 0.7
+                        },
+                        "target": {
+                            "target": "pan",
+                            "amount": 0.4
+                        }
+                    }
+                }
+            ],
+            "master_filter": {
+                "type": "lowpass",
+                "cutoff": 1200.0,
+                "resonance": 0.2
+            },
+            "effects": [
+                {
+                    "type": "chorus",
+                    "rate": 0.4,
+                    "depth": 0.25,
+                    "feedback": 0.15,
+                    "wet": 0.35
+                },
+                {
+                    "type": "phaser",
+                    "rate": 0.18,
+                    "depth": 0.4,
+                    "feedback": 0.3,
+                    "stages": 4,
+                    "wet": 0.28
+                },
+                {
+                    "type": "reverb",
+                    "room_size": 0.85,
+                    "damping": 0.35,
+                    "wet": 0.5,
+                    "width": 0.6
+                },
+                {
+                    "type": "compressor",
+                    "threshold_db": -18.0,
+                    "ratio": 2.5,
+                    "attack_ms": 50.0,
+                    "release_ms": 300.0,
+                    "makeup_db": 3.0
+                }
+            ]
         }
-      ]
     }
-  }
 }

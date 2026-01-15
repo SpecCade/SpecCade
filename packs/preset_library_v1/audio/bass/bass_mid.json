@@ -1,60 +1,126 @@
 {
-  "spec_version": 1,
-  "asset_id": "preset_bass_mid",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 10100,
-  "description": "Mid-focused bass - warm sawtooth filtered at 800Hz for rich harmonic content with controlled highs",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/bass/bass_mid.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "base_note": "C2",
-      "duration_seconds": 1.0,
-      "sample_rate": 44100,
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "preset_bass_mid",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 10100,
+    "description": "Professional mid-focused bass - three-layer design with sub foundation, prominent bandpass-filtered mid content (200-800Hz), and transient definition. Warm saturation and compression for tracker-ready punch that cuts through mixes.",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "oscillator",
-            "waveform": "sawtooth",
-            "frequency": 65.41
-          },
-          "filter": {
-            "type": "lowpass",
-            "cutoff": 800.0,
-            "resonance": 0.3
-          },
-          "envelope": {
-            "attack": 0.01,
-            "decay": 0.15,
-            "sustain": 0.8,
-            "release": 0.15
-          },
-          "volume": 0.9,
-          "pan": 0
-        },
-        {
-          "synthesis": {
-            "type": "oscillator",
-            "waveform": "sine",
-            "frequency": 65.41
-          },
-          "envelope": {
-            "attack": 0.01,
-            "decay": 0.1,
-            "sustain": 0.9,
-            "release": 0.1
-          },
-          "volume": 0.4,
-          "pan": 0
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/bass/bass_mid.wav"
         }
-      ]
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "base_note": "C2",
+            "duration_seconds": 1.0,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "oscillator",
+                        "waveform": "sine",
+                        "frequency": 65.41
+                    },
+                    "envelope": {
+                        "attack": 0.008,
+                        "decay": 0.12,
+                        "sustain": 0.85,
+                        "release": 0.18
+                    },
+                    "volume": 0.45,
+                    "pan": 0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 120.0,
+                        "resonance": 0.0
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "multi_oscillator",
+                        "frequency": 65.41,
+                        "oscillators": [
+                            {
+                                "waveform": "sawtooth",
+                                "volume": 1.0
+                            }
+                        ]
+                    },
+                    "envelope": {
+                        "attack": 0.006,
+                        "decay": 0.18,
+                        "sustain": 0.7,
+                        "release": 0.14
+                    },
+                    "volume": 0.72,
+                    "pan": 0,
+                    "filter": {
+                        "type": "bandpass",
+                        "center": 450.0,
+                        "resonance": 0.35
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "oscillator",
+                        "waveform": "square",
+                        "frequency": 130.82
+                    },
+                    "envelope": {
+                        "attack": 0.004,
+                        "decay": 0.22,
+                        "sustain": 0.5,
+                        "release": 0.12
+                    },
+                    "volume": 0.28,
+                    "pan": 0,
+                    "filter": {
+                        "type": "bandpass",
+                        "center": 700.0,
+                        "resonance": 0.25
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "oscillator",
+                        "waveform": "triangle",
+                        "frequency": 261.63
+                    },
+                    "envelope": {
+                        "attack": 0.001,
+                        "decay": 0.04,
+                        "sustain": 0,
+                        "release": 0.02
+                    },
+                    "volume": 0.35,
+                    "pan": 0,
+                    "filter": {
+                        "type": "bandpass",
+                        "center": 600.0,
+                        "resonance": 0.4
+                    }
+                }
+            ],
+            "effects": [
+                {
+                    "type": "waveshaper",
+                    "drive": 1.0,
+                    "wet": 0.4,
+                    "curve": "tanh"
+                },
+                {
+                    "type": "compressor",
+                    "threshold_db": -12.0,
+                    "ratio": 3.5,
+                    "attack_ms": 8.0,
+                    "release_ms": 120.0,
+                    "makeup_db": 0
+                }
+            ]
+        }
     }
-  }
 }

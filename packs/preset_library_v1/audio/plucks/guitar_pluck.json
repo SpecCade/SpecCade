@@ -1,40 +1,141 @@
 {
-  "spec_version": 1,
-  "asset_id": "guitar_pluck",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 20059,
-  "description": "Guitar pluck - single clean guitar note pluck",
-  "outputs": [
-    {
-      "kind": "primary",
-      "format": "wav",
-      "path": "test-outputs/preset_library_v1/audio/plucks/guitar_pluck.wav"
-    }
-  ],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "duration_seconds": 0.8,
-      "sample_rate": 44100,
-      "layers": [
+    "spec_version": 1,
+    "asset_id": "guitar_pluck",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 20059,
+    "description": "Professional acoustic guitar pluck with natural body resonance and harmonic richness",
+    "outputs": [
         {
-          "synthesis": {
-            "type": "karplus_strong",
-            "frequency": 293.66,
-            "decay": 0.996,
-            "blend": 0.35
-          },
-          "envelope": {
-            "attack": 0.001,
-            "decay": 0.1,
-            "sustain": 0.7,
-            "release": 0.25
-          },
-          "volume": 1.0,
-          "pan": 0.0
+            "kind": "primary",
+            "format": "wav",
+            "path": "test-outputs/preset_library_v1/audio/plucks/guitar_pluck.wav"
         }
-      ]
+    ],
+    "recipe": {
+        "kind": "audio_v1",
+        "params": {
+            "duration_seconds": 2.5,
+            "sample_rate": 44100,
+            "layers": [
+                {
+                    "synthesis": {
+                        "type": "karplus_strong",
+                        "frequency": 293.66,
+                        "decay": 0.9975,
+                        "blend": 0.28
+                    },
+                    "envelope": {
+                        "attack": 0.0008,
+                        "decay": 0.15,
+                        "sustain": 0.55,
+                        "release": 0.8
+                    },
+                    "volume": 0.85,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "lowpass",
+                        "cutoff": 5500.0,
+                        "resonance": 0.4,
+                        "cutoff_end": 2200.0
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "pitched_body",
+                        "start_freq": 293.66,
+                        "end_freq": 146.83
+                    },
+                    "envelope": {
+                        "attack": 0.002,
+                        "decay": 0.25,
+                        "sustain": 0.35,
+                        "release": 1.2
+                    },
+                    "volume": 0.35,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "bandpass",
+                        "center": 380.0,
+                        "resonance": 0.65
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "modal",
+                        "frequency": 587.32,
+                        "modes": [
+                            {
+                                "freq_ratio": 1.0,
+                                "amplitude": 1.0,
+                                "decay_time": 0.5
+                            },
+                            {
+                                "freq_ratio": 2.0,
+                                "amplitude": 0.5,
+                                "decay_time": 0.3
+                            }
+                        ],
+                        "excitation": "impulse"
+                    },
+                    "envelope": {
+                        "attack": 0.001,
+                        "decay": 0.08,
+                        "sustain": 0,
+                        "release": 0.3
+                    },
+                    "volume": 0.18,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "highpass",
+                        "cutoff": 1800.0,
+                        "resonance": 0.25
+                    }
+                },
+                {
+                    "synthesis": {
+                        "type": "noise_burst",
+                        "noise_type": "white"
+                    },
+                    "envelope": {
+                        "attack": 0.0001,
+                        "decay": 0.012,
+                        "sustain": 0,
+                        "release": 0.008
+                    },
+                    "volume": 0.08,
+                    "pan": 0.0,
+                    "filter": {
+                        "type": "bandpass",
+                        "center": 3200.0,
+                        "resonance": 0.5
+                    }
+                }
+            ],
+            "effects": [
+                {
+                    "type": "compressor",
+                    "threshold_db": -12.0,
+                    "ratio": 3.5,
+                    "attack_ms": 3.0,
+                    "release_ms": 80.0,
+                    "makeup_db": 0
+                },
+                {
+                    "type": "reverb",
+                    "room_size": 0.28,
+                    "damping": 0.55,
+                    "wet": 0.12,
+                    "width": 0.5
+                },
+                {
+                    "type": "chorus",
+                    "rate": 0.8,
+                    "depth": 0.15,
+                    "wet": 0.08,
+                    "voices": 2
+                }
+            ]
+        }
     }
-  }
 }

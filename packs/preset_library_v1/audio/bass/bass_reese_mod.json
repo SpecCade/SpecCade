@@ -4,7 +4,7 @@
   "asset_type": "audio",
   "license": "CC0-1.0",
   "seed": 10118,
-  "description": "Modulated Reese bass - 4 detuned sawtooths with slow filter LFO for evolving DnB movement",
+  "description": "Aggressive modulated Reese bass - 6 heavily detuned oscillators with square wave edge, fast filter LFO, phaser movement, and waveshaper aggression for modern DnB/neurofunk",
   "outputs": [
     {
       "kind": "primary",
@@ -31,45 +31,102 @@
               },
               {
                 "waveform": "sawtooth",
-                "volume": 0.9,
-                "detune": 12.0
+                "volume": 0.95,
+                "detune": -25.0
               },
               {
                 "waveform": "sawtooth",
-                "volume": 0.9,
-                "detune": -12.0
+                "volume": 0.95,
+                "detune": 25.0
               },
               {
                 "waveform": "sawtooth",
                 "volume": 0.85,
-                "detune": 7.0
+                "detune": -15.0
+              },
+              {
+                "waveform": "sawtooth",
+                "volume": 0.85,
+                "detune": 15.0
+              },
+              {
+                "waveform": "square",
+                "volume": 0.45,
+                "detune": 8.0
               }
             ]
           },
           "envelope": {
-            "attack": 0.02,
-            "decay": 0.2,
-            "sustain": 0.85,
-            "release": 0.25
+            "attack": 0.008,
+            "decay": 0.15,
+            "sustain": 0.9,
+            "release": 0.2
           },
+          "volume": 0.65,
+          "pan": 0.0,
           "filter": {
             "type": "lowpass",
-            "cutoff": 1400.0,
-            "resonance": 0.4
+            "cutoff": 1800.0,
+            "resonance": 0.65
+          },
+          "lfo": {
+            "config": {
+              "waveform": "triangle",
+              "rate": 2.5,
+              "depth": 0.85
+            },
+            "target": {
+              "target": "filter_cutoff",
+              "amount": 1800.0
+            }
+          }
+        },
+        {
+          "synthesis": {
+            "type": "multi_oscillator",
+            "frequency": 65.41,
+            "oscillators": [
+              {
+                "waveform": "sawtooth",
+                "volume": 0.7,
+                "detune": -30.0
+              },
+              {
+                "waveform": "sawtooth",
+                "volume": 0.7,
+                "detune": 30.0
+              },
+              {
+                "waveform": "square",
+                "volume": 0.3,
+                "detune": -12.0
+              }
+            ]
+          },
+          "envelope": {
+            "attack": 0.015,
+            "decay": 0.2,
+            "sustain": 0.75,
+            "release": 0.25
+          },
+          "volume": 0.45,
+          "pan": 0.0,
+          "filter": {
+            "type": "lowpass",
+            "cutoff": 2200.0,
+            "resonance": 0.55
           },
           "lfo": {
             "config": {
               "waveform": "sine",
-              "rate": 0.5,
+              "rate": 3.2,
               "depth": 0.7
             },
             "target": {
               "target": "filter_cutoff",
-              "amount": 800.0
+              "amount": 1400.0
             }
-          },
-          "volume": 0.7,
-          "pan": 0.0
+          }
         },
         {
           "synthesis": {
@@ -78,13 +135,45 @@
             "frequency": 65.41
           },
           "envelope": {
-            "attack": 0.01,
-            "decay": 0.1,
-            "sustain": 0.9,
-            "release": 0.15
+            "attack": 0.005,
+            "decay": 0.08,
+            "sustain": 0.95,
+            "release": 0.12
           },
-          "volume": 0.4,
+          "volume": 0.5,
           "pan": 0.0
+        }
+      ],
+      "effects": [
+        {
+          "type": "phaser",
+          "wet": 0.35,
+          "rate": 0.4,
+          "depth": 0.75,
+          "feedback": 0.5,
+          "stages": 6
+        },
+        {
+          "type": "chorus",
+          "wet": 0.25,
+          "rate": 0.6,
+          "depth": 0.4,
+          "mix": 0.3
+        },
+        {
+          "type": "waveshaper",
+          "drive": 3.2,
+          "curve": "tanh",
+          "wet": 1.0
+        },
+        {
+          "type": "compressor",
+          "ratio": 4.0,
+          "makeup_gain": 3.5,
+          "threshold_db": -12.0,
+          "attack_ms": 0.003,
+          "release_ms": 0.08,
+          "makeup_db": 0
         }
       ]
     }
