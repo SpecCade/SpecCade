@@ -6,7 +6,14 @@ Give this file to an agent to generate a **single phase runpack** under:
 
 This is designed for **context efficiency**: the agent should read only a small, bounded set of files and produce a fully self-contained phase runpack that can later be executed (possibly by another agent) without relying on chat history.
 
-Assume the primary orchestrator is **Claude Code** (able to spawn subtasks/subagents), but the generated phase runpack must still be runnable sequentially if subagents are unavailable.
+Assume the primary orchestrator is **Claude Code** (able to spawn subtasks/subagents).
+
+This runpack is intended for "coordinator-only" orchestration:
+- The main orchestrator coordinates and writes artifacts under the phase folder.
+- Code edits may happen only inside the `20_implement` and `40_quality` subtasks.
+- Commands/tests may happen only inside the `30_validate` subtask.
+
+If subtasks/subagents are unavailable, the orchestrator should STOP and ask the user to rerun in an environment that supports tasks (do not silently fall back to the orchestrator doing the work).
 
 ---
 
@@ -35,6 +42,9 @@ Create the directory:
 `runpacks/starlark-migration/phases/phase-<PHASE_ID>-<slug>/`
 
 The `<slug>` MUST exactly match the `slug` for `PHASE_ID` in `PHASES.yaml` (do not invent/rename it).
+
+You MUST NOT edit repo code or run commands while generating the phase runpack.
+Only create/update files under `runpacks/starlark-migration/phases/phase-<PHASE_ID>-<slug>/**`.
 
 And write these files (exact names):
 
@@ -77,6 +87,7 @@ No other files are required for generation (keep it lean), but you may add:
 - `ORCHESTRATOR.md` MUST include:
   - a short "Recommended dispatch plan" (which prompts can run in parallel vs must be exclusive)
   - a strict "Subagent protocol" (what each subagent may do, and what artifacts it must write)
+  - a "Coordinator-only rule" (the main orchestrator must not edit code or run commands)
 
 ---
 
@@ -90,6 +101,11 @@ No other files are required for generation (keep it lean), but you may add:
   4) run validation prompt
   5) run quality prompt
   6) finalize phase summary + mark complete
+- A clear instruction: each step above MUST run as a subtask/subagent (do not perform the role in the main orchestrator thread).
+- An explicit "Coordinator-only rule" section:
+  - main orchestrator may only write under this phase folder
+  - main orchestrator must not apply patches outside this phase folder
+  - main orchestrator must not run build/test commands
 - Explicit "stop conditions" (when to ask for help vs proceed with assumptions).
 - A "Recommended dispatch plan" section:
   - Research/plan may be parallel read-only (if tooling supports)
@@ -110,6 +126,7 @@ No other files are required for generation (keep it lean), but you may add:
 
 ### prompts/00_research.md
 - Role: strictly read/understand; no code edits.
+- Must include an explicit permission boundary: do not apply patches; do not run commands.
 - Must output:
   - `research.md` (notes)
   - `questions.md` (only if blocking)
@@ -117,6 +134,7 @@ No other files are required for generation (keep it lean), but you may add:
 
 ### prompts/10_plan.md
 - Role: produce an implementable plan, file list, APIs.
+- Must include an explicit permission boundary: do not apply patches; do not run commands.
 - Must output:
   - `plan.md`
   - `interfaces.md` (new structs/commands)
@@ -124,18 +142,21 @@ No other files are required for generation (keep it lean), but you may add:
 
 ### prompts/20_implement.md
 - Role: implement only the planned work.
+- Must include an explicit permission boundary: code edits allowed; do not run build/test commands (validation happens in `30_validate`).
 - Must output:
   - `implementation_log.md`
   - `diff_summary.md`
 
 ### prompts/30_validate.md
 - Role: run validation commands, capture outputs, triage failures.
+- Must include an explicit permission boundary: commands allowed; do not apply patches.
 - Must output:
   - `validation.md`
   - `failures.md` (if needed)
 
 ### prompts/40_quality.md
 - Role: refactor for maintainability, reduce complexity, improve prompt efficiency.
+- Must include an explicit permission boundary: code edits allowed; do not run build/test commands.
 - Must output:
   - `quality.md`
   - `followups.md` (optional)

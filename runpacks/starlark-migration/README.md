@@ -28,6 +28,8 @@ but you can split work into role-focused subtasks per phase. Each generated phas
 - `prompts/30_validate.md` (runs commands/tests)
 - `prompts/40_quality.md` (refactor + polish)
 
+Intended workflow: the main orchestrator coordinates and dispatches these prompts as subtasks; it should not write code itself.
+
 ## Output location
 
 Generated per-phase runpacks and artifacts go under:

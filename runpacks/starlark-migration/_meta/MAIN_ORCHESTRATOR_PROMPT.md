@@ -23,6 +23,13 @@ Goal: deliver all phases in `runpacks/starlark-migration/PHASES.yaml` end-to-end
 5) **Do not refactor "for fun":**
    - Only refactor when it reduces complexity or prevents bugs in the new pipeline.
 
+6) **Coordinator-only (MANDATORY in Claude Code):**
+   - The main orchestrator MUST NOT edit code or run build/test commands.
+   - The main orchestrator may only write under `runpacks/starlark-migration/phases/**` (runpack generation + status/artifacts).
+   - Code edits may happen only in the `20_implement` and `40_quality` subtasks.
+   - Commands/tests may happen only in the `30_validate` subtask.
+   - If you catch yourself writing code in this thread, STOP and spawn the appropriate subtask.
+
 ---
 
 ## How to run (high-level algorithm)
@@ -51,13 +58,15 @@ Do NOT scan the whole repo initially.
 
 For phase `PHASE_ID`:
 
-1) **Generate the phase runpack**
-   - Use `runpacks/starlark-migration/_meta/PHASE_RUNPACK_GENERATOR_PROMPT.md`
-   - Create `runpacks/starlark-migration/phases/phase-<ID>-<slug>/...` with all required files.
+1) **Generate the phase runpack (as a subtask)**
+   - Spawn a subagent/task whose only job is generating the phase runpack.
+   - Give it: `runpacks/starlark-migration/_meta/PHASE_RUNPACK_GENERATOR_PROMPT.md` and the `PHASE_ID`.
+   - It must create `runpacks/starlark-migration/phases/phase-<ID>-<slug>/...` with all required files.
 
-2) **Execute the phase runpack in strict stage order**
+2) **Execute the phase runpack in strict stage order (as subtasks)**
    - Follow `runpacks/starlark-migration/phases/phase-<...>/ORCHESTRATOR.md`.
-   - Use sub-agents/subtasks if available (preferred); otherwise execute sequentially yourself.
+   - Spawn a subagent/task for each role prompt (`00_research`, `10_plan`, `20_implement`, `30_validate`, `40_quality`).
+   - Do NOT perform any of those roles yourself.
 
 3) **Record everything needed to resume**
    - Ensure the required artifacts exist (research/plan/implementation/validation/quality outputs).
@@ -70,6 +79,18 @@ For phase `PHASE_ID`:
 ## Claude Code orchestration (default)
 
 Assume you are running in **Claude Code** as the primary orchestrator and can spawn subtasks/subagents.
+
+If you cannot spawn subtasks/subagents in your current environment, STOP and ask the user to rerun this runpack in an environment that supports tasks. Do not "just do it yourself".
+
+### Task naming (recommended)
+
+Create tasks with explicit names so the boundary is obvious:
+- `phase-<ID>-generate-runpack`
+- `phase-<ID>-research`
+- `phase-<ID>-plan`
+- `phase-<ID>-implement`
+- `phase-<ID>-validate`
+- `phase-<ID>-quality`
 
 ### Dispatch strategy (robust + efficient)
 
