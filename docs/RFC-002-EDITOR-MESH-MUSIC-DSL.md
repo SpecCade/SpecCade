@@ -23,9 +23,9 @@ The proposed solution is a unified editor application with real-time preview, St
 
 ## Part 1: Music DSL Gap Analysis
 
-### Current State: Pattern IR (Compose Layer) ✓
+### Current State: Pattern IR (Compose Layer)
 
-**CORRECTION**: SpecCade already has a sophisticated composition layer via `music.tracker_song_compose_v1` (see RFC-0003, RFC-0004):
+SpecCade has a sophisticated composition layer via `music.tracker_song_compose_v1`:
 
 ```json
 {
@@ -46,24 +46,24 @@ The proposed solution is a unified editor application with real-time preview, St
 }
 ```
 
-**Existing Capabilities** (already implemented):
+**Existing Capabilities**:
 
 | Concept | Strudel | SpecCade Pattern IR |
 |---------|---------|---------------------|
-| Pattern mini-notation | `"bd sd hh hh"` | `{"op": "pattern", "pattern": "x...x..."}` ✓ |
-| Euclidean rhythms | `"bd(3,8)"` | `{"op": "euclid", "pulses": 3, "steps": 8}` ✓ |
-| Stacking | `.stack()`, `[a, b]` | `{"op": "stack", "parts": [...]}` ✓ |
-| Probability | `"bd?0.5"` | `{"op": "prob", "p_permille": 500}` ✓ |
-| Transforms | `.fast(2)` | `{"op": "repeat"}`, `{"op": "shift"}` ✓ |
-| Sequence cycling | N/A | `{"op": "emit_seq", "note_seq": {...}}` ✓ |
-| Named channels | N/A | RFC-0004: `channel_ids` ✓ |
-| Harmonic authoring | N/A | RFC-0004: `harmony` + `pitch_seq` ✓ |
-| Weighted choice | N/A | `{"op": "choose", "choices": [...]}` ✓ |
-| Reusable defs | N/A | `{"op": "ref", "name": "four_on_floor"}` ✓ |
+| Pattern mini-notation | `"bd sd hh hh"` | `{"op": "pattern", "pattern": "x...x..."}` |
+| Euclidean rhythms | `"bd(3,8)"` | `{"op": "euclid", "pulses": 3, "steps": 8}` |
+| Stacking | `.stack()`, `[a, b]` | `{"op": "stack", "parts": [...]}` |
+| Probability | `"bd?0.5"` | `{"op": "prob", "p_permille": 500}` |
+| Transforms | `.fast(2)` | `{"op": "repeat"}`, `{"op": "shift"}` |
+| Sequence cycling | N/A | `{"op": "emit_seq", "note_seq": {...}}` |
+| Named channels | N/A | `channel_ids` |
+| Harmonic authoring | N/A | `harmony` + `pitch_seq` |
+| Weighted choice | N/A | `{"op": "choose", "choices": [...]}` |
+| Reusable defs | N/A | `{"op": "ref", "name": "four_on_floor"}` |
 
-### Actual Gap: Starlark Bindings for Compose IR
+### Gap: Starlark Bindings for Compose IR
 
-The gap is that **Starlark stdlib doesn't yet expose the full Compose IR**. The Starlark `music/` module currently wraps only the low-level tracker API:
+The Starlark `music/` module currently wraps only the low-level tracker API:
 
 ```python
 # Current Starlark (low-level tracker API only)
@@ -78,7 +78,7 @@ stack([kick_layer, snare_layer])     # NOT YET IN STARLARK
 
 | Concept | Strudel | SpecCade Status |
 |---------|---------|-----------------|
-| **Starlark bindings** | N/A | Pattern IR exists but not exposed to Starlark ❌ |
+| Starlark bindings | N/A | Pattern IR exists but not exposed to Starlark |
 | Live-coding REPL | Real-time eval | Not a goal (deterministic output) |
 | Continuous time | Fractional beats | Row-based (discrete) |
 | Pattern algebra | `+`, `*`, `|` operators | JSON operators only |
