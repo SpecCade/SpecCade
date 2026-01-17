@@ -1,10 +1,11 @@
 # speccade (Rust)
 
-Deterministic asset pipeline: takes a `Spec` (JSON or Starlark) and produces artifacts (WAV/PNG/XM/IT/…) plus a report.
+Deterministic asset pipeline: takes a `Spec` (JSON or Starlark) and produces artifacts (WAV/PNG/XM/IT/GLB/...) plus a report.
 
 ## Start Here (Canonical)
 
 - Repo overview + how to run: `README.md`
+- Docs map (what to read first): `docs/README.md`
 - Architecture + determinism model: `ARCHITECTURE.md`
 - Determinism expectations by backend: `PARITY_MATRIX.md`
 
@@ -20,7 +21,7 @@ Deterministic asset pipeline: takes a `Spec` (JSON or Starlark) and produces art
 - `golden/` — golden outputs used by tests
 - `golden/starlark/` — golden Starlark specs for integration tests
 - `packs/` — example packs/inputs
-- `docs/` — documentation (starlark-authoring.md, stdlib-reference.md, budgets.md)
+- `docs/` — documentation (`docs/README.md`, starlark authoring, stdlib reference, budgets, spec reference)
 
 ## Quick Commands
 
@@ -48,7 +49,7 @@ Deterministic asset pipeline: takes a `Spec` (JSON or Starlark) and produces art
 
 SpecCade supports authoring specs in Starlark (.star files) which compile to canonical JSON IR:
 
-**Pipeline:** `.star file → compiler → JSON IR → validation → backend`
+**Pipeline:** `.star file -> compiler -> JSON IR -> validation -> backend`
 
 **Stdlib modules:**
 - `core` - spec(), output() scaffolding
@@ -70,4 +71,3 @@ SpecCade supports authoring specs in Starlark (.star files) which compile to can
 - `docs/starlark-authoring.md` - authoring guide
 - `docs/stdlib-reference.md` - stdlib function reference
 - `docs/budgets.md` - budget documentation
-

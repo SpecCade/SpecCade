@@ -3,7 +3,7 @@
 Deterministic asset pipeline for procedural game asset generation.
 
 > This file is a high-level map of crates + the determinism model.
-> For usage and examples, start with `README.md` and `PARITY_MATRIX.md`.
+> For usage and examples, start with `README.md`, `docs/README.md`, and `PARITY_MATRIX.md`.
 
 ## TL;DR (mental model)
 
@@ -116,21 +116,15 @@ SpecCade supports authoring specs in Starlark (.star files) which compile to can
 
 ```
 .star file
-    ↓
-input.rs (load_spec) - dispatches by extension
-    ↓
-compiler/eval.rs - Starlark evaluation with timeout
-    ├── stdlib registered (audio, texture, mesh, music, core functions)
-    ├── 30s timeout enforced
-    └── no external loads allowed
-    ↓
-compiler/convert.rs - Starlark Value → serde_json::Value
-    ↓
-Spec::from_json() - parse canonical IR
-    ↓
-validation/budgets.rs - enforce resource limits
-    ↓
-Backend generation (same as JSON path)
+    -> crates/speccade-cli/src/input.rs (load_spec) - dispatches by extension
+    -> crates/speccade-cli/src/compiler/eval.rs - Starlark evaluation with timeout
+       ├── stdlib registered (audio, texture, mesh, music, core)
+       ├── timeout enforced (default: 30s)
+       └── load() disabled by default (enable_load=false)
+    -> crates/speccade-cli/src/compiler/convert.rs - starlark::Value -> serde_json::Value
+    -> speccade-spec::Spec::from_value() - parse canonical IR
+    -> crates/speccade-spec/src/validation/budgets.rs - enforce resource limits (optional)
+    -> Backend generation (same as JSON path)
 ```
 
 **Stdlib modules** (`compiler/stdlib/`):
@@ -193,7 +187,7 @@ speccade-tests
 ## Determinism Tiers
 
 - **Tier 1** (Rust-only): Audio, music, texture - byte-identical output guaranteed
-- **Tier 2** (Blender subprocess): Mesh, animation - hash-validated but platform-dependent
+- **Tier 2** (Blender subprocess): Mesh, animation - validated by metrics; output can vary by OS/Blender version
 
 ## Key invariants (read before changing behavior)
 

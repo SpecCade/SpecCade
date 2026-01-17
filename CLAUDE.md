@@ -7,6 +7,7 @@ SpecCade is a deterministic asset pipeline. It validates a `Spec` (JSON or Starl
 ## Start Here
 
 - `README.md` — usage and examples
+- `docs/README.md` — docs map / what to read first
 - `ARCHITECTURE.md` — crate map + determinism model
 - `PARITY_MATRIX.md` — what “deterministic” means per backend/tier
 
@@ -27,12 +28,12 @@ SpecCade is a deterministic asset pipeline. It validates a `Spec` (JSON or Starl
 
 **Stdlib modules:**
 - `crates/speccade-cli/src/compiler/stdlib/core.rs` - spec(), output() scaffolding
-- `crates/speccade-cli/src/compiler/stdlib/audio.rs` - Audio synthesis helpers
-- `crates/speccade-cli/src/compiler/stdlib/audio/synthesis.rs` - Synth-specific functions
-- `crates/speccade-cli/src/compiler/stdlib/music.rs` - Tracker composition helpers
+- `crates/speccade-cli/src/compiler/stdlib/audio/mod.rs` - Audio synthesis helpers
+- `crates/speccade-cli/src/compiler/stdlib/audio/synthesis/mod.rs` - Synth-specific functions
+- `crates/speccade-cli/src/compiler/stdlib/music/mod.rs` - Tracker composition helpers
 - `crates/speccade-cli/src/compiler/stdlib/music/instruments.rs` - Instrument definitions
 - `crates/speccade-cli/src/compiler/stdlib/music/patterns.rs` - Pattern composition
-- `crates/speccade-cli/src/compiler/stdlib/texture.rs` - Texture node graph helpers
+- `crates/speccade-cli/src/compiler/stdlib/texture/mod.rs` - Texture node graph helpers
 - `crates/speccade-cli/src/compiler/stdlib/mesh.rs` - Mesh primitive helpers
 
 **Budget enforcement:**
@@ -80,4 +81,3 @@ SpecCade is a deterministic asset pipeline. It validates a `Spec` (JSON or Starl
 - `cargo run -p speccade-cli -- eval --spec file.star --pretty` - compile Starlark to JSON IR
 - `cargo run -p speccade-cli -- validate --spec file.star --budget zx-8bit` - validate with budget
 - `cargo run -p speccade-cli -- generate --spec file.star --out-root ./out --budget strict` - generate with budget
-
