@@ -22,6 +22,18 @@ This is a curated backlog of *future work*. For what’s implemented today, see 
 - Add an “audio audit” report (peak/RMS/DC offset) to catch broken presets and regressions.
 - Improve loop-point generation + click-free envelope defaults for tracker instrument baking; document best practices.
 
+## LLM / Prompt-to-Spec Workflows
+
+- See `docs/LLM_PROMPT_TO_ASSET_ROADMAP.md` for a concrete execution path, example JSON schemas, and remaining friction points.
+- Add a machine-readable stdlib/API dump (e.g. `speccade stdlib dump --format json`) so tools/LLMs can ground against the real function set, enums, and parameter ranges.
+- Add `--json` output for `eval/validate/generate` errors and warnings (stable codes + file/line/col + suggested fixes) to enable reliable auto-repair loops.
+- Generalize `speccade template` beyond textures (audio/music/mesh) and add “preset + overrides” patterns to reduce spec boilerplate for generators.
+- Add higher-level Starlark constructors (e.g. `audio_spec()`, `texture_spec()`, `mesh_spec()`) similar to `music_spec()` so LLMs emit fewer raw recipe dicts.
+- Implement `preview` for fast iteration (waveform/spectrogram thumbnails, texture previews, GLB viewer hooks) and/or emit preview artifacts as part of generation.
+- Add an `analyze` command that outputs quality metrics suitable for iteration (audio peak/RMS/DC/clipping; texture tiling/artifacts/contrast; music structural checks; mesh bounds/topology budgets).
+- Add a content-addressed cache keyed by canonical spec/recipe hash + toolchain/backend versions to make iterative generate loops cheap.
+- Add a Nethercore-oriented budget profile (e.g. enforce 22050 Hz sample rate without implying “8-bit” constraints) and document recommended profiles per target runtime.
+
 ## Tooling / QA
 
 - Grow the Tier-1 golden corpus (`golden/`) for audio/music/textures and run it in CI.
