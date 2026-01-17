@@ -3,21 +3,41 @@
 use crate::error::{ErrorCode, ValidationError, ValidationResult};
 use crate::output::{OutputFormat, OutputKind};
 use crate::spec::Spec;
+use crate::validation::BudgetProfile;
 
-use super::recipe_outputs_audio::validate_audio_outputs;
-use super::recipe_outputs_music::{validate_music_compose_outputs, validate_music_outputs};
-use super::recipe_outputs_texture::validate_texture_procedural_outputs;
+use super::recipe_outputs_audio::validate_audio_outputs_with_budget;
+use super::recipe_outputs_music::{
+    validate_music_compose_outputs_with_budget, validate_music_outputs_with_budget,
+};
+use super::recipe_outputs_texture::validate_texture_procedural_outputs_with_budget;
 
+/// Validates outputs for a recipe using the default budget profile.
 pub(super) fn validate_outputs_for_recipe(
     spec: &Spec,
     recipe: &crate::recipe::Recipe,
     result: &mut ValidationResult,
 ) {
+    validate_outputs_for_recipe_with_budget(spec, recipe, &BudgetProfile::default(), result)
+}
+
+/// Validates outputs for a recipe with a specific budget profile.
+pub(super) fn validate_outputs_for_recipe_with_budget(
+    spec: &Spec,
+    recipe: &crate::recipe::Recipe,
+    budget: &BudgetProfile,
+    result: &mut ValidationResult,
+) {
     match recipe.kind.as_str() {
-        "audio_v1" => validate_audio_outputs(spec, recipe, result),
-        "music.tracker_song_v1" => validate_music_outputs(spec, recipe, result),
-        "music.tracker_song_compose_v1" => validate_music_compose_outputs(spec, recipe, result),
-        "texture.procedural_v1" => validate_texture_procedural_outputs(spec, recipe, result),
+        "audio_v1" => validate_audio_outputs_with_budget(spec, recipe, budget, result),
+        "music.tracker_song_v1" => {
+            validate_music_outputs_with_budget(spec, recipe, budget, result)
+        }
+        "music.tracker_song_compose_v1" => {
+            validate_music_compose_outputs_with_budget(spec, recipe, budget, result)
+        }
+        "texture.procedural_v1" => {
+            validate_texture_procedural_outputs_with_budget(spec, recipe, budget, result)
+        }
         "static_mesh.blender_primitives_v1" => {
             validate_single_primary_output_format(spec, OutputFormat::Glb, result)
         }

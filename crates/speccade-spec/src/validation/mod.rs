@@ -1,5 +1,6 @@
 //! Spec validation logic.
 
+pub mod budgets;
 pub mod common;
 mod path_safety;
 mod recipe_outputs;
@@ -25,12 +26,18 @@ pub use common::{
     validate_unit_interval, CommonValidationError,
 };
 
+// Re-export budget types for convenience
+pub use budgets::{
+    AudioBudget, BudgetCategory, BudgetError, BudgetProfile, GeneralBudget, MeshBudget,
+    MusicBudget, TextureBudget,
+};
+
 // Re-export path safety functions
 pub use path_safety::is_safe_output_path;
 
 // Internal imports
 use path_safety::validate_output_path;
-use recipe_outputs::validate_outputs_for_recipe;
+use recipe_outputs::{validate_outputs_for_recipe, validate_outputs_for_recipe_with_budget};
 
 /// Regex pattern for valid asset_id.
 /// Format: starts with lowercase letter, followed by 2-63 lowercase letters, digits, underscores, or hyphens.
@@ -245,8 +252,25 @@ fn check_warnings(spec: &Spec, result: &mut ValidationResult) {
 /// Validates that a spec is suitable for the `generate` command.
 ///
 /// This performs standard validation plus checks that a recipe is present.
+/// Uses the default budget profile.
 pub fn validate_for_generate(spec: &Spec) -> ValidationResult {
-    let mut result = validate_spec(spec);
+    validate_for_generate_with_budget(spec, &BudgetProfile::default())
+}
+
+/// Validates a spec for generation with a specific budget profile.
+///
+/// # Arguments
+/// * `spec` - The spec to validate
+/// * `budget` - The budget profile to validate against
+///
+/// # Returns
+/// * `ValidationResult` with `ok=true` if validation passed, with any warnings.
+/// * `ValidationResult` with `ok=false` and errors if validation failed.
+pub fn validate_for_generate_with_budget(
+    spec: &Spec,
+    budget: &BudgetProfile,
+) -> ValidationResult {
+    let mut result = validate_spec_with_budget(spec, budget);
 
     // E010: Recipe required for generate
     if spec.recipe.is_none() {
@@ -283,6 +307,36 @@ pub fn validate_for_generate(spec: &Spec) -> ValidationResult {
             ));
         }
     }
+
+    result
+}
+
+/// Validates a spec with a specific budget profile.
+///
+/// # Arguments
+/// * `spec` - The spec to validate
+/// * `budget` - The budget profile to validate against
+///
+/// # Returns
+/// * `ValidationResult` with `ok=true` if validation passed, with any warnings.
+/// * `ValidationResult` with `ok=false` and errors if validation failed.
+pub fn validate_spec_with_budget(spec: &Spec, budget: &BudgetProfile) -> ValidationResult {
+    let mut result = ValidationResult::default();
+
+    // Contract validation
+    validate_spec_version(spec, &mut result);
+    validate_asset_id(spec, &mut result);
+    validate_seed(spec, &mut result);
+    validate_outputs(spec, &mut result);
+
+    // Recipe validation (if present)
+    if let Some(ref recipe) = spec.recipe {
+        validate_recipe_compatibility(spec, recipe, &mut result);
+        validate_outputs_for_recipe_with_budget(spec, recipe, budget, &mut result);
+    }
+
+    // Warnings
+    check_warnings(spec, &mut result);
 
     result
 }

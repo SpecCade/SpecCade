@@ -508,4 +508,340 @@ mod tests {
         assert_eq!(format_jcs_string("quote\"here"), "\"quote\\\"here\"");
         assert_eq!(format_jcs_string("back\\slash"), "\"back\\\\slash\"");
     }
+
+    // ========================================================================
+    // Canonicalization Idempotence Tests
+    // ========================================================================
+
+    #[test]
+    fn test_canonicalization_idempotent_simple() {
+        let value = serde_json::json!({"b": 1, "a": 2});
+        let canon1 = canonicalize_json(&value).unwrap();
+        let reparsed: serde_json::Value = serde_json::from_str(&canon1).unwrap();
+        let canon2 = canonicalize_json(&reparsed).unwrap();
+
+        assert_eq!(canon1, canon2, "canonicalization should be idempotent");
+    }
+
+    #[test]
+    fn test_canonicalization_idempotent_nested() {
+        let value = serde_json::json!({
+            "z": {"b": 1, "a": 2},
+            "y": [3, 2, 1],
+            "x": {"nested": {"deep": true}}
+        });
+
+        let canon1 = canonicalize_json(&value).unwrap();
+        let reparsed: serde_json::Value = serde_json::from_str(&canon1).unwrap();
+        let canon2 = canonicalize_json(&reparsed).unwrap();
+
+        assert_eq!(canon1, canon2, "nested canonicalization should be idempotent");
+    }
+
+    #[test]
+    fn test_canonicalization_idempotent_with_arrays() {
+        let value = serde_json::json!({
+            "items": [
+                {"id": "b", "value": 2},
+                {"id": "a", "value": 1}
+            ],
+            "nested_arrays": [[1, 2], [3, 4]]
+        });
+
+        let canon1 = canonicalize_json(&value).unwrap();
+        let reparsed: serde_json::Value = serde_json::from_str(&canon1).unwrap();
+        let canon2 = canonicalize_json(&reparsed).unwrap();
+
+        assert_eq!(canon1, canon2, "array canonicalization should be idempotent");
+    }
+
+    #[test]
+    fn test_canonicalization_idempotent_empty_structures() {
+        let value = serde_json::json!({
+            "empty_object": {},
+            "empty_array": [],
+            "nested_empty": {"a": {}, "b": []}
+        });
+
+        let canon1 = canonicalize_json(&value).unwrap();
+        let reparsed: serde_json::Value = serde_json::from_str(&canon1).unwrap();
+        let canon2 = canonicalize_json(&reparsed).unwrap();
+
+        assert_eq!(canon1, canon2, "empty structure canonicalization should be idempotent");
+    }
+
+    // ========================================================================
+    // Float Edge Case Tests
+    // ========================================================================
+
+    #[test]
+    fn test_canonicalization_float_zero() {
+        let value = serde_json::json!({"x": 0.0});
+        let canon = canonicalize_json(&value).unwrap();
+        assert_eq!(canon, r#"{"x":0}"#);
+
+        // Verify idempotence
+        let reparsed: serde_json::Value = serde_json::from_str(&canon).unwrap();
+        let canon2 = canonicalize_json(&reparsed).unwrap();
+        assert_eq!(canon, canon2);
+    }
+
+    #[test]
+    fn test_canonicalization_float_integer_like() {
+        let test_cases = vec![
+            (1.0, "1"),
+            (42.0, "42"),
+            (-1.0, "-1"),
+            (1000000.0, "1000000"),
+        ];
+
+        for (input, expected) in test_cases {
+            let value = serde_json::json!({"x": input});
+            let canon = canonicalize_json(&value).unwrap();
+            assert_eq!(canon, format!(r#"{{"x":{}}}"#, expected), "Failed for {}", input);
+
+            // Verify idempotence
+            let reparsed: serde_json::Value = serde_json::from_str(&canon).unwrap();
+            let canon2 = canonicalize_json(&reparsed).unwrap();
+            assert_eq!(canon, canon2);
+        }
+    }
+
+    #[test]
+    fn test_canonicalization_float_decimals() {
+        let value = serde_json::json!({"x": 0.5, "y": 0.125});
+        let canon = canonicalize_json(&value).unwrap();
+
+        // Verify it parses back correctly
+        let reparsed: serde_json::Value = serde_json::from_str(&canon).unwrap();
+        let x = reparsed["x"].as_f64().unwrap();
+        let y = reparsed["y"].as_f64().unwrap();
+
+        assert!((x - 0.5).abs() < f64::EPSILON);
+        assert!((y - 0.125).abs() < f64::EPSILON);
+
+        // Verify idempotence
+        let canon2 = canonicalize_json(&reparsed).unwrap();
+        assert_eq!(canon, canon2);
+    }
+
+    #[test]
+    fn test_canonicalization_float_large_values() {
+        let value = serde_json::json!({"x": 1e10, "y": 1e15});
+        let canon = canonicalize_json(&value).unwrap();
+
+        // Verify idempotence
+        let reparsed: serde_json::Value = serde_json::from_str(&canon).unwrap();
+        let canon2 = canonicalize_json(&reparsed).unwrap();
+        assert_eq!(canon, canon2);
+    }
+
+    #[test]
+    fn test_canonicalization_float_nan_infinity() {
+        // NaN and Infinity should fail to create serde_json::Number
+        // because serde_json doesn't allow NaN/Infinity
+        let n = serde_json::Number::from_f64(f64::NAN);
+        let inf = serde_json::Number::from_f64(f64::INFINITY);
+        let neg_inf = serde_json::Number::from_f64(f64::NEG_INFINITY);
+
+        // These become None because serde_json doesn't allow NaN/Infinity
+        assert!(n.is_none(), "NaN should not be representable");
+        assert!(inf.is_none(), "Infinity should not be representable");
+        assert!(neg_inf.is_none(), "Negative infinity should not be representable");
+    }
+
+    // ========================================================================
+    // String Edge Case Tests
+    // ========================================================================
+
+    #[test]
+    fn test_canonicalization_string_empty() {
+        let value = serde_json::json!({"x": ""});
+        let canon = canonicalize_json(&value).unwrap();
+        assert_eq!(canon, r#"{"x":""}"#);
+
+        // Verify idempotence
+        let reparsed: serde_json::Value = serde_json::from_str(&canon).unwrap();
+        let canon2 = canonicalize_json(&reparsed).unwrap();
+        assert_eq!(canon, canon2);
+    }
+
+    #[test]
+    fn test_canonicalization_string_escape_sequences() {
+        let value = serde_json::json!({
+            "newline": "a\nb",
+            "tab": "a\tb",
+            "quote": "a\"b",
+            "backslash": "a\\b"
+        });
+
+        let canon = canonicalize_json(&value).unwrap();
+
+        // Verify it contains proper escapes (keys are sorted)
+        assert!(canon.contains(r#""backslash":"a\\b""#));
+        assert!(canon.contains(r#""newline":"a\nb""#));
+        assert!(canon.contains(r#""quote":"a\"b""#));
+        assert!(canon.contains(r#""tab":"a\tb""#));
+
+        // Verify round-trip
+        let reparsed: serde_json::Value = serde_json::from_str(&canon).unwrap();
+        let canon2 = canonicalize_json(&reparsed).unwrap();
+        assert_eq!(canon, canon2);
+    }
+
+    #[test]
+    fn test_canonicalization_string_unicode() {
+        // Test with various unicode characters
+        let value = serde_json::json!({
+            "chinese": "\u{4e2d}\u{6587}",
+            "japanese": "\u{3042}\u{3044}\u{3046}"
+        });
+
+        let canon = canonicalize_json(&value).unwrap();
+
+        // Verify round-trip
+        let reparsed: serde_json::Value = serde_json::from_str(&canon).unwrap();
+        assert_eq!(reparsed["chinese"].as_str().unwrap(), "\u{4e2d}\u{6587}");
+
+        // Verify idempotence
+        let canon2 = canonicalize_json(&reparsed).unwrap();
+        assert_eq!(canon, canon2);
+    }
+
+    #[test]
+    fn test_canonicalization_string_control_characters() {
+        let value = serde_json::json!({"x": "\x00\x01\x1f"});
+        let canon = canonicalize_json(&value).unwrap();
+
+        // Should escape control characters as \uXXXX
+        assert!(canon.contains("\\u0000"), "should escape null character");
+        assert!(canon.contains("\\u0001"), "should escape SOH character");
+        assert!(canon.contains("\\u001f"), "should escape unit separator");
+
+        // Verify round-trip
+        let reparsed: serde_json::Value = serde_json::from_str(&canon).unwrap();
+        let canon2 = canonicalize_json(&reparsed).unwrap();
+        assert_eq!(canon, canon2);
+    }
+
+    // ========================================================================
+    // Object Key Ordering Tests
+    // ========================================================================
+
+    #[test]
+    fn test_canonicalization_key_ordering_simple() {
+        let json1: serde_json::Value = serde_json::from_str(r#"{"z": 1, "a": 2, "m": 3}"#).unwrap();
+        let json2: serde_json::Value = serde_json::from_str(r#"{"a": 2, "z": 1, "m": 3}"#).unwrap();
+        let json3: serde_json::Value = serde_json::from_str(r#"{"m": 3, "z": 1, "a": 2}"#).unwrap();
+
+        let canon1 = canonicalize_json(&json1).unwrap();
+        let canon2 = canonicalize_json(&json2).unwrap();
+        let canon3 = canonicalize_json(&json3).unwrap();
+
+        // All should produce the same canonical form
+        assert_eq!(canon1, canon2);
+        assert_eq!(canon2, canon3);
+        assert_eq!(canon1, r#"{"a":2,"m":3,"z":1}"#);
+    }
+
+    #[test]
+    fn test_canonicalization_key_ordering_nested() {
+        let json: serde_json::Value = serde_json::from_str(r#"{
+            "z": {"b": 1, "a": 2},
+            "a": {"d": 3, "c": 4}
+        }"#).unwrap();
+
+        let canon = canonicalize_json(&json).unwrap();
+
+        // Keys should be sorted at all levels
+        assert_eq!(canon, r#"{"a":{"c":4,"d":3},"z":{"a":2,"b":1}}"#);
+    }
+
+    // ========================================================================
+    // Array Preservation Tests
+    // ========================================================================
+
+    #[test]
+    fn test_canonicalization_preserves_array_order() {
+        let value = serde_json::json!({"items": [3, 1, 2]});
+        let canon = canonicalize_json(&value).unwrap();
+
+        // Array order should be preserved
+        assert_eq!(canon, r#"{"items":[3,1,2]}"#);
+    }
+
+    #[test]
+    fn test_canonicalization_preserves_object_array_order() {
+        let value = serde_json::json!({
+            "items": [
+                {"id": "third", "value": 3},
+                {"id": "first", "value": 1},
+                {"id": "second", "value": 2}
+            ]
+        });
+
+        let canon = canonicalize_json(&value).unwrap();
+        let reparsed: serde_json::Value = serde_json::from_str(&canon).unwrap();
+
+        // Array order preserved (object keys sorted within each object)
+        assert_eq!(reparsed["items"][0]["id"].as_str().unwrap(), "third");
+        assert_eq!(reparsed["items"][1]["id"].as_str().unwrap(), "first");
+        assert_eq!(reparsed["items"][2]["id"].as_str().unwrap(), "second");
+    }
+
+    // ========================================================================
+    // Deep Nesting Tests
+    // ========================================================================
+
+    #[test]
+    fn test_canonicalization_deep_nesting() {
+        // Test 5+ levels of nesting
+        let value = serde_json::json!({
+            "level1": {
+                "level2": {
+                    "level3": {
+                        "level4": {
+                            "level5": {
+                                "value": 42
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        let canon1 = canonicalize_json(&value).unwrap();
+        let reparsed: serde_json::Value = serde_json::from_str(&canon1).unwrap();
+        let canon2 = canonicalize_json(&reparsed).unwrap();
+
+        assert_eq!(canon1, canon2, "deep nesting canonicalization should be idempotent");
+
+        // Verify the value is accessible
+        assert_eq!(
+            reparsed["level1"]["level2"]["level3"]["level4"]["level5"]["value"].as_i64().unwrap(),
+            42
+        );
+    }
+
+    #[test]
+    fn test_canonicalization_mixed_nesting() {
+        // Mix of arrays and objects
+        let value = serde_json::json!({
+            "data": [
+                {
+                    "nested": [1, 2, {"inner": true}]
+                },
+                [
+                    {"key": "value"},
+                    [3, 4, 5]
+                ]
+            ]
+        });
+
+        let canon1 = canonicalize_json(&value).unwrap();
+        let reparsed: serde_json::Value = serde_json::from_str(&canon1).unwrap();
+        let canon2 = canonicalize_json(&reparsed).unwrap();
+
+        assert_eq!(canon1, canon2, "mixed nesting canonicalization should be idempotent");
+    }
 }

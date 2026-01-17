@@ -7,10 +7,8 @@ use clap::{Parser, Subcommand};
 use std::path::Path;
 use std::process::ExitCode;
 
-mod commands;
-mod dispatch;
-pub mod parity_data;
-pub mod parity_matrix;
+// Use modules from the library crate
+use speccade_cli::commands;
 
 /// SpecCade - Declarative Asset Generation System
 #[derive(Parser)]
@@ -24,20 +22,35 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
+    /// Evaluate a spec file and print canonical IR JSON to stdout
+    Eval {
+        /// Path to the spec file (JSON or Starlark)
+        #[arg(short, long)]
+        spec: String,
+
+        /// Pretty-print the output JSON
+        #[arg(short, long)]
+        pretty: bool,
+    },
+
     /// Validate a spec file without generating assets
     Validate {
-        /// Path to the spec JSON file
+        /// Path to the spec file (JSON or Starlark)
         #[arg(short, long)]
         spec: String,
 
         /// Also validate artifact references (paths, formats)
         #[arg(long)]
         artifacts: bool,
+
+        /// Budget profile to validate against (default, strict, zx-8bit)
+        #[arg(long, value_parser = ["default", "strict", "zx-8bit"])]
+        budget: Option<String>,
     },
 
     /// Generate assets from a spec file
     Generate {
-        /// Path to the spec JSON file
+        /// Path to the spec file (JSON or Starlark)
         #[arg(short, long)]
         spec: String,
 
@@ -48,6 +61,10 @@ enum Commands {
         /// Expand `variants[]` into separate generation runs under `{out_root}/variants/{variant_id}/`
         #[arg(long)]
         expand_variants: bool,
+
+        /// Budget profile to validate against (default, strict, zx-8bit)
+        #[arg(long, value_parser = ["default", "strict", "zx-8bit"])]
+        budget: Option<String>,
     },
 
     /// Generate all assets from a directory of spec files
@@ -85,7 +102,7 @@ enum Commands {
 
     /// Expand compose specs into canonical tracker params JSON
     Expand {
-        /// Path to the spec JSON file
+        /// Path to the spec file (JSON or Starlark)
         #[arg(short, long)]
         spec: String,
     },
@@ -111,7 +128,7 @@ enum Commands {
 
     /// Format a spec file to canonical style
     Fmt {
-        /// Path to the spec JSON file
+        /// Path to the spec file (JSON or Starlark)
         #[arg(short, long)]
         spec: String,
 
@@ -160,12 +177,18 @@ fn main() -> ExitCode {
     let cli = Cli::parse();
 
     let result = match cli.command {
-        Commands::Validate { spec, artifacts } => commands::validate::run(&spec, artifacts),
+        Commands::Eval { spec, pretty } => commands::eval::run(&spec, pretty),
+        Commands::Validate {
+            spec,
+            artifacts,
+            budget,
+        } => commands::validate::run(&spec, artifacts, budget.as_deref()),
         Commands::Generate {
             spec,
             out_root,
             expand_variants,
-        } => commands::generate::run(&spec, out_root.as_deref(), expand_variants),
+            budget,
+        } => commands::generate::run(&spec, out_root.as_deref(), expand_variants, budget.as_deref()),
         Commands::GenerateAll {
             spec_dir,
             out_root,
@@ -216,12 +239,42 @@ mod tests {
     use super::*;
 
     #[test]
+    fn test_cli_parses_eval() {
+        let cli = Cli::try_parse_from(["speccade", "eval", "--spec", "spec.star"]).unwrap();
+        match cli.command {
+            Commands::Eval { spec, pretty } => {
+                assert_eq!(spec, "spec.star");
+                assert!(!pretty);
+            }
+            _ => panic!("expected eval command"),
+        }
+    }
+
+    #[test]
+    fn test_cli_parses_eval_with_pretty() {
+        let cli =
+            Cli::try_parse_from(["speccade", "eval", "--spec", "spec.star", "--pretty"]).unwrap();
+        match cli.command {
+            Commands::Eval { spec, pretty } => {
+                assert_eq!(spec, "spec.star");
+                assert!(pretty);
+            }
+            _ => panic!("expected eval command"),
+        }
+    }
+
+    #[test]
     fn test_cli_parses_validate() {
         let cli = Cli::try_parse_from(["speccade", "validate", "--spec", "spec.json"]).unwrap();
         match cli.command {
-            Commands::Validate { spec, artifacts } => {
+            Commands::Validate {
+                spec,
+                artifacts,
+                budget,
+            } => {
                 assert_eq!(spec, "spec.json");
                 assert!(!artifacts);
+                assert!(budget.is_none());
             }
             _ => panic!("expected validate command"),
         }
@@ -233,9 +286,39 @@ mod tests {
             Cli::try_parse_from(["speccade", "validate", "--spec", "spec.json", "--artifacts"])
                 .unwrap();
         match cli.command {
-            Commands::Validate { spec, artifacts } => {
+            Commands::Validate {
+                spec,
+                artifacts,
+                budget,
+            } => {
                 assert_eq!(spec, "spec.json");
                 assert!(artifacts);
+                assert!(budget.is_none());
+            }
+            _ => panic!("expected validate command"),
+        }
+    }
+
+    #[test]
+    fn test_cli_parses_validate_with_budget() {
+        let cli = Cli::try_parse_from([
+            "speccade",
+            "validate",
+            "--spec",
+            "spec.json",
+            "--budget",
+            "strict",
+        ])
+        .unwrap();
+        match cli.command {
+            Commands::Validate {
+                spec,
+                artifacts,
+                budget,
+            } => {
+                assert_eq!(spec, "spec.json");
+                assert!(!artifacts);
+                assert_eq!(budget.as_deref(), Some("strict"));
             }
             _ => panic!("expected validate command"),
         }
@@ -257,10 +340,39 @@ mod tests {
                 spec,
                 out_root,
                 expand_variants,
+                budget,
             } => {
                 assert_eq!(spec, "spec.json");
                 assert_eq!(out_root.as_deref(), Some("out"));
                 assert!(!expand_variants);
+                assert!(budget.is_none());
+            }
+            _ => panic!("expected generate command"),
+        }
+    }
+
+    #[test]
+    fn test_cli_parses_generate_with_budget() {
+        let cli = Cli::try_parse_from([
+            "speccade",
+            "generate",
+            "--spec",
+            "spec.json",
+            "--budget",
+            "zx-8bit",
+        ])
+        .unwrap();
+        match cli.command {
+            Commands::Generate {
+                spec,
+                out_root,
+                expand_variants,
+                budget,
+            } => {
+                assert_eq!(spec, "spec.json");
+                assert!(out_root.is_none());
+                assert!(!expand_variants);
+                assert_eq!(budget.as_deref(), Some("zx-8bit"));
             }
             _ => panic!("expected generate command"),
         }

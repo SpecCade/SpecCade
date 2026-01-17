@@ -5,7 +5,7 @@ use crate::output::OutputFormat;
 use crate::recipe::audio::{Effect, ModulationTarget, Synthesis, Waveform};
 use crate::spec::Spec;
 use crate::validation::{
-    validate_non_negative, validate_positive, validate_range, validate_unit_interval,
+    validate_non_negative, validate_positive, validate_range, validate_unit_interval, BudgetProfile,
 };
 
 use super::recipe_outputs::validate_single_primary_output_format;
@@ -102,13 +102,26 @@ fn synthesis_supports_pulse_width(synthesis: &Synthesis) -> bool {
     }
 }
 
+/// Validates audio outputs with the default budget profile.
+#[allow(dead_code)]
 pub(super) fn validate_audio_outputs(
     spec: &Spec,
     recipe: &crate::recipe::Recipe,
     result: &mut ValidationResult,
 ) {
-    const MAX_AUDIO_DURATION_SECONDS: f64 = 30.0;
-    const MAX_AUDIO_LAYERS: usize = 32;
+    validate_audio_outputs_with_budget(spec, recipe, &BudgetProfile::default(), result)
+}
+
+/// Validates audio outputs with a specific budget profile.
+pub(super) fn validate_audio_outputs_with_budget(
+    spec: &Spec,
+    recipe: &crate::recipe::Recipe,
+    budget: &BudgetProfile,
+    result: &mut ValidationResult,
+) {
+    let max_audio_duration_seconds = budget.audio.max_duration_seconds;
+    let max_audio_layers = budget.audio.max_layers;
+    let allowed_sample_rates = &budget.audio.allowed_sample_rates;
 
     let params = match recipe.as_audio() {
         Ok(params) => params,
@@ -128,35 +141,36 @@ pub(super) fn validate_audio_outputs(
             e.to_string(),
             "recipe.params.duration_seconds",
         ));
-    } else if params.duration_seconds > MAX_AUDIO_DURATION_SECONDS {
+    } else if params.duration_seconds > max_audio_duration_seconds {
         result.add_error(ValidationError::with_path(
-            ErrorCode::InvalidRecipeParams,
+            ErrorCode::BudgetExceeded,
             format!(
-                "duration_seconds must be <= {}, got {}",
-                MAX_AUDIO_DURATION_SECONDS, params.duration_seconds
+                "duration_seconds {} exceeds budget limit of {} (profile: {})",
+                params.duration_seconds, max_audio_duration_seconds, budget.name
             ),
             "recipe.params.duration_seconds",
         ));
     }
 
-    match params.sample_rate {
-        22050 | 44100 | 48000 => {}
-        other => {
-            result.add_error(ValidationError::with_path(
-                ErrorCode::InvalidRecipeParams,
-                format!("sample_rate must be 22050, 44100, or 48000, got {}", other),
-                "recipe.params.sample_rate",
-            ));
-        }
+    if !allowed_sample_rates.contains(&params.sample_rate) {
+        result.add_error(ValidationError::with_path(
+            ErrorCode::BudgetExceeded,
+            format!(
+                "sample_rate {} is not in allowed rates {:?} (profile: {})",
+                params.sample_rate, allowed_sample_rates, budget.name
+            ),
+            "recipe.params.sample_rate",
+        ));
     }
 
-    if params.layers.len() > MAX_AUDIO_LAYERS {
+    if params.layers.len() > max_audio_layers {
         result.add_error(ValidationError::with_path(
-            ErrorCode::InvalidRecipeParams,
+            ErrorCode::BudgetExceeded,
             format!(
-                "layers must have at most {} entries, got {}",
-                MAX_AUDIO_LAYERS,
-                params.layers.len()
+                "layers count {} exceeds budget limit of {} (profile: {})",
+                params.layers.len(),
+                max_audio_layers,
+                budget.name
             ),
             "recipe.params.layers",
         ));
@@ -172,12 +186,12 @@ pub(super) fn validate_audio_outputs(
         })
         .sum();
 
-    if expanded_layer_count > MAX_AUDIO_LAYERS {
+    if expanded_layer_count > max_audio_layers {
         result.add_error(ValidationError::with_path(
-            ErrorCode::InvalidRecipeParams,
+            ErrorCode::BudgetExceeded,
             format!(
-                "total expanded layers (including supersaw_unison voices) must be at most {}, got {}",
-                MAX_AUDIO_LAYERS, expanded_layer_count
+                "total expanded layers (including supersaw_unison voices) {} exceeds budget limit of {} (profile: {})",
+                expanded_layer_count, max_audio_layers, budget.name
             ),
             "recipe.params.layers",
         ));

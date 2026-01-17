@@ -3,12 +3,25 @@
 use crate::error::{ErrorCode, ValidationError, ValidationResult};
 use crate::output::{OutputFormat, OutputKind};
 use crate::spec::Spec;
+use crate::validation::BudgetProfile;
 
 use super::recipe_outputs::validate_primary_output_present;
 
+/// Validates music outputs with the default budget profile.
+#[allow(dead_code)]
 pub(super) fn validate_music_outputs(
     spec: &Spec,
     recipe: &crate::recipe::Recipe,
+    result: &mut ValidationResult,
+) {
+    validate_music_outputs_with_budget(spec, recipe, &BudgetProfile::default(), result)
+}
+
+/// Validates music outputs with a specific budget profile.
+pub(super) fn validate_music_outputs_with_budget(
+    spec: &Spec,
+    recipe: &crate::recipe::Recipe,
+    budget: &BudgetProfile,
     result: &mut ValidationResult,
 ) {
     let params = match recipe.as_music_tracker_song() {
@@ -23,18 +36,31 @@ pub(super) fn validate_music_outputs(
         }
     };
 
-    validate_music_outputs_common(
+    validate_music_outputs_common_with_budget(
         spec,
         &recipe.kind,
         params.format,
         &params.instruments,
+        budget,
         result,
     );
 }
 
+/// Validates music compose outputs with the default budget profile.
+#[allow(dead_code)]
 pub(super) fn validate_music_compose_outputs(
     spec: &Spec,
     recipe: &crate::recipe::Recipe,
+    result: &mut ValidationResult,
+) {
+    validate_music_compose_outputs_with_budget(spec, recipe, &BudgetProfile::default(), result)
+}
+
+/// Validates music compose outputs with a specific budget profile.
+pub(super) fn validate_music_compose_outputs_with_budget(
+    spec: &Spec,
+    recipe: &crate::recipe::Recipe,
+    budget: &BudgetProfile,
     result: &mut ValidationResult,
 ) {
     let params = match recipe.as_music_tracker_song_compose() {
@@ -49,15 +75,18 @@ pub(super) fn validate_music_compose_outputs(
         }
     };
 
-    validate_music_outputs_common(
+    validate_music_outputs_common_with_budget(
         spec,
         &recipe.kind,
         params.format,
         &params.instruments,
+        budget,
         result,
     );
 }
 
+/// Validates common music outputs with the default budget profile.
+#[allow(dead_code)]
 fn validate_music_outputs_common(
     spec: &Spec,
     recipe_kind: &str,
@@ -65,7 +94,46 @@ fn validate_music_outputs_common(
     instruments: &[crate::recipe::music::TrackerInstrument],
     result: &mut ValidationResult,
 ) {
+    validate_music_outputs_common_with_budget(
+        spec,
+        recipe_kind,
+        format,
+        instruments,
+        &BudgetProfile::default(),
+        result,
+    )
+}
+
+/// Validates common music outputs with a specific budget profile.
+fn validate_music_outputs_common_with_budget(
+    spec: &Spec,
+    recipe_kind: &str,
+    format: crate::recipe::music::TrackerFormat,
+    instruments: &[crate::recipe::music::TrackerInstrument],
+    budget: &BudgetProfile,
+    result: &mut ValidationResult,
+) {
     validate_primary_output_present(spec, result);
+
+    // Check instrument count against budget
+    let max_instruments = match format {
+        crate::recipe::music::TrackerFormat::Xm => budget.music.xm_max_instruments as usize,
+        crate::recipe::music::TrackerFormat::It => budget.music.it_max_instruments as usize,
+    };
+
+    if instruments.len() > max_instruments {
+        result.add_error(ValidationError::with_path(
+            ErrorCode::BudgetExceeded,
+            format!(
+                "instruments count {} exceeds budget limit of {} for {:?} format (profile: {})",
+                instruments.len(),
+                max_instruments,
+                format,
+                budget.name
+            ),
+            "recipe.params.instruments",
+        ));
+    }
 
     // Validate instrument sources are well-formed (matches backend behavior).
     for (idx, instrument) in instruments.iter().enumerate() {

@@ -5,35 +5,71 @@
 use anyhow::{Context, Result};
 use colored::Colorize;
 use speccade_spec::{
-    canonical_recipe_hash, canonical_spec_hash, validate_for_generate, validate_spec,
-    ReportBuilder, Spec,
+    canonical_recipe_hash, canonical_spec_hash, validate_for_generate_with_budget,
+    validate_spec_with_budget, BudgetProfile, ReportBuilder,
 };
-use std::fs;
+use std::path::Path;
 use std::process::ExitCode;
 use std::time::Instant;
 
 use super::reporting;
+use crate::input::{load_spec, LoadResult};
 
 /// Run the validate command
 ///
 /// # Arguments
-/// * `spec_path` - Path to the spec JSON file
+/// * `spec_path` - Path to the spec file (JSON or Starlark)
 /// * `artifacts` - Whether to also validate artifact references
+/// * `budget_name` - Optional budget profile name (default, strict, zx-8bit)
 ///
 /// # Returns
 /// Exit code: 0 if valid, 1 if invalid
-pub fn run(spec_path: &str, artifacts: bool) -> Result<ExitCode> {
+pub fn run(spec_path: &str, artifacts: bool, budget_name: Option<&str>) -> Result<ExitCode> {
     let start = Instant::now();
 
+    // Parse budget profile
+    let budget = match budget_name {
+        Some(name) => BudgetProfile::by_name(name).ok_or_else(|| {
+            anyhow::anyhow!("unknown budget profile: {} (expected default, strict, or zx-8bit)", name)
+        })?,
+        None => BudgetProfile::default(),
+    };
+
     println!("{} {}", "Validating:".cyan().bold(), spec_path);
+    if budget_name.is_some() {
+        println!("{} {}", "Budget:".dimmed(), budget.name);
+    }
 
-    // Read spec file
-    let spec_content = fs::read_to_string(spec_path)
-        .with_context(|| format!("Failed to read spec file: {}", spec_path))?;
+    // Load spec file (JSON or Starlark)
+    let LoadResult {
+        spec,
+        source_kind,
+        source_hash,
+        warnings: load_warnings,
+    } = load_spec(Path::new(spec_path))
+        .with_context(|| format!("Failed to load spec file: {}", spec_path))?;
 
-    // Parse spec
-    let spec = Spec::from_json(&spec_content)
-        .with_context(|| format!("Failed to parse spec file: {}", spec_path))?;
+    // Print any load warnings
+    for warning in &load_warnings {
+        let location = warning
+            .location
+            .as_ref()
+            .map(|l| format!(" at {}", l))
+            .unwrap_or_default();
+        println!(
+            "  {} [load]{}: {}",
+            "!".yellow(),
+            location.dimmed(),
+            warning.message
+        );
+    }
+
+    println!(
+        "{} {} ({})",
+        "Source:".dimmed(),
+        source_kind.as_str(),
+        &source_hash[..16]
+    );
 
     // Compute spec hash
     let spec_hash = canonical_spec_hash(&spec).unwrap_or_else(|_| "unknown".to_string());
@@ -42,13 +78,13 @@ pub fn run(spec_path: &str, artifacts: bool) -> Result<ExitCode> {
         .as_ref()
         .and_then(|r| canonical_recipe_hash(r).ok());
 
-    // Run validation
+    // Run validation with budget
     let validation_result = if artifacts {
         // Full validation including recipe requirements
-        validate_for_generate(&spec)
+        validate_for_generate_with_budget(&spec, &budget)
     } else {
         // Contract-only validation
-        validate_spec(&spec)
+        validate_spec_with_budget(&spec, &budget)
     };
 
     let duration_ms = start.elapsed().as_millis() as u64;
@@ -59,7 +95,15 @@ pub fn run(spec_path: &str, artifacts: bool) -> Result<ExitCode> {
     let git_dirty = matches!(option_env!("SPECCADE_GIT_DIRTY"), Some("1"));
     let mut report_builder = ReportBuilder::new(spec_hash.clone(), backend_version)
         .spec_metadata(&spec)
+        .source_provenance(source_kind.as_str(), &source_hash)
         .duration_ms(duration_ms);
+
+    // Add stdlib version for Starlark sources
+    #[cfg(feature = "starlark")]
+    if source_kind == crate::input::SourceKind::Starlark {
+        report_builder = report_builder.stdlib_version(crate::compiler::STDLIB_VERSION);
+    }
+
     if let Some(commit) = git_commit {
         report_builder = report_builder.git_metadata(commit, git_dirty);
     }
@@ -161,7 +205,7 @@ mod tests {
 
         let spec_path = write_spec(&tmp, "spec.json", &spec);
 
-        let code = run(spec_path.to_str().unwrap(), false).unwrap();
+        let code = run(spec_path.to_str().unwrap(), false, None).unwrap();
         assert_eq!(code, ExitCode::SUCCESS);
 
         let report_path = reporting::report_path(spec_path.to_str().unwrap(), &spec.asset_id);
@@ -184,7 +228,7 @@ mod tests {
 
         let spec_path = write_spec(&tmp, "spec.json", &spec);
 
-        let code = run(spec_path.to_str().unwrap(), true).unwrap();
+        let code = run(spec_path.to_str().unwrap(), true, None).unwrap();
         assert_eq!(code, ExitCode::from(1));
 
         let report_path = reporting::report_path(spec_path.to_str().unwrap(), &spec.asset_id);

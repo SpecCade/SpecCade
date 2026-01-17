@@ -5,15 +5,29 @@ use std::collections::{HashMap, HashSet};
 use crate::error::{ErrorCode, ValidationError, ValidationResult};
 use crate::output::{OutputFormat, OutputKind};
 use crate::spec::Spec;
+use crate::validation::BudgetProfile;
 
 use super::recipe_outputs::validate_primary_output_present;
 
-// Legacy texture recipe validations removed in favor of texture.procedural_v1.
+/// Validates texture procedural outputs with the default budget profile.
+#[allow(dead_code)]
 pub(super) fn validate_texture_procedural_outputs(
     spec: &Spec,
     recipe: &crate::recipe::Recipe,
     result: &mut ValidationResult,
 ) {
+    validate_texture_procedural_outputs_with_budget(spec, recipe, &BudgetProfile::default(), result)
+}
+
+/// Validates texture procedural outputs with a specific budget profile.
+pub(super) fn validate_texture_procedural_outputs_with_budget(
+    spec: &Spec,
+    recipe: &crate::recipe::Recipe,
+    budget: &BudgetProfile,
+    result: &mut ValidationResult,
+) {
+    let max_graph_nodes = budget.texture.max_graph_nodes;
+
     let params = match recipe.as_texture_procedural() {
         Ok(params) => params,
         Err(e) => {
@@ -35,6 +49,20 @@ pub(super) fn validate_texture_procedural_outputs(
             "recipe.params.nodes",
         ));
         return;
+    }
+
+    // Check node count against budget
+    if params.nodes.len() > max_graph_nodes {
+        result.add_error(ValidationError::with_path(
+            ErrorCode::BudgetExceeded,
+            format!(
+                "texture graph has {} nodes, exceeds budget limit of {} (profile: {})",
+                params.nodes.len(),
+                max_graph_nodes,
+                budget.name
+            ),
+            "recipe.params.nodes",
+        ));
     }
 
     let mut node_ids: HashSet<&str> = HashSet::new();

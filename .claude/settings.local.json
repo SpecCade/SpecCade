@@ -15,7 +15,8 @@
       "Bash(powershell -Command \"\\(Get-Content ''D:\\\\Development\\\\nethercore-project\\\\speccade\\\\crates\\\\speccade-backend-audio\\\\src\\\\generate\\\\layer.rs'' | Measure-Object -Line\\).Lines\")",
       "Bash(powershell -Command \"\\(Get-Content ''D:\\\\Development\\\\nethercore-project\\\\speccade\\\\crates\\\\speccade-backend-audio\\\\src\\\\synthesis\\\\membrane.rs'' | Measure-Object -Line\\).Lines\")",
       "Bash(python:*)",
-      "Bash(echo:*)"
+      "Bash(echo:*)",
+      "WebFetch(domain:crates.io)"
     ]
   }
 }

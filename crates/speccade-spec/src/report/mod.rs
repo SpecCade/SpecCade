@@ -53,6 +53,15 @@ pub struct Report {
     /// Canonical hash of the recipe (kind + params), if present.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub recipe_hash: Option<String>,
+    /// Source file format ("json" or "starlark").
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub source_kind: Option<String>,
+    /// BLAKE3 hash of the source file content (before compilation).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub source_hash: Option<String>,
+    /// Starlark stdlib version (for Starlark sources; cache invalidation key).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub stdlib_version: Option<String>,
     /// Whether the operation succeeded without errors.
     pub ok: bool,
     /// List of errors that occurred.

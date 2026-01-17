@@ -15,6 +15,9 @@ pub struct ReportBuilder {
     seed: Option<u32>,
     recipe_kind: Option<String>,
     recipe_hash: Option<String>,
+    source_kind: Option<String>,
+    source_hash: Option<String>,
+    stdlib_version: Option<String>,
     ok: bool,
     errors: Vec<ReportError>,
     warnings: Vec<ReportWarning>,
@@ -58,6 +61,9 @@ impl ReportBuilder {
             seed: None,
             recipe_kind: None,
             recipe_hash: None,
+            source_kind: None,
+            source_hash: None,
+            stdlib_version: None,
             ok: true,
             errors: Vec::new(),
             warnings: Vec::new(),
@@ -179,6 +185,29 @@ impl ReportBuilder {
         self
     }
 
+    /// Sets the source provenance information.
+    ///
+    /// # Arguments
+    /// * `kind` - Source format ("json" or "starlark")
+    /// * `hash` - BLAKE3 hash of the source file content
+    pub fn source_provenance(
+        mut self,
+        kind: impl Into<String>,
+        hash: impl Into<String>,
+    ) -> Self {
+        self.source_kind = Some(kind.into());
+        self.source_hash = Some(hash.into());
+        self
+    }
+
+    /// Sets the Starlark stdlib version (for Starlark sources).
+    ///
+    /// This is used as a cache invalidation key when the stdlib changes.
+    pub fn stdlib_version(mut self, version: impl Into<String>) -> Self {
+        self.stdlib_version = Some(version.into());
+        self
+    }
+
     /// Builds the final report.
     pub fn build(self) -> Report {
         Report {
@@ -192,6 +221,9 @@ impl ReportBuilder {
             seed: self.seed,
             recipe_kind: self.recipe_kind,
             recipe_hash: self.recipe_hash,
+            source_kind: self.source_kind,
+            source_hash: self.source_hash,
+            stdlib_version: self.stdlib_version,
             ok: self.ok,
             errors: self.errors,
             warnings: self.warnings,

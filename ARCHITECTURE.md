@@ -7,8 +7,9 @@ Deterministic asset pipeline for procedural game asset generation.
 
 ## TL;DR (mental model)
 
-SpecCade takes a `Spec` (JSON) and produces one or more artifacts (WAV/PNG/XM/IT/…) plus a `Report`.
+SpecCade takes a `Spec` (authored in JSON or Starlark) and produces one or more artifacts (WAV/PNG/XM/IT/…) plus a `Report`.
 
+- Starlark files (.star) are compiled to canonical JSON IR
 - Validation and hashing live in `speccade-spec`
 - The CLI (`speccade-cli`) validates + dispatches to a backend
 - Tier 1 backends are Rust-only and aim for byte-identical output
@@ -42,6 +43,7 @@ Core specification library. Defines JSON spec format, validation rules, and cano
 - `spec` - Main `Spec` type and builder
 - `recipe/` - Recipe types for each backend (audio, music, texture, mesh, animation)
 - `validation/` - Spec validation with error reporting
+- `validation/budgets` - Budget enforcement system (profiles: default, strict, zx-8bit)
 - `hash` - BLAKE3-based canonical hashing and seed derivation
 - `report` - Generation result reporting
 
@@ -49,8 +51,11 @@ Core specification library. Defines JSON spec format, validation rules, and cano
 Command-line tool for spec operations.
 
 **Key modules:**
+- `compiler/` - Starlark-to-JSON compiler pipeline
+- `compiler/stdlib/` - Starlark stdlib functions (audio, texture, mesh, music, core)
+- `input` - Unified spec loading (JSON/Starlark dispatch by extension)
 - `dispatch/` - Routes specs to appropriate backends
-- `commands/` - CLI command implementations (generate, validate, fmt, migrate)
+- `commands/` - CLI command implementations (eval, validate, generate, fmt, migrate)
 
 ### speccade-backend-audio
 Generates WAV files from synthesis specifications.
@@ -105,6 +110,42 @@ Integration tests and determinism validation framework.
 - `audio_analysis/` - Audio signal analysis utilities
 - `harness` - Test harness utilities
 
+## Starlark Compilation Pipeline
+
+SpecCade supports authoring specs in Starlark (.star files) which compile to canonical JSON IR:
+
+```
+.star file
+    ↓
+input.rs (load_spec) - dispatches by extension
+    ↓
+compiler/eval.rs - Starlark evaluation with timeout
+    ├── stdlib registered (audio, texture, mesh, music, core functions)
+    ├── 30s timeout enforced
+    └── no external loads allowed
+    ↓
+compiler/convert.rs - Starlark Value → serde_json::Value
+    ↓
+Spec::from_json() - parse canonical IR
+    ↓
+validation/budgets.rs - enforce resource limits
+    ↓
+Backend generation (same as JSON path)
+```
+
+**Stdlib modules** (`compiler/stdlib/`):
+- `core.rs` - spec(), output() scaffolding functions
+- `audio/` - envelope(), oscillator(), fm_synth(), filter(), effect(), layer()
+- `music/` - instrument(), pattern(), song() tracker composition
+- `texture/` - noise_node(), gradient_node(), graph() procedural textures
+- `mesh/` - mesh_primitive(), mesh_recipe() mesh generation
+
+**Budget system** (`validation/budgets.rs`):
+- Profiles: `default`, `strict`, `zx-8bit`
+- Per-asset limits: AudioBudget, TextureBudget, MusicBudget, MeshBudget, GeneralBudget
+- Enforced at validation stage before generation
+- CLI flag: `--budget <profile>`
+
 ## Module Dependencies
 
 ```
@@ -141,10 +182,13 @@ speccade-tests
 | Operation | Entry Point |
 |-----------|-------------|
 | CLI main | `crates/speccade-cli/src/main.rs` |
+| Load spec (JSON/Starlark) | `speccade-cli::input::load_spec()` |
+| Starlark compilation | `speccade-cli::compiler::compile()` |
 | Audio generation | `speccade-backend-audio::generate()` |
 | Music generation | `speccade-backend-music::generate_music()` |
 | Texture generation | `speccade-backend-texture::generate_graph()` |
 | Spec validation | `speccade-spec::validate_spec()` |
+| Budget validation | `speccade-spec::validation::budgets::BudgetProfile` |
 
 ## Determinism Tiers
 

@@ -9,9 +9,17 @@ keywords = ["assets", "gamedev", "procedural", "generation"]
 categories = ["command-line-utilities", "game-development"]
 build = "build.rs"
 
+[lib]
+name = "speccade_cli"
+path = "src/lib.rs"
+
 [[bin]]
 name = "speccade"
 path = "src/main.rs"
+
+[features]
+default = ["starlark"]
+starlark = ["dep:starlark", "dep:tokio", "dep:thiserror"]
 
 [dependencies]
 speccade-spec.workspace = true
@@ -27,6 +35,11 @@ regex.workspace = true
 walkdir.workspace = true
 blake3.workspace = true
 serde.workspace = true
+
+# Starlark support (optional, enabled by default)
+starlark = { workspace = true, optional = true }
+tokio = { workspace = true, optional = true }
+thiserror = { workspace = true, optional = true }
 
 [dev-dependencies]
 tempfile = { workspace = true }

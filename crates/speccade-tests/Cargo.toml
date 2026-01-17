@@ -27,9 +27,14 @@ path = "tests/e2e_validation.rs"
 name = "e2e_determinism"
 path = "tests/e2e_determinism.rs"
 
+[[test]]
+name = "starlark_input"
+path = "tests/starlark_input.rs"
+
 [dependencies]
 # We need all the workspace crates for integration testing
 speccade-spec = { workspace = true }
+speccade-cli = { workspace = true }
 speccade-backend-audio = { workspace = true }
 speccade-backend-music = { workspace = true }
 speccade-backend-texture = { workspace = true }

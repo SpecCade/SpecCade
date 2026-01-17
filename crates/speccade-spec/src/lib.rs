@@ -71,7 +71,10 @@ pub use report::{
 };
 pub use spec::{AssetType, Spec, SpecBuilder, MAX_SEED, SPEC_VERSION};
 pub use validation::{
-    is_safe_output_path, is_valid_asset_id, validate_for_generate, validate_spec,
+    is_safe_output_path, is_valid_asset_id, validate_for_generate,
+    validate_for_generate_with_budget, validate_spec, validate_spec_with_budget, AudioBudget,
+    BudgetCategory, BudgetError, BudgetProfile, GeneralBudget, MeshBudget, MusicBudget,
+    TextureBudget,
 };
 
 #[cfg(test)]

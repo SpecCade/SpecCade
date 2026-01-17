@@ -5,43 +5,86 @@
 use anyhow::{Context, Result};
 use colored::Colorize;
 use speccade_spec::{
-    canonical_recipe_hash, canonical_spec_hash, derive_variant_spec_seed, validate_for_generate,
-    BackendError, ReportBuilder, ReportError, Spec,
+    canonical_recipe_hash, canonical_spec_hash, derive_variant_spec_seed,
+    validate_for_generate_with_budget, BackendError, BudgetProfile, ReportBuilder, ReportError,
 };
-use std::fs;
 use std::path::Path;
 use std::process::ExitCode;
 use std::time::Instant;
 
 use super::reporting;
 use crate::dispatch::dispatch_generate;
+use crate::input::{load_spec, LoadResult};
 
 /// Run the generate command
 ///
 /// # Arguments
-/// * `spec_path` - Path to the spec JSON file
+/// * `spec_path` - Path to the spec file (JSON or Starlark)
 /// * `out_root` - Output root directory (default: current directory)
 /// * `expand_variants` - Whether to expand `spec.variants[]` during generation
+/// * `budget_name` - Optional budget profile name (default, strict, zx-8bit)
 ///
 /// # Returns
 /// Exit code: 0 success, 1 spec error, 2 generation error
-pub fn run(spec_path: &str, out_root: Option<&str>, expand_variants: bool) -> Result<ExitCode> {
+pub fn run(
+    spec_path: &str,
+    out_root: Option<&str>,
+    expand_variants: bool,
+    budget_name: Option<&str>,
+) -> Result<ExitCode> {
     let start = Instant::now();
     let out_root = out_root.unwrap_or(".");
 
+    // Parse budget profile
+    let budget = match budget_name {
+        Some(name) => BudgetProfile::by_name(name).ok_or_else(|| {
+            anyhow::anyhow!(
+                "unknown budget profile: {} (expected default, strict, or zx-8bit)",
+                name
+            )
+        })?,
+        None => BudgetProfile::default(),
+    };
+
     println!("{} {}", "Generating from:".cyan().bold(), spec_path);
     println!("{} {}", "Output root:".cyan().bold(), out_root);
+    if budget_name.is_some() {
+        println!("{} {}", "Budget:".dimmed(), budget.name);
+    }
     if expand_variants {
         println!("{} {}", "Expand variants:".cyan().bold(), "enabled".green());
     }
 
-    // Read spec file
-    let spec_content = fs::read_to_string(spec_path)
-        .with_context(|| format!("Failed to read spec file: {}", spec_path))?;
+    // Load spec file (JSON or Starlark)
+    let LoadResult {
+        spec,
+        source_kind,
+        source_hash,
+        warnings: load_warnings,
+    } = load_spec(Path::new(spec_path))
+        .with_context(|| format!("Failed to load spec file: {}", spec_path))?;
 
-    // Parse spec
-    let spec = Spec::from_json(&spec_content)
-        .with_context(|| format!("Failed to parse spec file: {}", spec_path))?;
+    // Print any load warnings
+    for warning in &load_warnings {
+        let location = warning
+            .location
+            .as_ref()
+            .map(|l| format!(" at {}", l))
+            .unwrap_or_default();
+        println!(
+            "  {} [load]{}: {}",
+            "!".yellow(),
+            location.dimmed(),
+            warning.message
+        );
+    }
+
+    println!(
+        "{} {} ({})",
+        "Source:".dimmed(),
+        source_kind.as_str(),
+        &source_hash[..16]
+    );
 
     // Compute spec hash
     let spec_hash = canonical_spec_hash(&spec).unwrap_or_else(|_| "unknown".to_string());
@@ -50,26 +93,34 @@ pub fn run(spec_path: &str, out_root: Option<&str>, expand_variants: bool) -> Re
         .as_ref()
         .and_then(|r| canonical_recipe_hash(r).ok());
 
-    // Validate for generation (requires recipe)
-    let validation_result = validate_for_generate(&spec);
+    // Validate for generation (requires recipe) with budget
+    let validation_result = validate_for_generate_with_budget(&spec, &budget);
 
     let backend_version = format!("speccade-cli v{}", env!("CARGO_PKG_VERSION"));
     let git_commit = option_env!("SPECCADE_GIT_SHA").map(|s| s.to_string());
     let git_dirty = matches!(option_env!("SPECCADE_GIT_DIRTY"), Some("1"));
 
-    let with_git = |builder: ReportBuilder| -> ReportBuilder {
-        if let Some(commit) = git_commit.as_ref() {
-            builder.git_metadata(commit.clone(), git_dirty)
-        } else {
-            builder
+    // Helper to add git and source provenance to report builders
+    let with_provenance = |builder: ReportBuilder| -> ReportBuilder {
+        let mut builder = builder.source_provenance(source_kind.as_str(), &source_hash);
+
+        // Add stdlib version for Starlark sources
+        #[cfg(feature = "starlark")]
+        if source_kind == crate::input::SourceKind::Starlark {
+            builder = builder.stdlib_version(crate::compiler::STDLIB_VERSION);
         }
+
+        if let Some(commit) = git_commit.as_ref() {
+            builder = builder.git_metadata(commit.clone(), git_dirty);
+        }
+        builder
     };
 
     if !validation_result.is_ok() {
         let duration_ms = start.elapsed().as_millis() as u64;
 
         // Build error report
-        let mut report_builder = with_git(ReportBuilder::new(spec_hash, backend_version))
+        let mut report_builder = with_provenance(ReportBuilder::new(spec_hash, backend_version))
             .spec_metadata(&spec)
             .duration_ms(duration_ms);
         if let Some(hash) = recipe_hash {
@@ -126,7 +177,7 @@ pub fn run(spec_path: &str, out_root: Option<&str>, expand_variants: bool) -> Re
             let output_count = outputs.len();
 
             // Build success report
-            let mut report_builder = with_git(ReportBuilder::new(
+            let mut report_builder = with_provenance(ReportBuilder::new(
                 spec_hash.clone(),
                 backend_version.clone(),
             ))
@@ -156,7 +207,7 @@ pub fn run(spec_path: &str, out_root: Option<&str>, expand_variants: bool) -> Re
         }
         Err(e) => {
             // Build error report
-            let mut report_builder = with_git(ReportBuilder::new(
+            let mut report_builder = with_provenance(ReportBuilder::new(
                 spec_hash.clone(),
                 backend_version.clone(),
             ))
@@ -218,7 +269,7 @@ pub fn run(spec_path: &str, out_root: Option<&str>, expand_variants: bool) -> Re
                 match variant_result {
                     Ok(outputs) => {
                         let output_count = outputs.len();
-                        let mut report_builder = with_git(ReportBuilder::new(
+                        let mut report_builder = with_provenance(ReportBuilder::new(
                             variant_spec_hash,
                             backend_version.clone(),
                         ))
@@ -252,7 +303,7 @@ pub fn run(spec_path: &str, out_root: Option<&str>, expand_variants: bool) -> Re
                     Err(e) => {
                         any_generation_failed = true;
 
-                        let mut report_builder = with_git(ReportBuilder::new(
+                        let mut report_builder = with_provenance(ReportBuilder::new(
                             variant_spec_hash,
                             backend_version.clone(),
                         ))
@@ -337,6 +388,7 @@ mod tests {
             spec_path.to_str().unwrap(),
             Some(tmp.path().to_str().unwrap()),
             false,
+            None,
         )
         .unwrap();
         assert_eq!(code, ExitCode::from(1));
@@ -352,7 +404,7 @@ mod tests {
     fn generate_reports_validation_errors_for_invalid_params() {
         let tmp = tempfile::tempdir().unwrap();
 
-        // Invalid sample_rate is caught during validation (E012)
+        // Invalid sample_rate is caught during validation (E017 with budget)
         let invalid_params = serde_json::json!({
             "duration_seconds": 0.1,
             "sample_rate": 12345,
@@ -373,6 +425,7 @@ mod tests {
             spec_path.to_str().unwrap(),
             Some(tmp.path().to_str().unwrap()),
             false,
+            None,
         )
         .unwrap();
         assert_eq!(code, ExitCode::from(1));
@@ -381,7 +434,8 @@ mod tests {
         let json = std::fs::read_to_string(&report_path).unwrap();
         let report: speccade_spec::Report = serde_json::from_str(&json).unwrap();
         assert!(!report.ok);
-        assert!(report.errors.iter().any(|e| e.code == "E012"));
+        // Invalid sample_rate now triggers BudgetExceeded (E017)
+        assert!(report.errors.iter().any(|e| e.code == "E017"));
     }
 
     #[test]
@@ -428,7 +482,7 @@ mod tests {
         let spec_path = write_spec(&tmp, "spec.json", &spec);
 
         let out_root = tmp.path().to_str().unwrap();
-        let code = run(spec_path.to_str().unwrap(), Some(out_root), false).unwrap();
+        let code = run(spec_path.to_str().unwrap(), Some(out_root), false, None).unwrap();
         assert_eq!(code, ExitCode::SUCCESS);
 
         let output_path = tmp.path().join("test.wav");
@@ -489,7 +543,7 @@ mod tests {
         let spec_path = write_spec(&tmp, "spec.json", &spec);
 
         let out_root = tmp.path().to_str().unwrap();
-        let code = run(spec_path.to_str().unwrap(), Some(out_root), true).unwrap();
+        let code = run(spec_path.to_str().unwrap(), Some(out_root), true, None).unwrap();
         assert_eq!(code, ExitCode::SUCCESS);
 
         // Base output.
