@@ -1,4 +1,4 @@
-# RFC-001 Appendix: Audio Analysis Backend Specification
+# RFC-0008 Appendix: Audio Analysis Backend Specification
 
 **Purpose**: Technical specification for S2-A (Audio Analysis Backend) enabling perceptual feedback loops.
 

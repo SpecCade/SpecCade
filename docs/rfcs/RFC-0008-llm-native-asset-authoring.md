@@ -1,4 +1,4 @@
-# RFC-001: LLM-Native Asset Authoring
+# RFC-0008: LLM-Native Asset Authoring
 
 **Status**: Draft
 **Author**: Claude (Anthropic)

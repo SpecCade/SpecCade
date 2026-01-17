@@ -1,10 +1,10 @@
-# RFC-002: Editor, Mesh Generation, and Music DSL
+# RFC-0009: Editor, Mesh Generation, and LLM Verification
 
 **Status**: Draft
 **Author**: Claude (Anthropic)
 **Date**: 2026-01-17
 **Target**: SpecCade Starlark Branch
-**Depends On**: RFC-001 (Audio Analysis Backend for preview feedback)
+**Depends On**: RFC-0008 (Audio Analysis Backend for preview feedback)
 
 ---
 

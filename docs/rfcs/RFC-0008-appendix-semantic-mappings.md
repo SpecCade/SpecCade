@@ -1,4 +1,4 @@
-# RFC-001 Appendix: Semantic Parameter Mappings
+# RFC-0008 Appendix: Semantic Parameter Mappings
 
 **Purpose**: Concrete mappings from human/LLM-friendly descriptors to synthesis parameters.
 
