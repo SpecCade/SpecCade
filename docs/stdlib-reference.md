@@ -234,37 +234,39 @@ Tracker-style music composition with instruments, patterns, and arrangements.
 ## Usage Examples
 
 ### Creating an Audio Spec
-```python
+```starlark
 spec(
     asset_id = "laser-blast-01",
     asset_type = "audio",
     seed = 42,
     outputs = [output("sounds/laser.wav", "wav")],
     recipe = {
-        "backend": "audio.procedural_v1",
+        "kind": "audio_v1",
         "params": {
-            "duration": 0.5,
+            "duration_seconds": 0.5,
+            "sample_rate": 44100,
             "layers": [
                 audio_layer(
                     oscillator(880, "sawtooth", 220, "exponential"),
                     envelope(0.01, 0.1, 0.0, 0.1),
                     filter = lowpass(5000, 0.707, 500)
                 )
-            ]
+            ],
+            "effects": [reverb()]
         }
     }
 )
 ```
 
 ### Creating a Texture Spec
-```python
+```starlark
 spec(
     asset_id = "noise-texture-01",
     asset_type = "texture",
     seed = 123,
     outputs = [output("textures/noise.png", "png")],
     recipe = {
-        "backend": "texture.procedural_v1",
+        "kind": "texture.procedural_v1",
         "params": texture_graph(
             [256, 256],
             [
@@ -278,14 +280,14 @@ spec(
 ```
 
 ### Creating a Mesh Spec
-```python
+```starlark
 spec(
     asset_id = "rounded-cube-01",
     asset_type = "static_mesh",
     seed = 456,
     outputs = [output("meshes/cube.glb", "glb")],
     recipe = {
-        "backend": "static_mesh.blender_primitives_v1",
+        "kind": "static_mesh.blender_primitives_v1",
         "params": mesh_recipe(
             "cube",
             [2.0, 2.0, 2.0],
@@ -296,7 +298,7 @@ spec(
 ```
 
 ### Creating a Music Spec
-```python
+```starlark
 music_spec(
     asset_id = "test-song-01",
     seed = 789,

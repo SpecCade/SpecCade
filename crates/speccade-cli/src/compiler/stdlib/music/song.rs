@@ -389,7 +389,7 @@ fn register_song_functions(builder: &mut GlobalsBuilder) {
         // seed
         spec.insert_hashed(
             hashed_key(heap, "seed"),
-            heap.alloc(seed as i32).to_value(),
+            heap.alloc(seed).to_value(),
         );
 
         // outputs

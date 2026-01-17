@@ -14,7 +14,7 @@ Creates a complete spec dictionary with all required fields.
 | Name | Type | Required | Default | Description |
 |------|------|----------|---------|-------------|
 | asset_id | str | Yes | - | Kebab-case identifier |
-| asset_type | str | Yes | - | "audio", "texture", "static_mesh", "animation", "music", "character" |
+| asset_type | str | Yes | - | "audio", "music", "texture", "static_mesh", "skeletal_mesh", "skeletal_animation" |
 | seed | int | Yes | - | Deterministic seed (0 to 2^32-1) |
 | outputs | list | Yes | - | List of output specifications |
 | recipe | dict | No | None | Optional recipe specification |
@@ -25,7 +25,7 @@ Creates a complete spec dictionary with all required fields.
 **Returns:** Dict matching the Spec IR structure with `spec_version: 1`.
 
 **Example:**
-```python
+```starlark
 spec(
     asset_id = "laser-blast-01",
     asset_type = "audio",
@@ -43,14 +43,15 @@ Creates an output specification.
 |------|------|----------|---------|-------------|
 | path | str | Yes | - | Output file path |
 | format | str | Yes | - | Output format ("wav", "png", "glb", etc.) |
-| kind | str | No | "primary" | "primary" or "secondary" |
+| kind | str | No | "primary" | "primary", "preview", or "metadata" |
 
 **Returns:** Dict matching the Output IR structure.
 
 **Example:**
-```python
+```starlark
 output("sounds/laser.wav", "wav")
-output("textures/preview.png", "png", "secondary")
+output("textures/preview.png", "png", "preview")
+output("textures/laser.report.json", "json", "metadata")
 ```
 
 ---

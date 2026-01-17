@@ -8,6 +8,8 @@ use starlark::starlark_module;
 use starlark::values::list::AllocList;
 use starlark::values::{dict::Dict, list::UnpackList, none::NoneType, Heap, Value, ValueLike};
 
+use speccade_spec::AssetType;
+
 use super::validation::validate_non_empty;
 
 /// Helper to create a hashed key for dict insertion.
@@ -37,7 +39,7 @@ fn register_core_functions(builder: &mut GlobalsBuilder) {
     /// # Arguments
     /// * `path` - Output file path (e.g., "sounds/laser.wav")
     /// * `format` - Output format (e.g., "wav", "png", "glb")
-    /// * `kind` - Output kind: "primary" (default) or "secondary"
+    /// * `kind` - Output kind: "primary" (default), "preview", or "metadata"
     /// * `source` - Optional source node ID (for texture procedural graphs)
     ///
     /// # Returns
@@ -46,7 +48,8 @@ fn register_core_functions(builder: &mut GlobalsBuilder) {
     /// # Example
     /// ```starlark
     /// output("sounds/laser.wav", "wav")
-    /// output("textures/preview.png", "png", "secondary")
+    /// output("textures/preview.png", "png", "preview")
+    /// output("textures/laser.report.json", "json", "metadata")
     /// output("textures/noise.png", "png", source = "mask")
     /// ```
     fn output<'v>(
@@ -62,8 +65,9 @@ fn register_core_functions(builder: &mut GlobalsBuilder) {
             .map_err(|e| anyhow::anyhow!(e))?;
 
         // Validate kind
-        let valid_kinds = &["primary", "secondary"];
-        if !valid_kinds.contains(&kind) {
+        let normalized_kind = if kind == "secondary" { "preview" } else { kind };
+        let valid_kinds = &["primary", "metadata", "preview"];
+        if !valid_kinds.contains(&normalized_kind) {
             return Err(anyhow::anyhow!(
                 "S104: output(): 'kind' must be one of: {}",
                 valid_kinds.join(", ")
@@ -73,7 +77,7 @@ fn register_core_functions(builder: &mut GlobalsBuilder) {
         let mut dict = new_dict(heap);
         dict.insert_hashed(
             hashed_key(heap, "kind"),
-            heap.alloc_str(kind).to_value(),
+            heap.alloc_str(normalized_kind).to_value(),
         );
         dict.insert_hashed(
             hashed_key(heap, "format"),
@@ -107,7 +111,7 @@ fn register_core_functions(builder: &mut GlobalsBuilder) {
     ///
     /// # Arguments
     /// * `asset_id` - Kebab-case identifier for the asset
-    /// * `asset_type` - Asset type: "audio", "texture", "static_mesh", etc.
+    /// * `asset_type` - Asset type: "audio", "music", "texture", "static_mesh", "skeletal_mesh", "skeletal_animation"
     /// * `seed` - Deterministic seed (0 to 2^32-1)
     /// * `outputs` - List of output specifications from `output()`
     /// * `recipe` - Optional recipe specification dict
@@ -143,8 +147,8 @@ fn register_core_functions(builder: &mut GlobalsBuilder) {
             .map_err(|e| anyhow::anyhow!(e))?;
 
         // Validate asset_type
-        let valid_types = &["audio", "texture", "static_mesh", "animation", "music", "character"];
-        if !valid_types.contains(&asset_type) {
+        if asset_type.parse::<AssetType>().is_err() {
+            let valid_types: Vec<_> = AssetType::all().iter().map(|t| t.as_str()).collect();
             return Err(anyhow::anyhow!(
                 "S104: spec(): 'asset_type' must be one of: {}",
                 valid_types.join(", ")
@@ -196,7 +200,7 @@ fn register_core_functions(builder: &mut GlobalsBuilder) {
         // seed
         dict.insert_hashed(
             hashed_key(heap, "seed"),
-            heap.alloc(seed as i32).to_value(),
+            heap.alloc(seed).to_value(),
         );
 
         // outputs (convert from list)
@@ -249,9 +253,15 @@ mod tests {
     }
 
     #[test]
-    fn test_output_secondary() {
+    fn test_output_preview() {
+        let result = eval_to_json(r#"output("textures/preview.png", "png", "preview")"#).unwrap();
+        assert_eq!(result["kind"], "preview");
+    }
+
+    #[test]
+    fn test_output_secondary_alias() {
         let result = eval_to_json(r#"output("textures/preview.png", "png", "secondary")"#).unwrap();
-        assert_eq!(result["kind"], "secondary");
+        assert_eq!(result["kind"], "preview");
     }
 
     #[test]
@@ -346,5 +356,35 @@ spec(
         assert!(result.is_err());
         let err = result.unwrap_err();
         assert!(err.contains("S103"));
+    }
+
+    #[test]
+    fn test_spec_large_seed_u32_max() {
+        let result = eval_to_json(r#"
+spec(
+    asset_id = "big-seed-01",
+    asset_type = "audio",
+    seed = 4294967295,
+    outputs = [output("test.wav", "wav")]
+)
+"#)
+        .unwrap();
+
+        assert_eq!(result["seed"].as_u64(), Some(4294967295));
+    }
+
+    #[test]
+    fn test_spec_supports_skeletal_asset_types() {
+        let result = eval_to_json(r#"
+spec(
+    asset_id = "skel-01",
+    asset_type = "skeletal_mesh",
+    seed = 1,
+    outputs = [output("meshes/skel.glb", "glb")]
+)
+"#)
+        .unwrap();
+
+        assert_eq!(result["asset_type"], "skeletal_mesh");
     }
 }

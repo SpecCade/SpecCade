@@ -188,21 +188,21 @@ fn register_basic_effects(builder: &mut GlobalsBuilder) {
         Ok(dict)
     }
 
-    /// Creates an LFO (Low Frequency Oscillator) configuration.
+    /// Creates a chorus effect.
     ///
     /// # Arguments
-    /// * `waveform` - LFO waveform: "sine", "square", "sawtooth", "triangle"
-    /// * `rate` - LFO rate in Hz (typically 0.1-20 Hz)
+    /// * `rate` - Modulation rate in Hz (typically ~0.1-10)
     /// * `depth` - Modulation depth 0.0-1.0
-    /// * `phase` - Initial phase offset 0.0-1.0 (optional)
+    /// * `wet` - Wet/dry mix 0.0-1.0
+    /// * `voices` - Number of chorus voices (1-4, default: 2)
     ///
     /// # Returns
-    /// A dict matching the LfoConfig IR structure.
+    /// A dict matching the Effect::Chorus IR structure.
     ///
     /// # Example
     /// ```starlark
-    /// lfo("sine", 5.0, 0.5)  # 5 Hz sine LFO at 50% depth
-    /// lfo("triangle", 2.0, 0.3, 0.25)  # With phase offset
+    /// chorus(1.5, 0.3, 0.25)
+    /// chorus(0.8, 0.6, 0.4, voices = 4)
     /// ```
     fn chorus<'v>(
         rate: f64,

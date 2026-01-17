@@ -42,6 +42,20 @@ fn convert_value(value: Value) -> Result<serde_json::Value, CompileError> {
     if let Some(i) = value.unpack_i32() {
         return Ok(serde_json::Value::Number(i.into()));
     }
+    // starlark 0.12.0 supports ints beyond i32, but `unpack_i32` only covers a subset.
+    // Fall back to parsing the string form for larger values so we can represent seeds (u32) and similar.
+    if value.get_type() == "int" {
+        let s = value.to_str();
+        if let Ok(i) = s.parse::<i64>() {
+            return Ok(serde_json::Value::Number(serde_json::Number::from(i)));
+        }
+        if let Ok(u) = s.parse::<u64>() {
+            return Ok(serde_json::Value::Number(serde_json::Number::from(u)));
+        }
+        return Err(CompileError::JsonConversion {
+            message: format!("cannot represent int {} as JSON number", s),
+        });
+    }
 
     // Try string
     if let Some(s) = value.unpack_str() {
@@ -136,6 +150,11 @@ mod tests {
         assert_eq!(eval_to_json("42").unwrap(), serde_json::json!(42));
         assert_eq!(eval_to_json("-123").unwrap(), serde_json::json!(-123));
         assert_eq!(eval_to_json("0").unwrap(), serde_json::json!(0));
+        // > i32::MAX, still representable as JSON integer
+        assert_eq!(
+            eval_to_json("4294967295").unwrap(),
+            serde_json::json!(4294967295_i64)
+        );
     }
 
     #[test]
