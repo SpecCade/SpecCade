@@ -1,0 +1,83 @@
+runpack_id: speccade-starlark-migration
+repo_root: speccade
+
+# This file is intentionally concise: it is the phase "API" the orchestrator uses
+# to generate phase runpacks with minimal extra context.
+phases:
+  - id: 1
+    slug: compiler-and-star-input
+    title: "Phase 1: Canonical compiler pipeline + .star input (non-breaking)"
+    goal: >
+      Introduce a compiler pipeline that accepts Starlark specs and produces the existing
+      canonical JSON IR (Spec v1), while keeping JSON specs fully supported.
+    scope_globs:
+      - "crates/speccade-cli/**"
+      - "crates/speccade-spec/**"
+      - "crates/speccade-tests/**"
+      - "schemas/**"
+      - "docs/**"
+      - "golden/**"
+      - "Cargo.toml"
+      - "Cargo.lock"
+    acceptance_criteria:
+      - "CLI accepts `.json` (existing) AND `.star` inputs for validate/generate."
+      - "New command: `speccade eval <spec.star|ir.json>` prints canonical IR JSON."
+      - "Backends consume only canonical `speccade_spec::Spec` (no Starlark in backends)."
+      - "Determinism hashes are computed on canonical IR (post expansion)."
+      - "No breaking changes for JSON users."
+    validation_commands:
+      - "cargo test -p speccade-spec"
+      - "cargo test -p speccade-cli"
+      - "cargo test -p speccade-tests"
+    notes:
+      - "Keep Starlark stdlib minimal in Phase 1; focus on plumbing + safety limits."
+      - "Move `music.tracker_song_compose_v1` expansion into the compiler stage if feasible."
+
+  - id: 2
+    slug: starlark-stdlib-and-examples
+    title: "Phase 2: Starlark stdlib + presets + examples"
+    goal: >
+      Make Starlark a first-class authoring format by shipping a small, LLM-friendly stdlib
+      (audio/texture/mesh constructors), plus examples and golden IR tests.
+    scope_globs:
+      - "crates/speccade-cli/**"
+      - "crates/speccade-spec/**"
+      - "crates/speccade-tests/**"
+      - "crates/**" # new crate(s) for starlark + compiler
+      - "docs/**"
+      - "golden/**"
+      - "packs/**"
+      - "schemas/**"
+    acceptance_criteria:
+      - "Starlark stdlib can generate canonical IR for audio + texture + static mesh examples."
+      - "Golden tests assert byte-identical canonical IR for `.star` examples."
+      - "Docs explain: Starlark (authoring) -> canonical JSON IR (backend contract)."
+      - "CLI diagnostics are LLM-friendly (stable codes + json output option)."
+    validation_commands:
+      - "cargo test -p speccade-spec"
+      - "cargo test -p speccade-cli"
+      - "cargo test -p speccade-tests"
+
+  - id: 3
+    slug: budgets-caching-and-hardening
+    title: "Phase 3: Budgets, caching, validator hardening"
+    goal: >
+      Unify hard budgets across Starlark and JSON IR inputs, improve caching keys and reports,
+      and add robustness tests (idempotence, fuzz-ish validation).
+    scope_globs:
+      - "crates/speccade-cli/**"
+      - "crates/speccade-spec/**"
+      - "crates/speccade-tests/**"
+      - "crates/**"
+      - "docs/**"
+      - "schemas/**"
+      - "golden/**"
+    acceptance_criteria:
+      - "Budgets are enforced at validation stage (not only inside backends)."
+      - "Reports include provenance for Starlark inputs (source hash + stdlib version)."
+      - "Caching key strategy documented + implemented for `generate` (optional but preferred)."
+      - "Canonicalization is idempotent; tests cover it."
+    validation_commands:
+      - "cargo test -p speccade-spec"
+      - "cargo test -p speccade-cli"
+      - "cargo test -p speccade-tests"
