@@ -135,6 +135,10 @@ enum Commands {
         /// Disable content-addressed caching (force regeneration)
         #[arg(long)]
         no_cache: bool,
+
+        /// Enable per-stage timing profiling (timings included in report)
+        #[arg(long)]
+        profile: bool,
     },
 
     /// Generate all assets from a directory of spec files
@@ -364,6 +368,7 @@ fn main() -> ExitCode {
             json,
             preview,
             no_cache,
+            profile,
         } => commands::generate::run(
             &spec,
             out_root.as_deref(),
@@ -372,6 +377,7 @@ fn main() -> ExitCode {
             json,
             preview,
             no_cache,
+            profile,
         ),
         Commands::GenerateAll {
             spec_dir,
@@ -601,6 +607,7 @@ mod tests {
                 json,
                 preview,
                 no_cache,
+                profile,
             } => {
                 assert_eq!(spec, "spec.json");
                 assert_eq!(out_root.as_deref(), Some("out"));
@@ -609,6 +616,7 @@ mod tests {
                 assert!(!json);
                 assert!(preview.is_none());
                 assert!(!no_cache);
+                assert!(!profile);
             }
             _ => panic!("expected generate command"),
         }
@@ -634,6 +642,7 @@ mod tests {
                 json,
                 preview,
                 no_cache,
+                profile,
             } => {
                 assert_eq!(spec, "spec.json");
                 assert!(out_root.is_none());
@@ -642,6 +651,7 @@ mod tests {
                 assert!(!json);
                 assert!(preview.is_none());
                 assert!(!no_cache);
+                assert!(!profile);
             }
             _ => panic!("expected generate command"),
         }
@@ -660,6 +670,7 @@ mod tests {
                 json,
                 preview,
                 no_cache,
+                profile,
             } => {
                 assert_eq!(spec, "spec.json");
                 assert!(out_root.is_none());
@@ -668,6 +679,35 @@ mod tests {
                 assert!(json);
                 assert!(preview.is_none());
                 assert!(!no_cache);
+                assert!(!profile);
+            }
+            _ => panic!("expected generate command"),
+        }
+    }
+
+    #[test]
+    fn test_cli_parses_generate_with_profile() {
+        let cli = Cli::try_parse_from(["speccade", "generate", "--spec", "spec.json", "--profile"])
+            .unwrap();
+        match cli.command {
+            Commands::Generate {
+                spec,
+                out_root,
+                expand_variants,
+                budget,
+                json,
+                preview,
+                no_cache,
+                profile,
+            } => {
+                assert_eq!(spec, "spec.json");
+                assert!(out_root.is_none());
+                assert!(!expand_variants);
+                assert!(budget.is_none());
+                assert!(!json);
+                assert!(preview.is_none());
+                assert!(!no_cache);
+                assert!(profile);
             }
             _ => panic!("expected generate command"),
         }

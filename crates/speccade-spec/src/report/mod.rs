@@ -7,6 +7,7 @@
 mod builder;
 mod error;
 mod output;
+mod timing;
 
 #[cfg(test)]
 mod tests;
@@ -14,6 +15,7 @@ mod tests;
 pub use builder::ReportBuilder;
 pub use error::{ReportError, ReportWarning};
 pub use output::{BoundingBox, OutputMetrics, OutputResult};
+pub use timing::StageTiming;
 
 use crate::spec::AssetType;
 use serde::{Deserialize, Serialize};
@@ -70,6 +72,9 @@ pub struct Report {
     pub warnings: Vec<ReportWarning>,
     /// List of output artifacts produced.
     pub outputs: Vec<OutputResult>,
+    /// Per-stage timing breakdown (only present when --profile is used).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub stages: Option<Vec<StageTiming>>,
     /// Total execution time in milliseconds.
     pub duration_ms: u64,
     /// Backend identifier and version (e.g., "speccade-backend-audio v0.1.0").

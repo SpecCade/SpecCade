@@ -19,7 +19,7 @@ use super::json_output::{
 };
 use super::reporting;
 use crate::cache::{CacheKey, CacheManager};
-use crate::dispatch::dispatch_generate;
+use crate::dispatch::{dispatch_generate, dispatch_generate_profiled};
 use crate::input::{load_spec, LoadResult};
 
 /// Run the generate command
@@ -32,6 +32,7 @@ use crate::input::{load_spec, LoadResult};
 /// * `json_output` - Whether to output machine-readable JSON diagnostics
 /// * `preview_duration` - Optional preview duration in seconds (truncates audio generation)
 /// * `no_cache` - Whether to bypass cache (default: false, cache enabled)
+/// * `profile` - Whether to include per-stage timing in the report
 ///
 /// # Returns
 /// Exit code: 0 success, 1 spec error, 2 generation error
@@ -43,6 +44,7 @@ pub fn run(
     json_output: bool,
     preview_duration: Option<f64>,
     no_cache: bool,
+    profile: bool,
 ) -> Result<ExitCode> {
     if json_output {
         run_json(
@@ -52,6 +54,7 @@ pub fn run(
             budget_name,
             preview_duration,
             no_cache,
+            profile,
         )
     } else {
         run_human(
@@ -61,6 +64,7 @@ pub fn run(
             budget_name,
             preview_duration,
             no_cache,
+            profile,
         )
     }
 }
@@ -73,6 +77,7 @@ fn run_human(
     budget_name: Option<&str>,
     preview_duration: Option<f64>,
     no_cache: bool,
+    profile: bool,
 ) -> Result<ExitCode> {
     let start = Instant::now();
     let out_root = out_root.unwrap_or(".");
@@ -98,6 +103,9 @@ fn run_human(
     }
     if let Some(duration) = preview_duration {
         println!("{} {:.2}s", "Preview mode:".yellow().bold(), duration);
+    }
+    if profile {
+        println!("{} enabled", "Profile:".cyan().bold());
     }
 
     // Load spec file (JSON or Starlark)
@@ -237,16 +245,28 @@ fn run_human(
     let base_gen_start = Instant::now();
     let mut cache_hit = false;
 
-    let base_result = if let (Some(mgr), Some(key)) = (cache_mgr.as_ref(), cache_key.as_ref()) {
+    // Dispatch with optional profiling
+    let base_result = if profile {
+        // Profiling mode: use profiled dispatch, no cache (profiling implies fresh run)
+        println!("\n{}", "Dispatching to backend (profiled)...".dimmed());
+        dispatch_generate_profiled(
+            &spec,
+            out_root,
+            Path::new(spec_path),
+            preview_duration,
+            true,
+        )
+    } else if let (Some(mgr), Some(key)) = (cache_mgr.as_ref(), cache_key.as_ref()) {
         if mgr.has_entry(key) {
             println!("\n{}", "Cache hit, restoring outputs...".green());
             cache_hit = true;
             match mgr.get(key, Path::new(out_root)) {
-                Ok(Some(outputs)) => Ok(outputs),
+                Ok(Some(outputs)) => Ok(crate::dispatch::DispatchResult::new(outputs)),
                 Ok(None) => {
                     println!("  {} Cache entry missing, regenerating...", "!".yellow());
                     cache_hit = false;
                     dispatch_generate(&spec, out_root, Path::new(spec_path), preview_duration)
+                        .map(crate::dispatch::DispatchResult::new)
                 }
                 Err(e) => {
                     println!(
@@ -256,15 +276,18 @@ fn run_human(
                     );
                     cache_hit = false;
                     dispatch_generate(&spec, out_root, Path::new(spec_path), preview_duration)
+                        .map(crate::dispatch::DispatchResult::new)
                 }
             }
         } else {
             println!("\n{}", "Dispatching to backend...".dimmed());
             dispatch_generate(&spec, out_root, Path::new(spec_path), preview_duration)
+                .map(crate::dispatch::DispatchResult::new)
         }
     } else {
         println!("\n{}", "Dispatching to backend...".dimmed());
         dispatch_generate(&spec, out_root, Path::new(spec_path), preview_duration)
+            .map(crate::dispatch::DispatchResult::new)
     };
 
     let base_duration_ms = base_gen_start.elapsed().as_millis() as u64;
@@ -272,11 +295,13 @@ fn run_human(
     let mut any_generation_failed = false;
 
     match base_result {
-        Ok(outputs) => {
+        Ok(dispatch_result) => {
+            let outputs = dispatch_result.outputs;
+            let stages = dispatch_result.stages;
             let output_count = outputs.len();
 
-            // Store in cache (if generation happened and caching is enabled)
-            if !cache_hit {
+            // Store in cache (if generation happened and caching is enabled, and not profiling)
+            if !cache_hit && !profile {
                 if let (Some(mgr), Some(key)) = (cache_mgr.as_ref(), cache_key.as_ref()) {
                     if let Err(e) = mgr.put(key, &outputs, Path::new(out_root)) {
                         println!("  {} Failed to cache outputs: {}", "!".yellow(), e);
@@ -293,6 +318,11 @@ fn run_human(
             .duration_ms(base_duration_ms);
             if let Some(hash) = recipe_hash.clone() {
                 report_builder = report_builder.recipe_hash(hash);
+            }
+
+            // Add stage timings if profiling was enabled
+            if let Some(stage_timings) = stages {
+                report_builder = report_builder.stages(stage_timings);
             }
 
             report_builder =
@@ -462,6 +492,7 @@ fn run_json(
     budget_name: Option<&str>,
     preview_duration: Option<f64>,
     no_cache: bool,
+    profile: bool,
 ) -> Result<ExitCode> {
     let start = Instant::now();
     let out_root_str = out_root.unwrap_or(".");
@@ -606,23 +637,38 @@ fn run_json(
     let base_gen_start = Instant::now();
     let mut cache_hit = false;
 
-    let base_result = if let (Some(mgr), Some(key)) = (cache_mgr.as_ref(), cache_key.as_ref()) {
+    // Dispatch with optional profiling
+    let base_result = if profile {
+        // Profiling mode: use profiled dispatch
+        dispatch_generate_profiled(
+            &spec,
+            out_root_str,
+            Path::new(spec_path),
+            preview_duration,
+            true,
+        )
+    } else if let (Some(mgr), Some(key)) = (cache_mgr.as_ref(), cache_key.as_ref()) {
         if let Ok(Some(outputs)) = mgr.get(key, Path::new(out_root_str)) {
             cache_hit = true;
-            Ok(outputs)
+            Ok(crate::dispatch::DispatchResult::new(outputs))
         } else {
             dispatch_generate(&spec, out_root_str, Path::new(spec_path), preview_duration)
+                .map(crate::dispatch::DispatchResult::new)
         }
     } else {
         dispatch_generate(&spec, out_root_str, Path::new(spec_path), preview_duration)
+            .map(crate::dispatch::DispatchResult::new)
     };
 
     let base_duration_ms = base_gen_start.elapsed().as_millis() as u64;
 
     match base_result {
-        Ok(outputs) => {
-            // Store in cache (if generation happened and caching is enabled)
-            if !cache_hit {
+        Ok(dispatch_result) => {
+            let outputs = dispatch_result.outputs;
+            let stages = dispatch_result.stages;
+
+            // Store in cache (if generation happened and caching is enabled, and not profiling)
+            if !cache_hit && !profile {
                 if let (Some(mgr), Some(key)) = (cache_mgr.as_ref(), cache_key.as_ref()) {
                     let _ = mgr.put(key, &outputs, Path::new(out_root_str));
                 }
@@ -637,6 +683,11 @@ fn run_json(
             .duration_ms(base_duration_ms);
             if let Some(hash) = recipe_hash.clone() {
                 report_builder = report_builder.recipe_hash(hash);
+            }
+
+            // Add stage timings if profiling was enabled
+            if let Some(stage_timings) = stages {
+                report_builder = report_builder.stages(stage_timings);
             }
 
             report_builder =
@@ -905,6 +956,7 @@ mod tests {
             false,
             None,
             false,
+            false,
         )
         .unwrap();
         assert_eq!(code, ExitCode::from(1));
@@ -944,6 +996,7 @@ mod tests {
             None,
             false,
             None,
+            false,
             false,
         )
         .unwrap();
@@ -1008,6 +1061,7 @@ mod tests {
             None,
             false,
             None,
+            false,
             false,
         )
         .unwrap();
@@ -1078,6 +1132,7 @@ mod tests {
             None,
             false,
             None,
+            false,
             false,
         )
         .unwrap();
@@ -1181,6 +1236,7 @@ mod tests {
             true,
             None,
             false,
+            false,
         )
         .unwrap();
         assert_eq!(code, ExitCode::SUCCESS);
@@ -1208,6 +1264,7 @@ mod tests {
             true,
             None,
             false,
+            false,
         )
         .unwrap();
         assert_eq!(code, ExitCode::from(1));
@@ -1223,6 +1280,7 @@ mod tests {
             None,
             true,
             None,
+            false,
             false,
         )
         .unwrap();

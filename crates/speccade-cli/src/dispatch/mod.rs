@@ -8,7 +8,7 @@ mod music;
 mod texture;
 mod waveform;
 
-use speccade_spec::{BackendError, OutputKind, OutputResult, Spec};
+use speccade_spec::{BackendError, OutputKind, OutputResult, Spec, StageTiming};
 use std::fmt;
 use std::fs;
 use std::path::Path;
@@ -115,6 +115,113 @@ pub fn dispatch_generate(
         }
 
         // Unknown recipe kind
+        _ => Err(DispatchError::BackendNotImplemented(kind.clone())),
+    }
+}
+
+/// Result of a dispatch with optional profiling timings.
+pub struct DispatchResult {
+    /// The generated output artifacts.
+    pub outputs: Vec<OutputResult>,
+    /// Per-stage timing breakdown (only present when profiling is enabled).
+    pub stages: Option<Vec<StageTiming>>,
+}
+
+impl DispatchResult {
+    /// Creates a dispatch result without profiling data.
+    pub fn new(outputs: Vec<OutputResult>) -> Self {
+        Self {
+            outputs,
+            stages: None,
+        }
+    }
+
+    /// Creates a dispatch result with profiling data.
+    pub fn with_stages(outputs: Vec<OutputResult>, stages: Vec<StageTiming>) -> Self {
+        Self {
+            outputs,
+            stages: if stages.is_empty() {
+                None
+            } else {
+                Some(stages)
+            },
+        }
+    }
+}
+
+/// Dispatch generation with optional profiling support.
+///
+/// When `profile` is true, per-stage timing information is collected and returned.
+pub fn dispatch_generate_profiled(
+    spec: &Spec,
+    out_root: &str,
+    spec_path: &Path,
+    preview_duration: Option<f64>,
+    profile: bool,
+) -> Result<DispatchResult, DispatchError> {
+    let recipe = spec.recipe.as_ref().ok_or(DispatchError::NoRecipe)?;
+    let kind = &recipe.kind;
+
+    // Create output directory if it doesn't exist
+    let out_root_path = Path::new(out_root);
+    fs::create_dir_all(out_root_path).map_err(|e| {
+        DispatchError::BackendError(format!("Failed to create output directory: {}", e))
+    })?;
+
+    // Get spec directory for resolving relative paths
+    let spec_dir = spec_path.parent().ok_or_else(|| {
+        DispatchError::BackendError("Invalid spec path: no parent directory".to_string())
+    })?;
+
+    // Dispatch based on recipe kind prefix with optional timing instrumentation
+    match kind.as_str() {
+        "audio_v1" => {
+            if profile {
+                audio::generate_audio_profiled(spec, out_root_path, preview_duration)
+            } else {
+                audio::generate_audio(spec, out_root_path, preview_duration)
+                    .map(DispatchResult::new)
+            }
+        }
+
+        "music.tracker_song_v1" => {
+            if profile {
+                music::generate_music_profiled(spec, out_root_path, spec_dir)
+            } else {
+                music::generate_music(spec, out_root_path, spec_dir).map(DispatchResult::new)
+            }
+        }
+
+        "music.tracker_song_compose_v1" => {
+            if profile {
+                music::generate_music_compose_profiled(spec, out_root_path, spec_dir)
+            } else {
+                music::generate_music_compose(spec, out_root_path, spec_dir)
+                    .map(DispatchResult::new)
+            }
+        }
+
+        "texture.procedural_v1" => {
+            if profile {
+                texture::generate_texture_procedural_profiled(spec, out_root_path)
+            } else {
+                texture::generate_texture_procedural(spec, out_root_path).map(DispatchResult::new)
+            }
+        }
+
+        // Blender backends (no profiling instrumentation yet)
+        "static_mesh.blender_primitives_v1" => {
+            blender::generate_blender_static_mesh(spec, out_root_path).map(DispatchResult::new)
+        }
+
+        "skeletal_mesh.blender_rigged_mesh_v1" => {
+            blender::generate_blender_skeletal_mesh(spec, out_root_path).map(DispatchResult::new)
+        }
+
+        "skeletal_animation.blender_clip_v1" => {
+            blender::generate_blender_animation(spec, out_root_path).map(DispatchResult::new)
+        }
+
         _ => Err(DispatchError::BackendNotImplemented(kind.clone())),
     }
 }

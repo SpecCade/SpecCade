@@ -67,7 +67,7 @@ pub use output::{EngineTarget, OutputFormat, OutputKind, OutputSpec, VariantSpec
 pub use recipe::Recipe;
 pub use report::{
     BoundingBox, OutputMetrics, OutputResult, Report, ReportBuilder, ReportError, ReportWarning,
-    REPORT_VERSION,
+    StageTiming, REPORT_VERSION,
 };
 pub use spec::{AssetType, Spec, SpecBuilder, MAX_SEED, SPEC_VERSION};
 pub use validation::{

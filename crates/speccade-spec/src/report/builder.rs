@@ -1,6 +1,6 @@
 //! Builder pattern for creating reports.
 
-use super::{OutputResult, Report, ReportError, ReportWarning, REPORT_VERSION};
+use super::{OutputResult, Report, ReportError, ReportWarning, StageTiming, REPORT_VERSION};
 use crate::error::{ValidationError, ValidationWarning};
 use crate::spec::{AssetType, Spec};
 
@@ -22,6 +22,7 @@ pub struct ReportBuilder {
     errors: Vec<ReportError>,
     warnings: Vec<ReportWarning>,
     outputs: Vec<OutputResult>,
+    stages: Option<Vec<StageTiming>>,
     duration_ms: u64,
     backend_version: String,
     target_triple: String,
@@ -68,6 +69,7 @@ impl ReportBuilder {
             errors: Vec::new(),
             warnings: Vec::new(),
             outputs: Vec::new(),
+            stages: None,
             duration_ms: 0,
             backend_version,
             target_triple: Self::detect_target_triple(),
@@ -166,6 +168,30 @@ impl ReportBuilder {
         self
     }
 
+    /// Adds a stage timing entry (only used when --profile is set).
+    ///
+    /// # Arguments
+    /// * `stage` - Name identifying the stage (e.g., "parse_params", "render_layers")
+    /// * `duration_ms` - Duration of the stage in milliseconds
+    pub fn stage(mut self, stage: impl Into<String>, duration_ms: u64) -> Self {
+        let timing = StageTiming::new(stage, duration_ms);
+        match &mut self.stages {
+            Some(stages) => stages.push(timing),
+            None => self.stages = Some(vec![timing]),
+        }
+        self
+    }
+
+    /// Sets all stage timings at once (only used when --profile is set).
+    pub fn stages(mut self, stages: Vec<StageTiming>) -> Self {
+        if stages.is_empty() {
+            self.stages = None;
+        } else {
+            self.stages = Some(stages);
+        }
+        self
+    }
+
     /// Sets the execution duration in milliseconds.
     pub fn duration_ms(mut self, ms: u64) -> Self {
         self.duration_ms = ms;
@@ -190,11 +216,7 @@ impl ReportBuilder {
     /// # Arguments
     /// * `kind` - Source format ("json" or "starlark")
     /// * `hash` - BLAKE3 hash of the source file content
-    pub fn source_provenance(
-        mut self,
-        kind: impl Into<String>,
-        hash: impl Into<String>,
-    ) -> Self {
+    pub fn source_provenance(mut self, kind: impl Into<String>, hash: impl Into<String>) -> Self {
         self.source_kind = Some(kind.into());
         self.source_hash = Some(hash.into());
         self
@@ -228,6 +250,7 @@ impl ReportBuilder {
             errors: self.errors,
             warnings: self.warnings,
             outputs: self.outputs,
+            stages: self.stages,
             duration_ms: self.duration_ms,
             backend_version: self.backend_version,
             target_triple: self.target_triple,

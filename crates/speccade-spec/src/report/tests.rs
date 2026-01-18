@@ -236,3 +236,82 @@ fn test_validation_warnings_batch_conversion() {
     assert_eq!(report.warnings[0].code, "W001");
     assert_eq!(report.warnings[1].code, "W002");
 }
+
+#[test]
+fn test_report_builder_with_stage_timings() {
+    let report = ReportBuilder::new("hash".to_string(), "backend v1.0".to_string())
+        .stage("parse_params", 5)
+        .stage("render_layers", 100)
+        .stage("encode_output", 20)
+        .build();
+
+    assert!(report.stages.is_some());
+    let stages = report.stages.unwrap();
+    assert_eq!(stages.len(), 3);
+    assert_eq!(stages[0].stage, "parse_params");
+    assert_eq!(stages[0].duration_ms, 5);
+    assert_eq!(stages[1].stage, "render_layers");
+    assert_eq!(stages[1].duration_ms, 100);
+    assert_eq!(stages[2].stage, "encode_output");
+    assert_eq!(stages[2].duration_ms, 20);
+}
+
+#[test]
+fn test_report_builder_with_stages_vec() {
+    use super::StageTiming;
+
+    let timings = vec![
+        StageTiming::new("parse_params", 10),
+        StageTiming::new("apply_effects", 50),
+    ];
+
+    let report = ReportBuilder::new("hash".to_string(), "backend v1.0".to_string())
+        .stages(timings)
+        .build();
+
+    assert!(report.stages.is_some());
+    let stages = report.stages.unwrap();
+    assert_eq!(stages.len(), 2);
+    assert_eq!(stages[0].stage, "parse_params");
+    assert_eq!(stages[1].stage, "apply_effects");
+}
+
+#[test]
+fn test_report_builder_empty_stages_vec() {
+    let report = ReportBuilder::new("hash".to_string(), "backend v1.0".to_string())
+        .stages(vec![])
+        .build();
+
+    assert!(report.stages.is_none());
+}
+
+#[test]
+fn test_report_without_stages_skips_serialization() {
+    let report = ReportBuilder::new("hash".to_string(), "backend v1.0".to_string())
+        .ok(true)
+        .build();
+
+    let json = report.to_json().unwrap();
+    assert!(!json.contains("\"stages\""));
+}
+
+#[test]
+fn test_report_with_stages_serializes() {
+    let report = ReportBuilder::new("hash".to_string(), "backend v1.0".to_string())
+        .stage("test_stage", 42)
+        .ok(true)
+        .build();
+
+    let json = report.to_json().unwrap();
+    assert!(json.contains("\"stages\""));
+    assert!(json.contains("\"test_stage\""));
+    assert!(json.contains("42"));
+
+    // Round-trip test
+    let parsed = Report::from_json(&json).unwrap();
+    assert!(parsed.stages.is_some());
+    let stages = parsed.stages.unwrap();
+    assert_eq!(stages.len(), 1);
+    assert_eq!(stages[0].stage, "test_stage");
+    assert_eq!(stages[0].duration_ms, 42);
+}
