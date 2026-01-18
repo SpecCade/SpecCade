@@ -88,6 +88,9 @@ jobs:
             echo "No golden specs directory found, skipping validation"
           fi
 
+      - name: Run golden hash verification tests
+        run: cargo test -p speccade-tests --test golden_hash_verification -- --nocapture
+
   format:
     name: Format Check
     runs-on: ubuntu-latest
