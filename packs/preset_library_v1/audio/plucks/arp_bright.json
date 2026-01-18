@@ -158,6 +158,17 @@
                     "drive": 1.12,
                     "wet": 0.3,
                     "curve": "tanh"
+                },
+                {
+                    "type": "parametric_eq",
+                    "bands": [
+                        {
+                            "frequency": 20,
+                            "gain_db": -12,
+                            "q": 0.7,
+                            "band_type": "lowshelf"
+                        }
+                    ]
                 }
             ]
         }

@@ -264,6 +264,17 @@
                     "room_size": 0.25,
                     "damping": 0.6,
                     "wet": 0.15
+                },
+                {
+                    "type": "parametric_eq",
+                    "bands": [
+                        {
+                            "frequency": 30,
+                            "gain_db": -24,
+                            "q": 0.7,
+                            "band_type": "lowshelf"
+                        }
+                    ]
                 }
             ]
         }

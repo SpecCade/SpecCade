@@ -123,8 +123,9 @@ Open questions:
 
 ## Audio
 
-- [ ] `AUDIO-001` Keep expanding and tuning the `audio_v1` preset library with QA gates.
+- [x] `AUDIO-001` Keep expanding and tuning the `audio_v1` preset library with QA gates. **Done: 2026-01-18**
   - Deliverable: baseline checks (no clipping, sane RMS, low DC offset) applied in CI or via `speccade analyze`.
+  - Implemented: Rust test validates all 255 presets; 36 presets fixed for DC offset/compressor issues.
 - [ ] `AUDIO-002` Add an "audio audit" report command (or `analyze` sub-mode) to catch regressions.
   - Deliverable: peak/RMS/DC metrics for golden audio fixtures + budgeted tolerances.
 - [ ] `AUDIO-003` Improve loop-point generation + click-free defaults for tracker instrument baking.

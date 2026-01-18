@@ -261,6 +261,17 @@
                     "attack_ms": 8.0,
                     "release_ms": 80.0,
                     "makeup_db": 0
+                },
+                {
+                    "type": "parametric_eq",
+                    "bands": [
+                        {
+                            "frequency": 20,
+                            "gain_db": -12,
+                            "q": 0.7,
+                            "band_type": "lowshelf"
+                        }
+                    ]
                 }
             ]
         }

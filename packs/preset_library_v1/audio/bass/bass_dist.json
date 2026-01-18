@@ -156,6 +156,17 @@
                     "type": "bitcrush",
                     "bits": 8,
                     "sample_rate_reduction": 1
+                },
+                {
+                    "type": "parametric_eq",
+                    "bands": [
+                        {
+                            "frequency": 20,
+                            "gain_db": -12,
+                            "q": 0.7,
+                            "band_type": "lowshelf"
+                        }
+                    ]
                 }
             ]
         }

@@ -31,6 +31,10 @@ path = "tests/e2e_determinism.rs"
 name = "starlark_input"
 path = "tests/starlark_input.rs"
 
+[[test]]
+name = "preset_qa"
+path = "tests/preset_qa.rs"
+
 [dependencies]
 # We need all the workspace crates for integration testing
 speccade-spec = { workspace = true }

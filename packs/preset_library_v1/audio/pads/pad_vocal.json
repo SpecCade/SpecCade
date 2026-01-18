@@ -190,7 +190,12 @@
                     "release_ms": 150.0,
                     "makeup_db": 0
                 }
-            ]
+            ],
+            "master_filter": {
+                "type": "highpass",
+                "cutoff": 30,
+                "resonance": 0.0
+            }
         }
     }
 }

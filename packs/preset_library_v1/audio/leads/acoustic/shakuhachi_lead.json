@@ -297,6 +297,17 @@
                     "depth": 0.22,
                     "wet": 0.12,
                     "voices": 2
+                },
+                {
+                    "type": "parametric_eq",
+                    "bands": [
+                        {
+                            "frequency": 30,
+                            "gain_db": -24,
+                            "q": 0.7,
+                            "band_type": "lowshelf"
+                        }
+                    ]
                 }
             ]
         }

@@ -186,8 +186,8 @@
           "ratio": 3.5,
           "wet": 1.0,
           "threshold_db": -12.0,
-          "attack_ms": 0.005,
-          "release_ms": 0.08,
+          "attack_ms": 0.1,
+          "release_ms": 10,
           "makeup_db": 0
         }
       ]

@@ -241,6 +241,17 @@
                     "damping": 0.35,
                     "wet": 0.55,
                     "width": 0.65
+                },
+                {
+                    "type": "parametric_eq",
+                    "bands": [
+                        {
+                            "frequency": 30,
+                            "gain_db": -24,
+                            "q": 0.7,
+                            "band_type": "lowshelf"
+                        }
+                    ]
                 }
             ]
         }
