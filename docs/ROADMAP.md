@@ -109,8 +109,9 @@ Open questions:
 - [x] `MUSIC-003` Improve `speccade expand` UX for review workflows. **Done: 2026-01-18**
   - Deliverable: stable formatting, optional file output, and diff-friendly mode.
   - Implemented: `--output`, `--pretty`, `--compact`, `--json` flags; Starlark input support.
-- [ ] `MUSIC-004` Tighten XM/IT parity checks and document known differences.
+- [x] `MUSIC-004` Tighten XM/IT parity checks and document known differences. **Done: 2026-01-18**
   - Deliverable: automated structural checks + a short listening checklist doc.
+  - Implemented: `check_parity()` function in backend-music; `docs/xm-it-differences.md` with QA checklist.
 - [ ] `MUSIC-008` Expand tracker effect coverage + validation (arp/porta/vibrato/retrig/vol slide, etc.).
 - [ ] `MUSIC-009` Add deterministic swing/humanize macros to Pattern IR (timing + velocity ranges with explicit constraints).
 

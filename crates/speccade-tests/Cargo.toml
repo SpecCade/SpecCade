@@ -39,6 +39,10 @@ path = "tests/preset_qa.rs"
 name = "golden_hash_verification"
 path = "tests/golden_hash_verification.rs"
 
+[[test]]
+name = "music_parity"
+path = "tests/music_parity.rs"
+
 [dependencies]
 # We need all the workspace crates for integration testing
 speccade-spec = { workspace = true }

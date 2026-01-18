@@ -178,6 +178,7 @@ fn test_audio_params_determinism() {
             lfo: None,
         }],
         pitch_envelope: None,
+        loop_config: None,
         generate_loop_points: false,
         master_filter: None,
         effects: vec![],

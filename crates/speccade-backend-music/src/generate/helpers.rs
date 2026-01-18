@@ -238,6 +238,7 @@ pub(super) fn legacy_synthesis_to_audio_v1_params(
             lfo: None,
         }],
         pitch_envelope: None,
+        loop_config: None,
         generate_loop_points: want_loop,
         master_filter: None,
         effects: vec![],

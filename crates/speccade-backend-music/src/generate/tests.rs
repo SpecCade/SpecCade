@@ -256,6 +256,7 @@ fn test_bake_instrument_sample_inline_audio_v1_downmixes_stereo() {
                 },
             ],
             pitch_envelope: None,
+            loop_config: None,
             generate_loop_points: false,
             master_filter: None,
             effects: vec![],
@@ -300,6 +301,7 @@ fn test_loop_policy_uses_tracker_envelope_sustain() {
             lfo: None,
         }],
         pitch_envelope: None,
+        loop_config: None,
         // Intentionally opposite of the tracker envelope tests below.
         generate_loop_points: true,
         master_filter: None,
@@ -325,6 +327,7 @@ fn test_loop_policy_uses_tracker_envelope_sustain() {
     let sustained = TrackerInstrument {
         name: "Sustain".to_string(),
         synthesis_audio_v1: Some(AudioV1Params {
+            loop_config: None,
             generate_loop_points: false,
             ..audio
         }),
@@ -365,6 +368,7 @@ fn test_audio_v1_base_note_midi_note_is_used_for_pitch_mapping() {
                 lfo: None,
             }],
             pitch_envelope: None,
+            loop_config: None,
             generate_loop_points: false,
             master_filter: None,
             effects: vec![],
@@ -408,6 +412,7 @@ fn test_sustained_sine_prefers_forward_loop_with_crossfade() {
                 lfo: None,
             }],
             pitch_envelope: None,
+            loop_config: None,
             generate_loop_points: false,
             master_filter: None,
             effects: vec![],
@@ -452,6 +457,7 @@ fn test_sustained_noise_falls_back_to_pingpong_loop() {
                 lfo: None,
             }],
             pitch_envelope: None,
+            loop_config: None,
             generate_loop_points: false,
             master_filter: None,
             effects: vec![],

@@ -62,6 +62,7 @@ pub mod generate;
 pub mod it;
 pub mod it_gen;
 pub mod note;
+pub mod parity;
 pub mod synthesis;
 pub mod xm;
 pub mod xm_gen;
@@ -73,6 +74,7 @@ pub use note::{
     calculate_pitch_correction, freq_to_midi, it_note_to_name, midi_to_freq, note_name_to_it,
     note_name_to_xm, xm_note_to_name, DEFAULT_SAMPLE_RATE,
 };
+pub use parity::{check_parity, check_parity_detailed, ParityError, ParityMismatch, ParityReport};
 
 /// Crate version for backend identification.
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
