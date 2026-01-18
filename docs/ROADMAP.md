@@ -106,8 +106,9 @@ Open questions:
   - Implemented: Generated eurobeat_4bars.expanded.params.json; all compose specs now have snapshot coverage.
 - [ ] `MUSIC-002` Extend Pattern IR operators and hard limits (keep determinism + reviewability).
   - Deliverable: RFC + schema/types changes + tests for any new ops; avoid silent behavior changes.
-- [ ] `MUSIC-003` Improve `speccade expand` UX for review workflows.
+- [x] `MUSIC-003` Improve `speccade expand` UX for review workflows. **Done: 2026-01-18**
   - Deliverable: stable formatting, optional file output, and diff-friendly mode.
+  - Implemented: `--output`, `--pretty`, `--compact`, `--json` flags; Starlark input support.
 - [ ] `MUSIC-004` Tighten XM/IT parity checks and document known differences.
   - Deliverable: automated structural checks + a short listening checklist doc.
 - [ ] `MUSIC-008` Expand tracker effect coverage + validation (arp/porta/vibrato/retrig/vol slide, etc.).

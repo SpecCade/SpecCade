@@ -175,6 +175,22 @@ enum Commands {
         /// Path to the spec file (JSON or Starlark)
         #[arg(short, long)]
         spec: String,
+
+        /// Output file path (default: stdout)
+        #[arg(short, long)]
+        output: Option<String>,
+
+        /// Pretty-print the output JSON (default: true)
+        #[arg(long, default_value = "true")]
+        pretty: bool,
+
+        /// Compact output (minified JSON, overrides --pretty)
+        #[arg(long)]
+        compact: bool,
+
+        /// Output machine-readable JSON envelope
+        #[arg(long)]
+        json: bool,
     },
 
     /// Migrate legacy .spec.py files to canonical JSON format
@@ -355,7 +371,13 @@ fn main() -> ExitCode {
         ),
         Commands::Preview { spec, out_root } => commands::preview::run(&spec, out_root.as_deref()),
         Commands::Doctor => commands::doctor::run(),
-        Commands::Expand { spec } => commands::expand::run(&spec),
+        Commands::Expand {
+            spec,
+            output,
+            pretty,
+            compact,
+            json,
+        } => commands::expand::run(&spec, output.as_deref(), pretty && !compact, json),
         Commands::Migrate {
             project,
             allow_exec_specs,
@@ -635,8 +657,91 @@ mod tests {
     fn test_cli_parses_expand() {
         let cli = Cli::try_parse_from(["speccade", "expand", "--spec", "spec.json"]).unwrap();
         match cli.command {
-            Commands::Expand { spec } => {
+            Commands::Expand {
+                spec,
+                output,
+                pretty,
+                compact,
+                json,
+            } => {
                 assert_eq!(spec, "spec.json");
+                assert!(output.is_none());
+                assert!(pretty); // default is true
+                assert!(!compact);
+                assert!(!json);
+            }
+            _ => panic!("expected expand command"),
+        }
+    }
+
+    #[test]
+    fn test_cli_parses_expand_with_output() {
+        let cli = Cli::try_parse_from([
+            "speccade",
+            "expand",
+            "--spec",
+            "spec.json",
+            "--output",
+            "out.json",
+        ])
+        .unwrap();
+        match cli.command {
+            Commands::Expand {
+                spec,
+                output,
+                pretty,
+                compact,
+                json,
+            } => {
+                assert_eq!(spec, "spec.json");
+                assert_eq!(output.as_deref(), Some("out.json"));
+                assert!(pretty);
+                assert!(!compact);
+                assert!(!json);
+            }
+            _ => panic!("expected expand command"),
+        }
+    }
+
+    #[test]
+    fn test_cli_parses_expand_with_compact() {
+        let cli = Cli::try_parse_from(["speccade", "expand", "--spec", "spec.json", "--compact"])
+            .unwrap();
+        match cli.command {
+            Commands::Expand {
+                spec,
+                output,
+                pretty,
+                compact,
+                json,
+            } => {
+                assert_eq!(spec, "spec.json");
+                assert!(output.is_none());
+                assert!(pretty); // still true, but compact overrides
+                assert!(compact);
+                assert!(!json);
+            }
+            _ => panic!("expected expand command"),
+        }
+    }
+
+    #[test]
+    fn test_cli_parses_expand_with_json() {
+        let cli =
+            Cli::try_parse_from(["speccade", "expand", "--spec", "spec.json", "--json"]).unwrap();
+        match cli.command {
+            Commands::Expand {
+                spec,
+                output,
+                pretty,
+                compact,
+                json,
+            } => {
+                assert_eq!(spec, "spec.json");
+                assert!(output.is_none());
+                assert!(pretty);
+                assert!(!compact);
+                assert!(json);
             }
             _ => panic!("expected expand command"),
         }

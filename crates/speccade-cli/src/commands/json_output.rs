@@ -494,6 +494,57 @@ pub fn compile_warnings_to_json(warnings: &[crate::input::CompileWarning]) -> Ve
         .collect()
 }
 
+/// JSON output for the `expand` command.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ExpandOutput {
+    /// Whether the expansion succeeded
+    pub success: bool,
+    /// Errors encountered during expansion
+    pub errors: Vec<JsonError>,
+    /// Warnings from compilation (Starlark only)
+    pub warnings: Vec<JsonWarning>,
+    /// The expanded tracker params JSON (on success)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub expanded: Option<serde_json::Value>,
+    /// BLAKE3 hash of the source file
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub source_hash: Option<String>,
+    /// Source format (json/starlark)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub source_kind: Option<String>,
+}
+
+impl ExpandOutput {
+    /// Creates a successful expand output.
+    pub fn success(
+        expanded: serde_json::Value,
+        source_hash: String,
+        source_kind: String,
+        warnings: Vec<JsonWarning>,
+    ) -> Self {
+        Self {
+            success: true,
+            errors: Vec::new(),
+            warnings,
+            expanded: Some(expanded),
+            source_hash: Some(source_hash),
+            source_kind: Some(source_kind),
+        }
+    }
+
+    /// Creates a failed expand output.
+    pub fn failure(errors: Vec<JsonError>, warnings: Vec<JsonWarning>) -> Self {
+        Self {
+            success: false,
+            errors,
+            warnings,
+            expanded: None,
+            source_hash: None,
+            source_kind: None,
+        }
+    }
+}
+
 /// JSON output for the `analyze` command.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AnalyzeOutput {
