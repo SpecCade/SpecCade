@@ -142,6 +142,12 @@ enum Commands {
         #[command(subcommand)]
         command: TemplateCommands,
     },
+
+    /// Inspect Starlark stdlib functions and metadata
+    Stdlib {
+        #[command(subcommand)]
+        command: StdlibCommands,
+    },
 }
 
 #[derive(Subcommand)]
@@ -173,6 +179,16 @@ enum TemplateCommands {
     },
 }
 
+#[derive(Subcommand)]
+enum StdlibCommands {
+    /// Dump stdlib function metadata in machine-readable format
+    Dump {
+        /// Output format (currently only "json" is supported)
+        #[arg(long, default_value = "json", value_parser = ["json"])]
+        format: String,
+    },
+}
+
 fn main() -> ExitCode {
     let cli = Cli::parse();
 
@@ -188,7 +204,12 @@ fn main() -> ExitCode {
             out_root,
             expand_variants,
             budget,
-        } => commands::generate::run(&spec, out_root.as_deref(), expand_variants, budget.as_deref()),
+        } => commands::generate::run(
+            &spec,
+            out_root.as_deref(),
+            expand_variants,
+            budget.as_deref(),
+        ),
         Commands::GenerateAll {
             spec_dir,
             out_root,
@@ -221,6 +242,14 @@ fn main() -> ExitCode {
             TemplateCommands::Show { id, asset_type } => commands::template::show(&asset_type, &id),
             TemplateCommands::Copy { id, to, asset_type } => {
                 commands::template::copy(&asset_type, &id, Path::new(&to))
+            }
+        },
+        Commands::Stdlib { command } => match command {
+            StdlibCommands::Dump { format } => {
+                let dump_format = format
+                    .parse::<commands::stdlib::DumpFormat>()
+                    .expect("clap should have validated format");
+                commands::stdlib::run_dump(dump_format)
             }
         },
     };
@@ -595,6 +624,32 @@ mod tests {
                 _ => panic!("expected template copy"),
             },
             _ => panic!("expected template command"),
+        }
+    }
+
+    #[test]
+    fn test_cli_parses_stdlib_dump() {
+        let cli = Cli::try_parse_from(["speccade", "stdlib", "dump"]).unwrap();
+        match cli.command {
+            Commands::Stdlib { command } => match command {
+                StdlibCommands::Dump { format } => {
+                    assert_eq!(format, "json");
+                }
+            },
+            _ => panic!("expected stdlib command"),
+        }
+    }
+
+    #[test]
+    fn test_cli_parses_stdlib_dump_with_format() {
+        let cli = Cli::try_parse_from(["speccade", "stdlib", "dump", "--format", "json"]).unwrap();
+        match cli.command {
+            Commands::Stdlib { command } => match command {
+                StdlibCommands::Dump { format } => {
+                    assert_eq!(format, "json");
+                }
+            },
+            _ => panic!("expected stdlib command"),
         }
     }
 }

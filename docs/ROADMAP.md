@@ -29,7 +29,7 @@ This file is grouped by domain, but a typical dependency order is:
 
 Reference: `docs/rfcs/RFC-0008-llm-native-asset-authoring.md`
 
-- [ ] `LLM-001` Add machine-readable stdlib dump: `speccade stdlib dump --format json`.
+- [x] `LLM-001` Add machine-readable stdlib dump: `speccade stdlib dump --format json`. **Done: 2026-01-18**
   - Deliverable: stable JSON describing stdlib functions, params (required/default), enums, ranges, examples, and `STDLIB_VERSION`.
   - Touch points: `crates/speccade-cli/src/compiler/stdlib/`, CLI command plumbing under `crates/speccade-cli/src/commands/`.
 - [ ] `LLM-002` Add `--json` structured output for `eval`, `validate`, `generate`.

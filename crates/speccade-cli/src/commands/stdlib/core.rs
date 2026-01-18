@@ -1,0 +1,50 @@
+//! Core stdlib functions (spec, output, envelope)
+
+use super::{func, param, FunctionInfo};
+
+pub(super) fn register_functions() -> Vec<FunctionInfo> {
+    vec![
+        func!(
+            "spec",
+            "core",
+            "Creates a complete spec dictionary with all required fields.",
+            vec![
+                param!("asset_id", "string", req),
+                param!("asset_type", "string", req, enum: &["audio", "texture", "static_mesh", "music"]),
+                param!("seed", "int", req, range: Some(0.0), Some(4294967295.0)),
+                param!("outputs", "list", req),
+                param!("recipe", "dict", req),
+                param!("license", "string", opt, "CC0-1.0"),
+                param!("description", "string", opt_none),
+                param!("style_tags", "list", opt_none),
+            ],
+            "A complete spec dict ready for serialization.",
+            r#"spec(asset_id="laser-01", asset_type="audio", seed=42, outputs=[...], recipe={...})"#
+        ),
+        func!(
+            "output",
+            "core",
+            "Creates an output specification for an asset.",
+            vec![
+                param!("path", "string", req),
+                param!("format", "string", req, enum: &["wav", "ogg", "png", "glb", "xm", "it"]),
+                param!("kind", "string", opt, "primary", enum: &["primary", "variant"]),
+            ],
+            "An output dict for the spec outputs list.",
+            r#"output("sounds/laser.wav", "wav")"#
+        ),
+        func!(
+            "envelope",
+            "core",
+            "Creates an ADSR envelope configuration.",
+            vec![
+                param!("attack", "float", opt, 0.01, range: Some(0.0), None),
+                param!("decay", "float", opt, 0.1, range: Some(0.0), None),
+                param!("sustain", "float", opt, 0.7, range: Some(0.0), Some(1.0)),
+                param!("release", "float", opt, 0.2, range: Some(0.0), None),
+            ],
+            "An ADSR envelope dict.",
+            "envelope(0.01, 0.1, 0.7, 0.2)"
+        ),
+    ]
+}

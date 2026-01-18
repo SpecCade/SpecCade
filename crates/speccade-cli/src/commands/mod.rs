@@ -8,6 +8,7 @@ pub mod generate;
 pub mod generate_all;
 pub mod migrate;
 pub mod preview;
+pub mod stdlib;
 pub mod template;
 pub mod validate;
 
