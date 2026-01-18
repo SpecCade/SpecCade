@@ -56,7 +56,8 @@ Reference: `docs/rfcs/RFC-0008-llm-native-asset-authoring.md`
   - Implemented: `--embeddings` flag outputs 48-dimension deterministic feature vectors for audio and texture files.
 - [x] `LLM-010` Add batch analysis modes (`--input-dir`, CSV/JSONL outputs) for clustering/auditing. **Done: 2026-01-18**
   - Implemented: `--input-dir` recursively scans for .wav/.png; `--output-format json|jsonl|csv` with summary statistics.
-- [ ] `LLM-011` Add a real-time analysis mode (e.g. WebSocket server) for editor/iterative workflows.
+- [x] `LLM-011` Add a real-time analysis mode (e.g. WebSocket server) for editor/iterative workflows. **Done: 2026-01-19**
+  - Implemented: `speccade analyze --serve [port]` WebSocket server (feature-gated); JSON protocol with analyze_path/analyze_data requests.
 
 ---
 

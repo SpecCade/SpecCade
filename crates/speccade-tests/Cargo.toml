@@ -43,10 +43,14 @@ path = "tests/golden_hash_verification.rs"
 name = "music_parity"
 path = "tests/music_parity.rs"
 
+[[test]]
+name = "analyze_serve"
+path = "tests/analyze_serve.rs"
+
 [dependencies]
 # We need all the workspace crates for integration testing
 speccade-spec = { workspace = true }
-speccade-cli = { workspace = true }
+speccade-cli = { workspace = true, features = ["serve"] }
 speccade-backend-audio = { workspace = true }
 speccade-backend-music = { workspace = true }
 speccade-backend-texture = { workspace = true }
@@ -58,6 +62,13 @@ serde_json = { workspace = true }
 serde = { workspace = true }
 walkdir = { workspace = true }
 blake3 = { workspace = true }
+
+# For WebSocket testing
+tokio = { workspace = true, features = ["rt", "time", "net", "sync", "macros"] }
+tokio-tungstenite = { workspace = true }
+futures-util = { workspace = true }
+base64 = { workspace = true }
+png = { workspace = true }
 
 [dev-dependencies]
 pretty_assertions = { workspace = true }

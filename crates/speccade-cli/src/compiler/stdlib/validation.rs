@@ -42,7 +42,12 @@ pub fn validate_pan_range(value: f64, function: &str, param: &str) -> Result<(),
 }
 
 /// Validates that a string is one of the allowed enum values.
-pub fn validate_enum(value: &str, allowed: &[&str], function: &str, param: &str) -> Result<(), String> {
+pub fn validate_enum(
+    value: &str,
+    allowed: &[&str],
+    function: &str,
+    param: &str,
+) -> Result<(), String> {
     if !allowed.contains(&value) {
         let suggestion = find_similar(value, allowed);
         let mut msg = format!(
@@ -118,17 +123,29 @@ fn levenshtein_distance(a: &str, b: &str) -> usize {
     let m = a_chars.len();
     let n = b_chars.len();
 
-    if m == 0 { return n; }
-    if n == 0 { return m; }
+    if m == 0 {
+        return n;
+    }
+    if n == 0 {
+        return m;
+    }
 
     let mut dp = vec![vec![0; n + 1]; m + 1];
 
-    for i in 0..=m { dp[i][0] = i; }
-    for j in 0..=n { dp[0][j] = j; }
+    for (i, row) in dp.iter_mut().enumerate().take(m + 1) {
+        row[0] = i;
+    }
+    for (j, val) in dp[0].iter_mut().enumerate().take(n + 1) {
+        *val = j;
+    }
 
     for i in 1..=m {
         for j in 1..=n {
-            let cost = if a_chars[i - 1] == b_chars[j - 1] { 0 } else { 1 };
+            let cost = if a_chars[i - 1] == b_chars[j - 1] {
+                0
+            } else {
+                1
+            };
             dp[i][j] = (dp[i - 1][j] + 1)
                 .min(dp[i][j - 1] + 1)
                 .min(dp[i - 1][j - 1] + cost);
@@ -172,7 +189,9 @@ pub fn extract_float(value: Value, function: &str, param: &str) -> Result<f64, S
     }
     Err(format!(
         "S102: {}(): '{}' expected float, got {}",
-        function, param, value.get_type()
+        function,
+        param,
+        value.get_type()
     ))
 }
 
@@ -225,7 +244,7 @@ mod tests {
         assert!(err.is_err());
         let msg = err.unwrap_err();
         assert!(msg.contains("S104"));
-        assert!(msg.contains("sine"));  // Should suggest "sine"
+        assert!(msg.contains("sine")); // Should suggest "sine"
     }
 
     #[test]

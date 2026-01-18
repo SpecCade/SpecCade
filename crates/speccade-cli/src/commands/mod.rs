@@ -15,6 +15,8 @@ pub mod inspect;
 pub mod json_output;
 pub mod migrate;
 pub mod preview;
+#[cfg(feature = "serve")]
+pub mod serve;
 pub mod stdlib;
 pub mod template;
 pub mod validate;
@@ -40,5 +42,13 @@ mod tests {
         let _ = preview::run;
         let _ = template::list;
         let _ = validate::run;
+    }
+
+    #[cfg(feature = "serve")]
+    #[test]
+    fn serve_module_exports_entrypoints() {
+        let _ = serve::run;
+        let _ = serve::analyze_path;
+        let _ = serve::analyze_data;
     }
 }

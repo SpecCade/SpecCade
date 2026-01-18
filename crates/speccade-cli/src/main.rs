@@ -51,6 +51,11 @@ enum Commands {
         /// Include fixed-dimension feature embedding for similarity search
         #[arg(long)]
         embeddings: bool,
+
+        /// Start WebSocket analysis server on the specified port (default: 9123)
+        #[cfg(feature = "serve")]
+        #[arg(long)]
+        serve: Option<Option<u16>>,
     },
 
     /// Compare two asset files and output perceptual difference metrics
@@ -345,6 +350,34 @@ fn main() -> ExitCode {
     let cli = Cli::parse();
 
     let result = match cli.command {
+        #[cfg(feature = "serve")]
+        Commands::Analyze {
+            input,
+            spec,
+            input_dir,
+            output,
+            json,
+            output_format,
+            embeddings,
+            serve,
+        } => {
+            // If --serve flag is provided, start the WebSocket server
+            if let Some(port_opt) = serve {
+                let port = port_opt.unwrap_or(commands::serve::DEFAULT_PORT);
+                commands::serve::run(port)
+            } else {
+                commands::analyze::run(
+                    input.as_deref(),
+                    spec.as_deref(),
+                    input_dir.as_deref(),
+                    output.as_deref(),
+                    json,
+                    &output_format,
+                    embeddings,
+                )
+            }
+        }
+        #[cfg(not(feature = "serve"))]
         Commands::Analyze {
             input,
             spec,
@@ -1175,6 +1208,7 @@ mod tests {
                 json,
                 output_format,
                 embeddings,
+                ..
             } => {
                 assert_eq!(input.as_deref(), Some("sound.wav"));
                 assert!(spec.is_none());
@@ -1208,6 +1242,7 @@ mod tests {
                 json,
                 output_format,
                 embeddings,
+                ..
             } => {
                 assert_eq!(input.as_deref(), Some("sound.wav"));
                 assert!(spec.is_none());
@@ -1234,6 +1269,7 @@ mod tests {
                 json,
                 output_format,
                 embeddings,
+                ..
             } => {
                 assert_eq!(input.as_deref(), Some("sound.wav"));
                 assert!(spec.is_none());
@@ -1267,6 +1303,7 @@ mod tests {
                 json,
                 output_format,
                 embeddings,
+                ..
             } => {
                 assert_eq!(input.as_deref(), Some("sound.wav"));
                 assert!(spec.is_none());
@@ -1300,6 +1337,7 @@ mod tests {
                 json,
                 output_format,
                 embeddings,
+                ..
             } => {
                 assert!(input.is_none());
                 assert!(spec.is_none());
@@ -1334,6 +1372,7 @@ mod tests {
                 json,
                 output_format,
                 embeddings,
+                ..
             } => {
                 assert!(input.is_none());
                 assert!(spec.is_none());
@@ -1342,6 +1381,33 @@ mod tests {
                 assert!(!json);
                 assert_eq!(output_format, "csv");
                 assert!(embeddings);
+            }
+            _ => panic!("expected analyze command"),
+        }
+    }
+
+    #[cfg(feature = "serve")]
+    #[test]
+    fn test_cli_parses_analyze_with_serve_default_port() {
+        let cli = Cli::try_parse_from(["speccade", "analyze", "--serve"]).unwrap();
+        match cli.command {
+            Commands::Analyze { serve, .. } => {
+                // --serve with no value should be Some(None)
+                assert!(serve.is_some());
+                assert!(serve.unwrap().is_none());
+            }
+            _ => panic!("expected analyze command"),
+        }
+    }
+
+    #[cfg(feature = "serve")]
+    #[test]
+    fn test_cli_parses_analyze_with_serve_custom_port() {
+        let cli = Cli::try_parse_from(["speccade", "analyze", "--serve", "8080"]).unwrap();
+        match cli.command {
+            Commands::Analyze { serve, .. } => {
+                assert!(serve.is_some());
+                assert_eq!(serve.unwrap(), Some(8080));
             }
             _ => panic!("expected analyze command"),
         }
