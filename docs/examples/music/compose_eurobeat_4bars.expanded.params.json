@@ -1,0 +1,818 @@
+{
+  "format": "xm",
+  "bpm": 150,
+  "speed": 6,
+  "channels": 8,
+  "loop": false,
+  "instruments": [
+    {
+      "name": "kick",
+      "synthesis": {
+        "type": "sine"
+      },
+      "base_note": "C4",
+      "envelope": {
+        "attack": 0.01,
+        "decay": 0.1,
+        "sustain": 0.7,
+        "release": 0.2
+      }
+    },
+    {
+      "name": "snare",
+      "synthesis": {
+        "type": "noise",
+        "periodic": false
+      },
+      "base_note": "D4",
+      "envelope": {
+        "attack": 0.01,
+        "decay": 0.1,
+        "sustain": 0.7,
+        "release": 0.2
+      }
+    },
+    {
+      "name": "hat",
+      "synthesis": {
+        "type": "noise",
+        "periodic": true
+      },
+      "base_note": "C1",
+      "envelope": {
+        "attack": 0.01,
+        "decay": 0.1,
+        "sustain": 0.7,
+        "release": 0.2
+      }
+    },
+    {
+      "name": "bass",
+      "synthesis": {
+        "type": "sawtooth"
+      },
+      "base_note": "C2",
+      "envelope": {
+        "attack": 0.01,
+        "decay": 0.1,
+        "sustain": 0.7,
+        "release": 0.2
+      }
+    },
+    {
+      "name": "lead",
+      "synthesis": {
+        "type": "sawtooth"
+      },
+      "base_note": "C5",
+      "envelope": {
+        "attack": 0.01,
+        "decay": 0.1,
+        "sustain": 0.7,
+        "release": 0.2
+      }
+    }
+  ],
+  "patterns": {
+    "verse_4bars": {
+      "rows": 64,
+      "data": [
+        {
+          "row": 0,
+          "channel": 0,
+          "note": "C4",
+          "inst": 0,
+          "vol": 64
+        },
+        {
+          "row": 0,
+          "channel": 2,
+          "note": "F1",
+          "inst": 3,
+          "vol": 56
+        },
+        {
+          "row": 0,
+          "channel": 3,
+          "note": "E5",
+          "inst": 4,
+          "vol": 48
+        },
+        {
+          "row": 0,
+          "channel": 5,
+          "note": "C1",
+          "inst": 2,
+          "vol": 32
+        },
+        {
+          "row": 1,
+          "channel": 5,
+          "note": "C1",
+          "inst": 2,
+          "vol": 16
+        },
+        {
+          "row": 2,
+          "channel": 5,
+          "note": "C1",
+          "inst": 2,
+          "vol": 32
+        },
+        {
+          "row": 3,
+          "channel": 5,
+          "note": "C1",
+          "inst": 2,
+          "vol": 32
+        },
+        {
+          "row": 4,
+          "channel": 2,
+          "note": "F1",
+          "inst": 3,
+          "vol": 56
+        },
+        {
+          "row": 4,
+          "channel": 3,
+          "note": "G5",
+          "inst": 4,
+          "vol": 48
+        },
+        {
+          "row": 4,
+          "channel": 5,
+          "note": "C1",
+          "inst": 2,
+          "vol": 32
+        },
+        {
+          "row": 5,
+          "channel": 5,
+          "note": "C1",
+          "inst": 2,
+          "vol": 16
+        },
+        {
+          "row": 6,
+          "channel": 5,
+          "note": "C1",
+          "inst": 2,
+          "vol": 32
+        },
+        {
+          "row": 7,
+          "channel": 5,
+          "note": "C1",
+          "inst": 2,
+          "vol": 16
+        },
+        {
+          "row": 8,
+          "channel": 1,
+          "note": "D4",
+          "inst": 1,
+          "vol": 56
+        },
+        {
+          "row": 8,
+          "channel": 2,
+          "note": "C2",
+          "inst": 3,
+          "vol": 56
+        },
+        {
+          "row": 8,
+          "channel": 3,
+          "note": "B5",
+          "inst": 4,
+          "vol": 48
+        },
+        {
+          "row": 8,
+          "channel": 5,
+          "note": "C1",
+          "inst": 2,
+          "vol": 32
+        },
+        {
+          "row": 9,
+          "channel": 5,
+          "note": "C1",
+          "inst": 2,
+          "vol": 16
+        },
+        {
+          "row": 10,
+          "channel": 5,
+          "note": "C1",
+          "inst": 2,
+          "vol": 32
+        },
+        {
+          "row": 11,
+          "channel": 5,
+          "note": "C1",
+          "inst": 2,
+          "vol": 16
+        },
+        {
+          "row": 12,
+          "channel": 2,
+          "note": "C2",
+          "inst": 3,
+          "vol": 56
+        },
+        {
+          "row": 12,
+          "channel": 3,
+          "note": "A5",
+          "inst": 4,
+          "vol": 48
+        },
+        {
+          "row": 12,
+          "channel": 5,
+          "note": "C1",
+          "inst": 2,
+          "vol": 32
+        },
+        {
+          "row": 13,
+          "channel": 5,
+          "note": "C1",
+          "inst": 2,
+          "vol": 16
+        },
+        {
+          "row": 14,
+          "channel": 5,
+          "note": "C1",
+          "inst": 2,
+          "vol": 32
+        },
+        {
+          "row": 15,
+          "channel": 5,
+          "note": "C1",
+          "inst": 2,
+          "vol": 16
+        },
+        {
+          "row": 16,
+          "channel": 0,
+          "note": "C4",
+          "inst": 0,
+          "vol": 64
+        },
+        {
+          "row": 16,
+          "channel": 2,
+          "note": "G1",
+          "inst": 3,
+          "vol": 56
+        },
+        {
+          "row": 16,
+          "channel": 3,
+          "note": "G5",
+          "inst": 4,
+          "vol": 48
+        },
+        {
+          "row": 16,
+          "channel": 5,
+          "note": "C1",
+          "inst": 2,
+          "vol": 32
+        },
+        {
+          "row": 17,
+          "channel": 5,
+          "note": "C1",
+          "inst": 2,
+          "vol": 32
+        },
+        {
+          "row": 18,
+          "channel": 5,
+          "note": "C1",
+          "inst": 2,
+          "vol": 32
+        },
+        {
+          "row": 19,
+          "channel": 5,
+          "note": "C1",
+          "inst": 2,
+          "vol": 16
+        },
+        {
+          "row": 20,
+          "channel": 2,
+          "note": "G1",
+          "inst": 3,
+          "vol": 56
+        },
+        {
+          "row": 20,
+          "channel": 3,
+          "note": "E5",
+          "inst": 4,
+          "vol": 48
+        },
+        {
+          "row": 20,
+          "channel": 5,
+          "note": "C1",
+          "inst": 2,
+          "vol": 32
+        },
+        {
+          "row": 21,
+          "channel": 5,
+          "note": "C1",
+          "inst": 2,
+          "vol": 32
+        },
+        {
+          "row": 22,
+          "channel": 5,
+          "note": "C1",
+          "inst": 2,
+          "vol": 32
+        },
+        {
+          "row": 23,
+          "channel": 5,
+          "note": "C1",
+          "inst": 2,
+          "vol": 32
+        },
+        {
+          "row": 24,
+          "channel": 1,
+          "note": "D4",
+          "inst": 1,
+          "vol": 56
+        },
+        {
+          "row": 24,
+          "channel": 2,
+          "note": "D2",
+          "inst": 3,
+          "vol": 56
+        },
+        {
+          "row": 24,
+          "channel": 3,
+          "note": "D5",
+          "inst": 4,
+          "vol": 48
+        },
+        {
+          "row": 24,
+          "channel": 5,
+          "note": "C1",
+          "inst": 2,
+          "vol": 32
+        },
+        {
+          "row": 25,
+          "channel": 5,
+          "note": "C1",
+          "inst": 2,
+          "vol": 16
+        },
+        {
+          "row": 26,
+          "channel": 5,
+          "note": "C1",
+          "inst": 2,
+          "vol": 32
+        },
+        {
+          "row": 27,
+          "channel": 5,
+          "note": "C1",
+          "inst": 2,
+          "vol": 32
+        },
+        {
+          "row": 28,
+          "channel": 2,
+          "note": "D2",
+          "inst": 3,
+          "vol": 56
+        },
+        {
+          "row": 28,
+          "channel": 3,
+          "note": "E5",
+          "inst": 4,
+          "vol": 48
+        },
+        {
+          "row": 28,
+          "channel": 5,
+          "note": "C1",
+          "inst": 2,
+          "vol": 32
+        },
+        {
+          "row": 29,
+          "channel": 5,
+          "note": "C1",
+          "inst": 2,
+          "vol": 32
+        },
+        {
+          "row": 30,
+          "channel": 5,
+          "note": "C1",
+          "inst": 2,
+          "vol": 32
+        },
+        {
+          "row": 31,
+          "channel": 5,
+          "note": "C1",
+          "inst": 2,
+          "vol": 16
+        },
+        {
+          "row": 32,
+          "channel": 0,
+          "note": "C4",
+          "inst": 0,
+          "vol": 64
+        },
+        {
+          "row": 32,
+          "channel": 2,
+          "note": "F1",
+          "inst": 3,
+          "vol": 56
+        },
+        {
+          "row": 32,
+          "channel": 3,
+          "note": "E5",
+          "inst": 4,
+          "vol": 48
+        },
+        {
+          "row": 32,
+          "channel": 5,
+          "note": "C1",
+          "inst": 2,
+          "vol": 32
+        },
+        {
+          "row": 33,
+          "channel": 5,
+          "note": "C1",
+          "inst": 2,
+          "vol": 32
+        },
+        {
+          "row": 34,
+          "channel": 5,
+          "note": "C1",
+          "inst": 2,
+          "vol": 32
+        },
+        {
+          "row": 35,
+          "channel": 5,
+          "note": "C1",
+          "inst": 2,
+          "vol": 16
+        },
+        {
+          "row": 36,
+          "channel": 2,
+          "note": "F1",
+          "inst": 3,
+          "vol": 56
+        },
+        {
+          "row": 36,
+          "channel": 3,
+          "note": "G5",
+          "inst": 4,
+          "vol": 48
+        },
+        {
+          "row": 36,
+          "channel": 5,
+          "note": "C1",
+          "inst": 2,
+          "vol": 32
+        },
+        {
+          "row": 37,
+          "channel": 5,
+          "note": "C1",
+          "inst": 2,
+          "vol": 16
+        },
+        {
+          "row": 38,
+          "channel": 5,
+          "note": "C1",
+          "inst": 2,
+          "vol": 32
+        },
+        {
+          "row": 39,
+          "channel": 5,
+          "note": "C1",
+          "inst": 2,
+          "vol": 16
+        },
+        {
+          "row": 40,
+          "channel": 1,
+          "note": "D4",
+          "inst": 1,
+          "vol": 56
+        },
+        {
+          "row": 40,
+          "channel": 2,
+          "note": "C2",
+          "inst": 3,
+          "vol": 56
+        },
+        {
+          "row": 40,
+          "channel": 3,
+          "note": "B5",
+          "inst": 4,
+          "vol": 48
+        },
+        {
+          "row": 40,
+          "channel": 5,
+          "note": "C1",
+          "inst": 2,
+          "vol": 32
+        },
+        {
+          "row": 41,
+          "channel": 5,
+          "note": "C1",
+          "inst": 2,
+          "vol": 16
+        },
+        {
+          "row": 42,
+          "channel": 5,
+          "note": "C1",
+          "inst": 2,
+          "vol": 32
+        },
+        {
+          "row": 43,
+          "channel": 5,
+          "note": "C1",
+          "inst": 2,
+          "vol": 16
+        },
+        {
+          "row": 44,
+          "channel": 2,
+          "note": "C2",
+          "inst": 3,
+          "vol": 56
+        },
+        {
+          "row": 44,
+          "channel": 3,
+          "note": "A5",
+          "inst": 4,
+          "vol": 48
+        },
+        {
+          "row": 44,
+          "channel": 5,
+          "note": "C1",
+          "inst": 2,
+          "vol": 32
+        },
+        {
+          "row": 45,
+          "channel": 5,
+          "note": "C1",
+          "inst": 2,
+          "vol": 16
+        },
+        {
+          "row": 46,
+          "channel": 5,
+          "note": "C1",
+          "inst": 2,
+          "vol": 32
+        },
+        {
+          "row": 47,
+          "channel": 5,
+          "note": "C1",
+          "inst": 2,
+          "vol": 32
+        },
+        {
+          "row": 48,
+          "channel": 0,
+          "note": "C4",
+          "inst": 0,
+          "vol": 64
+        },
+        {
+          "row": 48,
+          "channel": 2,
+          "note": "G1",
+          "inst": 3,
+          "vol": 56
+        },
+        {
+          "row": 48,
+          "channel": 3,
+          "note": "G5",
+          "inst": 4,
+          "vol": 48
+        },
+        {
+          "row": 48,
+          "channel": 5,
+          "note": "C1",
+          "inst": 2,
+          "vol": 32
+        },
+        {
+          "row": 49,
+          "channel": 5,
+          "note": "C1",
+          "inst": 2,
+          "vol": 16
+        },
+        {
+          "row": 50,
+          "channel": 5,
+          "note": "C1",
+          "inst": 2,
+          "vol": 32
+        },
+        {
+          "row": 51,
+          "channel": 5,
+          "note": "C1",
+          "inst": 2,
+          "vol": 32
+        },
+        {
+          "row": 52,
+          "channel": 2,
+          "note": "G1",
+          "inst": 3,
+          "vol": 56
+        },
+        {
+          "row": 52,
+          "channel": 3,
+          "note": "E5",
+          "inst": 4,
+          "vol": 48
+        },
+        {
+          "row": 52,
+          "channel": 5,
+          "note": "C1",
+          "inst": 2,
+          "vol": 32
+        },
+        {
+          "row": 53,
+          "channel": 5,
+          "note": "C1",
+          "inst": 2,
+          "vol": 32
+        },
+        {
+          "row": 54,
+          "channel": 5,
+          "note": "C1",
+          "inst": 2,
+          "vol": 32
+        },
+        {
+          "row": 55,
+          "channel": 5,
+          "note": "C1",
+          "inst": 2,
+          "vol": 32
+        },
+        {
+          "row": 56,
+          "channel": 1,
+          "note": "D4",
+          "inst": 1,
+          "vol": 56
+        },
+        {
+          "row": 56,
+          "channel": 2,
+          "note": "D2",
+          "inst": 3,
+          "vol": 56
+        },
+        {
+          "row": 56,
+          "channel": 3,
+          "note": "D5",
+          "inst": 4,
+          "vol": 48
+        },
+        {
+          "row": 56,
+          "channel": 5,
+          "note": "C1",
+          "inst": 2,
+          "vol": 32
+        },
+        {
+          "row": 57,
+          "channel": 5,
+          "note": "C1",
+          "inst": 2,
+          "vol": 32
+        },
+        {
+          "row": 58,
+          "channel": 5,
+          "note": "C1",
+          "inst": 2,
+          "vol": 32
+        },
+        {
+          "row": 59,
+          "channel": 5,
+          "note": "C1",
+          "inst": 2,
+          "vol": 16
+        },
+        {
+          "row": 60,
+          "channel": 2,
+          "note": "D2",
+          "inst": 3,
+          "vol": 56
+        },
+        {
+          "row": 60,
+          "channel": 3,
+          "note": "E5",
+          "inst": 4,
+          "vol": 48
+        },
+        {
+          "row": 60,
+          "channel": 5,
+          "note": "C1",
+          "inst": 2,
+          "vol": 32
+        },
+        {
+          "row": 61,
+          "channel": 5,
+          "note": "C1",
+          "inst": 2,
+          "vol": 32
+        },
+        {
+          "row": 62,
+          "channel": 5,
+          "note": "C1",
+          "inst": 2,
+          "vol": 32
+        },
+        {
+          "row": 63,
+          "channel": 5,
+          "note": "C1",
+          "inst": 2,
+          "vol": 16
+        }
+      ]
+    }
+  },
+  "arrangement": [
+    {
+      "pattern": "verse_4bars",
+      "repeat": 1
+    }
+  ],
+  "automation": []
+}

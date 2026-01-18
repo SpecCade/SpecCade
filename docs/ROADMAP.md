@@ -101,8 +101,9 @@ Open questions:
 
 ## Music (Compose / Pattern IR)
 
-- [ ] `MUSIC-001` Add snapshot tests for `docs/examples/music/*.expanded.params.json` via `speccade expand`.
+- [x] `MUSIC-001` Add snapshot tests for `docs/examples/music/*.expanded.params.json` via `speccade expand`. **Done: 2026-01-18**
   - Deliverable: tests that compare expansion output to checked-in snapshots (stable formatting).
+  - Implemented: Generated eurobeat_4bars.expanded.params.json; all compose specs now have snapshot coverage.
 - [ ] `MUSIC-002` Extend Pattern IR operators and hard limits (keep determinism + reviewability).
   - Deliverable: RFC + schema/types changes + tests for any new ops; avoid silent behavior changes.
 - [ ] `MUSIC-003` Improve `speccade expand` UX for review workflows.

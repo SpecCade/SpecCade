@@ -22,6 +22,10 @@ fn compose_example_paths() -> Vec<(PathBuf, PathBuf)> {
             root.join("docs/examples/music/compose_harmony_octave_bass_4bars.json"),
             root.join("docs/examples/music/compose_harmony_octave_bass_4bars.expanded.params.json"),
         ),
+        (
+            root.join("docs/examples/music/compose_eurobeat_4bars.json"),
+            root.join("docs/examples/music/compose_eurobeat_4bars.expanded.params.json"),
+        ),
     ]
 }
 
