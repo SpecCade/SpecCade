@@ -20,6 +20,9 @@ pub struct OutputResult {
     /// Validation metrics (for Tier 2 outputs only).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub metrics: Option<OutputMetrics>,
+    /// Whether this output was generated in preview mode (truncated for fast iteration).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub preview: Option<bool>,
 }
 
 impl OutputResult {
@@ -31,6 +34,7 @@ impl OutputResult {
             path,
             hash: Some(hash),
             metrics: None,
+            preview: None,
         }
     }
 
@@ -47,6 +51,7 @@ impl OutputResult {
             path,
             hash: None,
             metrics: Some(metrics),
+            preview: None,
         }
     }
 }

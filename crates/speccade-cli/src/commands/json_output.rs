@@ -318,6 +318,9 @@ pub struct GeneratedFile {
     /// BLAKE3 hash of the output file
     #[serde(skip_serializing_if = "Option::is_none")]
     pub hash: Option<String>,
+    /// Whether this output was generated in preview mode
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub preview: Option<bool>,
 }
 
 /// Generation result details.
@@ -621,6 +624,7 @@ mod tests {
                 format: "wav".to_string(),
                 path: "test.wav".to_string(),
                 hash: Some("filehash".to_string()),
+                preview: None,
             }],
             report_path: "test.report.json".to_string(),
             duration_ms: 250,

@@ -29,6 +29,7 @@ use crate::input::{load_spec, LoadResult};
 /// * `expand_variants` - Whether to expand `spec.variants[]` during generation
 /// * `budget_name` - Optional budget profile name (default, strict, zx-8bit)
 /// * `json_output` - Whether to output machine-readable JSON diagnostics
+/// * `preview_duration` - Optional preview duration in seconds (truncates audio generation)
 ///
 /// # Returns
 /// Exit code: 0 success, 1 spec error, 2 generation error
@@ -38,11 +39,24 @@ pub fn run(
     expand_variants: bool,
     budget_name: Option<&str>,
     json_output: bool,
+    preview_duration: Option<f64>,
 ) -> Result<ExitCode> {
     if json_output {
-        run_json(spec_path, out_root, expand_variants, budget_name)
+        run_json(
+            spec_path,
+            out_root,
+            expand_variants,
+            budget_name,
+            preview_duration,
+        )
     } else {
-        run_human(spec_path, out_root, expand_variants, budget_name)
+        run_human(
+            spec_path,
+            out_root,
+            expand_variants,
+            budget_name,
+            preview_duration,
+        )
     }
 }
 
@@ -52,6 +66,7 @@ fn run_human(
     out_root: Option<&str>,
     expand_variants: bool,
     budget_name: Option<&str>,
+    preview_duration: Option<f64>,
 ) -> Result<ExitCode> {
     let start = Instant::now();
     let out_root = out_root.unwrap_or(".");
@@ -74,6 +89,9 @@ fn run_human(
     }
     if expand_variants {
         println!("{} {}", "Expand variants:".cyan().bold(), "enabled".green());
+    }
+    if let Some(duration) = preview_duration {
+        println!("{} {:.2}s", "Preview mode:".yellow().bold(), duration);
     }
 
     // Load spec file (JSON or Starlark)
@@ -188,7 +206,7 @@ fn run_human(
     let base_report_path = reporting::report_path(spec_path, &spec.asset_id);
 
     let base_gen_start = Instant::now();
-    let base_result = dispatch_generate(&spec, out_root, Path::new(spec_path));
+    let base_result = dispatch_generate(&spec, out_root, Path::new(spec_path), preview_duration);
     let base_duration_ms = base_gen_start.elapsed().as_millis() as u64;
 
     let mut any_generation_failed = false;
@@ -283,8 +301,12 @@ fn run_human(
                     canonical_spec_hash(&variant_spec).unwrap_or_else(|_| "unknown".to_string());
 
                 let variant_gen_start = Instant::now();
-                let variant_result =
-                    dispatch_generate(&variant_spec, &variant_out_root, Path::new(spec_path));
+                let variant_result = dispatch_generate(
+                    &variant_spec,
+                    &variant_out_root,
+                    Path::new(spec_path),
+                    preview_duration,
+                );
                 let variant_duration_ms = variant_gen_start.elapsed().as_millis() as u64;
 
                 match variant_result {
@@ -365,6 +387,7 @@ fn run_json(
     out_root: Option<&str>,
     expand_variants: bool,
     budget_name: Option<&str>,
+    preview_duration: Option<f64>,
 ) -> Result<ExitCode> {
     let start = Instant::now();
     let out_root_str = out_root.unwrap_or(".");
@@ -488,7 +511,8 @@ fn run_json(
     let base_report_path = reporting::report_path(spec_path, &spec.asset_id);
 
     let base_gen_start = Instant::now();
-    let base_result = dispatch_generate(&spec, out_root_str, Path::new(spec_path));
+    let base_result =
+        dispatch_generate(&spec, out_root_str, Path::new(spec_path), preview_duration);
     let base_duration_ms = base_gen_start.elapsed().as_millis() as u64;
 
     match base_result {
@@ -522,6 +546,7 @@ fn run_json(
                     format: o.format.to_string(),
                     path: o.path.to_string_lossy().to_string(),
                     hash: o.hash.clone(),
+                    preview: o.preview,
                 })
                 .collect();
 
@@ -553,6 +578,7 @@ fn run_json(
                             &variant_spec,
                             &variant_out_root,
                             Path::new(spec_path),
+                            preview_duration,
                         );
                         let variant_duration_ms = variant_gen_start.elapsed().as_millis() as u64;
 
@@ -588,6 +614,7 @@ fn run_json(
                                         format: o.format.to_string(),
                                         path: o.path.to_string_lossy().to_string(),
                                         hash: o.hash.clone(),
+                                        preview: o.preview,
                                     })
                                     .collect();
 
@@ -762,6 +789,7 @@ mod tests {
             false,
             None,
             false,
+            None,
         )
         .unwrap();
         assert_eq!(code, ExitCode::from(1));
@@ -800,6 +828,7 @@ mod tests {
             false,
             None,
             false,
+            None,
         )
         .unwrap();
         assert_eq!(code, ExitCode::from(1));
@@ -862,6 +891,7 @@ mod tests {
             false,
             None,
             false,
+            None,
         )
         .unwrap();
         assert_eq!(code, ExitCode::SUCCESS);
@@ -930,6 +960,7 @@ mod tests {
             true,
             None,
             false,
+            None,
         )
         .unwrap();
         assert_eq!(code, ExitCode::SUCCESS);
@@ -1030,6 +1061,7 @@ mod tests {
             false,
             None,
             true,
+            None,
         )
         .unwrap();
         assert_eq!(code, ExitCode::SUCCESS);
@@ -1055,6 +1087,7 @@ mod tests {
             false,
             None,
             true,
+            None,
         )
         .unwrap();
         assert_eq!(code, ExitCode::from(1));
@@ -1063,7 +1096,7 @@ mod tests {
     #[test]
     fn generate_json_output_file_not_found() {
         // Run with json=true on nonexistent file - should return exit code 1
-        let code = run("/nonexistent/spec.json", None, false, None, true).unwrap();
+        let code = run("/nonexistent/spec.json", None, false, None, true, None).unwrap();
         assert_eq!(code, ExitCode::from(1));
     }
 }

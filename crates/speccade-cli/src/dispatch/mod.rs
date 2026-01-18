@@ -59,6 +59,7 @@ impl BackendError for DispatchError {
 /// * `spec` - The validated spec to generate from
 /// * `out_root` - The output root directory
 /// * `spec_path` - Path to the spec file (for resolving relative paths)
+/// * `preview_duration` - Optional preview duration in seconds (truncates audio generation)
 ///
 /// # Returns
 /// A vector of output results on success, or a dispatch error
@@ -66,6 +67,7 @@ pub fn dispatch_generate(
     spec: &Spec,
     out_root: &str,
     spec_path: &Path,
+    preview_duration: Option<f64>,
 ) -> Result<Vec<OutputResult>, DispatchError> {
     // Get the recipe kind
     let recipe = spec.recipe.as_ref().ok_or(DispatchError::NoRecipe)?;
@@ -85,7 +87,7 @@ pub fn dispatch_generate(
     // Dispatch based on recipe kind prefix
     match kind.as_str() {
         // Unified audio backend (handles both SFX and instruments)
-        "audio_v1" => audio::generate_audio(spec, out_root_path),
+        "audio_v1" => audio::generate_audio(spec, out_root_path, preview_duration),
 
         // Music backend
         "music.tracker_song_v1" => music::generate_music(spec, out_root_path, spec_dir),
@@ -257,7 +259,8 @@ mod tests {
             .build();
 
         let spec_path = tmp.path().join("test.spec.json");
-        let outputs = dispatch_generate(&spec, tmp.path().to_str().unwrap(), &spec_path).unwrap();
+        let outputs =
+            dispatch_generate(&spec, tmp.path().to_str().unwrap(), &spec_path, None).unwrap();
         assert_eq!(outputs.len(), 1);
         assert_eq!(outputs[0].format, OutputFormat::Png);
 

@@ -438,8 +438,8 @@ fn process_spec(spec_path: &Path, out_root: &Path, _verbose: bool) -> SpecResult
         return result;
     }
 
-    // Dispatch generation
-    match dispatch_generate(&spec, spec_out_dir.to_str().unwrap_or("."), spec_path) {
+    // Dispatch generation (no preview mode for batch generation)
+    match dispatch_generate(&spec, spec_out_dir.to_str().unwrap_or("."), spec_path, None) {
         Ok(outputs) => {
             result.success = true;
             result.output_hashes = outputs.iter().filter_map(|o| o.hash.clone()).collect();

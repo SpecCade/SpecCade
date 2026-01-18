@@ -8,9 +8,15 @@ use std::path::{Path, PathBuf};
 pub(super) fn generate_audio(
     spec: &Spec,
     out_root: &Path,
+    preview_duration: Option<f64>,
 ) -> Result<Vec<OutputResult>, DispatchError> {
-    let result = speccade_backend_audio::generate(spec)
-        .map_err(|e| DispatchError::BackendError(format!("Audio generation failed: {}", e)))?;
+    let result = if let Some(duration) = preview_duration {
+        speccade_backend_audio::generate_preview(spec, duration)
+            .map_err(|e| DispatchError::BackendError(format!("Audio generation failed: {}", e)))?
+    } else {
+        speccade_backend_audio::generate(spec)
+            .map_err(|e| DispatchError::BackendError(format!("Audio generation failed: {}", e)))?
+    };
 
     // Write WAV file to the output path from spec
     let primary_output = get_primary_output(spec)?;
@@ -22,10 +28,17 @@ pub(super) fn generate_audio(
     }
     write_output_bytes(out_root, &primary_output.path, &result.wav.wav_data)?;
 
-    Ok(vec![OutputResult::tier1(
+    let mut output = OutputResult::tier1(
         OutputKind::Primary,
         OutputFormat::Wav,
         PathBuf::from(&primary_output.path),
         result.wav.pcm_hash,
-    )])
+    );
+
+    // Mark as preview if generated with preview duration
+    if preview_duration.is_some() {
+        output.preview = Some(true);
+    }
+
+    Ok(vec![output])
 }

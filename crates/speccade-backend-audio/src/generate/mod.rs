@@ -64,6 +64,41 @@ pub fn generate(spec: &Spec) -> AudioResult<GenerateResult> {
     }
 }
 
+/// Generates a preview of audio from a spec with truncated duration.
+///
+/// # Arguments
+/// * `spec` - The specification containing audio parameters
+/// * `preview_duration` - Maximum duration in seconds for the preview
+///
+/// # Returns
+/// Generated WAV file (truncated) and metadata
+pub fn generate_preview(spec: &Spec, preview_duration: f64) -> AudioResult<GenerateResult> {
+    let recipe = spec.recipe.as_ref().ok_or(AudioError::MissingRecipe)?;
+
+    match recipe.kind.as_str() {
+        "audio_v1" => {
+            let mut params: AudioV1Params =
+                serde_json::from_value(recipe.params.clone()).map_err(|e| {
+                    AudioError::InvalidRecipeType {
+                        expected: "audio_v1".to_string(),
+                        found: format!("{}: {}", recipe.kind, e),
+                    }
+                })?;
+
+            // Truncate duration to preview_duration
+            if params.duration_seconds > preview_duration {
+                params.duration_seconds = preview_duration;
+            }
+
+            generate_from_params(&params, spec.seed)
+        }
+        _ => Err(AudioError::InvalidRecipeType {
+            expected: "audio_v1".to_string(),
+            found: recipe.kind.clone(),
+        }),
+    }
+}
+
 /// Generates audio directly from parameters (without a full `Spec`).
 ///
 /// # Arguments

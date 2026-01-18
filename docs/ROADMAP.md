@@ -49,8 +49,9 @@ Reference: `docs/rfcs/RFC-0008-llm-native-asset-authoring.md`
 - [x] `LLM-006` Add higher-level Starlark constructors to reduce raw recipe dict authoring. **Done: 2026-01-18**
   - Deliverable: `audio_spec(...)`, `texture_spec(...)`, `mesh_spec(...)` helpers analogous to `music_spec(...)`.
   - Touch points: `crates/speccade-cli/src/compiler/stdlib/{core,audio,texture,mesh}.rs`.
-- [ ] `LLM-007` Iteration-speed features for agentic loops (preview + partial generation + caching).
+- [x] `LLM-007` Iteration-speed features for agentic loops (preview + partial generation + caching). **Done: 2026-01-18**
   - Deliverable: at least one of: `generate --preview`, per-layer generation for audio, or content-addressed caching keyed by canonical hashes + backend versions.
+  - Implemented: `generate --preview <duration_seconds>` for fast audio preview generation.
 - [ ] `LLM-009` Extend `speccade analyze` with embedding export for similarity search (explicit opt-in).
 - [ ] `LLM-010` Add batch analysis modes (`--input-dir`, CSV/JSONL outputs) for clustering/auditing.
 - [ ] `LLM-011` Add a real-time analysis mode (e.g. WebSocket server) for editor/iterative workflows.

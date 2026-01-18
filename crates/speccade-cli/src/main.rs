@@ -96,6 +96,10 @@ enum Commands {
         /// Output machine-readable JSON diagnostics (no colored output)
         #[arg(long)]
         json: bool,
+
+        /// Generate preview of specified duration in seconds (for fast iteration)
+        #[arg(long)]
+        preview: Option<f64>,
     },
 
     /// Generate all assets from a directory of spec files
@@ -261,12 +265,14 @@ fn main() -> ExitCode {
             expand_variants,
             budget,
             json,
+            preview,
         } => commands::generate::run(
             &spec,
             out_root.as_deref(),
             expand_variants,
             budget.as_deref(),
             json,
+            preview,
         ),
         Commands::GenerateAll {
             spec_dir,
@@ -479,12 +485,14 @@ mod tests {
                 expand_variants,
                 budget,
                 json,
+                preview,
             } => {
                 assert_eq!(spec, "spec.json");
                 assert_eq!(out_root.as_deref(), Some("out"));
                 assert!(!expand_variants);
                 assert!(budget.is_none());
                 assert!(!json);
+                assert!(preview.is_none());
             }
             _ => panic!("expected generate command"),
         }
@@ -508,12 +516,14 @@ mod tests {
                 expand_variants,
                 budget,
                 json,
+                preview,
             } => {
                 assert_eq!(spec, "spec.json");
                 assert!(out_root.is_none());
                 assert!(!expand_variants);
                 assert_eq!(budget.as_deref(), Some("zx-8bit"));
                 assert!(!json);
+                assert!(preview.is_none());
             }
             _ => panic!("expected generate command"),
         }
@@ -530,12 +540,14 @@ mod tests {
                 expand_variants,
                 budget,
                 json,
+                preview,
             } => {
                 assert_eq!(spec, "spec.json");
                 assert!(out_root.is_none());
                 assert!(!expand_variants);
                 assert!(budget.is_none());
                 assert!(json);
+                assert!(preview.is_none());
             }
             _ => panic!("expected generate command"),
         }

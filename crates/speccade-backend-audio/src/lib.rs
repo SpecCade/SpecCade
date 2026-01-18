@@ -61,7 +61,7 @@ pub mod wav;
 
 // Re-export main types at crate root
 pub use error::{AudioError, AudioResult};
-pub use generate::{generate, generate_from_params, GenerateResult};
+pub use generate::{generate, generate_from_params, generate_preview, GenerateResult};
 pub use wav::{WavResult, WavWriter};
 
 #[cfg(test)]
