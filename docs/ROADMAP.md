@@ -131,7 +131,8 @@ Open questions:
 - [x] `AUDIO-002` Add an "audio audit" report command (or `analyze` sub-mode) to catch regressions. **Done: 2026-01-18**
   - Deliverable: peak/RMS/DC metrics for golden audio fixtures + budgeted tolerances.
   - Implemented: `speccade audit` command with tolerances, baseline management, and `--update-baselines` flag.
-- [ ] `AUDIO-003` Improve loop-point generation + click-free defaults for tracker instrument baking.
+- [x] `AUDIO-003` Improve loop-point generation + click-free defaults for tracker instrument baking. **Done: 2026-01-18**
+  - Implemented: LoopConfig with zero-crossing detection, crossfade at boundaries, click-free defaults.
 - [ ] `AUDIO-004` Add missing effects needed for production mixing (start with parametric EQ + limiter).
   - Notes: also consider gate/expander and stereo widener.
 - [ ] `AUDIO-005` Add missing filter types (notch/allpass first; then comb/formant/shelves as needed).

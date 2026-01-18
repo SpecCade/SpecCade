@@ -34,6 +34,10 @@ pub struct GenerateResult {
     pub base_note: Option<u8>,
     /// Loop point in samples (if generated).
     pub loop_point: Option<usize>,
+    /// Loop end point in samples (if generated).
+    pub loop_end: Option<usize>,
+    /// Whether loop points were snapped to zero crossings.
+    pub loop_snapped_to_zero_crossing: bool,
 }
 
 /// Generates audio from a spec.
@@ -308,13 +312,65 @@ fn generate_from_unified_params(params: &AudioV1Params, seed: u32) -> AudioResul
         }
     }
 
-    // Determine loop point if requested
-    let loop_point = if params.generate_loop_points && !params.layers.is_empty() {
-        // Use first layer's envelope for loop point calculation
-        let first_layer = &params.layers[0];
-        Some(calculate_loop_point(&first_layer.envelope, sample_rate))
+    // Determine loop points and apply crossfade if configured
+    let loop_config = params.effective_loop_config();
+    let (loop_point, loop_end, loop_snapped) = if let Some(ref config) = loop_config {
+        if !params.layers.is_empty() {
+            // Use first layer's envelope for loop point calculation
+            let first_layer = &params.layers[0];
+
+            // Calculate loop points with optional zero-crossing snapping
+            let loop_points = match &mixed {
+                MixerOutput::Mono(samples) => crate::loop_processing::calculate_loop_points(
+                    &first_layer.envelope,
+                    config,
+                    samples,
+                    sample_rate,
+                ),
+                MixerOutput::Stereo(stereo) => {
+                    // Use left channel for zero-crossing detection
+                    crate::loop_processing::calculate_loop_points(
+                        &first_layer.envelope,
+                        config,
+                        &stereo.left,
+                        sample_rate,
+                    )
+                }
+            };
+
+            // Apply crossfade if configured
+            if config.crossfade_ms > 0.0 {
+                match &mut mixed {
+                    MixerOutput::Mono(samples) => {
+                        crate::loop_processing::apply_loop_crossfade(
+                            samples,
+                            &loop_points,
+                            config.crossfade_ms,
+                            sample_rate,
+                        );
+                    }
+                    MixerOutput::Stereo(stereo) => {
+                        crate::loop_processing::apply_loop_crossfade_stereo(
+                            &mut stereo.left,
+                            &mut stereo.right,
+                            &loop_points,
+                            config.crossfade_ms,
+                            sample_rate,
+                        );
+                    }
+                }
+            }
+
+            (
+                Some(loop_points.start),
+                Some(loop_points.end),
+                loop_points.snapped_to_zero_crossing,
+            )
+        } else {
+            (None, None, false)
+        }
     } else {
-        None
+        (None, None, false)
     };
 
     // Convert to WAV
@@ -334,6 +390,8 @@ fn generate_from_unified_params(params: &AudioV1Params, seed: u32) -> AudioResul
         num_layers: params.layers.len(),
         base_note: base_note_midi,
         loop_point,
+        loop_end,
+        loop_snapped_to_zero_crossing: loop_snapped,
     })
 }
 

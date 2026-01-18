@@ -35,6 +35,7 @@ fn main() {
         effects: vec![],
         pitch_envelope: None,
         base_note: Some(NoteSpec::MidiNote(69)), // A4
+        loop_config: None,
         generate_loop_points: true,
         post_fx_lfos: vec![],
     };

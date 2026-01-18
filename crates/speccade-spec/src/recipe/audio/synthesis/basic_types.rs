@@ -272,6 +272,111 @@ pub fn midi_to_frequency(midi_note: u8) -> f64 {
     440.0 * 2.0_f64.powf((midi_note as f64 - 69.0) / 12.0)
 }
 
+/// Loop configuration for seamless audio looping.
+///
+/// When enabled, the audio generator will find optimal loop points and apply
+/// crossfading to eliminate clicks at loop boundaries.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct LoopConfig {
+    /// Whether looping is enabled.
+    #[serde(default = "default_loop_enabled")]
+    pub enabled: bool,
+    /// Start sample for loop region (None = auto-detect after attack+decay).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub start_sample: Option<u32>,
+    /// End sample for loop region (None = end of audio).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub end_sample: Option<u32>,
+    /// Crossfade duration in milliseconds at loop boundaries (default: 10ms).
+    /// Applied as a cosine crossfade to eliminate clicks.
+    #[serde(
+        default = "default_crossfade_ms",
+        skip_serializing_if = "is_default_crossfade"
+    )]
+    pub crossfade_ms: f32,
+    /// Snap loop points to nearest zero crossings (default: true).
+    /// Helps eliminate discontinuity clicks even without crossfade.
+    #[serde(default = "default_snap_to_zero_crossing")]
+    pub snap_to_zero_crossing: bool,
+    /// Maximum samples to search for zero crossing from target point (default: 1000).
+    /// Larger values allow finding better zero crossings but may shift loop points more.
+    #[serde(
+        default = "default_zero_crossing_tolerance",
+        skip_serializing_if = "is_default_tolerance"
+    )]
+    pub zero_crossing_tolerance: u32,
+}
+
+fn default_loop_enabled() -> bool {
+    true
+}
+
+fn default_crossfade_ms() -> f32 {
+    10.0
+}
+
+fn is_default_crossfade(val: &f32) -> bool {
+    (*val - 10.0).abs() < 0.001
+}
+
+fn default_snap_to_zero_crossing() -> bool {
+    true
+}
+
+fn default_zero_crossing_tolerance() -> u32 {
+    1000
+}
+
+fn is_default_tolerance(val: &u32) -> bool {
+    *val == 1000
+}
+
+impl Default for LoopConfig {
+    fn default() -> Self {
+        Self {
+            enabled: true,
+            start_sample: None,
+            end_sample: None,
+            crossfade_ms: 10.0,
+            snap_to_zero_crossing: true,
+            zero_crossing_tolerance: 1000,
+        }
+    }
+}
+
+impl LoopConfig {
+    /// Creates a simple loop config with just enabled flag.
+    pub fn enabled() -> Self {
+        Self::default()
+    }
+
+    /// Creates a disabled loop config.
+    pub fn disabled() -> Self {
+        Self {
+            enabled: false,
+            ..Self::default()
+        }
+    }
+
+    /// Creates a loop config with custom crossfade.
+    pub fn with_crossfade(crossfade_ms: f32) -> Self {
+        Self {
+            crossfade_ms,
+            ..Self::default()
+        }
+    }
+
+    /// Creates a loop config with specific loop points.
+    pub fn with_points(start: u32, end: u32) -> Self {
+        Self {
+            start_sample: Some(start),
+            end_sample: Some(end),
+            ..Self::default()
+        }
+    }
+}
+
 /// Parses a note name (e.g., "C4", "A#3", "Bb5") to a MIDI note number.
 pub fn parse_note_name(name: &str) -> Option<u8> {
     let name = name.trim();

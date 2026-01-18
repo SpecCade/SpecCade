@@ -33,6 +33,7 @@ fn test_fm_synth_basic() {
         effects: vec![],
         pitch_envelope: None,
         base_note: None,
+        loop_config: None,
         generate_loop_points: false,
         post_fx_lfos: vec![],
     };
@@ -67,6 +68,7 @@ fn test_fm_synth_with_sweep() {
         effects: vec![],
         pitch_envelope: None,
         base_note: None,
+        loop_config: None,
         generate_loop_points: false,
         post_fx_lfos: vec![],
     };
@@ -101,6 +103,7 @@ fn test_karplus_strong() {
         effects: vec![],
         pitch_envelope: None,
         base_note: None,
+        loop_config: None,
         generate_loop_points: false,
         post_fx_lfos: vec![],
     };
@@ -131,6 +134,7 @@ fn test_karplus_strong_high_damping() {
         effects: vec![],
         pitch_envelope: None,
         base_note: None,
+        loop_config: None,
         generate_loop_points: false,
         post_fx_lfos: vec![],
     };
@@ -164,6 +168,7 @@ fn test_additive_synthesis() {
         effects: vec![],
         pitch_envelope: None,
         base_note: None,
+        loop_config: None,
         generate_loop_points: false,
         post_fx_lfos: vec![],
     };
@@ -193,6 +198,7 @@ fn test_additive_synthesis_single_harmonic() {
         effects: vec![],
         pitch_envelope: None,
         base_note: None,
+        loop_config: None,
         generate_loop_points: false,
         post_fx_lfos: vec![],
     };

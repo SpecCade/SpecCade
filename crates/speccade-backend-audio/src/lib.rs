@@ -52,6 +52,7 @@ pub mod envelope;
 pub mod error;
 pub mod filter;
 pub mod generate;
+pub mod loop_processing;
 pub mod mixer;
 pub mod modulation;
 pub mod oscillator;
@@ -102,6 +103,7 @@ mod integration_tests {
             }],
             pitch_envelope: None,
             base_note: None,
+            loop_config: None,
             generate_loop_points: false,
             effects: vec![],
             post_fx_lfos: vec![],
@@ -186,6 +188,7 @@ mod integration_tests {
             }],
             pitch_envelope: None,
             base_note: None,
+            loop_config: None,
             generate_loop_points: false,
             effects: vec![],
             post_fx_lfos: vec![],
@@ -228,6 +231,7 @@ mod integration_tests {
                 }],
                 pitch_envelope: None,
                 base_note: None,
+                loop_config: None,
                 generate_loop_points: false,
                 effects: vec![],
                 post_fx_lfos: vec![],
@@ -262,6 +266,7 @@ mod integration_tests {
             master_filter: None,
             pitch_envelope: None,
             base_note: None,
+            loop_config: None,
             generate_loop_points: false,
             layers: vec![
                 AudioLayer {
@@ -341,6 +346,7 @@ mod integration_tests {
             }],
             pitch_envelope: None,
             base_note: None,
+            loop_config: None,
             generate_loop_points: false,
             effects: vec![],
             post_fx_lfos: vec![],
@@ -380,6 +386,7 @@ mod integration_tests {
             }],
             pitch_envelope: None,
             base_note: None,
+            loop_config: None,
             generate_loop_points: false,
             effects: vec![],
             post_fx_lfos: vec![],
@@ -409,5 +416,223 @@ mod integration_tests {
 
         // Should be valid hex
         assert!(result.wav.pcm_hash.chars().all(|c| c.is_ascii_hexdigit()));
+    }
+
+    #[test]
+    fn test_loop_config_with_defaults() {
+        use speccade_spec::recipe::audio::LoopConfig;
+
+        let params = AudioV1Params {
+            duration_seconds: 1.0,
+            sample_rate: 44100,
+            master_filter: None,
+            layers: vec![AudioLayer {
+                synthesis: Synthesis::Oscillator {
+                    waveform: Waveform::Sine,
+                    frequency: 440.0,
+                    freq_sweep: None,
+                    detune: None,
+                    duty: None,
+                },
+                envelope: Envelope {
+                    attack: 0.05,
+                    decay: 0.1,
+                    sustain: 0.7,
+                    release: 0.2,
+                },
+                volume: 0.8,
+                pan: 0.0,
+                delay: None,
+                filter: None,
+                lfo: None,
+            }],
+            pitch_envelope: None,
+            base_note: None,
+            loop_config: Some(LoopConfig::enabled()),
+            generate_loop_points: false,
+            effects: vec![],
+            post_fx_lfos: vec![],
+        };
+
+        let spec = Spec::builder("loop-test", AssetType::Audio)
+            .license("CC0-1.0")
+            .seed(42)
+            .output(OutputSpec::primary(OutputFormat::Wav, "test.wav"))
+            .recipe(Recipe::new(
+                "audio_v1",
+                serde_json::to_value(&params).unwrap(),
+            ))
+            .build();
+
+        let result = generate(&spec).expect("generation should succeed");
+
+        // Loop points should be generated
+        assert!(result.loop_point.is_some());
+        assert!(result.loop_end.is_some());
+
+        // Loop start should be after attack+decay (0.15s = 6615 samples)
+        let expected_start = (0.15 * 44100.0) as usize;
+        let actual_start = result.loop_point.unwrap();
+        // Allow some tolerance for zero-crossing snapping
+        assert!(
+            (actual_start as i64 - expected_start as i64).abs() < 1100,
+            "Loop start {} should be near expected {}",
+            actual_start,
+            expected_start
+        );
+
+        // Loop end should be near the end of the audio
+        let actual_end = result.loop_end.unwrap();
+        assert!(actual_end > actual_start, "Loop end must be after start");
+    }
+
+    #[test]
+    fn test_loop_config_with_custom_crossfade() {
+        use speccade_spec::recipe::audio::LoopConfig;
+
+        let params = AudioV1Params {
+            duration_seconds: 0.5,
+            sample_rate: 44100,
+            master_filter: None,
+            layers: vec![AudioLayer {
+                synthesis: Synthesis::Oscillator {
+                    waveform: Waveform::Sawtooth,
+                    frequency: 220.0,
+                    freq_sweep: None,
+                    detune: None,
+                    duty: None,
+                },
+                envelope: Envelope {
+                    attack: 0.02,
+                    decay: 0.05,
+                    sustain: 0.8,
+                    release: 0.1,
+                },
+                volume: 0.8,
+                pan: 0.0,
+                delay: None,
+                filter: None,
+                lfo: None,
+            }],
+            pitch_envelope: None,
+            base_note: None,
+            loop_config: Some(LoopConfig::with_crossfade(25.0)), // 25ms crossfade
+            generate_loop_points: false,
+            effects: vec![],
+            post_fx_lfos: vec![],
+        };
+
+        let spec = Spec::builder("loop-crossfade-test", AssetType::Audio)
+            .license("CC0-1.0")
+            .seed(42)
+            .output(OutputSpec::primary(OutputFormat::Wav, "test.wav"))
+            .recipe(Recipe::new(
+                "audio_v1",
+                serde_json::to_value(&params).unwrap(),
+            ))
+            .build();
+
+        let result = generate(&spec).expect("generation should succeed");
+        assert!(result.loop_point.is_some());
+        assert!(result.loop_end.is_some());
+    }
+
+    #[test]
+    fn test_legacy_generate_loop_points() {
+        // Test backward compatibility with legacy generate_loop_points field
+        let params = AudioV1Params {
+            duration_seconds: 0.5,
+            sample_rate: 44100,
+            master_filter: None,
+            layers: vec![AudioLayer {
+                synthesis: Synthesis::Oscillator {
+                    waveform: Waveform::Sine,
+                    frequency: 440.0,
+                    freq_sweep: None,
+                    detune: None,
+                    duty: None,
+                },
+                envelope: Envelope::default(),
+                volume: 0.8,
+                pan: 0.0,
+                delay: None,
+                filter: None,
+                lfo: None,
+            }],
+            pitch_envelope: None,
+            base_note: None,
+            loop_config: None,          // No new config
+            generate_loop_points: true, // Legacy flag
+            effects: vec![],
+            post_fx_lfos: vec![],
+        };
+
+        let spec = Spec::builder("legacy-loop-test", AssetType::Audio)
+            .license("CC0-1.0")
+            .seed(42)
+            .output(OutputSpec::primary(OutputFormat::Wav, "test.wav"))
+            .recipe(Recipe::new(
+                "audio_v1",
+                serde_json::to_value(&params).unwrap(),
+            ))
+            .build();
+
+        let result = generate(&spec).expect("generation should succeed");
+
+        // Legacy flag should still generate loop points
+        assert!(result.loop_point.is_some());
+        assert!(result.loop_end.is_some());
+    }
+
+    #[test]
+    fn test_loop_determinism() {
+        use speccade_spec::recipe::audio::LoopConfig;
+
+        let params = AudioV1Params {
+            duration_seconds: 0.5,
+            sample_rate: 44100,
+            master_filter: None,
+            layers: vec![AudioLayer {
+                synthesis: Synthesis::Oscillator {
+                    waveform: Waveform::Sine,
+                    frequency: 440.0,
+                    freq_sweep: None,
+                    detune: None,
+                    duty: None,
+                },
+                envelope: Envelope::default(),
+                volume: 0.8,
+                pan: 0.0,
+                delay: None,
+                filter: None,
+                lfo: None,
+            }],
+            pitch_envelope: None,
+            base_note: None,
+            loop_config: Some(LoopConfig::enabled()),
+            generate_loop_points: false,
+            effects: vec![],
+            post_fx_lfos: vec![],
+        };
+
+        let spec = Spec::builder("loop-determinism-test", AssetType::Audio)
+            .license("CC0-1.0")
+            .seed(42)
+            .output(OutputSpec::primary(OutputFormat::Wav, "test.wav"))
+            .recipe(Recipe::new(
+                "audio_v1",
+                serde_json::to_value(&params).unwrap(),
+            ))
+            .build();
+
+        let result1 = generate(&spec).expect("first generation");
+        let result2 = generate(&spec).expect("second generation");
+
+        // Loop points must be identical
+        assert_eq!(result1.loop_point, result2.loop_point);
+        assert_eq!(result1.loop_end, result2.loop_end);
+
+        // Audio with crossfade must be identical
+        assert_eq!(result1.wav.pcm_hash, result2.wav.pcm_hash);
     }
 }

@@ -36,6 +36,7 @@ fn test_noise_white() {
         effects: vec![],
         pitch_envelope: None,
         base_note: None,
+        loop_config: None,
         generate_loop_points: false,
         post_fx_lfos: vec![],
     };
@@ -70,6 +71,7 @@ fn test_noise_pink() {
         effects: vec![],
         pitch_envelope: None,
         base_note: None,
+        loop_config: None,
         generate_loop_points: false,
         post_fx_lfos: vec![],
     };
@@ -104,6 +106,7 @@ fn test_noise_brown() {
         effects: vec![],
         pitch_envelope: None,
         base_note: None,
+        loop_config: None,
         generate_loop_points: false,
         post_fx_lfos: vec![],
     };
@@ -142,6 +145,7 @@ fn test_noise_with_filter() {
         effects: vec![],
         pitch_envelope: None,
         base_note: None,
+        loop_config: None,
         generate_loop_points: false,
         post_fx_lfos: vec![],
     };
@@ -182,6 +186,7 @@ fn test_multi_oscillator_basic() {
         effects: vec![],
         pitch_envelope: None,
         base_note: None,
+        loop_config: None,
         generate_loop_points: false,
         post_fx_lfos: vec![],
     };
@@ -227,6 +232,7 @@ fn test_multi_oscillator_detuned() {
         effects: vec![],
         pitch_envelope: None,
         base_note: None,
+        loop_config: None,
         generate_loop_points: false,
         post_fx_lfos: vec![],
     };
@@ -272,6 +278,7 @@ fn test_multi_oscillator_with_phase() {
         effects: vec![],
         pitch_envelope: None,
         base_note: None,
+        loop_config: None,
         generate_loop_points: false,
         post_fx_lfos: vec![],
     };
@@ -317,6 +324,7 @@ fn test_multi_oscillator_with_duty() {
         effects: vec![],
         pitch_envelope: None,
         base_note: None,
+        loop_config: None,
         generate_loop_points: false,
         post_fx_lfos: vec![],
     };

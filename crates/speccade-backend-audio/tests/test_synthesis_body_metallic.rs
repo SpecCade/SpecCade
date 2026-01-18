@@ -35,6 +35,7 @@ fn test_pitched_body() {
         effects: vec![],
         pitch_envelope: None,
         base_note: None,
+        loop_config: None,
         generate_loop_points: false,
         post_fx_lfos: vec![],
     };
@@ -74,6 +75,7 @@ fn test_metallic_synthesis() {
         effects: vec![],
         pitch_envelope: None,
         base_note: None,
+        loop_config: None,
         generate_loop_points: false,
         post_fx_lfos: vec![],
     };
@@ -109,6 +111,7 @@ fn test_metallic_synthesis_many_partials() {
         effects: vec![],
         pitch_envelope: None,
         base_note: None,
+        loop_config: None,
         generate_loop_points: false,
         post_fx_lfos: vec![],
     };

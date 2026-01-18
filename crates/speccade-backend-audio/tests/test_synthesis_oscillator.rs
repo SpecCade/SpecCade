@@ -30,6 +30,7 @@ fn test_oscillator_sine() {
         effects: vec![],
         pitch_envelope: None,
         base_note: None,
+        loop_config: None,
         generate_loop_points: false,
         post_fx_lfos: vec![],
     };
@@ -64,6 +65,7 @@ fn test_oscillator_square() {
         effects: vec![],
         pitch_envelope: None,
         base_note: None,
+        loop_config: None,
         generate_loop_points: false,
         post_fx_lfos: vec![],
     };
@@ -96,6 +98,7 @@ fn test_oscillator_sawtooth() {
         effects: vec![],
         pitch_envelope: None,
         base_note: None,
+        loop_config: None,
         generate_loop_points: false,
         post_fx_lfos: vec![],
     };
@@ -128,6 +131,7 @@ fn test_oscillator_triangle() {
         effects: vec![],
         pitch_envelope: None,
         base_note: None,
+        loop_config: None,
         generate_loop_points: false,
         post_fx_lfos: vec![],
     };
@@ -160,6 +164,7 @@ fn test_oscillator_pulse_with_duty() {
         effects: vec![],
         pitch_envelope: None,
         base_note: None,
+        loop_config: None,
         generate_loop_points: false,
         post_fx_lfos: vec![],
     };
@@ -192,6 +197,7 @@ fn test_oscillator_with_detune() {
         effects: vec![],
         pitch_envelope: None,
         base_note: None,
+        loop_config: None,
         generate_loop_points: false,
         post_fx_lfos: vec![],
     };
@@ -227,6 +233,7 @@ fn test_oscillator_with_freq_sweep_linear() {
         effects: vec![],
         pitch_envelope: None,
         base_note: None,
+        loop_config: None,
         generate_loop_points: false,
         post_fx_lfos: vec![],
     };
@@ -262,6 +269,7 @@ fn test_oscillator_with_freq_sweep_exponential() {
         effects: vec![],
         pitch_envelope: None,
         base_note: None,
+        loop_config: None,
         generate_loop_points: false,
         post_fx_lfos: vec![],
     };
@@ -297,6 +305,7 @@ fn test_oscillator_with_freq_sweep_logarithmic() {
         effects: vec![],
         pitch_envelope: None,
         base_note: None,
+        loop_config: None,
         generate_loop_points: false,
         post_fx_lfos: vec![],
     };

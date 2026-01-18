@@ -302,6 +302,7 @@ fn test_instrument_synthesis_audio_v1_serialization() {
                 lfo: None,
             }],
             pitch_envelope: None,
+            loop_config: None,
             generate_loop_points: false,
             master_filter: None,
             effects: vec![],

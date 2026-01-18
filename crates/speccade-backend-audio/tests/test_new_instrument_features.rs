@@ -46,6 +46,7 @@ fn test_instrument_with_detune() {
         effects: vec![],
         pitch_envelope: None,
         base_note: Some(NoteSpec::MidiNote(69)), // A4
+        loop_config: None,
         generate_loop_points: false,
         post_fx_lfos: vec![],
     };
@@ -83,6 +84,7 @@ fn test_instrument_with_duty_cycle() {
         effects: vec![],
         pitch_envelope: None,
         base_note: Some(NoteSpec::MidiNote(60)), // C4
+        loop_config: None,
         generate_loop_points: false,
         post_fx_lfos: vec![],
     };
@@ -126,6 +128,7 @@ fn test_instrument_with_pitch_envelope() {
             depth: 12.0, // 1 octave up
         }),
         base_note: Some(NoteSpec::MidiNote(69)),
+        loop_config: None,
         generate_loop_points: false,
         post_fx_lfos: vec![],
     };
@@ -183,6 +186,7 @@ fn test_instrument_multi_oscillator() {
         effects: vec![],
         pitch_envelope: None,
         base_note: Some(NoteSpec::MidiNote(60)), // C4
+        loop_config: None,
         generate_loop_points: false,
         post_fx_lfos: vec![],
     };
@@ -239,6 +243,7 @@ fn test_instrument_multi_oscillator_with_pitch_envelope() {
             depth: -12.0, // Octave down
         }),
         base_note: Some(NoteSpec::MidiNote(69)),
+        loop_config: None,
         generate_loop_points: false,
         post_fx_lfos: vec![],
     };
@@ -282,6 +287,7 @@ fn test_instrument_determinism_with_new_features() {
             depth: 5.0,
         }),
         base_note: Some(NoteSpec::MidiNote(60)),
+        loop_config: None,
         generate_loop_points: false,
         post_fx_lfos: vec![],
     };
@@ -323,6 +329,7 @@ fn test_spectral_freeze_noise() {
         effects: vec![],
         pitch_envelope: None,
         base_note: None,
+        loop_config: None,
         generate_loop_points: false,
         post_fx_lfos: vec![],
     };
@@ -358,6 +365,7 @@ fn test_spectral_freeze_tone() {
         effects: vec![],
         pitch_envelope: None,
         base_note: Some(NoteSpec::NoteName("A3".to_string())),
+        loop_config: None,
         generate_loop_points: false,
         post_fx_lfos: vec![],
     };
@@ -392,6 +400,7 @@ fn test_spectral_freeze_determinism() {
         effects: vec![],
         pitch_envelope: None,
         base_note: None,
+        loop_config: None,
         generate_loop_points: false,
         post_fx_lfos: vec![],
     };
