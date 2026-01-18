@@ -10,6 +10,7 @@ pub mod expand;
 pub mod fmt;
 pub mod generate;
 pub mod generate_all;
+pub mod inspect;
 pub mod json_output;
 pub mod migrate;
 pub mod preview;
@@ -33,6 +34,7 @@ mod tests {
         let _ = fmt::run;
         let _ = generate::run;
         let _ = generate_all::run;
+        let _ = inspect::run;
         let _ = preview::run;
         let _ = template::list;
         let _ = validate::run;

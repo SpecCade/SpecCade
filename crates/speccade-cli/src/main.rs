@@ -193,6 +193,21 @@ enum Commands {
         json: bool,
     },
 
+    /// Inspect intermediate build artifacts (texture nodes, expanded params)
+    Inspect {
+        /// Path to the spec file (JSON or Starlark)
+        #[arg(short, long)]
+        spec: String,
+
+        /// Output directory for intermediate artifacts
+        #[arg(short, long)]
+        out_dir: String,
+
+        /// Output machine-readable JSON diagnostics (no colored output)
+        #[arg(long)]
+        json: bool,
+    },
+
     /// Migrate legacy .spec.py files to canonical JSON format
     Migrate {
         /// Path to the project directory containing legacy specs
@@ -378,6 +393,11 @@ fn main() -> ExitCode {
             compact,
             json,
         } => commands::expand::run(&spec, output.as_deref(), pretty && !compact, json),
+        Commands::Inspect {
+            spec,
+            out_dir,
+            json,
+        } => commands::inspect::run(&spec, &out_dir, json),
         Commands::Migrate {
             project,
             allow_exec_specs,
@@ -1311,5 +1331,72 @@ mod tests {
     fn test_cli_requires_input_dir_for_audit() {
         let err = Cli::try_parse_from(["speccade", "audit"]).err().unwrap();
         assert!(err.to_string().contains("--input-dir"));
+    }
+
+    #[test]
+    fn test_cli_parses_inspect_basic() {
+        let cli = Cli::try_parse_from([
+            "speccade",
+            "inspect",
+            "--spec",
+            "spec.json",
+            "--out-dir",
+            "./out",
+        ])
+        .unwrap();
+        match cli.command {
+            Commands::Inspect {
+                spec,
+                out_dir,
+                json,
+            } => {
+                assert_eq!(spec, "spec.json");
+                assert_eq!(out_dir, "./out");
+                assert!(!json);
+            }
+            _ => panic!("expected inspect command"),
+        }
+    }
+
+    #[test]
+    fn test_cli_parses_inspect_with_json() {
+        let cli = Cli::try_parse_from([
+            "speccade",
+            "inspect",
+            "--spec",
+            "spec.json",
+            "--out-dir",
+            "./out",
+            "--json",
+        ])
+        .unwrap();
+        match cli.command {
+            Commands::Inspect {
+                spec,
+                out_dir,
+                json,
+            } => {
+                assert_eq!(spec, "spec.json");
+                assert_eq!(out_dir, "./out");
+                assert!(json);
+            }
+            _ => panic!("expected inspect command"),
+        }
+    }
+
+    #[test]
+    fn test_cli_requires_spec_for_inspect() {
+        let err = Cli::try_parse_from(["speccade", "inspect", "--out-dir", "./out"])
+            .err()
+            .unwrap();
+        assert!(err.to_string().contains("--spec"));
+    }
+
+    #[test]
+    fn test_cli_requires_out_dir_for_inspect() {
+        let err = Cli::try_parse_from(["speccade", "inspect", "--spec", "spec.json"])
+            .err()
+            .unwrap();
+        assert!(err.to_string().contains("--out-dir"));
     }
 }

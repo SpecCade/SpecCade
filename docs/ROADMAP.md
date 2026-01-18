@@ -206,7 +206,8 @@ Migrated from `docs/FUTURE_GENERATORS.md` (now deprecated).
 
 - [x] `QA-001` Grow Tier-1 golden corpus (`golden/`) and run it in CI. **Done: 2026-01-18**
   - Implemented: 81 hash files (43 audio, 29 texture, 9 music); hash verification test; CI integration.
-- [ ] `QA-002` Add "inspect" style commands/flags where helpful for review (compose->expanded JSON, intermediate texture maps).
+- [x] `QA-002` Add "inspect" style commands/flags where helpful for review (compose->expanded JSON, intermediate texture maps). **Done: 2026-01-18**
+  - Implemented: `speccade inspect` command emits per-node texture PNGs and expanded compose params.
 - [x] `QA-003` Add content-addressed caching keyed by canonical spec/recipe hash + backend versions (iteration speed). **Done: 2026-01-18**
 - [ ] `QA-004` Add perceptual diffing / quality controls (image SSIM/DeltaE; audio loudness/spectral) where feasible.
 - [ ] `QA-005` Add profiling/observability: per-stage timings, memory stats, and reproducible perf runs.

@@ -686,6 +686,100 @@ impl BatchAnalyzeOutput {
     }
 }
 
+/// JSON output for the `inspect` command.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct InspectOutput {
+    /// Whether inspection succeeded
+    pub success: bool,
+    /// Errors encountered during inspection
+    pub errors: Vec<JsonError>,
+    /// Warnings from validation
+    pub warnings: Vec<JsonWarning>,
+    /// Inspection result (on success)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub result: Option<InspectResult>,
+    /// Canonical spec hash
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub spec_hash: Option<String>,
+    /// BLAKE3 hash of the source file
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub source_hash: Option<String>,
+}
+
+/// Inspection result details.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct InspectResult {
+    /// Asset ID from the spec
+    pub asset_id: String,
+    /// Asset type
+    pub asset_type: String,
+    /// Source format (json/starlark)
+    pub source_kind: String,
+    /// Recipe kind
+    pub recipe_kind: String,
+    /// Output directory for intermediates
+    pub out_dir: String,
+    /// Intermediate artifact paths
+    pub intermediates: Vec<IntermediateFile>,
+    /// Final output paths (from spec outputs)
+    pub final_outputs: Vec<IntermediateFile>,
+    /// Expanded params JSON path (for compose specs)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub expanded_params_path: Option<String>,
+    /// Duration in milliseconds
+    pub duration_ms: u64,
+}
+
+/// An intermediate file produced during inspection.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct IntermediateFile {
+    /// Identifier for this intermediate (node id, layer name, etc.)
+    pub id: String,
+    /// File format (png, json, etc.)
+    pub format: String,
+    /// Path to the file (relative to out_dir)
+    pub path: String,
+    /// BLAKE3 hash of the file
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub hash: Option<String>,
+}
+
+impl InspectOutput {
+    /// Creates a successful inspect output.
+    pub fn success(
+        result: InspectResult,
+        spec_hash: String,
+        source_hash: String,
+        warnings: Vec<JsonWarning>,
+    ) -> Self {
+        Self {
+            success: true,
+            errors: Vec::new(),
+            warnings,
+            result: Some(result),
+            spec_hash: Some(spec_hash),
+            source_hash: Some(source_hash),
+        }
+    }
+
+    /// Creates a failed inspect output.
+    pub fn failure(
+        errors: Vec<JsonError>,
+        warnings: Vec<JsonWarning>,
+        spec_hash: Option<String>,
+        source_hash: Option<String>,
+    ) -> Self {
+        Self {
+            success: false,
+            errors,
+            warnings,
+            result: None,
+            spec_hash,
+            source_hash,
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
