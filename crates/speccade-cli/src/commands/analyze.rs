@@ -8,7 +8,7 @@ use std::fs;
 use std::path::Path;
 use std::process::ExitCode;
 
-use crate::analysis::{audio, detect_asset_type, texture, AssetAnalysisType};
+use crate::analysis::{audio, detect_asset_type, embeddings, texture, AssetAnalysisType};
 
 use super::json_output::{error_codes, AnalyzeOutput, AnalyzeResult, JsonError};
 
@@ -19,6 +19,7 @@ use super::json_output::{error_codes, AnalyzeOutput, AnalyzeResult, JsonError};
 /// * `spec_path` - Optional path to spec file (generate then analyze)
 /// * `output_path` - Optional output file path (default: stdout)
 /// * `json_output` - Whether to output machine-readable JSON
+/// * `include_embeddings` - Whether to include feature embeddings
 ///
 /// # Returns
 /// Exit code: 0 on success, 1 on error
@@ -27,6 +28,7 @@ pub fn run(
     spec_path: Option<&str>,
     output_path: Option<&str>,
     json_output: bool,
+    include_embeddings: bool,
 ) -> Result<ExitCode> {
     // Currently we only support --input mode
     // --spec mode (generate then analyze) will be implemented when needed
@@ -50,14 +52,18 @@ pub fn run(
     let input = input_path.ok_or_else(|| anyhow::anyhow!("--input is required"))?;
 
     if json_output {
-        run_json(input, output_path)
+        run_json(input, output_path, include_embeddings)
     } else {
-        run_human(input, output_path)
+        run_human(input, output_path, include_embeddings)
     }
 }
 
 /// Run analyze with human-readable (colored) output
-fn run_human(input_path: &str, output_path: Option<&str>) -> Result<ExitCode> {
+fn run_human(
+    input_path: &str,
+    output_path: Option<&str>,
+    include_embeddings: bool,
+) -> Result<ExitCode> {
     let path = Path::new(input_path);
 
     // Detect asset type
@@ -81,18 +87,40 @@ fn run_human(input_path: &str, output_path: Option<&str>) -> Result<ExitCode> {
     println!("{} {}", "Hash:".dimmed(), &input_hash[..16]);
 
     // Analyze based on type
-    let metrics = match asset_type {
+    let (metrics, embedding) = match asset_type {
         AssetAnalysisType::Audio => {
             let audio_metrics = audio::analyze_wav(&data)
                 .map_err(|e| anyhow::anyhow!("Audio analysis failed: {}", e))?;
-            audio::metrics_to_btree(&audio_metrics)
+            let emb = if include_embeddings {
+                let (samples, sample_rate) = audio::extract_wav_samples(&data)
+                    .map_err(|e| anyhow::anyhow!("Audio extraction failed: {}", e))?;
+                Some(embeddings::compute_audio_embedding(&samples, sample_rate))
+            } else {
+                None
+            };
+            (audio::metrics_to_btree(&audio_metrics), emb)
         }
         AssetAnalysisType::Texture => {
             let texture_metrics = texture::analyze_png(&data)
                 .map_err(|e| anyhow::anyhow!("Texture analysis failed: {}", e))?;
-            texture::metrics_to_btree(&texture_metrics)
+            let emb = if include_embeddings {
+                let (pixels, width, height, channels) = texture::extract_png_pixels(&data)
+                    .map_err(|e| anyhow::anyhow!("Texture extraction failed: {}", e))?;
+                Some(embeddings::compute_texture_embedding(
+                    &pixels, width, height, channels,
+                ))
+            } else {
+                None
+            };
+            (texture::metrics_to_btree(&texture_metrics), emb)
         }
     };
+
+    if include_embeddings {
+        if let Some(ref emb) = embedding {
+            println!("{} {} dimensions", "Embedding:".dimmed(), emb.len());
+        }
+    }
 
     // Build result
     let result = AnalyzeResult {
@@ -100,6 +128,7 @@ fn run_human(input_path: &str, output_path: Option<&str>) -> Result<ExitCode> {
         asset_type: asset_type.as_str().to_string(),
         input_hash,
         metrics,
+        embedding,
     };
 
     // Serialize to JSON
@@ -118,7 +147,11 @@ fn run_human(input_path: &str, output_path: Option<&str>) -> Result<ExitCode> {
 }
 
 /// Run analyze with machine-readable JSON output
-fn run_json(input_path: &str, output_path: Option<&str>) -> Result<ExitCode> {
+fn run_json(
+    input_path: &str,
+    output_path: Option<&str>,
+    include_embeddings: bool,
+) -> Result<ExitCode> {
     let path = Path::new(input_path);
 
     // Detect asset type
@@ -160,9 +193,30 @@ fn run_json(input_path: &str, output_path: Option<&str>) -> Result<ExitCode> {
     let input_hash = blake3::hash(&data).to_hex().to_string();
 
     // Analyze based on type
-    let metrics = match asset_type {
+    let (metrics, embedding) = match asset_type {
         AssetAnalysisType::Audio => match audio::analyze_wav(&data) {
-            Ok(m) => audio::metrics_to_btree(&m),
+            Ok(m) => {
+                let emb = if include_embeddings {
+                    match audio::extract_wav_samples(&data) {
+                        Ok((samples, sample_rate)) => {
+                            Some(embeddings::compute_audio_embedding(&samples, sample_rate))
+                        }
+                        Err(e) => {
+                            let error = JsonError::new(
+                                error_codes::AUDIO_ANALYSIS,
+                                format!("Audio extraction for embedding failed: {}", e),
+                            )
+                            .with_file(input_path);
+                            let output = AnalyzeOutput::failure(vec![error]);
+                            output_json(&output, output_path)?;
+                            return Ok(ExitCode::from(1));
+                        }
+                    }
+                } else {
+                    None
+                };
+                (audio::metrics_to_btree(&m), emb)
+            }
             Err(e) => {
                 let error = JsonError::new(
                     error_codes::AUDIO_ANALYSIS,
@@ -175,7 +229,28 @@ fn run_json(input_path: &str, output_path: Option<&str>) -> Result<ExitCode> {
             }
         },
         AssetAnalysisType::Texture => match texture::analyze_png(&data) {
-            Ok(m) => texture::metrics_to_btree(&m),
+            Ok(m) => {
+                let emb = if include_embeddings {
+                    match texture::extract_png_pixels(&data) {
+                        Ok((pixels, width, height, channels)) => Some(
+                            embeddings::compute_texture_embedding(&pixels, width, height, channels),
+                        ),
+                        Err(e) => {
+                            let error = JsonError::new(
+                                error_codes::TEXTURE_ANALYSIS,
+                                format!("Texture extraction for embedding failed: {}", e),
+                            )
+                            .with_file(input_path);
+                            let output = AnalyzeOutput::failure(vec![error]);
+                            output_json(&output, output_path)?;
+                            return Ok(ExitCode::from(1));
+                        }
+                    }
+                } else {
+                    None
+                };
+                (texture::metrics_to_btree(&m), emb)
+            }
             Err(e) => {
                 let error = JsonError::new(
                     error_codes::TEXTURE_ANALYSIS,
@@ -195,6 +270,7 @@ fn run_json(input_path: &str, output_path: Option<&str>) -> Result<ExitCode> {
         asset_type: asset_type.as_str().to_string(),
         input_hash,
         metrics,
+        embedding,
     };
 
     let output = AnalyzeOutput::success(result);
@@ -272,7 +348,7 @@ mod tests {
         let wav_data = create_test_wav(&samples, 44100);
         fs::write(&wav_path, &wav_data).unwrap();
 
-        let code = run(Some(wav_path.to_str().unwrap()), None, None, true).unwrap();
+        let code = run(Some(wav_path.to_str().unwrap()), None, None, true, false).unwrap();
         assert_eq!(code, ExitCode::SUCCESS);
     }
 
@@ -285,7 +361,7 @@ mod tests {
         let png_data = create_test_png(1, 1, &pixels);
         fs::write(&png_path, &png_data).unwrap();
 
-        let code = run(Some(png_path.to_str().unwrap()), None, None, true).unwrap();
+        let code = run(Some(png_path.to_str().unwrap()), None, None, true, false).unwrap();
         assert_eq!(code, ExitCode::SUCCESS);
     }
 
@@ -295,13 +371,13 @@ mod tests {
         let txt_path = tmp.path().join("test.txt");
         fs::write(&txt_path, "hello").unwrap();
 
-        let code = run(Some(txt_path.to_str().unwrap()), None, None, true).unwrap();
+        let code = run(Some(txt_path.to_str().unwrap()), None, None, true, false).unwrap();
         assert_eq!(code, ExitCode::from(1));
     }
 
     #[test]
     fn test_analyze_file_not_found() {
-        let code = run(Some("/nonexistent/file.wav"), None, None, true).unwrap();
+        let code = run(Some("/nonexistent/file.wav"), None, None, true, false).unwrap();
         assert_eq!(code, ExitCode::from(1));
     }
 
@@ -320,6 +396,7 @@ mod tests {
             None,
             Some(out_path.to_str().unwrap()),
             true,
+            false,
         )
         .unwrap();
         assert_eq!(code, ExitCode::SUCCESS);
@@ -328,6 +405,8 @@ mod tests {
         let content = fs::read_to_string(&out_path).unwrap();
         let parsed: AnalyzeOutput = serde_json::from_str(&content).unwrap();
         assert!(parsed.success);
+        // No embedding when flag is false
+        assert!(parsed.result.as_ref().unwrap().embedding.is_none());
     }
 
     #[test]
@@ -347,6 +426,7 @@ mod tests {
             None,
             Some(out1_path.to_str().unwrap()),
             true,
+            false,
         )
         .unwrap();
 
@@ -355,10 +435,124 @@ mod tests {
             None,
             Some(out2_path.to_str().unwrap()),
             true,
+            false,
         )
         .unwrap();
 
         // Compare outputs
+        let content1 = fs::read_to_string(&out1_path).unwrap();
+        let content2 = fs::read_to_string(&out2_path).unwrap();
+        assert_eq!(content1, content2);
+    }
+
+    #[test]
+    fn test_analyze_audio_with_embeddings() {
+        let tmp = tempfile::tempdir().unwrap();
+        let wav_path = tmp.path().join("test.wav");
+        let out_path = tmp.path().join("metrics.json");
+
+        let samples: Vec<f32> = (0..4410).map(|i| (i as f32 * 0.1).sin() * 0.5).collect();
+        let wav_data = create_test_wav(&samples, 44100);
+        fs::write(&wav_path, &wav_data).unwrap();
+
+        let code = run(
+            Some(wav_path.to_str().unwrap()),
+            None,
+            Some(out_path.to_str().unwrap()),
+            true,
+            true, // include embeddings
+        )
+        .unwrap();
+        assert_eq!(code, ExitCode::SUCCESS);
+
+        let content = fs::read_to_string(&out_path).unwrap();
+        let parsed: AnalyzeOutput = serde_json::from_str(&content).unwrap();
+        assert!(parsed.success);
+
+        // Check embedding is present and has correct dimension
+        let embedding = parsed.result.as_ref().unwrap().embedding.as_ref().unwrap();
+        assert_eq!(embedding.len(), embeddings::AUDIO_EMBEDDING_DIM);
+
+        // Check all values are in valid range [0, 1]
+        for &v in embedding {
+            assert!(
+                (0.0..=1.0).contains(&v),
+                "Embedding value {} out of range",
+                v
+            );
+        }
+    }
+
+    #[test]
+    fn test_analyze_texture_with_embeddings() {
+        let tmp = tempfile::tempdir().unwrap();
+        let png_path = tmp.path().join("test.png");
+        let out_path = tmp.path().join("metrics.json");
+
+        // Create a 4x4 RGBA image
+        let pixels: Vec<u8> = (0..4 * 4 * 4).map(|i| (i % 256) as u8).collect();
+        let png_data = create_test_png(4, 4, &pixels);
+        fs::write(&png_path, &png_data).unwrap();
+
+        let code = run(
+            Some(png_path.to_str().unwrap()),
+            None,
+            Some(out_path.to_str().unwrap()),
+            true,
+            true, // include embeddings
+        )
+        .unwrap();
+        assert_eq!(code, ExitCode::SUCCESS);
+
+        let content = fs::read_to_string(&out_path).unwrap();
+        let parsed: AnalyzeOutput = serde_json::from_str(&content).unwrap();
+        assert!(parsed.success);
+
+        // Check embedding is present and has correct dimension
+        let embedding = parsed.result.as_ref().unwrap().embedding.as_ref().unwrap();
+        assert_eq!(embedding.len(), embeddings::TEXTURE_EMBEDDING_DIM);
+
+        // Check all values are in valid range [0, 1]
+        for &v in embedding {
+            assert!(
+                (0.0..=1.0).contains(&v),
+                "Embedding value {} out of range",
+                v
+            );
+        }
+    }
+
+    #[test]
+    fn test_embeddings_deterministic() {
+        let tmp = tempfile::tempdir().unwrap();
+        let wav_path = tmp.path().join("test.wav");
+        let out1_path = tmp.path().join("metrics1.json");
+        let out2_path = tmp.path().join("metrics2.json");
+
+        let samples: Vec<f32> = (0..4410).map(|i| (i as f32 * 0.1).sin() * 0.5).collect();
+        let wav_data = create_test_wav(&samples, 44100);
+        fs::write(&wav_path, &wav_data).unwrap();
+
+        // Run twice with embeddings
+        run(
+            Some(wav_path.to_str().unwrap()),
+            None,
+            Some(out1_path.to_str().unwrap()),
+            true,
+            true,
+        )
+        .unwrap();
+
+        run(
+            Some(wav_path.to_str().unwrap()),
+            None,
+            Some(out2_path.to_str().unwrap()),
+            true,
+            true,
+        )
+        .unwrap();
+
+        // Compare outputs - should be identical
         let content1 = fs::read_to_string(&out1_path).unwrap();
         let content2 = fs::read_to_string(&out2_path).unwrap();
         assert_eq!(content1, content2);

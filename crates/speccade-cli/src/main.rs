@@ -39,6 +39,10 @@ enum Commands {
         /// Output machine-readable JSON diagnostics (no colored output)
         #[arg(long)]
         json: bool,
+
+        /// Include fixed-dimension feature embedding for similarity search
+        #[arg(long)]
+        embeddings: bool,
     },
 
     /// Evaluate a spec file and print canonical IR JSON to stdout
@@ -269,7 +273,14 @@ fn main() -> ExitCode {
             spec,
             output,
             json,
-        } => commands::analyze::run(input.as_deref(), spec.as_deref(), output.as_deref(), json),
+            embeddings,
+        } => commands::analyze::run(
+            input.as_deref(),
+            spec.as_deref(),
+            output.as_deref(),
+            json,
+            embeddings,
+        ),
         Commands::Eval { spec, pretty, json } => commands::eval::run(&spec, pretty, json),
         Commands::Validate {
             spec,
@@ -887,11 +898,13 @@ mod tests {
                 spec,
                 output,
                 json,
+                embeddings,
             } => {
                 assert_eq!(input.as_deref(), Some("sound.wav"));
                 assert!(spec.is_none());
                 assert!(output.is_none());
                 assert!(!json);
+                assert!(!embeddings);
             }
             _ => panic!("expected analyze command"),
         }
@@ -914,11 +927,13 @@ mod tests {
                 spec,
                 output,
                 json,
+                embeddings,
             } => {
                 assert_eq!(input.as_deref(), Some("sound.wav"));
                 assert!(spec.is_none());
                 assert_eq!(output.as_deref(), Some("metrics.json"));
                 assert!(!json);
+                assert!(!embeddings);
             }
             _ => panic!("expected analyze command"),
         }
@@ -934,11 +949,42 @@ mod tests {
                 spec,
                 output,
                 json,
+                embeddings,
             } => {
                 assert_eq!(input.as_deref(), Some("sound.wav"));
                 assert!(spec.is_none());
                 assert!(output.is_none());
                 assert!(json);
+                assert!(!embeddings);
+            }
+            _ => panic!("expected analyze command"),
+        }
+    }
+
+    #[test]
+    fn test_cli_parses_analyze_with_embeddings() {
+        let cli = Cli::try_parse_from([
+            "speccade",
+            "analyze",
+            "--input",
+            "sound.wav",
+            "--embeddings",
+            "--json",
+        ])
+        .unwrap();
+        match cli.command {
+            Commands::Analyze {
+                input,
+                spec,
+                output,
+                json,
+                embeddings,
+            } => {
+                assert_eq!(input.as_deref(), Some("sound.wav"));
+                assert!(spec.is_none());
+                assert!(output.is_none());
+                assert!(json);
+                assert!(embeddings);
             }
             _ => panic!("expected analyze command"),
         }

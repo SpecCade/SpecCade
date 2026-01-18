@@ -314,6 +314,22 @@ fn calculate_contrast(pixels: &[u8], channels: u8) -> TextureContrastMetrics {
     }
 }
 
+/// Extract pixel data from PNG for embedding computation.
+///
+/// Returns raw pixels, dimensions (width, height), and channel count.
+pub fn extract_png_pixels(
+    png_data: &[u8],
+) -> Result<(Vec<u8>, u32, u32, u8), TextureAnalysisError> {
+    let (header, pixels) = decode_png_pixels(png_data)?;
+    let channels = header.channels();
+
+    if pixels.is_empty() || header.width == 0 || header.height == 0 {
+        return Err(TextureAnalysisError::EmptyImage);
+    }
+
+    Ok((pixels, header.width, header.height, channels))
+}
+
 /// Analyze a PNG file and return metrics.
 pub fn analyze_png(png_data: &[u8]) -> Result<TextureMetrics, TextureAnalysisError> {
     let (header, pixels) = decode_png_pixels(png_data)?;

@@ -52,7 +52,8 @@ Reference: `docs/rfcs/RFC-0008-llm-native-asset-authoring.md`
 - [x] `LLM-007` Iteration-speed features for agentic loops (preview + partial generation + caching). **Done: 2026-01-18**
   - Deliverable: at least one of: `generate --preview`, per-layer generation for audio, or content-addressed caching keyed by canonical hashes + backend versions.
   - Implemented: `generate --preview <duration_seconds>` for fast audio preview generation.
-- [ ] `LLM-009` Extend `speccade analyze` with embedding export for similarity search (explicit opt-in).
+- [x] `LLM-009` Extend `speccade analyze` with embedding export for similarity search (explicit opt-in). **Done: 2026-01-18**
+  - Implemented: `--embeddings` flag outputs 48-dimension deterministic feature vectors for audio and texture files.
 - [ ] `LLM-010` Add batch analysis modes (`--input-dir`, CSV/JSONL outputs) for clustering/auditing.
 - [ ] `LLM-011` Add a real-time analysis mode (e.g. WebSocket server) for editor/iterative workflows.
 

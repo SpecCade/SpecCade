@@ -24,6 +24,7 @@
 //! ```
 
 pub mod audio;
+pub mod embeddings;
 pub mod texture;
 
 /// Recognized audio extensions.

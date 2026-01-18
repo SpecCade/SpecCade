@@ -517,6 +517,9 @@ pub struct AnalyzeResult {
     pub input_hash: String,
     /// Extracted metrics (structure depends on asset type)
     pub metrics: std::collections::BTreeMap<String, serde_json::Value>,
+    /// Fixed-dimension feature embedding for similarity search (optional)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub embedding: Option<Vec<f64>>,
 }
 
 impl AnalyzeOutput {

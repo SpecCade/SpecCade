@@ -186,6 +186,21 @@ fn stereo_to_mono(samples: &[f32], channels: u16) -> Vec<f32> {
         .collect()
 }
 
+/// Extract mono samples from WAV data for embedding computation.
+///
+/// Returns normalized samples in the range [-1.0, 1.0] and the sample rate.
+pub fn extract_wav_samples(wav_data: &[u8]) -> Result<(Vec<f32>, u32), AudioAnalysisError> {
+    let header = parse_wav_header(wav_data)?;
+    let samples = parse_wav_samples(wav_data)?;
+
+    if samples.is_empty() {
+        return Err(AudioAnalysisError::EmptyAudio);
+    }
+
+    let mono_samples = stereo_to_mono(&samples, header.channels);
+    Ok((mono_samples, header.sample_rate))
+}
+
 /// Analyze a WAV file and return metrics.
 pub fn analyze_wav(wav_data: &[u8]) -> Result<AudioMetrics, AudioAnalysisError> {
     let header = parse_wav_header(wav_data)?;
