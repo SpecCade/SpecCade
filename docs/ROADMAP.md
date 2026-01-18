@@ -135,8 +135,9 @@ Open questions:
   - Implemented: `speccade audit` command with tolerances, baseline management, and `--update-baselines` flag.
 - [x] `AUDIO-003` Improve loop-point generation + click-free defaults for tracker instrument baking. **Done: 2026-01-18**
   - Implemented: LoopConfig with zero-crossing detection, crossfade at boundaries, click-free defaults.
-- [ ] `AUDIO-004` Add missing effects needed for production mixing (start with parametric EQ + limiter).
+- [x] `AUDIO-004` Add missing effects needed for production mixing (start with parametric EQ + limiter). **Done: 2026-01-19**
   - Notes: also consider gate/expander and stereo widener.
+  - Verified: ParametricEq and Limiter effects exist in spec (effects/mod.rs), backend DSP (effects/chain.rs), and stdlib helpers (dynamics.rs).
 - [ ] `AUDIO-005` Add missing filter types (notch/allpass first; then comb/formant/shelves as needed).
 - [ ] `AUDIO-006` Add missing synthesis types with highest leverage (unison/supersaw, waveguide, bowed string, membrane/drum).
 - [ ] `AUDIO-007` Add loudness targets (LUFS) and true-peak limiting workflows for production-ready output levels.
