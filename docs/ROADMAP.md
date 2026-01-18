@@ -198,7 +198,7 @@ Migrated from `docs/FUTURE_GENERATORS.md` (now deprecated).
 
 - [ ] `QA-001` Grow Tier-1 golden corpus (`golden/`) and run it in CI.
 - [ ] `QA-002` Add "inspect" style commands/flags where helpful for review (compose->expanded JSON, intermediate texture maps).
-- [ ] `QA-003` Add content-addressed caching keyed by canonical spec/recipe hash + backend versions (iteration speed).
+- [x] `QA-003` Add content-addressed caching keyed by canonical spec/recipe hash + backend versions (iteration speed). **Done: 2026-01-18**
 - [ ] `QA-004` Add perceptual diffing / quality controls (image SSIM/DeltaE; audio loudness/spectral) where feasible.
 - [ ] `QA-005` Add profiling/observability: per-stage timings, memory stats, and reproducible perf runs.
 - [ ] `QA-006` Define a plugin/backends extension story (subprocess or WASM) with strict I/O contracts + determinism reporting.

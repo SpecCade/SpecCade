@@ -4,6 +4,7 @@
 //! including input loading, Starlark compilation, and asset generation commands.
 
 pub mod analysis;
+pub mod cache;
 pub mod input;
 
 #[cfg(feature = "starlark")]

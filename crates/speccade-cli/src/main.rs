@@ -100,6 +100,10 @@ enum Commands {
         /// Generate preview of specified duration in seconds (for fast iteration)
         #[arg(long)]
         preview: Option<f64>,
+
+        /// Disable content-addressed caching (force regeneration)
+        #[arg(long)]
+        no_cache: bool,
     },
 
     /// Generate all assets from a directory of spec files
@@ -183,6 +187,12 @@ enum Commands {
         #[command(subcommand)]
         command: StdlibCommands,
     },
+
+    /// Manage generation cache
+    Cache {
+        #[command(subcommand)]
+        command: CacheCommands,
+    },
 }
 
 #[derive(Subcommand)]
@@ -242,6 +252,14 @@ enum StdlibCommands {
     },
 }
 
+#[derive(Subcommand)]
+enum CacheCommands {
+    /// Clear all cache entries
+    Clear,
+    /// Show cache information (entry count, total size)
+    Info,
+}
+
 fn main() -> ExitCode {
     let cli = Cli::parse();
 
@@ -266,6 +284,7 @@ fn main() -> ExitCode {
             budget,
             json,
             preview,
+            no_cache,
         } => commands::generate::run(
             &spec,
             out_root.as_deref(),
@@ -273,6 +292,7 @@ fn main() -> ExitCode {
             budget.as_deref(),
             json,
             preview,
+            no_cache,
         ),
         Commands::GenerateAll {
             spec_dir,
@@ -323,6 +343,10 @@ fn main() -> ExitCode {
                     .expect("clap should have validated format");
                 commands::stdlib::run_dump(dump_format)
             }
+        },
+        Commands::Cache { command } => match command {
+            CacheCommands::Clear => commands::cache::clear(),
+            CacheCommands::Info => commands::cache::info(),
         },
     };
 
@@ -486,6 +510,7 @@ mod tests {
                 budget,
                 json,
                 preview,
+                no_cache,
             } => {
                 assert_eq!(spec, "spec.json");
                 assert_eq!(out_root.as_deref(), Some("out"));
@@ -493,6 +518,7 @@ mod tests {
                 assert!(budget.is_none());
                 assert!(!json);
                 assert!(preview.is_none());
+                assert!(!no_cache);
             }
             _ => panic!("expected generate command"),
         }
@@ -517,6 +543,7 @@ mod tests {
                 budget,
                 json,
                 preview,
+                no_cache,
             } => {
                 assert_eq!(spec, "spec.json");
                 assert!(out_root.is_none());
@@ -524,6 +551,7 @@ mod tests {
                 assert_eq!(budget.as_deref(), Some("zx-8bit"));
                 assert!(!json);
                 assert!(preview.is_none());
+                assert!(!no_cache);
             }
             _ => panic!("expected generate command"),
         }
@@ -541,6 +569,7 @@ mod tests {
                 budget,
                 json,
                 preview,
+                no_cache,
             } => {
                 assert_eq!(spec, "spec.json");
                 assert!(out_root.is_none());
@@ -548,6 +577,7 @@ mod tests {
                 assert!(budget.is_none());
                 assert!(json);
                 assert!(preview.is_none());
+                assert!(!no_cache);
             }
             _ => panic!("expected generate command"),
         }

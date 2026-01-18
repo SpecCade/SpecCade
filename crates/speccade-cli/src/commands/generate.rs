@@ -18,6 +18,7 @@ use super::json_output::{
     JsonWarning, VariantResult,
 };
 use super::reporting;
+use crate::cache::{CacheKey, CacheManager};
 use crate::dispatch::dispatch_generate;
 use crate::input::{load_spec, LoadResult};
 
@@ -30,6 +31,7 @@ use crate::input::{load_spec, LoadResult};
 /// * `budget_name` - Optional budget profile name (default, strict, zx-8bit)
 /// * `json_output` - Whether to output machine-readable JSON diagnostics
 /// * `preview_duration` - Optional preview duration in seconds (truncates audio generation)
+/// * `no_cache` - Whether to bypass cache (default: false, cache enabled)
 ///
 /// # Returns
 /// Exit code: 0 success, 1 spec error, 2 generation error
@@ -40,6 +42,7 @@ pub fn run(
     budget_name: Option<&str>,
     json_output: bool,
     preview_duration: Option<f64>,
+    no_cache: bool,
 ) -> Result<ExitCode> {
     if json_output {
         run_json(
@@ -48,6 +51,7 @@ pub fn run(
             expand_variants,
             budget_name,
             preview_duration,
+            no_cache,
         )
     } else {
         run_human(
@@ -56,6 +60,7 @@ pub fn run(
             expand_variants,
             budget_name,
             preview_duration,
+            no_cache,
         )
     }
 }
@@ -67,6 +72,7 @@ fn run_human(
     expand_variants: bool,
     budget_name: Option<&str>,
     preview_duration: Option<f64>,
+    no_cache: bool,
 ) -> Result<ExitCode> {
     let start = Instant::now();
     let out_root = out_root.unwrap_or(".");
@@ -200,13 +206,67 @@ fn run_human(
         }
     }
 
-    // Dispatch to backend
-    println!("\n{}", "Dispatching to backend...".dimmed());
+    // Initialize cache manager (if caching is enabled)
+    let cache_mgr = if no_cache {
+        None
+    } else {
+        match CacheManager::new() {
+            Ok(mgr) => Some(mgr),
+            Err(e) => {
+                println!("  {} Failed to initialize cache: {}", "!".yellow(), e);
+                None
+            }
+        }
+    };
 
+    // Compute cache key
+    let cache_key = if let Some(recipe) = spec.recipe.as_ref() {
+        CacheKey::new(
+            recipe,
+            spec.seed,
+            backend_version.clone(),
+            preview_duration.is_some(),
+        )
+        .ok()
+    } else {
+        None
+    };
+
+    // Check cache
     let base_report_path = reporting::report_path(spec_path, &spec.asset_id);
-
     let base_gen_start = Instant::now();
-    let base_result = dispatch_generate(&spec, out_root, Path::new(spec_path), preview_duration);
+    let mut cache_hit = false;
+
+    let base_result = if let (Some(mgr), Some(key)) = (cache_mgr.as_ref(), cache_key.as_ref()) {
+        if mgr.has_entry(key) {
+            println!("\n{}", "Cache hit, restoring outputs...".green());
+            cache_hit = true;
+            match mgr.get(key, Path::new(out_root)) {
+                Ok(Some(outputs)) => Ok(outputs),
+                Ok(None) => {
+                    println!("  {} Cache entry missing, regenerating...", "!".yellow());
+                    cache_hit = false;
+                    dispatch_generate(&spec, out_root, Path::new(spec_path), preview_duration)
+                }
+                Err(e) => {
+                    println!(
+                        "  {} Cache retrieval failed: {}, regenerating...",
+                        "!".yellow(),
+                        e
+                    );
+                    cache_hit = false;
+                    dispatch_generate(&spec, out_root, Path::new(spec_path), preview_duration)
+                }
+            }
+        } else {
+            println!("\n{}", "Dispatching to backend...".dimmed());
+            dispatch_generate(&spec, out_root, Path::new(spec_path), preview_duration)
+        }
+    } else {
+        println!("\n{}", "Dispatching to backend...".dimmed());
+        dispatch_generate(&spec, out_root, Path::new(spec_path), preview_duration)
+    };
+
     let base_duration_ms = base_gen_start.elapsed().as_millis() as u64;
 
     let mut any_generation_failed = false;
@@ -214,6 +274,15 @@ fn run_human(
     match base_result {
         Ok(outputs) => {
             let output_count = outputs.len();
+
+            // Store in cache (if generation happened and caching is enabled)
+            if !cache_hit {
+                if let (Some(mgr), Some(key)) = (cache_mgr.as_ref(), cache_key.as_ref()) {
+                    if let Err(e) = mgr.put(key, &outputs, Path::new(out_root)) {
+                        println!("  {} Failed to cache outputs: {}", "!".yellow(), e);
+                    }
+                }
+            }
 
             // Build success report
             let mut report_builder = with_provenance(ReportBuilder::new(
@@ -229,18 +298,22 @@ fn run_human(
             report_builder =
                 reporting::apply_validation_messages(report_builder, &validation_result);
 
-            for output in outputs {
-                report_builder = report_builder.output(output);
+            for output in &outputs {
+                report_builder = report_builder.output(output.clone());
             }
 
             let report = report_builder.ok(true).build();
             reporting::write_report(&report, &base_report_path)?;
 
+            let status = if cache_hit {
+                format!("{} (cache)", "SUCCESS".green().bold())
+            } else {
+                format!("{}", "SUCCESS".green().bold())
+            };
+
             println!(
                 "\n{} Generated {} output(s) in {}ms",
-                "SUCCESS".green().bold(),
-                output_count,
-                base_duration_ms
+                status, output_count, base_duration_ms
             );
             println!("{} {}", "Report written to:".dimmed(), base_report_path);
         }
@@ -388,6 +461,7 @@ fn run_json(
     expand_variants: bool,
     budget_name: Option<&str>,
     preview_duration: Option<f64>,
+    no_cache: bool,
 ) -> Result<ExitCode> {
     let start = Instant::now();
     let out_root_str = out_root.unwrap_or(".");
@@ -507,16 +581,53 @@ fn run_json(
         return Ok(ExitCode::from(1));
     }
 
-    // Dispatch to backend
-    let base_report_path = reporting::report_path(spec_path, &spec.asset_id);
+    // Initialize cache manager (if caching is enabled)
+    let cache_mgr = if !no_cache {
+        CacheManager::new().ok()
+    } else {
+        None
+    };
 
+    // Compute cache key
+    let cache_key = if let Some(recipe) = spec.recipe.as_ref() {
+        CacheKey::new(
+            recipe,
+            spec.seed,
+            backend_version.clone(),
+            preview_duration.is_some(),
+        )
+        .ok()
+    } else {
+        None
+    };
+
+    // Check cache
+    let base_report_path = reporting::report_path(spec_path, &spec.asset_id);
     let base_gen_start = Instant::now();
-    let base_result =
-        dispatch_generate(&spec, out_root_str, Path::new(spec_path), preview_duration);
+    let mut cache_hit = false;
+
+    let base_result = if let (Some(mgr), Some(key)) = (cache_mgr.as_ref(), cache_key.as_ref()) {
+        if let Ok(Some(outputs)) = mgr.get(key, Path::new(out_root_str)) {
+            cache_hit = true;
+            Ok(outputs)
+        } else {
+            dispatch_generate(&spec, out_root_str, Path::new(spec_path), preview_duration)
+        }
+    } else {
+        dispatch_generate(&spec, out_root_str, Path::new(spec_path), preview_duration)
+    };
+
     let base_duration_ms = base_gen_start.elapsed().as_millis() as u64;
 
     match base_result {
         Ok(outputs) => {
+            // Store in cache (if generation happened and caching is enabled)
+            if !cache_hit {
+                if let (Some(mgr), Some(key)) = (cache_mgr.as_ref(), cache_key.as_ref()) {
+                    let _ = mgr.put(key, &outputs, Path::new(out_root_str));
+                }
+            }
+
             // Build success report
             let mut report_builder = with_provenance(ReportBuilder::new(
                 spec_hash.clone(),
@@ -622,6 +733,7 @@ fn run_json(
                                     variant_id: variant_id.to_string(),
                                     success: true,
                                     spec_hash: variant_spec_hash,
+                                    cache_hit: false,
                                     outputs: variant_files,
                                     report_path: variant_report_path,
                                     duration_ms: variant_duration_ms,
@@ -661,6 +773,7 @@ fn run_json(
                                     variant_id: variant_id.to_string(),
                                     success: false,
                                     spec_hash: variant_spec_hash,
+                                    cache_hit: false,
                                     outputs: vec![],
                                     report_path: variant_report_path,
                                     duration_ms: variant_duration_ms,
@@ -681,6 +794,7 @@ fn run_json(
                 out_root: out_root_str.to_string(),
                 budget: budget_name.map(|s| s.to_string()),
                 recipe_hash,
+                cache_hit,
                 outputs: generated_files,
                 report_path: base_report_path,
                 duration_ms: total_duration_ms,
@@ -790,6 +904,7 @@ mod tests {
             None,
             false,
             None,
+            false,
         )
         .unwrap();
         assert_eq!(code, ExitCode::from(1));
@@ -829,6 +944,7 @@ mod tests {
             None,
             false,
             None,
+            false,
         )
         .unwrap();
         assert_eq!(code, ExitCode::from(1));
@@ -892,6 +1008,7 @@ mod tests {
             None,
             false,
             None,
+            false,
         )
         .unwrap();
         assert_eq!(code, ExitCode::SUCCESS);
@@ -961,6 +1078,7 @@ mod tests {
             None,
             false,
             None,
+            false,
         )
         .unwrap();
         assert_eq!(code, ExitCode::SUCCESS);
@@ -1062,6 +1180,7 @@ mod tests {
             None,
             true,
             None,
+            false,
         )
         .unwrap();
         assert_eq!(code, ExitCode::SUCCESS);
@@ -1088,6 +1207,7 @@ mod tests {
             None,
             true,
             None,
+            false,
         )
         .unwrap();
         assert_eq!(code, ExitCode::from(1));
@@ -1096,7 +1216,16 @@ mod tests {
     #[test]
     fn generate_json_output_file_not_found() {
         // Run with json=true on nonexistent file - should return exit code 1
-        let code = run("/nonexistent/spec.json", None, false, None, true, None).unwrap();
+        let code = run(
+            "/nonexistent/spec.json",
+            None,
+            false,
+            None,
+            true,
+            None,
+            false,
+        )
+        .unwrap();
         assert_eq!(code, ExitCode::from(1));
     }
 }

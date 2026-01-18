@@ -340,6 +340,8 @@ pub struct GenerateResult {
     /// Recipe hash (if recipe present)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub recipe_hash: Option<String>,
+    /// Whether this generation was served from cache
+    pub cache_hit: bool,
     /// Generated output files
     pub outputs: Vec<GeneratedFile>,
     /// Path to the generated report file
@@ -360,6 +362,8 @@ pub struct VariantResult {
     pub success: bool,
     /// Variant-specific spec hash
     pub spec_hash: String,
+    /// Whether this generation was served from cache
+    pub cache_hit: bool,
     /// Generated output files for this variant
     pub outputs: Vec<GeneratedFile>,
     /// Path to the variant report file
@@ -619,6 +623,7 @@ mod tests {
             out_root: "./out".to_string(),
             budget: Some("strict".to_string()),
             recipe_hash: Some("recipehash".to_string()),
+            cache_hit: false,
             outputs: vec![GeneratedFile {
                 kind: "primary".to_string(),
                 format: "wav".to_string(),
