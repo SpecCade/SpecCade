@@ -112,7 +112,8 @@ Open questions:
 - [x] `MUSIC-004` Tighten XM/IT parity checks and document known differences. **Done: 2026-01-18**
   - Deliverable: automated structural checks + a short listening checklist doc.
   - Implemented: `check_parity()` function in backend-music; `docs/xm-it-differences.md` with QA checklist.
-- [ ] `MUSIC-008` Expand tracker effect coverage + validation (arp/porta/vibrato/retrig/vol slide, etc.).
+- [x] `MUSIC-008` Expand tracker effect coverage + validation (arp/porta/vibrato/retrig/vol slide, etc.). **Done: 2026-01-18**
+  - Implemented: 30+ typed TrackerEffect variants with XM/IT validation; `docs/tracker-effects.md` reference.
 - [ ] `MUSIC-009` Add deterministic swing/humanize macros to Pattern IR (timing + velocity ranges with explicit constraints).
 
 ## Music (Content / Workflow)

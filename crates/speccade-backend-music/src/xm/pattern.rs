@@ -173,59 +173,15 @@ impl XmPattern {
     }
 }
 
-/// XM effect types.
+/// XM effect types - re-exported from speccade-spec for convenience.
 pub mod effects {
-    /// Arpeggio effect (0xy).
-    pub const ARPEGGIO: u8 = 0x0;
-    /// Portamento up (1xx).
-    pub const PORTA_UP: u8 = 0x1;
-    /// Portamento down (2xx).
-    pub const PORTA_DOWN: u8 = 0x2;
-    /// Tone portamento (3xx).
-    pub const TONE_PORTA: u8 = 0x3;
-    /// Vibrato (4xy).
-    pub const VIBRATO: u8 = 0x4;
-    /// Tone portamento + volume slide (5xy).
-    pub const TONE_PORTA_VOL_SLIDE: u8 = 0x5;
-    /// Vibrato + volume slide (6xy).
-    pub const VIBRATO_VOL_SLIDE: u8 = 0x6;
-    /// Tremolo (7xy).
-    pub const TREMOLO: u8 = 0x7;
-    /// Set panning (8xx).
-    pub const SET_PANNING: u8 = 0x8;
-    /// Sample offset (9xx).
-    pub const SAMPLE_OFFSET: u8 = 0x9;
-    /// Volume slide (Axy).
-    pub const VOL_SLIDE: u8 = 0xA;
-    /// Position jump (Bxx).
-    pub const POSITION_JUMP: u8 = 0xB;
-    /// Set volume (Cxx).
-    pub const SET_VOLUME: u8 = 0xC;
-    /// Pattern break (Dxx).
-    pub const PATTERN_BREAK: u8 = 0xD;
-    /// Extended effects (Exy).
-    pub const EXTENDED: u8 = 0xE;
-    /// Set speed/tempo (Fxx).
-    pub const SET_SPEED_TEMPO: u8 = 0xF;
-    /// Set global volume (Gxx).
-    pub const GLOBAL_VOL: u8 = 0x10;
-    /// Global volume slide (Hxy).
-    pub const GLOBAL_VOL_SLIDE: u8 = 0x11;
-    /// Key off (Kxx).
-    pub const KEY_OFF: u8 = 0x14;
-    /// Set envelope position (Lxx).
-    pub const SET_ENV_POS: u8 = 0x15;
-    /// Panning slide (Pxy).
-    pub const PAN_SLIDE: u8 = 0x19;
-    /// Multi retrigger note (Rxy).
-    pub const RETRIGGER: u8 = 0x1B;
-    /// Tremor (Txy).
-    pub const TREMOR: u8 = 0x1D;
-    /// Extra fine portamento (Xxy).
-    pub const EXTRA_FINE_PORTA: u8 = 0x21;
+    pub use speccade_spec::recipe::music::xm_codes::*;
 }
 
 /// Convert an effect name to XM effect code.
+///
+/// Note: For effects that use extended commands (E) or extra fine (X),
+/// this returns the base effect code. The caller must handle parameter encoding.
 pub fn effect_name_to_code(name: &str) -> Option<u8> {
     match name.to_lowercase().as_str() {
         "arpeggio" => Some(effects::ARPEGGIO),
@@ -233,11 +189,35 @@ pub fn effect_name_to_code(name: &str) -> Option<u8> {
         "porta_down" | "portamento_down" => Some(effects::PORTA_DOWN),
         "tone_porta" | "tone_portamento" => Some(effects::TONE_PORTA),
         "vibrato" => Some(effects::VIBRATO),
-        "vol_slide" | "volume_slide" => Some(effects::VOL_SLIDE),
-        "set_volume" => Some(effects::SET_VOLUME),
-        "pattern_break" => Some(effects::PATTERN_BREAK),
-        "set_speed" | "set_tempo" => Some(effects::SET_SPEED_TEMPO),
+        "tone_porta_vol_slide" => Some(effects::TONE_PORTA_VOL_SLIDE),
+        "vibrato_vol_slide" => Some(effects::VIBRATO_VOL_SLIDE),
+        "tremolo" => Some(effects::TREMOLO),
         "set_panning" | "panning" => Some(effects::SET_PANNING),
+        "sample_offset" => Some(effects::SAMPLE_OFFSET),
+        "vol_slide" | "volume_slide" => Some(effects::VOL_SLIDE),
+        "position_jump" | "jump" => Some(effects::POSITION_JUMP),
+        "set_volume" => Some(effects::SET_VOLUME),
+        "pattern_break" | "break" => Some(effects::PATTERN_BREAK),
+        "set_speed" | "set_tempo" | "speed" | "tempo" => Some(effects::SET_SPEED_TEMPO),
+        "global_volume" | "set_global_volume" => Some(effects::GLOBAL_VOL),
+        "global_vol_slide" | "global_volume_slide" => Some(effects::GLOBAL_VOL_SLIDE),
+        "key_off" => Some(effects::KEY_OFF),
+        "envelope_position" | "set_envelope_position" => Some(effects::SET_ENV_POS),
+        "pan_slide" | "panning_slide" => Some(effects::PAN_SLIDE),
+        "retrigger" => Some(effects::RETRIGGER),
+        "tremor" => Some(effects::TREMOR),
+        // Extended effects (Exy) - return EXTENDED, param encoding handled elsewhere
+        "fine_porta_up" | "fine_portamento_up" => Some(effects::EXTENDED),
+        "fine_porta_down" | "fine_portamento_down" => Some(effects::EXTENDED),
+        "note_cut" => Some(effects::EXTENDED),
+        "note_delay" => Some(effects::EXTENDED),
+        "pattern_loop" | "loop" => Some(effects::EXTENDED),
+        "finetune" | "set_finetune" => Some(effects::EXTENDED),
+        "vibrato_waveform" | "set_vibrato_waveform" => Some(effects::EXTENDED),
+        "tremolo_waveform" | "set_tremolo_waveform" => Some(effects::EXTENDED),
+        // Extra fine portamento (Xxy)
+        "extra_fine_porta_up" => Some(effects::EXTRA_FINE_PORTA),
+        "extra_fine_porta_down" => Some(effects::EXTRA_FINE_PORTA),
         _ => None,
     }
 }

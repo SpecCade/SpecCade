@@ -226,63 +226,15 @@ impl ItPattern {
     }
 }
 
-/// IT effect types (letter-based: A=1, B=2, etc.).
+/// IT effect types - re-exported from speccade-spec for convenience.
 pub mod effects {
-    /// Set speed (Axx).
-    pub const SET_SPEED: u8 = 1;
-    /// Position jump (Bxx).
-    pub const POSITION_JUMP: u8 = 2;
-    /// Pattern break (Cxx).
-    pub const PATTERN_BREAK: u8 = 3;
-    /// Volume slide (Dxy).
-    pub const VOLUME_SLIDE: u8 = 4;
-    /// Portamento down (Exx).
-    pub const PORTA_DOWN: u8 = 5;
-    /// Portamento up (Fxx).
-    pub const PORTA_UP: u8 = 6;
-    /// Tone portamento (Gxx).
-    pub const TONE_PORTA: u8 = 7;
-    /// Vibrato (Hxy).
-    pub const VIBRATO: u8 = 8;
-    /// Tremor (Ixy).
-    pub const TREMOR: u8 = 9;
-    /// Arpeggio (Jxy).
-    pub const ARPEGGIO: u8 = 10;
-    /// Vibrato + volume slide (Kxy).
-    pub const VIBRATO_VOL_SLIDE: u8 = 11;
-    /// Tone porta + volume slide (Lxy).
-    pub const TONE_PORTA_VOL_SLIDE: u8 = 12;
-    /// Set channel volume (Mxx).
-    pub const SET_CHANNEL_VOL: u8 = 13;
-    /// Channel volume slide (Nxy).
-    pub const CHANNEL_VOL_SLIDE: u8 = 14;
-    /// Sample offset (Oxx).
-    pub const SAMPLE_OFFSET: u8 = 15;
-    /// Panning slide (Pxy).
-    pub const PANNING_SLIDE: u8 = 16;
-    /// Retrigger note (Qxy).
-    pub const RETRIGGER: u8 = 17;
-    /// Tremolo (Rxy).
-    pub const TREMOLO: u8 = 18;
-    /// Extended effects (Sxy).
-    pub const EXTENDED: u8 = 19;
-    /// Set tempo (Txx).
-    pub const TEMPO: u8 = 20;
-    /// Fine vibrato (Uxy).
-    pub const FINE_VIBRATO: u8 = 21;
-    /// Set global volume (Vxx).
-    pub const SET_GLOBAL_VOL: u8 = 22;
-    /// Global volume slide (Wxy).
-    pub const GLOBAL_VOL_SLIDE: u8 = 23;
-    /// Set panning (Xxx).
-    pub const SET_PANNING: u8 = 24;
-    /// Panbrello (Yxy).
-    pub const PANBRELLO: u8 = 25;
-    /// MIDI macro (Zxx).
-    pub const MIDI_MACRO: u8 = 26;
+    pub use speccade_spec::recipe::music::it_codes::*;
 }
 
 /// Convert an effect name to IT effect code.
+///
+/// Note: For effects that use extended commands (S), the caller must handle
+/// parameter encoding. Fine portamento uses special parameter values (Fx/Ex).
 pub fn effect_name_to_code(name: &str) -> Option<u8> {
     match name.to_lowercase().as_str() {
         "set_speed" | "speed" => Some(effects::SET_SPEED),
@@ -291,11 +243,36 @@ pub fn effect_name_to_code(name: &str) -> Option<u8> {
         "volume_slide" | "vol_slide" => Some(effects::VOLUME_SLIDE),
         "porta_down" | "portamento_down" => Some(effects::PORTA_DOWN),
         "porta_up" | "portamento_up" => Some(effects::PORTA_UP),
+        // Fine portamento in IT uses the same effect with special param (Fx/Ex)
+        "fine_porta_up" | "fine_portamento_up" => Some(effects::PORTA_UP),
+        "fine_porta_down" | "fine_portamento_down" => Some(effects::PORTA_DOWN),
+        "extra_fine_porta_up" => Some(effects::PORTA_UP),
+        "extra_fine_porta_down" => Some(effects::PORTA_DOWN),
         "tone_porta" | "tone_portamento" => Some(effects::TONE_PORTA),
         "vibrato" => Some(effects::VIBRATO),
+        "tremor" => Some(effects::TREMOR),
         "arpeggio" => Some(effects::ARPEGGIO),
+        "vibrato_vol_slide" => Some(effects::VIBRATO_VOL_SLIDE),
+        "tone_porta_vol_slide" => Some(effects::TONE_PORTA_VOL_SLIDE),
+        "channel_volume" | "set_channel_volume" => Some(effects::SET_CHANNEL_VOL),
+        "channel_vol_slide" | "channel_volume_slide" => Some(effects::CHANNEL_VOL_SLIDE),
+        "sample_offset" => Some(effects::SAMPLE_OFFSET),
+        "pan_slide" | "panning_slide" => Some(effects::PANNING_SLIDE),
+        "retrigger" => Some(effects::RETRIGGER),
+        "tremolo" => Some(effects::TREMOLO),
         "tempo" | "set_tempo" => Some(effects::TEMPO),
+        "fine_vibrato" => Some(effects::FINE_VIBRATO),
+        "global_volume" | "set_global_volume" => Some(effects::SET_GLOBAL_VOL),
+        "global_vol_slide" | "global_volume_slide" => Some(effects::GLOBAL_VOL_SLIDE),
         "set_panning" | "panning" => Some(effects::SET_PANNING),
+        "panbrello" => Some(effects::PANBRELLO),
+        // Extended effects (Sxy) - return EXTENDED, param encoding handled elsewhere
+        "note_cut" => Some(effects::EXTENDED),
+        "note_delay" => Some(effects::EXTENDED),
+        "pattern_loop" | "loop" => Some(effects::EXTENDED),
+        "finetune" | "set_finetune" => Some(effects::EXTENDED),
+        "vibrato_waveform" | "set_vibrato_waveform" => Some(effects::EXTENDED),
+        "tremolo_waveform" | "set_tremolo_waveform" => Some(effects::EXTENDED),
         _ => None,
     }
 }
