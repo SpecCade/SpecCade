@@ -4,7 +4,7 @@
   "asset_type": "texture",
   "license": "CC0-1.0",
   "seed": 777777,
-  "description": "Golden op coverage for texture.procedural_v1 (constant, gradient, stripes, add, lerp, palette, to_grayscale, compose_rgba alpha, normal_from_height).",
+  "description": "Golden op coverage for texture.procedural_v1 (all ops including blur, warp, morphology, blend modes, UV transforms).",
   "outputs": [
     {
       "kind": "primary",
@@ -77,6 +77,72 @@
       "format": "png",
       "path": "procedural_ops_normal.png",
       "source": "normal"
+    },
+    {
+      "kind": "primary",
+      "format": "png",
+      "path": "procedural_ops_blur.png",
+      "source": "blurred"
+    },
+    {
+      "kind": "primary",
+      "format": "png",
+      "path": "procedural_ops_erode.png",
+      "source": "eroded"
+    },
+    {
+      "kind": "primary",
+      "format": "png",
+      "path": "procedural_ops_dilate.png",
+      "source": "dilated"
+    },
+    {
+      "kind": "primary",
+      "format": "png",
+      "path": "procedural_ops_warp.png",
+      "source": "warped"
+    },
+    {
+      "kind": "primary",
+      "format": "png",
+      "path": "procedural_ops_screen.png",
+      "source": "screen"
+    },
+    {
+      "kind": "primary",
+      "format": "png",
+      "path": "procedural_ops_overlay.png",
+      "source": "overlay"
+    },
+    {
+      "kind": "primary",
+      "format": "png",
+      "path": "procedural_ops_softlight.png",
+      "source": "softlight"
+    },
+    {
+      "kind": "primary",
+      "format": "png",
+      "path": "procedural_ops_difference.png",
+      "source": "difference"
+    },
+    {
+      "kind": "primary",
+      "format": "png",
+      "path": "procedural_ops_uv_scale.png",
+      "source": "scaled"
+    },
+    {
+      "kind": "primary",
+      "format": "png",
+      "path": "procedural_ops_uv_rotate.png",
+      "source": "rotated"
+    },
+    {
+      "kind": "primary",
+      "format": "png",
+      "path": "procedural_ops_uv_translate.png",
+      "source": "translated"
     }
   ],
   "recipe": {
@@ -189,6 +255,75 @@
           "id": "normal",
           "type": "normal_from_height",
           "input": "lerp"
+        },
+        {
+          "id": "blurred",
+          "type": "blur",
+          "input": "checker",
+          "radius": 2.0
+        },
+        {
+          "id": "eroded",
+          "type": "erode",
+          "input": "checker",
+          "radius": 1
+        },
+        {
+          "id": "dilated",
+          "type": "dilate",
+          "input": "checker",
+          "radius": 1
+        },
+        {
+          "id": "warped",
+          "type": "warp",
+          "input": "grad_h",
+          "displacement": "grad_r",
+          "strength": 8.0
+        },
+        {
+          "id": "screen",
+          "type": "blend_screen",
+          "base": "grad_h",
+          "blend": "grad_v"
+        },
+        {
+          "id": "overlay",
+          "type": "blend_overlay",
+          "base": "grad_h",
+          "blend": "grad_v"
+        },
+        {
+          "id": "softlight",
+          "type": "blend_soft_light",
+          "base": "grad_h",
+          "blend": "grad_v"
+        },
+        {
+          "id": "difference",
+          "type": "blend_difference",
+          "base": "grad_h",
+          "blend": "grad_v"
+        },
+        {
+          "id": "scaled",
+          "type": "uv_scale",
+          "input": "stripes_v",
+          "scale_x": 2.0,
+          "scale_y": 1.0
+        },
+        {
+          "id": "rotated",
+          "type": "uv_rotate",
+          "input": "stripes_v",
+          "angle": 0.785
+        },
+        {
+          "id": "translated",
+          "type": "uv_translate",
+          "input": "stripes_v",
+          "offset_x": 0.25,
+          "offset_y": 0.0
         }
       ]
     }

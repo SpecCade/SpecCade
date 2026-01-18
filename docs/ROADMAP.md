@@ -146,8 +146,9 @@ Open questions:
 
 ## Textures
 
-- [ ] `TEX-001` Add additional `texture.procedural_v1` ops (blur/warp/morphology/blend modes/UV transforms).
+- [x] `TEX-001` Add additional `texture.procedural_v1` ops (blur/warp/morphology/blend modes/UV transforms). **Done: 2026-01-18**
   - References: RFC-0005/0006 future-work notes.
+  - Implemented: Blur, Erode, Dilate, Warp, BlendScreen/Overlay/SoftLight/Difference, UvScale/Rotate/Translate.
 - [ ] `TEX-002` Add graph libraries/templates without introducing new recipe kinds.
   - Deliverable: reusable templates in `packs/` + CLI support to copy/instantiate.
 - [ ] `TEX-003` Decide if richer channel "swizzle/component extract" ops are needed for packing workflows.

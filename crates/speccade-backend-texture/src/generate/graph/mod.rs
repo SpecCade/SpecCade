@@ -9,8 +9,13 @@ use crate::maps::{GrayscaleBuffer, TextureBuffer};
 use super::GenerateError;
 
 mod encoding;
+mod filters;
 mod helpers;
 mod operations;
+mod ops_color;
+mod ops_filter;
+mod ops_math;
+mod ops_primitive;
 
 #[cfg(test)]
 mod tests;

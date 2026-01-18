@@ -122,7 +122,18 @@ pub(super) fn validate_texture_procedural_outputs_with_budget(
             | TextureProceduralOp::Multiply { .. }
             | TextureProceduralOp::Lerp { .. }
             | TextureProceduralOp::Threshold { .. }
-            | TextureProceduralOp::ToGrayscale { .. } => GraphValueType::Grayscale,
+            | TextureProceduralOp::ToGrayscale { .. }
+            | TextureProceduralOp::Blur { .. }
+            | TextureProceduralOp::Erode { .. }
+            | TextureProceduralOp::Dilate { .. }
+            | TextureProceduralOp::Warp { .. }
+            | TextureProceduralOp::BlendScreen { .. }
+            | TextureProceduralOp::BlendOverlay { .. }
+            | TextureProceduralOp::BlendSoftLight { .. }
+            | TextureProceduralOp::BlendDifference { .. }
+            | TextureProceduralOp::UvScale { .. }
+            | TextureProceduralOp::UvRotate { .. }
+            | TextureProceduralOp::UvTranslate { .. } => GraphValueType::Grayscale,
         };
 
         node_types.insert(node.id.as_str(), node_type);
@@ -277,6 +288,72 @@ pub(super) fn validate_texture_procedural_outputs_with_budget(
             | TextureProceduralOp::Stripes { .. }
             | TextureProceduralOp::Checkerboard { .. } => {
                 deps.insert(node.id.as_str(), Vec::new());
+            }
+            // Single grayscale input ops
+            TextureProceduralOp::Blur { input, .. }
+            | TextureProceduralOp::Erode { input, .. }
+            | TextureProceduralOp::Dilate { input, .. }
+            | TextureProceduralOp::UvScale { input, .. }
+            | TextureProceduralOp::UvRotate { input, .. }
+            | TextureProceduralOp::UvTranslate { input, .. } => {
+                validate_ref(input, format!("recipe.params.nodes[{}].input", i), result);
+                validate_input_type(
+                    GraphValueType::Grayscale,
+                    input,
+                    format!("recipe.params.nodes[{}].input", i),
+                    result,
+                );
+                deps.insert(node.id.as_str(), vec![input.as_str()]);
+            }
+            // Warp: input + displacement (both grayscale)
+            TextureProceduralOp::Warp {
+                input,
+                displacement,
+                ..
+            } => {
+                validate_ref(input, format!("recipe.params.nodes[{}].input", i), result);
+                validate_ref(
+                    displacement,
+                    format!("recipe.params.nodes[{}].displacement", i),
+                    result,
+                );
+                validate_input_type(
+                    GraphValueType::Grayscale,
+                    input,
+                    format!("recipe.params.nodes[{}].input", i),
+                    result,
+                );
+                validate_input_type(
+                    GraphValueType::Grayscale,
+                    displacement,
+                    format!("recipe.params.nodes[{}].displacement", i),
+                    result,
+                );
+                deps.insert(
+                    node.id.as_str(),
+                    vec![input.as_str(), displacement.as_str()],
+                );
+            }
+            // Blend modes: base + blend (both grayscale)
+            TextureProceduralOp::BlendScreen { base, blend }
+            | TextureProceduralOp::BlendOverlay { base, blend }
+            | TextureProceduralOp::BlendSoftLight { base, blend }
+            | TextureProceduralOp::BlendDifference { base, blend } => {
+                validate_ref(base, format!("recipe.params.nodes[{}].base", i), result);
+                validate_ref(blend, format!("recipe.params.nodes[{}].blend", i), result);
+                validate_input_type(
+                    GraphValueType::Grayscale,
+                    base,
+                    format!("recipe.params.nodes[{}].base", i),
+                    result,
+                );
+                validate_input_type(
+                    GraphValueType::Grayscale,
+                    blend,
+                    format!("recipe.params.nodes[{}].blend", i),
+                    result,
+                );
+                deps.insert(node.id.as_str(), vec![base.as_str(), blend.as_str()]);
             }
         }
     }
