@@ -31,6 +31,12 @@ pub mod error_codes {
     pub const JSON_SERIALIZE: &str = "CLI_009";
     /// Generation error (wraps backend errors)
     pub const GENERATION_ERROR: &str = "CLI_010";
+    /// Unsupported file format for analysis
+    pub const UNSUPPORTED_FORMAT: &str = "CLI_011";
+    /// Audio analysis error
+    pub const AUDIO_ANALYSIS: &str = "CLI_012";
+    /// Texture analysis error
+    pub const TEXTURE_ANALYSIS: &str = "CLI_013";
 }
 
 /// Warning codes for CLI operations.
@@ -479,6 +485,51 @@ pub fn compile_warnings_to_json(warnings: &[crate::input::CompileWarning]) -> Ve
             warning
         })
         .collect()
+}
+
+/// JSON output for the `analyze` command.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AnalyzeOutput {
+    /// Whether analysis succeeded
+    pub success: bool,
+    /// Errors encountered during analysis
+    pub errors: Vec<JsonError>,
+    /// Analysis result (on success)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub result: Option<AnalyzeResult>,
+}
+
+/// Analysis result details.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AnalyzeResult {
+    /// Input file path
+    pub input: String,
+    /// Asset type analyzed (audio/texture)
+    pub asset_type: String,
+    /// BLAKE3 hash of the input file
+    pub input_hash: String,
+    /// Extracted metrics (structure depends on asset type)
+    pub metrics: std::collections::BTreeMap<String, serde_json::Value>,
+}
+
+impl AnalyzeOutput {
+    /// Creates a successful analyze output.
+    pub fn success(result: AnalyzeResult) -> Self {
+        Self {
+            success: true,
+            errors: Vec::new(),
+            result: Some(result),
+        }
+    }
+
+    /// Creates a failed analyze output.
+    pub fn failure(errors: Vec<JsonError>) -> Self {
+        Self {
+            success: false,
+            errors,
+            result: None,
+        }
+    }
 }
 
 #[cfg(test)]

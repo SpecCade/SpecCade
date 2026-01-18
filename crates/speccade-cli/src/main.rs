@@ -22,6 +22,25 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
+    /// Analyze a generated asset file and output quality metrics
+    Analyze {
+        /// Path to the input file to analyze (WAV or PNG)
+        #[arg(short, long)]
+        input: Option<String>,
+
+        /// Path to spec file (generate then analyze)
+        #[arg(short, long)]
+        spec: Option<String>,
+
+        /// Output file path (default: stdout)
+        #[arg(short, long)]
+        output: Option<String>,
+
+        /// Output machine-readable JSON diagnostics (no colored output)
+        #[arg(long)]
+        json: bool,
+    },
+
     /// Evaluate a spec file and print canonical IR JSON to stdout
     Eval {
         /// Path to the spec file (JSON or Starlark)
@@ -205,6 +224,12 @@ fn main() -> ExitCode {
     let cli = Cli::parse();
 
     let result = match cli.command {
+        Commands::Analyze {
+            input,
+            spec,
+            output,
+            json,
+        } => commands::analyze::run(input.as_deref(), spec.as_deref(), output.as_deref(), json),
         Commands::Eval { spec, pretty, json } => commands::eval::run(&spec, pretty, json),
         Commands::Validate {
             spec,
@@ -733,6 +758,72 @@ mod tests {
                 }
             },
             _ => panic!("expected stdlib command"),
+        }
+    }
+
+    #[test]
+    fn test_cli_parses_analyze_with_input() {
+        let cli = Cli::try_parse_from(["speccade", "analyze", "--input", "sound.wav"]).unwrap();
+        match cli.command {
+            Commands::Analyze {
+                input,
+                spec,
+                output,
+                json,
+            } => {
+                assert_eq!(input.as_deref(), Some("sound.wav"));
+                assert!(spec.is_none());
+                assert!(output.is_none());
+                assert!(!json);
+            }
+            _ => panic!("expected analyze command"),
+        }
+    }
+
+    #[test]
+    fn test_cli_parses_analyze_with_output() {
+        let cli = Cli::try_parse_from([
+            "speccade",
+            "analyze",
+            "--input",
+            "sound.wav",
+            "--output",
+            "metrics.json",
+        ])
+        .unwrap();
+        match cli.command {
+            Commands::Analyze {
+                input,
+                spec,
+                output,
+                json,
+            } => {
+                assert_eq!(input.as_deref(), Some("sound.wav"));
+                assert!(spec.is_none());
+                assert_eq!(output.as_deref(), Some("metrics.json"));
+                assert!(!json);
+            }
+            _ => panic!("expected analyze command"),
+        }
+    }
+
+    #[test]
+    fn test_cli_parses_analyze_with_json() {
+        let cli =
+            Cli::try_parse_from(["speccade", "analyze", "--input", "sound.wav", "--json"]).unwrap();
+        match cli.command {
+            Commands::Analyze {
+                input,
+                spec,
+                output,
+                json,
+            } => {
+                assert_eq!(input.as_deref(), Some("sound.wav"));
+                assert!(spec.is_none());
+                assert!(output.is_none());
+                assert!(json);
+            }
+            _ => panic!("expected analyze command"),
         }
     }
 }

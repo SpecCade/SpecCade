@@ -38,7 +38,7 @@ Reference: `docs/rfcs/RFC-0008-llm-native-asset-authoring.md`
 - [x] `LLM-008` Add a Nethercore-oriented budget profile (22050 Hz audio, modern constraints). **Done: 2026-01-18**
   - Deliverable: `BudgetProfile::nethercore()` (or `by_name("nethercore")`) with documented limits; avoids "zx-8bit" naming confusion.
   - Touch points: `crates/speccade-spec/src/validation/budgets.rs`, `docs/budgets.md`.
-- [ ] `LLM-003` Add `speccade analyze` baseline metrics (start with audio + textures).
+- [x] `LLM-003` Add `speccade analyze` baseline metrics (start with audio + textures). **Done: 2026-01-18**
   - Deliverable: deterministic metrics JSON for iteration loops (audio peak/clipping/DC/loudness proxy; texture histogram/contrast/tileability checks).
   - Reference spec: `docs/rfcs/RFC-0008-appendix-audio-analysis-spec.md`.
 - [ ] `LLM-004` Add preset/template retrieval primitives (CLI-time, no runtime IO in Starlark).

@@ -1,5 +1,6 @@
 //! CLI command implementations
 
+pub mod analyze;
 pub mod doctor;
 pub mod eval;
 pub mod expand;
@@ -21,6 +22,7 @@ mod tests {
 
     #[test]
     fn commands_module_exports_entrypoints() {
+        let _ = analyze::run;
         let _ = doctor::run;
         let _ = eval::run;
         let _ = expand::run;

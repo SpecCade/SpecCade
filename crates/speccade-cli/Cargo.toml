@@ -35,6 +35,10 @@ regex.workspace = true
 walkdir.workspace = true
 blake3.workspace = true
 serde.workspace = true
+png.workspace = true
+
+# FFT for audio spectral analysis
+rustfft = "6"
 
 # Starlark support (optional, enabled by default)
 starlark = { workspace = true, optional = true }

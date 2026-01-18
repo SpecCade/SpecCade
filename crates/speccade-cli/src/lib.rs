@@ -3,6 +3,7 @@
 //! This crate provides the core functionality for the SpecCade CLI,
 //! including input loading, Starlark compilation, and asset generation commands.
 
+pub mod analysis;
 pub mod input;
 
 #[cfg(feature = "starlark")]
