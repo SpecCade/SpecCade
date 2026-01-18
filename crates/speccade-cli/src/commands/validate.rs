@@ -50,7 +50,7 @@ fn run_human(spec_path: &str, artifacts: bool, budget_name: Option<&str>) -> Res
     let budget = match budget_name {
         Some(name) => BudgetProfile::by_name(name).ok_or_else(|| {
             anyhow::anyhow!(
-                "unknown budget profile: {} (expected default, strict, or zx-8bit)",
+                "unknown budget profile: {} (expected default, strict, zx-8bit, or nethercore)",
                 name
             )
         })?,
@@ -174,7 +174,7 @@ fn run_json(spec_path: &str, artifacts: bool, budget_name: Option<&str>) -> Resu
                 let error = JsonError::new(
                     super::json_output::error_codes::UNKNOWN_BUDGET,
                     format!(
-                        "Unknown budget profile: {} (expected default, strict, or zx-8bit)",
+                        "Unknown budget profile: {} (expected default, strict, zx-8bit, or nethercore)",
                         name
                     ),
                 );

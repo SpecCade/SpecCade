@@ -35,7 +35,7 @@ Reference: `docs/rfcs/RFC-0008-llm-native-asset-authoring.md`
 - [x] `LLM-002` Add `--json` structured output for `eval`, `validate`, `generate`. **Done: 2026-01-18**
   - Deliverable: machine-readable diagnostics (stable codes, path, file/line/col where available, suggestions).
   - Touch points: `crates/speccade-cli/src/commands/{eval,validate,generate}.rs`, `crates/speccade-spec` validation error structures.
-- [ ] `LLM-008` Add a Nethercore-oriented budget profile (22050 Hz audio, modern constraints).
+- [x] `LLM-008` Add a Nethercore-oriented budget profile (22050 Hz audio, modern constraints). **Done: 2026-01-18**
   - Deliverable: `BudgetProfile::nethercore()` (or `by_name("nethercore")`) with documented limits; avoids "zx-8bit" naming confusion.
   - Touch points: `crates/speccade-spec/src/validation/budgets.rs`, `docs/budgets.md`.
 - [ ] `LLM-003` Add `speccade analyze` baseline metrics (start with audio + textures).

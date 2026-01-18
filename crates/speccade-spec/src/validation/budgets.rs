@@ -316,12 +316,50 @@ impl BudgetProfile {
         }
     }
 
+    /// Returns the Nethercore profile optimized for modern sprite-based games.
+    pub fn nethercore() -> Self {
+        Self {
+            name: "nethercore".to_string(),
+            audio: AudioBudget {
+                max_duration_seconds: 30.0,
+                max_layers: 16,
+                max_samples: 30 * 22050,
+                allowed_sample_rates: vec![22050],
+            },
+            texture: TextureBudget {
+                max_dimension: 1024,
+                max_pixels: 1024 * 1024,
+                max_graph_nodes: 128,
+                max_graph_depth: 32,
+            },
+            music: MusicBudget {
+                xm_max_channels: 16,
+                xm_max_patterns: 128,
+                xm_max_instruments: 64,
+                xm_max_pattern_rows: 128,
+                it_max_channels: 16,
+                it_max_patterns: 128,
+                it_max_instruments: 64,
+                it_max_samples: 64,
+                max_compose_recursion: 32,
+                max_cells_per_pattern: 25_000,
+            },
+            mesh: MeshBudget {
+                max_vertices: 25_000,
+                max_faces: 25_000,
+                max_bones: 128,
+            },
+            general: GeneralBudget::default(),
+        }
+    }
+
     /// Looks up a profile by name.
     pub fn by_name(name: &str) -> Option<Self> {
         match name {
             "default" => Some(Self::default()),
             "strict" => Some(Self::strict()),
             "zx-8bit" => Some(Self::zx_8bit()),
+            "nethercore" => Some(Self::nethercore()),
             _ => None,
         }
     }
@@ -428,10 +466,26 @@ mod tests {
     }
 
     #[test]
+    fn test_budget_profile_nethercore() {
+        let profile = BudgetProfile::nethercore();
+        assert_eq!(profile.name, "nethercore");
+        assert_eq!(profile.audio.max_duration_seconds, 30.0);
+        assert_eq!(profile.audio.max_layers, 16);
+        assert_eq!(profile.audio.allowed_sample_rates, vec![22050]);
+        assert_eq!(profile.texture.max_dimension, 1024);
+        assert_eq!(profile.texture.max_pixels, 1024 * 1024);
+        assert_eq!(profile.music.xm_max_channels, 16);
+        assert_eq!(profile.music.it_max_channels, 16);
+        assert_eq!(profile.mesh.max_vertices, 25_000);
+        assert_eq!(profile.mesh.max_faces, 25_000);
+    }
+
+    #[test]
     fn test_budget_profile_by_name() {
         assert!(BudgetProfile::by_name("default").is_some());
         assert!(BudgetProfile::by_name("strict").is_some());
         assert!(BudgetProfile::by_name("zx-8bit").is_some());
+        assert!(BudgetProfile::by_name("nethercore").is_some());
         assert!(BudgetProfile::by_name("nonexistent").is_none());
     }
 
@@ -449,12 +503,7 @@ mod tests {
 
     #[test]
     fn test_budget_error_display() {
-        let err = BudgetError::new(
-            BudgetCategory::Audio,
-            "duration_seconds",
-            "60.0",
-            "30.0",
-        );
+        let err = BudgetError::new(BudgetCategory::Audio, "duration_seconds", "60.0", "30.0");
         assert_eq!(
             err.to_string(),
             "audio budget exceeded: duration_seconds is 60.0, maximum is 30.0"
@@ -506,10 +555,7 @@ mod tests {
     #[test]
     fn test_general_budget_constants() {
         assert_eq!(GeneralBudget::DEFAULT_STARLARK_TIMEOUT_SECONDS, 30);
-        assert_eq!(
-            GeneralBudget::DEFAULT_MAX_SPEC_SIZE_BYTES,
-            10 * 1024 * 1024
-        );
+        assert_eq!(GeneralBudget::DEFAULT_MAX_SPEC_SIZE_BYTES, 10 * 1024 * 1024);
     }
 
     #[test]

@@ -47,8 +47,8 @@ enum Commands {
         #[arg(long)]
         artifacts: bool,
 
-        /// Budget profile to validate against (default, strict, zx-8bit)
-        #[arg(long, value_parser = ["default", "strict", "zx-8bit"])]
+        /// Budget profile to validate against (default, strict, zx-8bit, nethercore)
+        #[arg(long, value_parser = ["default", "strict", "zx-8bit", "nethercore"])]
         budget: Option<String>,
 
         /// Output machine-readable JSON diagnostics (no colored output)
@@ -70,8 +70,8 @@ enum Commands {
         #[arg(long)]
         expand_variants: bool,
 
-        /// Budget profile to validate against (default, strict, zx-8bit)
-        #[arg(long, value_parser = ["default", "strict", "zx-8bit"])]
+        /// Budget profile to validate against (default, strict, zx-8bit, nethercore)
+        #[arg(long, value_parser = ["default", "strict", "zx-8bit", "nethercore"])]
         budget: Option<String>,
 
         /// Output machine-readable JSON diagnostics (no colored output)
