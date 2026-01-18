@@ -1,9 +1,9 @@
-//! Texture stdlib functions for procedural texture generation.
+//! Mesh stdlib functions for static mesh generation.
 //!
-//! Provides helper functions for creating texture graph nodes and graphs.
+//! Provides helper functions for creating mesh primitives and modifiers.
 
-mod graph;
-mod nodes;
+mod modifiers;
+mod primitives;
 mod spec;
 
 use starlark::collections::SmallMap;
@@ -11,6 +11,7 @@ use starlark::environment::GlobalsBuilder;
 use starlark::values::{dict::Dict, Heap, Value};
 
 /// Helper to create a hashed key for dict insertion.
+/// String hashing cannot fail, so we use expect.
 pub(crate) fn hashed_key<'v>(
     heap: &'v Heap,
     key: &str,
@@ -27,12 +28,28 @@ pub(crate) fn new_dict<'v>(_heap: &'v Heap) -> Dict<'v> {
     Dict::new(map)
 }
 
-/// Valid texture output formats.
-pub(crate) const TEXTURE_FORMATS: &[&str] = &["png", "jpg", "exr", "tga"];
+/// Valid mesh primitive types.
+pub(crate) const PRIMITIVES: &[&str] = &[
+    "cube",
+    "sphere",
+    "cylinder",
+    "cone",
+    "torus",
+    "plane",
+    "ico_sphere",
+];
 
-/// Registers texture stdlib functions into a GlobalsBuilder.
+/// Valid mesh output formats.
+pub(crate) const MESH_FORMATS: &[&str] = &["glb", "gltf", "obj", "fbx"];
+
+/// Registers mesh stdlib functions into a GlobalsBuilder.
 pub fn register(builder: &mut GlobalsBuilder) {
-    nodes::register(builder);
-    graph::register(builder);
+    primitives::register(builder);
+    modifiers::register(builder);
     spec::register(builder);
+}
+
+#[cfg(test)]
+mod tests {
+    pub use super::super::tests::eval_to_json;
 }

@@ -66,7 +66,8 @@ fn register_texture_graph_functions(builder: &mut GlobalsBuilder) {
         if width <= 0 || height <= 0 {
             return Err(anyhow::anyhow!(
                 "S103: texture_graph(): resolution values must be positive, got [{}, {}]",
-                width, height
+                width,
+                height
             ));
         }
 
@@ -77,10 +78,7 @@ fn register_texture_graph_functions(builder: &mut GlobalsBuilder) {
             heap.alloc(width).to_value(),
             heap.alloc(height).to_value(),
         ]));
-        dict.insert_hashed(
-            hashed_key(heap, "resolution"),
-            res_list,
-        );
+        dict.insert_hashed(hashed_key(heap, "resolution"), res_list);
 
         dict.insert_hashed(
             hashed_key(heap, "tileable"),
@@ -89,11 +87,53 @@ fn register_texture_graph_functions(builder: &mut GlobalsBuilder) {
 
         // nodes as list
         let nodes_list = heap.alloc(AllocList(nodes.items));
-        dict.insert_hashed(
-            hashed_key(heap, "nodes"),
-            nodes_list,
-        );
+        dict.insert_hashed(hashed_key(heap, "nodes"), nodes_list);
 
         Ok(dict)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::super::super::tests::eval_to_json;
+
+    // ========================================================================
+    // texture_graph() tests
+    // ========================================================================
+
+    #[test]
+    fn test_texture_graph_basic() {
+        let result = eval_to_json("texture_graph([64, 64], [noise_node(\"n\")])").unwrap();
+
+        assert!(result["resolution"].is_array());
+        let res = result["resolution"].as_array().unwrap();
+        assert_eq!(res.len(), 2);
+        assert_eq!(res[0], 64);
+        assert_eq!(res[1], 64);
+        assert_eq!(result["tileable"], true);
+        assert!(result["nodes"].is_array());
+        assert_eq!(result["nodes"].as_array().unwrap().len(), 1);
+    }
+
+    #[test]
+    fn test_texture_graph_not_tileable() {
+        let result = eval_to_json("texture_graph([128, 128], [], False)").unwrap();
+        assert_eq!(result["tileable"], false);
+    }
+
+    #[test]
+    fn test_texture_graph_invalid_resolution() {
+        let result = eval_to_json("texture_graph([64], [])");
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert!(err.contains("S101"));
+    }
+
+    #[test]
+    fn test_texture_graph_negative_resolution() {
+        let result = eval_to_json("texture_graph([-64, 64], [])");
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert!(err.contains("S103"));
     }
 }

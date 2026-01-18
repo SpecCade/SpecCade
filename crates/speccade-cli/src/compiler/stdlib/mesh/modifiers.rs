@@ -1,90 +1,20 @@
-//! Mesh stdlib functions for static mesh generation.
-//!
-//! Provides helper functions for creating mesh primitives and modifiers.
+//! Mesh modifier creation functions.
 
-use starlark::collections::SmallMap;
 use starlark::environment::GlobalsBuilder;
 use starlark::starlark_module;
 use starlark::values::list::AllocList;
 use starlark::values::{dict::Dict, list::UnpackList, none::NoneType, Heap, Value, ValueLike};
 
-use super::validation::{extract_float, validate_enum, validate_positive_int, validate_unit_range};
+use super::super::validation::{extract_float, validate_positive_int};
+use super::{hashed_key, new_dict};
 
-/// Helper to create a hashed key for dict insertion.
-/// String hashing cannot fail, so we use expect.
-fn hashed_key<'v>(heap: &'v Heap, key: &str) -> starlark::collections::Hashed<Value<'v>> {
-    heap.alloc_str(key)
-        .to_value()
-        .get_hashed()
-        .expect("string hashing cannot fail")
-}
-
-/// Helper to create an empty dict on the heap.
-fn new_dict<'v>(_heap: &'v Heap) -> Dict<'v> {
-    let map: SmallMap<Value<'v>, Value<'v>> = SmallMap::new();
-    Dict::new(map)
-}
-
-/// Valid mesh primitive types.
-const PRIMITIVES: &[&str] = &["cube", "sphere", "cylinder", "cone", "torus", "plane", "ico_sphere"];
-
-/// Registers mesh stdlib functions into a GlobalsBuilder.
+/// Registers mesh modifier functions into a GlobalsBuilder.
 pub fn register(builder: &mut GlobalsBuilder) {
-    register_mesh_functions(builder);
+    register_mesh_modifier_functions(builder);
 }
 
 #[starlark_module]
-fn register_mesh_functions(builder: &mut GlobalsBuilder) {
-    /// Creates a base mesh primitive specification.
-    ///
-    /// # Arguments
-    /// * `primitive` - Primitive type: "cube", "sphere", "cylinder", "cone", "torus", "plane", "ico_sphere"
-    /// * `dimensions` - [x, y, z] dimensions in Blender units
-    ///
-    /// # Returns
-    /// A dict with base_primitive and dimensions.
-    ///
-    /// # Example
-    /// ```starlark
-    /// mesh_primitive("cube", [1.0, 1.0, 1.0])
-    /// mesh_primitive("sphere", [2.0, 2.0, 2.0])
-    /// ```
-    fn mesh_primitive<'v>(
-        primitive: &str,
-        dimensions: UnpackList<f64>,
-        heap: &'v Heap,
-    ) -> anyhow::Result<Dict<'v>> {
-        validate_enum(primitive, PRIMITIVES, "mesh_primitive", "primitive")
-            .map_err(|e| anyhow::anyhow!(e))?;
-
-        if dimensions.items.len() != 3 {
-            return Err(anyhow::anyhow!(
-                "S101: mesh_primitive(): 'dimensions' must be [x, y, z], got {} values",
-                dimensions.items.len()
-            ));
-        }
-
-        let mut dict = new_dict(heap);
-
-        dict.insert_hashed(
-            hashed_key(heap, "base_primitive"),
-            heap.alloc_str(primitive).to_value(),
-        );
-
-        // dimensions as list
-        let dim_list = heap.alloc(AllocList(vec![
-            heap.alloc(dimensions.items[0]).to_value(),
-            heap.alloc(dimensions.items[1]).to_value(),
-            heap.alloc(dimensions.items[2]).to_value(),
-        ]));
-        dict.insert_hashed(
-            hashed_key(heap, "dimensions"),
-            dim_list,
-        );
-
-        Ok(dict)
-    }
-
+fn register_mesh_modifier_functions(builder: &mut GlobalsBuilder) {
     /// Creates a bevel modifier.
     ///
     /// # Arguments
@@ -118,14 +48,8 @@ fn register_mesh_functions(builder: &mut GlobalsBuilder) {
 
         let mut dict = new_dict(heap);
 
-        dict.insert_hashed(
-            hashed_key(heap, "type"),
-            heap.alloc_str("bevel").to_value(),
-        );
-        dict.insert_hashed(
-            hashed_key(heap, "width"),
-            heap.alloc(width).to_value(),
-        );
+        dict.insert_hashed(hashed_key(heap, "type"), heap.alloc_str("bevel").to_value());
+        dict.insert_hashed(hashed_key(heap, "width"), heap.alloc(width).to_value());
         dict.insert_hashed(
             hashed_key(heap, "segments"),
             heap.alloc(segments).to_value(),
@@ -195,10 +119,7 @@ fn register_mesh_functions(builder: &mut GlobalsBuilder) {
             hashed_key(heap, "type"),
             heap.alloc_str("subdivision").to_value(),
         );
-        dict.insert_hashed(
-            hashed_key(heap, "levels"),
-            heap.alloc(levels).to_value(),
-        );
+        dict.insert_hashed(hashed_key(heap, "levels"), heap.alloc(levels).to_value());
         dict.insert_hashed(
             hashed_key(heap, "render_levels"),
             heap.alloc(render).to_value(),
@@ -224,8 +145,8 @@ fn register_mesh_functions(builder: &mut GlobalsBuilder) {
         #[starlark(default = 0.5)] ratio: f64,
         heap: &'v Heap,
     ) -> anyhow::Result<Dict<'v>> {
-        validate_unit_range(ratio, "decimate_modifier", "ratio")
-            .map_err(|e| anyhow::anyhow!(e))?;
+        use super::super::validation::validate_unit_range;
+        validate_unit_range(ratio, "decimate_modifier", "ratio").map_err(|e| anyhow::anyhow!(e))?;
 
         let mut dict = new_dict(heap);
 
@@ -233,10 +154,7 @@ fn register_mesh_functions(builder: &mut GlobalsBuilder) {
             hashed_key(heap, "type"),
             heap.alloc_str("decimate").to_value(),
         );
-        dict.insert_hashed(
-            hashed_key(heap, "ratio"),
-            heap.alloc(ratio).to_value(),
-        );
+        dict.insert_hashed(hashed_key(heap, "ratio"), heap.alloc(ratio).to_value());
 
         Ok(dict)
     }
@@ -253,10 +171,7 @@ fn register_mesh_functions(builder: &mut GlobalsBuilder) {
     /// ```starlark
     /// edge_split_modifier(30.0)
     /// ```
-    fn edge_split_modifier<'v>(
-        angle: f64,
-        heap: &'v Heap,
-    ) -> anyhow::Result<Dict<'v>> {
+    fn edge_split_modifier<'v>(angle: f64, heap: &'v Heap) -> anyhow::Result<Dict<'v>> {
         if angle <= 0.0 || angle > 180.0 {
             return Err(anyhow::anyhow!(
                 "S103: edge_split_modifier(): 'angle' must be in range (0, 180] degrees, got {}",
@@ -270,10 +185,7 @@ fn register_mesh_functions(builder: &mut GlobalsBuilder) {
             hashed_key(heap, "type"),
             heap.alloc_str("edge_split").to_value(),
         );
-        dict.insert_hashed(
-            hashed_key(heap, "angle"),
-            heap.alloc(angle).to_value(),
-        );
+        dict.insert_hashed(hashed_key(heap, "angle"), heap.alloc(angle).to_value());
 
         Ok(dict)
     }
@@ -305,18 +217,9 @@ fn register_mesh_functions(builder: &mut GlobalsBuilder) {
             hashed_key(heap, "type"),
             heap.alloc_str("mirror").to_value(),
         );
-        dict.insert_hashed(
-            hashed_key(heap, "axis_x"),
-            heap.alloc(axis_x).to_value(),
-        );
-        dict.insert_hashed(
-            hashed_key(heap, "axis_y"),
-            heap.alloc(axis_y).to_value(),
-        );
-        dict.insert_hashed(
-            hashed_key(heap, "axis_z"),
-            heap.alloc(axis_z).to_value(),
-        );
+        dict.insert_hashed(hashed_key(heap, "axis_x"), heap.alloc(axis_x).to_value());
+        dict.insert_hashed(hashed_key(heap, "axis_y"), heap.alloc(axis_y).to_value());
+        dict.insert_hashed(hashed_key(heap, "axis_z"), heap.alloc(axis_z).to_value());
 
         Ok(dict)
     }
@@ -352,14 +255,8 @@ fn register_mesh_functions(builder: &mut GlobalsBuilder) {
 
         let mut dict = new_dict(heap);
 
-        dict.insert_hashed(
-            hashed_key(heap, "type"),
-            heap.alloc_str("array").to_value(),
-        );
-        dict.insert_hashed(
-            hashed_key(heap, "count"),
-            heap.alloc(count).to_value(),
-        );
+        dict.insert_hashed(hashed_key(heap, "type"), heap.alloc_str("array").to_value());
+        dict.insert_hashed(hashed_key(heap, "count"), heap.alloc(count).to_value());
 
         // offset as list
         let offset_list = heap.alloc(AllocList(vec![
@@ -367,10 +264,7 @@ fn register_mesh_functions(builder: &mut GlobalsBuilder) {
             heap.alloc(offset.items[1]).to_value(),
             heap.alloc(offset.items[2]).to_value(),
         ]));
-        dict.insert_hashed(
-            hashed_key(heap, "offset"),
-            offset_list,
-        );
+        dict.insert_hashed(hashed_key(heap, "offset"), offset_list);
 
         Ok(dict)
     }
@@ -418,80 +312,7 @@ fn register_mesh_functions(builder: &mut GlobalsBuilder) {
             hashed_key(heap, "thickness"),
             heap.alloc(thickness).to_value(),
         );
-        dict.insert_hashed(
-            hashed_key(heap, "offset"),
-            heap.alloc(offset).to_value(),
-        );
-
-        Ok(dict)
-    }
-
-    /// Creates a complete static mesh recipe params.
-    ///
-    /// # Arguments
-    /// * `primitive` - Primitive type
-    /// * `dimensions` - [x, y, z] dimensions
-    /// * `modifiers` - Optional list of modifiers
-    ///
-    /// # Returns
-    /// A dict matching the StaticMeshBlenderPrimitivesV1Params structure.
-    ///
-    /// # Example
-    /// ```starlark
-    /// mesh_recipe("cube", [1.0, 1.0, 1.0])
-    /// mesh_recipe(
-    ///     "cube",
-    ///     [1.0, 1.0, 1.0],
-    ///     [bevel_modifier(0.02, 2), subdivision_modifier(2)]
-    /// )
-    /// ```
-    fn mesh_recipe<'v>(
-        primitive: &str,
-        dimensions: UnpackList<f64>,
-        #[starlark(default = NoneType)] modifiers: Value<'v>,
-        heap: &'v Heap,
-    ) -> anyhow::Result<Dict<'v>> {
-        validate_enum(primitive, PRIMITIVES, "mesh_recipe", "primitive")
-            .map_err(|e| anyhow::anyhow!(e))?;
-
-        if dimensions.items.len() != 3 {
-            return Err(anyhow::anyhow!(
-                "S101: mesh_recipe(): 'dimensions' must be [x, y, z], got {} values",
-                dimensions.items.len()
-            ));
-        }
-
-        let mut dict = new_dict(heap);
-
-        dict.insert_hashed(
-            hashed_key(heap, "base_primitive"),
-            heap.alloc_str(primitive).to_value(),
-        );
-
-        // dimensions as list
-        let dim_list = heap.alloc(AllocList(vec![
-            heap.alloc(dimensions.items[0]).to_value(),
-            heap.alloc(dimensions.items[1]).to_value(),
-            heap.alloc(dimensions.items[2]).to_value(),
-        ]));
-        dict.insert_hashed(
-            hashed_key(heap, "dimensions"),
-            dim_list,
-        );
-
-        // modifiers - add empty list if None
-        if modifiers.is_none() {
-            let empty_list: Vec<Value> = vec![];
-            dict.insert_hashed(
-                hashed_key(heap, "modifiers"),
-                heap.alloc(AllocList(empty_list)),
-            );
-        } else {
-            dict.insert_hashed(
-                hashed_key(heap, "modifiers"),
-                modifiers,
-            );
-        }
+        dict.insert_hashed(hashed_key(heap, "offset"), heap.alloc(offset).to_value());
 
         Ok(dict)
     }
@@ -500,44 +321,6 @@ fn register_mesh_functions(builder: &mut GlobalsBuilder) {
 #[cfg(test)]
 mod tests {
     use super::super::tests::eval_to_json;
-
-    // ========================================================================
-    // mesh_primitive() tests
-    // ========================================================================
-
-    #[test]
-    fn test_mesh_primitive_cube() {
-        let result = eval_to_json("mesh_primitive(\"cube\", [1.0, 1.0, 1.0])").unwrap();
-        assert_eq!(result["base_primitive"], "cube");
-        assert!(result["dimensions"].is_array());
-        let dims = result["dimensions"].as_array().unwrap();
-        assert_eq!(dims.len(), 3);
-        assert_eq!(dims[0], 1.0);
-        assert_eq!(dims[1], 1.0);
-        assert_eq!(dims[2], 1.0);
-    }
-
-    #[test]
-    fn test_mesh_primitive_sphere() {
-        let result = eval_to_json("mesh_primitive(\"sphere\", [2.0, 2.0, 2.0])").unwrap();
-        assert_eq!(result["base_primitive"], "sphere");
-    }
-
-    #[test]
-    fn test_mesh_primitive_invalid() {
-        let result = eval_to_json("mesh_primitive(\"box\", [1.0, 1.0, 1.0])");
-        assert!(result.is_err());
-        let err = result.unwrap_err();
-        assert!(err.contains("S104"));
-    }
-
-    #[test]
-    fn test_mesh_primitive_wrong_dimensions() {
-        let result = eval_to_json("mesh_primitive(\"cube\", [1.0, 1.0])");
-        assert!(result.is_err());
-        let err = result.unwrap_err();
-        assert!(err.contains("S101"));
-    }
 
     // ========================================================================
     // bevel_modifier() tests
@@ -564,6 +347,16 @@ mod tests {
         assert!(result.is_err());
         let err = result.unwrap_err();
         assert!(err.contains("S103"));
+    }
+
+    #[test]
+    fn test_bevel_modifier_with_angle_limit() {
+        let result = eval_to_json("bevel_modifier(0.02, 2, 45.0)").unwrap();
+        assert_eq!(result["type"], "bevel");
+        assert!(result["angle_limit"].is_number());
+        // 45 degrees in radians is approximately 0.785
+        let angle = result["angle_limit"].as_f64().unwrap();
+        assert!((angle - std::f64::consts::FRAC_PI_4).abs() < 0.001);
     }
 
     // ========================================================================
@@ -608,51 +401,6 @@ mod tests {
         assert!(result.is_err());
         let err = result.unwrap_err();
         assert!(err.contains("S103"));
-    }
-
-    // ========================================================================
-    // mesh_recipe() tests
-    // ========================================================================
-
-    #[test]
-    fn test_mesh_recipe_minimal() {
-        let result = eval_to_json("mesh_recipe(\"cube\", [1.0, 1.0, 1.0])").unwrap();
-        assert_eq!(result["base_primitive"], "cube");
-        assert!(result["dimensions"].is_array());
-        assert!(result["modifiers"].is_array());
-        assert_eq!(result["modifiers"].as_array().unwrap().len(), 0);
-    }
-
-    #[test]
-    fn test_mesh_recipe_with_modifiers() {
-        let result = eval_to_json(r#"
-mesh_recipe(
-    "cube",
-    [1.0, 1.0, 1.0],
-    [bevel_modifier(0.05, 3), subdivision_modifier(2)]
-)
-"#).unwrap();
-
-        assert_eq!(result["base_primitive"], "cube");
-        assert!(result["modifiers"].is_array());
-        let mods = result["modifiers"].as_array().unwrap();
-        assert_eq!(mods.len(), 2);
-        assert_eq!(mods[0]["type"], "bevel");
-        assert_eq!(mods[1]["type"], "subdivision");
-    }
-
-    // ========================================================================
-    // bevel_modifier() with angle_limit tests
-    // ========================================================================
-
-    #[test]
-    fn test_bevel_modifier_with_angle_limit() {
-        let result = eval_to_json("bevel_modifier(0.02, 2, 45.0)").unwrap();
-        assert_eq!(result["type"], "bevel");
-        assert!(result["angle_limit"].is_number());
-        // 45 degrees in radians is approximately 0.785
-        let angle = result["angle_limit"].as_f64().unwrap();
-        assert!((angle - std::f64::consts::FRAC_PI_4).abs() < 0.001);
     }
 
     // ========================================================================

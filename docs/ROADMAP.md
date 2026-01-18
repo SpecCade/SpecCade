@@ -46,7 +46,7 @@ Reference: `docs/rfcs/RFC-0008-llm-native-asset-authoring.md`
 - [x] `LLM-005` Expand `speccade template` beyond textures (audio/music first). **Done: 2026-01-18** (via LLM-004)
   - Deliverable: `template list/show/copy` works for `audio` and `music` templates in `packs/`.
   - Touch points: `crates/speccade-cli/src/commands/template.rs`, `packs/`.
-- [ ] `LLM-006` Add higher-level Starlark constructors to reduce raw recipe dict authoring.
+- [x] `LLM-006` Add higher-level Starlark constructors to reduce raw recipe dict authoring. **Done: 2026-01-18**
   - Deliverable: `audio_spec(...)`, `texture_spec(...)`, `mesh_spec(...)` helpers analogous to `music_spec(...)`.
   - Touch points: `crates/speccade-cli/src/compiler/stdlib/{core,audio,texture,mesh}.rs`.
 - [ ] `LLM-007` Iteration-speed features for agentic loops (preview + partial generation + caching).

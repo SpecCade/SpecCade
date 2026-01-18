@@ -62,23 +62,28 @@ mod tests {
         let ast = AstModule::parse("test.star", source.to_string(), &Dialect::Standard)
             .map_err(|e| e.to_string())?;
         let module = Module::new();
-        let globals = GlobalsBuilder::standard()
-            .with(register_stdlib)
-            .build();
+        let globals = GlobalsBuilder::standard().with(register_stdlib).build();
         let mut eval = Evaluator::new(&module);
         let value = eval.eval_module(ast, &globals).map_err(|e| e.to_string())?;
-        crate::compiler::convert::starlark_to_json(value)
-            .map_err(|e| e.to_string())
+        crate::compiler::convert::starlark_to_json(value).map_err(|e| e.to_string())
     }
 
     #[test]
     fn test_stdlib_registered() {
         // Test that stdlib functions are available
         let result = eval_to_json("envelope()");
-        assert!(result.is_ok(), "envelope() should be available: {:?}", result);
+        assert!(
+            result.is_ok(),
+            "envelope() should be available: {:?}",
+            result
+        );
 
         let result = eval_to_json("oscillator(440)");
-        assert!(result.is_ok(), "oscillator() should be available: {:?}", result);
+        assert!(
+            result.is_ok(),
+            "oscillator() should be available: {:?}",
+            result
+        );
 
         let result = eval_to_json("output(\"test.wav\", \"wav\")");
         assert!(result.is_ok(), "output() should be available: {:?}", result);
