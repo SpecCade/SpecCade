@@ -6,6 +6,7 @@ pub mod expand;
 pub mod fmt;
 pub mod generate;
 pub mod generate_all;
+pub mod json_output;
 pub mod migrate;
 pub mod preview;
 pub mod stdlib;

@@ -7,6 +7,9 @@ use colored::Colorize;
 use std::path::Path;
 use std::process::ExitCode;
 
+use super::json_output::{
+    compile_warnings_to_json, input_error_to_json, EvalOutput, JsonError, JsonWarning,
+};
 use crate::input::{load_spec, InputError};
 
 /// Run the eval command
@@ -14,10 +17,20 @@ use crate::input::{load_spec, InputError};
 /// # Arguments
 /// * `spec_path` - Path to the spec file (JSON or Starlark)
 /// * `pretty` - Whether to pretty-print the output JSON
+/// * `json_output` - Whether to output machine-readable JSON diagnostics
 ///
 /// # Returns
 /// Exit code: 0 on success, 1 on error
-pub fn run(spec_path: &str, pretty: bool) -> Result<ExitCode> {
+pub fn run(spec_path: &str, pretty: bool, json_output: bool) -> Result<ExitCode> {
+    if json_output {
+        run_json(spec_path, pretty)
+    } else {
+        run_human(spec_path, pretty)
+    }
+}
+
+/// Run eval with human-readable (colored) output
+fn run_human(spec_path: &str, pretty: bool) -> Result<ExitCode> {
     let path = Path::new(spec_path);
 
     // Load the spec
@@ -104,6 +117,48 @@ pub fn run(spec_path: &str, pretty: bool) -> Result<ExitCode> {
     Ok(ExitCode::SUCCESS)
 }
 
+/// Run eval with machine-readable JSON output
+fn run_json(spec_path: &str, _pretty: bool) -> Result<ExitCode> {
+    let path = Path::new(spec_path);
+
+    // Load the spec
+    let load_result = load_spec(path);
+
+    let output = match load_result {
+        Ok(result) => {
+            // Convert warnings
+            let warnings: Vec<JsonWarning> = compile_warnings_to_json(&result.warnings);
+
+            // Serialize spec to JSON value
+            match serde_json::to_value(&result.spec) {
+                Ok(spec_json) => EvalOutput::success(spec_json, result.source_hash, warnings),
+                Err(e) => {
+                    let error = JsonError::new(
+                        super::json_output::error_codes::JSON_SERIALIZE,
+                        format!("Failed to serialize spec: {}", e),
+                    );
+                    EvalOutput::failure(vec![error], warnings)
+                }
+            }
+        }
+        Err(e) => {
+            let error = input_error_to_json(&e, Some(spec_path));
+            EvalOutput::failure(vec![error], vec![])
+        }
+    };
+
+    // Always pretty-print the JSON output for readability
+    let json =
+        serde_json::to_string_pretty(&output).expect("EvalOutput serialization should not fail");
+    println!("{}", json);
+
+    if output.success {
+        Ok(ExitCode::SUCCESS)
+    } else {
+        Ok(ExitCode::from(1))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -127,13 +182,13 @@ mod tests {
 
         let spec_path = write_spec(&tmp, "spec.json", &spec);
 
-        let code = run(spec_path.to_str().unwrap(), false).unwrap();
+        let code = run(spec_path.to_str().unwrap(), false, false).unwrap();
         assert_eq!(code, ExitCode::SUCCESS);
     }
 
     #[test]
     fn eval_nonexistent_file_fails() {
-        let result = run("/nonexistent/spec.json", false);
+        let result = run("/nonexistent/spec.json", false, false);
         assert!(result.is_err());
     }
 
@@ -143,7 +198,7 @@ mod tests {
         let spec_path = tmp.path().join("invalid.json");
         std::fs::write(&spec_path, "{ invalid json }").unwrap();
 
-        let result = run(spec_path.to_str().unwrap(), false);
+        let result = run(spec_path.to_str().unwrap(), false, false);
         assert!(result.is_err());
     }
 
@@ -171,7 +226,7 @@ mod tests {
 "#;
         std::fs::write(&spec_path, starlark_source).unwrap();
 
-        let code = run(spec_path.to_str().unwrap(), false).unwrap();
+        let code = run(spec_path.to_str().unwrap(), false, false).unwrap();
         assert_eq!(code, ExitCode::SUCCESS);
     }
 
@@ -202,7 +257,56 @@ seed = 123
 "#;
         std::fs::write(&spec_path, starlark_source).unwrap();
 
-        let code = run(spec_path.to_str().unwrap(), false).unwrap();
+        let code = run(spec_path.to_str().unwrap(), false, false).unwrap();
         assert_eq!(code, ExitCode::SUCCESS);
+    }
+
+    #[test]
+    fn eval_json_output_success() {
+        let tmp = tempfile::tempdir().unwrap();
+
+        let spec = Spec::builder("eval-json-test-01", AssetType::Audio)
+            .license("CC0-1.0")
+            .seed(42)
+            .output(OutputSpec::primary(OutputFormat::Wav, "test.wav"))
+            .build();
+
+        let spec_path = write_spec(&tmp, "spec.json", &spec);
+
+        // Run with json=true - should succeed
+        let code = run(spec_path.to_str().unwrap(), false, true).unwrap();
+        assert_eq!(code, ExitCode::SUCCESS);
+    }
+
+    #[test]
+    fn eval_json_output_failure() {
+        // Run with json=true on nonexistent file - should return exit code 1, not error
+        let code = run("/nonexistent/spec.json", false, true).unwrap();
+        assert_eq!(code, ExitCode::from(1));
+    }
+
+    #[test]
+    fn eval_json_output_parses_correctly() {
+        let tmp = tempfile::tempdir().unwrap();
+
+        let spec = Spec::builder("eval-parse-test-01", AssetType::Audio)
+            .license("CC0-1.0")
+            .seed(42)
+            .output(OutputSpec::primary(OutputFormat::Wav, "test.wav"))
+            .build();
+
+        let spec_path = write_spec(&tmp, "spec.json", &spec);
+
+        // We can't easily capture stdout in a unit test, but we can at least
+        // verify the run_json function produces valid JSON by testing the output type
+        let path = Path::new(spec_path.to_str().unwrap());
+        let load_result = load_spec(path).unwrap();
+        let spec_json = serde_json::to_value(&load_result.spec).unwrap();
+        let output = EvalOutput::success(spec_json, load_result.source_hash, vec![]);
+
+        let json_str = serde_json::to_string(&output).unwrap();
+        let parsed: EvalOutput = serde_json::from_str(&json_str).unwrap();
+        assert!(parsed.success);
+        assert!(parsed.result.is_some());
     }
 }

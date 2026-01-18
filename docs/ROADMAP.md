@@ -32,7 +32,7 @@ Reference: `docs/rfcs/RFC-0008-llm-native-asset-authoring.md`
 - [x] `LLM-001` Add machine-readable stdlib dump: `speccade stdlib dump --format json`. **Done: 2026-01-18**
   - Deliverable: stable JSON describing stdlib functions, params (required/default), enums, ranges, examples, and `STDLIB_VERSION`.
   - Touch points: `crates/speccade-cli/src/compiler/stdlib/`, CLI command plumbing under `crates/speccade-cli/src/commands/`.
-- [ ] `LLM-002` Add `--json` structured output for `eval`, `validate`, `generate`.
+- [x] `LLM-002` Add `--json` structured output for `eval`, `validate`, `generate`. **Done: 2026-01-18**
   - Deliverable: machine-readable diagnostics (stable codes, path, file/line/col where available, suggestions).
   - Touch points: `crates/speccade-cli/src/commands/{eval,validate,generate}.rs`, `crates/speccade-spec` validation error structures.
 - [ ] `LLM-008` Add a Nethercore-oriented budget profile (22050 Hz audio, modern constraints).
