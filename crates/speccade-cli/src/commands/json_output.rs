@@ -780,6 +780,111 @@ impl InspectOutput {
     }
 }
 
+/// JSON output for the `compare` command.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CompareOutput {
+    /// Whether the comparison succeeded
+    pub success: bool,
+    /// Errors encountered during comparison
+    pub errors: Vec<JsonError>,
+    /// Comparison result (on success)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub result: Option<CompareResult>,
+}
+
+/// Comparison result details.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CompareResult {
+    /// Path to file A
+    pub path_a: String,
+    /// Path to file B
+    pub path_b: String,
+    /// Asset type (audio/texture)
+    pub asset_type: String,
+    /// BLAKE3 hash of file A
+    pub hash_a: String,
+    /// BLAKE3 hash of file B
+    pub hash_b: String,
+    /// Whether files are byte-identical
+    pub identical: bool,
+    /// Comparison metrics (type-specific)
+    pub metrics: CompareMetrics,
+}
+
+/// Type-specific comparison metrics.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(tag = "type")]
+pub enum CompareMetrics {
+    /// Texture comparison metrics
+    #[serde(rename = "texture")]
+    Texture(TextureCompareMetrics),
+    /// Audio comparison metrics
+    #[serde(rename = "audio")]
+    Audio(AudioCompareMetrics),
+}
+
+/// Texture comparison metrics.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TextureCompareMetrics {
+    /// SSIM (Structural Similarity Index), range [0, 1] where 1 = identical
+    pub ssim: f64,
+    /// Mean DeltaE (CIE76) color difference
+    pub delta_e_mean: f64,
+    /// Maximum DeltaE color difference
+    pub delta_e_max: f64,
+    /// Histogram difference metrics
+    pub histogram_diff: HistogramDiffMetrics,
+}
+
+/// Histogram difference for compare output.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct HistogramDiffMetrics {
+    /// Red/grayscale channel mean difference
+    pub red: f64,
+    /// Green channel mean difference (None for grayscale)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub green: Option<f64>,
+    /// Blue channel mean difference (None for grayscale)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub blue: Option<f64>,
+    /// Alpha channel mean difference (None if no alpha)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub alpha: Option<f64>,
+}
+
+/// Audio comparison metrics.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AudioCompareMetrics {
+    /// Spectral centroid correlation coefficient [-1, 1]
+    pub spectral_correlation: f64,
+    /// RMS level difference in dB (A - B)
+    pub rms_delta_db: f64,
+    /// Peak level difference in dB (A - B)
+    pub peak_delta_db: f64,
+    /// Loudness difference as percentage ((A - B) / B * 100)
+    pub loudness_delta_percent: f64,
+}
+
+impl CompareOutput {
+    /// Creates a successful compare output.
+    pub fn success(result: CompareResult) -> Self {
+        Self {
+            success: true,
+            errors: Vec::new(),
+            result: Some(result),
+        }
+    }
+
+    /// Creates a failed compare output.
+    pub fn failure(errors: Vec<JsonError>) -> Self {
+        Self {
+            success: false,
+            errors,
+            result: None,
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

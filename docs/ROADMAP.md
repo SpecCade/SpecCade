@@ -209,7 +209,8 @@ Migrated from `docs/FUTURE_GENERATORS.md` (now deprecated).
 - [x] `QA-002` Add "inspect" style commands/flags where helpful for review (compose->expanded JSON, intermediate texture maps). **Done: 2026-01-18**
   - Implemented: `speccade inspect` command emits per-node texture PNGs and expanded compose params.
 - [x] `QA-003` Add content-addressed caching keyed by canonical spec/recipe hash + backend versions (iteration speed). **Done: 2026-01-18**
-- [ ] `QA-004` Add perceptual diffing / quality controls (image SSIM/DeltaE; audio loudness/spectral) where feasible.
+- [x] `QA-004` Add perceptual diffing / quality controls (image SSIM/DeltaE; audio loudness/spectral) where feasible. **Done: 2026-01-18**
+  - Implemented: `speccade compare` command with SSIM, DeltaE (CIE76), histogram diff for textures; spectral correlation for audio.
 - [x] `QA-005` Add profiling/observability: per-stage timings, memory stats, and reproducible perf runs. **Done: 2026-01-18**
   - Implemented: `--profile` flag adds `stages[]` timing breakdown to report; documented in `docs/profiling.md`.
 - [ ] `QA-006` Define a plugin/backends extension story (subprocess or WASM) with strict I/O contracts + determinism reporting.

@@ -25,6 +25,7 @@
 
 pub mod audio;
 pub mod embeddings;
+pub mod perceptual;
 pub mod texture;
 
 /// Recognized audio extensions.

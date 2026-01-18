@@ -4,6 +4,7 @@ pub mod analyze;
 mod analyze_csv;
 pub mod audit;
 pub mod cache;
+pub mod compare;
 pub mod doctor;
 pub mod eval;
 pub mod expand;
@@ -28,6 +29,7 @@ mod tests {
     fn commands_module_exports_entrypoints() {
         let _ = analyze::run;
         let _ = audit::run;
+        let _ = compare::run;
         let _ = doctor::run;
         let _ = eval::run;
         let _ = expand::run;

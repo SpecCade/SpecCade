@@ -53,6 +53,21 @@ enum Commands {
         embeddings: bool,
     },
 
+    /// Compare two asset files and output perceptual difference metrics
+    Compare {
+        /// Path to the first file (reference)
+        #[arg(short, long)]
+        a: String,
+
+        /// Path to the second file (comparison target)
+        #[arg(short, long)]
+        b: String,
+
+        /// Output machine-readable JSON diagnostics (no colored output)
+        #[arg(long)]
+        json: bool,
+    },
+
     /// Audit audio files for quality regressions against baselines
     Audit {
         /// Directory to scan for .wav files
@@ -347,6 +362,7 @@ fn main() -> ExitCode {
             &output_format,
             embeddings,
         ),
+        Commands::Compare { a, b, json } => commands::compare::run(&a, &b, json),
         Commands::Audit {
             input_dir,
             tolerances,
@@ -458,6 +474,62 @@ fn main() -> ExitCode {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_cli_parses_compare() {
+        let cli = Cli::try_parse_from([
+            "speccade",
+            "compare",
+            "--a",
+            "file1.wav",
+            "--b",
+            "file2.wav",
+        ])
+        .unwrap();
+        match cli.command {
+            Commands::Compare { a, b, json } => {
+                assert_eq!(a, "file1.wav");
+                assert_eq!(b, "file2.wav");
+                assert!(!json);
+            }
+            _ => panic!("expected compare command"),
+        }
+    }
+
+    #[test]
+    fn test_cli_parses_compare_with_json() {
+        let cli = Cli::try_parse_from([
+            "speccade",
+            "compare",
+            "--a",
+            "file1.png",
+            "--b",
+            "file2.png",
+            "--json",
+        ])
+        .unwrap();
+        match cli.command {
+            Commands::Compare { a, b, json } => {
+                assert_eq!(a, "file1.png");
+                assert_eq!(b, "file2.png");
+                assert!(json);
+            }
+            _ => panic!("expected compare command"),
+        }
+    }
+
+    #[test]
+    fn test_cli_requires_a_and_b_for_compare() {
+        let err = Cli::try_parse_from(["speccade", "compare", "--a", "file.wav"])
+            .err()
+            .unwrap();
+        assert!(err.to_string().contains("-b"));
+
+        let err = Cli::try_parse_from(["speccade", "compare", "--b", "file.wav"])
+            .err()
+            .unwrap();
+        assert!(err.to_string().contains("-a"));
+    }
 
     #[test]
     fn test_cli_parses_eval() {
