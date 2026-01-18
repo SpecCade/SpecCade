@@ -30,7 +30,7 @@ Deterministic asset pipeline: takes a `Spec` (JSON or Starlark) and produces art
 - Starlark compiler tests: `cargo test -p speccade-cli`
 - CLI help: `cargo run -p speccade-cli -- --help`
 - Eval Starlark to JSON: `cargo run -p speccade-cli -- eval --spec file.star --pretty`
-- Validate with budget: `cargo run -p speccade-cli -- validate --spec file.star --budget zx-8bit`
+- Validate with budget: `cargo run -p speccade-cli -- validate --spec file.star --budget strict`
 - Generate with budget: `cargo run -p speccade-cli -- generate --spec file.star --out-root ./out --budget strict`
 
 ## Determinism Guardrails (Tier 1 backends)
@@ -59,7 +59,7 @@ SpecCade supports authoring specs in Starlark (.star files) which compile to can
 - `mesh` - mesh_primitive(), mesh_recipe()
 
 **Budget system:**
-- Profiles: `default`, `strict`, `zx-8bit`
+- Profiles: `default`, `strict`, `zx-8bit` (retro-style constraints; name does not imply audio bit depth)
 - Enforced at validation stage before generation
 - Use `--budget <profile>` flag with validate/generate commands
 

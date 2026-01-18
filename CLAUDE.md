@@ -54,7 +54,7 @@ SpecCade is a deterministic asset pipeline. It validates a `Spec` (JSON or Starl
 
 - **Author specs in Starlark:** Use `.star` files for ergonomic authoring with stdlib helpers. See `docs/starlark-authoring.md` and `docs/stdlib-reference.md`.
 - **Evaluate Starlark to JSON IR:** `cargo run -p speccade-cli -- eval --spec file.star --pretty` to preview canonical IR.
-- **Validate with budget profiles:** `cargo run -p speccade-cli -- validate --spec file.star --budget zx-8bit` to enforce resource limits.
+- **Validate with budget profiles:** `cargo run -p speccade-cli -- validate --spec file.star --budget strict` to enforce resource limits.
 - **Generate with budgets:** `cargo run -p speccade-cli -- generate --spec file.star --out-root ./out --budget strict`
 
 ### Development workflows
@@ -79,5 +79,5 @@ SpecCade is a deterministic asset pipeline. It validates a `Spec` (JSON or Starl
 ### CLI
 - `cargo run -p speccade-cli -- --help`
 - `cargo run -p speccade-cli -- eval --spec file.star --pretty` - compile Starlark to JSON IR
-- `cargo run -p speccade-cli -- validate --spec file.star --budget zx-8bit` - validate with budget
+- `cargo run -p speccade-cli -- validate --spec file.star --budget strict` - validate with budget
 - `cargo run -p speccade-cli -- generate --spec file.star --out-root ./out --budget strict` - generate with budget
