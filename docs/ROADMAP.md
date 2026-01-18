@@ -10,9 +10,18 @@ Design rationale and proposals live in `docs/rfcs/`. The canonical spec contract
 
 ## How to Use This Doc
 
-- If it’s a **task** or **decision**, it belongs here with an ID.
+- If it's a **task** or **decision**, it belongs here with an ID.
 - Other documents should **link here** instead of duplicating task lists.
 - Keep items **actionable**: verb + concrete deliverable + (when possible) file/command touch points.
+
+## Suggested Execution Order
+
+This file is grouped by domain, but a typical dependency order is:
+
+1) `LLM-001`, `LLM-002`, `LLM-008`, `LLM-003` (make the API/diagnostics/tool loop reliable)
+2) `LLM-004`, `LLM-005`, `LLM-006` (reduce first-draft failure rate via reuse and constructors)
+3) `LLM-007` plus `QA-003` and `EDITOR-002/003` (iteration speed + previews)
+4) `LLM-009/010/011`, `MESHVER-*`, and `GEN-*`/`MESH-*` (advanced/longer-term)
 
 ---
 
@@ -26,14 +35,14 @@ Reference: `docs/rfcs/RFC-0008-llm-native-asset-authoring.md`
 - [ ] `LLM-002` Add `--json` structured output for `eval`, `validate`, `generate`.
   - Deliverable: machine-readable diagnostics (stable codes, path, file/line/col where available, suggestions).
   - Touch points: `crates/speccade-cli/src/commands/{eval,validate,generate}.rs`, `crates/speccade-spec` validation error structures.
+- [ ] `LLM-008` Add a Nethercore-oriented budget profile (22050 Hz audio, modern constraints).
+  - Deliverable: `BudgetProfile::nethercore()` (or `by_name("nethercore")`) with documented limits; avoids "zx-8bit" naming confusion.
+  - Touch points: `crates/speccade-spec/src/validation/budgets.rs`, `docs/budgets.md`.
 - [ ] `LLM-003` Add `speccade analyze` baseline metrics (start with audio + textures).
   - Deliverable: deterministic metrics JSON for iteration loops (audio peak/clipping/DC/loudness proxy; texture histogram/contrast/tileability checks).
   - Reference spec: `docs/rfcs/RFC-0008-appendix-audio-analysis-spec.md`.
-- [ ] `LLM-009` Extend `speccade analyze` with embedding export for similarity search (explicit opt-in).
-- [ ] `LLM-010` Add batch analysis modes (`--input-dir`, CSV/JSONL outputs) for clustering/auditing.
-- [ ] `LLM-011` Add a real-time analysis mode (e.g. WebSocket server) for editor/iterative workflows.
 - [ ] `LLM-004` Add preset/template retrieval primitives (CLI-time, no runtime IO in Starlark).
-  - Deliverable: a way to pick “known good” starting points by tags/keywords (e.g. `style_tags`, curated kit IDs) without copying 200-line presets into every spec.
+  - Deliverable: a way to pick "known good" starting points by tags/keywords (e.g. `style_tags`, curated kit IDs) without copying 200-line presets into every spec.
 - [ ] `LLM-005` Expand `speccade template` beyond textures (audio/music first).
   - Deliverable: `template list/show/copy` works for `audio` and `music` templates in `packs/`.
   - Touch points: `crates/speccade-cli/src/commands/template.rs`, `packs/`.
@@ -42,9 +51,9 @@ Reference: `docs/rfcs/RFC-0008-llm-native-asset-authoring.md`
   - Touch points: `crates/speccade-cli/src/compiler/stdlib/{core,audio,texture,mesh}.rs`.
 - [ ] `LLM-007` Iteration-speed features for agentic loops (preview + partial generation + caching).
   - Deliverable: at least one of: `generate --preview`, per-layer generation for audio, or content-addressed caching keyed by canonical hashes + backend versions.
-- [ ] `LLM-008` Add a Nethercore-oriented budget profile (22050 Hz audio, modern constraints).
-  - Deliverable: `BudgetProfile::nethercore()` (or `by_name("nethercore")`) with documented limits; avoids “zx-8bit” naming confusion.
-  - Touch points: `crates/speccade-spec/src/validation/budgets.rs`, `docs/budgets.md`.
+- [ ] `LLM-009` Extend `speccade analyze` with embedding export for similarity search (explicit opt-in).
+- [ ] `LLM-010` Add batch analysis modes (`--input-dir`, CSV/JSONL outputs) for clustering/auditing.
+- [ ] `LLM-011` Add a real-time analysis mode (e.g. WebSocket server) for editor/iterative workflows.
 
 ---
 
@@ -52,13 +61,13 @@ Reference: `docs/rfcs/RFC-0008-llm-native-asset-authoring.md`
 
 Reference: `docs/rfcs/RFC-0009-editor-architecture.md`
 
-- [ ] `EDITOR-001` Decide “editor” delivery shape (Tauri app vs VSCode extension vs both).
+- [ ] `EDITOR-001` Decide "editor" delivery shape (Tauri app vs VSCode extension vs both).
   - Deliverable: a committed decision + minimal repo layout plan (new crate? new top-level directory?).
 - [ ] `EDITOR-002` Implement CLI-side preview artifacts (useful even without a full editor).
   - Deliverable: standardized preview outputs (audio waveform/spectrogram PNG; texture thumbnails) emitted by `generate` and recorded in reports.
   - Touch points: `crates/speccade-cli`, `crates/speccade-spec` report structures.
-- [ ] `EDITOR-003` Add fast “preview mode” generation knobs.
-  - Deliverable: deterministic downscaled/shortened preview generation flags (e.g. audio first N ms; texture 256²), clearly labeled as preview.
+- [ ] `EDITOR-003` Add fast "preview mode" generation knobs.
+  - Deliverable: deterministic downscaled/shortened preview generation flags (e.g. audio first N ms; texture 256x256), clearly labeled as preview.
 
 Open questions (track decisions here, not in the RFC):
 - [ ] `EDITOR-Q001` GPU acceleration for preview (WebGPU) vs WebGL2-only.
@@ -102,7 +111,7 @@ Open questions:
 
 - [ ] `MUSIC-005` Prefer `TrackerInstrument.ref` (external `audio_v1` specs) in examples/goldens where possible.
 - [ ] `MUSIC-006` Add a tuned, high-quality drum example (kick/snare/hat) and gate it with basic metrics (no clipping, sane levels).
-- [ ] `MUSIC-007` Grow “genre kits” as data packages: curated compose defs + instrument refs + timebase/harmony defaults.
+- [ ] `MUSIC-007` Grow "genre kits" as data packages: curated compose defs + instrument refs + timebase/harmony defaults.
 - [ ] `MUSIC-010` Add cue templates (`loop_low/loop_main/loop_hi`, stingers, transitions) as compile-time helpers or templates.
 
 ---
@@ -111,7 +120,7 @@ Open questions:
 
 - [ ] `AUDIO-001` Keep expanding and tuning the `audio_v1` preset library with QA gates.
   - Deliverable: baseline checks (no clipping, sane RMS, low DC offset) applied in CI or via `speccade analyze`.
-- [ ] `AUDIO-002` Add an “audio audit” report command (or `analyze` sub-mode) to catch regressions.
+- [ ] `AUDIO-002` Add an "audio audit" report command (or `analyze` sub-mode) to catch regressions.
   - Deliverable: peak/RMS/DC metrics for golden audio fixtures + budgeted tolerances.
 - [ ] `AUDIO-003` Improve loop-point generation + click-free defaults for tracker instrument baking.
 - [ ] `AUDIO-004` Add missing effects needed for production mixing (start with parametric EQ + limiter).
@@ -132,17 +141,17 @@ Open questions:
   - References: RFC-0005/0006 future-work notes.
 - [ ] `TEX-002` Add graph libraries/templates without introducing new recipe kinds.
   - Deliverable: reusable templates in `packs/` + CLI support to copy/instantiate.
-- [ ] `TEX-003` Decide if richer channel “swizzle/component extract” ops are needed for packing workflows.
+- [ ] `TEX-003` Decide if richer channel "swizzle/component extract" ops are needed for packing workflows.
 - [ ] `TEX-004` Add stochastic tiling (Wang tiles / texture bombing) to reduce visible repetition.
 - [ ] `TEX-005` Add trimsheets/atlases with deterministic packing + mip-safe gutters and metadata.
   - Candidate: `texture.trimsheet_v1`.
 - [ ] `TEX-006` Add decal workflows (RGBA + optional normal/roughness + placement metadata).
   - Candidate: `texture.decal_v1`.
-- [ ] `TEX-007` Add terrain “splat set” workflows (albedo/normal/roughness + splat masks + macro variation).
+- [ ] `TEX-007` Add terrain "splat set" workflows (albedo/normal/roughness + splat masks + macro variation).
   - Candidate: `texture.splat_set_v1`.
 - [ ] `TEX-008` Define and implement matcap generation (`texture.matcap_v1`) for stylized shading presets.
-  - Notes: toon steps/ramps, curvature/cavity masks, outline, “preset + overrides” art direction.
-- [ ] `TEX-009` Add a material preset system for stable art direction (“preset + parameterization” at CLI-time).
+  - Notes: toon steps/ramps, curvature/cavity masks, outline, "preset + overrides" art direction.
+- [ ] `TEX-009` Add a material preset system for stable art direction ("preset + parameterization" at CLI-time).
 
 ---
 
@@ -156,7 +165,7 @@ Migrated from `docs/FUTURE_GENERATORS.md` (now deprecated).
 - [ ] `GEN-003` Implement UI generators: nine-slice panels (`ui.nine_slice_v1`) and an icon set generator (`ui.icon_set_v1`).
 - [ ] `GEN-004` Implement font generators (bitmap pixel fonts and/or MSDF with JSON metrics).
   - Candidates: `font.bitmap_v1`, `font.msdf_v1`.
-- [ ] `GEN-005` Add VFX particle “material/profile” presets (additive/soft/distort/etc.).
+- [ ] `GEN-005` Add VFX particle "material/profile" presets (additive/soft/distort/etc.).
   - Candidate: `vfx.particle_profile_v1`.
 - [ ] `GEN-006` Add UI kit presets and item card templates with slots (icon/rarity/background).
   - Candidate: `ui.item_card_v1`.
@@ -174,10 +183,10 @@ Migrated from `docs/FUTURE_GENERATORS.md` (now deprecated).
 - [ ] `MESH-004` Add deterministic LOD generation (decimate to target tri counts) + validate bounds/tri metrics.
 - [ ] `MESH-005` Add collision mesh generation outputs (convex hull / simplified mesh).
 - [ ] `MESH-006` Add navmesh hints/metadata outputs (walkable surfaces, slope/stair tagging).
-- [ ] `MESH-007` Add a baking suite (high→low normal/AO/curvature, vertex colors, dilation).
-- [ ] `MESH-008` Add a render-to-sprite bridge (render `static_mesh` with lighting preset → `sprite.sheet_v1`).
+- [ ] `MESH-007` Add a baking suite (high->low normal/AO/curvature, vertex colors, dilation).
+- [ ] `MESH-008` Add a render-to-sprite bridge (render `static_mesh` with lighting preset -> `sprite.sheet_v1`).
 - [ ] `MESH-009` Add modular kit generators (walls/doors/pipes) built from primitives + modifiers.
-- [ ] `MESH-010` Add organic modeling gap-fill (metaballs → remesh → smooth → displacement noise) with strict budgets.
+- [ ] `MESH-010` Add organic modeling gap-fill (metaballs -> remesh -> smooth -> displacement noise) with strict budgets.
 - [ ] `MESH-011` Add shrinkwrap workflows (armor/clothes wrapping onto body parts) with strict stability validation.
 - [ ] `MESH-012` Add boolean kitbashing (union/difference + cleanup) with determinism/validation constraints.
 - [ ] `MESH-013` Add animation helper presets (IK targets + constraint presets) for procedural walk/run cycles.
@@ -187,9 +196,9 @@ Migrated from `docs/FUTURE_GENERATORS.md` (now deprecated).
 ## Tooling / QA
 
 - [ ] `QA-001` Grow Tier-1 golden corpus (`golden/`) and run it in CI.
-- [ ] `QA-002` Add “inspect” style commands/flags where helpful for review (compose→expanded JSON, intermediate texture maps).
+- [ ] `QA-002` Add "inspect" style commands/flags where helpful for review (compose->expanded JSON, intermediate texture maps).
 - [ ] `QA-003` Add content-addressed caching keyed by canonical spec/recipe hash + backend versions (iteration speed).
-- [ ] `QA-004` Add perceptual diffing / quality controls (image SSIM/ΔE; audio loudness/spectral) where feasible.
+- [ ] `QA-004` Add perceptual diffing / quality controls (image SSIM/DeltaE; audio loudness/spectral) where feasible.
 - [ ] `QA-005` Add profiling/observability: per-stage timings, memory stats, and reproducible perf runs.
 - [ ] `QA-006` Define a plugin/backends extension story (subprocess or WASM) with strict I/O contracts + determinism reporting.
 
@@ -199,5 +208,5 @@ Migrated from `docs/FUTURE_GENERATORS.md` (now deprecated).
 
 Reference: `docs/MIGRATION.md`
 
-- [ ] `MIGRATE-001` Implement a real params mapping layer in the migrator (legacy keys → canonical recipe schemas).
+- [ ] `MIGRATE-001` Implement a real params mapping layer in the migrator (legacy keys -> canonical recipe schemas).
 - [ ] `MIGRATE-002` Add migration fixtures + tests that validate migrated specs against `speccade validate`.
