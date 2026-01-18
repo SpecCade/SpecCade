@@ -10,7 +10,7 @@ use std::path::Path;
 use std::process::ExitCode;
 use walkdir::WalkDir;
 
-use crate::analysis::{audio, detect_asset_type, embeddings, texture, AssetAnalysisType};
+use crate::analysis::{audio, detect_asset_type, embeddings, mesh, texture, AssetAnalysisType};
 
 use super::analyze_csv::format_csv;
 use super::json_output::{
@@ -109,7 +109,7 @@ fn run_human(
     // Detect asset type
     let asset_type = detect_asset_type(path).ok_or_else(|| {
         anyhow::anyhow!(
-            "Unsupported file format. Expected .wav or .png, got: {}",
+            "Unsupported file format. Expected .wav, .png, .glb, or .gltf, got: {}",
             path.extension()
                 .and_then(|e| e.to_str())
                 .unwrap_or("(none)")
@@ -153,6 +153,12 @@ fn run_human(
                 None
             };
             (texture::metrics_to_btree(&texture_metrics), emb)
+        }
+        AssetAnalysisType::Mesh => {
+            let mesh_metrics = mesh::analyze_glb(&data)
+                .map_err(|e| anyhow::anyhow!("Mesh analysis failed: {}", e))?;
+            // Mesh embeddings not yet supported
+            (mesh::metrics_to_btree(&mesh_metrics), None)
         }
     };
 
@@ -201,7 +207,7 @@ fn run_json(
             let error = JsonError::new(
                 error_codes::UNSUPPORTED_FORMAT,
                 format!(
-                    "Unsupported file format. Expected .wav or .png, got: {}",
+                    "Unsupported file format. Expected .wav, .png, .glb, or .gltf, got: {}",
                     path.extension()
                         .and_then(|e| e.to_str())
                         .unwrap_or("(none)")
@@ -302,6 +308,22 @@ fn run_json(
                 return Ok(ExitCode::from(1));
             }
         },
+        AssetAnalysisType::Mesh => match mesh::analyze_glb(&data) {
+            Ok(m) => {
+                // Mesh embeddings not yet supported
+                (mesh::metrics_to_btree(&m), None)
+            }
+            Err(e) => {
+                let error = JsonError::new(
+                    error_codes::MESH_ANALYSIS,
+                    format!("Mesh analysis failed: {}", e),
+                )
+                .with_file(input_path);
+                let output = AnalyzeOutput::failure(vec![error]);
+                output_json(&output, output_path)?;
+                return Ok(ExitCode::from(1));
+            }
+        },
     };
 
     // Build result
@@ -344,7 +366,7 @@ fn run_batch(
         anyhow::bail!("--input-dir path is not a directory: {}", dir_path);
     }
 
-    // Discover all .wav and .png files recursively
+    // Discover all .wav, .png, .glb, and .gltf files recursively
     let files: Vec<_> = WalkDir::new(dir)
         .follow_links(true)
         .into_iter()
@@ -356,7 +378,10 @@ fn run_batch(
                 .and_then(|ext| ext.to_str())
                 .map(|ext| {
                     let ext_lower = ext.to_lowercase();
-                    ext_lower == "wav" || ext_lower == "png"
+                    ext_lower == "wav"
+                        || ext_lower == "png"
+                        || ext_lower == "glb"
+                        || ext_lower == "gltf"
                 })
                 .unwrap_or(false)
         })
@@ -477,6 +502,19 @@ fn analyze_single_file(path: &Path, include_embeddings: bool) -> BatchAnalyzeIte
             Err(e) => {
                 let error = JsonError::new(
                     error_codes::TEXTURE_ANALYSIS,
+                    format!("Analysis failed: {}", e),
+                );
+                return BatchAnalyzeItem::failure(path_str, error);
+            }
+        },
+        AssetAnalysisType::Mesh => match mesh::analyze_glb(&data) {
+            Ok(m) => {
+                // Mesh embeddings not yet supported
+                (mesh::metrics_to_btree(&m), None)
+            }
+            Err(e) => {
+                let error = JsonError::new(
+                    error_codes::MESH_ANALYSIS,
                     format!("Analysis failed: {}", e),
                 );
                 return BatchAnalyzeItem::failure(path_str, error);

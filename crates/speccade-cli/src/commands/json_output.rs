@@ -37,6 +37,8 @@ pub mod error_codes {
     pub const AUDIO_ANALYSIS: &str = "CLI_012";
     /// Texture analysis error
     pub const TEXTURE_ANALYSIS: &str = "CLI_013";
+    /// Mesh analysis error
+    pub const MESH_ANALYSIS: &str = "CLI_014";
 }
 
 /// Warning codes for CLI operations.
@@ -821,6 +823,16 @@ pub enum CompareMetrics {
     /// Audio comparison metrics
     #[serde(rename = "audio")]
     Audio(AudioCompareMetrics),
+    /// Mesh comparison metrics (byte-identical only for now)
+    #[serde(rename = "mesh")]
+    Mesh(MeshCompareMetrics),
+}
+
+/// Mesh comparison metrics.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MeshCompareMetrics {
+    /// Placeholder - mesh comparison not yet implemented beyond byte-identical check
+    pub byte_identical_only: bool,
 }
 
 /// Texture comparison metrics.

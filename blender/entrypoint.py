@@ -62,14 +62,36 @@ def write_report(report_path: Path, ok: bool, error: Optional[str] = None,
 
 
 def compute_mesh_metrics(obj: 'bpy.types.Object') -> Dict[str, Any]:
-    """Compute metrics for a mesh object."""
+    """Compute comprehensive metrics for a mesh object."""
     # Ensure we're working with evaluated mesh data
     depsgraph = bpy.context.evaluated_depsgraph_get()
     obj_eval = obj.evaluated_get(depsgraph)
     mesh = obj_eval.to_mesh()
 
-    # Triangle count
-    triangle_count = sum(len(p.vertices) - 2 for p in mesh.polygons)
+    # Topology metrics
+    vertex_count = len(mesh.vertices)
+    face_count = len(mesh.polygons)
+    edge_count = len(mesh.edges)
+
+    # Count triangles and quads
+    triangle_count = 0
+    quad_count = 0
+    for poly in mesh.polygons:
+        vert_count = len(poly.vertices)
+        if vert_count == 3:
+            triangle_count += 1
+        elif vert_count == 4:
+            quad_count += 1
+            triangle_count += 2  # A quad is 2 triangles
+        else:
+            triangle_count += vert_count - 2  # N-gon triangulation
+
+    quad_percentage = (quad_count / face_count * 100.0) if face_count > 0 else 0.0
+
+    # Manifold metrics
+    non_manifold_edges = count_non_manifold_edges(mesh)
+    manifold = non_manifold_edges == 0
+    degenerate_faces = count_degenerate_faces(mesh)
 
     # Bounding box
     bbox_min = [float('inf')] * 3
@@ -80,16 +102,15 @@ def compute_mesh_metrics(obj: 'bpy.types.Object') -> Dict[str, Any]:
             bbox_min[i] = min(bbox_min[i], co[i])
             bbox_max[i] = max(bbox_max[i], co[i])
 
-    # UV island count
+    # UV metrics
     uv_island_count = 0
+    uv_coverage = 0.0
+    uv_overlap_percentage = 0.0
     if mesh.uv_layers:
         uv_layer = mesh.uv_layers.active
         if uv_layer:
-            # Simple approximation: count connected UV components
             uv_island_count = count_uv_islands(mesh, uv_layer)
-
-    # Vertex count
-    vertex_count = len(mesh.vertices)
+            uv_coverage, uv_overlap_percentage = compute_uv_coverage_and_overlap(mesh, uv_layer)
 
     # Material slot count
     material_slot_count = len(obj.material_slots)
@@ -97,15 +118,100 @@ def compute_mesh_metrics(obj: 'bpy.types.Object') -> Dict[str, Any]:
     obj_eval.to_mesh_clear()
 
     return {
+        "vertex_count": vertex_count,
+        "face_count": face_count,
+        "edge_count": edge_count,
         "triangle_count": triangle_count,
+        "quad_count": quad_count,
+        "quad_percentage": round(quad_percentage, 2),
+        "manifold": manifold,
+        "non_manifold_edge_count": non_manifold_edges,
+        "degenerate_face_count": degenerate_faces,
+        "uv_island_count": uv_island_count,
+        "uv_coverage": round(uv_coverage, 4),
+        "uv_overlap_percentage": round(uv_overlap_percentage, 2),
         "bounding_box": {
             "min": bbox_min,
             "max": bbox_max
         },
-        "uv_island_count": uv_island_count,
-        "vertex_count": vertex_count,
+        "bounds_min": bbox_min,
+        "bounds_max": bbox_max,
         "material_slot_count": material_slot_count
     }
+
+
+def count_non_manifold_edges(mesh: 'bpy.types.Mesh') -> int:
+    """Count non-manifold edges (edges with != 2 adjacent faces)."""
+    edge_face_count = {}
+    for poly in mesh.polygons:
+        for i in range(len(poly.vertices)):
+            v1 = poly.vertices[i]
+            v2 = poly.vertices[(i + 1) % len(poly.vertices)]
+            edge_key = (min(v1, v2), max(v1, v2))
+            edge_face_count[edge_key] = edge_face_count.get(edge_key, 0) + 1
+
+    non_manifold = 0
+    for count in edge_face_count.values():
+        if count != 2:
+            non_manifold += 1
+    return non_manifold
+
+
+def count_degenerate_faces(mesh: 'bpy.types.Mesh') -> int:
+    """Count degenerate faces (zero area or invalid topology)."""
+    degenerate = 0
+    for poly in mesh.polygons:
+        # Check for zero area
+        if poly.area < 1e-8:
+            degenerate += 1
+            continue
+        # Check for duplicate vertices
+        verts = list(poly.vertices)
+        if len(verts) != len(set(verts)):
+            degenerate += 1
+    return degenerate
+
+
+def compute_uv_coverage_and_overlap(
+    mesh: 'bpy.types.Mesh',
+    uv_layer: 'bpy.types.MeshUVLoopLayer'
+) -> Tuple[float, float]:
+    """Compute UV coverage (0-1) and overlap percentage (0-100)."""
+    # Collect all UV triangles
+    uv_triangles = []
+    for poly in mesh.polygons:
+        loop_indices = list(poly.loop_indices)
+        uvs = [tuple(uv_layer.data[li].uv) for li in loop_indices]
+        # Triangulate the polygon
+        for i in range(1, len(uvs) - 1):
+            uv_triangles.append((uvs[0], uvs[i], uvs[i + 1]))
+
+    if not uv_triangles:
+        return 0.0, 0.0
+
+    # Compute total UV area (may include overlaps)
+    total_area = 0.0
+    for tri in uv_triangles:
+        area = triangle_area_2d(tri[0], tri[1], tri[2])
+        total_area += abs(area)
+
+    # Simple coverage estimate: clamp to [0, 1]
+    # UV space is [0,1] x [0,1] = 1.0 area
+    coverage = min(total_area, 1.0)
+
+    # Overlap: if total area > 1.0, there's overlap
+    # This is a simplified approximation
+    if total_area > 1.0:
+        overlap_percentage = ((total_area - 1.0) / total_area) * 100.0
+    else:
+        overlap_percentage = 0.0
+
+    return coverage, overlap_percentage
+
+
+def triangle_area_2d(p1: Tuple[float, float], p2: Tuple[float, float], p3: Tuple[float, float]) -> float:
+    """Compute the signed area of a 2D triangle."""
+    return 0.5 * ((p2[0] - p1[0]) * (p3[1] - p1[1]) - (p3[0] - p1[0]) * (p2[1] - p1[1]))
 
 
 def count_uv_islands(mesh: 'bpy.types.Mesh', uv_layer: 'bpy.types.MeshUVLoopLayer') -> int:

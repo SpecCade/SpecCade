@@ -1,6 +1,6 @@
 //! Asset analysis module for extracting quality metrics.
 //!
-//! This module provides deterministic analysis of generated assets (audio and texture)
+//! This module provides deterministic analysis of generated assets (audio, texture, mesh)
 //! to enable LLM-driven iteration loops and quality gating. All outputs are designed
 //! to be byte-identical across runs on the same input.
 //!
@@ -8,11 +8,12 @@
 //!
 //! - **Audio**: WAV files (PCM, 8/16/24/32-bit)
 //! - **Texture**: PNG files (Grayscale, RGB, RGBA)
+//! - **Mesh**: GLB/glTF files (3D geometry with optional skeleton/animation)
 //!
 //! ## Usage
 //!
 //! ```rust,no_run
-//! use speccade_cli::analysis::{audio, texture};
+//! use speccade_cli::analysis::{audio, texture, mesh};
 //!
 //! // Analyze audio
 //! let wav_data = std::fs::read("sound.wav").unwrap();
@@ -21,10 +22,15 @@
 //! // Analyze texture
 //! let png_data = std::fs::read("texture.png").unwrap();
 //! let texture_metrics = texture::analyze_png(&png_data).unwrap();
+//!
+//! // Analyze mesh
+//! let glb_data = std::fs::read("model.glb").unwrap();
+//! let mesh_metrics = mesh::analyze_glb(&glb_data).unwrap();
 //! ```
 
 pub mod audio;
 pub mod embeddings;
+pub mod mesh;
 pub mod perceptual;
 pub mod texture;
 
@@ -34,6 +40,9 @@ pub const AUDIO_EXTENSIONS: &[&str] = &["wav"];
 /// Recognized texture extensions.
 pub const TEXTURE_EXTENSIONS: &[&str] = &["png"];
 
+/// Recognized mesh extensions.
+pub const MESH_EXTENSIONS: &[&str] = &["glb", "gltf"];
+
 /// Detect asset type from file extension.
 pub fn detect_asset_type(path: &std::path::Path) -> Option<AssetAnalysisType> {
     let ext = path.extension()?.to_str()?.to_lowercase();
@@ -42,6 +51,8 @@ pub fn detect_asset_type(path: &std::path::Path) -> Option<AssetAnalysisType> {
         Some(AssetAnalysisType::Audio)
     } else if TEXTURE_EXTENSIONS.contains(&ext.as_str()) {
         Some(AssetAnalysisType::Texture)
+    } else if MESH_EXTENSIONS.contains(&ext.as_str()) {
+        Some(AssetAnalysisType::Mesh)
     } else {
         None
     }
@@ -54,6 +65,8 @@ pub enum AssetAnalysisType {
     Audio,
     /// Texture asset (PNG)
     Texture,
+    /// Mesh asset (GLB/glTF)
+    Mesh,
 }
 
 impl AssetAnalysisType {
@@ -62,6 +75,7 @@ impl AssetAnalysisType {
         match self {
             AssetAnalysisType::Audio => "audio",
             AssetAnalysisType::Texture => "texture",
+            AssetAnalysisType::Mesh => "mesh",
         }
     }
 }

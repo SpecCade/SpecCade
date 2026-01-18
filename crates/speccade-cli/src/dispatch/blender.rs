@@ -29,17 +29,29 @@ pub(super) fn generate_blender_static_mesh(
     // Convert metrics to OutputMetrics
     let metrics =
         speccade_spec::OutputMetrics {
+            vertex_count: result.metrics.vertex_count,
+            face_count: result.metrics.face_count,
+            edge_count: result.metrics.edge_count,
             triangle_count: result.metrics.triangle_count,
+            quad_count: result.metrics.quad_count,
+            quad_percentage: result.metrics.quad_percentage,
+            manifold: result.metrics.manifold,
+            non_manifold_edge_count: result.metrics.non_manifold_edge_count,
+            degenerate_face_count: result.metrics.degenerate_face_count,
+            uv_island_count: result.metrics.uv_island_count,
+            uv_coverage: result.metrics.uv_coverage,
+            uv_overlap_percentage: result.metrics.uv_overlap_percentage,
             bounding_box: result.metrics.bounding_box.as_ref().map(|bb| {
                 speccade_spec::BoundingBox {
                     min: [bb.min[0] as f32, bb.min[1] as f32, bb.min[2] as f32],
                     max: [bb.max[0] as f32, bb.max[1] as f32, bb.max[2] as f32],
                 }
             }),
-            uv_island_count: result.metrics.uv_island_count,
+            bounds_min: result.metrics.bounds_min,
+            bounds_max: result.metrics.bounds_max,
             bone_count: None,
-            material_slot_count: result.metrics.material_slot_count,
             max_bone_influences: None,
+            material_slot_count: result.metrics.material_slot_count,
             animation_frame_count: None,
             animation_duration_seconds: None,
         };
@@ -78,17 +90,29 @@ pub(super) fn generate_blender_skeletal_mesh(
     // Convert metrics to OutputMetrics
     let metrics =
         speccade_spec::OutputMetrics {
+            vertex_count: result.metrics.vertex_count,
+            face_count: result.metrics.face_count,
+            edge_count: result.metrics.edge_count,
             triangle_count: result.metrics.triangle_count,
+            quad_count: result.metrics.quad_count,
+            quad_percentage: result.metrics.quad_percentage,
+            manifold: result.metrics.manifold,
+            non_manifold_edge_count: result.metrics.non_manifold_edge_count,
+            degenerate_face_count: result.metrics.degenerate_face_count,
+            uv_island_count: result.metrics.uv_island_count,
+            uv_coverage: result.metrics.uv_coverage,
+            uv_overlap_percentage: result.metrics.uv_overlap_percentage,
             bounding_box: result.metrics.bounding_box.as_ref().map(|bb| {
                 speccade_spec::BoundingBox {
                     min: [bb.min[0] as f32, bb.min[1] as f32, bb.min[2] as f32],
                     max: [bb.max[0] as f32, bb.max[1] as f32, bb.max[2] as f32],
                 }
             }),
-            uv_island_count: result.metrics.uv_island_count,
+            bounds_min: result.metrics.bounds_min,
+            bounds_max: result.metrics.bounds_max,
             bone_count: result.metrics.bone_count,
-            material_slot_count: result.metrics.material_slot_count,
             max_bone_influences: result.metrics.max_bone_influences,
+            material_slot_count: result.metrics.material_slot_count,
             animation_frame_count: None,
             animation_duration_seconds: None,
         };
@@ -124,12 +148,24 @@ pub(super) fn generate_blender_animation(
 
     // Convert metrics to OutputMetrics
     let metrics = speccade_spec::OutputMetrics {
+        vertex_count: None,
+        face_count: None,
+        edge_count: None,
         triangle_count: None,
-        bounding_box: None,
+        quad_count: None,
+        quad_percentage: None,
+        manifold: None,
+        non_manifold_edge_count: None,
+        degenerate_face_count: None,
         uv_island_count: None,
+        uv_coverage: None,
+        uv_overlap_percentage: None,
+        bounding_box: None,
+        bounds_min: None,
+        bounds_max: None,
         bone_count: result.metrics.bone_count,
-        material_slot_count: None,
         max_bone_influences: None,
+        material_slot_count: None,
         animation_frame_count: result.metrics.animation_frame_count,
         animation_duration_seconds: result.metrics.animation_duration_seconds.map(|d| d as f32),
     };

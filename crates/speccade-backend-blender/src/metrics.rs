@@ -11,30 +11,85 @@ use serde::{Deserialize, Serialize};
 /// validated via metrics rather than file hashes.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
 pub struct BlenderMetrics {
+    // ========== Topology metrics ==========
+    /// Number of vertices in the mesh.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub vertex_count: Option<u32>,
+
+    /// Number of faces (polygons) in the mesh.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub face_count: Option<u32>,
+
+    /// Number of edges in the mesh.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub edge_count: Option<u32>,
+
     /// Number of triangles in the mesh.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub triangle_count: Option<u32>,
 
-    /// Axis-aligned bounding box of the mesh.
+    /// Number of quad faces in the mesh.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub bounding_box: Option<BoundingBox>,
+    pub quad_count: Option<u32>,
 
+    /// Percentage of faces that are quads (0.0-100.0).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub quad_percentage: Option<f64>,
+
+    // ========== Manifold metrics ==========
+    /// Whether the mesh is manifold (watertight).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub manifold: Option<bool>,
+
+    /// Number of non-manifold edges.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub non_manifold_edge_count: Option<u32>,
+
+    /// Number of degenerate faces (zero area or invalid topology).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub degenerate_face_count: Option<u32>,
+
+    // ========== UV metrics ==========
     /// Number of UV islands.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub uv_island_count: Option<u32>,
 
+    /// UV coverage ratio (0.0-1.0), how much of UV space is used.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub uv_coverage: Option<f64>,
+
+    /// Percentage of UV space that overlaps (0.0-100.0).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub uv_overlap_percentage: Option<f64>,
+
+    // ========== Bounds metrics ==========
+    /// Axis-aligned bounding box of the mesh.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub bounding_box: Option<BoundingBox>,
+
+    /// Minimum corner of bounding box [x, y, z].
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub bounds_min: Option<[f64; 3]>,
+
+    /// Maximum corner of bounding box [x, y, z].
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub bounds_max: Option<[f64; 3]>,
+
+    // ========== Skeleton metrics ==========
     /// Number of bones in the armature.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub bone_count: Option<u32>,
-
-    /// Number of material slots.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub material_slot_count: Option<u32>,
 
     /// Maximum bone influences per vertex.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub max_bone_influences: Option<u32>,
 
+    // ========== Material metrics ==========
+    /// Number of material slots.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub material_slot_count: Option<u32>,
+
+    // ========== Animation metrics ==========
     /// Number of animation frames.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub animation_frame_count: Option<u32>,
@@ -42,10 +97,6 @@ pub struct BlenderMetrics {
     /// Animation duration in seconds.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub animation_duration_seconds: Option<f64>,
-
-    /// Number of vertices in the mesh.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub vertex_count: Option<u32>,
 }
 
 impl BlenderMetrics {

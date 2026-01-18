@@ -86,8 +86,9 @@ Open questions (track decisions here, not in the RFC):
 
 Reference: `docs/rfcs/RFC-0010-mesh-llm-verification.md`
 
-- [ ] `MESHVER-001` Implement geometric metrics for Tier-2 assets (bounds, verts/faces, UV sanity, bone counts).
+- [x] `MESHVER-001` Implement geometric metrics for Tier-2 assets (bounds, verts/faces, UV sanity, bone counts). **Done: 2026-01-19**
   - Deliverable: deterministic metrics emitted into `${asset_id}.report.json` for mesh/character/animation outputs.
+  - Implemented: OutputMetrics extended with vertex/face/edge counts, quad_percentage, manifold checks, UV coverage/overlap, bounds; GLB analysis via `speccade analyze`.
 - [ ] `MESHVER-002` Add a constraint/verification surface (validation-time vs post-generate).
   - Deliverable: a minimal constraint schema and a place to run it (e.g. `speccade verify --spec ...`).
 - [ ] `MESHVER-003` Decide if/when VLM integration is supported (and how it is configured).

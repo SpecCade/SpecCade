@@ -5,7 +5,7 @@ use std::path::Path;
 use base64::Engine;
 use tokio_tungstenite::tungstenite::Message;
 
-use crate::analysis::{audio, detect_asset_type, embeddings, texture, AssetAnalysisType};
+use crate::analysis::{audio, detect_asset_type, embeddings, mesh, texture, AssetAnalysisType};
 use crate::commands::json_output::{error_codes, AnalyzeOutput, AnalyzeResult, JsonError};
 
 use super::types::{AnalyzeRequest, ErrorResponse};
@@ -217,6 +217,19 @@ fn analyze_bytes(
                 let error = JsonError::new(
                     error_codes::TEXTURE_ANALYSIS,
                     format!("Texture analysis failed: {}", e),
+                );
+                return AnalyzeOutput::failure(vec![error]);
+            }
+        },
+        AssetAnalysisType::Mesh => match mesh::analyze_glb(data) {
+            Ok(m) => {
+                // Mesh embeddings not yet supported
+                (mesh::metrics_to_btree(&m), None)
+            }
+            Err(e) => {
+                let error = JsonError::new(
+                    error_codes::MESH_ANALYSIS,
+                    format!("Mesh analysis failed: {}", e),
                 );
                 return AnalyzeOutput::failure(vec![error]);
             }

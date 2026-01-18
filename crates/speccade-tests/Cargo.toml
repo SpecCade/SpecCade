@@ -47,6 +47,10 @@ path = "tests/music_parity.rs"
 name = "analyze_serve"
 path = "tests/analyze_serve.rs"
 
+[[test]]
+name = "mesh_metrics"
+path = "tests/mesh_metrics.rs"
+
 [dependencies]
 # We need all the workspace crates for integration testing
 speccade-spec = { workspace = true }

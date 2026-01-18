@@ -13,7 +13,7 @@ use crate::analysis::{audio, detect_asset_type, perceptual, texture, AssetAnalys
 
 use super::json_output::{
     error_codes, AudioCompareMetrics, CompareMetrics, CompareOutput, CompareResult,
-    HistogramDiffMetrics, JsonError, TextureCompareMetrics,
+    HistogramDiffMetrics, JsonError, MeshCompareMetrics, TextureCompareMetrics,
 };
 
 /// Run the compare command
@@ -99,6 +99,13 @@ fn run_human(path_a: &str, path_b: &str) -> Result<ExitCode> {
         AssetAnalysisType::Audio => {
             let result = compare_audio(&data_a, &data_b)?;
             print_audio_metrics(&result);
+        }
+        AssetAnalysisType::Mesh => {
+            println!(
+                "{}",
+                "Mesh comparison not yet implemented. Only byte-identical check performed."
+                    .yellow()
+            );
         }
     }
 
@@ -224,6 +231,12 @@ fn run_json(path_a: &str, path_b: &str) -> Result<ExitCode> {
                 return Ok(ExitCode::from(1));
             }
         },
+        AssetAnalysisType::Mesh => {
+            // Mesh comparison not yet implemented beyond byte-identical check
+            CompareMetrics::Mesh(MeshCompareMetrics {
+                byte_identical_only: true,
+            })
+        }
     };
 
     let result = CompareResult {
