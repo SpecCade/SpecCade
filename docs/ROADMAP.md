@@ -126,8 +126,9 @@ Open questions:
 - [x] `AUDIO-001` Keep expanding and tuning the `audio_v1` preset library with QA gates. **Done: 2026-01-18**
   - Deliverable: baseline checks (no clipping, sane RMS, low DC offset) applied in CI or via `speccade analyze`.
   - Implemented: Rust test validates all 255 presets; 36 presets fixed for DC offset/compressor issues.
-- [ ] `AUDIO-002` Add an "audio audit" report command (or `analyze` sub-mode) to catch regressions.
+- [x] `AUDIO-002` Add an "audio audit" report command (or `analyze` sub-mode) to catch regressions. **Done: 2026-01-18**
   - Deliverable: peak/RMS/DC metrics for golden audio fixtures + budgeted tolerances.
+  - Implemented: `speccade audit` command with tolerances, baseline management, and `--update-baselines` flag.
 - [ ] `AUDIO-003` Improve loop-point generation + click-free defaults for tracker instrument baking.
 - [ ] `AUDIO-004` Add missing effects needed for production mixing (start with parametric EQ + limiter).
   - Notes: also consider gate/expander and stereo widener.

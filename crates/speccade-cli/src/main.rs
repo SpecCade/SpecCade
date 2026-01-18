@@ -53,6 +53,25 @@ enum Commands {
         embeddings: bool,
     },
 
+    /// Audit audio files for quality regressions against baselines
+    Audit {
+        /// Directory to scan for .wav files
+        #[arg(long)]
+        input_dir: String,
+
+        /// Path to tolerances config file (JSON)
+        #[arg(long)]
+        tolerances: Option<String>,
+
+        /// Update or create baseline files for each audio file
+        #[arg(long)]
+        update_baselines: bool,
+
+        /// Output machine-readable JSON diagnostics (no colored output)
+        #[arg(long)]
+        json: bool,
+    },
+
     /// Evaluate a spec file and print canonical IR JSON to stdout
     Eval {
         /// Path to the spec file (JSON or Starlark)
@@ -293,6 +312,12 @@ fn main() -> ExitCode {
             &output_format,
             embeddings,
         ),
+        Commands::Audit {
+            input_dir,
+            tolerances,
+            update_baselines,
+            json,
+        } => commands::audit::run(&input_dir, tolerances.as_deref(), update_baselines, json),
         Commands::Eval { spec, pretty, json } => commands::eval::run(&spec, pretty, json),
         Commands::Validate {
             spec,
@@ -1083,5 +1108,103 @@ mod tests {
             }
             _ => panic!("expected analyze command"),
         }
+    }
+
+    #[test]
+    fn test_cli_parses_audit_basic() {
+        let cli = Cli::try_parse_from(["speccade", "audit", "--input-dir", "./sounds"]).unwrap();
+        match cli.command {
+            Commands::Audit {
+                input_dir,
+                tolerances,
+                update_baselines,
+                json,
+            } => {
+                assert_eq!(input_dir, "./sounds");
+                assert!(tolerances.is_none());
+                assert!(!update_baselines);
+                assert!(!json);
+            }
+            _ => panic!("expected audit command"),
+        }
+    }
+
+    #[test]
+    fn test_cli_parses_audit_with_tolerances() {
+        let cli = Cli::try_parse_from([
+            "speccade",
+            "audit",
+            "--input-dir",
+            "./sounds",
+            "--tolerances",
+            "config.json",
+        ])
+        .unwrap();
+        match cli.command {
+            Commands::Audit {
+                input_dir,
+                tolerances,
+                update_baselines,
+                json,
+            } => {
+                assert_eq!(input_dir, "./sounds");
+                assert_eq!(tolerances.as_deref(), Some("config.json"));
+                assert!(!update_baselines);
+                assert!(!json);
+            }
+            _ => panic!("expected audit command"),
+        }
+    }
+
+    #[test]
+    fn test_cli_parses_audit_with_update_baselines() {
+        let cli = Cli::try_parse_from([
+            "speccade",
+            "audit",
+            "--input-dir",
+            "./sounds",
+            "--update-baselines",
+        ])
+        .unwrap();
+        match cli.command {
+            Commands::Audit {
+                input_dir,
+                tolerances,
+                update_baselines,
+                json,
+            } => {
+                assert_eq!(input_dir, "./sounds");
+                assert!(tolerances.is_none());
+                assert!(update_baselines);
+                assert!(!json);
+            }
+            _ => panic!("expected audit command"),
+        }
+    }
+
+    #[test]
+    fn test_cli_parses_audit_with_json() {
+        let cli = Cli::try_parse_from(["speccade", "audit", "--input-dir", "./sounds", "--json"])
+            .unwrap();
+        match cli.command {
+            Commands::Audit {
+                input_dir,
+                tolerances,
+                update_baselines,
+                json,
+            } => {
+                assert_eq!(input_dir, "./sounds");
+                assert!(tolerances.is_none());
+                assert!(!update_baselines);
+                assert!(json);
+            }
+            _ => panic!("expected audit command"),
+        }
+    }
+
+    #[test]
+    fn test_cli_requires_input_dir_for_audit() {
+        let err = Cli::try_parse_from(["speccade", "audit"]).err().unwrap();
+        assert!(err.to_string().contains("--input-dir"));
     }
 }
