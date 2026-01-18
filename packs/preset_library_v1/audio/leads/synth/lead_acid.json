@@ -1,140 +1,147 @@
 {
-    "spec_version": 1,
-    "asset_id": "preset_lead_acid",
-    "asset_type": "audio",
-    "license": "CC0-1.0",
-    "seed": 10308,
-    "description": "Acid lead - Professional TB-303 style with resonant filter sweep, pitch glide, waveshaping distortion, and stereo delay for squelchy acid lines",
-    "outputs": [
-        {
-            "kind": "primary",
-            "format": "wav",
-            "path": "test-outputs/preset_library_v1/audio/leads/synth/lead_acid.wav"
-        }
-    ],
-    "recipe": {
-        "kind": "audio_v1",
-        "params": {
-            "base_note": "A3",
-            "duration_seconds": 1.5,
-            "sample_rate": 44100,
-            "layers": [
-                {
-                    "synthesis": {
-                        "type": "oscillator",
-                        "waveform": "sawtooth",
-                        "frequency": 220.0
-                    },
-                    "envelope": {
-                        "attack": 0.001,
-                        "decay": 0.12,
-                        "sustain": 0.65,
-                        "release": 0.08
-                    },
-                    "volume": 0.85,
-                    "pan": 0,
-                    "filter": {
-                        "type": "lowpass",
-                        "cutoff": 3200,
-                        "resonance": 0.92,
-                        "cutoff_end": 650
-                    },
-                    "lfo": {
-                        "config": {
-                            "waveform": "sine",
-                            "rate": 5.5,
-                            "depth": 0.35
-                        },
-                        "target": {
-                            "target": "filter_cutoff",
-                            "amount": 800
-                        }
-                    }
-                },
-                {
-                    "synthesis": {
-                        "type": "oscillator",
-                        "waveform": "square",
-                        "frequency": 220.0
-                    },
-                    "envelope": {
-                        "attack": 0.001,
-                        "decay": 0.12,
-                        "sustain": 0.65,
-                        "release": 0.08
-                    },
-                    "volume": 0.25,
-                    "pan": 0,
-                    "filter": {
-                        "type": "bandpass",
-                        "center": 2800,
-                        "resonance": 0.88,
-                        "center_end": 720
-                    },
-                    "lfo": {
-                        "config": {
-                            "waveform": "sine",
-                            "rate": 5.5,
-                            "depth": 0.28
-                        },
-                        "target": {
-                            "target": "filter_cutoff",
-                            "amount": 600
-                        }
-                    }
-                },
-                {
-                    "synthesis": {
-                        "type": "oscillator",
-                        "waveform": "triangle",
-                        "frequency": 440.0
-                    },
-                    "envelope": {
-                        "attack": 0.001,
-                        "decay": 0.1,
-                        "sustain": 0.55,
-                        "release": 0.08
-                    },
-                    "volume": 0.18,
-                    "pan": 0.15,
-                    "filter": {
-                        "type": "lowpass",
-                        "cutoff": 5000,
-                        "resonance": 0.65,
-                        "cutoff_end": 1800
-                    },
-                    "lfo": {
-                        "config": {
-                            "waveform": "sine",
-                            "rate": 6.2,
-                            "depth": 0.12
-                        },
-                        "target": {
-                            "target": "pitch",
-                            "semitones": 0.08
-                        }
-                    }
-                }
-            ],
-            "effects": [
-                {
-                    "type": "waveshaper",
-                    "drive": 2.8,
-                    "wet": 0.45
-                },
-                {
-                    "type": "delay",
-                    "time_ms": 285,
-                    "feedback": 0.28,
-                    "wet": 0.22
-                },
-                {
-                    "type": "chorus",
-                    "rate": 0.8,
-                    "depth": 0.15,
-                    "wet": 0.18
-                }
-            ]
-        }
+  "spec_version": 1,
+  "asset_id": "preset_lead_acid",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 10308,
+  "description": "Acid lead - Professional TB-303 style with resonant filter sweep, pitch glide, waveshaping distortion, and stereo delay for squelchy acid lines",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/leads/synth/lead_acid.wav"
     }
+  ],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "base_note": "A3",
+      "duration_seconds": 1.5,
+      "sample_rate": 44100,
+      "layers": [
+        {
+          "synthesis": {
+            "type": "oscillator",
+            "waveform": "sawtooth",
+            "frequency": 220.0
+          },
+          "envelope": {
+            "attack": 0.001,
+            "decay": 0.12,
+            "sustain": 0.65,
+            "release": 0.08
+          },
+          "volume": 0.85,
+          "pan": 0,
+          "filter": {
+            "type": "lowpass",
+            "cutoff": 3200,
+            "resonance": 0.92,
+            "cutoff_end": 650
+          },
+          "lfo": {
+            "config": {
+              "waveform": "sine",
+              "rate": 5.5,
+              "depth": 0.35
+            },
+            "target": {
+              "target": "filter_cutoff",
+              "amount": 800
+            }
+          }
+        },
+        {
+          "synthesis": {
+            "type": "oscillator",
+            "waveform": "square",
+            "frequency": 220.0
+          },
+          "envelope": {
+            "attack": 0.001,
+            "decay": 0.12,
+            "sustain": 0.65,
+            "release": 0.08
+          },
+          "volume": 0.25,
+          "pan": 0,
+          "filter": {
+            "type": "bandpass",
+            "center": 2800,
+            "resonance": 0.88,
+            "center_end": 720
+          },
+          "lfo": {
+            "config": {
+              "waveform": "sine",
+              "rate": 5.5,
+              "depth": 0.28
+            },
+            "target": {
+              "target": "filter_cutoff",
+              "amount": 600
+            }
+          }
+        },
+        {
+          "synthesis": {
+            "type": "oscillator",
+            "waveform": "triangle",
+            "frequency": 440.0
+          },
+          "envelope": {
+            "attack": 0.001,
+            "decay": 0.1,
+            "sustain": 0.55,
+            "release": 0.08
+          },
+          "volume": 0.18,
+          "pan": 0.15,
+          "filter": {
+            "type": "lowpass",
+            "cutoff": 5000,
+            "resonance": 0.65,
+            "cutoff_end": 1800
+          },
+          "lfo": {
+            "config": {
+              "waveform": "sine",
+              "rate": 6.2,
+              "depth": 0.12
+            },
+            "target": {
+              "target": "pitch",
+              "semitones": 0.08
+            }
+          }
+        }
+      ],
+      "effects": [
+        {
+          "type": "waveshaper",
+          "drive": 2.8,
+          "wet": 0.45
+        },
+        {
+          "type": "delay",
+          "time_ms": 285,
+          "feedback": 0.28,
+          "wet": 0.22
+        },
+        {
+          "type": "chorus",
+          "rate": 0.8,
+          "depth": 0.15,
+          "wet": 0.18
+        }
+      ]
+    }
+  },
+  "style_tags": [
+    "lead",
+    "acid",
+    "303",
+    "synth",
+    "electronic"
+  ]
 }

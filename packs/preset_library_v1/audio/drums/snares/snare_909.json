@@ -5,6 +5,7 @@
     "license": "CC0-1.0",
     "seed": 10021,
     "description": "Professional TR-909 snare - punchy body with pitch sweep + long noise tail for house/techno",
+    "style_tags": ["909", "snare", "drum", "house", "techno", "electronic"],
     "outputs": [
         {
             "kind": "primary",

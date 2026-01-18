@@ -116,5 +116,11 @@
         }
       ]
     }
-  }
+  },
+  "style_tags": [
+    "snare",
+    "drum",
+    "percussion",
+    "basic"
+  ]
 }

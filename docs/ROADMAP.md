@@ -41,7 +41,7 @@ Reference: `docs/rfcs/RFC-0008-llm-native-asset-authoring.md`
 - [x] `LLM-003` Add `speccade analyze` baseline metrics (start with audio + textures). **Done: 2026-01-18**
   - Deliverable: deterministic metrics JSON for iteration loops (audio peak/clipping/DC/loudness proxy; texture histogram/contrast/tileability checks).
   - Reference spec: `docs/rfcs/RFC-0008-appendix-audio-analysis-spec.md`.
-- [ ] `LLM-004` Add preset/template retrieval primitives (CLI-time, no runtime IO in Starlark).
+- [x] `LLM-004` Add preset/template retrieval primitives (CLI-time, no runtime IO in Starlark). **Done: 2026-01-18**
   - Deliverable: a way to pick "known good" starting points by tags/keywords (e.g. `style_tags`, curated kit IDs) without copying 200-line presets into every spec.
 - [ ] `LLM-005` Expand `speccade template` beyond textures (audio/music first).
   - Deliverable: `template list/show/copy` works for `audio` and `music` templates in `packs/`.

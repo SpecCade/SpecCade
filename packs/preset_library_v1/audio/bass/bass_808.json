@@ -5,6 +5,7 @@
     "license": "CC0-1.0",
     "seed": 20001,
     "description": "TR-808 style sub bass with long decay, classic boomy character",
+    "style_tags": ["808", "bass", "sub", "synth", "electronic", "retro"],
     "outputs": [
         {
             "kind": "primary",

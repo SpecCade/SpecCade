@@ -194,5 +194,11 @@
         }
       ]
     }
-  }
+  },
+  "style_tags": [
+    "clap",
+    "drum",
+    "percussion",
+    "rhythmic"
+  ]
 }

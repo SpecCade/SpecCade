@@ -185,15 +185,18 @@ enum Commands {
 enum TemplateCommands {
     /// List available templates
     List {
-        /// Asset type to list (default: texture)
+        /// Asset type to list (texture, audio, music)
         #[arg(long, default_value = "texture")]
         asset_type: String,
+        /// Output machine-readable JSON
+        #[arg(long)]
+        json: bool,
     },
     /// Show details for a template
     Show {
         /// Template id (asset_id)
         id: String,
-        /// Asset type scope (default: texture)
+        /// Asset type scope (texture, audio, music)
         #[arg(long, default_value = "texture")]
         asset_type: String,
     },
@@ -204,9 +207,24 @@ enum TemplateCommands {
         /// Destination path to write the template JSON
         #[arg(long)]
         to: String,
-        /// Asset type scope (default: texture)
+        /// Asset type scope (texture, audio, music)
         #[arg(long, default_value = "texture")]
         asset_type: String,
+    },
+    /// Search templates by tags or keywords
+    Search {
+        /// Filter by tags (comma-separated)
+        #[arg(long, value_delimiter = ',')]
+        tags: Option<Vec<String>>,
+        /// Filter by description/asset_id keyword
+        #[arg(long)]
+        query: Option<String>,
+        /// Filter by asset type (texture, audio, music)
+        #[arg(long)]
+        asset_type: Option<String>,
+        /// Output machine-readable JSON
+        #[arg(long)]
+        json: bool,
     },
 }
 
@@ -278,11 +296,19 @@ fn main() -> ExitCode {
         }
         Commands::Fmt { spec, output } => commands::fmt::run(&spec, output.as_deref()),
         Commands::Template { command } => match command {
-            TemplateCommands::List { asset_type } => commands::template::list(&asset_type),
+            TemplateCommands::List { asset_type, json } => {
+                commands::template::list(&asset_type, json)
+            }
             TemplateCommands::Show { id, asset_type } => commands::template::show(&asset_type, &id),
             TemplateCommands::Copy { id, to, asset_type } => {
                 commands::template::copy(&asset_type, &id, Path::new(&to))
             }
+            TemplateCommands::Search {
+                tags,
+                query,
+                asset_type,
+                json,
+            } => commands::template::search(tags, query, asset_type, json),
         },
         Commands::Stdlib { command } => match command {
             StdlibCommands::Dump { format } => {
@@ -686,10 +712,59 @@ mod tests {
             .unwrap();
         match cli.command {
             Commands::Template { command } => match command {
-                TemplateCommands::List { asset_type } => {
+                TemplateCommands::List { asset_type, json } => {
                     assert_eq!(asset_type, "texture");
+                    assert!(!json);
                 }
                 _ => panic!("expected template list"),
+            },
+            _ => panic!("expected template command"),
+        }
+    }
+
+    #[test]
+    fn test_cli_parses_template_list_json() {
+        let cli = Cli::try_parse_from([
+            "speccade",
+            "template",
+            "list",
+            "--asset-type",
+            "audio",
+            "--json",
+        ])
+        .unwrap();
+        match cli.command {
+            Commands::Template { command } => match command {
+                TemplateCommands::List { asset_type, json } => {
+                    assert_eq!(asset_type, "audio");
+                    assert!(json);
+                }
+                _ => panic!("expected template list"),
+            },
+            _ => panic!("expected template command"),
+        }
+    }
+
+    #[test]
+    fn test_cli_parses_template_search() {
+        let cli = Cli::try_parse_from([
+            "speccade", "template", "search", "--tags", "kick,808", "--query", "bass", "--json",
+        ])
+        .unwrap();
+        match cli.command {
+            Commands::Template { command } => match command {
+                TemplateCommands::Search {
+                    tags,
+                    query,
+                    asset_type,
+                    json,
+                } => {
+                    assert_eq!(tags, Some(vec!["kick".to_string(), "808".to_string()]));
+                    assert_eq!(query, Some("bass".to_string()));
+                    assert!(asset_type.is_none());
+                    assert!(json);
+                }
+                _ => panic!("expected template search"),
             },
             _ => panic!("expected template command"),
         }

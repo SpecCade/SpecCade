@@ -110,5 +110,11 @@
         }
       ]
     }
-  }
+  },
+  "style_tags": [
+    "shaker",
+    "percussion",
+    "rhythmic",
+    "texture"
+  ]
 }

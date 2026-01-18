@@ -5,6 +5,7 @@
   "license": "CC0-1.0",
   "seed": 10101,
   "description": "Classic 808 kick - long sub bass decay",
+  "style_tags": ["808", "kick", "drum", "bass", "sub", "electronic"],
   "outputs": [
     {
       "kind": "primary",

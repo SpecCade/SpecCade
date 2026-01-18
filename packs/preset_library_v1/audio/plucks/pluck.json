@@ -1,182 +1,188 @@
 {
-    "spec_version": 1,
-    "asset_id": "pluck",
-    "asset_type": "audio",
-    "license": "CC0-1.0",
-    "seed": 10150,
-    "description": "Professional multi-layer pluck synthesizer - combines Karplus-Strong with filtered oscillators for a versatile, neutral pluck perfect for melodies and arpeggios",
-    "outputs": [
-        {
-            "kind": "primary",
-            "format": "wav",
-            "path": "test-outputs/preset_library_v1/audio/plucks/pluck.wav"
-        }
-    ],
-    "recipe": {
-        "kind": "audio_v1",
-        "params": {
-            "duration_seconds": 1.2,
-            "sample_rate": 44100,
-            "layers": [
-                {
-                    "synthesis": {
-                        "type": "karplus_strong",
-                        "frequency": 440.0,
-                        "decay": 0.9965,
-                        "blend": 0.45
-                    },
-                    "envelope": {
-                        "attack": 0.0005,
-                        "decay": 0.08,
-                        "sustain": 0.65,
-                        "release": 0.35
-                    },
-                    "volume": 0.72,
-                    "pan": 0.0,
-                    "filter": {
-                        "type": "lowpass",
-                        "cutoff": 4800.0,
-                        "resonance": 0.35,
-                        "cutoff_end": 1800.0
-                    }
-                },
-                {
-                    "synthesis": {
-                        "type": "multi_oscillator",
-                        "frequency": 440.0,
-                        "oscillators": [
-                            {
-                                "waveform": "sawtooth",
-                                "volume": 1.0
-                            }
-                        ]
-                    },
-                    "envelope": {
-                        "attack": 0.001,
-                        "decay": 0.12,
-                        "sustain": 0.5,
-                        "release": 0.28
-                    },
-                    "volume": 0.45,
-                    "pan": 0.0,
-                    "filter": {
-                        "type": "lowpass",
-                        "cutoff": 3200.0,
-                        "resonance": 0.42,
-                        "cutoff_end": 1200.0
-                    }
-                },
-                {
-                    "synthesis": {
-                        "type": "fm_synth",
-                        "carrier_freq": 440.0,
-                        "modulator_freq": 440,
-                        "modulation_index": 1.8
-                    },
-                    "envelope": {
-                        "attack": 0.002,
-                        "decay": 0.15,
-                        "sustain": 0.35,
-                        "release": 0.22
-                    },
-                    "volume": 0.28,
-                    "pan": 0.0,
-                    "filter": {
-                        "type": "bandpass",
-                        "center": 2400.0,
-                        "resonance": 0.55,
-                        "center_end": 1600.0
-                    },
-                    "lfo": {
-                        "config": {
-                            "waveform": "sine",
-                            "rate": 6.2,
-                            "depth": 0.12
-                        },
-                        "target": {
-                            "target": "filter_cutoff",
-                            "amount": 500
-                        }
-                    }
-                },
-                {
-                    "synthesis": {
-                        "type": "oscillator",
-                        "waveform": "triangle",
-                        "frequency": 880.0
-                    },
-                    "envelope": {
-                        "attack": 0.001,
-                        "decay": 0.06,
-                        "sustain": 0.25,
-                        "release": 0.15
-                    },
-                    "volume": 0.18,
-                    "pan": 0.0,
-                    "filter": {
-                        "type": "highpass",
-                        "cutoff": 800.0,
-                        "resonance": 0.25
-                    }
-                },
-                {
-                    "synthesis": {
-                        "type": "modal",
-                        "frequency": 440.0,
-                        "modes": [
-                            {
-                                "freq_ratio": 1.0,
-                                "amplitude": 1.0,
-                                "decay_time": 0.5
-                            },
-                            {
-                                "freq_ratio": 2.0,
-                                "amplitude": 0.5,
-                                "decay_time": 0.3
-                            }
-                        ],
-                        "excitation": "impulse"
-                    },
-                    "envelope": {
-                        "attack": 0.0008,
-                        "decay": 0.18,
-                        "sustain": 0.4,
-                        "release": 0.32
-                    },
-                    "volume": 0.22,
-                    "pan": 0.0,
-                    "filter": {
-                        "type": "lowpass",
-                        "cutoff": 5500.0,
-                        "resonance": 0.3,
-                        "cutoff_end": 2200.0
-                    }
-                }
-            ],
-            "effects": [
-                {
-                    "type": "compressor",
-                    "threshold_db": -7.0,
-                    "ratio": 3.2,
-                    "attack_ms": 3.0,
-                    "release_ms": 80.0,
-                    "makeup_db": 0
-                },
-                {
-                    "type": "chorus",
-                    "rate": 0.45,
-                    "depth": 0.15,
-                    "wet": 0.18,
-                    "voices": 2
-                },
-                {
-                    "type": "reverb",
-                    "room_size": 0.28,
-                    "damping": 0.55,
-                    "wet": 0.12,
-                    "width": 0.5
-                }
-            ]
-        }
+  "spec_version": 1,
+  "asset_id": "pluck",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 10150,
+  "description": "Professional multi-layer pluck synthesizer - combines Karplus-Strong with filtered oscillators for a versatile, neutral pluck perfect for melodies and arpeggios",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/plucks/pluck.wav"
     }
+  ],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "duration_seconds": 1.2,
+      "sample_rate": 44100,
+      "layers": [
+        {
+          "synthesis": {
+            "type": "karplus_strong",
+            "frequency": 440.0,
+            "decay": 0.9965,
+            "blend": 0.45
+          },
+          "envelope": {
+            "attack": 0.0005,
+            "decay": 0.08,
+            "sustain": 0.65,
+            "release": 0.35
+          },
+          "volume": 0.72,
+          "pan": 0.0,
+          "filter": {
+            "type": "lowpass",
+            "cutoff": 4800.0,
+            "resonance": 0.35,
+            "cutoff_end": 1800.0
+          }
+        },
+        {
+          "synthesis": {
+            "type": "multi_oscillator",
+            "frequency": 440.0,
+            "oscillators": [
+              {
+                "waveform": "sawtooth",
+                "volume": 1.0
+              }
+            ]
+          },
+          "envelope": {
+            "attack": 0.001,
+            "decay": 0.12,
+            "sustain": 0.5,
+            "release": 0.28
+          },
+          "volume": 0.45,
+          "pan": 0.0,
+          "filter": {
+            "type": "lowpass",
+            "cutoff": 3200.0,
+            "resonance": 0.42,
+            "cutoff_end": 1200.0
+          }
+        },
+        {
+          "synthesis": {
+            "type": "fm_synth",
+            "carrier_freq": 440.0,
+            "modulator_freq": 440,
+            "modulation_index": 1.8
+          },
+          "envelope": {
+            "attack": 0.002,
+            "decay": 0.15,
+            "sustain": 0.35,
+            "release": 0.22
+          },
+          "volume": 0.28,
+          "pan": 0.0,
+          "filter": {
+            "type": "bandpass",
+            "center": 2400.0,
+            "resonance": 0.55,
+            "center_end": 1600.0
+          },
+          "lfo": {
+            "config": {
+              "waveform": "sine",
+              "rate": 6.2,
+              "depth": 0.12
+            },
+            "target": {
+              "target": "filter_cutoff",
+              "amount": 500
+            }
+          }
+        },
+        {
+          "synthesis": {
+            "type": "oscillator",
+            "waveform": "triangle",
+            "frequency": 880.0
+          },
+          "envelope": {
+            "attack": 0.001,
+            "decay": 0.06,
+            "sustain": 0.25,
+            "release": 0.15
+          },
+          "volume": 0.18,
+          "pan": 0.0,
+          "filter": {
+            "type": "highpass",
+            "cutoff": 800.0,
+            "resonance": 0.25
+          }
+        },
+        {
+          "synthesis": {
+            "type": "modal",
+            "frequency": 440.0,
+            "modes": [
+              {
+                "freq_ratio": 1.0,
+                "amplitude": 1.0,
+                "decay_time": 0.5
+              },
+              {
+                "freq_ratio": 2.0,
+                "amplitude": 0.5,
+                "decay_time": 0.3
+              }
+            ],
+            "excitation": "impulse"
+          },
+          "envelope": {
+            "attack": 0.0008,
+            "decay": 0.18,
+            "sustain": 0.4,
+            "release": 0.32
+          },
+          "volume": 0.22,
+          "pan": 0.0,
+          "filter": {
+            "type": "lowpass",
+            "cutoff": 5500.0,
+            "resonance": 0.3,
+            "cutoff_end": 2200.0
+          }
+        }
+      ],
+      "effects": [
+        {
+          "type": "compressor",
+          "threshold_db": -7.0,
+          "ratio": 3.2,
+          "attack_ms": 3.0,
+          "release_ms": 80.0,
+          "makeup_db": 0
+        },
+        {
+          "type": "chorus",
+          "rate": 0.45,
+          "depth": 0.15,
+          "wet": 0.18,
+          "voices": 2
+        },
+        {
+          "type": "reverb",
+          "room_size": 0.28,
+          "damping": 0.55,
+          "wet": 0.12,
+          "width": 0.5
+        }
+      ]
+    }
+  },
+  "style_tags": [
+    "pluck",
+    "synth",
+    "percussive",
+    "staccato"
+  ]
 }

@@ -5,6 +5,7 @@
   "license": "CC0-1.0",
   "seed": 10102,
   "description": "Professional TR-909 kick - punchy transient, tight decay, perfect for house and techno",
+  "style_tags": ["909", "kick", "drum", "house", "techno", "electronic", "punchy"],
   "outputs": [
     {
       "kind": "primary",

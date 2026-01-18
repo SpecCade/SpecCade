@@ -1,103 +1,110 @@
 {
-    "spec_version": 1,
-    "asset_id": "preset_bass_acid",
-    "asset_type": "audio",
-    "license": "CC0-1.0",
-    "seed": 10108,
-    "description": "Acid bass - TB-303 style with high resonance lowpass filter and dramatic envelope sweep for squelchy acid character",
-    "outputs": [
-        {
-            "kind": "primary",
-            "format": "wav",
-            "path": "test-outputs/preset_library_v1/audio/bass/bass_acid.wav"
-        }
-    ],
-    "recipe": {
-        "kind": "audio_v1",
-        "params": {
-            "base_note": "C2",
-            "duration_seconds": 1.0,
-            "sample_rate": 44100,
-            "layers": [
-                {
-                    "synthesis": {
-                        "type": "oscillator",
-                        "waveform": "sawtooth",
-                        "frequency": 65.41
-                    },
-                    "envelope": {
-                        "attack": 0.001,
-                        "decay": 0.18,
-                        "sustain": 0.25,
-                        "release": 0.08
-                    },
-                    "volume": 0.72,
-                    "pan": 0,
-                    "filter": {
-                        "type": "lowpass",
-                        "cutoff": 4500.0,
-                        "resonance": 0.92,
-                        "cutoff_end": 180.0
-                    }
-                },
-                {
-                    "synthesis": {
-                        "type": "oscillator",
-                        "waveform": "square",
-                        "frequency": 65.41
-                    },
-                    "envelope": {
-                        "attack": 0.002,
-                        "decay": 0.22,
-                        "sustain": 0.2,
-                        "release": 0.1
-                    },
-                    "volume": 0.35,
-                    "pan": 0,
-                    "filter": {
-                        "type": "lowpass",
-                        "cutoff": 3800.0,
-                        "resonance": 0.85,
-                        "cutoff_end": 220.0
-                    }
-                },
-                {
-                    "synthesis": {
-                        "type": "oscillator",
-                        "waveform": "sine",
-                        "frequency": 65.41
-                    },
-                    "envelope": {
-                        "attack": 0.005,
-                        "decay": 0.3,
-                        "sustain": 0.6,
-                        "release": 0.15
-                    },
-                    "volume": 0.55,
-                    "pan": 0,
-                    "filter": {
-                        "type": "lowpass",
-                        "cutoff": 200.0,
-                        "resonance": 0.1
-                    }
-                }
-            ],
-            "effects": [
-                {
-                    "type": "waveshaper",
-                    "drive": 2.0,
-                    "wet": 0.5,
-                    "curve": "soft_clip"
-                },
-                {
-                    "type": "compressor",
-                    "threshold_db": -12.0,
-                    "ratio": 4.0,
-                    "attack_ms": 5.0,
-                    "release_ms": 100.0,
-                    "makeup_db": 0
-                }
-            ]
-        }
+  "spec_version": 1,
+  "asset_id": "preset_bass_acid",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 10108,
+  "description": "Acid bass - TB-303 style with high resonance lowpass filter and dramatic envelope sweep for squelchy acid character",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "test-outputs/preset_library_v1/audio/bass/bass_acid.wav"
     }
+  ],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "base_note": "C2",
+      "duration_seconds": 1.0,
+      "sample_rate": 44100,
+      "layers": [
+        {
+          "synthesis": {
+            "type": "oscillator",
+            "waveform": "sawtooth",
+            "frequency": 65.41
+          },
+          "envelope": {
+            "attack": 0.001,
+            "decay": 0.18,
+            "sustain": 0.25,
+            "release": 0.08
+          },
+          "volume": 0.72,
+          "pan": 0,
+          "filter": {
+            "type": "lowpass",
+            "cutoff": 4500.0,
+            "resonance": 0.92,
+            "cutoff_end": 180.0
+          }
+        },
+        {
+          "synthesis": {
+            "type": "oscillator",
+            "waveform": "square",
+            "frequency": 65.41
+          },
+          "envelope": {
+            "attack": 0.002,
+            "decay": 0.22,
+            "sustain": 0.2,
+            "release": 0.1
+          },
+          "volume": 0.35,
+          "pan": 0,
+          "filter": {
+            "type": "lowpass",
+            "cutoff": 3800.0,
+            "resonance": 0.85,
+            "cutoff_end": 220.0
+          }
+        },
+        {
+          "synthesis": {
+            "type": "oscillator",
+            "waveform": "sine",
+            "frequency": 65.41
+          },
+          "envelope": {
+            "attack": 0.005,
+            "decay": 0.3,
+            "sustain": 0.6,
+            "release": 0.15
+          },
+          "volume": 0.55,
+          "pan": 0,
+          "filter": {
+            "type": "lowpass",
+            "cutoff": 200.0,
+            "resonance": 0.1
+          }
+        }
+      ],
+      "effects": [
+        {
+          "type": "waveshaper",
+          "drive": 2.0,
+          "wet": 0.5,
+          "curve": "soft_clip"
+        },
+        {
+          "type": "compressor",
+          "threshold_db": -12.0,
+          "ratio": 4.0,
+          "attack_ms": 5.0,
+          "release_ms": 100.0,
+          "makeup_db": 0
+        }
+      ]
+    }
+  },
+  "style_tags": [
+    "bass",
+    "acid",
+    "303",
+    "squelch",
+    "electronic"
+  ]
 }
