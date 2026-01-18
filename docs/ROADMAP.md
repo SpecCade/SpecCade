@@ -43,7 +43,7 @@ Reference: `docs/rfcs/RFC-0008-llm-native-asset-authoring.md`
   - Reference spec: `docs/rfcs/RFC-0008-appendix-audio-analysis-spec.md`.
 - [x] `LLM-004` Add preset/template retrieval primitives (CLI-time, no runtime IO in Starlark). **Done: 2026-01-18**
   - Deliverable: a way to pick "known good" starting points by tags/keywords (e.g. `style_tags`, curated kit IDs) without copying 200-line presets into every spec.
-- [ ] `LLM-005` Expand `speccade template` beyond textures (audio/music first).
+- [x] `LLM-005` Expand `speccade template` beyond textures (audio/music first). **Done: 2026-01-18** (via LLM-004)
   - Deliverable: `template list/show/copy` works for `audio` and `music` templates in `packs/`.
   - Touch points: `crates/speccade-cli/src/commands/template.rs`, `packs/`.
 - [ ] `LLM-006` Add higher-level Starlark constructors to reduce raw recipe dict authoring.
