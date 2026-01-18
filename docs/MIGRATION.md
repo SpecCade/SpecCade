@@ -56,7 +56,9 @@ the migrator will:
    - a placeholder `license: "UNKNOWN"`
 5. Add `migration_notes` and (when applicable) warnings for manual review
 
-### Important Limitation: Params Mapping Is TODO
+### Important Limitation: Params Mapping Is Not Implemented Yet
+
+Tracking: `docs/ROADMAP.md` → `MIGRATE-001`.
 
 For most asset types, the migrator currently **passes through** the legacy dict contents into `recipe.params` (minus the legacy `name` field). Because SpecCade recipe params are strict (`deny_unknown_fields`), migrated specs are not guaranteed to validate or generate until you translate legacy keys into the canonical recipe schema.
 

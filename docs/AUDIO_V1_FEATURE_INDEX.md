@@ -1,6 +1,6 @@
 # FG Audio V1 Library Expansion — Feature Index
 
-Source: `docs/FUTURE_GENERATORS.md` (Audio/Music Expansion).
+Source: `docs/ROADMAP.md` (Audio).
 
 Guidance: implement in this order unless dependencies force a reorder.
 

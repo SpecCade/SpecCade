@@ -38,4 +38,4 @@ These entries are **design targets** (not yet implemented). Details may change a
 - Tier 1: deterministic-by-contract, golden hashes, stable schemas, strict validation.
 - Tier 2: external-tool backends (e.g., Blender) validated by metrics + pinned toolchain + CI invariants.
 
-For longer-term generator expansion ideas, see `docs/FUTURE_GENERATORS.md`.
+For longer-term generator expansion ideas, see `docs/ROADMAP.md`.

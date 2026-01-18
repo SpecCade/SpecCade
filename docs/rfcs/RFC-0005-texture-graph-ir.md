@@ -127,10 +127,6 @@ Color ops:
 - Existing specs remain valid.
 - Adding `outputs[].source` is backward compatible because it is optional; existing JSON specs will continue to parse.
 
-## Future Work
+## Follow-ups
 
-- More ops (blur, warp, distance, morphology, blend modes, UV transforms, etc.).
-- Better tileability controls per node.
-- Explicit type annotations (if needed for stronger validation).
-- A generic “graph” output kind or richer `source` descriptors (e.g. select a channel, output color type).
-- Bridges: `texture.material_v1` as a node inside graphs, or graphs feeding `texture.packed_v1`.
+All follow-up work is tracked in `docs/ROADMAP.md` under **Textures**.

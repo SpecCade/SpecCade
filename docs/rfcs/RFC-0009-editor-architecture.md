@@ -175,42 +175,9 @@ Preview generation may use approximations for speed. The editor must clearly ind
 
 A "Verify Determinism" button generates full-quality output and compares against preview.
 
-## Implementation Phases
+## Tracking
 
-### Phase 1: Core Shell
-- Tauri application scaffolding
-- Monaco editor with Starlark syntax highlighting
-- Basic IPC bridge to Rust backend
-- File open/save/autosave
-
-### Phase 2: Audio Preview
-- Web Audio integration
-- Waveform visualization
-- Real-time parameter adjustment
-- Playback controls
-
-### Phase 3: Texture Preview
-- Canvas-based texture rendering
-- Tiling preview
-- Zoom/pan controls
-- Channel isolation (R/G/B/A)
-
-### Phase 4: Mesh Preview
-- Three.js viewport
-- Camera controls (orbit, pan, zoom)
-- Wireframe/solid/textured modes
-- Animation playback for rigged meshes
-
-### Phase 5: LLM Integration
-- Chat panel
-- Describe-to-generate workflow
-- Refinement workflow
-- Configurable LLM backend (local/API)
-
-### Phase 6: IDE Extensions
-- VSCode extension
-- Cursor extension
-- Shared preview webview component
+All implementation work and open questions for this RFC are tracked in `docs/ROADMAP.md` under **Editor / Real-Time Preview (RFC-0009)**.
 
 ## Alternatives Considered
 
@@ -240,12 +207,6 @@ A "Verify Determinism" button generates full-quality output and compares against
 - LLM integration uses user-provided API keys (not stored)
 - Preview generation runs in separate process with resource limits
 - No network access except explicit LLM API calls
-
-## Open Questions
-
-1. Should preview backends support GPU acceleration (WebGPU)?
-2. How to handle very large meshes in preview (LOD streaming)?
-3. Should the editor support collaborative editing in v2?
 
 ## References
 

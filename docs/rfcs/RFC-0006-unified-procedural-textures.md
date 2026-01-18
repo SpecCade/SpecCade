@@ -279,8 +279,6 @@ Cons:
 
 - still leaves the user with multiple mental models and recipe choices
 
-## 12. Future Work
+## 12. Follow-ups
 
-- Add more ops (blur/warp/morphology/blend modes/UV transforms).
-- Add graph libraries/templates (reusable subgraphs) without introducing new recipe kinds.
-- Optional “component extract” / “swizzle” ops if we need richer packing workflows beyond grayscale-to-RGBA.
+All follow-up work is tracked in `docs/ROADMAP.md` under **Textures**.

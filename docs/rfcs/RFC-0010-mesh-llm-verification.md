@@ -309,27 +309,9 @@ Please modify the spec to:
 2. Adjust arm_length parameter to 0.95 (from 1.0)
 ```
 
-## Implementation
+## Tracking
 
-### Phase 1: Geometric Metrics
-- Implement metric computation in Rust
-- Add constraint DSL to Starlark stdlib
-- Produce JSON metric reports
-
-### Phase 2: Constraint Validation
-- Constraint evaluation engine
-- Actionable failure messages
-- Integration with existing validation system
-
-### Phase 3: VLM Integration
-- Multi-view render pipeline
-- VLM API abstraction (Claude, GPT-4V, local models)
-- Structured prompt templates
-
-### Phase 4: Report Aggregation
-- Combined report format
-- Suggested action generation
-- Integration with editor (RFC-0009)
+All implementation work and open questions for this RFC are tracked in `docs/ROADMAP.md` under **Mesh/Character Verification Loop (RFC-0010)**.
 
 ## Alternatives Considered
 
@@ -357,12 +339,6 @@ Please modify the spec to:
 - Rendered images processed locally before upload
 - No mesh data sent to external services (only renders)
 - Rate limiting on verification requests
-
-## Open Questions
-
-1. What is acceptable VLM latency for interactive use?
-2. Should verification cache results for identical specs?
-3. How to handle VLM hallucinations in quality assessment?
 
 ## References
 

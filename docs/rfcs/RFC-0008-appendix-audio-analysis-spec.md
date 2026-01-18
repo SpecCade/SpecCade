@@ -385,31 +385,9 @@ Metrics should match within tolerance across platforms:
 
 ---
 
-## Future Extensions
+## Follow-ups
 
-### Phase 2: Embedding Export
-
-```bash
-speccade analyze --input kick.wav --embed --model clap-base
-```
-
-Output includes 512-dim embedding vector for similarity search.
-
-### Phase 3: Batch Analysis
-
-```bash
-speccade analyze --input-dir ./sounds/ --output-csv metrics.csv
-```
-
-Analyze entire directory, output as CSV for visualization/clustering.
-
-### Phase 4: Real-Time Analysis
-
-```bash
-speccade analyze --stream --port 8080
-```
-
-WebSocket server for real-time analysis during iterative generation.
+All future extensions to `speccade analyze` (embeddings, batch analysis, streaming) are tracked in `docs/ROADMAP.md` under **LLM-Native Authoring (RFC-0008)**.
 
 ---
 

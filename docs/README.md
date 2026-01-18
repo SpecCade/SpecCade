@@ -3,12 +3,13 @@
 ## Start Here
 
 - `README.md` (repo overview + how to run)
+- `ROADMAP.md` (single source of truth for planned work + open questions)
 - `SPEC_REFERENCE.md` (index of canonical spec docs under `docs/spec-reference/`)
 - `starlark-authoring.md` (authoring `.star` specs)
 - `stdlib-reference.md` (Starlark stdlib index)
 - `budgets.md` (budget profiles and how to use `--budget`)
 - `DETERMINISM.md` (determinism model and expectations)
-- `LLM_PROMPT_TO_ASSET_ROADMAP.md` (forward-looking: prompt→spec→asset workflows and tooling gaps)
+- `rfcs/` (design proposals and rationale; action items live in `ROADMAP.md`)
 
 ## LLM/Tool-Friendly Notes
 

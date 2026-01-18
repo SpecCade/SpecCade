@@ -1,4 +1,8 @@
-# LLM Prompt-to-Asset Roadmap (SpecCade)
+# LLM Prompt-to-Asset Roadmap (Deprecated)
+
+Deprecated: consolidated into `docs/ROADMAP.md` (action items) and `docs/rfcs/RFC-0008-llm-native-asset-authoring.md` (design rationale).
+
+<!--
 
 This document captures actionable, forward-looking work to make SpecCade easier to drive from an LLM/tooling loop: **prompt → spec → validate → generate → analyze → revise**.
 
@@ -170,3 +174,4 @@ Not quite. These changes remove most of the *mechanical/tooling* friction, but s
 - Capability gaps: if a backend/recipe cannot express a desired look/sound, no amount of prompting fixes that; it becomes a generator/stdlib expansion task.
 
 Treat “LLM readiness” as: (1) validity, (2) iteration speed, (3) measurable quality convergence, (4) curated art direction defaults.
+-->

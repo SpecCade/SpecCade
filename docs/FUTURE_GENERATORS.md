@@ -1,6 +1,10 @@
-# Future Generators + Production-Readiness Ideas
+# Future Generators + Production-Readiness Ideas (Deprecated)
 
-This is a forward-looking brainstorm document (not a spec contract).
+Deprecated: consolidated into `docs/ROADMAP.md` (see **Textures**, **New Asset Types**, **Mesh/Animation Feature Expansion**, **Audio**, **Tooling / QA**). This file is retained only as an archive.
+
+<!--
+
+This file used to be a forward-looking brainstorm document (not a spec contract).
 
 Legend (informal triage tags used below):
 
@@ -213,3 +217,4 @@ From `analyze_presets.py` run on 2026-01-15:
 - `[G]` Plugin API: external generators as WASM or subprocess backends with strict I/O contracts + determinism reporting
 - `[G]` “Bridge specs”: mesh → sprites, materials → packed textures, etc., without bespoke glue code
 - `[G]` Constraint solvers + property-based fuzzing for spec validation and generator robustness
+-->

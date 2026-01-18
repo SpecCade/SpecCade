@@ -159,12 +159,9 @@ This RFC assumes RFC-0006’s hard break is accepted:
 - All texture templates must use `texture.procedural_v1`.
 - Old recipe kinds are not used in templates.
 
-## 9. Implementation Plan (Repository Work)
+## 9. Tracking
 
-- Add the template specs under the chosen `packs/` layout.
-- Add documentation pointing users to the template library.
-- (Optional) Implement the CLI `template` subcommands for discoverability.
-- Add golden hash coverage for representative templates.
+All implementation follow-ups are tracked in `docs/ROADMAP.md` under **Textures** and **Tooling / QA**.
 
 ## 10. Alternatives Considered
 
@@ -175,8 +172,3 @@ Rejected: it reintroduces user confusion and duplicates validation/dispatch logi
 ### 10.2 Add spec-level templating/parameterization
 
 Deferred: a parameter system can be valuable, but it adds complexity and deserves its own RFC once we have real needs.
-
-## 11. Future Work
-
-- A lightweight parameterization system for templates (CLI-time only) if needed.
-- “Graph modules” (importable node bundles) as a separate RFC if we want composable libraries without copy/paste.

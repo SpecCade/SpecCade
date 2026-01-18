@@ -147,7 +147,7 @@ Update docs to remove “not implemented” notes:
 
 - `speccade/docs/rfcs/RFC-0002-channel-packing.md`
 - `speccade/docs/spec-reference/texture.md`
-- `speccade/docs/TODOS.md` (remove the packed-texture TODOs once done)
+- `speccade/docs/ROADMAP.md` (single SSOT for planned work; remove the packed-texture TODOs once done)
 
 ### 6) Status Update
 

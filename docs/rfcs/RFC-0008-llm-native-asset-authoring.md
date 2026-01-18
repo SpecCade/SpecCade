@@ -647,42 +647,9 @@ speccade generate --spec song.star --cache ./cache --incremental
 
 ---
 
-## Implementation Roadmap
+## Tracking
 
-### Phase 1: Foundation (Immediate)
-
-| Item | Effort | Impact |
-|------|--------|--------|
-| S6-A: Consolidated LLM Reference | 4h | High |
-| S7-A/B: Preview + Layer Isolation | 2d | High |
-| S1-A: Preset Inheritance | 3d | High |
-| S5-A: Generated Schema | 2d | Medium |
-
-### Phase 2: Feedback Loop (Short-term)
-
-| Item | Effort | Impact |
-|------|--------|--------|
-| S2-A: Audio Analysis Backend | 5d | Critical |
-| S3-A: Text Embedding Search | 3d | High |
-| S1-B: Semantic Macros (core set) | 5d | High |
-
-### Phase 3: Composition (Medium-term)
-
-| Item | Effort | Impact |
-|------|--------|--------|
-| S4-A: Genre-Aware Patterns | 7d | High |
-| S4-B: MIDI Abstraction | 4d | Medium |
-| S2-C: Perceptual Embeddings | 4d | Medium |
-
-### Phase 4: Production (Long-term)
-
-| Item | Effort | Impact |
-|------|--------|--------|
-| S3-B: Audio-Text Multimodal Index | 5d | High |
-| S6-C: MCP Reference Server | 3d | Medium |
-| S7-C: Cached Incremental Generation | 5d | Medium |
-
----
+All actionable work items and open questions for this RFC are tracked in `docs/ROADMAP.md` under **LLM-Native Authoring (RFC-0008)**.
 
 ## Success Metrics
 
