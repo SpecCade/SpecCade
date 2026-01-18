@@ -54,7 +54,8 @@ Reference: `docs/rfcs/RFC-0008-llm-native-asset-authoring.md`
   - Implemented: `generate --preview <duration_seconds>` for fast audio preview generation.
 - [x] `LLM-009` Extend `speccade analyze` with embedding export for similarity search (explicit opt-in). **Done: 2026-01-18**
   - Implemented: `--embeddings` flag outputs 48-dimension deterministic feature vectors for audio and texture files.
-- [ ] `LLM-010` Add batch analysis modes (`--input-dir`, CSV/JSONL outputs) for clustering/auditing.
+- [x] `LLM-010` Add batch analysis modes (`--input-dir`, CSV/JSONL outputs) for clustering/auditing. **Done: 2026-01-18**
+  - Implemented: `--input-dir` recursively scans for .wav/.png; `--output-format json|jsonl|csv` with summary statistics.
 - [ ] `LLM-011` Add a real-time analysis mode (e.g. WebSocket server) for editor/iterative workflows.
 
 ---

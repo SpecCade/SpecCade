@@ -542,6 +542,99 @@ impl AnalyzeOutput {
     }
 }
 
+/// Result for a single file in batch mode (either success or error).
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BatchAnalyzeItem {
+    /// Input file path
+    pub input: String,
+    /// Whether analysis succeeded
+    pub success: bool,
+    /// Asset type analyzed (if successful)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub asset_type: Option<String>,
+    /// BLAKE3 hash of the input file (if successful)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub input_hash: Option<String>,
+    /// Extracted metrics (if successful)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub metrics: Option<std::collections::BTreeMap<String, serde_json::Value>>,
+    /// Fixed-dimension feature embedding (if requested and successful)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub embedding: Option<Vec<f64>>,
+    /// Error information (if failed)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub error: Option<JsonError>,
+}
+
+impl BatchAnalyzeItem {
+    /// Creates a successful batch item from an AnalyzeResult.
+    pub fn success(result: AnalyzeResult) -> Self {
+        Self {
+            input: result.input,
+            success: true,
+            asset_type: Some(result.asset_type),
+            input_hash: Some(result.input_hash),
+            metrics: Some(result.metrics),
+            embedding: result.embedding,
+            error: None,
+        }
+    }
+
+    /// Creates a failed batch item.
+    pub fn failure(input: String, error: JsonError) -> Self {
+        Self {
+            input,
+            success: false,
+            asset_type: None,
+            input_hash: None,
+            metrics: None,
+            embedding: None,
+            error: Some(error),
+        }
+    }
+}
+
+/// Summary statistics for batch analysis.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BatchAnalyzeSummary {
+    /// Total number of files processed
+    pub total: usize,
+    /// Number of successfully analyzed files
+    pub succeeded: usize,
+    /// Number of failed files
+    pub failed: usize,
+}
+
+/// JSON output for batch analyze command.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BatchAnalyzeOutput {
+    /// Whether the overall batch operation completed (always true unless catastrophic failure)
+    pub success: bool,
+    /// Individual file results
+    pub results: Vec<BatchAnalyzeItem>,
+    /// Summary statistics
+    pub summary: BatchAnalyzeSummary,
+}
+
+impl BatchAnalyzeOutput {
+    /// Creates a new batch output from results.
+    pub fn new(results: Vec<BatchAnalyzeItem>) -> Self {
+        let total = results.len();
+        let succeeded = results.iter().filter(|r| r.success).count();
+        let failed = total - succeeded;
+
+        Self {
+            success: true,
+            results,
+            summary: BatchAnalyzeSummary {
+                total,
+                succeeded,
+                failed,
+            },
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

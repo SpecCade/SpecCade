@@ -1,6 +1,7 @@
 //! CLI command implementations
 
 pub mod analyze;
+mod analyze_csv;
 pub mod cache;
 pub mod doctor;
 pub mod eval;

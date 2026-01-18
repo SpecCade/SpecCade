@@ -32,6 +32,10 @@ enum Commands {
         #[arg(short, long)]
         spec: Option<String>,
 
+        /// Directory to recursively scan for .wav and .png files (batch mode)
+        #[arg(long)]
+        input_dir: Option<String>,
+
         /// Output file path (default: stdout)
         #[arg(short, long)]
         output: Option<String>,
@@ -39,6 +43,10 @@ enum Commands {
         /// Output machine-readable JSON diagnostics (no colored output)
         #[arg(long)]
         json: bool,
+
+        /// Output format for batch mode (json, jsonl, csv)
+        #[arg(long, default_value = "json", value_parser = ["json", "jsonl", "csv"])]
+        output_format: String,
 
         /// Include fixed-dimension feature embedding for similarity search
         #[arg(long)]
@@ -271,14 +279,18 @@ fn main() -> ExitCode {
         Commands::Analyze {
             input,
             spec,
+            input_dir,
             output,
             json,
+            output_format,
             embeddings,
         } => commands::analyze::run(
             input.as_deref(),
             spec.as_deref(),
+            input_dir.as_deref(),
             output.as_deref(),
             json,
+            &output_format,
             embeddings,
         ),
         Commands::Eval { spec, pretty, json } => commands::eval::run(&spec, pretty, json),
@@ -896,14 +908,18 @@ mod tests {
             Commands::Analyze {
                 input,
                 spec,
+                input_dir,
                 output,
                 json,
+                output_format,
                 embeddings,
             } => {
                 assert_eq!(input.as_deref(), Some("sound.wav"));
                 assert!(spec.is_none());
+                assert!(input_dir.is_none());
                 assert!(output.is_none());
                 assert!(!json);
+                assert_eq!(output_format, "json");
                 assert!(!embeddings);
             }
             _ => panic!("expected analyze command"),
@@ -925,14 +941,18 @@ mod tests {
             Commands::Analyze {
                 input,
                 spec,
+                input_dir,
                 output,
                 json,
+                output_format,
                 embeddings,
             } => {
                 assert_eq!(input.as_deref(), Some("sound.wav"));
                 assert!(spec.is_none());
+                assert!(input_dir.is_none());
                 assert_eq!(output.as_deref(), Some("metrics.json"));
                 assert!(!json);
+                assert_eq!(output_format, "json");
                 assert!(!embeddings);
             }
             _ => panic!("expected analyze command"),
@@ -947,14 +967,18 @@ mod tests {
             Commands::Analyze {
                 input,
                 spec,
+                input_dir,
                 output,
                 json,
+                output_format,
                 embeddings,
             } => {
                 assert_eq!(input.as_deref(), Some("sound.wav"));
                 assert!(spec.is_none());
+                assert!(input_dir.is_none());
                 assert!(output.is_none());
                 assert!(json);
+                assert_eq!(output_format, "json");
                 assert!(!embeddings);
             }
             _ => panic!("expected analyze command"),
@@ -976,14 +1000,85 @@ mod tests {
             Commands::Analyze {
                 input,
                 spec,
+                input_dir,
                 output,
                 json,
+                output_format,
                 embeddings,
             } => {
                 assert_eq!(input.as_deref(), Some("sound.wav"));
                 assert!(spec.is_none());
+                assert!(input_dir.is_none());
                 assert!(output.is_none());
                 assert!(json);
+                assert_eq!(output_format, "json");
+                assert!(embeddings);
+            }
+            _ => panic!("expected analyze command"),
+        }
+    }
+
+    #[test]
+    fn test_cli_parses_analyze_with_input_dir() {
+        let cli = Cli::try_parse_from([
+            "speccade",
+            "analyze",
+            "--input-dir",
+            "./assets",
+            "--output-format",
+            "jsonl",
+        ])
+        .unwrap();
+        match cli.command {
+            Commands::Analyze {
+                input,
+                spec,
+                input_dir,
+                output,
+                json,
+                output_format,
+                embeddings,
+            } => {
+                assert!(input.is_none());
+                assert!(spec.is_none());
+                assert_eq!(input_dir.as_deref(), Some("./assets"));
+                assert!(output.is_none());
+                assert!(!json);
+                assert_eq!(output_format, "jsonl");
+                assert!(!embeddings);
+            }
+            _ => panic!("expected analyze command"),
+        }
+    }
+
+    #[test]
+    fn test_cli_parses_analyze_with_csv_format() {
+        let cli = Cli::try_parse_from([
+            "speccade",
+            "analyze",
+            "--input-dir",
+            "./test",
+            "--output-format",
+            "csv",
+            "--embeddings",
+        ])
+        .unwrap();
+        match cli.command {
+            Commands::Analyze {
+                input,
+                spec,
+                input_dir,
+                output,
+                json,
+                output_format,
+                embeddings,
+            } => {
+                assert!(input.is_none());
+                assert!(spec.is_none());
+                assert_eq!(input_dir.as_deref(), Some("./test"));
+                assert!(output.is_none());
+                assert!(!json);
+                assert_eq!(output_format, "csv");
                 assert!(embeddings);
             }
             _ => panic!("expected analyze command"),
