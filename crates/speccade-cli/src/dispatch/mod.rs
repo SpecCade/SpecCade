@@ -6,6 +6,7 @@ mod audio;
 mod blender;
 mod music;
 mod texture;
+mod waveform;
 
 use speccade_spec::{BackendError, OutputKind, OutputResult, Spec};
 use std::fmt;

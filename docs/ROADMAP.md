@@ -64,11 +64,13 @@ Reference: `docs/rfcs/RFC-0009-editor-architecture.md`
 
 - [ ] `EDITOR-001` Decide "editor" delivery shape (Tauri app vs VSCode extension vs both).
   - Deliverable: a committed decision + minimal repo layout plan (new crate? new top-level directory?).
-- [ ] `EDITOR-002` Implement CLI-side preview artifacts (useful even without a full editor).
+- [x] `EDITOR-002` Implement CLI-side preview artifacts (useful even without a full editor). **Done: 2026-01-18**
   - Deliverable: standardized preview outputs (audio waveform/spectrogram PNG; texture thumbnails) emitted by `generate` and recorded in reports.
   - Touch points: `crates/speccade-cli`, `crates/speccade-spec` report structures.
-- [ ] `EDITOR-003` Add fast "preview mode" generation knobs.
+  - Implemented: audio waveform PNG (1024x256) generated alongside WAV output and recorded in reports with `kind: "preview"`.
+- [x] `EDITOR-003` Add fast "preview mode" generation knobs. **Done: 2026-01-18** (via LLM-007)
   - Deliverable: deterministic downscaled/shortened preview generation flags (e.g. audio first N ms; texture 256x256), clearly labeled as preview.
+  - Implemented: `generate --preview <duration_seconds>` for audio preview; texture/mesh knobs deferred.
 
 Open questions (track decisions here, not in the RFC):
 - [ ] `EDITOR-Q001` GPU acceleration for preview (WebGPU) vs WebGL2-only.

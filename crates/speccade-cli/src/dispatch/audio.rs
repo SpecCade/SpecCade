@@ -1,6 +1,8 @@
 //! Audio backend dispatch handler
 
+use super::waveform::{generate_waveform_png, preview_path_from_primary};
 use super::{get_primary_output, write_output_bytes, DispatchError};
+use speccade_backend_audio::wav::extract_pcm_data;
 use speccade_spec::{OutputFormat, OutputKind, OutputResult, Spec};
 use std::path::{Path, PathBuf};
 
@@ -28,17 +30,37 @@ pub(super) fn generate_audio(
     }
     write_output_bytes(out_root, &primary_output.path, &result.wav.wav_data)?;
 
-    let mut output = OutputResult::tier1(
+    let mut outputs = Vec::new();
+
+    // Primary WAV output
+    let mut wav_output = OutputResult::tier1(
         OutputKind::Primary,
         OutputFormat::Wav,
         PathBuf::from(&primary_output.path),
-        result.wav.pcm_hash,
+        result.wav.pcm_hash.clone(),
     );
 
     // Mark as preview if generated with preview duration
     if preview_duration.is_some() {
-        output.preview = Some(true);
+        wav_output.preview = Some(true);
+    }
+    outputs.push(wav_output);
+
+    // Generate waveform preview PNG
+    if let Some(pcm_data) = extract_pcm_data(&result.wav.wav_data) {
+        let waveform = generate_waveform_png(pcm_data, result.wav.is_stereo);
+        let preview_path = preview_path_from_primary(&primary_output.path);
+
+        write_output_bytes(out_root, &preview_path, &waveform.png_data)?;
+
+        let preview_output = OutputResult::tier1(
+            OutputKind::Preview,
+            OutputFormat::Png,
+            PathBuf::from(&preview_path),
+            waveform.hash,
+        );
+        outputs.push(preview_output);
     }
 
-    Ok(vec![output])
+    Ok(outputs)
 }
