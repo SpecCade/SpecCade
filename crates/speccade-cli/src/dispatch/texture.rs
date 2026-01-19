@@ -5,6 +5,329 @@ use speccade_spec::{OutputFormat, OutputKind, OutputResult, Spec, StageTiming};
 use std::path::{Path, PathBuf};
 use std::time::Instant;
 
+/// Generate spritesheet atlas outputs using the texture backend.
+pub(super) fn generate_sprite_sheet(
+    spec: &Spec,
+    out_root: &Path,
+) -> Result<Vec<OutputResult>, DispatchError> {
+    let recipe = spec.recipe.as_ref().ok_or(DispatchError::NoRecipe)?;
+    let params = recipe.as_sprite_sheet().map_err(|e| {
+        DispatchError::BackendError(format!("Invalid sprite sheet params: {}", e))
+    })?;
+
+    let result = speccade_backend_texture::generate_sprite_sheet(&params, spec.seed).map_err(|e| {
+        DispatchError::BackendError(format!("Sprite sheet generation failed: {}", e))
+    })?;
+
+    let mut outputs = Vec::new();
+
+    // Find primary output for the atlas PNG
+    let primary_outputs: Vec<(usize, &speccade_spec::OutputSpec)> = spec
+        .outputs
+        .iter()
+        .enumerate()
+        .filter(|(_, o)| o.kind == OutputKind::Primary)
+        .collect();
+
+    if primary_outputs.is_empty() {
+        return Err(DispatchError::BackendError(
+            "sprite.sheet_v1 requires at least one output of kind 'primary'".to_string(),
+        ));
+    }
+
+    for (output_index, output_spec) in &primary_outputs {
+        if output_spec.format != OutputFormat::Png {
+            return Err(DispatchError::BackendError(format!(
+                "sprite.sheet_v1 primary outputs must have format 'png' (outputs[{}].format)",
+                output_index
+            )));
+        }
+
+        write_output_bytes(out_root, &output_spec.path, &result.png_data)?;
+
+        outputs.push(OutputResult::tier1(
+            output_spec.kind,
+            OutputFormat::Png,
+            PathBuf::from(&output_spec.path),
+            result.hash.clone(),
+        ));
+    }
+
+    // Find metadata output (JSON sidecar)
+    let metadata_outputs: Vec<(usize, &speccade_spec::OutputSpec)> = spec
+        .outputs
+        .iter()
+        .enumerate()
+        .filter(|(_, o)| o.kind == OutputKind::Metadata)
+        .collect();
+
+    for (output_index, output_spec) in &metadata_outputs {
+        if output_spec.format != OutputFormat::Json {
+            return Err(DispatchError::BackendError(format!(
+                "sprite.sheet_v1 metadata outputs must have format 'json' (outputs[{}].format)",
+                output_index
+            )));
+        }
+
+        let metadata_json = serde_json::to_string_pretty(&result.metadata).map_err(|e| {
+            DispatchError::BackendError(format!("Failed to serialize metadata: {}", e))
+        })?;
+
+        write_output_bytes(out_root, &output_spec.path, metadata_json.as_bytes())?;
+
+        // Calculate hash of the JSON metadata
+        let metadata_hash = blake3::hash(metadata_json.as_bytes()).to_hex().to_string();
+
+        outputs.push(OutputResult::tier1(
+            output_spec.kind,
+            OutputFormat::Json,
+            PathBuf::from(&output_spec.path),
+            metadata_hash,
+        ));
+    }
+
+    Ok(outputs)
+}
+
+/// Generate spritesheet atlas outputs with profiling instrumentation.
+pub(super) fn generate_sprite_sheet_profiled(
+    spec: &Spec,
+    out_root: &Path,
+) -> Result<DispatchResult, DispatchError> {
+    let mut stages = Vec::new();
+
+    // Stage: parse_params
+    let parse_start = Instant::now();
+    let recipe = spec.recipe.as_ref().ok_or(DispatchError::NoRecipe)?;
+    let params = recipe.as_sprite_sheet().map_err(|e| {
+        DispatchError::BackendError(format!("Invalid sprite sheet params: {}", e))
+    })?;
+    stages.push(StageTiming::new(
+        "parse_params",
+        parse_start.elapsed().as_millis() as u64,
+    ));
+
+    // Stage: pack_and_render
+    let render_start = Instant::now();
+    let result = speccade_backend_texture::generate_sprite_sheet(&params, spec.seed).map_err(|e| {
+        DispatchError::BackendError(format!("Sprite sheet generation failed: {}", e))
+    })?;
+    stages.push(StageTiming::new(
+        "pack_and_render",
+        render_start.elapsed().as_millis() as u64,
+    ));
+
+    // Stage: write_outputs
+    let write_start = Instant::now();
+    let mut outputs = Vec::new();
+
+    // Find primary output for the atlas PNG
+    let primary_outputs: Vec<(usize, &speccade_spec::OutputSpec)> = spec
+        .outputs
+        .iter()
+        .enumerate()
+        .filter(|(_, o)| o.kind == OutputKind::Primary)
+        .collect();
+
+    if primary_outputs.is_empty() {
+        return Err(DispatchError::BackendError(
+            "sprite.sheet_v1 requires at least one output of kind 'primary'".to_string(),
+        ));
+    }
+
+    for (output_index, output_spec) in &primary_outputs {
+        if output_spec.format != OutputFormat::Png {
+            return Err(DispatchError::BackendError(format!(
+                "sprite.sheet_v1 primary outputs must have format 'png' (outputs[{}].format)",
+                output_index
+            )));
+        }
+
+        write_output_bytes(out_root, &output_spec.path, &result.png_data)?;
+
+        outputs.push(OutputResult::tier1(
+            output_spec.kind,
+            OutputFormat::Png,
+            PathBuf::from(&output_spec.path),
+            result.hash.clone(),
+        ));
+    }
+
+    // Find metadata output (JSON sidecar)
+    let metadata_outputs: Vec<(usize, &speccade_spec::OutputSpec)> = spec
+        .outputs
+        .iter()
+        .enumerate()
+        .filter(|(_, o)| o.kind == OutputKind::Metadata)
+        .collect();
+
+    for (output_index, output_spec) in &metadata_outputs {
+        if output_spec.format != OutputFormat::Json {
+            return Err(DispatchError::BackendError(format!(
+                "sprite.sheet_v1 metadata outputs must have format 'json' (outputs[{}].format)",
+                output_index
+            )));
+        }
+
+        let metadata_json = serde_json::to_string_pretty(&result.metadata).map_err(|e| {
+            DispatchError::BackendError(format!("Failed to serialize metadata: {}", e))
+        })?;
+
+        write_output_bytes(out_root, &output_spec.path, metadata_json.as_bytes())?;
+
+        // Calculate hash of the JSON metadata
+        let metadata_hash = blake3::hash(metadata_json.as_bytes()).to_hex().to_string();
+
+        outputs.push(OutputResult::tier1(
+            output_spec.kind,
+            OutputFormat::Json,
+            PathBuf::from(&output_spec.path),
+            metadata_hash,
+        ));
+    }
+
+    stages.push(StageTiming::new(
+        "write_outputs",
+        write_start.elapsed().as_millis() as u64,
+    ));
+
+    Ok(DispatchResult::with_stages(outputs, stages))
+}
+
+/// Generate sprite animation metadata.
+pub(super) fn generate_sprite_animation(
+    spec: &Spec,
+    out_root: &Path,
+) -> Result<Vec<OutputResult>, DispatchError> {
+    let recipe = spec.recipe.as_ref().ok_or(DispatchError::NoRecipe)?;
+    let params = recipe.as_sprite_animation().map_err(|e| {
+        DispatchError::BackendError(format!("Invalid sprite animation params: {}", e))
+    })?;
+
+    // Generate metadata
+    let metadata = params.to_metadata();
+
+    let mut outputs = Vec::new();
+
+    // Find primary output for the animation JSON
+    let primary_outputs: Vec<(usize, &speccade_spec::OutputSpec)> = spec
+        .outputs
+        .iter()
+        .enumerate()
+        .filter(|(_, o)| o.kind == OutputKind::Primary)
+        .collect();
+
+    if primary_outputs.is_empty() {
+        return Err(DispatchError::BackendError(
+            "sprite.animation_v1 requires at least one output of kind 'primary'".to_string(),
+        ));
+    }
+
+    for (output_index, output_spec) in &primary_outputs {
+        if output_spec.format != OutputFormat::Json {
+            return Err(DispatchError::BackendError(format!(
+                "sprite.animation_v1 primary outputs must have format 'json' (outputs[{}].format)",
+                output_index
+            )));
+        }
+
+        let metadata_json = serde_json::to_string_pretty(&metadata).map_err(|e| {
+            DispatchError::BackendError(format!("Failed to serialize animation metadata: {}", e))
+        })?;
+
+        write_output_bytes(out_root, &output_spec.path, metadata_json.as_bytes())?;
+
+        // Calculate hash of the JSON metadata
+        let metadata_hash = blake3::hash(metadata_json.as_bytes()).to_hex().to_string();
+
+        outputs.push(OutputResult::tier1(
+            output_spec.kind,
+            OutputFormat::Json,
+            PathBuf::from(&output_spec.path),
+            metadata_hash,
+        ));
+    }
+
+    Ok(outputs)
+}
+
+/// Generate sprite animation metadata with profiling instrumentation.
+pub(super) fn generate_sprite_animation_profiled(
+    spec: &Spec,
+    out_root: &Path,
+) -> Result<DispatchResult, DispatchError> {
+    let mut stages = Vec::new();
+
+    // Stage: parse_params
+    let parse_start = Instant::now();
+    let recipe = spec.recipe.as_ref().ok_or(DispatchError::NoRecipe)?;
+    let params = recipe.as_sprite_animation().map_err(|e| {
+        DispatchError::BackendError(format!("Invalid sprite animation params: {}", e))
+    })?;
+    stages.push(StageTiming::new(
+        "parse_params",
+        parse_start.elapsed().as_millis() as u64,
+    ));
+
+    // Stage: generate_metadata
+    let gen_start = Instant::now();
+    let metadata = params.to_metadata();
+    stages.push(StageTiming::new(
+        "generate_metadata",
+        gen_start.elapsed().as_millis() as u64,
+    ));
+
+    // Stage: write_outputs
+    let write_start = Instant::now();
+    let mut outputs = Vec::new();
+
+    // Find primary output for the animation JSON
+    let primary_outputs: Vec<(usize, &speccade_spec::OutputSpec)> = spec
+        .outputs
+        .iter()
+        .enumerate()
+        .filter(|(_, o)| o.kind == OutputKind::Primary)
+        .collect();
+
+    if primary_outputs.is_empty() {
+        return Err(DispatchError::BackendError(
+            "sprite.animation_v1 requires at least one output of kind 'primary'".to_string(),
+        ));
+    }
+
+    for (output_index, output_spec) in &primary_outputs {
+        if output_spec.format != OutputFormat::Json {
+            return Err(DispatchError::BackendError(format!(
+                "sprite.animation_v1 primary outputs must have format 'json' (outputs[{}].format)",
+                output_index
+            )));
+        }
+
+        let metadata_json = serde_json::to_string_pretty(&metadata).map_err(|e| {
+            DispatchError::BackendError(format!("Failed to serialize animation metadata: {}", e))
+        })?;
+
+        write_output_bytes(out_root, &output_spec.path, metadata_json.as_bytes())?;
+
+        // Calculate hash of the JSON metadata
+        let metadata_hash = blake3::hash(metadata_json.as_bytes()).to_hex().to_string();
+
+        outputs.push(OutputResult::tier1(
+            output_spec.kind,
+            OutputFormat::Json,
+            PathBuf::from(&output_spec.path),
+            metadata_hash,
+        ));
+    }
+
+    stages.push(StageTiming::new(
+        "write_outputs",
+        write_start.elapsed().as_millis() as u64,
+    ));
+
+    Ok(DispatchResult::with_stages(outputs, stages))
+}
+
 /// Generate trimsheet atlas outputs using the texture backend.
 pub(super) fn generate_texture_trimsheet(
     spec: &Spec,

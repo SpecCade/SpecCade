@@ -75,6 +75,7 @@ pub mod png;
 pub mod rng;
 pub mod shared;
 pub mod splat_set;
+pub mod sprite;
 pub mod trimsheet;
 
 // Re-export main types for convenience
@@ -97,6 +98,7 @@ pub use pattern::{
 pub use png::{PngConfig, PngError};
 pub use rng::DeterministicRng;
 pub use splat_set::{generate_splat_set, SplatSetError, SplatSetResult};
+pub use sprite::{generate_sprite_sheet, SpriteSheetError, SpriteSheetResult};
 pub use trimsheet::{generate_trimsheet, TrimsheetError, TrimsheetResult};
 
 #[cfg(test)]

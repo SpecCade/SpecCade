@@ -8,6 +8,7 @@ pub mod audio;
 pub mod character;
 pub mod mesh;
 pub mod music;
+pub mod sprite;
 pub mod texture;
 
 pub use animation::*;
@@ -15,6 +16,7 @@ pub use audio::*;
 pub use character::*;
 pub use mesh::*;
 pub use music::*;
+pub use sprite::*;
 pub use texture::*;
 
 use serde::{Deserialize, Serialize};
@@ -56,6 +58,12 @@ pub enum RecipeKind {
     /// `skeletal_animation.blender_rigged_v1` - Skeletal animation with IK rigging support.
     #[serde(rename = "skeletal_animation.blender_rigged_v1")]
     SkeletalAnimationBlenderRiggedV1,
+    /// `sprite.sheet_v1` - Spritesheet/atlas packing with frame metadata.
+    #[serde(rename = "sprite.sheet_v1")]
+    SpriteSheetV1,
+    /// `sprite.animation_v1` - Sprite animation clip definitions.
+    #[serde(rename = "sprite.animation_v1")]
+    SpriteAnimationV1,
 }
 
 impl RecipeKind {
@@ -73,6 +81,8 @@ impl RecipeKind {
             RecipeKind::SkeletalMeshBlenderRiggedMeshV1 => "skeletal_mesh.blender_rigged_mesh_v1",
             RecipeKind::SkeletalAnimationBlenderClipV1 => "skeletal_animation.blender_clip_v1",
             RecipeKind::SkeletalAnimationBlenderRiggedV1 => "skeletal_animation.blender_rigged_v1",
+            RecipeKind::SpriteSheetV1 => "sprite.sheet_v1",
+            RecipeKind::SpriteAnimationV1 => "sprite.animation_v1",
         }
     }
 
@@ -90,6 +100,8 @@ impl RecipeKind {
             RecipeKind::SkeletalMeshBlenderRiggedMeshV1 => "skeletal_mesh",
             RecipeKind::SkeletalAnimationBlenderClipV1 => "skeletal_animation",
             RecipeKind::SkeletalAnimationBlenderRiggedV1 => "skeletal_animation",
+            RecipeKind::SpriteSheetV1 => "sprite",
+            RecipeKind::SpriteAnimationV1 => "sprite",
         }
     }
 
@@ -102,7 +114,9 @@ impl RecipeKind {
             | RecipeKind::TextureProceduralV1
             | RecipeKind::TextureTrimsheetV1
             | RecipeKind::TextureDecalV1
-            | RecipeKind::TextureSplatSetV1 => true,
+            | RecipeKind::TextureSplatSetV1
+            | RecipeKind::SpriteSheetV1
+            | RecipeKind::SpriteAnimationV1 => true,
             RecipeKind::StaticMeshBlenderPrimitivesV1
             | RecipeKind::SkeletalMeshBlenderRiggedMeshV1
             | RecipeKind::SkeletalAnimationBlenderClipV1
@@ -156,6 +170,8 @@ impl Recipe {
             "skeletal_animation.blender_rigged_v1" => {
                 Some(RecipeKind::SkeletalAnimationBlenderRiggedV1)
             }
+            "sprite.sheet_v1" => Some(RecipeKind::SpriteSheetV1),
+            "sprite.animation_v1" => Some(RecipeKind::SpriteAnimationV1),
             _ => None,
         }
     }
@@ -234,6 +250,16 @@ impl Recipe {
     pub fn as_skeletal_animation_blender_rigged(
         &self,
     ) -> Result<SkeletalAnimationBlenderRiggedV1Params, serde_json::Error> {
+        serde_json::from_value(self.params.clone())
+    }
+
+    /// Attempts to parse params as sprite sheet params.
+    pub fn as_sprite_sheet(&self) -> Result<SpriteSheetV1Params, serde_json::Error> {
+        serde_json::from_value(self.params.clone())
+    }
+
+    /// Attempts to parse params as sprite animation params.
+    pub fn as_sprite_animation(&self) -> Result<SpriteAnimationV1Params, serde_json::Error> {
         serde_json::from_value(self.params.clone())
     }
 
@@ -321,6 +347,18 @@ impl Recipe {
                         recipe_kind: self.kind.clone(),
                         error_message: e.to_string(),
                     })?;
+            }
+            "sprite.sheet_v1" => {
+                self.as_sprite_sheet().map_err(|e| RecipeParamsError {
+                    recipe_kind: self.kind.clone(),
+                    error_message: e.to_string(),
+                })?;
+            }
+            "sprite.animation_v1" => {
+                self.as_sprite_animation().map_err(|e| RecipeParamsError {
+                    recipe_kind: self.kind.clone(),
+                    error_message: e.to_string(),
+                })?;
             }
             _ => {
                 // Unknown recipe kind - we don't validate params for unrecognized kinds

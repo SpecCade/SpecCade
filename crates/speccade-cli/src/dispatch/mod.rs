@@ -108,6 +108,12 @@ pub fn dispatch_generate(
         // Splat set texture backend
         "texture.splat_set_v1" => texture::generate_texture_splat_set(spec, out_root_path),
 
+        // Sprite sheet backend
+        "sprite.sheet_v1" => texture::generate_sprite_sheet(spec, out_root_path),
+
+        // Sprite animation backend
+        "sprite.animation_v1" => texture::generate_sprite_animation(spec, out_root_path),
+
         // Blender static mesh backend
         "static_mesh.blender_primitives_v1" => {
             blender::generate_blender_static_mesh(spec, out_root_path)
@@ -247,6 +253,22 @@ pub fn dispatch_generate_profiled(
             }
         }
 
+        "sprite.sheet_v1" => {
+            if profile {
+                texture::generate_sprite_sheet_profiled(spec, out_root_path)
+            } else {
+                texture::generate_sprite_sheet(spec, out_root_path).map(DispatchResult::new)
+            }
+        }
+
+        "sprite.animation_v1" => {
+            if profile {
+                texture::generate_sprite_animation_profiled(spec, out_root_path)
+            } else {
+                texture::generate_sprite_animation(spec, out_root_path).map(DispatchResult::new)
+            }
+        }
+
         // Blender backends (no profiling instrumentation yet)
         "static_mesh.blender_primitives_v1" => {
             blender::generate_blender_static_mesh(spec, out_root_path).map(DispatchResult::new)
@@ -310,6 +332,8 @@ pub fn is_backend_available(kind: &str) -> bool {
             | "texture.trimsheet_v1"
             | "texture.decal_v1"
             | "texture.splat_set_v1"
+            | "sprite.sheet_v1"
+            | "sprite.animation_v1"
             | "static_mesh.blender_primitives_v1"
             | "skeletal_mesh.blender_rigged_mesh_v1"
             | "skeletal_animation.blender_clip_v1"
@@ -330,6 +354,7 @@ pub fn get_backend_tier(kind: &str) -> Option<u8> {
         "audio_v1" => Some(1),
         k if k.starts_with("music.") => Some(1),
         k if k.starts_with("texture.") => Some(1),
+        k if k.starts_with("sprite.") => Some(1),
 
         // Tier 2: Blender backends (metric validation only)
         k if k.starts_with("static_mesh.") => Some(2),
