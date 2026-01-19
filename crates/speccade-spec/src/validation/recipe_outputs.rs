@@ -37,6 +37,9 @@ pub(super) fn validate_outputs_for_recipe_with_budget(
         "texture.procedural_v1" => {
             validate_texture_procedural_outputs_with_budget(spec, recipe, budget, result)
         }
+        "texture.trimsheet_v1" => {
+            validate_texture_trimsheet_outputs(spec, recipe, result)
+        }
         "static_mesh.blender_primitives_v1" => {
             validate_static_mesh_blender_primitives(recipe, result);
             validate_single_primary_output_format(spec, OutputFormat::Glb, result);
@@ -57,7 +60,7 @@ pub(super) fn validate_outputs_for_recipe_with_budget(
             result.add_error(ValidationError::with_path(
                 ErrorCode::UnsupportedRecipeKind,
                 format!(
-                    "unsupported texture recipe kind '{}'; use 'texture.procedural_v1'",
+                    "unsupported texture recipe kind '{}'; use 'texture.procedural_v1' or 'texture.trimsheet_v1'",
                     recipe.kind
                 ),
                 "recipe.kind",
@@ -281,6 +284,103 @@ fn validate_skeletal_animation_blender_rigged(recipe: &Recipe, result: &mut Vali
                 ErrorCode::InvalidRecipeParams,
                 format!("invalid params for {}: {}", recipe.kind, e),
                 "recipe.params",
+            ));
+        }
+    }
+}
+
+/// Validates outputs for `texture.trimsheet_v1` recipe.
+///
+/// Trimsheet specs require:
+/// - Exactly one primary output with PNG format
+/// - Optional metadata output(s) with JSON format
+fn validate_texture_trimsheet_outputs(
+    spec: &Spec,
+    recipe: &Recipe,
+    result: &mut ValidationResult,
+) {
+    // Validate params parse correctly
+    match recipe.as_texture_trimsheet() {
+        Ok(params) => {
+            // Validate resolution is positive
+            if params.resolution[0] == 0 || params.resolution[1] == 0 {
+                result.add_error(ValidationError::with_path(
+                    ErrorCode::InvalidRecipeParams,
+                    format!(
+                        "resolution must be positive, got [{}, {}]",
+                        params.resolution[0], params.resolution[1]
+                    ),
+                    "recipe.params.resolution",
+                ));
+            }
+
+            // Validate tiles have unique ids
+            let mut seen_ids = std::collections::HashSet::new();
+            for (i, tile) in params.tiles.iter().enumerate() {
+                if !seen_ids.insert(&tile.id) {
+                    result.add_error(ValidationError::with_path(
+                        ErrorCode::InvalidRecipeParams,
+                        format!("duplicate tile id: '{}'", tile.id),
+                        format!("recipe.params.tiles[{}].id", i),
+                    ));
+                }
+
+                // Validate tile dimensions
+                if tile.width == 0 || tile.height == 0 {
+                    result.add_error(ValidationError::with_path(
+                        ErrorCode::InvalidRecipeParams,
+                        format!(
+                            "tile '{}' dimensions must be positive, got {}x{}",
+                            tile.id, tile.width, tile.height
+                        ),
+                        format!("recipe.params.tiles[{}]", i),
+                    ));
+                }
+
+                // Validate tile fits in atlas with padding
+                let padded_width = tile.width + params.padding * 2;
+                let padded_height = tile.height + params.padding * 2;
+                if padded_width > params.resolution[0] || padded_height > params.resolution[1] {
+                    result.add_error(ValidationError::with_path(
+                        ErrorCode::InvalidRecipeParams,
+                        format!(
+                            "tile '{}' ({}x{}) with padding {} is too large for atlas ({}x{})",
+                            tile.id, tile.width, tile.height, params.padding,
+                            params.resolution[0], params.resolution[1]
+                        ),
+                        format!("recipe.params.tiles[{}]", i),
+                    ));
+                }
+            }
+        }
+        Err(e) => {
+            result.add_error(ValidationError::with_path(
+                ErrorCode::InvalidRecipeParams,
+                format!("invalid params for {}: {}", recipe.kind, e),
+                "recipe.params",
+            ));
+        }
+    }
+
+    // Validate outputs
+    validate_primary_output_present(spec, result);
+
+    // Check primary outputs are PNG
+    for (i, output) in spec.outputs.iter().enumerate() {
+        if output.kind == OutputKind::Primary && output.format != OutputFormat::Png {
+            result.add_error(ValidationError::with_path(
+                ErrorCode::OutputValidationFailed,
+                "texture.trimsheet_v1 primary outputs must have format 'png'",
+                format!("outputs[{}].format", i),
+            ));
+        }
+
+        // Check metadata outputs are JSON
+        if output.kind == OutputKind::Metadata && output.format != OutputFormat::Json {
+            result.add_error(ValidationError::with_path(
+                ErrorCode::OutputValidationFailed,
+                "texture.trimsheet_v1 metadata outputs must have format 'json'",
+                format!("outputs[{}].format", i),
             ));
         }
     }

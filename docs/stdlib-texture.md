@@ -9,6 +9,7 @@ Texture functions provide a node-based procedural texture graph system.
 ## Table of Contents
 - [Node Functions](#node-functions)
 - [Graph Functions](#graph-functions)
+- [Trimsheet Functions](#trimsheet-functions)
 
 ---
 
@@ -396,6 +397,98 @@ texture_graph(
         threshold_node("mask", "height", 0.5)
     ]
 )
+```
+
+---
+
+## Trimsheet Functions
+
+Trimsheet functions create texture atlas specs with deterministic shelf packing.
+
+### trimsheet_tile()
+
+Creates a tile definition for trimsheet packing.
+
+**Parameters:**
+| Name | Type | Required | Default | Description |
+|------|------|----------|---------|-------------|
+| id | str | Yes | - | Unique tile identifier |
+| width | int | Yes | - | Tile width in pixels |
+| height | int | Yes | - | Tile height in pixels |
+| color | list | Yes | - | RGBA color [r, g, b, a], values 0.0-1.0 |
+
+**Returns:** Dict matching TrimsheetTile.
+
+**Example:**
+```python
+trimsheet_tile(id = "grass", width = 128, height = 128, color = [0.2, 0.6, 0.2, 1.0])
+trimsheet_tile(id = "stone", width = 64, height = 64, color = [0.5, 0.5, 0.5, 1.0])
+```
+
+### trimsheet_spec()
+
+Creates a complete trimsheet atlas spec with trimsheet_v1 recipe.
+
+The trimsheet recipe uses deterministic shelf packing to arrange tiles into
+a single atlas texture. It outputs both the PNG atlas and a JSON metadata file
+containing UV coordinates for each tile.
+
+**Parameters:**
+| Name | Type | Required | Default | Description |
+|------|------|----------|---------|-------------|
+| asset_id | str | Yes | - | Kebab-case identifier for the asset |
+| seed | int | Yes | - | Deterministic seed (0 to 2^32-1) |
+| output_path | str | Yes | - | Output path for atlas PNG |
+| resolution | list | Yes | - | [width, height] in pixels |
+| tiles | list | Yes | - | List of tile definitions |
+| metadata_path | str | No | None | Output path for UV metadata JSON |
+| padding | int | No | 2 | Gutter pixels between tiles |
+| description | str | No | None | Asset description |
+| tags | list | No | None | Style tags |
+| license | str | No | "CC0-1.0" | SPDX license identifier |
+
+**Returns:** A complete spec dict ready for serialization.
+
+**Features:**
+- Deterministic shelf packing (tiles sorted by height, then width, then id)
+- Mip-safe gutters (edge pixels replicated into padding)
+- UV metadata output with normalized [0,1] coordinates
+
+**Example:**
+```python
+trimsheet_spec(
+    asset_id = "tileset-01",
+    seed = 42,
+    output_path = "atlas/tileset.png",
+    metadata_path = "atlas/tileset.json",
+    resolution = [1024, 1024],
+    padding = 4,
+    tiles = [
+        trimsheet_tile(id = "grass", width = 128, height = 128, color = [0.2, 0.6, 0.2, 1.0]),
+        trimsheet_tile(id = "stone", width = 64, height = 64, color = [0.5, 0.5, 0.5, 1.0]),
+        trimsheet_tile(id = "water", width = 128, height = 64, color = [0.1, 0.3, 0.8, 1.0])
+    ]
+)
+```
+
+**Metadata Output Format:**
+```json
+{
+  "atlas_width": 1024,
+  "atlas_height": 1024,
+  "padding": 4,
+  "tiles": [
+    {
+      "id": "grass",
+      "u_min": 0.00390625,
+      "v_min": 0.00390625,
+      "u_max": 0.12890625,
+      "v_max": 0.12890625,
+      "width": 128,
+      "height": 128
+    }
+  ]
+}
 ```
 
 ---

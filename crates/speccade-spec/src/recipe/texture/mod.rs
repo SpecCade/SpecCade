@@ -8,6 +8,7 @@ mod packed;
 mod packing;
 mod pbr_maps;
 mod procedural;
+mod trimsheet;
 
 pub use common::*;
 pub use layers::*;
@@ -17,6 +18,7 @@ pub use packed::*;
 pub use packing::*;
 pub use pbr_maps::*;
 pub use procedural::*;
+pub use trimsheet::*;
 
 #[cfg(test)]
 mod tests;

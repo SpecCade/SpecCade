@@ -166,26 +166,39 @@ fn validate_outputs(spec: &Spec, result: &mut ValidationResult) {
 
     // Check for unique paths
     let mut seen_paths: HashSet<&str> = HashSet::new();
+
+    // Some recipe kinds support metadata outputs (e.g., texture.trimsheet_v1 for UV coordinates)
+    let recipe_supports_metadata = spec
+        .recipe
+        .as_ref()
+        .map(|r| r.kind.as_str())
+        .is_some_and(|k| matches!(k, "texture.trimsheet_v1"));
+
     for (i, output) in spec.outputs.iter().enumerate() {
         // NOTE: `metadata` / `preview` are defined in the enum for forward-compat,
-        // but they are not produced by any current generators. The structured output
+        // but they are not produced by most generators. The structured output
         // for generation/validation is the `${asset_id}.report.json` sibling file.
         if matches!(output.kind, OutputKind::Metadata | OutputKind::Preview) {
-            let hint = if output.kind == OutputKind::Metadata {
-                format!(
-                    "output kind '{}' is reserved; use '{}' instead",
-                    output.kind,
-                    crate::report::Report::filename(&spec.asset_id)
-                )
+            // Allow metadata outputs for recipes that support them
+            if output.kind == OutputKind::Metadata && recipe_supports_metadata {
+                // This recipe explicitly supports metadata outputs
             } else {
-                format!("output kind '{}' is reserved (not generated)", output.kind)
-            };
+                let hint = if output.kind == OutputKind::Metadata {
+                    format!(
+                        "output kind '{}' is reserved; use '{}' instead",
+                        output.kind,
+                        crate::report::Report::filename(&spec.asset_id)
+                    )
+                } else {
+                    format!("output kind '{}' is reserved (not generated)", output.kind)
+                };
 
-            result.add_error(ValidationError::with_path(
-                ErrorCode::OutputValidationFailed,
-                hint,
-                format!("outputs[{}].kind", i),
-            ));
+                result.add_error(ValidationError::with_path(
+                    ErrorCode::OutputValidationFailed,
+                    hint,
+                    format!("outputs[{}].kind", i),
+                ));
+            }
         }
 
         if !seen_paths.insert(&output.path) {
@@ -289,6 +302,7 @@ pub fn validate_for_generate_with_budget(spec: &Spec, budget: &BudgetProfile) ->
             "music.tracker_song_v1",
             "music.tracker_song_compose_v1",
             "texture.procedural_v1",
+            "texture.trimsheet_v1",
             "static_mesh.blender_primitives_v1",
             "skeletal_mesh.blender_rigged_mesh_v1",
             "skeletal_animation.blender_clip_v1",

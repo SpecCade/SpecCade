@@ -183,8 +183,8 @@ Open questions:
 - [ ] `TEX-003` Decide if richer channel "swizzle/component extract" ops are needed for packing workflows.
 - [x] `TEX-004` Add stochastic tiling (Wang tiles / texture bombing) to reduce visible repetition. **Done: 2026-01-20**
   - Implemented: WangTiles and TextureBomb node types in spec, backend implementation with deterministic output, Starlark helpers (wang_tiles_node, texture_bomb_node), full test coverage, and documentation.
-- [ ] `TEX-005` Add trimsheets/atlases with deterministic packing + mip-safe gutters and metadata.
-  - Candidate: `texture.trimsheet_v1`.
+- [x] `TEX-005` Add trimsheets/atlases with deterministic packing + mip-safe gutters and metadata. **Done: 2026-01-20**
+  - Implemented: `texture.trimsheet_v1` recipe kind with deterministic shelf packing algorithm, mip-safe gutter generation, UV metadata JSON output, Starlark helpers (trimsheet_tile, trimsheet_spec), full test coverage, and documentation.
 - [ ] `TEX-006` Add decal workflows (RGBA + optional normal/roughness + placement metadata).
   - Candidate: `texture.decal_v1`.
 - [ ] `TEX-007` Add terrain "splat set" workflows (albedo/normal/roughness + splat masks + macro variation).

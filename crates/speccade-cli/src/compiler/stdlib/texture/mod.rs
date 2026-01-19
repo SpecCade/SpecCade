@@ -5,6 +5,7 @@
 mod graph;
 mod nodes;
 mod spec;
+mod trimsheet;
 
 use starlark::collections::SmallMap;
 use starlark::environment::GlobalsBuilder;
@@ -35,4 +36,5 @@ pub fn register(builder: &mut GlobalsBuilder) {
     nodes::register(builder);
     graph::register(builder);
     spec::register(builder);
+    trimsheet::register(builder);
 }

@@ -73,6 +73,7 @@ pub mod pattern;
 pub mod png;
 pub mod rng;
 pub mod shared;
+pub mod trimsheet;
 
 // Re-export main types for convenience
 pub use color::{BlendMode, Color};
@@ -92,6 +93,7 @@ pub use pattern::{
 };
 pub use png::{PngConfig, PngError};
 pub use rng::DeterministicRng;
+pub use trimsheet::{generate_trimsheet, TrimsheetError, TrimsheetResult};
 
 #[cfg(test)]
 mod tests {

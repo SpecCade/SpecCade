@@ -99,6 +99,9 @@ pub fn dispatch_generate(
         // Unified procedural texture backend
         "texture.procedural_v1" => texture::generate_texture_procedural(spec, out_root_path),
 
+        // Trimsheet atlas backend
+        "texture.trimsheet_v1" => texture::generate_texture_trimsheet(spec, out_root_path),
+
         // Blender static mesh backend
         "static_mesh.blender_primitives_v1" => {
             blender::generate_blender_static_mesh(spec, out_root_path)
@@ -214,6 +217,14 @@ pub fn dispatch_generate_profiled(
             }
         }
 
+        "texture.trimsheet_v1" => {
+            if profile {
+                texture::generate_texture_trimsheet_profiled(spec, out_root_path)
+            } else {
+                texture::generate_texture_trimsheet(spec, out_root_path).map(DispatchResult::new)
+            }
+        }
+
         // Blender backends (no profiling instrumentation yet)
         "static_mesh.blender_primitives_v1" => {
             blender::generate_blender_static_mesh(spec, out_root_path).map(DispatchResult::new)
@@ -274,6 +285,7 @@ pub fn is_backend_available(kind: &str) -> bool {
             | "music.tracker_song_v1"
             | "music.tracker_song_compose_v1"
             | "texture.procedural_v1"
+            | "texture.trimsheet_v1"
             | "static_mesh.blender_primitives_v1"
             | "skeletal_mesh.blender_rigged_mesh_v1"
             | "skeletal_animation.blender_clip_v1"
@@ -317,6 +329,7 @@ mod tests {
         assert_eq!(get_backend_tier("music.tracker_song_v1"), Some(1));
         assert_eq!(get_backend_tier("music.tracker_song_compose_v1"), Some(1));
         assert_eq!(get_backend_tier("texture.procedural_v1"), Some(1));
+        assert_eq!(get_backend_tier("texture.trimsheet_v1"), Some(1));
 
         // Tier 2 - Blender backends
         assert_eq!(
@@ -347,6 +360,7 @@ mod tests {
         assert!(is_backend_available("music.tracker_song_v1"));
         assert!(is_backend_available("music.tracker_song_compose_v1"));
         assert!(is_backend_available("texture.procedural_v1"));
+        assert!(is_backend_available("texture.trimsheet_v1"));
         assert!(is_backend_available("static_mesh.blender_primitives_v1"));
         assert!(is_backend_available("skeletal_mesh.blender_rigged_mesh_v1"));
         assert!(is_backend_available("skeletal_animation.blender_clip_v1"));
@@ -392,5 +406,111 @@ mod tests {
         assert!(output_path.exists());
         let bytes = std::fs::read(&output_path).unwrap();
         assert!(!bytes.is_empty());
+    }
+
+    #[test]
+    fn test_dispatch_texture_trimsheet_generates_outputs() {
+        let tmp = tempfile::tempdir().unwrap();
+
+        let primary_output = OutputSpec::primary(OutputFormat::Png, "atlas/trimsheet.png");
+        let metadata_output = OutputSpec::metadata("atlas/trimsheet.json");
+
+        let recipe = Recipe::new(
+            "texture.trimsheet_v1",
+            serde_json::json!({
+                "resolution": [256, 256],
+                "padding": 2,
+                "tiles": [
+                    { "id": "grass", "width": 64, "height": 64, "color": [0.2, 0.6, 0.2, 1.0] },
+                    { "id": "stone", "width": 32, "height": 32, "color": [0.5, 0.5, 0.5, 1.0] }
+                ]
+            }),
+        );
+
+        let spec = Spec::builder("test-trimsheet-01", AssetType::Texture)
+            .license("CC0-1.0")
+            .seed(42)
+            .output(primary_output)
+            .output(metadata_output)
+            .recipe(recipe)
+            .build();
+
+        let spec_path = tmp.path().join("test.spec.json");
+        let outputs =
+            dispatch_generate(&spec, tmp.path().to_str().unwrap(), &spec_path, None).unwrap();
+
+        // Should have 2 outputs: PNG atlas and JSON metadata
+        assert_eq!(outputs.len(), 2);
+
+        // Check PNG output
+        let png_output = outputs.iter().find(|o| o.format == OutputFormat::Png).unwrap();
+        let png_path = tmp.path().join("atlas/trimsheet.png");
+        assert!(png_path.exists());
+        let png_bytes = std::fs::read(&png_path).unwrap();
+        assert!(!png_bytes.is_empty());
+        assert!(png_output.hash.is_some());
+
+        // Check JSON metadata output
+        let json_output = outputs.iter().find(|o| o.format == OutputFormat::Json).unwrap();
+        let json_path = tmp.path().join("atlas/trimsheet.json");
+        assert!(json_path.exists());
+        let json_str = std::fs::read_to_string(&json_path).unwrap();
+        let metadata: serde_json::Value = serde_json::from_str(&json_str).unwrap();
+
+        assert_eq!(metadata["atlas_width"], 256);
+        assert_eq!(metadata["atlas_height"], 256);
+        assert_eq!(metadata["padding"], 2);
+        assert!(metadata["tiles"].is_array());
+        assert_eq!(metadata["tiles"].as_array().unwrap().len(), 2);
+        assert!(json_output.hash.is_some());
+    }
+
+    #[test]
+    fn test_dispatch_texture_trimsheet_determinism() {
+        let tmp1 = tempfile::tempdir().unwrap();
+        let tmp2 = tempfile::tempdir().unwrap();
+
+        let recipe = Recipe::new(
+            "texture.trimsheet_v1",
+            serde_json::json!({
+                "resolution": [128, 128],
+                "padding": 1,
+                "tiles": [
+                    { "id": "a", "width": 32, "height": 32, "color": [1.0, 0.0, 0.0, 1.0] },
+                    { "id": "b", "width": 48, "height": 48, "color": [0.0, 1.0, 0.0, 1.0] }
+                ]
+            }),
+        );
+
+        let make_spec = || {
+            Spec::builder("test-determinism", AssetType::Texture)
+                .license("CC0-1.0")
+                .seed(42)
+                .output(OutputSpec::primary(OutputFormat::Png, "atlas.png"))
+                .output(OutputSpec::metadata("atlas.json"))
+                .recipe(recipe.clone())
+                .build()
+        };
+
+        let spec1 = make_spec();
+        let spec2 = make_spec();
+
+        let spec_path1 = tmp1.path().join("test.spec.json");
+        let spec_path2 = tmp2.path().join("test.spec.json");
+
+        let outputs1 =
+            dispatch_generate(&spec1, tmp1.path().to_str().unwrap(), &spec_path1, None).unwrap();
+        let outputs2 =
+            dispatch_generate(&spec2, tmp2.path().to_str().unwrap(), &spec_path2, None).unwrap();
+
+        // Hashes should be identical
+        let hash1 = outputs1.iter().find(|o| o.format == OutputFormat::Png).unwrap().hash.as_ref().unwrap();
+        let hash2 = outputs2.iter().find(|o| o.format == OutputFormat::Png).unwrap().hash.as_ref().unwrap();
+        assert_eq!(hash1, hash2, "PNG hashes should be identical for same input");
+
+        // PNG bytes should be byte-identical
+        let png1 = std::fs::read(tmp1.path().join("atlas.png")).unwrap();
+        let png2 = std::fs::read(tmp2.path().join("atlas.png")).unwrap();
+        assert_eq!(png1, png2, "PNG bytes should be identical");
     }
 }
