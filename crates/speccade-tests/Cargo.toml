@@ -55,6 +55,10 @@ path = "tests/mesh_metrics.rs"
 name = "drum_kit_quality"
 path = "tests/drum_kit_quality.rs"
 
+[[test]]
+name = "stdlib_snapshot"
+path = "tests/stdlib_snapshot.rs"
+
 [dependencies]
 # We need all the workspace crates for integration testing
 speccade-spec = { workspace = true }

@@ -1,0 +1,2089 @@
+{
+  "stdlib_version": "0.1.0",
+  "functions": [
+    {
+      "name": "bitcrush",
+      "category": "audio.effects",
+      "description": "Creates a bitcrusher effect configuration.",
+      "params": [
+        {
+          "name": "bits",
+          "type": "int",
+          "required": true,
+          "range": {
+            "min": 1.0,
+            "max": 16.0
+          }
+        },
+        {
+          "name": "sample_rate_reduction",
+          "type": "float",
+          "required": false,
+          "default": 1.0,
+          "range": {
+            "min": 1.0
+          }
+        }
+      ],
+      "returns": "An effect dict.",
+      "example": "bitcrush(8, 4.0)"
+    },
+    {
+      "name": "chorus",
+      "category": "audio.effects",
+      "description": "Creates a chorus effect configuration.",
+      "params": [
+        {
+          "name": "rate",
+          "type": "float",
+          "required": true,
+          "range": {
+            "min": 0.0
+          }
+        },
+        {
+          "name": "depth",
+          "type": "float",
+          "required": true,
+          "range": {
+            "min": 0.0,
+            "max": 1.0
+          }
+        },
+        {
+          "name": "wet",
+          "type": "float",
+          "required": true,
+          "range": {
+            "min": 0.0,
+            "max": 1.0
+          }
+        },
+        {
+          "name": "voices",
+          "type": "int",
+          "required": false,
+          "default": 2,
+          "range": {
+            "min": 1.0,
+            "max": 4.0
+          }
+        }
+      ],
+      "returns": "An effect dict.",
+      "example": "chorus(1.5, 0.3, 0.25)"
+    },
+    {
+      "name": "compressor",
+      "category": "audio.effects",
+      "description": "Creates a compressor effect configuration.",
+      "params": [
+        {
+          "name": "threshold_db",
+          "type": "float",
+          "required": false,
+          "default": -12.0
+        },
+        {
+          "name": "ratio",
+          "type": "float",
+          "required": false,
+          "default": 4.0,
+          "range": {
+            "min": 0.0
+          }
+        },
+        {
+          "name": "attack_ms",
+          "type": "float",
+          "required": false,
+          "default": 10.0,
+          "range": {
+            "min": 0.0
+          }
+        },
+        {
+          "name": "release_ms",
+          "type": "float",
+          "required": false,
+          "default": 100.0,
+          "range": {
+            "min": 0.0
+          }
+        },
+        {
+          "name": "makeup_db",
+          "type": "float",
+          "required": false,
+          "default": 0.0
+        }
+      ],
+      "returns": "An effect dict.",
+      "example": "compressor(-18, 6, 5, 50)"
+    },
+    {
+      "name": "delay",
+      "category": "audio.effects",
+      "description": "Creates a delay effect configuration.",
+      "params": [
+        {
+          "name": "time_ms",
+          "type": "float",
+          "required": false,
+          "default": 250.0,
+          "range": {
+            "min": 0.0
+          }
+        },
+        {
+          "name": "feedback",
+          "type": "float",
+          "required": false,
+          "default": 0.4,
+          "range": {
+            "min": 0.0,
+            "max": 1.0
+          }
+        },
+        {
+          "name": "wet",
+          "type": "float",
+          "required": false,
+          "default": 0.3,
+          "range": {
+            "min": 0.0,
+            "max": 1.0
+          }
+        },
+        {
+          "name": "ping_pong",
+          "type": "bool",
+          "required": false,
+          "default": false
+        }
+      ],
+      "returns": "An effect dict.",
+      "example": "delay(500, 0.5, 0.4)"
+    },
+    {
+      "name": "reverb",
+      "category": "audio.effects",
+      "description": "Creates a reverb effect configuration.",
+      "params": [
+        {
+          "name": "decay",
+          "type": "float",
+          "required": false,
+          "default": 0.5
+        },
+        {
+          "name": "wet",
+          "type": "float",
+          "required": false,
+          "default": 0.3,
+          "range": {
+            "min": 0.0,
+            "max": 1.0
+          }
+        },
+        {
+          "name": "room_size",
+          "type": "float",
+          "required": false,
+          "default": 0.8,
+          "range": {
+            "min": 0.0,
+            "max": 1.0
+          }
+        },
+        {
+          "name": "width",
+          "type": "float",
+          "required": false,
+          "default": 1.0,
+          "range": {
+            "min": 0.0,
+            "max": 1.0
+          }
+        }
+      ],
+      "returns": "An effect dict.",
+      "example": "reverb(0.5, 0.3)"
+    },
+    {
+      "name": "bandpass",
+      "category": "audio.filters",
+      "description": "Creates a bandpass filter configuration.",
+      "params": [
+        {
+          "name": "center",
+          "type": "float",
+          "required": true,
+          "range": {
+            "min": 0.0
+          }
+        },
+        {
+          "name": "bandwidth",
+          "type": "float",
+          "required": true,
+          "range": {
+            "min": 0.0
+          }
+        }
+      ],
+      "returns": "A filter dict.",
+      "example": "bandpass(1000, 200)"
+    },
+    {
+      "name": "highpass",
+      "category": "audio.filters",
+      "description": "Creates a highpass filter configuration.",
+      "params": [
+        {
+          "name": "cutoff",
+          "type": "float",
+          "required": true,
+          "range": {
+            "min": 0.0
+          }
+        },
+        {
+          "name": "resonance",
+          "type": "float",
+          "required": false,
+          "default": 0.707,
+          "range": {
+            "min": 0.0
+          }
+        }
+      ],
+      "returns": "A filter dict.",
+      "example": "highpass(200)"
+    },
+    {
+      "name": "lowpass",
+      "category": "audio.filters",
+      "description": "Creates a lowpass filter configuration.",
+      "params": [
+        {
+          "name": "cutoff",
+          "type": "float",
+          "required": true,
+          "range": {
+            "min": 0.0
+          }
+        },
+        {
+          "name": "resonance",
+          "type": "float",
+          "required": false,
+          "default": 0.707,
+          "range": {
+            "min": 0.0
+          }
+        },
+        {
+          "name": "sweep_to",
+          "type": "float",
+          "required": false,
+          "range": {
+            "min": 0.0
+          }
+        }
+      ],
+      "returns": "A filter dict.",
+      "example": "lowpass(5000, 0.707)"
+    },
+    {
+      "name": "audio_layer",
+      "category": "audio.layers",
+      "description": "Creates a complete audio synthesis layer.",
+      "params": [
+        {
+          "name": "synthesis",
+          "type": "dict",
+          "required": true
+        },
+        {
+          "name": "envelope",
+          "type": "dict",
+          "required": true
+        },
+        {
+          "name": "filter",
+          "type": "dict",
+          "required": false
+        },
+        {
+          "name": "volume",
+          "type": "float",
+          "required": false,
+          "default": 1.0,
+          "range": {
+            "min": 0.0,
+            "max": 1.0
+          }
+        },
+        {
+          "name": "pan",
+          "type": "float",
+          "required": false,
+          "default": 0.0,
+          "range": {
+            "min": -1.0,
+            "max": 1.0
+          }
+        }
+      ],
+      "returns": "A layer dict.",
+      "example": "audio_layer(oscillator(440), envelope(0.01, 0.1, 0.7, 0.2))"
+    },
+    {
+      "name": "lfo",
+      "category": "audio.modulation",
+      "description": "Creates an LFO configuration.",
+      "params": [
+        {
+          "name": "rate",
+          "type": "float",
+          "required": true,
+          "range": {
+            "min": 0.0
+          }
+        },
+        {
+          "name": "depth",
+          "type": "float",
+          "required": true,
+          "range": {
+            "min": 0.0,
+            "max": 1.0
+          }
+        },
+        {
+          "name": "waveform",
+          "type": "string",
+          "required": false,
+          "default": "sine",
+          "enum_values": [
+            "sine",
+            "triangle",
+            "square",
+            "sawtooth",
+            "random"
+          ]
+        }
+      ],
+      "returns": "An LFO dict.",
+      "example": "lfo(5.0, 0.3, \"sine\")"
+    },
+    {
+      "name": "pitch_envelope",
+      "category": "audio.modulation",
+      "description": "Creates a pitch envelope configuration.",
+      "params": [
+        {
+          "name": "start_semitones",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "end_semitones",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "time",
+          "type": "float",
+          "required": true,
+          "range": {
+            "min": 0.0
+          }
+        },
+        {
+          "name": "curve",
+          "type": "string",
+          "required": false,
+          "default": "linear",
+          "enum_values": [
+            "linear",
+            "exponential"
+          ]
+        }
+      ],
+      "returns": "A pitch envelope dict.",
+      "example": "pitch_envelope(12, 0, 0.1, \"exponential\")"
+    },
+    {
+      "name": "additive",
+      "category": "audio.synthesis",
+      "description": "Creates an additive synthesis block with harmonics.",
+      "params": [
+        {
+          "name": "base_freq",
+          "type": "float",
+          "required": true,
+          "range": {
+            "min": 0.0
+          }
+        },
+        {
+          "name": "harmonics",
+          "type": "list",
+          "required": true
+        }
+      ],
+      "returns": "A dict matching the Synthesis::Additive IR structure.",
+      "example": "additive(440, [1.0, 0.5, 0.25, 0.125])"
+    },
+    {
+      "name": "am_synth",
+      "category": "audio.synthesis",
+      "description": "Creates an AM synthesis block.",
+      "params": [
+        {
+          "name": "carrier",
+          "type": "float",
+          "required": true,
+          "range": {
+            "min": 0.0
+          }
+        },
+        {
+          "name": "modulator",
+          "type": "float",
+          "required": true,
+          "range": {
+            "min": 0.0
+          }
+        },
+        {
+          "name": "depth",
+          "type": "float",
+          "required": true,
+          "range": {
+            "min": 0.0,
+            "max": 1.0
+          }
+        },
+        {
+          "name": "sweep_to",
+          "type": "float",
+          "required": false,
+          "range": {
+            "min": 0.0
+          }
+        }
+      ],
+      "returns": "A dict matching the Synthesis::AmSynth IR structure.",
+      "example": "am_synth(440, 880, 0.5)"
+    },
+    {
+      "name": "bowed_string",
+      "category": "audio.synthesis",
+      "description": "Creates a Bowed String synthesis block for violin/cello sounds.",
+      "params": [
+        {
+          "name": "frequency",
+          "type": "float",
+          "required": true,
+          "range": {
+            "min": 0.0
+          }
+        },
+        {
+          "name": "bow_pressure",
+          "type": "float",
+          "required": true,
+          "range": {
+            "min": 0.0,
+            "max": 1.0
+          }
+        },
+        {
+          "name": "bow_position",
+          "type": "float",
+          "required": true,
+          "range": {
+            "min": 0.0,
+            "max": 1.0
+          }
+        },
+        {
+          "name": "damping",
+          "type": "float",
+          "required": true,
+          "range": {
+            "min": 0.0,
+            "max": 1.0
+          }
+        }
+      ],
+      "returns": "A dict matching the Synthesis::BowedString IR structure."
+    },
+    {
+      "name": "fm_synth",
+      "category": "audio.synthesis",
+      "description": "Creates an FM synthesis block.",
+      "params": [
+        {
+          "name": "carrier",
+          "type": "float",
+          "required": true,
+          "range": {
+            "min": 0.0
+          }
+        },
+        {
+          "name": "modulator",
+          "type": "float",
+          "required": true,
+          "range": {
+            "min": 0.0
+          }
+        },
+        {
+          "name": "index",
+          "type": "float",
+          "required": true,
+          "range": {
+            "min": 0.0
+          }
+        },
+        {
+          "name": "sweep_to",
+          "type": "float",
+          "required": false,
+          "range": {
+            "min": 0.0
+          }
+        }
+      ],
+      "returns": "A dict matching the Synthesis::FmSynth IR structure.",
+      "example": "fm_synth(440, 880, 5.0)"
+    },
+    {
+      "name": "formant_synth",
+      "category": "audio.synthesis",
+      "description": "Creates a Formant synthesis block for vowel/voice sounds.",
+      "params": [
+        {
+          "name": "frequency",
+          "type": "float",
+          "required": true,
+          "range": {
+            "min": 0.0
+          }
+        },
+        {
+          "name": "vowel",
+          "type": "string",
+          "required": false,
+          "enum_values": [
+            "a",
+            "i",
+            "u",
+            "e",
+            "o"
+          ]
+        },
+        {
+          "name": "vowel_morph",
+          "type": "string",
+          "required": false,
+          "enum_values": [
+            "a",
+            "i",
+            "u",
+            "e",
+            "o"
+          ]
+        },
+        {
+          "name": "morph_amount",
+          "type": "float",
+          "required": false,
+          "default": 0.0,
+          "range": {
+            "min": 0.0,
+            "max": 1.0
+          }
+        },
+        {
+          "name": "breathiness",
+          "type": "float",
+          "required": false,
+          "default": 0.0,
+          "range": {
+            "min": 0.0,
+            "max": 1.0
+          }
+        }
+      ],
+      "returns": "A dict matching the Synthesis::Formant IR structure.",
+      "example": "formant_synth(frequency=220, vowel=\"a\")"
+    },
+    {
+      "name": "granular",
+      "category": "audio.synthesis",
+      "description": "Creates a Granular synthesis block.",
+      "params": [
+        {
+          "name": "source",
+          "type": "dict",
+          "required": true
+        },
+        {
+          "name": "grain_size_ms",
+          "type": "float",
+          "required": true,
+          "range": {
+            "min": 10.0,
+            "max": 500.0
+          }
+        },
+        {
+          "name": "grain_density",
+          "type": "float",
+          "required": true,
+          "range": {
+            "min": 1.0,
+            "max": 100.0
+          }
+        },
+        {
+          "name": "pitch_spread",
+          "type": "float",
+          "required": false,
+          "default": 0.0
+        },
+        {
+          "name": "position_spread",
+          "type": "float",
+          "required": false,
+          "default": 0.0,
+          "range": {
+            "min": 0.0,
+            "max": 1.0
+          }
+        },
+        {
+          "name": "pan_spread",
+          "type": "float",
+          "required": false,
+          "default": 0.0,
+          "range": {
+            "min": 0.0,
+            "max": 1.0
+          }
+        }
+      ],
+      "returns": "A dict matching the Synthesis::Granular IR structure.",
+      "example": "granular(granular_source(\"noise\", \"white\"), 50, 20)"
+    },
+    {
+      "name": "granular_source",
+      "category": "audio.synthesis",
+      "description": "Creates a granular source configuration.",
+      "params": [
+        {
+          "name": "source_type",
+          "type": "string",
+          "required": true,
+          "enum_values": [
+            "noise",
+            "tone",
+            "formant"
+          ]
+        },
+        {
+          "name": "param1",
+          "type": "string|float",
+          "required": true
+        },
+        {
+          "name": "param2",
+          "type": "float",
+          "required": false
+        }
+      ],
+      "returns": "A dict matching the GranularSource IR structure.",
+      "example": "granular_source(\"tone\", \"sine\", 440)"
+    },
+    {
+      "name": "karplus_strong",
+      "category": "audio.synthesis",
+      "description": "Creates a Karplus-Strong plucked string synthesis block.",
+      "params": [
+        {
+          "name": "frequency",
+          "type": "float",
+          "required": true,
+          "range": {
+            "min": 0.0
+          }
+        },
+        {
+          "name": "damping",
+          "type": "float",
+          "required": true,
+          "range": {
+            "min": 0.0,
+            "max": 1.0
+          }
+        },
+        {
+          "name": "blend",
+          "type": "float",
+          "required": true,
+          "range": {
+            "min": 0.0,
+            "max": 1.0
+          }
+        }
+      ],
+      "returns": "A dict matching the Synthesis::KarplusStrong IR structure.",
+      "example": "karplus_strong(440, 0.5, 0.5)"
+    },
+    {
+      "name": "membrane_drum",
+      "category": "audio.synthesis",
+      "description": "Creates a Membrane Drum physical modeling synthesis block.",
+      "params": [
+        {
+          "name": "frequency",
+          "type": "float",
+          "required": true,
+          "range": {
+            "min": 0.0
+          }
+        },
+        {
+          "name": "decay",
+          "type": "float",
+          "required": true,
+          "range": {
+            "min": 0.0,
+            "max": 1.0
+          }
+        },
+        {
+          "name": "tone",
+          "type": "float",
+          "required": true,
+          "range": {
+            "min": 0.0,
+            "max": 1.0
+          }
+        },
+        {
+          "name": "strike",
+          "type": "float",
+          "required": true,
+          "range": {
+            "min": 0.0,
+            "max": 1.0
+          }
+        }
+      ],
+      "returns": "A dict matching the Synthesis::MembraneDrum IR structure.",
+      "example": "membrane_drum(100, 0.5, 0.3, 0.8)"
+    },
+    {
+      "name": "metallic",
+      "category": "audio.synthesis",
+      "description": "Creates a Metallic synthesis block.",
+      "params": [
+        {
+          "name": "base_freq",
+          "type": "float",
+          "required": true,
+          "range": {
+            "min": 0.0
+          }
+        },
+        {
+          "name": "num_partials",
+          "type": "int",
+          "required": true,
+          "range": {
+            "min": 1.0
+          }
+        },
+        {
+          "name": "inharmonicity",
+          "type": "float",
+          "required": true,
+          "range": {
+            "min": 1.0
+          }
+        }
+      ],
+      "returns": "A dict matching the Synthesis::Metallic IR structure.",
+      "example": "metallic(440, 8, 1.5)"
+    },
+    {
+      "name": "modal",
+      "category": "audio.synthesis",
+      "description": "Creates a Modal synthesis block.",
+      "params": [
+        {
+          "name": "frequency",
+          "type": "float",
+          "required": true,
+          "range": {
+            "min": 0.0
+          }
+        },
+        {
+          "name": "modes",
+          "type": "list",
+          "required": true
+        },
+        {
+          "name": "excitation",
+          "type": "string",
+          "required": false,
+          "default": "impulse",
+          "enum_values": [
+            "impulse",
+            "noise",
+            "pluck"
+          ]
+        }
+      ],
+      "returns": "A dict matching the Synthesis::Modal IR structure.",
+      "example": "modal(440, [modal_mode(1.0, 1.0, 0.5)])"
+    },
+    {
+      "name": "modal_mode",
+      "category": "audio.synthesis",
+      "description": "Creates a modal mode configuration.",
+      "params": [
+        {
+          "name": "freq_ratio",
+          "type": "float",
+          "required": true,
+          "range": {
+            "min": 0.0
+          }
+        },
+        {
+          "name": "amplitude",
+          "type": "float",
+          "required": true,
+          "range": {
+            "min": 0.0,
+            "max": 1.0
+          }
+        },
+        {
+          "name": "decay_time",
+          "type": "float",
+          "required": true,
+          "range": {
+            "min": 0.0
+          }
+        }
+      ],
+      "returns": "A modal mode dict.",
+      "example": "modal_mode(1.0, 1.0, 0.5)"
+    },
+    {
+      "name": "noise_burst",
+      "category": "audio.synthesis",
+      "description": "Creates a noise burst synthesis block.",
+      "params": [
+        {
+          "name": "noise_type",
+          "type": "string",
+          "required": false,
+          "default": "white",
+          "enum_values": [
+            "white",
+            "pink",
+            "brown"
+          ]
+        },
+        {
+          "name": "filter",
+          "type": "dict",
+          "required": false
+        }
+      ],
+      "returns": "A dict matching the Synthesis::NoiseBurst IR structure.",
+      "example": "noise_burst(\"pink\", lowpass(5000))"
+    },
+    {
+      "name": "oscillator",
+      "category": "audio.synthesis",
+      "description": "Creates a basic oscillator synthesis block with optional frequency sweep.",
+      "params": [
+        {
+          "name": "frequency",
+          "type": "float",
+          "required": true,
+          "range": {
+            "min": 0.0
+          }
+        },
+        {
+          "name": "waveform",
+          "type": "string",
+          "required": false,
+          "default": "sine",
+          "enum_values": [
+            "sine",
+            "square",
+            "sawtooth",
+            "triangle",
+            "pulse"
+          ]
+        },
+        {
+          "name": "sweep_to",
+          "type": "float",
+          "required": false,
+          "range": {
+            "min": 0.0
+          }
+        },
+        {
+          "name": "curve",
+          "type": "string",
+          "required": false,
+          "default": "linear",
+          "enum_values": [
+            "linear",
+            "exponential",
+            "logarithmic"
+          ]
+        },
+        {
+          "name": "detune",
+          "type": "float",
+          "required": false
+        },
+        {
+          "name": "duty",
+          "type": "float",
+          "required": false,
+          "range": {
+            "min": 0.0,
+            "max": 1.0
+          }
+        }
+      ],
+      "returns": "A dict matching the Synthesis::Oscillator IR structure.",
+      "example": "oscillator(440, \"sawtooth\", 220, \"exponential\")"
+    },
+    {
+      "name": "pitched_body",
+      "category": "audio.synthesis",
+      "description": "Creates a Pitched Body synthesis block.",
+      "params": [
+        {
+          "name": "start_freq",
+          "type": "float",
+          "required": true,
+          "range": {
+            "min": 0.0
+          }
+        },
+        {
+          "name": "end_freq",
+          "type": "float",
+          "required": true,
+          "range": {
+            "min": 0.0
+          }
+        }
+      ],
+      "returns": "A dict matching the Synthesis::PitchedBody IR structure.",
+      "example": "pitched_body(start_freq=880, end_freq=110)"
+    },
+    {
+      "name": "pulsar",
+      "category": "audio.synthesis",
+      "description": "Creates a Pulsar synthesis block.",
+      "params": [
+        {
+          "name": "frequency",
+          "type": "float",
+          "required": true,
+          "range": {
+            "min": 0.0
+          }
+        },
+        {
+          "name": "pulse_rate",
+          "type": "float",
+          "required": true,
+          "range": {
+            "min": 0.0
+          }
+        },
+        {
+          "name": "grain_size_ms",
+          "type": "float",
+          "required": true,
+          "range": {
+            "min": 0.0
+          }
+        },
+        {
+          "name": "shape",
+          "type": "string",
+          "required": true,
+          "enum_values": [
+            "sine",
+            "square",
+            "sawtooth",
+            "triangle",
+            "pulse"
+          ]
+        }
+      ],
+      "returns": "A dict matching the Synthesis::Pulsar IR structure."
+    },
+    {
+      "name": "spectral_freeze",
+      "category": "audio.synthesis",
+      "description": "Creates a Spectral Freeze synthesis block.",
+      "params": [
+        {
+          "name": "source",
+          "type": "dict",
+          "required": true
+        }
+      ],
+      "returns": "A dict matching the Synthesis::SpectralFreeze IR structure.",
+      "example": "spectral_freeze(source=spectral_source(\"noise\", \"pink\"))"
+    },
+    {
+      "name": "supersaw_unison",
+      "category": "audio.synthesis",
+      "description": "Creates a Supersaw/Unison synthesis block.",
+      "params": [
+        {
+          "name": "frequency",
+          "type": "float",
+          "required": true,
+          "range": {
+            "min": 0.0
+          }
+        },
+        {
+          "name": "voices",
+          "type": "int",
+          "required": true,
+          "range": {
+            "min": 1.0,
+            "max": 16.0
+          }
+        },
+        {
+          "name": "detune_cents",
+          "type": "float",
+          "required": true,
+          "range": {
+            "min": 0.0
+          }
+        },
+        {
+          "name": "spread",
+          "type": "float",
+          "required": true,
+          "range": {
+            "min": 0.0,
+            "max": 1.0
+          }
+        },
+        {
+          "name": "detune_curve",
+          "type": "string",
+          "required": false,
+          "default": "linear",
+          "enum_values": [
+            "linear",
+            "exp2"
+          ]
+        }
+      ],
+      "returns": "A dict matching the Synthesis::SupersawUnison IR structure.",
+      "example": "supersaw_unison(440, 7, 20, 0.8)"
+    },
+    {
+      "name": "vocoder",
+      "category": "audio.synthesis",
+      "description": "Creates a Vocoder synthesis block.",
+      "params": [
+        {
+          "name": "carrier_freq",
+          "type": "float",
+          "required": true,
+          "range": {
+            "min": 0.0
+          }
+        },
+        {
+          "name": "carrier_type",
+          "type": "string",
+          "required": true,
+          "enum_values": [
+            "sawtooth",
+            "pulse",
+            "noise"
+          ]
+        },
+        {
+          "name": "num_bands",
+          "type": "int",
+          "required": true,
+          "range": {
+            "min": 8.0,
+            "max": 32.0
+          }
+        },
+        {
+          "name": "band_spacing",
+          "type": "string",
+          "required": true,
+          "enum_values": [
+            "linear",
+            "logarithmic"
+          ]
+        },
+        {
+          "name": "envelope_attack",
+          "type": "float",
+          "required": true,
+          "range": {
+            "min": 0.0
+          }
+        },
+        {
+          "name": "envelope_release",
+          "type": "float",
+          "required": true,
+          "range": {
+            "min": 0.0
+          }
+        },
+        {
+          "name": "formant_rate",
+          "type": "float",
+          "required": false,
+          "default": 2.0,
+          "range": {
+            "min": 0.0
+          }
+        }
+      ],
+      "returns": "A dict matching the Synthesis::Vocoder IR structure."
+    },
+    {
+      "name": "vosim",
+      "category": "audio.synthesis",
+      "description": "Creates a VOSIM synthesis block (voice simulation).",
+      "params": [
+        {
+          "name": "frequency",
+          "type": "float",
+          "required": true,
+          "range": {
+            "min": 0.0
+          }
+        },
+        {
+          "name": "formant_freq",
+          "type": "float",
+          "required": true,
+          "range": {
+            "min": 0.0
+          }
+        },
+        {
+          "name": "pulses",
+          "type": "int",
+          "required": true,
+          "range": {
+            "min": 1.0,
+            "max": 16.0
+          }
+        },
+        {
+          "name": "breathiness",
+          "type": "float",
+          "required": false,
+          "default": 0.0,
+          "range": {
+            "min": 0.0,
+            "max": 1.0
+          }
+        }
+      ],
+      "returns": "A dict matching the Synthesis::Vosim IR structure."
+    },
+    {
+      "name": "waveguide",
+      "category": "audio.synthesis",
+      "description": "Creates a Waveguide synthesis block for wind/brass sounds.",
+      "params": [
+        {
+          "name": "frequency",
+          "type": "float",
+          "required": true,
+          "range": {
+            "min": 0.0
+          }
+        },
+        {
+          "name": "breath",
+          "type": "float",
+          "required": true,
+          "range": {
+            "min": 0.0,
+            "max": 1.0
+          }
+        },
+        {
+          "name": "noise",
+          "type": "float",
+          "required": true,
+          "range": {
+            "min": 0.0,
+            "max": 1.0
+          }
+        },
+        {
+          "name": "damping",
+          "type": "float",
+          "required": true,
+          "range": {
+            "min": 0.0,
+            "max": 1.0
+          }
+        },
+        {
+          "name": "resonance",
+          "type": "float",
+          "required": true,
+          "range": {
+            "min": 0.0,
+            "max": 1.0
+          }
+        }
+      ],
+      "returns": "A dict matching the Synthesis::Waveguide IR structure."
+    },
+    {
+      "name": "wavetable",
+      "category": "audio.synthesis",
+      "description": "Creates a Wavetable synthesis block.",
+      "params": [
+        {
+          "name": "table",
+          "type": "string",
+          "required": true,
+          "enum_values": [
+            "basic",
+            "analog",
+            "digital",
+            "pwm",
+            "formant",
+            "organ"
+          ]
+        },
+        {
+          "name": "frequency",
+          "type": "float",
+          "required": true,
+          "range": {
+            "min": 0.0
+          }
+        },
+        {
+          "name": "position",
+          "type": "float",
+          "required": false,
+          "default": 0.0,
+          "range": {
+            "min": 0.0,
+            "max": 1.0
+          }
+        },
+        {
+          "name": "position_end",
+          "type": "float",
+          "required": false,
+          "range": {
+            "min": 0.0,
+            "max": 1.0
+          }
+        },
+        {
+          "name": "voices",
+          "type": "int",
+          "required": false,
+          "range": {
+            "min": 1.0,
+            "max": 8.0
+          }
+        },
+        {
+          "name": "detune",
+          "type": "float",
+          "required": false
+        }
+      ],
+      "returns": "A dict matching the Synthesis::Wavetable IR structure.",
+      "example": "wavetable(\"analog\", 440, 0.5)"
+    },
+    {
+      "name": "envelope",
+      "category": "core",
+      "description": "Creates an ADSR envelope configuration.",
+      "params": [
+        {
+          "name": "attack",
+          "type": "float",
+          "required": false,
+          "default": 0.01,
+          "range": {
+            "min": 0.0
+          }
+        },
+        {
+          "name": "decay",
+          "type": "float",
+          "required": false,
+          "default": 0.1,
+          "range": {
+            "min": 0.0
+          }
+        },
+        {
+          "name": "sustain",
+          "type": "float",
+          "required": false,
+          "default": 0.7,
+          "range": {
+            "min": 0.0,
+            "max": 1.0
+          }
+        },
+        {
+          "name": "release",
+          "type": "float",
+          "required": false,
+          "default": 0.2,
+          "range": {
+            "min": 0.0
+          }
+        }
+      ],
+      "returns": "An ADSR envelope dict.",
+      "example": "envelope(0.01, 0.1, 0.7, 0.2)"
+    },
+    {
+      "name": "output",
+      "category": "core",
+      "description": "Creates an output specification for an asset.",
+      "params": [
+        {
+          "name": "path",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "format",
+          "type": "string",
+          "required": true,
+          "enum_values": [
+            "wav",
+            "xm",
+            "it",
+            "png",
+            "glb",
+            "gltf",
+            "json"
+          ]
+        },
+        {
+          "name": "kind",
+          "type": "string",
+          "required": false,
+          "default": "primary",
+          "enum_values": [
+            "primary",
+            "metadata",
+            "preview"
+          ]
+        },
+        {
+          "name": "source",
+          "type": "string",
+          "required": false
+        }
+      ],
+      "returns": "An output dict for the spec outputs list.",
+      "example": "output(\"sounds/laser.wav\", \"wav\")"
+    },
+    {
+      "name": "spec",
+      "category": "core",
+      "description": "Creates a complete spec dictionary with all required fields.",
+      "params": [
+        {
+          "name": "asset_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "asset_type",
+          "type": "string",
+          "required": true,
+          "enum_values": [
+            "audio",
+            "music",
+            "texture",
+            "static_mesh",
+            "skeletal_mesh",
+            "skeletal_animation"
+          ]
+        },
+        {
+          "name": "seed",
+          "type": "int",
+          "required": true,
+          "range": {
+            "min": 0.0,
+            "max": 4294967295.0
+          }
+        },
+        {
+          "name": "outputs",
+          "type": "list",
+          "required": true
+        },
+        {
+          "name": "recipe",
+          "type": "dict",
+          "required": false
+        },
+        {
+          "name": "license",
+          "type": "string",
+          "required": false,
+          "default": "CC0-1.0"
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "style_tags",
+          "type": "list",
+          "required": false
+        }
+      ],
+      "returns": "A complete spec dict ready for serialization.",
+      "example": "spec(asset_id=\"laser-01\", asset_type=\"audio\", seed=42, outputs=[...], recipe={...})"
+    },
+    {
+      "name": "mesh_primitive",
+      "category": "mesh",
+      "description": "Creates a base mesh primitive.",
+      "params": [
+        {
+          "name": "primitive_type",
+          "type": "string",
+          "required": true,
+          "enum_values": [
+            "cube",
+            "sphere",
+            "cylinder",
+            "cone",
+            "torus",
+            "plane"
+          ]
+        },
+        {
+          "name": "size",
+          "type": "list",
+          "required": false,
+          "default": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        }
+      ],
+      "returns": "A primitive dict.",
+      "example": "mesh_primitive(\"cube\", [2.0, 2.0, 2.0])"
+    },
+    {
+      "name": "mesh_recipe",
+      "category": "mesh",
+      "description": "Creates a complete mesh recipe.",
+      "params": [
+        {
+          "name": "primitive_type",
+          "type": "string",
+          "required": true,
+          "enum_values": [
+            "cube",
+            "sphere",
+            "cylinder",
+            "cone",
+            "torus",
+            "plane"
+          ]
+        },
+        {
+          "name": "size",
+          "type": "list",
+          "required": false,
+          "default": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "name": "modifiers",
+          "type": "list",
+          "required": false
+        }
+      ],
+      "returns": "A mesh recipe dict.",
+      "example": "mesh_recipe(\"cube\", [2.0, 2.0, 2.0], [bevel_modifier(0.1, 3)])"
+    },
+    {
+      "name": "bevel_modifier",
+      "category": "mesh.modifiers",
+      "description": "Creates a bevel modifier configuration.",
+      "params": [
+        {
+          "name": "width",
+          "type": "float",
+          "required": true,
+          "range": {
+            "min": 0.0
+          }
+        },
+        {
+          "name": "segments",
+          "type": "int",
+          "required": false,
+          "default": 1,
+          "range": {
+            "min": 1.0
+          }
+        }
+      ],
+      "returns": "A modifier dict.",
+      "example": "bevel_modifier(0.1, 3)"
+    },
+    {
+      "name": "subdivision_modifier",
+      "category": "mesh.modifiers",
+      "description": "Creates a subdivision surface modifier.",
+      "params": [
+        {
+          "name": "levels",
+          "type": "int",
+          "required": false,
+          "default": 1,
+          "range": {
+            "min": 1.0,
+            "max": 6.0
+          }
+        }
+      ],
+      "returns": "A modifier dict.",
+      "example": "subdivision_modifier(2)"
+    },
+    {
+      "name": "instrument_synthesis",
+      "category": "music.instruments",
+      "description": "Creates a tracker instrument synthesis configuration.",
+      "params": [
+        {
+          "name": "synth_type",
+          "type": "string",
+          "required": true,
+          "enum_values": [
+            "pulse",
+            "square",
+            "triangle",
+            "sawtooth",
+            "sine",
+            "noise"
+          ]
+        },
+        {
+          "name": "duty_cycle",
+          "type": "float",
+          "required": false,
+          "default": 0.5,
+          "range": {
+            "min": 0.0,
+            "max": 1.0
+          }
+        },
+        {
+          "name": "periodic",
+          "type": "bool",
+          "required": false,
+          "default": false
+        }
+      ],
+      "returns": "An instrument synthesis dict.",
+      "example": "instrument_synthesis(\"pulse\", 0.25)"
+    },
+    {
+      "name": "tracker_instrument",
+      "category": "music.instruments",
+      "description": "Creates a tracker instrument definition.",
+      "params": [
+        {
+          "name": "name",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "synthesis",
+          "type": "dict",
+          "required": false
+        },
+        {
+          "name": "wav",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "envelope",
+          "type": "dict",
+          "required": false
+        },
+        {
+          "name": "loop_mode",
+          "type": "string",
+          "required": false,
+          "enum_values": [
+            "auto",
+            "none",
+            "forward",
+            "pingpong"
+          ]
+        }
+      ],
+      "returns": "An instrument dict.",
+      "example": "tracker_instrument(name=\"bass\", synthesis=instrument_synthesis(\"sawtooth\"))"
+    },
+    {
+      "name": "arrangement_entry",
+      "category": "music.patterns",
+      "description": "Creates an arrangement entry.",
+      "params": [
+        {
+          "name": "pattern",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "repeat",
+          "type": "int",
+          "required": false,
+          "default": 1,
+          "range": {
+            "min": 1.0
+          }
+        }
+      ],
+      "returns": "An arrangement entry dict.",
+      "example": "arrangement_entry(\"intro\", 4)"
+    },
+    {
+      "name": "pattern_note",
+      "category": "music.patterns",
+      "description": "Creates a pattern note event.",
+      "params": [
+        {
+          "name": "row",
+          "type": "int",
+          "required": true,
+          "range": {
+            "min": 0.0
+          }
+        },
+        {
+          "name": "note",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "inst",
+          "type": "int",
+          "required": true,
+          "range": {
+            "min": 0.0
+          }
+        },
+        {
+          "name": "vol",
+          "type": "int",
+          "required": false,
+          "range": {
+            "min": 0.0,
+            "max": 64.0
+          }
+        }
+      ],
+      "returns": "A pattern note dict.",
+      "example": "pattern_note(0, \"C4\", 0)"
+    },
+    {
+      "name": "tracker_pattern",
+      "category": "music.patterns",
+      "description": "Creates a tracker pattern definition.",
+      "params": [
+        {
+          "name": "rows",
+          "type": "int",
+          "required": true,
+          "range": {
+            "min": 1.0
+          }
+        },
+        {
+          "name": "notes",
+          "type": "dict",
+          "required": false
+        },
+        {
+          "name": "data",
+          "type": "list",
+          "required": false
+        }
+      ],
+      "returns": "A pattern dict.",
+      "example": "tracker_pattern(64, notes={\"0\": [pattern_note(0, \"C4\", 0)]})"
+    },
+    {
+      "name": "music_spec",
+      "category": "music.song",
+      "description": "Creates a music spec with a tracker song recipe.",
+      "params": [
+        {
+          "name": "asset_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "seed",
+          "type": "int",
+          "required": true,
+          "range": {
+            "min": 0.0,
+            "max": 4294967295.0
+          }
+        },
+        {
+          "name": "output_path",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "format",
+          "type": "string",
+          "required": true,
+          "enum_values": [
+            "xm",
+            "it"
+          ]
+        },
+        {
+          "name": "bpm",
+          "type": "int",
+          "required": true,
+          "range": {
+            "min": 30.0,
+            "max": 300.0
+          }
+        },
+        {
+          "name": "speed",
+          "type": "int",
+          "required": true,
+          "range": {
+            "min": 1.0,
+            "max": 31.0
+          }
+        },
+        {
+          "name": "channels",
+          "type": "int",
+          "required": true,
+          "range": {
+            "min": 1.0,
+            "max": 64.0
+          }
+        },
+        {
+          "name": "instruments",
+          "type": "list",
+          "required": true
+        },
+        {
+          "name": "patterns",
+          "type": "dict",
+          "required": true
+        },
+        {
+          "name": "arrangement",
+          "type": "list",
+          "required": true
+        }
+      ],
+      "returns": "A complete music spec dict."
+    },
+    {
+      "name": "tracker_song",
+      "category": "music.song",
+      "description": "Creates a complete tracker song recipe.",
+      "params": [
+        {
+          "name": "format",
+          "type": "string",
+          "required": true,
+          "enum_values": [
+            "xm",
+            "it"
+          ]
+        },
+        {
+          "name": "bpm",
+          "type": "int",
+          "required": true,
+          "range": {
+            "min": 30.0,
+            "max": 300.0
+          }
+        },
+        {
+          "name": "speed",
+          "type": "int",
+          "required": true,
+          "range": {
+            "min": 1.0,
+            "max": 31.0
+          }
+        },
+        {
+          "name": "channels",
+          "type": "int",
+          "required": true,
+          "range": {
+            "min": 1.0,
+            "max": 64.0
+          }
+        },
+        {
+          "name": "instruments",
+          "type": "list",
+          "required": true
+        },
+        {
+          "name": "patterns",
+          "type": "dict",
+          "required": true
+        },
+        {
+          "name": "arrangement",
+          "type": "list",
+          "required": true
+        },
+        {
+          "name": "loop",
+          "type": "bool",
+          "required": false,
+          "default": false
+        }
+      ],
+      "returns": "A tracker song recipe dict."
+    },
+    {
+      "name": "texture_graph",
+      "category": "texture.graph",
+      "description": "Creates a complete texture graph recipe params.",
+      "params": [
+        {
+          "name": "resolution",
+          "type": "list",
+          "required": true
+        },
+        {
+          "name": "nodes",
+          "type": "list",
+          "required": true
+        },
+        {
+          "name": "tileable",
+          "type": "bool",
+          "required": false,
+          "default": true
+        }
+      ],
+      "returns": "A texture graph params dict.",
+      "example": "texture_graph([64, 64], [noise_node(\"base\", \"perlin\")])"
+    },
+    {
+      "name": "color_ramp_node",
+      "category": "texture.nodes",
+      "description": "Creates a color ramp mapping node.",
+      "params": [
+        {
+          "name": "id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "input",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "ramp",
+          "type": "list",
+          "required": true
+        }
+      ],
+      "returns": "A texture node dict.",
+      "example": "color_ramp_node(\"colored\", \"noise\", [\"#000000\", \"#ffffff\"])"
+    },
+    {
+      "name": "gradient_node",
+      "category": "texture.nodes",
+      "description": "Creates a gradient texture node.",
+      "params": [
+        {
+          "name": "id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "direction",
+          "type": "string",
+          "required": false,
+          "default": "horizontal",
+          "enum_values": [
+            "horizontal",
+            "vertical",
+            "radial"
+          ]
+        },
+        {
+          "name": "start",
+          "type": "float",
+          "required": false,
+          "default": 0.0
+        },
+        {
+          "name": "end",
+          "type": "float",
+          "required": false,
+          "default": 1.0
+        }
+      ],
+      "returns": "A texture node dict.",
+      "example": "gradient_node(\"grad\", \"horizontal\")"
+    },
+    {
+      "name": "noise_node",
+      "category": "texture.nodes",
+      "description": "Creates a noise texture node.",
+      "params": [
+        {
+          "name": "id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "algorithm",
+          "type": "string",
+          "required": false,
+          "default": "perlin",
+          "enum_values": [
+            "perlin",
+            "simplex",
+            "worley",
+            "value",
+            "fbm"
+          ]
+        },
+        {
+          "name": "scale",
+          "type": "float",
+          "required": false,
+          "default": 0.1,
+          "range": {
+            "min": 0.0
+          }
+        },
+        {
+          "name": "octaves",
+          "type": "int",
+          "required": false,
+          "default": 4,
+          "range": {
+            "min": 1.0
+          }
+        },
+        {
+          "name": "persistence",
+          "type": "float",
+          "required": false,
+          "default": 0.5
+        },
+        {
+          "name": "lacunarity",
+          "type": "float",
+          "required": false,
+          "default": 2.0
+        }
+      ],
+      "returns": "A texture node dict.",
+      "example": "noise_node(\"height\", \"perlin\", 0.1, 4)"
+    },
+    {
+      "name": "threshold_node",
+      "category": "texture.nodes",
+      "description": "Creates a threshold operation node.",
+      "params": [
+        {
+          "name": "id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "input",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "threshold",
+          "type": "float",
+          "required": false,
+          "default": 0.5
+        }
+      ],
+      "returns": "A texture node dict.",
+      "example": "threshold_node(\"mask\", \"noise\", 0.5)"
+    }
+  ]
+}
