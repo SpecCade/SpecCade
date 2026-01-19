@@ -59,6 +59,10 @@ path = "tests/drum_kit_quality.rs"
 name = "stdlib_snapshot"
 path = "tests/stdlib_snapshot.rs"
 
+[[test]]
+name = "stdlib_coverage"
+path = "tests/stdlib_coverage.rs"
+
 [dependencies]
 # We need all the workspace crates for integration testing
 speccade-spec = { workspace = true }
@@ -74,6 +78,7 @@ serde_json = { workspace = true }
 serde = { workspace = true }
 walkdir = { workspace = true }
 blake3 = { workspace = true }
+regex = { workspace = true }
 
 # For WebSocket testing
 tokio = { workspace = true, features = ["rt", "time", "net", "sync", "macros"] }

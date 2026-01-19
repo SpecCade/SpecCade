@@ -271,9 +271,9 @@ Migrated from `docs/FUTURE_GENERATORS.md` (now deprecated).
 - [x] `QA-007` Add a Starlark stdlib drift guard (CI) using `speccade stdlib dump --format json`. **Done: 2026-01-19**
   - Deliverable: a checked-in stdlib snapshot (JSON) + a test/CI step that fails if the dump changes without updating the snapshot.
   - Implemented: golden/stdlib/stdlib.snapshot.json + stdlib_snapshot.rs test with 4 checks and helpful diff output.
-- [ ] `QA-008` Add a Starlark coverage guard for stdlib helpers (prevent “dead” helpers or missing examples).
+- [x] `QA-008` Add a Starlark coverage guard for stdlib helpers (prevent "dead" helpers or missing examples). **Done: 2026-01-19**
   - Deliverable: a test that ensures every function in the stdlib dump is referenced by at least one `golden/starlark/*.star` file (with an explicit allowlist for intentionally-unexercised helpers).
-  - Touch points: `golden/starlark/`, `crates/speccade-tests/`.
+  - Implemented: stdlib_coverage.rs scans golden/*.star for function calls; 98.1% coverage (51/52); allowlist for mesh_primitive.
 - [ ] `QA-009` Validate Tier-2 recipe params at `speccade validate` time (no Blender required).
   - Deliverable: `speccade validate` rejects unknown/invalid fields for `static_mesh`, `skeletal_mesh`, and `skeletal_animation` recipe params (matching the Rust `deny_unknown_fields` structs), so Starlark/JSON IR can’t silently drift.
   - Touch points: `crates/speccade-spec/src/validation/`, `crates/speccade-spec/src/recipe/{mesh,character,animation}/`, `schemas/speccade-spec-v1.schema.json`.

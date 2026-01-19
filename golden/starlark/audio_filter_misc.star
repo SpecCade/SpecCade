@@ -1,7 +1,7 @@
 # Miscellaneous filters example
 #
-# Demonstrates various filter types: notch, allpass, comb, formant, and shelving filters.
-# Covers: notch(), allpass(), comb_filter(), formant_filter(), shelf_low(), shelf_high()
+# Demonstrates various filter types: notch, allpass, comb, formant, highpass, and shelving filters.
+# Covers: notch(), allpass(), comb_filter(), formant_filter(), shelf_low(), shelf_high(), highpass()
 
 spec(
     asset_id = "stdlib-audio-filters-misc-01",
@@ -55,6 +55,13 @@ spec(
                     envelope = envelope(0.01, 0.2, 0.6, 0.3),
                     volume = 0.3,
                     filter = formant_filter("a", 0.8)  # vowel, intensity
+                ),
+                # Layer 7: Square wave with highpass filter
+                audio_layer(
+                    synthesis = oscillator(200, "square"),
+                    envelope = envelope(0.01, 0.25, 0.5, 0.2),
+                    volume = 0.25,
+                    filter = highpass(500.0, 0.707)  # cutoff, resonance
                 )
             ]
         }

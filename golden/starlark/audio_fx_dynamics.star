@@ -1,7 +1,7 @@
 # Dynamics effects example
 #
-# Demonstrates limiter, transient_shaper, reverb, and eq_band effects.
-# Covers: limiter(), transient_shaper(), reverb(), eq_band(), parametric_eq()
+# Demonstrates limiter, transient_shaper, reverb, compressor, delay, and eq_band effects.
+# Covers: limiter(), transient_shaper(), reverb(), compressor(), delay(), eq_band(), parametric_eq()
 
 spec(
     asset_id = "stdlib-audio-dynamics-01",
@@ -22,6 +22,8 @@ spec(
             ],
             "effects": [
                 reverb(0.5, 0.3, 0.7, 0.8),  # decay, wet, room_size, width
+                compressor(-12.0, 4.0, 10.0, 100.0, 0.0),  # threshold_db, ratio, attack_ms, release_ms, makeup_db
+                delay(300.0, 0.4, 0.3, False),  # time_ms, feedback, wet, ping_pong
                 transient_shaper(attack = 0.5, sustain = -0.2, output_gain_db = 3.0),
                 parametric_eq([
                     eq_band(800.0, -3.0, 2.0, "notch"),      # frequency, gain_db, q, band_type
