@@ -10,6 +10,7 @@ Texture functions provide a node-based procedural texture graph system.
 - [Node Functions](#node-functions)
 - [Graph Functions](#graph-functions)
 - [Trimsheet Functions](#trimsheet-functions)
+- [Decal Functions](#decal-functions)
 
 ---
 
@@ -488,6 +489,129 @@ trimsheet_spec(
       "height": 128
     }
   ]
+}
+```
+
+---
+
+## Decal Functions
+
+Decal functions create texture specs for decal/overlay textures with RGBA output,
+optional normal and roughness maps, and placement metadata for game engine integration.
+
+### decal_metadata()
+
+Creates decal placement metadata for projection and rendering hints.
+
+**Parameters:**
+| Name | Type | Required | Default | Description |
+|------|------|----------|---------|-------------|
+| aspect_ratio | f64 | No | 1.0 | Width/height ratio for correct proportions |
+| anchor | list | No | [0.5, 0.5] | Anchor point in normalized [0,1] coordinates |
+| fade_distance | f64 | No | 0.0 | Edge fade distance (0.0-1.0), 0 = hard edges |
+| projection_size | list | No | None | Optional world-space size [width, height] in meters |
+| depth_range | list | No | None | Optional depth clipping [near, far] in meters |
+
+**Returns:** Dict matching DecalMetadata.
+
+**Example:**
+```python
+decal_metadata()
+decal_metadata(aspect_ratio = 2.0, anchor = [0.5, 1.0], fade_distance = 0.1)
+decal_metadata(projection_size = [1.0, 0.5], depth_range = [0.0, 0.1])
+```
+
+### decal_spec()
+
+Creates a complete decal spec with decal_v1 recipe.
+
+The decal recipe generates RGBA textures optimized for decal projection, with the alpha
+channel composited from a separate mask. Optionally includes normal and roughness outputs
+for PBR workflows, plus a JSON metadata sidecar for placement information.
+
+**Parameters:**
+| Name | Type | Required | Default | Description |
+|------|------|----------|---------|-------------|
+| asset_id | str | Yes | - | Kebab-case identifier for the asset |
+| seed | int | Yes | - | Deterministic seed (0 to 2^32-1) |
+| output_path | str | Yes | - | Output path for albedo PNG |
+| resolution | list | Yes | - | [width, height] in pixels |
+| nodes | list | Yes | - | List of texture nodes |
+| albedo_output | str | Yes | - | Node id for albedo/diffuse output |
+| alpha_output | str | Yes | - | Node id for alpha mask output |
+| metadata | dict | Yes | - | Placement metadata from decal_metadata() |
+| normal_output | str | No | None | Node id for normal map output |
+| roughness_output | str | No | None | Node id for roughness output |
+| normal_path | str | No | None | Output path for normal map PNG |
+| roughness_path | str | No | None | Output path for roughness PNG |
+| metadata_path | str | No | None | Output path for metadata JSON |
+| description | str | No | None | Asset description |
+| tags | list | No | None | Style tags |
+| license | str | No | "CC0-1.0" | SPDX license identifier |
+
+**Returns:** A complete spec dict ready for serialization.
+
+**Features:**
+- RGBA albedo output with alpha composited from separate mask node
+- Optional normal map for surface detail
+- Optional roughness map for PBR materials
+- JSON metadata sidecar with placement hints (anchor, aspect ratio, fade, projection bounds)
+
+**Example:**
+```python
+# Basic decal with just albedo and alpha
+decal_spec(
+    asset_id = "bullet-hole-01",
+    seed = 42,
+    output_path = "decals/bullet_hole.png",
+    resolution = [512, 512],
+    nodes = [
+        noise_node("base", algorithm = "perlin", scale = 0.05),
+        threshold_node("alpha", "base", threshold = 0.3)
+    ],
+    albedo_output = "base",
+    alpha_output = "alpha",
+    metadata = decal_metadata(aspect_ratio = 1.0, fade_distance = 0.1)
+)
+
+# Full PBR decal with normal, roughness, and metadata
+decal_spec(
+    asset_id = "blood-splatter-01",
+    seed = 123,
+    output_path = "decals/blood.png",
+    normal_path = "decals/blood_normal.png",
+    roughness_path = "decals/blood_roughness.png",
+    metadata_path = "decals/blood.decal.json",
+    resolution = [256, 256],
+    nodes = [
+        noise_node("base", algorithm = "simplex", scale = 0.1),
+        threshold_node("alpha", "base", threshold = 0.4),
+        normal_from_height_node("normal", "base", strength = 0.5),
+        constant_node("rough", 0.8)
+    ],
+    albedo_output = "base",
+    alpha_output = "alpha",
+    normal_output = "normal",
+    roughness_output = "rough",
+    metadata = decal_metadata(
+        aspect_ratio = 1.5,
+        anchor = [0.5, 0.5],
+        fade_distance = 0.2,
+        projection_size = [0.5, 0.33]
+    )
+)
+```
+
+**Metadata Output Format:**
+```json
+{
+  "resolution": [256, 256],
+  "aspect_ratio": 1.5,
+  "anchor": [0.5, 0.5],
+  "fade_distance": 0.2,
+  "projection_size": [0.5, 0.33],
+  "has_normal_map": true,
+  "has_roughness_map": true
 }
 ```
 

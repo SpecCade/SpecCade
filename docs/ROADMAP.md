@@ -185,8 +185,8 @@ Open questions:
   - Implemented: WangTiles and TextureBomb node types in spec, backend implementation with deterministic output, Starlark helpers (wang_tiles_node, texture_bomb_node), full test coverage, and documentation.
 - [x] `TEX-005` Add trimsheets/atlases with deterministic packing + mip-safe gutters and metadata. **Done: 2026-01-20**
   - Implemented: `texture.trimsheet_v1` recipe kind with deterministic shelf packing algorithm, mip-safe gutter generation, UV metadata JSON output, Starlark helpers (trimsheet_tile, trimsheet_spec), full test coverage, and documentation.
-- [ ] `TEX-006` Add decal workflows (RGBA + optional normal/roughness + placement metadata).
-  - Candidate: `texture.decal_v1`.
+- [x] `TEX-006` Add decal workflows (RGBA + optional normal/roughness + placement metadata). **Done: 2026-01-20**
+  - Implemented: `texture.decal_v1` recipe kind with RGBA albedo (alpha composited), optional normal/roughness outputs, placement metadata JSON sidecar; Starlark helpers (decal_metadata, decal_spec); full test coverage.
 - [ ] `TEX-007` Add terrain "splat set" workflows (albedo/normal/roughness + splat masks + macro variation).
   - Candidate: `texture.splat_set_v1`.
 - [ ] `TEX-008` Define and implement matcap generation (`texture.matcap_v1`) for stylized shading presets.

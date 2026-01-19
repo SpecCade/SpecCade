@@ -2,6 +2,7 @@
 //!
 //! Provides helper functions for creating texture graph nodes and graphs.
 
+mod decal;
 mod graph;
 mod nodes;
 mod spec;
@@ -37,4 +38,5 @@ pub fn register(builder: &mut GlobalsBuilder) {
     graph::register(builder);
     spec::register(builder);
     trimsheet::register(builder);
+    decal::register(builder);
 }

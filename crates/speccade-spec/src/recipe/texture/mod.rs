@@ -1,6 +1,7 @@
 //! Texture recipe types (procedural graphs and legacy helpers).
 
 mod common;
+mod decal;
 mod layers;
 mod materials;
 mod normal;
@@ -11,6 +12,7 @@ mod procedural;
 mod trimsheet;
 
 pub use common::*;
+pub use decal::*;
 pub use layers::*;
 pub use materials::*;
 pub use normal::*;

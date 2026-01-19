@@ -38,6 +38,9 @@ pub enum RecipeKind {
     /// `texture.trimsheet_v1` - Atlas/trimsheet texture packing.
     #[serde(rename = "texture.trimsheet_v1")]
     TextureTrimsheetV1,
+    /// `texture.decal_v1` - Decal textures with RGBA, optional normal/roughness, and placement metadata.
+    #[serde(rename = "texture.decal_v1")]
+    TextureDecalV1,
     /// `static_mesh.blender_primitives_v1` - Static mesh from Blender primitives.
     #[serde(rename = "static_mesh.blender_primitives_v1")]
     StaticMeshBlenderPrimitivesV1,
@@ -61,6 +64,7 @@ impl RecipeKind {
             RecipeKind::MusicTrackerSongComposeV1 => "music.tracker_song_compose_v1",
             RecipeKind::TextureProceduralV1 => "texture.procedural_v1",
             RecipeKind::TextureTrimsheetV1 => "texture.trimsheet_v1",
+            RecipeKind::TextureDecalV1 => "texture.decal_v1",
             RecipeKind::StaticMeshBlenderPrimitivesV1 => "static_mesh.blender_primitives_v1",
             RecipeKind::SkeletalMeshBlenderRiggedMeshV1 => "skeletal_mesh.blender_rigged_mesh_v1",
             RecipeKind::SkeletalAnimationBlenderClipV1 => "skeletal_animation.blender_clip_v1",
@@ -76,6 +80,7 @@ impl RecipeKind {
             RecipeKind::MusicTrackerSongComposeV1 => "music",
             RecipeKind::TextureProceduralV1 => "texture",
             RecipeKind::TextureTrimsheetV1 => "texture",
+            RecipeKind::TextureDecalV1 => "texture",
             RecipeKind::StaticMeshBlenderPrimitivesV1 => "static_mesh",
             RecipeKind::SkeletalMeshBlenderRiggedMeshV1 => "skeletal_mesh",
             RecipeKind::SkeletalAnimationBlenderClipV1 => "skeletal_animation",
@@ -90,7 +95,8 @@ impl RecipeKind {
             | RecipeKind::MusicTrackerSongV1
             | RecipeKind::MusicTrackerSongComposeV1
             | RecipeKind::TextureProceduralV1
-            | RecipeKind::TextureTrimsheetV1 => true,
+            | RecipeKind::TextureTrimsheetV1
+            | RecipeKind::TextureDecalV1 => true,
             RecipeKind::StaticMeshBlenderPrimitivesV1
             | RecipeKind::SkeletalMeshBlenderRiggedMeshV1
             | RecipeKind::SkeletalAnimationBlenderClipV1
@@ -132,6 +138,7 @@ impl Recipe {
             "music.tracker_song_compose_v1" => Some(RecipeKind::MusicTrackerSongComposeV1),
             "texture.procedural_v1" => Some(RecipeKind::TextureProceduralV1),
             "texture.trimsheet_v1" => Some(RecipeKind::TextureTrimsheetV1),
+            "texture.decal_v1" => Some(RecipeKind::TextureDecalV1),
             "static_mesh.blender_primitives_v1" => Some(RecipeKind::StaticMeshBlenderPrimitivesV1),
             "skeletal_mesh.blender_rigged_mesh_v1" => {
                 Some(RecipeKind::SkeletalMeshBlenderRiggedMeshV1)
@@ -182,6 +189,11 @@ impl Recipe {
 
     /// Attempts to parse params as trimsheet texture params.
     pub fn as_texture_trimsheet(&self) -> Result<TextureTrimsheetV1Params, serde_json::Error> {
+        serde_json::from_value(self.params.clone())
+    }
+
+    /// Attempts to parse params as decal texture params.
+    pub fn as_texture_decal(&self) -> Result<TextureDecalV1Params, serde_json::Error> {
         serde_json::from_value(self.params.clone())
     }
 
@@ -257,6 +269,12 @@ impl Recipe {
                         recipe_kind: self.kind.clone(),
                         error_message: e.to_string(),
                     })?;
+            }
+            "texture.decal_v1" => {
+                self.as_texture_decal().map_err(|e| RecipeParamsError {
+                    recipe_kind: self.kind.clone(),
+                    error_message: e.to_string(),
+                })?;
             }
             "static_mesh.blender_primitives_v1" => {
                 self.as_static_mesh_blender_primitives()

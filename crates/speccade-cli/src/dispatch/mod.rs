@@ -102,6 +102,9 @@ pub fn dispatch_generate(
         // Trimsheet atlas backend
         "texture.trimsheet_v1" => texture::generate_texture_trimsheet(spec, out_root_path),
 
+        // Decal texture backend
+        "texture.decal_v1" => texture::generate_texture_decal(spec, out_root_path),
+
         // Blender static mesh backend
         "static_mesh.blender_primitives_v1" => {
             blender::generate_blender_static_mesh(spec, out_root_path)
@@ -225,6 +228,14 @@ pub fn dispatch_generate_profiled(
             }
         }
 
+        "texture.decal_v1" => {
+            if profile {
+                texture::generate_texture_decal_profiled(spec, out_root_path)
+            } else {
+                texture::generate_texture_decal(spec, out_root_path).map(DispatchResult::new)
+            }
+        }
+
         // Blender backends (no profiling instrumentation yet)
         "static_mesh.blender_primitives_v1" => {
             blender::generate_blender_static_mesh(spec, out_root_path).map(DispatchResult::new)
@@ -286,6 +297,7 @@ pub fn is_backend_available(kind: &str) -> bool {
             | "music.tracker_song_compose_v1"
             | "texture.procedural_v1"
             | "texture.trimsheet_v1"
+            | "texture.decal_v1"
             | "static_mesh.blender_primitives_v1"
             | "skeletal_mesh.blender_rigged_mesh_v1"
             | "skeletal_animation.blender_clip_v1"
