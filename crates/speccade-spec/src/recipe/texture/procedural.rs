@@ -177,10 +177,60 @@ pub enum TextureProceduralOp {
         #[serde(default = "default_normal_strength")]
         strength: f64,
     },
+
+    // ---------------------------------------------------------------------
+    // Stochastic tiling ops
+    // ---------------------------------------------------------------------
+    /// Wang tile edge-matching for seamless random tiling.
+    ///
+    /// Uses a simplified 2-edge Wang tile system (corner colors) to create
+    /// seamless random tiling from an input texture. The input is subdivided
+    /// into tiles, and edge-matching ensures seamless boundaries.
+    WangTiles {
+        /// Input texture node to tile.
+        input: String,
+        /// Number of tiles in [x, y] (e.g., [4, 4] for 16 total tiles).
+        tile_count: [u32; 2],
+        /// Blend width at tile edges as fraction of tile size (0.0-0.5).
+        #[serde(default = "default_wang_blend_width")]
+        blend_width: f64,
+    },
+
+    /// Random stamp/splat placement with overlap handling (texture bombing).
+    ///
+    /// Places randomized stamps of the input texture across the output,
+    /// with configurable density, scale variation, rotation, and blend mode.
+    TextureBomb {
+        /// Input texture node to scatter.
+        input: String,
+        /// Density of stamps (0.0-1.0), controls how many stamps per area.
+        density: f64,
+        /// Scale variation range [min, max] (e.g., [0.8, 1.2]).
+        #[serde(default = "default_scale_variation")]
+        scale_variation: [f64; 2],
+        /// Rotation variation in degrees (0 = no rotation, 360 = full random).
+        #[serde(default)]
+        rotation_variation: f64,
+        /// Blend mode for overlapping stamps: "max", "add", "average".
+        #[serde(default = "default_bomb_blend_mode")]
+        blend_mode: String,
+    },
 }
 
 fn default_normal_strength() -> f64 {
     1.0
+}
+
+fn default_wang_blend_width() -> f64 {
+    0.1
+}
+
+fn default_scale_variation() -> [f64; 2] {
+    [1.0, 1.0]
+}
+
+fn default_bomb_blend_mode() -> String {
+    "max".to_string()
 }
 
 #[cfg(test)]
@@ -468,5 +518,142 @@ mod tests {
         let reserialized = serde_json::to_string(&params).unwrap();
         let reparsed: TextureProceduralV1Params = serde_json::from_str(&reserialized).unwrap();
         assert_eq!(reparsed, params);
+    }
+
+    #[test]
+    fn wang_tiles_roundtrip() {
+        let json = r#"
+        {
+          "resolution": [64, 64],
+          "tileable": true,
+          "nodes": [
+            { "id": "src", "type": "constant", "value": 0.5 },
+            { "id": "tiled", "type": "wang_tiles", "input": "src", "tile_count": [4, 4] }
+          ]
+        }
+        "#;
+
+        let params: TextureProceduralV1Params = serde_json::from_str(json).unwrap();
+        let node = params.nodes.iter().find(|n| n.id == "tiled").unwrap();
+
+        let TextureProceduralOp::WangTiles {
+            input,
+            tile_count,
+            blend_width,
+        } = &node.op
+        else {
+            panic!("expected wang_tiles op");
+        };
+
+        assert_eq!(input, "src");
+        assert_eq!(*tile_count, [4, 4]);
+        assert!((*blend_width - 0.1).abs() < 1e-6, "default blend_width should be 0.1");
+
+        let reserialized = serde_json::to_string(&params).unwrap();
+        let reparsed: TextureProceduralV1Params = serde_json::from_str(&reserialized).unwrap();
+        assert_eq!(reparsed, params);
+    }
+
+    #[test]
+    fn wang_tiles_custom_blend_width() {
+        let json = r#"
+        {
+          "resolution": [64, 64],
+          "tileable": true,
+          "nodes": [
+            { "id": "src", "type": "constant", "value": 0.5 },
+            { "id": "tiled", "type": "wang_tiles", "input": "src", "tile_count": [2, 2], "blend_width": 0.25 }
+          ]
+        }
+        "#;
+
+        let params: TextureProceduralV1Params = serde_json::from_str(json).unwrap();
+        let node = params.nodes.iter().find(|n| n.id == "tiled").unwrap();
+
+        let TextureProceduralOp::WangTiles { blend_width, .. } = &node.op else {
+            panic!("expected wang_tiles op");
+        };
+
+        assert!((*blend_width - 0.25).abs() < 1e-6);
+    }
+
+    #[test]
+    fn texture_bomb_roundtrip() {
+        let json = r#"
+        {
+          "resolution": [64, 64],
+          "tileable": true,
+          "nodes": [
+            { "id": "src", "type": "constant", "value": 0.5 },
+            { "id": "bombed", "type": "texture_bomb", "input": "src", "density": 0.5 }
+          ]
+        }
+        "#;
+
+        let params: TextureProceduralV1Params = serde_json::from_str(json).unwrap();
+        let node = params.nodes.iter().find(|n| n.id == "bombed").unwrap();
+
+        let TextureProceduralOp::TextureBomb {
+            input,
+            density,
+            scale_variation,
+            rotation_variation,
+            blend_mode,
+        } = &node.op
+        else {
+            panic!("expected texture_bomb op");
+        };
+
+        assert_eq!(input, "src");
+        assert!((*density - 0.5).abs() < 1e-6);
+        assert_eq!(*scale_variation, [1.0, 1.0], "default scale_variation");
+        assert!(rotation_variation.abs() < 1e-6, "default rotation_variation");
+        assert_eq!(blend_mode, "max", "default blend_mode");
+
+        let reserialized = serde_json::to_string(&params).unwrap();
+        let reparsed: TextureProceduralV1Params = serde_json::from_str(&reserialized).unwrap();
+        assert_eq!(reparsed, params);
+    }
+
+    #[test]
+    fn texture_bomb_all_params() {
+        let json = r#"
+        {
+          "resolution": [64, 64],
+          "tileable": true,
+          "nodes": [
+            { "id": "src", "type": "constant", "value": 0.5 },
+            {
+              "id": "scattered",
+              "type": "texture_bomb",
+              "input": "src",
+              "density": 0.7,
+              "scale_variation": [0.8, 1.2],
+              "rotation_variation": 180.0,
+              "blend_mode": "add"
+            }
+          ]
+        }
+        "#;
+
+        let params: TextureProceduralV1Params = serde_json::from_str(json).unwrap();
+        let node = params.nodes.iter().find(|n| n.id == "scattered").unwrap();
+
+        let TextureProceduralOp::TextureBomb {
+            density,
+            scale_variation,
+            rotation_variation,
+            blend_mode,
+            ..
+        } = &node.op
+        else {
+            panic!("expected texture_bomb op");
+        };
+
+        assert!((*density - 0.7).abs() < 1e-6);
+        assert!((scale_variation[0] - 0.8).abs() < 1e-6);
+        assert!((scale_variation[1] - 1.2).abs() < 1e-6);
+        assert!((*rotation_variation - 180.0).abs() < 1e-6);
+        assert_eq!(blend_mode, "add");
     }
 }

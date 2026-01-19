@@ -133,7 +133,9 @@ pub(super) fn validate_texture_procedural_outputs_with_budget(
             | TextureProceduralOp::BlendDifference { .. }
             | TextureProceduralOp::UvScale { .. }
             | TextureProceduralOp::UvRotate { .. }
-            | TextureProceduralOp::UvTranslate { .. } => GraphValueType::Grayscale,
+            | TextureProceduralOp::UvTranslate { .. }
+            | TextureProceduralOp::WangTiles { .. }
+            | TextureProceduralOp::TextureBomb { .. } => GraphValueType::Grayscale,
         };
 
         node_types.insert(node.id.as_str(), node_type);
@@ -354,6 +356,18 @@ pub(super) fn validate_texture_procedural_outputs_with_budget(
                     result,
                 );
                 deps.insert(node.id.as_str(), vec![base.as_str(), blend.as_str()]);
+            }
+            // Stochastic tiling: WangTiles and TextureBomb (grayscale input)
+            TextureProceduralOp::WangTiles { input, .. }
+            | TextureProceduralOp::TextureBomb { input, .. } => {
+                validate_ref(input, format!("recipe.params.nodes[{}].input", i), result);
+                validate_input_type(
+                    GraphValueType::Grayscale,
+                    input,
+                    format!("recipe.params.nodes[{}].input", i),
+                    result,
+                );
+                deps.insert(node.id.as_str(), vec![input.as_str()]);
             }
         }
     }

@@ -181,7 +181,8 @@ Open questions:
   - Deliverable: reusable templates in `packs/` + CLI support to copy/instantiate.
   - Implemented: 5 new texture templates showcasing TEX-001 ops (terrain_blend, stylized_toon, tech_grid, organic_warp, blended_layers) with style_tags for searchability.
 - [ ] `TEX-003` Decide if richer channel "swizzle/component extract" ops are needed for packing workflows.
-- [ ] `TEX-004` Add stochastic tiling (Wang tiles / texture bombing) to reduce visible repetition.
+- [x] `TEX-004` Add stochastic tiling (Wang tiles / texture bombing) to reduce visible repetition. **Done: 2026-01-20**
+  - Implemented: WangTiles and TextureBomb node types in spec, backend implementation with deterministic output, Starlark helpers (wang_tiles_node, texture_bomb_node), full test coverage, and documentation.
 - [ ] `TEX-005` Add trimsheets/atlases with deterministic packing + mip-safe gutters and metadata.
   - Candidate: `texture.trimsheet_v1`.
 - [ ] `TEX-006` Add decal workflows (RGBA + optional normal/roughness + placement metadata).

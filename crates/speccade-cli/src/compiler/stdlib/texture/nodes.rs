@@ -760,6 +760,163 @@ fn register_texture_node_functions(builder: &mut GlobalsBuilder) {
 
         Ok(dict)
     }
+
+    /// Creates a Wang tiles stochastic tiling node.
+    ///
+    /// Wang tiles use edge-matching to create seamless random tiling from
+    /// an input texture, reducing visible repetition patterns.
+    ///
+    /// # Arguments
+    /// * `id` - Unique node identifier
+    /// * `input` - Input texture node id
+    /// * `tile_count_x` - Number of tiles in X direction (default: 4)
+    /// * `tile_count_y` - Number of tiles in Y direction (default: 4)
+    /// * `blend_width` - Blend width at edges as fraction of tile size (0.0-0.5, default: 0.1)
+    ///
+    /// # Returns
+    /// A dict matching the TextureProceduralNode with WangTiles op.
+    ///
+    /// # Example
+    /// ```starlark
+    /// wang_tiles_node("tiled", "base_texture", 4, 4)
+    /// wang_tiles_node("tiled", "base_texture", 2, 2, 0.2)
+    /// ```
+    fn wang_tiles_node<'v>(
+        id: &str,
+        input: &str,
+        #[starlark(default = 4)] tile_count_x: i32,
+        #[starlark(default = 4)] tile_count_y: i32,
+        #[starlark(default = 0.1)] blend_width: f64,
+        heap: &'v Heap,
+    ) -> anyhow::Result<Dict<'v>> {
+        validate_non_empty(id, "wang_tiles_node", "id").map_err(|e| anyhow::anyhow!(e))?;
+        validate_non_empty(input, "wang_tiles_node", "input").map_err(|e| anyhow::anyhow!(e))?;
+        validate_positive_int(tile_count_x as i64, "wang_tiles_node", "tile_count_x")
+            .map_err(|e| anyhow::anyhow!(e))?;
+        validate_positive_int(tile_count_y as i64, "wang_tiles_node", "tile_count_y")
+            .map_err(|e| anyhow::anyhow!(e))?;
+        if blend_width < 0.0 || blend_width > 0.5 {
+            return Err(anyhow::anyhow!(
+                "S103: wang_tiles_node(): 'blend_width' must be 0.0-0.5, got {}",
+                blend_width
+            ));
+        }
+
+        let mut dict = new_dict(heap);
+
+        dict.insert_hashed(hashed_key(heap, "id"), heap.alloc_str(id).to_value());
+        dict.insert_hashed(
+            hashed_key(heap, "type"),
+            heap.alloc_str("wang_tiles").to_value(),
+        );
+        dict.insert_hashed(hashed_key(heap, "input"), heap.alloc_str(input).to_value());
+
+        // Create tile_count array
+        let tile_count = heap.alloc(AllocList(vec![
+            heap.alloc(tile_count_x).to_value(),
+            heap.alloc(tile_count_y).to_value(),
+        ]));
+        dict.insert_hashed(hashed_key(heap, "tile_count"), tile_count);
+        dict.insert_hashed(
+            hashed_key(heap, "blend_width"),
+            heap.alloc(blend_width).to_value(),
+        );
+
+        Ok(dict)
+    }
+
+    /// Creates a texture bombing (random splat) node.
+    ///
+    /// Places randomized stamps of the input texture across the output,
+    /// with configurable density, scale variation, rotation, and blending.
+    ///
+    /// # Arguments
+    /// * `id` - Unique node identifier
+    /// * `input` - Input texture node id to scatter
+    /// * `density` - Stamp density (0.0-1.0, default: 0.5)
+    /// * `scale_min` - Minimum scale factor (default: 0.8)
+    /// * `scale_max` - Maximum scale factor (default: 1.2)
+    /// * `rotation_variation` - Rotation variation in degrees (0-360, default: 0.0)
+    /// * `blend_mode` - Blend mode: "max", "add", "average" (default: "max")
+    ///
+    /// # Returns
+    /// A dict matching the TextureProceduralNode with TextureBomb op.
+    ///
+    /// # Example
+    /// ```starlark
+    /// texture_bomb_node("scattered", "base_texture", 0.5)
+    /// texture_bomb_node("scattered", "base_texture", 0.7, 0.8, 1.2, 180.0, "add")
+    /// ```
+    fn texture_bomb_node<'v>(
+        id: &str,
+        input: &str,
+        #[starlark(default = 0.5)] density: f64,
+        #[starlark(default = 0.8)] scale_min: f64,
+        #[starlark(default = 1.2)] scale_max: f64,
+        #[starlark(default = 0.0)] rotation_variation: f64,
+        #[starlark(default = "max")] blend_mode: &str,
+        heap: &'v Heap,
+    ) -> anyhow::Result<Dict<'v>> {
+        validate_non_empty(id, "texture_bomb_node", "id").map_err(|e| anyhow::anyhow!(e))?;
+        validate_non_empty(input, "texture_bomb_node", "input").map_err(|e| anyhow::anyhow!(e))?;
+
+        if density < 0.0 || density > 1.0 {
+            return Err(anyhow::anyhow!(
+                "S103: texture_bomb_node(): 'density' must be 0.0-1.0, got {}",
+                density
+            ));
+        }
+        if scale_min <= 0.0 {
+            return Err(anyhow::anyhow!(
+                "S103: texture_bomb_node(): 'scale_min' must be positive, got {}",
+                scale_min
+            ));
+        }
+        if scale_max < scale_min {
+            return Err(anyhow::anyhow!(
+                "S103: texture_bomb_node(): 'scale_max' ({}) must be >= 'scale_min' ({})",
+                scale_max,
+                scale_min
+            ));
+        }
+        if rotation_variation < 0.0 || rotation_variation > 360.0 {
+            return Err(anyhow::anyhow!(
+                "S103: texture_bomb_node(): 'rotation_variation' must be 0-360, got {}",
+                rotation_variation
+            ));
+        }
+
+        let valid_blend_modes = ["max", "add", "average"];
+        validate_enum(blend_mode, &valid_blend_modes, "texture_bomb_node", "blend_mode")
+            .map_err(|e| anyhow::anyhow!(e))?;
+
+        let mut dict = new_dict(heap);
+
+        dict.insert_hashed(hashed_key(heap, "id"), heap.alloc_str(id).to_value());
+        dict.insert_hashed(
+            hashed_key(heap, "type"),
+            heap.alloc_str("texture_bomb").to_value(),
+        );
+        dict.insert_hashed(hashed_key(heap, "input"), heap.alloc_str(input).to_value());
+        dict.insert_hashed(hashed_key(heap, "density"), heap.alloc(density).to_value());
+
+        // Create scale_variation array
+        let scale_variation = heap.alloc(AllocList(vec![
+            heap.alloc(scale_min).to_value(),
+            heap.alloc(scale_max).to_value(),
+        ]));
+        dict.insert_hashed(hashed_key(heap, "scale_variation"), scale_variation);
+        dict.insert_hashed(
+            hashed_key(heap, "rotation_variation"),
+            heap.alloc(rotation_variation).to_value(),
+        );
+        dict.insert_hashed(
+            hashed_key(heap, "blend_mode"),
+            heap.alloc_str(blend_mode).to_value(),
+        );
+
+        Ok(dict)
+    }
 }
 
 #[cfg(test)]
@@ -1071,5 +1228,124 @@ mod tests {
     fn test_normal_from_height_node_custom() {
         let result = eval_to_json("normal_from_height_node(\"normals\", \"height\", 2.5)").unwrap();
         assert_eq!(result["strength"], 2.5);
+    }
+
+    // ========================================================================
+    // wang_tiles_node() tests
+    // ========================================================================
+
+    #[test]
+    fn test_wang_tiles_node_defaults() {
+        let result = eval_to_json("wang_tiles_node(\"tiled\", \"base\")").unwrap();
+        assert_eq!(result["id"], "tiled");
+        assert_eq!(result["type"], "wang_tiles");
+        assert_eq!(result["input"], "base");
+        assert!(result["tile_count"].is_array());
+        let tile_count = result["tile_count"].as_array().unwrap();
+        assert_eq!(tile_count[0], 4);
+        assert_eq!(tile_count[1], 4);
+        assert_eq!(result["blend_width"], 0.1);
+    }
+
+    #[test]
+    fn test_wang_tiles_node_custom() {
+        let result = eval_to_json("wang_tiles_node(\"tiled\", \"base\", 2, 3, 0.25)").unwrap();
+        let tile_count = result["tile_count"].as_array().unwrap();
+        assert_eq!(tile_count[0], 2);
+        assert_eq!(tile_count[1], 3);
+        assert_eq!(result["blend_width"], 0.25);
+    }
+
+    #[test]
+    fn test_wang_tiles_node_invalid_blend_width() {
+        let result = eval_to_json("wang_tiles_node(\"t\", \"b\", 4, 4, 0.6)");
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert!(err.contains("S103"));
+        assert!(err.contains("blend_width"));
+    }
+
+    #[test]
+    fn test_wang_tiles_node_invalid_tile_count() {
+        let result = eval_to_json("wang_tiles_node(\"t\", \"b\", 0, 4)");
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert!(err.contains("S103"));
+        assert!(err.contains("tile_count_x"));
+    }
+
+    // ========================================================================
+    // texture_bomb_node() tests
+    // ========================================================================
+
+    #[test]
+    fn test_texture_bomb_node_defaults() {
+        let result = eval_to_json("texture_bomb_node(\"scattered\", \"base\")").unwrap();
+        assert_eq!(result["id"], "scattered");
+        assert_eq!(result["type"], "texture_bomb");
+        assert_eq!(result["input"], "base");
+        assert_eq!(result["density"], 0.5);
+        assert!(result["scale_variation"].is_array());
+        let scale = result["scale_variation"].as_array().unwrap();
+        assert_eq!(scale[0], 0.8);
+        assert_eq!(scale[1], 1.2);
+        assert_eq!(result["rotation_variation"], 0.0);
+        assert_eq!(result["blend_mode"], "max");
+    }
+
+    #[test]
+    fn test_texture_bomb_node_custom() {
+        let result =
+            eval_to_json("texture_bomb_node(\"scattered\", \"base\", 0.7, 0.5, 1.5, 180.0, \"add\")")
+                .unwrap();
+        assert_eq!(result["density"], 0.7);
+        let scale = result["scale_variation"].as_array().unwrap();
+        assert_eq!(scale[0], 0.5);
+        assert_eq!(scale[1], 1.5);
+        assert_eq!(result["rotation_variation"], 180.0);
+        assert_eq!(result["blend_mode"], "add");
+    }
+
+    #[test]
+    fn test_texture_bomb_node_average_blend() {
+        let result =
+            eval_to_json("texture_bomb_node(\"s\", \"b\", 0.5, 1.0, 1.0, 0.0, \"average\")").unwrap();
+        assert_eq!(result["blend_mode"], "average");
+    }
+
+    #[test]
+    fn test_texture_bomb_node_invalid_density() {
+        let result = eval_to_json("texture_bomb_node(\"s\", \"b\", 1.5)");
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert!(err.contains("S103"));
+        assert!(err.contains("density"));
+    }
+
+    #[test]
+    fn test_texture_bomb_node_invalid_scale_order() {
+        let result = eval_to_json("texture_bomb_node(\"s\", \"b\", 0.5, 1.5, 0.8)");
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert!(err.contains("S103"));
+        assert!(err.contains("scale_max"));
+    }
+
+    #[test]
+    fn test_texture_bomb_node_invalid_rotation() {
+        let result = eval_to_json("texture_bomb_node(\"s\", \"b\", 0.5, 0.8, 1.2, 400.0)");
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert!(err.contains("S103"));
+        assert!(err.contains("rotation_variation"));
+    }
+
+    #[test]
+    fn test_texture_bomb_node_invalid_blend_mode() {
+        let result = eval_to_json("texture_bomb_node(\"s\", \"b\", 0.5, 0.8, 1.2, 0.0, \"invalid\")");
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert!(err.contains("S104"));
+        assert!(err.contains("blend_mode"));
     }
 }

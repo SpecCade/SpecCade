@@ -21,6 +21,7 @@ use super::ops_math::{
 use super::ops_primitive::{
     eval_checkerboard, eval_constant, eval_gradient, eval_noise, eval_stripes,
 };
+use super::ops_stochastic::{eval_texture_bomb, eval_wang_tiles, BombBlendMode};
 use super::GraphValue;
 
 /// Helper macro to evaluate a dependency node.
@@ -583,6 +584,59 @@ pub(super) fn eval_node<'a>(
             );
             let in_buf = expect_gray(cache, input)?;
             eval_normal_from_height(in_buf, *strength)
+        }
+
+        // -----------------------------------------------------------------
+        // Stochastic tiling ops
+        // -----------------------------------------------------------------
+        TextureProceduralOp::WangTiles {
+            input,
+            tile_count,
+            blend_width,
+        } => {
+            eval_dep!(
+                input,
+                nodes_by_id,
+                cache,
+                visiting,
+                width,
+                height,
+                tileable,
+                seed
+            );
+            let in_buf = expect_gray(cache, input)?;
+            eval_wang_tiles(in_buf, *tile_count, *blend_width, derived_seed)
+        }
+
+        TextureProceduralOp::TextureBomb {
+            input,
+            density,
+            scale_variation,
+            rotation_variation,
+            blend_mode,
+        } => {
+            eval_dep!(
+                input,
+                nodes_by_id,
+                cache,
+                visiting,
+                width,
+                height,
+                tileable,
+                seed
+            );
+            let in_buf = expect_gray(cache, input)?;
+            let mode = BombBlendMode::from_str(blend_mode)?;
+            eval_texture_bomb(
+                in_buf,
+                width,
+                height,
+                *density,
+                *scale_variation,
+                *rotation_variation,
+                mode,
+                derived_seed,
+            )
         }
     };
 

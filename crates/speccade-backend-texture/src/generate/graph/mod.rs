@@ -16,6 +16,7 @@ mod ops_color;
 mod ops_filter;
 mod ops_math;
 mod ops_primitive;
+mod ops_stochastic;
 
 #[cfg(test)]
 mod tests;

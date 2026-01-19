@@ -318,6 +318,58 @@ Creates a normal map from height field node.
 normal_from_height_node("normals", "heightmap", 1.0)
 ```
 
+### wang_tiles_node()
+
+Creates a Wang tiles stochastic tiling node for seamless random tiling.
+
+Wang tiles use edge-matching to create seamless random tiling from an input texture,
+reducing visible repetition patterns.
+
+**Parameters:**
+| Name | Type | Required | Default | Description |
+|------|------|----------|---------|-------------|
+| id | str | Yes | - | Unique node identifier |
+| input | str | Yes | - | Input texture node id |
+| tile_count_x | int | No | 4 | Number of tiles in X direction |
+| tile_count_y | int | No | 4 | Number of tiles in Y direction |
+| blend_width | f64 | No | 0.1 | Blend width at edges (0.0-0.5) |
+
+**Returns:** Dict matching TextureProceduralNode with WangTiles op.
+
+**Example:**
+```python
+wang_tiles_node("tiled", "base_texture")
+wang_tiles_node("tiled", "base_texture", 4, 4)
+wang_tiles_node("tiled", "base_texture", 2, 2, 0.2)
+```
+
+### texture_bomb_node()
+
+Creates a texture bombing (random splat) node.
+
+Places randomized stamps of the input texture across the output,
+with configurable density, scale variation, rotation, and blending.
+
+**Parameters:**
+| Name | Type | Required | Default | Description |
+|------|------|----------|---------|-------------|
+| id | str | Yes | - | Unique node identifier |
+| input | str | Yes | - | Input texture node id to scatter |
+| density | f64 | No | 0.5 | Stamp density (0.0-1.0) |
+| scale_min | f64 | No | 0.8 | Minimum scale factor |
+| scale_max | f64 | No | 1.2 | Maximum scale factor |
+| rotation_variation | f64 | No | 0.0 | Rotation variation in degrees (0-360) |
+| blend_mode | str | No | "max" | Blend mode: "max", "add", "average" |
+
+**Returns:** Dict matching TextureProceduralNode with TextureBomb op.
+
+**Example:**
+```python
+texture_bomb_node("scattered", "base_texture")
+texture_bomb_node("scattered", "base_texture", 0.5)
+texture_bomb_node("scattered", "base_texture", 0.7, 0.8, 1.2, 180.0, "add")
+```
+
 ---
 
 ## Graph Functions
