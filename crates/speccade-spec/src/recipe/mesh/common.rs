@@ -153,6 +153,45 @@ impl Default for CollisionMeshSettings {
     }
 }
 
+/// Navmesh analysis settings.
+///
+/// These settings control how mesh geometry is analyzed for walkability,
+/// producing metadata about walkable surfaces and potential stair geometry.
+/// Note: This produces classification metadata only, not actual navmesh generation.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct NavmeshSettings {
+    /// Maximum slope angle in degrees for a surface to be considered walkable.
+    /// Faces with normals deviating more than this from vertical are non-walkable.
+    /// Default: 45.0 degrees.
+    #[serde(default = "default_walkable_slope_max")]
+    pub walkable_slope_max: f64,
+    /// Enable stair detection analysis.
+    /// When true, attempts to identify potential stair geometry.
+    /// Default: false.
+    #[serde(default)]
+    pub stair_detection: bool,
+    /// Step height threshold for stair detection in world units.
+    /// Consecutive horizontal surfaces within this height difference
+    /// may be classified as stairs. Only used if stair_detection is true.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub stair_step_height: Option<f64>,
+}
+
+fn default_walkable_slope_max() -> f64 {
+    45.0
+}
+
+impl Default for NavmeshSettings {
+    fn default() -> Self {
+        Self {
+            walkable_slope_max: default_walkable_slope_max(),
+            stair_detection: false,
+            stair_step_height: None,
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -603,5 +642,105 @@ mod tests {
         let json = r#"{"collision_type":"convex_hull","unknown_field":123}"#;
         let result: Result<CollisionMeshSettings, _> = serde_json::from_str(json);
         assert!(result.is_err());
+    }
+
+    // ========================================================================
+    // NavmeshSettings Tests
+    // ========================================================================
+
+    #[test]
+    fn test_navmesh_settings_default() {
+        let settings = NavmeshSettings::default();
+        assert_eq!(settings.walkable_slope_max, 45.0);
+        assert!(!settings.stair_detection);
+        assert_eq!(settings.stair_step_height, None);
+    }
+
+    #[test]
+    fn test_navmesh_settings_from_json_minimal() {
+        let json = r#"{}"#;
+        let parsed: NavmeshSettings = serde_json::from_str(json).unwrap();
+        assert_eq!(parsed.walkable_slope_max, 45.0);
+        assert!(!parsed.stair_detection);
+        assert_eq!(parsed.stair_step_height, None);
+    }
+
+    #[test]
+    fn test_navmesh_settings_from_json_complete() {
+        let json = r#"{
+            "walkable_slope_max": 60.0,
+            "stair_detection": true,
+            "stair_step_height": 0.3
+        }"#;
+        let parsed: NavmeshSettings = serde_json::from_str(json).unwrap();
+        assert_eq!(parsed.walkable_slope_max, 60.0);
+        assert!(parsed.stair_detection);
+        assert_eq!(parsed.stair_step_height, Some(0.3));
+    }
+
+    #[test]
+    fn test_navmesh_settings_custom_slope() {
+        let settings = NavmeshSettings {
+            walkable_slope_max: 30.0,
+            stair_detection: false,
+            stair_step_height: None,
+        };
+
+        let json = serde_json::to_string(&settings).unwrap();
+        assert!(json.contains("\"walkable_slope_max\":30.0"));
+        assert!(!json.contains("stair_step_height"));
+
+        let parsed: NavmeshSettings = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed.walkable_slope_max, 30.0);
+        assert!(!parsed.stair_detection);
+    }
+
+    #[test]
+    fn test_navmesh_settings_with_stair_detection() {
+        let settings = NavmeshSettings {
+            walkable_slope_max: 45.0,
+            stair_detection: true,
+            stair_step_height: Some(0.25),
+        };
+
+        let json = serde_json::to_string(&settings).unwrap();
+        assert!(json.contains("\"stair_detection\":true"));
+        assert!(json.contains("\"stair_step_height\":0.25"));
+
+        let parsed: NavmeshSettings = serde_json::from_str(&json).unwrap();
+        assert!(parsed.stair_detection);
+        assert_eq!(parsed.stair_step_height, Some(0.25));
+    }
+
+    #[test]
+    fn test_navmesh_settings_serialization_omits_none() {
+        let settings = NavmeshSettings {
+            walkable_slope_max: 45.0,
+            stair_detection: true,
+            stair_step_height: None,
+        };
+
+        let json = serde_json::to_string(&settings).unwrap();
+        assert!(!json.contains("stair_step_height"));
+    }
+
+    #[test]
+    fn test_navmesh_settings_rejects_unknown_fields() {
+        let json = r#"{"walkable_slope_max":45.0,"unknown_field":123}"#;
+        let result: Result<NavmeshSettings, _> = serde_json::from_str(json);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_navmesh_settings_roundtrip() {
+        let settings = NavmeshSettings {
+            walkable_slope_max: 50.0,
+            stair_detection: true,
+            stair_step_height: Some(0.2),
+        };
+
+        let json = serde_json::to_string(&settings).unwrap();
+        let parsed: NavmeshSettings = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed, settings);
     }
 }

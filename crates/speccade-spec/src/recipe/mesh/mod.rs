@@ -5,7 +5,7 @@ mod modifiers;
 mod primitives;
 mod static_mesh;
 
-pub use common::{CollisionMeshSettings, CollisionType, MaterialSlot, MeshConstraints, MeshExportSettings, NormalsPreset, NormalsSettings};
+pub use common::{CollisionMeshSettings, CollisionType, MaterialSlot, MeshConstraints, MeshExportSettings, NavmeshSettings, NormalsPreset, NormalsSettings};
 pub use modifiers::{MeshModifier, UvProjection, UvProjectionMethod};
 pub use primitives::MeshPrimitive;
 pub use static_mesh::{

@@ -2,7 +2,7 @@
 
 use serde::{Deserialize, Serialize};
 
-use super::common::{CollisionMeshSettings, MaterialSlot, MeshConstraints, MeshExportSettings, NormalsSettings};
+use super::common::{CollisionMeshSettings, MaterialSlot, MeshConstraints, MeshExportSettings, NavmeshSettings, NormalsSettings};
 use super::modifiers::{MeshModifier, UvProjection};
 use super::primitives::MeshPrimitive;
 
@@ -78,6 +78,12 @@ pub struct StaticMeshBlenderPrimitivesV1Params {
     /// When specified, generates a collision mesh alongside the primary mesh.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub collision_mesh: Option<CollisionMeshSettings>,
+    /// Navmesh analysis settings.
+    /// When specified, analyzes mesh geometry for walkability and emits
+    /// navmesh metadata (walkable/non-walkable face counts, stair detection).
+    /// Note: This produces classification metadata only, not actual navmesh generation.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub navmesh: Option<NavmeshSettings>,
 }
 
 #[cfg(test)]
@@ -103,6 +109,7 @@ mod tests {
             constraints: None,
             lod_chain: None,
             collision_mesh: None,
+            navmesh: None,
         };
 
         let json = serde_json::to_string(&params).unwrap();
@@ -126,6 +133,7 @@ mod tests {
             constraints: None,
             lod_chain: None,
             collision_mesh: None,
+            navmesh: None,
         };
 
         let json = serde_json::to_string(&params).unwrap();
@@ -155,6 +163,7 @@ mod tests {
             constraints: None,
             lod_chain: None,
             collision_mesh: None,
+            navmesh: None,
         };
 
         let json = serde_json::to_string(&params).unwrap();
@@ -185,6 +194,7 @@ mod tests {
             constraints: None,
             lod_chain: None,
             collision_mesh: None,
+            navmesh: None,
         };
 
         let json = serde_json::to_string(&params).unwrap();
@@ -212,6 +222,7 @@ mod tests {
             constraints: None,
             lod_chain: None,
             collision_mesh: None,
+            navmesh: None,
         };
 
         let json = serde_json::to_string(&params).unwrap();
@@ -243,6 +254,7 @@ mod tests {
             constraints: None,
             lod_chain: None,
             collision_mesh: None,
+            navmesh: None,
         };
 
         let json = serde_json::to_string(&params).unwrap();
@@ -272,6 +284,7 @@ mod tests {
             constraints: None,
             lod_chain: None,
             collision_mesh: None,
+            navmesh: None,
         };
 
         let json = serde_json::to_string(&params).unwrap();
@@ -303,6 +316,7 @@ mod tests {
             constraints: None,
             lod_chain: None,
             collision_mesh: None,
+            navmesh: None,
         };
 
         let json = serde_json::to_string(&params).unwrap();
@@ -355,6 +369,7 @@ mod tests {
             }),
             lod_chain: None,
             collision_mesh: None,
+            navmesh: None,
         };
 
         let json = serde_json::to_string(&params).unwrap();
@@ -511,6 +526,7 @@ mod tests {
                 decimate_method: LodDecimateMethod::Collapse,
             }),
             collision_mesh: None,
+            navmesh: None,
         };
 
         let json = serde_json::to_string(&params).unwrap();
@@ -585,6 +601,7 @@ mod tests {
                 target_faces: None,
                 output_suffix: "_col".to_string(),
             }),
+            navmesh: None,
         };
 
         let json = serde_json::to_string(&params).unwrap();
@@ -620,6 +637,7 @@ mod tests {
                 target_faces: Some(64),
                 output_suffix: "_col".to_string(),
             }),
+            navmesh: None,
         };
 
         let json = serde_json::to_string(&params).unwrap();
@@ -653,6 +671,7 @@ mod tests {
                 target_faces: None,
                 output_suffix: "_box".to_string(),
             }),
+            navmesh: None,
         };
 
         let json = serde_json::to_string(&params).unwrap();
@@ -699,6 +718,7 @@ mod tests {
                 target_faces: None,
                 output_suffix: "_col".to_string(),
             }),
+            navmesh: None,
         };
 
         let json = serde_json::to_string(&params).unwrap();
@@ -708,5 +728,122 @@ mod tests {
         let parsed: StaticMeshBlenderPrimitivesV1Params = serde_json::from_str(&json).unwrap();
         assert!(parsed.lod_chain.is_some());
         assert!(parsed.collision_mesh.is_some());
+    }
+
+    // ========================================================================
+    // Navmesh Integration Tests
+    // ========================================================================
+
+    #[test]
+    fn test_mesh_params_with_navmesh_basic() {
+        let params = StaticMeshBlenderPrimitivesV1Params {
+            base_primitive: MeshPrimitive::Plane,
+            dimensions: [10.0, 10.0, 0.0],
+            modifiers: vec![],
+            uv_projection: None,
+            normals: None,
+            material_slots: vec![],
+            export: None,
+            constraints: None,
+            lod_chain: None,
+            collision_mesh: None,
+            navmesh: Some(NavmeshSettings::default()),
+        };
+
+        let json = serde_json::to_string(&params).unwrap();
+        assert!(json.contains("navmesh"));
+        assert!(json.contains("\"walkable_slope_max\":45.0"));
+
+        let parsed: StaticMeshBlenderPrimitivesV1Params = serde_json::from_str(&json).unwrap();
+        assert!(parsed.navmesh.is_some());
+        let navmesh = parsed.navmesh.unwrap();
+        assert_eq!(navmesh.walkable_slope_max, 45.0);
+        assert!(!navmesh.stair_detection);
+    }
+
+    #[test]
+    fn test_mesh_params_with_navmesh_stair_detection() {
+        let params = StaticMeshBlenderPrimitivesV1Params {
+            base_primitive: MeshPrimitive::Cube,
+            dimensions: [2.0, 2.0, 1.0],
+            modifiers: vec![],
+            uv_projection: None,
+            normals: None,
+            material_slots: vec![],
+            export: None,
+            constraints: None,
+            lod_chain: None,
+            collision_mesh: None,
+            navmesh: Some(NavmeshSettings {
+                walkable_slope_max: 60.0,
+                stair_detection: true,
+                stair_step_height: Some(0.25),
+            }),
+        };
+
+        let json = serde_json::to_string(&params).unwrap();
+        assert!(json.contains("\"stair_detection\":true"));
+        assert!(json.contains("\"stair_step_height\":0.25"));
+
+        let parsed: StaticMeshBlenderPrimitivesV1Params = serde_json::from_str(&json).unwrap();
+        let navmesh = parsed.navmesh.unwrap();
+        assert_eq!(navmesh.walkable_slope_max, 60.0);
+        assert!(navmesh.stair_detection);
+        assert_eq!(navmesh.stair_step_height, Some(0.25));
+    }
+
+    #[test]
+    fn test_mesh_params_with_navmesh_and_collision() {
+        use super::super::common::{CollisionMeshSettings, CollisionType};
+
+        let params = StaticMeshBlenderPrimitivesV1Params {
+            base_primitive: MeshPrimitive::Cube,
+            dimensions: [5.0, 5.0, 1.0],
+            modifiers: vec![],
+            uv_projection: None,
+            normals: None,
+            material_slots: vec![],
+            export: None,
+            constraints: None,
+            lod_chain: None,
+            collision_mesh: Some(CollisionMeshSettings {
+                collision_type: CollisionType::SimplifiedMesh,
+                target_faces: Some(32),
+                output_suffix: "_col".to_string(),
+            }),
+            navmesh: Some(NavmeshSettings {
+                walkable_slope_max: 45.0,
+                stair_detection: false,
+                stair_step_height: None,
+            }),
+        };
+
+        let json = serde_json::to_string(&params).unwrap();
+        assert!(json.contains("collision_mesh"));
+        assert!(json.contains("navmesh"));
+
+        let parsed: StaticMeshBlenderPrimitivesV1Params = serde_json::from_str(&json).unwrap();
+        assert!(parsed.collision_mesh.is_some());
+        assert!(parsed.navmesh.is_some());
+    }
+
+    #[test]
+    fn test_mesh_params_navmesh_from_json() {
+        let json = r#"{
+            "base_primitive": "plane",
+            "dimensions": [10.0, 10.0, 0.0],
+            "navmesh": {
+                "walkable_slope_max": 30.0,
+                "stair_detection": true,
+                "stair_step_height": 0.3
+            }
+        }"#;
+
+        let parsed: StaticMeshBlenderPrimitivesV1Params = serde_json::from_str(json).unwrap();
+        assert!(parsed.navmesh.is_some());
+        let navmesh = parsed.navmesh.unwrap();
+        assert_eq!(navmesh.walkable_slope_max, 30.0);
+        assert!(navmesh.stair_detection);
+        assert_eq!(navmesh.stair_step_height, Some(0.3));
     }
 }

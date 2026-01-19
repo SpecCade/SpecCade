@@ -33,6 +33,7 @@ The `static_mesh.blender_primitives_v1` recipe builds meshes from Blender primit
 | `constraints` | object | No | Validation constraints (see constraints below) |
 | `lod_chain` | object | No | LOD chain settings for multi-LOD export (see LOD chain below) |
 | `collision_mesh` | object | No | Collision mesh generation settings (see collision mesh below) |
+| `navmesh` | object | No | Navmesh analysis settings for walkability metadata (see navmesh below) |
 
 ### Primitives
 
@@ -508,6 +509,95 @@ This will generate two files:
 - Box collision is the fastest but least accurate; convex hull provides a good balance
 - For complex concave objects, use `simplified_mesh` with an appropriate `target_faces` count
 
+### Navmesh
+
+Navmesh settings enable analysis of mesh geometry for walkability classification. This produces metadata about which surfaces are walkable (based on slope angle) and optionally detects potential stair geometry.
+
+**Note:** This produces classification metadata only, not actual navmesh/pathfinding mesh generation. Use this metadata to inform game engine navmesh baking or level design.
+
+```json
+"navmesh": {
+  "walkable_slope_max": 45.0,
+  "stair_detection": true,
+  "stair_step_height": 0.3
+}
+```
+
+#### Navmesh Settings
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `walkable_slope_max` | f64 | 45.0 | Maximum slope angle in degrees for a surface to be considered walkable |
+| `stair_detection` | bool | false | Enable detection of potential stair geometry |
+| `stair_step_height` | f64 | - | Step height threshold for stair detection (only used if stair_detection is true) |
+
+#### Walkability Classification
+
+A face is classified as walkable if its surface normal is within `walkable_slope_max` degrees of vertical (Z-up). Faces with steeper slopes are classified as non-walkable.
+
+For example, with the default `walkable_slope_max: 45.0`:
+- A perfectly horizontal floor (0 degrees from vertical) is walkable
+- A 30-degree ramp is walkable
+- A 60-degree slope is non-walkable
+- A vertical wall (90 degrees) is non-walkable
+
+#### Stair Detection
+
+When `stair_detection` is enabled, the analyzer looks for clusters of walkable surfaces at regular height intervals matching the `stair_step_height` threshold. This helps identify potential stair geometry in the mesh.
+
+#### Navmesh Examples
+
+**Basic walkability analysis:**
+
+```json
+"navmesh": {
+  "walkable_slope_max": 45.0
+}
+```
+
+**Strict walkability with stair detection:**
+
+```json
+"navmesh": {
+  "walkable_slope_max": 30.0,
+  "stair_detection": true,
+  "stair_step_height": 0.25
+}
+```
+
+#### Example with Navmesh Analysis
+
+```json
+{
+  "spec_version": 1,
+  "asset_id": "level_floor",
+  "asset_type": "static_mesh",
+  "license": "CC0-1.0",
+  "seed": 7003,
+  "outputs": [
+    { "kind": "primary", "format": "glb", "path": "level_floor.glb" }
+  ],
+  "recipe": {
+    "kind": "static_mesh.blender_primitives_v1",
+    "params": {
+      "base_primitive": "plane",
+      "dimensions": [10.0, 10.0, 0.0],
+      "navmesh": {
+        "walkable_slope_max": 45.0,
+        "stair_detection": false
+      }
+    }
+  }
+}
+```
+
+#### Navmesh Notes
+
+- Navmesh analysis is performed on the original mesh before collision mesh or LOD chain processing
+- The analysis uses world-space face normals, accounting for object rotation
+- Stair detection uses height clustering to identify step-like patterns
+- Results are metadata only; actual navmesh generation requires game engine tools (e.g., Recast/Detour)
+
 ## Example Spec
 
 ```json
@@ -616,6 +706,23 @@ The `collision_mesh` object includes:
 | `triangle_count` | Triangle count of the collision mesh |
 | `target_faces` | Target face count (for simplified_mesh type only) |
 | `bounding_box` | Bounding box of the collision mesh |
+
+### Navmesh Metrics
+
+When `navmesh` is specified, the report includes walkability analysis metrics:
+
+| Metric | Description |
+|--------|-------------|
+| `navmesh` | Object containing navmesh analysis metrics (see below) |
+
+The `navmesh` object includes:
+
+| Metric | Description |
+|--------|-------------|
+| `walkable_face_count` | Number of faces classified as walkable |
+| `non_walkable_face_count` | Number of faces classified as non-walkable |
+| `walkable_percentage` | Percentage of faces that are walkable (0-100) |
+| `stair_candidates` | Number of potential stair surfaces detected (only if stair_detection enabled) |
 
 ## Post-Generation Verification
 

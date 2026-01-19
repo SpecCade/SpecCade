@@ -4021,6 +4021,154 @@ def export_collision_mesh(
     bpy.ops.export_scene.gltf(**export_settings)
 
 
+# =============================================================================
+# Navmesh Analysis
+# =============================================================================
+
+def analyze_navmesh(
+    obj: 'bpy.types.Object',
+    navmesh_spec: Dict
+) -> Dict[str, Any]:
+    """
+    Analyze mesh geometry for walkability and produce navmesh metadata.
+
+    This function classifies faces as walkable or non-walkable based on their
+    slope (angle from vertical), and optionally detects potential stair geometry.
+
+    Note: This produces classification metadata only, not actual navmesh generation.
+
+    Args:
+        obj: The mesh object to analyze.
+        navmesh_spec: Navmesh settings with:
+            - walkable_slope_max: Maximum slope angle in degrees for walkable surfaces
+            - stair_detection: Whether to detect stairs
+            - stair_step_height: Step height threshold for stair detection
+
+    Returns:
+        Dictionary of navmesh metrics:
+            - walkable_face_count: Number of walkable faces
+            - non_walkable_face_count: Number of non-walkable faces
+            - walkable_percentage: Percentage of faces that are walkable
+            - stair_candidates: Number of potential stair surfaces (if stair_detection enabled)
+    """
+    walkable_slope_max = navmesh_spec.get("walkable_slope_max", 45.0)
+    stair_detection = navmesh_spec.get("stair_detection", False)
+    stair_step_height = navmesh_spec.get("stair_step_height", 0.3)
+
+    # Convert slope threshold to radians and compute the minimum Z component
+    # of the normal for a face to be considered walkable
+    # A face is walkable if its normal is within walkable_slope_max degrees of vertical (Z-up)
+    slope_rad = math.radians(walkable_slope_max)
+    min_normal_z = math.cos(slope_rad)
+
+    # Get evaluated mesh data
+    depsgraph = bpy.context.evaluated_depsgraph_get()
+    obj_eval = obj.evaluated_get(depsgraph)
+    mesh = obj_eval.to_mesh()
+
+    walkable_count = 0
+    non_walkable_count = 0
+    walkable_heights = []  # Z positions of walkable surface centers (for stair detection)
+
+    for poly in mesh.polygons:
+        # Get face normal in world space
+        # The polygon normal is in local space, so transform it
+        normal_local = poly.normal
+        # For world space, we need to transform by the object's rotation matrix (not translation)
+        normal_world = obj.matrix_world.to_3x3() @ normal_local
+        normal_world.normalize()
+
+        # Check if face is walkable based on slope
+        # A face is walkable if its normal Z component >= min_normal_z (pointing mostly up)
+        if normal_world.z >= min_normal_z:
+            walkable_count += 1
+            if stair_detection:
+                # Record the center Z position of this face for stair analysis
+                center = poly.center
+                world_center = obj.matrix_world @ center
+                walkable_heights.append(world_center.z)
+        else:
+            non_walkable_count += 1
+
+    obj_eval.to_mesh_clear()
+
+    total_faces = walkable_count + non_walkable_count
+    walkable_percentage = (walkable_count / total_faces * 100.0) if total_faces > 0 else 0.0
+
+    metrics = {
+        "walkable_face_count": walkable_count,
+        "non_walkable_face_count": non_walkable_count,
+        "walkable_percentage": round(walkable_percentage, 2),
+    }
+
+    # Stair detection: look for clusters of walkable surfaces at regular height intervals
+    if stair_detection and walkable_heights:
+        stair_candidates = _detect_stair_candidates(walkable_heights, stair_step_height)
+        metrics["stair_candidates"] = stair_candidates
+
+    return metrics
+
+
+def _detect_stair_candidates(
+    walkable_heights: List[float],
+    step_height: float
+) -> int:
+    """
+    Detect potential stair geometry by analyzing walkable surface heights.
+
+    Stairs are identified as sequences of walkable surfaces with height
+    differences approximately equal to the step height threshold.
+
+    Args:
+        walkable_heights: List of Z positions of walkable surface centers.
+        step_height: Expected height difference between stair steps.
+
+    Returns:
+        Number of detected stair candidate surfaces.
+    """
+    if not walkable_heights or step_height <= 0:
+        return 0
+
+    # Sort heights and cluster into potential steps
+    sorted_heights = sorted(walkable_heights)
+
+    # Tolerance for step height matching (allow some variation)
+    tolerance = step_height * 0.3
+
+    stair_candidates = 0
+    height_clusters = []
+    current_cluster = [sorted_heights[0]]
+
+    # Group heights into clusters (faces at similar heights)
+    for h in sorted_heights[1:]:
+        if abs(h - current_cluster[-1]) < tolerance * 0.5:
+            # Same level (within 15% of step height)
+            current_cluster.append(h)
+        else:
+            # New cluster
+            if current_cluster:
+                avg_height = sum(current_cluster) / len(current_cluster)
+                height_clusters.append((avg_height, len(current_cluster)))
+            current_cluster = [h]
+
+    if current_cluster:
+        avg_height = sum(current_cluster) / len(current_cluster)
+        height_clusters.append((avg_height, len(current_cluster)))
+
+    # Look for sequences of clusters with step_height spacing
+    if len(height_clusters) >= 2:
+        for i in range(len(height_clusters) - 1):
+            height_diff = height_clusters[i + 1][0] - height_clusters[i][0]
+            if abs(height_diff - step_height) < tolerance:
+                # This looks like a stair step
+                stair_candidates += height_clusters[i][1]
+        # Include the top step if the previous one matched
+        if stair_candidates > 0:
+            stair_candidates += height_clusters[-1][1]
+
+    return stair_candidates
+
+
 def export_glb_with_lods(
     output_path: Path,
     lod_objects: List['bpy.types.Object'],
@@ -4117,9 +4265,15 @@ def handle_static_mesh(spec: Dict, out_root: Path, report_path: Path) -> None:
         # Export with tangents if requested
         export_tangents = export_settings.get("tangents", False)
 
-        # Check for LOD chain and collision mesh
+        # Check for LOD chain, collision mesh, and navmesh analysis
         lod_chain_spec = params.get("lod_chain")
         collision_mesh_spec = params.get("collision_mesh")
+        navmesh_spec = params.get("navmesh")
+
+        # Analyze navmesh first (before collision mesh or LOD chain modifies the object)
+        navmesh_metrics = None
+        if navmesh_spec:
+            navmesh_metrics = analyze_navmesh(obj, navmesh_spec)
 
         # Generate collision mesh first (before LOD chain modifies the object)
         collision_obj = None
@@ -4171,6 +4325,10 @@ def handle_static_mesh(spec: Dict, out_root: Path, report_path: Path) -> None:
             metrics["collision_mesh_path"] = str(collision_output_path.name)
             # Clean up collision object
             bpy.data.objects.remove(collision_obj, do_unlink=True)
+
+        # Add navmesh metrics if analyzed
+        if navmesh_metrics:
+            metrics["navmesh"] = navmesh_metrics
 
         duration_ms = int((time.time() - start_time) * 1000)
         write_report(report_path, ok=True, metrics=metrics,
