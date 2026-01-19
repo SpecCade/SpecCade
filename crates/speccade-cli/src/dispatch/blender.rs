@@ -56,6 +56,10 @@ pub(super) fn generate_blender_static_mesh(
             material_slot_count: result.metrics.material_slot_count,
             animation_frame_count: None,
             animation_duration_seconds: None,
+            hinge_axis_violations: None,
+            range_violations: None,
+            velocity_spikes: None,
+            root_motion_delta: None,
         };
 
     Ok(vec![OutputResult::tier2(
@@ -119,6 +123,10 @@ pub(super) fn generate_blender_skeletal_mesh(
             material_slot_count: result.metrics.material_slot_count,
             animation_frame_count: None,
             animation_duration_seconds: None,
+            hinge_axis_violations: None,
+            range_violations: None,
+            velocity_spikes: None,
+            root_motion_delta: None,
         };
 
     Ok(vec![OutputResult::tier2(
@@ -174,6 +182,14 @@ pub(super) fn generate_blender_animation(
         material_slot_count: None,
         animation_frame_count: result.metrics.animation_frame_count,
         animation_duration_seconds: result.metrics.animation_duration_seconds.map(|d| d as f32),
+        // Motion verification metrics (MESHVER-005)
+        hinge_axis_violations: result.metrics.hinge_axis_violations,
+        range_violations: result.metrics.range_violations,
+        velocity_spikes: result.metrics.velocity_spikes,
+        root_motion_delta: result
+            .metrics
+            .root_motion_delta
+            .map(|d| [d[0] as f32, d[1] as f32, d[2] as f32]),
     };
 
     Ok(vec![OutputResult::tier2(

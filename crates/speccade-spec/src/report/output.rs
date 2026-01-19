@@ -139,6 +139,20 @@ pub struct OutputMetrics {
     /// Duration of animation in seconds.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub animation_duration_seconds: Option<f32>,
+
+    // ========== Motion verification metrics (MESHVER-005) ==========
+    /// Number of hinge axis violations (joints bending the wrong way).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub hinge_axis_violations: Option<u32>,
+    /// Number of range-of-motion violations (rotations exceeding limits).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub range_violations: Option<u32>,
+    /// Number of velocity spikes (sudden direction reversals, "pops").
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub velocity_spikes: Option<u32>,
+    /// Root motion delta [X, Y, Z] from start to end of animation.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub root_motion_delta: Option<[f32; 3]>,
 }
 
 impl OutputMetrics {
@@ -167,6 +181,10 @@ impl OutputMetrics {
             material_slot_count: None,
             animation_frame_count: None,
             animation_duration_seconds: None,
+            hinge_axis_violations: None,
+            range_violations: None,
+            velocity_spikes: None,
+            root_motion_delta: None,
         }
     }
 
@@ -299,6 +317,30 @@ impl OutputMetrics {
     /// Sets the animation duration.
     pub fn with_animation_duration_seconds(mut self, duration: f32) -> Self {
         self.animation_duration_seconds = Some(duration);
+        self
+    }
+
+    /// Sets the hinge axis violations count.
+    pub fn with_hinge_axis_violations(mut self, count: u32) -> Self {
+        self.hinge_axis_violations = Some(count);
+        self
+    }
+
+    /// Sets the range violations count.
+    pub fn with_range_violations(mut self, count: u32) -> Self {
+        self.range_violations = Some(count);
+        self
+    }
+
+    /// Sets the velocity spikes count.
+    pub fn with_velocity_spikes(mut self, count: u32) -> Self {
+        self.velocity_spikes = Some(count);
+        self
+    }
+
+    /// Sets the root motion delta.
+    pub fn with_root_motion_delta(mut self, delta: [f32; 3]) -> Self {
+        self.root_motion_delta = Some(delta);
         self
     }
 }

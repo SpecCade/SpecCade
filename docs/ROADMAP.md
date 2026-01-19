@@ -98,9 +98,10 @@ Reference: `docs/rfcs/RFC-0010-mesh-llm-verification.md`
   - Deliverable: additional `speccade verify` constraints and/or Blender-side probes for max influences, unweighted verts, and deformation sanity poses.
   - Touch points: `blender/entrypoint.py`, `crates/speccade-backend-blender/src/metrics.rs`, `crates/speccade-spec/src/validation/constraints/`.
   - Implemented: Added 3 new constraint types (MaxBoneInfluences, MaxUnweightedVertices, MinWeightNormalization), 2 new OutputMetrics fields (unweighted_vertex_count, weight_normalization_percentage), 13 new tests.
-- [ ] `MESHVER-005` Add animation motion verification (post-IK/post-bake) for joint direction + constraint enforcement.
+- [x] `MESHVER-005` Add animation motion verification (post-IK/post-bake) for joint direction + constraint enforcement. **Done: 2026-01-19**
   - Deliverable: machine-readable motion validation section in reports (hinge axis/sign calibration, range violations, knee/elbow pops, root motion sanity).
   - Touch points: `blender/entrypoint.py`, `crates/speccade-backend-blender/src/metrics.rs`, `crates/speccade-spec/src/validation/constraints/`.
+  - Implemented: Added 4 new constraint types (MaxHingeAxisViolations, MaxRangeViolations, MaxVelocitySpikes, MaxRootMotionDelta), 4 new OutputMetrics fields (hinge_axis_violations, range_violations, velocity_spikes, root_motion_delta), 4 new BlenderMetrics fields, 17 new tests.
 
 Open questions:
 - [ ] `MESHVER-Q001` Acceptable VLM latency targets for interactive use.

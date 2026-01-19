@@ -99,6 +99,31 @@ impl Constraint {
                 "weight normalization",
                 "weight_normalization_percentage",
             ),
+            // ========== Motion verification constraints (MESHVER-005) ==========
+            Constraint::MaxHingeAxisViolations { value } => evaluate_max_u32(
+                self,
+                metrics.hinge_axis_violations,
+                *value,
+                "hinge axis violations",
+                "hinge_axis_violations",
+            ),
+            Constraint::MaxRangeViolations { value } => evaluate_max_u32(
+                self,
+                metrics.range_violations,
+                *value,
+                "range violations",
+                "range_violations",
+            ),
+            Constraint::MaxVelocitySpikes { value } => evaluate_max_u32(
+                self,
+                metrics.velocity_spikes,
+                *value,
+                "velocity spikes",
+                "velocity_spikes",
+            ),
+            Constraint::MaxRootMotionDelta { value } => {
+                evaluate_max_root_motion_delta(self, metrics.root_motion_delta, *value)
+            }
         }
     }
 }
@@ -192,6 +217,43 @@ fn evaluate_max_f64_percentage(
         }
     } else {
         ConstraintResult::skipped(constraint, format!("{} metric not available", metric_name))
+    }
+}
+
+/// Helper for evaluating maximum root motion delta constraint.
+fn evaluate_max_root_motion_delta(
+    constraint: &Constraint,
+    actual: Option<[f32; 3]>,
+    max: f64,
+) -> ConstraintResult {
+    if let Some(delta) = actual {
+        // Calculate magnitude of the delta vector
+        let magnitude =
+            ((delta[0] as f64).powi(2) + (delta[1] as f64).powi(2) + (delta[2] as f64).powi(2))
+                .sqrt();
+        if magnitude <= max {
+            ConstraintResult::pass(
+                constraint,
+                Some(serde_json::json!({
+                    "delta": delta,
+                    "magnitude": magnitude
+                })),
+            )
+        } else {
+            ConstraintResult::fail(
+                constraint,
+                Some(serde_json::json!({
+                    "delta": delta,
+                    "magnitude": magnitude
+                })),
+                format!(
+                    "root motion delta magnitude {:.4} exceeds maximum {:.4}",
+                    magnitude, max
+                ),
+            )
+        }
+    } else {
+        ConstraintResult::skipped(constraint, "root_motion_delta metric not available")
     }
 }
 

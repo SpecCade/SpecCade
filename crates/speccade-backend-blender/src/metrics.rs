@@ -97,6 +97,23 @@ pub struct BlenderMetrics {
     /// Animation duration in seconds.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub animation_duration_seconds: Option<f64>,
+
+    // ========== Motion verification metrics (MESHVER-005) ==========
+    /// Number of hinge axis violations (joints bending the wrong way).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub hinge_axis_violations: Option<u32>,
+
+    /// Number of range-of-motion violations (rotations exceeding limits).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub range_violations: Option<u32>,
+
+    /// Number of velocity spikes (sudden direction reversals, "pops").
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub velocity_spikes: Option<u32>,
+
+    /// Root motion delta [X, Y, Z] from start to end of animation.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub root_motion_delta: Option<[f64; 3]>,
 }
 
 impl BlenderMetrics {

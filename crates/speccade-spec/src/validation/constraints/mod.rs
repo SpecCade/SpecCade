@@ -81,6 +81,27 @@ pub enum Constraint {
         /// The minimum percentage of vertices that must have normalized weights (0.0-100.0).
         value: f64,
     },
+    // ========== Motion verification constraints (MESHVER-005) ==========
+    /// Maximum hinge axis violations (joints bending the wrong way).
+    MaxHingeAxisViolations {
+        /// The maximum number of hinge axis violations allowed.
+        value: u32,
+    },
+    /// Maximum range-of-motion violations (rotations exceeding limits).
+    MaxRangeViolations {
+        /// The maximum number of range violations allowed.
+        value: u32,
+    },
+    /// Maximum velocity spikes (sudden direction reversals, "pops").
+    MaxVelocitySpikes {
+        /// The maximum number of velocity spikes allowed.
+        value: u32,
+    },
+    /// Maximum root motion delta magnitude.
+    MaxRootMotionDelta {
+        /// The maximum magnitude of root motion delta allowed.
+        value: f64,
+    },
 }
 
 impl fmt::Display for Constraint {
@@ -108,6 +129,18 @@ impl fmt::Display for Constraint {
             }
             Constraint::MinWeightNormalization { value } => {
                 write!(f, "min_weight_normalization({})", value)
+            }
+            Constraint::MaxHingeAxisViolations { value } => {
+                write!(f, "max_hinge_axis_violations({})", value)
+            }
+            Constraint::MaxRangeViolations { value } => {
+                write!(f, "max_range_violations({})", value)
+            }
+            Constraint::MaxVelocitySpikes { value } => {
+                write!(f, "max_velocity_spikes({})", value)
+            }
+            Constraint::MaxRootMotionDelta { value } => {
+                write!(f, "max_root_motion_delta({})", value)
             }
         }
     }

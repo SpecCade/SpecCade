@@ -390,3 +390,192 @@ fn test_evaluate_skeletal_mesh_constraints() {
     assert_eq!(result.results.len(), 5);
     assert!(result.results.iter().all(|r| r.passed));
 }
+
+// ========== Motion verification constraint tests (MESHVER-005) ==========
+
+#[test]
+fn test_max_hinge_axis_violations_pass() {
+    let metrics = OutputMetrics::new().with_hinge_axis_violations(0);
+    let constraint = Constraint::MaxHingeAxisViolations { value: 0 };
+    let result = constraint.evaluate(&metrics);
+    assert!(result.passed);
+    assert_eq!(result.actual, Some(serde_json::json!(0)));
+}
+
+#[test]
+fn test_max_hinge_axis_violations_fail() {
+    let metrics = OutputMetrics::new().with_hinge_axis_violations(5);
+    let constraint = Constraint::MaxHingeAxisViolations { value: 2 };
+    let result = constraint.evaluate(&metrics);
+    assert!(!result.passed);
+    assert!(result.message.unwrap().contains("exceeds maximum"));
+}
+
+#[test]
+fn test_max_hinge_axis_violations_skipped() {
+    let metrics = OutputMetrics::new();
+    let constraint = Constraint::MaxHingeAxisViolations { value: 0 };
+    let result = constraint.evaluate(&metrics);
+    assert!(result.passed); // Skipped constraints pass
+    assert!(result.message.unwrap().contains("not available"));
+}
+
+#[test]
+fn test_max_range_violations_pass() {
+    let metrics = OutputMetrics::new().with_range_violations(0);
+    let constraint = Constraint::MaxRangeViolations { value: 0 };
+    let result = constraint.evaluate(&metrics);
+    assert!(result.passed);
+}
+
+#[test]
+fn test_max_range_violations_fail() {
+    let metrics = OutputMetrics::new().with_range_violations(10);
+    let constraint = Constraint::MaxRangeViolations { value: 5 };
+    let result = constraint.evaluate(&metrics);
+    assert!(!result.passed);
+    assert!(result.message.unwrap().contains("exceeds maximum"));
+}
+
+#[test]
+fn test_max_velocity_spikes_pass() {
+    let metrics = OutputMetrics::new().with_velocity_spikes(2);
+    let constraint = Constraint::MaxVelocitySpikes { value: 5 };
+    let result = constraint.evaluate(&metrics);
+    assert!(result.passed);
+}
+
+#[test]
+fn test_max_velocity_spikes_fail() {
+    let metrics = OutputMetrics::new().with_velocity_spikes(10);
+    let constraint = Constraint::MaxVelocitySpikes { value: 3 };
+    let result = constraint.evaluate(&metrics);
+    assert!(!result.passed);
+    assert!(result.message.unwrap().contains("exceeds maximum"));
+}
+
+#[test]
+fn test_max_root_motion_delta_pass() {
+    // Vector [3.0, 0.0, 4.0] has magnitude 5.0
+    let metrics = OutputMetrics::new().with_root_motion_delta([3.0, 0.0, 4.0]);
+    let constraint = Constraint::MaxRootMotionDelta { value: 10.0 };
+    let result = constraint.evaluate(&metrics);
+    assert!(result.passed);
+    // Verify magnitude is included in actual
+    let actual = result.actual.unwrap();
+    assert!((actual["magnitude"].as_f64().unwrap() - 5.0).abs() < 0.0001);
+}
+
+#[test]
+fn test_max_root_motion_delta_fail() {
+    // Vector [3.0, 0.0, 4.0] has magnitude 5.0
+    let metrics = OutputMetrics::new().with_root_motion_delta([3.0, 0.0, 4.0]);
+    let constraint = Constraint::MaxRootMotionDelta { value: 2.0 };
+    let result = constraint.evaluate(&metrics);
+    assert!(!result.passed);
+    assert!(result.message.unwrap().contains("exceeds maximum"));
+}
+
+#[test]
+fn test_max_root_motion_delta_skipped() {
+    let metrics = OutputMetrics::new();
+    let constraint = Constraint::MaxRootMotionDelta { value: 10.0 };
+    let result = constraint.evaluate(&metrics);
+    assert!(result.passed); // Skipped constraints pass
+    assert!(result.message.unwrap().contains("not available"));
+}
+
+#[test]
+fn test_max_root_motion_delta_zero() {
+    // Zero vector should always pass
+    let metrics = OutputMetrics::new().with_root_motion_delta([0.0, 0.0, 0.0]);
+    let constraint = Constraint::MaxRootMotionDelta { value: 0.0 };
+    let result = constraint.evaluate(&metrics);
+    assert!(result.passed);
+}
+
+#[test]
+fn test_motion_constraint_display() {
+    assert_eq!(
+        Constraint::MaxHingeAxisViolations { value: 0 }.to_string(),
+        "max_hinge_axis_violations(0)"
+    );
+    assert_eq!(
+        Constraint::MaxRangeViolations { value: 5 }.to_string(),
+        "max_range_violations(5)"
+    );
+    assert_eq!(
+        Constraint::MaxVelocitySpikes { value: 3 }.to_string(),
+        "max_velocity_spikes(3)"
+    );
+    assert_eq!(
+        Constraint::MaxRootMotionDelta { value: 10.5 }.to_string(),
+        "max_root_motion_delta(10.5)"
+    );
+}
+
+#[test]
+fn test_motion_constraint_serialization() {
+    let constraints = ConstraintSet::from_constraints(vec![
+        Constraint::MaxHingeAxisViolations { value: 0 },
+        Constraint::MaxRangeViolations { value: 5 },
+        Constraint::MaxVelocitySpikes { value: 3 },
+        Constraint::MaxRootMotionDelta { value: 10.0 },
+    ]);
+
+    let json = constraints.to_json_pretty().unwrap();
+    assert!(json.contains("\"type\": \"max_hinge_axis_violations\""));
+    assert!(json.contains("\"type\": \"max_range_violations\""));
+    assert!(json.contains("\"type\": \"max_velocity_spikes\""));
+    assert!(json.contains("\"type\": \"max_root_motion_delta\""));
+
+    let parsed = ConstraintSet::from_json(&json).unwrap();
+    assert_eq!(parsed, constraints);
+}
+
+#[test]
+fn test_evaluate_animation_motion_constraints() {
+    let metrics = OutputMetrics::new()
+        .with_hinge_axis_violations(0)
+        .with_range_violations(2)
+        .with_velocity_spikes(1)
+        .with_root_motion_delta([1.0, 0.0, 0.0])
+        .with_bone_count(64)
+        .with_animation_frame_count(120);
+
+    let constraints = ConstraintSet::from_constraints(vec![
+        Constraint::MaxHingeAxisViolations { value: 0 },
+        Constraint::MaxRangeViolations { value: 5 },
+        Constraint::MaxVelocitySpikes { value: 3 },
+        Constraint::MaxRootMotionDelta { value: 5.0 },
+        Constraint::MaxBoneCount { value: 128 },
+    ]);
+
+    let result = evaluate_constraints("animation-test", &metrics, &constraints);
+    assert!(result.overall_pass);
+    assert_eq!(result.results.len(), 5);
+    assert!(result.results.iter().all(|r| r.passed));
+}
+
+#[test]
+fn test_evaluate_animation_motion_constraints_mixed_failures() {
+    let metrics = OutputMetrics::new()
+        .with_hinge_axis_violations(5) // Will fail: exceeds 0
+        .with_range_violations(2)
+        .with_velocity_spikes(10) // Will fail: exceeds 3
+        .with_root_motion_delta([10.0, 10.0, 10.0]); // Will fail: magnitude ~17.3 > 5.0
+
+    let constraints = ConstraintSet::from_constraints(vec![
+        Constraint::MaxHingeAxisViolations { value: 0 },
+        Constraint::MaxRangeViolations { value: 5 },
+        Constraint::MaxVelocitySpikes { value: 3 },
+        Constraint::MaxRootMotionDelta { value: 5.0 },
+    ]);
+
+    let result = evaluate_constraints("animation-fail-test", &metrics, &constraints);
+    assert!(!result.overall_pass);
+    assert!(!result.results[0].passed); // hinge violations failed
+    assert!(result.results[1].passed); // range violations passed
+    assert!(!result.results[2].passed); // velocity spikes failed
+    assert!(!result.results[3].passed); // root motion delta failed
+}
