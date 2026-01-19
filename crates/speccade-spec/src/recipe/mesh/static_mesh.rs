@@ -2,7 +2,7 @@
 
 use serde::{Deserialize, Serialize};
 
-use super::common::{MaterialSlot, MeshConstraints, MeshExportSettings};
+use super::common::{MaterialSlot, MeshConstraints, MeshExportSettings, NormalsSettings};
 use super::modifiers::{MeshModifier, UvProjection};
 use super::primitives::MeshPrimitive;
 
@@ -20,6 +20,9 @@ pub struct StaticMeshBlenderPrimitivesV1Params {
     /// UV unwrapping method.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub uv_projection: Option<UvProjection>,
+    /// Normals automation settings.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub normals: Option<NormalsSettings>,
     /// Material slot definitions.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub material_slots: Vec<MaterialSlot>,
@@ -33,6 +36,7 @@ pub struct StaticMeshBlenderPrimitivesV1Params {
 
 #[cfg(test)]
 mod tests {
+    use super::super::common::NormalsPreset;
     use super::super::modifiers::UvProjectionMethod;
     use super::*;
 
@@ -47,6 +51,7 @@ mod tests {
             dimensions: [1.0, 1.0, 1.0],
             modifiers: vec![],
             uv_projection: None,
+            normals: None,
             material_slots: vec![],
             export: None,
             constraints: None,
@@ -67,6 +72,7 @@ mod tests {
             dimensions: [2.0, 2.0, 2.0],
             modifiers: vec![],
             uv_projection: None,
+            normals: None,
             material_slots: vec![],
             export: None,
             constraints: None,
@@ -93,6 +99,7 @@ mod tests {
                 },
             ],
             uv_projection: None,
+            normals: None,
             material_slots: vec![],
             export: None,
             constraints: None,
@@ -117,6 +124,7 @@ mod tests {
                 angle_limit: Some(66.0),
                 cube_size: None,
             }),
+            normals: None,
             material_slots: vec![],
             export: None,
             constraints: None,
@@ -131,12 +139,95 @@ mod tests {
     }
 
     #[test]
+    fn test_mesh_params_with_normals_auto_smooth() {
+        let params = StaticMeshBlenderPrimitivesV1Params {
+            base_primitive: MeshPrimitive::Cube,
+            dimensions: [1.0, 1.0, 1.0],
+            modifiers: vec![],
+            uv_projection: None,
+            normals: Some(NormalsSettings {
+                preset: NormalsPreset::AutoSmooth,
+                angle: Some(30.0),
+                keep_sharp: None,
+            }),
+            material_slots: vec![],
+            export: None,
+            constraints: None,
+        };
+
+        let json = serde_json::to_string(&params).unwrap();
+        assert!(json.contains("normals"));
+        assert!(json.contains("auto_smooth"));
+        assert!(json.contains("\"angle\":30.0"));
+
+        let parsed: StaticMeshBlenderPrimitivesV1Params = serde_json::from_str(&json).unwrap();
+        assert!(parsed.normals.is_some());
+        let normals = parsed.normals.unwrap();
+        assert_eq!(normals.preset, NormalsPreset::AutoSmooth);
+        assert_eq!(normals.angle, Some(30.0));
+    }
+
+    #[test]
+    fn test_mesh_params_with_normals_weighted() {
+        let params = StaticMeshBlenderPrimitivesV1Params {
+            base_primitive: MeshPrimitive::IcoSphere,
+            dimensions: [1.0, 1.0, 1.0],
+            modifiers: vec![],
+            uv_projection: None,
+            normals: Some(NormalsSettings {
+                preset: NormalsPreset::WeightedNormals,
+                angle: None,
+                keep_sharp: Some(true),
+            }),
+            material_slots: vec![],
+            export: None,
+            constraints: None,
+        };
+
+        let json = serde_json::to_string(&params).unwrap();
+        assert!(json.contains("weighted_normals"));
+        assert!(json.contains("\"keep_sharp\":true"));
+
+        let parsed: StaticMeshBlenderPrimitivesV1Params = serde_json::from_str(&json).unwrap();
+        let normals = parsed.normals.unwrap();
+        assert_eq!(normals.preset, NormalsPreset::WeightedNormals);
+        assert_eq!(normals.keep_sharp, Some(true));
+    }
+
+    #[test]
+    fn test_mesh_params_with_normals_hard_edge() {
+        let params = StaticMeshBlenderPrimitivesV1Params {
+            base_primitive: MeshPrimitive::Cylinder,
+            dimensions: [1.0, 1.0, 2.0],
+            modifiers: vec![],
+            uv_projection: None,
+            normals: Some(NormalsSettings {
+                preset: NormalsPreset::HardEdgeByAngle,
+                angle: Some(45.0),
+                keep_sharp: Some(false),
+            }),
+            material_slots: vec![],
+            export: None,
+            constraints: None,
+        };
+
+        let json = serde_json::to_string(&params).unwrap();
+        assert!(json.contains("hard_edge_by_angle"));
+
+        let parsed: StaticMeshBlenderPrimitivesV1Params = serde_json::from_str(&json).unwrap();
+        let normals = parsed.normals.unwrap();
+        assert_eq!(normals.preset, NormalsPreset::HardEdgeByAngle);
+        assert_eq!(normals.angle, Some(45.0));
+    }
+
+    #[test]
     fn test_mesh_params_with_export_settings() {
         let params = StaticMeshBlenderPrimitivesV1Params {
             base_primitive: MeshPrimitive::Torus,
             dimensions: [1.5, 1.5, 0.5],
             modifiers: vec![],
             uv_projection: None,
+            normals: None,
             material_slots: vec![],
             export: Some(MeshExportSettings {
                 apply_modifiers: true,
@@ -175,6 +266,11 @@ mod tests {
                 angle_limit: Some(66.0),
                 cube_size: None,
             }),
+            normals: Some(NormalsSettings {
+                preset: NormalsPreset::AutoSmooth,
+                angle: Some(60.0),
+                keep_sharp: Some(true),
+            }),
             material_slots: vec![],
             export: Some(MeshExportSettings {
                 apply_modifiers: true,
@@ -198,6 +294,7 @@ mod tests {
         assert_eq!(parsed.dimensions, [1.0, 1.0, 1.0]);
         assert_eq!(parsed.modifiers.len(), 2);
         assert!(parsed.uv_projection.is_some());
+        assert!(parsed.normals.is_some());
         assert!(parsed.export.is_some());
         assert!(parsed.constraints.is_some());
     }

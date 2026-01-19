@@ -27,6 +27,7 @@ The `static_mesh.blender_primitives_v1` recipe builds meshes from Blender primit
 | `dimensions` | `[f64; 3]` | Yes | Dimensions [X, Y, Z] in Blender units |
 | `modifiers` | array | No | List of modifiers to apply (see modifiers below) |
 | `uv_projection` | string/object | No | UV unwrapping method (see UV projection below) |
+| `normals` | object | No | Normals automation settings (see normals below) |
 | `material_slots` | array | No | Material definitions (see materials below) |
 | `export` | object | No | GLB export settings (see export below) |
 | `constraints` | object | No | Validation constraints (see constraints below) |
@@ -180,6 +181,62 @@ UV projection can be a simple string or an object with settings.
 | `smart` | Smart UV project |
 | `lightmap` | Lightmap pack |
 
+### Normals Settings
+
+Normals automation settings control how vertex normals are calculated for the mesh.
+
+```json
+"normals": {
+  "preset": "auto_smooth",
+  "angle": 30.0,
+  "keep_sharp": true
+}
+```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `preset` | string | Yes | Normals preset (see presets below) |
+| `angle` | f64 | No | Angle threshold in degrees (default: 30.0) |
+| `keep_sharp` | bool | No | Preserve existing sharp edges (default: true) |
+
+#### Normals Presets
+
+| Preset | Description |
+|--------|-------------|
+| `flat` | Flat shading - each face has its own normal direction, creating a faceted appearance |
+| `smooth` | Smooth shading - normals are interpolated across faces for a smooth appearance |
+| `auto_smooth` | Auto-smooth based on angle threshold - edges sharper than the angle are hard, others are smooth |
+| `weighted_normals` | Weighted normals based on face area - larger faces contribute more to vertex normals |
+| `hard_edge_by_angle` | Mark edges as sharp if angle exceeds threshold, then apply smooth shading |
+
+#### Examples
+
+**Flat shading for low-poly style:**
+
+```json
+"normals": {
+  "preset": "flat"
+}
+```
+
+**Auto-smooth with 45 degree threshold:**
+
+```json
+"normals": {
+  "preset": "auto_smooth",
+  "angle": 45.0
+}
+```
+
+**Weighted normals for hard-surface models:**
+
+```json
+"normals": {
+  "preset": "weighted_normals",
+  "keep_sharp": true
+}
+```
+
 ### Material Slots
 
 ```json
@@ -272,6 +329,10 @@ Constraints define validation limits. Reports include metrics for verification.
         }
       ],
       "uv_projection": "box",
+      "normals": {
+        "preset": "auto_smooth",
+        "angle": 30.0
+      },
       "export": {
         "apply_modifiers": true,
         "triangulate": true,

@@ -2,6 +2,36 @@
 
 use serde::{Deserialize, Serialize};
 
+/// Normals automation preset.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum NormalsPreset {
+    /// Auto-smooth normals based on angle threshold.
+    AutoSmooth,
+    /// Weighted normals based on face area.
+    WeightedNormals,
+    /// Hard edges at angles above threshold.
+    HardEdgeByAngle,
+    /// Flat shading (faceted).
+    Flat,
+    /// Smooth shading (interpolated).
+    Smooth,
+}
+
+/// Normals generation settings.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct NormalsSettings {
+    /// Normals preset to apply.
+    pub preset: NormalsPreset,
+    /// Angle threshold in degrees (used by auto_smooth and hard_edge_by_angle).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub angle: Option<f64>,
+    /// Keep existing sharp edges marked in the mesh.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub keep_sharp: Option<bool>,
+}
+
 /// Material slot definition.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -254,5 +284,149 @@ mod tests {
         assert_eq!(parsed.max_triangles, Some(1000));
         assert_eq!(parsed.max_materials, Some(4));
         assert_eq!(parsed.max_vertices, Some(2000));
+    }
+
+    // ========================================================================
+    // NormalsPreset Tests
+    // ========================================================================
+
+    #[test]
+    fn test_normals_preset_auto_smooth() {
+        let preset = NormalsPreset::AutoSmooth;
+        let json = serde_json::to_string(&preset).unwrap();
+        assert_eq!(json, "\"auto_smooth\"");
+
+        let parsed: NormalsPreset = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed, NormalsPreset::AutoSmooth);
+    }
+
+    #[test]
+    fn test_normals_preset_weighted_normals() {
+        let preset = NormalsPreset::WeightedNormals;
+        let json = serde_json::to_string(&preset).unwrap();
+        assert_eq!(json, "\"weighted_normals\"");
+
+        let parsed: NormalsPreset = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed, NormalsPreset::WeightedNormals);
+    }
+
+    #[test]
+    fn test_normals_preset_hard_edge_by_angle() {
+        let preset = NormalsPreset::HardEdgeByAngle;
+        let json = serde_json::to_string(&preset).unwrap();
+        assert_eq!(json, "\"hard_edge_by_angle\"");
+
+        let parsed: NormalsPreset = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed, NormalsPreset::HardEdgeByAngle);
+    }
+
+    #[test]
+    fn test_normals_preset_flat() {
+        let preset = NormalsPreset::Flat;
+        let json = serde_json::to_string(&preset).unwrap();
+        assert_eq!(json, "\"flat\"");
+
+        let parsed: NormalsPreset = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed, NormalsPreset::Flat);
+    }
+
+    #[test]
+    fn test_normals_preset_smooth() {
+        let preset = NormalsPreset::Smooth;
+        let json = serde_json::to_string(&preset).unwrap();
+        assert_eq!(json, "\"smooth\"");
+
+        let parsed: NormalsPreset = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed, NormalsPreset::Smooth);
+    }
+
+    // ========================================================================
+    // NormalsSettings Tests
+    // ========================================================================
+
+    #[test]
+    fn test_normals_settings_minimal() {
+        let settings = NormalsSettings {
+            preset: NormalsPreset::Smooth,
+            angle: None,
+            keep_sharp: None,
+        };
+
+        let json = serde_json::to_string(&settings).unwrap();
+        assert!(json.contains("\"preset\":\"smooth\""));
+        assert!(!json.contains("angle"));
+        assert!(!json.contains("keep_sharp"));
+
+        let parsed: NormalsSettings = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed.preset, NormalsPreset::Smooth);
+        assert_eq!(parsed.angle, None);
+        assert_eq!(parsed.keep_sharp, None);
+    }
+
+    #[test]
+    fn test_normals_settings_auto_smooth_with_angle() {
+        let settings = NormalsSettings {
+            preset: NormalsPreset::AutoSmooth,
+            angle: Some(30.0),
+            keep_sharp: None,
+        };
+
+        let json = serde_json::to_string(&settings).unwrap();
+        assert!(json.contains("\"preset\":\"auto_smooth\""));
+        assert!(json.contains("\"angle\":30.0"));
+
+        let parsed: NormalsSettings = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed.preset, NormalsPreset::AutoSmooth);
+        assert_eq!(parsed.angle, Some(30.0));
+    }
+
+    #[test]
+    fn test_normals_settings_weighted_with_keep_sharp() {
+        let settings = NormalsSettings {
+            preset: NormalsPreset::WeightedNormals,
+            angle: None,
+            keep_sharp: Some(true),
+        };
+
+        let json = serde_json::to_string(&settings).unwrap();
+        assert!(json.contains("\"preset\":\"weighted_normals\""));
+        assert!(json.contains("\"keep_sharp\":true"));
+
+        let parsed: NormalsSettings = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed.preset, NormalsPreset::WeightedNormals);
+        assert_eq!(parsed.keep_sharp, Some(true));
+    }
+
+    #[test]
+    fn test_normals_settings_hard_edge_complete() {
+        let settings = NormalsSettings {
+            preset: NormalsPreset::HardEdgeByAngle,
+            angle: Some(45.0),
+            keep_sharp: Some(false),
+        };
+
+        let json = serde_json::to_string(&settings).unwrap();
+        let parsed: NormalsSettings = serde_json::from_str(&json).unwrap();
+
+        assert_eq!(parsed.preset, NormalsPreset::HardEdgeByAngle);
+        assert_eq!(parsed.angle, Some(45.0));
+        assert_eq!(parsed.keep_sharp, Some(false));
+    }
+
+    #[test]
+    fn test_normals_settings_from_json() {
+        let json = r#"{"preset":"auto_smooth","angle":60.0,"keep_sharp":true}"#;
+        let parsed: NormalsSettings = serde_json::from_str(json).unwrap();
+
+        assert_eq!(parsed.preset, NormalsPreset::AutoSmooth);
+        assert_eq!(parsed.angle, Some(60.0));
+        assert_eq!(parsed.keep_sharp, Some(true));
+    }
+
+    #[test]
+    fn test_normals_settings_rejects_unknown_fields() {
+        let json = r#"{"preset":"smooth","unknown_field":123}"#;
+        let result: Result<NormalsSettings, _> = serde_json::from_str(json);
+        assert!(result.is_err());
     }
 }

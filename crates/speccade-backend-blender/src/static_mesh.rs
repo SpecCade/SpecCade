@@ -169,6 +169,7 @@ mod tests {
             dimensions: [1.0, 1.0, 1.0],
             modifiers: vec![],
             uv_projection: Some(UvProjection::Simple(UvProjectionMethod::Box)),
+            normals: None,
             material_slots: vec![],
             export: None,
             constraints: Some(MeshConstraints {
