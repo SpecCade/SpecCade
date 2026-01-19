@@ -92,6 +92,7 @@ def compute_mesh_metrics(obj: 'bpy.types.Object') -> Dict[str, Any]:
     non_manifold_edges = count_non_manifold_edges(mesh)
     manifold = non_manifold_edges == 0
     degenerate_faces = count_degenerate_faces(mesh)
+    zero_area_faces = count_zero_area_faces(mesh)
 
     # Bounding box
     bbox_min = [float('inf')] * 3
@@ -108,6 +109,7 @@ def compute_mesh_metrics(obj: 'bpy.types.Object') -> Dict[str, Any]:
     uv_overlap_percentage = 0.0
     uv_layer_count = 0
     texel_density = 0.0
+    has_uv_map = len(mesh.uv_layers) > 0
 
     if mesh.uv_layers:
         uv_layer_count = len(mesh.uv_layers)
@@ -133,9 +135,11 @@ def compute_mesh_metrics(obj: 'bpy.types.Object') -> Dict[str, Any]:
         "manifold": manifold,
         "non_manifold_edge_count": non_manifold_edges,
         "degenerate_face_count": degenerate_faces,
+        "zero_area_face_count": zero_area_faces,
         "uv_island_count": uv_island_count,
         "uv_coverage": round(uv_coverage, 4),
         "uv_overlap_percentage": round(uv_overlap_percentage, 2),
+        "has_uv_map": has_uv_map,
         "uv_layer_count": uv_layer_count,
         "texel_density": round(texel_density, 2),
         "bounding_box": {
@@ -178,6 +182,15 @@ def count_degenerate_faces(mesh: 'bpy.types.Mesh') -> int:
         if len(verts) != len(set(verts)):
             degenerate += 1
     return degenerate
+
+
+def count_zero_area_faces(mesh: 'bpy.types.Mesh') -> int:
+    """Count faces with zero or near-zero area (CHAR-003)."""
+    zero_area = 0
+    for poly in mesh.polygons:
+        if poly.area < 1e-8:
+            zero_area += 1
+    return zero_area
 
 
 def compute_uv_coverage_and_overlap(
@@ -320,15 +333,44 @@ def compute_skeletal_mesh_metrics(obj: 'bpy.types.Object', armature: 'bpy.types.
     # Add bone count
     bone_count = len(armature.data.bones)
 
-    # Compute max bone influences
+    # Compute max bone influences and skin weight metrics (CHAR-003)
     max_influences = 0
+    unweighted_vertex_count = 0
+    normalized_vertex_count = 0
+    max_weight_deviation = 0.0
+
     if obj.vertex_groups:
         for v in obj.data.vertices:
+            # Count influences per vertex (weight > 0.001 threshold)
             influences = sum(1 for g in v.groups if g.weight > 0.001)
             max_influences = max(max_influences, influences)
 
+            # Compute weight sum for this vertex
+            weight_sum = sum(g.weight for g in v.groups)
+
+            # Track unweighted vertices (total weight < 0.001)
+            if weight_sum < 0.001:
+                unweighted_vertex_count += 1
+            else:
+                # Track deviation from normalized (1.0)
+                deviation = abs(weight_sum - 1.0)
+                max_weight_deviation = max(max_weight_deviation, deviation)
+
+                # Consider normalized if within 0.001 of 1.0
+                if deviation < 0.001:
+                    normalized_vertex_count += 1
+
+    # Compute weight normalization percentage
+    total_vertices = len(obj.data.vertices)
+    weight_normalization_percentage = 0.0
+    if total_vertices > 0:
+        weight_normalization_percentage = (normalized_vertex_count / total_vertices) * 100.0
+
     mesh_metrics["bone_count"] = bone_count
     mesh_metrics["max_bone_influences"] = max_influences
+    mesh_metrics["unweighted_vertex_count"] = unweighted_vertex_count
+    mesh_metrics["weight_normalization_percentage"] = round(weight_normalization_percentage, 2)
+    mesh_metrics["max_weight_deviation"] = round(max_weight_deviation, 6)
 
     return mesh_metrics
 

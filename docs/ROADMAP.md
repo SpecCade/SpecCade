@@ -244,9 +244,10 @@ Migrated from `docs/FUTURE_GENERATORS.md` (now deprecated).
   - Deliverable: ergonomic helpers for skeleton presets/custom skeletons, body parts, skinning/export settings; documented under `docs/stdlib-reference.md`.
   - Touch points: `crates/speccade-cli/src/compiler/stdlib/` (new module), `docs/stdlib-*.md`.
   - Implemented: New `character` stdlib module with 8 functions (body_part, material_slot, skinning_config, custom_bone, skeletal_export_settings, skeletal_constraints, skeletal_texturing, skeletal_mesh_spec), 25 tests, golden example, and docs update.
-- [ ] `CHAR-003` Expand skeletal mesh validation/verification beyond counts (topology, UV presence, skin weights).
+- [x] `CHAR-003` Expand skeletal mesh validation/verification beyond counts (topology, UV presence, skin weights). **Done: 2026-01-20**
   - Deliverable: additional constraints in `speccade verify` and report fields for non-manifold edges, degenerate faces, UV sanity, max influences, and unweighted vertices.
   - Touch points: `blender/entrypoint.py`, `crates/speccade-spec/src/validation/constraints/`, `crates/speccade-backend-blender/src/metrics.rs`.
+  - Implemented: Added 3 new constraint types (RequireUvPresence, MaxZeroAreaFaces, MaxSkinWeightSum), 3 new OutputMetrics fields (has_uv_map, zero_area_face_count, max_weight_deviation), updated Blender entrypoint.py with zero-area face counting and comprehensive weight metrics, 17 new tests.
 
 ### Skeletal Animation / Rigging / IK (Blender Tier)
 

@@ -90,6 +90,9 @@ pub struct OutputMetrics {
     /// Number of degenerate faces (zero area or invalid topology).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub degenerate_face_count: Option<u32>,
+    /// Number of zero-area faces (CHAR-003).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub zero_area_face_count: Option<u32>,
 
     // ========== UV metrics ==========
     /// Number of UV islands.
@@ -101,6 +104,9 @@ pub struct OutputMetrics {
     /// Percentage of UV space that overlaps (0.0-100.0).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub uv_overlap_percentage: Option<f64>,
+    /// Whether the mesh has at least one UV map (CHAR-003).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub has_uv_map: Option<bool>,
 
     // ========== Bounds metrics ==========
     /// Bounding box of the mesh.
@@ -126,6 +132,9 @@ pub struct OutputMetrics {
     /// Percentage of vertices with properly normalized weights (0.0-100.0).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub weight_normalization_percentage: Option<f64>,
+    /// Maximum weight sum deviation from 1.0 across all vertices (CHAR-003).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub max_weight_deviation: Option<f64>,
 
     // ========== Material metrics ==========
     /// Number of material slots.
@@ -168,9 +177,11 @@ impl OutputMetrics {
             manifold: None,
             non_manifold_edge_count: None,
             degenerate_face_count: None,
+            zero_area_face_count: None,
             uv_island_count: None,
             uv_coverage: None,
             uv_overlap_percentage: None,
+            has_uv_map: None,
             bounding_box: None,
             bounds_min: None,
             bounds_max: None,
@@ -178,6 +189,7 @@ impl OutputMetrics {
             max_bone_influences: None,
             unweighted_vertex_count: None,
             weight_normalization_percentage: None,
+            max_weight_deviation: None,
             material_slot_count: None,
             animation_frame_count: None,
             animation_duration_seconds: None,
@@ -242,6 +254,12 @@ impl OutputMetrics {
         self
     }
 
+    /// Sets the zero-area face count.
+    pub fn with_zero_area_face_count(mut self, count: u32) -> Self {
+        self.zero_area_face_count = Some(count);
+        self
+    }
+
     /// Sets the UV island count.
     pub fn with_uv_island_count(mut self, count: u32) -> Self {
         self.uv_island_count = Some(count);
@@ -257,6 +275,12 @@ impl OutputMetrics {
     /// Sets the UV overlap percentage.
     pub fn with_uv_overlap_percentage(mut self, percentage: f64) -> Self {
         self.uv_overlap_percentage = Some(percentage);
+        self
+    }
+
+    /// Sets whether the mesh has a UV map.
+    pub fn with_has_uv_map(mut self, has_uv: bool) -> Self {
+        self.has_uv_map = Some(has_uv);
         self
     }
 
@@ -299,6 +323,12 @@ impl OutputMetrics {
     /// Sets the weight normalization percentage.
     pub fn with_weight_normalization_percentage(mut self, percentage: f64) -> Self {
         self.weight_normalization_percentage = Some(percentage);
+        self
+    }
+
+    /// Sets the maximum weight deviation from 1.0.
+    pub fn with_max_weight_deviation(mut self, deviation: f64) -> Self {
+        self.max_weight_deviation = Some(deviation);
         self
     }
 

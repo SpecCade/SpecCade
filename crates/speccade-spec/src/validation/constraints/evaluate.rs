@@ -99,6 +99,32 @@ impl Constraint {
                 "weight normalization",
                 "weight_normalization_percentage",
             ),
+            // ========== Skeletal mesh topology/UV/weight constraints (CHAR-003) ==========
+            Constraint::RequireUvPresence => {
+                if let Some(has_uv) = metrics.has_uv_map {
+                    if has_uv {
+                        ConstraintResult::pass(self, Some(serde_json::json!(has_uv)))
+                    } else {
+                        ConstraintResult::fail(
+                            self,
+                            Some(serde_json::json!(has_uv)),
+                            "mesh has no UV map",
+                        )
+                    }
+                } else {
+                    ConstraintResult::skipped(self, "has_uv_map metric not available")
+                }
+            }
+            Constraint::MaxZeroAreaFaces { value } => evaluate_max_u32(
+                self,
+                metrics.zero_area_face_count,
+                *value,
+                "zero-area face count",
+                "zero_area_face_count",
+            ),
+            Constraint::MaxSkinWeightSum { value } => {
+                evaluate_max_weight_deviation(self, metrics.max_weight_deviation, *value)
+            }
             // ========== Motion verification constraints (MESHVER-005) ==========
             Constraint::MaxHingeAxisViolations { value } => evaluate_max_u32(
                 self,
@@ -217,6 +243,30 @@ fn evaluate_max_f64_percentage(
         }
     } else {
         ConstraintResult::skipped(constraint, format!("{} metric not available", metric_name))
+    }
+}
+
+/// Helper for evaluating maximum weight deviation constraint.
+fn evaluate_max_weight_deviation(
+    constraint: &Constraint,
+    actual: Option<f64>,
+    max: f64,
+) -> ConstraintResult {
+    if let Some(deviation) = actual {
+        if deviation <= max {
+            ConstraintResult::pass(constraint, Some(serde_json::json!(deviation)))
+        } else {
+            ConstraintResult::fail(
+                constraint,
+                Some(serde_json::json!(deviation)),
+                format!(
+                    "max weight sum deviation {:.4} exceeds maximum {:.4}",
+                    deviation, max
+                ),
+            )
+        }
+    } else {
+        ConstraintResult::skipped(constraint, "max_weight_deviation metric not available")
     }
 }
 

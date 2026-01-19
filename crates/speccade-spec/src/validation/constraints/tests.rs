@@ -391,6 +391,172 @@ fn test_evaluate_skeletal_mesh_constraints() {
     assert!(result.results.iter().all(|r| r.passed));
 }
 
+// ========== Skeletal mesh topology/UV/weight constraint tests (CHAR-003) ==========
+
+#[test]
+fn test_require_uv_presence_pass() {
+    let metrics = OutputMetrics::new().with_has_uv_map(true);
+    let constraint = Constraint::RequireUvPresence;
+    let result = constraint.evaluate(&metrics);
+    assert!(result.passed);
+    assert_eq!(result.actual, Some(serde_json::json!(true)));
+}
+
+#[test]
+fn test_require_uv_presence_fail() {
+    let metrics = OutputMetrics::new().with_has_uv_map(false);
+    let constraint = Constraint::RequireUvPresence;
+    let result = constraint.evaluate(&metrics);
+    assert!(!result.passed);
+    assert_eq!(result.actual, Some(serde_json::json!(false)));
+    assert!(result.message.unwrap().contains("no UV map"));
+}
+
+#[test]
+fn test_require_uv_presence_skipped() {
+    let metrics = OutputMetrics::new();
+    let constraint = Constraint::RequireUvPresence;
+    let result = constraint.evaluate(&metrics);
+    assert!(result.passed); // Skipped constraints pass
+    assert!(result.message.unwrap().contains("not available"));
+}
+
+#[test]
+fn test_max_zero_area_faces_pass() {
+    let metrics = OutputMetrics::new().with_zero_area_face_count(0);
+    let constraint = Constraint::MaxZeroAreaFaces { value: 0 };
+    let result = constraint.evaluate(&metrics);
+    assert!(result.passed);
+    assert_eq!(result.actual, Some(serde_json::json!(0)));
+}
+
+#[test]
+fn test_max_zero_area_faces_fail() {
+    let metrics = OutputMetrics::new().with_zero_area_face_count(5);
+    let constraint = Constraint::MaxZeroAreaFaces { value: 2 };
+    let result = constraint.evaluate(&metrics);
+    assert!(!result.passed);
+    assert!(result.message.unwrap().contains("exceeds maximum"));
+}
+
+#[test]
+fn test_max_zero_area_faces_skipped() {
+    let metrics = OutputMetrics::new();
+    let constraint = Constraint::MaxZeroAreaFaces { value: 0 };
+    let result = constraint.evaluate(&metrics);
+    assert!(result.passed); // Skipped constraints pass
+    assert!(result.message.unwrap().contains("not available"));
+}
+
+#[test]
+fn test_max_skin_weight_sum_pass() {
+    let metrics = OutputMetrics::new().with_max_weight_deviation(0.001);
+    let constraint = Constraint::MaxSkinWeightSum { value: 0.01 };
+    let result = constraint.evaluate(&metrics);
+    assert!(result.passed);
+    assert_eq!(result.actual, Some(serde_json::json!(0.001)));
+}
+
+#[test]
+fn test_max_skin_weight_sum_fail() {
+    let metrics = OutputMetrics::new().with_max_weight_deviation(0.15);
+    let constraint = Constraint::MaxSkinWeightSum { value: 0.01 };
+    let result = constraint.evaluate(&metrics);
+    assert!(!result.passed);
+    assert!(result.message.unwrap().contains("exceeds maximum"));
+}
+
+#[test]
+fn test_max_skin_weight_sum_skipped() {
+    let metrics = OutputMetrics::new();
+    let constraint = Constraint::MaxSkinWeightSum { value: 0.01 };
+    let result = constraint.evaluate(&metrics);
+    assert!(result.passed); // Skipped constraints pass
+    assert!(result.message.unwrap().contains("not available"));
+}
+
+#[test]
+fn test_max_skin_weight_sum_zero_deviation() {
+    // Perfect normalization - deviation of 0.0
+    let metrics = OutputMetrics::new().with_max_weight_deviation(0.0);
+    let constraint = Constraint::MaxSkinWeightSum { value: 0.0 };
+    let result = constraint.evaluate(&metrics);
+    assert!(result.passed);
+}
+
+#[test]
+fn test_char003_constraint_display() {
+    assert_eq!(Constraint::RequireUvPresence.to_string(), "require_uv_presence");
+    assert_eq!(
+        Constraint::MaxZeroAreaFaces { value: 5 }.to_string(),
+        "max_zero_area_faces(5)"
+    );
+    assert_eq!(
+        Constraint::MaxSkinWeightSum { value: 0.01 }.to_string(),
+        "max_skin_weight_sum(0.01)"
+    );
+}
+
+#[test]
+fn test_char003_constraint_serialization() {
+    let constraints = ConstraintSet::from_constraints(vec![
+        Constraint::RequireUvPresence,
+        Constraint::MaxZeroAreaFaces { value: 0 },
+        Constraint::MaxSkinWeightSum { value: 0.01 },
+    ]);
+
+    let json = constraints.to_json_pretty().unwrap();
+    assert!(json.contains("\"type\": \"require_uv_presence\""));
+    assert!(json.contains("\"type\": \"max_zero_area_faces\""));
+    assert!(json.contains("\"type\": \"max_skin_weight_sum\""));
+
+    let parsed = ConstraintSet::from_json(&json).unwrap();
+    assert_eq!(parsed, constraints);
+}
+
+#[test]
+fn test_evaluate_skeletal_mesh_char003_constraints() {
+    let metrics = OutputMetrics::new()
+        .with_has_uv_map(true)
+        .with_zero_area_face_count(0)
+        .with_max_weight_deviation(0.001)
+        .with_vertex_count(5000)
+        .with_bone_count(64);
+
+    let constraints = ConstraintSet::from_constraints(vec![
+        Constraint::RequireUvPresence,
+        Constraint::MaxZeroAreaFaces { value: 0 },
+        Constraint::MaxSkinWeightSum { value: 0.01 },
+        Constraint::MaxVertexCount { value: 10000 },
+        Constraint::MaxBoneCount { value: 128 },
+    ]);
+
+    let result = evaluate_constraints("skeletal-char003-test", &metrics, &constraints);
+    assert!(result.overall_pass);
+    assert_eq!(result.results.len(), 5);
+    assert!(result.results.iter().all(|r| r.passed));
+}
+
+#[test]
+fn test_evaluate_skeletal_mesh_char003_mixed_failures() {
+    let metrics = OutputMetrics::new()
+        .with_has_uv_map(false)     // Will fail: no UV map
+        .with_zero_area_face_count(10) // Will fail: exceeds 0
+        .with_max_weight_deviation(0.25); // Will fail: exceeds 0.01
+
+    let constraints = ConstraintSet::from_constraints(vec![
+        Constraint::RequireUvPresence,
+        Constraint::MaxZeroAreaFaces { value: 0 },
+        Constraint::MaxSkinWeightSum { value: 0.01 },
+    ]);
+
+    let result = evaluate_constraints("skeletal-char003-fail-test", &metrics, &constraints);
+    assert!(!result.overall_pass);
+    assert!(!result.results[0].passed); // UV presence failed
+    assert!(!result.results[1].passed); // zero area faces failed
+    assert!(!result.results[2].passed); // skin weight sum failed
+}
+
 // ========== Motion verification constraint tests (MESHVER-005) ==========
 
 #[test]

@@ -81,6 +81,20 @@ pub enum Constraint {
         /// The minimum percentage of vertices that must have normalized weights (0.0-100.0).
         value: f64,
     },
+    // ========== Skeletal mesh topology/UV/weight constraints (CHAR-003) ==========
+    /// Requires the mesh to have at least one UV map.
+    RequireUvPresence,
+    /// Maximum number of zero-area faces allowed.
+    MaxZeroAreaFaces {
+        /// The maximum number of zero-area faces allowed.
+        value: u32,
+    },
+    /// Maximum skin weight sum deviation from 1.0 per vertex.
+    MaxSkinWeightSum {
+        /// The maximum allowed deviation of weight sum from 1.0.
+        value: f64,
+    },
+
     // ========== Motion verification constraints (MESHVER-005) ==========
     /// Maximum hinge axis violations (joints bending the wrong way).
     MaxHingeAxisViolations {
@@ -130,6 +144,9 @@ impl fmt::Display for Constraint {
             Constraint::MinWeightNormalization { value } => {
                 write!(f, "min_weight_normalization({})", value)
             }
+            Constraint::RequireUvPresence => write!(f, "require_uv_presence"),
+            Constraint::MaxZeroAreaFaces { value } => write!(f, "max_zero_area_faces({})", value),
+            Constraint::MaxSkinWeightSum { value } => write!(f, "max_skin_weight_sum({})", value),
             Constraint::MaxHingeAxisViolations { value } => {
                 write!(f, "max_hinge_axis_violations({})", value)
             }

@@ -49,6 +49,10 @@ pub struct BlenderMetrics {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub degenerate_face_count: Option<u32>,
 
+    /// Number of zero-area faces (CHAR-003).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub zero_area_face_count: Option<u32>,
+
     // ========== UV metrics ==========
     /// Number of UV islands.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -61,6 +65,10 @@ pub struct BlenderMetrics {
     /// Percentage of UV space that overlaps (0.0-100.0).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub uv_overlap_percentage: Option<f64>,
+
+    /// Whether the mesh has at least one UV map (CHAR-003).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub has_uv_map: Option<bool>,
 
     // ========== Bounds metrics ==========
     /// Axis-aligned bounding box of the mesh.
@@ -83,6 +91,18 @@ pub struct BlenderMetrics {
     /// Maximum bone influences per vertex.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub max_bone_influences: Option<u32>,
+
+    /// Number of unweighted vertices (vertices with zero total skin weight, CHAR-003).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub unweighted_vertex_count: Option<u32>,
+
+    /// Percentage of vertices with normalized weights (CHAR-003).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub weight_normalization_percentage: Option<f64>,
+
+    /// Maximum weight sum deviation from 1.0 across all vertices (CHAR-003).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub max_weight_deviation: Option<f64>,
 
     // ========== Material metrics ==========
     /// Number of material slots.
