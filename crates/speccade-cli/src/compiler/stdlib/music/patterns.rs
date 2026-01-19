@@ -64,26 +64,14 @@ fn register_pattern_functions(builder: &mut GlobalsBuilder) {
 
         let mut dict = new_dict(heap);
 
-        dict.insert_hashed(
-            hashed_key(heap, "row"),
-            heap.alloc(row).to_value(),
-        );
-        dict.insert_hashed(
-            hashed_key(heap, "note"),
-            heap.alloc_str(note).to_value(),
-        );
-        dict.insert_hashed(
-            hashed_key(heap, "inst"),
-            heap.alloc(inst).to_value(),
-        );
+        dict.insert_hashed(hashed_key(heap, "row"), heap.alloc(row).to_value());
+        dict.insert_hashed(hashed_key(heap, "note"), heap.alloc_str(note).to_value());
+        dict.insert_hashed(hashed_key(heap, "inst"), heap.alloc(inst).to_value());
 
         // Optional: channel
         if !channel.is_none() {
             if let Some(ch) = channel.unpack_i32() {
-                dict.insert_hashed(
-                    hashed_key(heap, "channel"),
-                    heap.alloc(ch).to_value(),
-                );
+                dict.insert_hashed(hashed_key(heap, "channel"), heap.alloc(ch).to_value());
             }
         }
 
@@ -96,30 +84,21 @@ fn register_pattern_functions(builder: &mut GlobalsBuilder) {
                         v
                     ));
                 }
-                dict.insert_hashed(
-                    hashed_key(heap, "vol"),
-                    heap.alloc(v).to_value(),
-                );
+                dict.insert_hashed(hashed_key(heap, "vol"), heap.alloc(v).to_value());
             }
         }
 
         // Optional: effect
         if !effect.is_none() {
             if let Some(e) = effect.unpack_i32() {
-                dict.insert_hashed(
-                    hashed_key(heap, "effect"),
-                    heap.alloc(e).to_value(),
-                );
+                dict.insert_hashed(hashed_key(heap, "effect"), heap.alloc(e).to_value());
             }
         }
 
         // Optional: param
         if !param.is_none() {
             if let Some(p) = param.unpack_i32() {
-                dict.insert_hashed(
-                    hashed_key(heap, "param"),
-                    heap.alloc(p).to_value(),
-                );
+                dict.insert_hashed(hashed_key(heap, "param"), heap.alloc(p).to_value());
             }
         }
 
@@ -135,10 +114,7 @@ fn register_pattern_functions(builder: &mut GlobalsBuilder) {
 
         // Optional: effect_xy
         if !effect_xy.is_none() {
-            dict.insert_hashed(
-                hashed_key(heap, "effect_xy"),
-                effect_xy,
-            );
+            dict.insert_hashed(hashed_key(heap, "effect_xy"), effect_xy);
         }
 
         Ok(dict)
@@ -179,25 +155,16 @@ fn register_pattern_functions(builder: &mut GlobalsBuilder) {
 
         let mut dict = new_dict(heap);
 
-        dict.insert_hashed(
-            hashed_key(heap, "rows"),
-            heap.alloc(rows).to_value(),
-        );
+        dict.insert_hashed(hashed_key(heap, "rows"), heap.alloc(rows).to_value());
 
         // Optional: notes (channel-keyed format)
         if !notes.is_none() {
-            dict.insert_hashed(
-                hashed_key(heap, "notes"),
-                notes,
-            );
+            dict.insert_hashed(hashed_key(heap, "notes"), notes);
         }
 
         // Optional: data (flat array format)
         if !data.is_none() {
-            dict.insert_hashed(
-                hashed_key(heap, "data"),
-                data,
-            );
+            dict.insert_hashed(hashed_key(heap, "data"), data);
         }
 
         Ok(dict)
@@ -239,10 +206,7 @@ fn register_pattern_functions(builder: &mut GlobalsBuilder) {
             hashed_key(heap, "pattern"),
             heap.alloc_str(pattern).to_value(),
         );
-        dict.insert_hashed(
-            hashed_key(heap, "repeat"),
-            heap.alloc(repeat).to_value(),
-        );
+        dict.insert_hashed(hashed_key(heap, "repeat"), heap.alloc(repeat).to_value());
 
         Ok(dict)
     }
@@ -273,8 +237,7 @@ fn register_pattern_functions(builder: &mut GlobalsBuilder) {
         end_vol: i32,
         heap: &'v Heap,
     ) -> anyhow::Result<Dict<'v>> {
-        validate_non_empty(pattern, "volume_fade", "pattern")
-            .map_err(|e| anyhow::anyhow!(e))?;
+        validate_non_empty(pattern, "volume_fade", "pattern").map_err(|e| anyhow::anyhow!(e))?;
 
         if !(0..=64).contains(&start_vol) {
             return Err(anyhow::anyhow!(
@@ -299,26 +262,17 @@ fn register_pattern_functions(builder: &mut GlobalsBuilder) {
             hashed_key(heap, "pattern"),
             heap.alloc_str(pattern).to_value(),
         );
-        dict.insert_hashed(
-            hashed_key(heap, "channel"),
-            heap.alloc(channel).to_value(),
-        );
+        dict.insert_hashed(hashed_key(heap, "channel"), heap.alloc(channel).to_value());
         dict.insert_hashed(
             hashed_key(heap, "start_row"),
             heap.alloc(start_row).to_value(),
         );
-        dict.insert_hashed(
-            hashed_key(heap, "end_row"),
-            heap.alloc(end_row).to_value(),
-        );
+        dict.insert_hashed(hashed_key(heap, "end_row"), heap.alloc(end_row).to_value());
         dict.insert_hashed(
             hashed_key(heap, "start_vol"),
             heap.alloc(start_vol).to_value(),
         );
-        dict.insert_hashed(
-            hashed_key(heap, "end_vol"),
-            heap.alloc(end_vol).to_value(),
-        );
+        dict.insert_hashed(hashed_key(heap, "end_vol"), heap.alloc(end_vol).to_value());
 
         Ok(dict)
     }
@@ -343,8 +297,7 @@ fn register_pattern_functions(builder: &mut GlobalsBuilder) {
         bpm: i32,
         heap: &'v Heap,
     ) -> anyhow::Result<Dict<'v>> {
-        validate_non_empty(pattern, "tempo_change", "pattern")
-            .map_err(|e| anyhow::anyhow!(e))?;
+        validate_non_empty(pattern, "tempo_change", "pattern").map_err(|e| anyhow::anyhow!(e))?;
 
         if !(32..=255).contains(&bpm) {
             return Err(anyhow::anyhow!(
@@ -363,13 +316,121 @@ fn register_pattern_functions(builder: &mut GlobalsBuilder) {
             hashed_key(heap, "pattern"),
             heap.alloc_str(pattern).to_value(),
         );
+        dict.insert_hashed(hashed_key(heap, "row"), heap.alloc(row).to_value());
+        dict.insert_hashed(hashed_key(heap, "bpm"), heap.alloc(bpm).to_value());
+
+        Ok(dict)
+    }
+
+    /// Creates a humanize_vol transform operation.
+    ///
+    /// Applies per-cell volume variation for musical humanization.
+    /// The volume is derived deterministically from (seed, salt, pattern_name, row, channel).
+    ///
+    /// # Arguments
+    /// * `min_vol` - Minimum volume (0-64)
+    /// * `max_vol` - Maximum volume (0-64)
+    /// * `seed_salt` - Salt for deterministic randomization
+    ///
+    /// # Returns
+    /// A dict matching the TransformOp::HumanizeVol IR structure.
+    ///
+    /// # Example
+    /// ```starlark
+    /// humanize_vol(40, 60, "velocity")
+    /// ```
+    fn humanize_vol<'v>(
+        min_vol: i32,
+        max_vol: i32,
+        seed_salt: &str,
+        heap: &'v Heap,
+    ) -> anyhow::Result<Dict<'v>> {
+        if !(0..=64).contains(&min_vol) {
+            return Err(anyhow::anyhow!(
+                "S103: humanize_vol(): 'min_vol' must be 0-64, got {}",
+                min_vol
+            ));
+        }
+        if !(0..=64).contains(&max_vol) {
+            return Err(anyhow::anyhow!(
+                "S103: humanize_vol(): 'max_vol' must be 0-64, got {}",
+                max_vol
+            ));
+        }
+        if min_vol > max_vol {
+            return Err(anyhow::anyhow!(
+                "S103: humanize_vol(): 'min_vol' ({}) must be <= 'max_vol' ({})",
+                min_vol,
+                max_vol
+            ));
+        }
+        validate_non_empty(seed_salt, "humanize_vol", "seed_salt")
+            .map_err(|e| anyhow::anyhow!(e))?;
+
+        let mut dict = new_dict(heap);
+
         dict.insert_hashed(
-            hashed_key(heap, "row"),
-            heap.alloc(row).to_value(),
+            hashed_key(heap, "op"),
+            heap.alloc_str("humanize_vol").to_value(),
         );
+        dict.insert_hashed(hashed_key(heap, "min_vol"), heap.alloc(min_vol).to_value());
+        dict.insert_hashed(hashed_key(heap, "max_vol"), heap.alloc(max_vol).to_value());
         dict.insert_hashed(
-            hashed_key(heap, "bpm"),
-            heap.alloc(bpm).to_value(),
+            hashed_key(heap, "seed_salt"),
+            heap.alloc_str(seed_salt).to_value(),
+        );
+
+        Ok(dict)
+    }
+
+    /// Creates a swing transform operation.
+    ///
+    /// Applies offbeat timing offset (swing feel) via note delay effects.
+    /// Delay is applied to offbeat positions (row % stride != 0).
+    ///
+    /// # Arguments
+    /// * `amount_permille` - Delay amount in permille of a row (0-1000)
+    /// * `stride` - Stride for determining offbeat positions (must be > 0)
+    /// * `seed_salt` - Salt for deterministic randomization
+    ///
+    /// # Returns
+    /// A dict matching the TransformOp::Swing IR structure.
+    ///
+    /// # Example
+    /// ```starlark
+    /// swing(500, 2, "groove")  # Apply 50% swing with stride 2
+    /// ```
+    fn swing<'v>(
+        amount_permille: i32,
+        stride: i32,
+        seed_salt: &str,
+        heap: &'v Heap,
+    ) -> anyhow::Result<Dict<'v>> {
+        if !(0..=1000).contains(&amount_permille) {
+            return Err(anyhow::anyhow!(
+                "S103: swing(): 'amount_permille' must be 0-1000, got {}",
+                amount_permille
+            ));
+        }
+        if stride <= 0 {
+            return Err(anyhow::anyhow!(
+                "S103: swing(): 'stride' must be > 0, got {}",
+                stride
+            ));
+        }
+        validate_non_empty(seed_salt, "swing", "seed_salt").map_err(|e| anyhow::anyhow!(e))?;
+
+        let mut dict = new_dict(heap);
+
+        dict.insert_hashed(hashed_key(heap, "op"), heap.alloc_str("swing").to_value());
+        dict.insert_hashed(
+            hashed_key(heap, "amount_permille"),
+            heap.alloc(amount_permille).to_value(),
+        );
+        dict.insert_hashed(hashed_key(heap, "stride"), heap.alloc(stride).to_value());
+        dict.insert_hashed(
+            hashed_key(heap, "seed_salt"),
+            heap.alloc_str(seed_salt).to_value(),
         );
 
         Ok(dict)
@@ -410,11 +471,14 @@ mod tests {
 
     #[test]
     fn test_tracker_pattern_with_notes() {
-        let result = eval_to_json(r#"
+        let result = eval_to_json(
+            r#"
 tracker_pattern(64, notes = {
     "0": [pattern_note(0, "C4", 0)]
 })
-"#).unwrap();
+"#,
+        )
+        .unwrap();
         assert_eq!(result["rows"], 64);
         assert!(result["notes"].is_object());
     }
@@ -446,5 +510,87 @@ tracker_pattern(64, notes = {
         let result = eval_to_json("tempo_change(\"bridge\", 32, 140)").unwrap();
         assert_eq!(result["type"], "tempo_change");
         assert_eq!(result["bpm"], 140);
+    }
+
+    #[test]
+    fn test_humanize_vol_basic() {
+        let result = eval_to_json("humanize_vol(40, 60, \"velocity\")").unwrap();
+        assert_eq!(result["op"], "humanize_vol");
+        assert_eq!(result["min_vol"], 40);
+        assert_eq!(result["max_vol"], 60);
+        assert_eq!(result["seed_salt"], "velocity");
+    }
+
+    #[test]
+    fn test_humanize_vol_invalid_min() {
+        let result = eval_to_json("humanize_vol(-1, 60, \"velocity\")");
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert!(err.contains("S103"));
+    }
+
+    #[test]
+    fn test_humanize_vol_invalid_max() {
+        let result = eval_to_json("humanize_vol(40, 65, \"velocity\")");
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert!(err.contains("S103"));
+    }
+
+    #[test]
+    fn test_humanize_vol_invalid_range() {
+        let result = eval_to_json("humanize_vol(60, 40, \"velocity\")");
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert!(err.contains("S103"));
+    }
+
+    #[test]
+    fn test_humanize_vol_empty_salt() {
+        let result = eval_to_json("humanize_vol(40, 60, \"\")");
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert!(err.contains("S101"));
+    }
+
+    #[test]
+    fn test_swing_basic() {
+        let result = eval_to_json("swing(500, 2, \"groove\")").unwrap();
+        assert_eq!(result["op"], "swing");
+        assert_eq!(result["amount_permille"], 500);
+        assert_eq!(result["stride"], 2);
+        assert_eq!(result["seed_salt"], "groove");
+    }
+
+    #[test]
+    fn test_swing_invalid_amount() {
+        let result = eval_to_json("swing(1001, 2, \"groove\")");
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert!(err.contains("S103"));
+    }
+
+    #[test]
+    fn test_swing_invalid_stride() {
+        let result = eval_to_json("swing(500, 0, \"groove\")");
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert!(err.contains("S103"));
+    }
+
+    #[test]
+    fn test_swing_negative_stride() {
+        let result = eval_to_json("swing(500, -1, \"groove\")");
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert!(err.contains("S103"));
+    }
+
+    #[test]
+    fn test_swing_empty_salt() {
+        let result = eval_to_json("swing(500, 2, \"\")");
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert!(err.contains("S101"));
     }
 }

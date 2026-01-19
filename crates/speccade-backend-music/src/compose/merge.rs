@@ -2,10 +2,11 @@
 
 use std::collections::BTreeMap;
 
+use rand::Rng;
 use speccade_spec::recipe::music::{MergePolicy, TransformOp};
 
 use super::error::ExpandError;
-use super::utils::transpose_note;
+use super::utils::{rng_for_cell, transpose_note};
 
 pub(super) type CellKey = (i32, u8);
 pub(super) type CellMap = BTreeMap<CellKey, Cell>;
@@ -193,17 +194,24 @@ fn merge_field<T: Clone + PartialEq>(
     Ok(())
 }
 
+/// Context needed for transforms that use randomization.
+pub(super) struct TransformContext<'a> {
+    pub seed: u32,
+    pub pattern_name: &'a str,
+    pub key: CellKey,
+}
+
 /// Apply a list of transforms to a cell.
 pub(super) fn apply_transforms(
     cell: &mut Cell,
     ops: &[TransformOp],
-    pattern_name: &str,
+    ctx: &TransformContext<'_>,
 ) -> Result<(), ExpandError> {
     for op in ops {
         match op {
             TransformOp::TransposeSemitones { semitones } => {
                 if let Some(ref note) = cell.note {
-                    if let Some(transposed) = transpose_note(note, *semitones, pattern_name)? {
+                    if let Some(transposed) = transpose_note(note, *semitones, ctx.pattern_name)? {
                         cell.note = Some(transposed);
                     }
                 }
@@ -211,7 +219,7 @@ pub(super) fn apply_transforms(
             TransformOp::VolMul { mul, div } => {
                 if *div == 0 {
                     return Err(ExpandError::InvalidExpr {
-                        pattern: pattern_name.to_string(),
+                        pattern: ctx.pattern_name.to_string(),
                         message: "vol_mul div must be > 0".to_string(),
                     });
                 }
@@ -245,6 +253,77 @@ pub(super) fn apply_transforms(
                 }
                 if cell.effect_xy.is_none() {
                     cell.effect_xy = *effect_xy;
+                }
+            }
+            TransformOp::HumanizeVol {
+                min_vol,
+                max_vol,
+                seed_salt,
+            } => {
+                if min_vol > max_vol {
+                    return Err(ExpandError::InvalidExpr {
+                        pattern: ctx.pattern_name.to_string(),
+                        message: format!(
+                            "humanize_vol min_vol ({}) must be <= max_vol ({})",
+                            min_vol, max_vol
+                        ),
+                    });
+                }
+                let (row, channel) = ctx.key;
+                let mut rng = rng_for_cell(ctx.seed, ctx.pattern_name, seed_salt, row, channel);
+                let vol = if min_vol == max_vol {
+                    *min_vol
+                } else {
+                    rng.gen_range(*min_vol..=*max_vol)
+                };
+                cell.vol = Some(vol.min(64));
+            }
+            TransformOp::Swing {
+                amount_permille,
+                stride,
+                seed_salt,
+            } => {
+                if *amount_permille > 1000 {
+                    return Err(ExpandError::InvalidExpr {
+                        pattern: ctx.pattern_name.to_string(),
+                        message: format!(
+                            "swing amount_permille ({}) must be <= 1000",
+                            amount_permille
+                        ),
+                    });
+                }
+                if *stride == 0 {
+                    return Err(ExpandError::InvalidExpr {
+                        pattern: ctx.pattern_name.to_string(),
+                        message: "swing stride must be > 0".to_string(),
+                    });
+                }
+                let (row, channel) = ctx.key;
+                // Check if this is an offbeat position (row % stride != 0)
+                let is_offbeat = !((row as u32).is_multiple_of(*stride));
+                if is_offbeat && *amount_permille > 0 {
+                    // Apply note delay effect.
+                    // The delay is expressed in ticks (0-15 for most trackers).
+                    // We map amount_permille (0-1000) to delay ticks (0-15).
+                    // At 1000 permille, we apply maximum delay (15 ticks).
+                    let mut rng = rng_for_cell(ctx.seed, ctx.pattern_name, seed_salt, row, channel);
+                    // Add some randomization to the delay for natural feel
+                    let base_delay = (*amount_permille as u32 * 15) / 1000;
+                    let jitter = if base_delay > 0 {
+                        rng.gen_range(0..=1)
+                    } else {
+                        0
+                    };
+                    let delay = (base_delay + jitter).min(15) as u8;
+                    if delay > 0 {
+                        // Apply EDx (note delay) effect
+                        // effect_name = "note_delay" and effect_xy = [delay, 0]
+                        // Only apply if no effect is already set
+                        if cell.effect_name.is_none() && cell.effect_xy.is_none() {
+                            cell.effect_name = Some("note_delay".to_string());
+                            cell.effect_xy = Some([delay, 0]);
+                        }
+                    }
                 }
             }
         }

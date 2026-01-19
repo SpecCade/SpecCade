@@ -6,7 +6,9 @@ use speccade_spec::recipe::music::{ComposePattern, MergePolicy, PatternExpr, Pit
 
 use super::error::ExpandError;
 use super::expander_context::{Expander, MAX_CELLS_PER_PATTERN, MAX_RECURSION_DEPTH};
-use super::merge::{apply_transforms, insert_cell_merge, shift_map, Cell, CellMap};
+use super::merge::{
+    apply_transforms, insert_cell_merge, shift_map, Cell, CellMap, TransformContext,
+};
 use super::seq::{PitchSeqAccessor, SeqAccessor};
 use super::utils::rng_for;
 
@@ -365,8 +367,13 @@ impl<'a> Expander<'a> {
             }
             PatternExpr::Transform { ops, body } => {
                 let mut map = self.eval_expr(body, depth + 1)?;
-                for (_key, cell) in map.iter_mut() {
-                    apply_transforms(cell, ops, self.pattern_name)?;
+                for (key, cell) in map.iter_mut() {
+                    let ctx = TransformContext {
+                        seed: self.seed,
+                        pattern_name: self.pattern_name,
+                        key: *key,
+                    };
+                    apply_transforms(cell, ops, &ctx)?;
                 }
                 Ok(map)
             }

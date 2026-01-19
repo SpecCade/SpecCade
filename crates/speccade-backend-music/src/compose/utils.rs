@@ -121,3 +121,30 @@ pub fn rng_for(seed: u32, pattern_name: &str, seed_salt: &str) -> Pcg32 {
     let seed64 = (derived as u64) | ((derived as u64) << 32);
     Pcg32::seed_from_u64(seed64)
 }
+
+/// Create a deterministic RNG from a seed, pattern name, salt, row, and channel.
+///
+/// This provides per-cell randomization that is stable across runs with the same inputs.
+pub fn rng_for_cell(
+    seed: u32,
+    pattern_name: &str,
+    seed_salt: &str,
+    row: i32,
+    channel: u8,
+) -> Pcg32 {
+    let mut input = Vec::with_capacity(8 + pattern_name.len() + seed_salt.len() + 4 + 1 + 3);
+    input.extend_from_slice(&seed.to_le_bytes());
+    input.push(0);
+    input.extend_from_slice(pattern_name.as_bytes());
+    input.push(0);
+    input.extend_from_slice(seed_salt.as_bytes());
+    input.push(0);
+    input.extend_from_slice(&row.to_le_bytes());
+    input.push(channel);
+
+    let hash = blake3::hash(&input);
+    let bytes: [u8; 4] = hash.as_bytes()[0..4].try_into().unwrap();
+    let derived = u32::from_le_bytes(bytes);
+    let seed64 = (derived as u64) | ((derived as u64) << 32);
+    Pcg32::seed_from_u64(seed64)
+}

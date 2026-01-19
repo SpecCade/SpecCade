@@ -408,6 +408,30 @@ pub enum TransformOp {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         effect_xy: Option<[u8; 2]>,
     },
+    /// Per-cell volume variation for humanization.
+    ///
+    /// Derives a deterministic volume value from (seed, salt, pattern_name, row, channel).
+    /// Volume is clamped to 0-64.
+    HumanizeVol {
+        /// Minimum volume (0-64).
+        min_vol: u8,
+        /// Maximum volume (0-64).
+        max_vol: u8,
+        /// Salt for deterministic randomization.
+        seed_salt: String,
+    },
+    /// Offbeat timing offset (swing feel).
+    ///
+    /// Applies note delay to offbeat positions (row % stride != 0).
+    /// The delay is expressed as permille of a row (0-1000).
+    Swing {
+        /// Delay amount in permille of a row (0-1000).
+        amount_permille: u16,
+        /// Stride for determining offbeat positions.
+        stride: u32,
+        /// Salt for deterministic randomization.
+        seed_salt: String,
+    },
 }
 
 /// Cell template emitted by Pattern IR (row comes from TimeExpr).

@@ -13,7 +13,7 @@ use speccade_spec::recipe::music::{
 use super::super::{expand_compose, ExpandError};
 use super::expander::Expander;
 use super::harmony::parse_chord_symbol;
-use super::merge::{apply_transforms, insert_cell_merge, Cell, CellMap};
+use super::merge::{apply_transforms, insert_cell_merge, Cell, CellMap, TransformContext};
 use super::utils::rng_for;
 
 fn base_params() -> MusicTrackerSongComposeV1Params {
@@ -404,6 +404,14 @@ fn merge_policies() {
     assert_eq!(cell.vol, Some(48));
 }
 
+fn test_ctx() -> TransformContext<'static> {
+    TransformContext {
+        seed: 1,
+        pattern_name: "p0",
+        key: (0, 0),
+    }
+}
+
 #[test]
 fn transpose_skips_special_notes() {
     let mut cell = Cell {
@@ -418,7 +426,7 @@ fn transpose_skips_special_notes() {
     apply_transforms(
         &mut cell,
         &[TransformOp::TransposeSemitones { semitones: 12 }],
-        "p0",
+        &test_ctx(),
     )
     .unwrap();
     assert_eq!(cell.note.as_deref(), Some("---"));
@@ -449,7 +457,7 @@ fn transform_transpose_vol_mul_set() {
                 effect_xy: Some([1, 2]),
             },
         ],
-        "p0",
+        &test_ctx(),
     )
     .unwrap();
 
@@ -751,4 +759,416 @@ fn pitch_seq_chord_tone_maps_notes() {
     assert_eq!(notes[1].note, "C3");
     assert_eq!(notes[2].note, "E3");
     assert_eq!(notes[3].note, "G3");
+}
+
+#[test]
+fn humanize_vol_deterministic() {
+    // Test that humanize_vol produces consistent results
+    let ctx = TransformContext {
+        seed: 42,
+        pattern_name: "p0",
+        key: (0, 0),
+    };
+    let mut cell1 = Cell {
+        note: Some("C4".to_string()),
+        inst: Some(0),
+        vol: None,
+        effect: None,
+        param: None,
+        effect_name: None,
+        effect_xy: None,
+    };
+    let mut cell2 = cell1.clone();
+
+    apply_transforms(
+        &mut cell1,
+        &[TransformOp::HumanizeVol {
+            min_vol: 40,
+            max_vol: 60,
+            seed_salt: "test".to_string(),
+        }],
+        &ctx,
+    )
+    .unwrap();
+
+    apply_transforms(
+        &mut cell2,
+        &[TransformOp::HumanizeVol {
+            min_vol: 40,
+            max_vol: 60,
+            seed_salt: "test".to_string(),
+        }],
+        &ctx,
+    )
+    .unwrap();
+
+    // Same context and salt should produce same result
+    assert_eq!(cell1.vol, cell2.vol);
+    assert!(cell1.vol.unwrap() >= 40 && cell1.vol.unwrap() <= 60);
+}
+
+#[test]
+fn humanize_vol_different_salt() {
+    // Test that different salts produce different results
+    let ctx = TransformContext {
+        seed: 42,
+        pattern_name: "p0",
+        key: (0, 0),
+    };
+    let mut cell1 = Cell {
+        note: Some("C4".to_string()),
+        inst: Some(0),
+        vol: None,
+        effect: None,
+        param: None,
+        effect_name: None,
+        effect_xy: None,
+    };
+    let mut cell2 = cell1.clone();
+
+    apply_transforms(
+        &mut cell1,
+        &[TransformOp::HumanizeVol {
+            min_vol: 0,
+            max_vol: 64,
+            seed_salt: "salt_a".to_string(),
+        }],
+        &ctx,
+    )
+    .unwrap();
+
+    apply_transforms(
+        &mut cell2,
+        &[TransformOp::HumanizeVol {
+            min_vol: 0,
+            max_vol: 64,
+            seed_salt: "salt_b".to_string(),
+        }],
+        &ctx,
+    )
+    .unwrap();
+
+    // Different salts should produce different results (with high probability)
+    // Note: there's a tiny chance they could be equal, but range 0-64 makes it unlikely
+    assert_ne!(cell1.vol, cell2.vol);
+}
+
+#[test]
+fn humanize_vol_invalid_range() {
+    let ctx = TransformContext {
+        seed: 42,
+        pattern_name: "p0",
+        key: (0, 0),
+    };
+    let mut cell = Cell {
+        note: Some("C4".to_string()),
+        inst: Some(0),
+        vol: None,
+        effect: None,
+        param: None,
+        effect_name: None,
+        effect_xy: None,
+    };
+
+    let result = apply_transforms(
+        &mut cell,
+        &[TransformOp::HumanizeVol {
+            min_vol: 60,
+            max_vol: 40, // Invalid: min > max
+            seed_salt: "test".to_string(),
+        }],
+        &ctx,
+    );
+
+    assert!(result.is_err());
+}
+
+#[test]
+fn swing_offbeat_applies_delay() {
+    // Test that swing applies note delay to offbeat positions
+    // Row 1 with stride 2 is offbeat (1 % 2 = 1 != 0)
+    let ctx = TransformContext {
+        seed: 42,
+        pattern_name: "p0",
+        key: (1, 0), // offbeat row
+    };
+    let mut cell = Cell {
+        note: Some("C4".to_string()),
+        inst: Some(0),
+        vol: Some(64),
+        effect: None,
+        param: None,
+        effect_name: None,
+        effect_xy: None,
+    };
+
+    apply_transforms(
+        &mut cell,
+        &[TransformOp::Swing {
+            amount_permille: 500,
+            stride: 2,
+            seed_salt: "swing".to_string(),
+        }],
+        &ctx,
+    )
+    .unwrap();
+
+    // Should apply note_delay effect
+    assert_eq!(cell.effect_name.as_deref(), Some("note_delay"));
+    assert!(cell.effect_xy.is_some());
+    let delay = cell.effect_xy.unwrap()[0];
+    assert!(delay > 0 && delay <= 15);
+}
+
+#[test]
+fn swing_onbeat_no_delay() {
+    // Test that swing does not apply to onbeat positions
+    // Row 0 with stride 2 is onbeat (0 % 2 = 0)
+    let ctx = TransformContext {
+        seed: 42,
+        pattern_name: "p0",
+        key: (0, 0), // onbeat row
+    };
+    let mut cell = Cell {
+        note: Some("C4".to_string()),
+        inst: Some(0),
+        vol: Some(64),
+        effect: None,
+        param: None,
+        effect_name: None,
+        effect_xy: None,
+    };
+
+    apply_transforms(
+        &mut cell,
+        &[TransformOp::Swing {
+            amount_permille: 500,
+            stride: 2,
+            seed_salt: "swing".to_string(),
+        }],
+        &ctx,
+    )
+    .unwrap();
+
+    // Should NOT apply note_delay effect
+    assert!(cell.effect_name.is_none());
+    assert!(cell.effect_xy.is_none());
+}
+
+#[test]
+fn swing_invalid_amount() {
+    let ctx = TransformContext {
+        seed: 42,
+        pattern_name: "p0",
+        key: (1, 0),
+    };
+    let mut cell = Cell {
+        note: Some("C4".to_string()),
+        inst: Some(0),
+        vol: Some(64),
+        effect: None,
+        param: None,
+        effect_name: None,
+        effect_xy: None,
+    };
+
+    let result = apply_transforms(
+        &mut cell,
+        &[TransformOp::Swing {
+            amount_permille: 1001, // Invalid: > 1000
+            stride: 2,
+            seed_salt: "swing".to_string(),
+        }],
+        &ctx,
+    );
+
+    assert!(result.is_err());
+}
+
+#[test]
+fn swing_invalid_stride() {
+    let ctx = TransformContext {
+        seed: 42,
+        pattern_name: "p0",
+        key: (1, 0),
+    };
+    let mut cell = Cell {
+        note: Some("C4".to_string()),
+        inst: Some(0),
+        vol: Some(64),
+        effect: None,
+        param: None,
+        effect_name: None,
+        effect_xy: None,
+    };
+
+    let result = apply_transforms(
+        &mut cell,
+        &[TransformOp::Swing {
+            amount_permille: 500,
+            stride: 0, // Invalid: must be > 0
+            seed_salt: "swing".to_string(),
+        }],
+        &ctx,
+    );
+
+    assert!(result.is_err());
+}
+
+#[test]
+fn swing_deterministic() {
+    // Test that swing produces consistent results
+    let ctx = TransformContext {
+        seed: 42,
+        pattern_name: "p0",
+        key: (1, 0),
+    };
+    let mut cell1 = Cell {
+        note: Some("C4".to_string()),
+        inst: Some(0),
+        vol: Some(64),
+        effect: None,
+        param: None,
+        effect_name: None,
+        effect_xy: None,
+    };
+    let mut cell2 = cell1.clone();
+
+    apply_transforms(
+        &mut cell1,
+        &[TransformOp::Swing {
+            amount_permille: 500,
+            stride: 2,
+            seed_salt: "swing".to_string(),
+        }],
+        &ctx,
+    )
+    .unwrap();
+
+    apply_transforms(
+        &mut cell2,
+        &[TransformOp::Swing {
+            amount_permille: 500,
+            stride: 2,
+            seed_salt: "swing".to_string(),
+        }],
+        &ctx,
+    )
+    .unwrap();
+
+    // Same context and salt should produce same result
+    assert_eq!(cell1.effect_xy, cell2.effect_xy);
+}
+
+#[test]
+fn humanize_vol_integration() {
+    // Integration test using pattern expansion
+    let mut params = base_params();
+    params.patterns.insert(
+        "p0".to_string(),
+        ComposePattern {
+            rows: Some(4),
+            bars: None,
+            timebase: None,
+            program: PatternExpr::Transform {
+                ops: vec![TransformOp::HumanizeVol {
+                    min_vol: 40,
+                    max_vol: 60,
+                    seed_salt: "vel".to_string(),
+                }],
+                body: Box::new(PatternExpr::Emit {
+                    at: TimeExpr::Range {
+                        start: 0,
+                        step: 1,
+                        count: 4,
+                    },
+                    cell: CellTemplate {
+                        channel: ChannelRef::Index(0),
+                        note: Some("C4".to_string()),
+                        inst: Some(InstrumentRef::Index(0)),
+                        vol: Some(50), // Will be replaced by humanize
+                        ..Default::default()
+                    },
+                }),
+            },
+            data: None,
+            notes: None,
+        },
+    );
+
+    let first = expand_compose(&params, 123).unwrap();
+    let second = expand_compose(&params, 123).unwrap();
+
+    // Should be deterministic
+    assert_eq!(first, second);
+
+    // Volumes should vary per row
+    let notes = first.patterns.get("p0").unwrap().data.as_ref().unwrap();
+    let vols: Vec<u8> = notes.iter().filter_map(|n| n.vol).collect();
+    assert_eq!(vols.len(), 4);
+    // All volumes should be in range
+    assert!(vols.iter().all(|v| *v >= 40 && *v <= 60));
+}
+
+#[test]
+fn swing_integration() {
+    // Integration test using pattern expansion
+    let mut params = base_params();
+    params.patterns.insert(
+        "p0".to_string(),
+        ComposePattern {
+            rows: Some(4),
+            bars: None,
+            timebase: None,
+            program: PatternExpr::Transform {
+                ops: vec![TransformOp::Swing {
+                    amount_permille: 500,
+                    stride: 2,
+                    seed_salt: "swing".to_string(),
+                }],
+                body: Box::new(PatternExpr::Emit {
+                    at: TimeExpr::Range {
+                        start: 0,
+                        step: 1,
+                        count: 4,
+                    },
+                    cell: CellTemplate {
+                        channel: ChannelRef::Index(0),
+                        note: Some("C4".to_string()),
+                        inst: Some(InstrumentRef::Index(0)),
+                        ..Default::default()
+                    },
+                }),
+            },
+            data: None,
+            notes: None,
+        },
+    );
+
+    let first = expand_compose(&params, 123).unwrap();
+    let second = expand_compose(&params, 123).unwrap();
+
+    // Should be deterministic
+    assert_eq!(first, second);
+
+    // Check that offbeat rows have note_delay, onbeat rows don't
+    let notes = first.patterns.get("p0").unwrap().data.as_ref().unwrap();
+    for note in notes {
+        if note.row % 2 == 0 {
+            // onbeat
+            assert!(
+                note.effect_name.is_none(),
+                "onbeat row {} should not have delay",
+                note.row
+            );
+        } else {
+            // offbeat
+            assert_eq!(
+                note.effect_name.as_deref(),
+                Some("note_delay"),
+                "offbeat row {} should have delay",
+                note.row
+            );
+        }
+    }
 }

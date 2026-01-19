@@ -117,7 +117,8 @@ Open questions:
   - Implemented: `check_parity()` function in backend-music; `docs/xm-it-differences.md` with QA checklist.
 - [x] `MUSIC-008` Expand tracker effect coverage + validation (arp/porta/vibrato/retrig/vol slide, etc.). **Done: 2026-01-18**
   - Implemented: 30+ typed TrackerEffect variants with XM/IT validation; `docs/tracker-effects.md` reference.
-- [ ] `MUSIC-009` Add deterministic swing/humanize macros to Pattern IR (timing + velocity ranges with explicit constraints).
+- [x] `MUSIC-009` Add deterministic swing/humanize macros to Pattern IR (timing + velocity ranges with explicit constraints). **Done: 2026-01-19**
+  - Implemented: HumanizeVol (per-cell volume variation) and Swing (offbeat note-delay) TransformOp variants; Starlark helpers humanize_vol() and swing().
 
 ## Music (Content / Workflow)
 
