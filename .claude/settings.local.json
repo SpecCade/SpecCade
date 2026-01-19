@@ -16,7 +16,21 @@
       "Bash(powershell -Command \"\\(Get-Content ''D:\\\\Development\\\\nethercore-project\\\\speccade\\\\crates\\\\speccade-backend-audio\\\\src\\\\synthesis\\\\membrane.rs'' | Measure-Object -Line\\).Lines\")",
       "Bash(python:*)",
       "Bash(echo:*)",
-      "WebFetch(domain:crates.io)"
+      "WebFetch(domain:crates.io)",
+      "Bash(where:*)",
+      "Bash(git push:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(python3:*)",
+      "Bash(Remove-Item \"D:\\\\Development\\\\nethercore-project\\\\speccade\\\\crates\\\\speccade-cli\\\\src\\\\commands\\\\inspect.rs\")",
+      "Bash(powershell -Command:*)",
+      "Bash(Remove-Item \"D:\\\\Development\\\\nethercore-project\\\\speccade\\\\crates\\\\speccade-cli\\\\src\\\\analysis\\\\mesh.rs\")",
+      "Bash(cargo clean:*)",
+      "Bash(do if [ -f \"packs/preset_library_v1/audio/$preset.json\" ])",
+      "Bash(then echo \"OK: $preset\")",
+      "Bash(else echo \"MISSING: $preset\")",
+      "Bash(fi)",
+      "Bash(del /f \"D:\\\\Development\\\\nethercore-project\\\\speccade\\\\golden\\\\speccade\\\\specs\\\\skeletal_animation\\\\walk_cycle_ik.report.json\")"
     ]
   }
 }
