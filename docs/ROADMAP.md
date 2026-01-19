@@ -94,6 +94,12 @@ Reference: `docs/rfcs/RFC-0010-mesh-llm-verification.md`
   - Implemented: `speccade verify` command with 10 constraint types; JSON constraint files; pass/fail results with actual values.
 - [ ] `MESHVER-003` Decide if/when VLM integration is supported (and how it is configured).
   - Deliverable: explicit policy: off by default; user-provided credentials; what gets uploaded (renders only).
+- [ ] `MESHVER-004` Add skeletal mesh deformation/weight verification probes (result-based, not spec-based).
+  - Deliverable: additional `speccade verify` constraints and/or Blender-side probes for max influences, unweighted verts, and deformation sanity poses.
+  - Touch points: `blender/entrypoint.py`, `crates/speccade-backend-blender/src/metrics.rs`, `crates/speccade-spec/src/validation/constraints/`.
+- [ ] `MESHVER-005` Add animation motion verification (post-IK/post-bake) for joint direction + constraint enforcement.
+  - Deliverable: machine-readable motion validation section in reports (hinge axis/sign calibration, range violations, knee/elbow pops, root motion sanity).
+  - Touch points: `blender/entrypoint.py`, `crates/speccade-backend-blender/src/metrics.rs`, `crates/speccade-spec/src/validation/constraints/`.
 
 Open questions:
 - [ ] `MESHVER-Q001` Acceptable VLM latency targets for interactive use.
@@ -147,7 +153,8 @@ Open questions:
 - [x] `AUDIO-005` Add missing filter types (notch/allpass first; then comb/formant/shelves as needed). **Done: 2026-01-19**
   - Verified: Notch and Allpass filters exist in spec, backend DSP, and Starlark stdlib; tests added for coverage.
 - [ ] `AUDIO-006` Add missing synthesis types with highest leverage (unison/supersaw, waveguide, bowed string, membrane/drum).
-- [ ] `AUDIO-007` Add loudness targets (LUFS) and true-peak limiting workflows for production-ready output levels.
+- [x] `AUDIO-007` Add loudness targets (LUFS) and true-peak limiting workflows for production-ready output levels. **Done: 2026-01-19**
+  - Implemented: ITU-R BS.1770 integrated LUFS + true_peak_db in analyze; TruePeakLimiter effect with oversampling; true_peak_limiter() Starlark helper.
 - [ ] `AUDIO-008` Add one-shot + loop pairing helpers (transient + loopable sustain from the same recipe).
 - [ ] `AUDIO-009` Add foley layering helpers (impact builder: transient/body/tail; whoosh builder: noise + sweep).
 - [ ] `AUDIO-010` Add batch SFX variation sets (seed sweeps + constraints + sample-set export).
@@ -212,6 +219,39 @@ Migrated from `docs/FUTURE_GENERATORS.md` (now deprecated).
 - [ ] `MESH-012` Add boolean kitbashing (union/difference + cleanup) with determinism/validation constraints.
 - [ ] `MESH-013` Add animation helper presets (IK targets + constraint presets) for procedural walk/run cycles.
 
+### Skeletal Mesh / Character (Blender Tier)
+
+- [ ] `CHAR-001` Add spec reference docs for Blender-backed mesh/character/animation assets.
+  - Deliverable: `docs/spec-reference/mesh.md` (static mesh), `docs/spec-reference/character.md` (skeletal mesh), `docs/spec-reference/animation.md` (skeletal animation), plus updates to `docs/SPEC_REFERENCE.md`.
+  - Touch points: `docs/spec-reference/`, `crates/speccade-spec/src/recipe/{mesh,character,animation}/`, `schemas/speccade-spec-v1.schema.json`.
+- [ ] `CHAR-002` Add Starlark constructors for `skeletal_mesh` authoring (and docs).
+  - Deliverable: ergonomic helpers for skeleton presets/custom skeletons, body parts, skinning/export settings; documented under `docs/stdlib-reference.md`.
+  - Touch points: `crates/speccade-cli/src/compiler/stdlib/` (new module), `docs/stdlib-*.md`.
+- [ ] `CHAR-003` Expand skeletal mesh validation/verification beyond counts (topology, UV presence, skin weights).
+  - Deliverable: additional constraints in `speccade verify` and report fields for non-manifold edges, degenerate faces, UV sanity, max influences, and unweighted vertices.
+  - Touch points: `blender/entrypoint.py`, `crates/speccade-spec/src/validation/constraints/`, `crates/speccade-backend-blender/src/metrics.rs`.
+
+### Skeletal Animation / Rigging / IK (Blender Tier)
+
+- [ ] `ANIM-001` Expose `skeletal_animation.blender_rigged_v1` end-to-end (IK/rig-aware animation generation).
+  - Deliverable: `speccade generate` supports `skeletal_animation.blender_rigged_v1` and dispatches Blender with `--mode rigged_animation`.
+  - Touch points: `crates/speccade-spec/src/validation/mod.rs`, `schemas/speccade-spec-v1.schema.json`, `crates/speccade-cli`, `crates/speccade-backend-blender/src/orchestrator.rs`, `blender/entrypoint.py`.
+- [ ] `ANIM-002` Decide and enforce the clip-vs-rigged schema split, then migrate fixtures/examples.
+  - Deliverable: `skeletal_animation.blender_clip_v1` stays "simple keyframes"; all IK/rigging keys live under `skeletal_animation.blender_rigged_v1`; migrate `golden/speccade/specs/skeletal_animation/*.json` accordingly.
+  - Touch points: `golden/speccade/specs/skeletal_animation/`, `crates/speccade-backend-blender/src/animation.rs`, `crates/speccade-backend-blender/src/orchestrator.rs`.
+- [ ] `ANIM-003` Add Starlark constructors for `skeletal_animation` authoring (phases/poses/procedural layers/IK keyframes).
+  - Deliverable: ergonomic helpers with safe defaults, plus docs/examples.
+  - Touch points: `crates/speccade-cli/src/compiler/stdlib/` (new module), `docs/stdlib-reference.md`, `docs/examples/`.
+- [ ] `ANIM-004` Fill remaining rigging parity gaps and document them (IK stretch, foot roll, missing presets).
+  - Deliverable: reference docs + probe specs for IK stretch settings, foot roll systems, and any missing presets (e.g. basic spine).
+  - Touch points: `blender/entrypoint.py`, `crates/speccade-spec/src/recipe/animation/`, `golden/speccade/specs/skeletal_animation/`.
+- [ ] `ANIM-005` Validate "hard" constraint types in real assets (ball/planar + stiffness/influence semantics).
+  - Deliverable: probe specs + verification checks for ball socket constraints, planar constraints, and influence/stiffness behavior.
+  - Touch points: `blender/entrypoint.py`, `crates/speccade-spec/src/recipe/animation/constraints.rs`, `crates/speccade-spec/src/validation/constraints/`.
+- [ ] `ANIM-006` Add root motion controls + validation (export + verify).
+  - Deliverable: explicit root motion settings (extract/lock/validate) with a report section and a `speccade verify` constraint.
+  - Touch points: `crates/speccade-spec/src/recipe/animation/`, `blender/entrypoint.py`, `crates/speccade-backend-blender/src/metrics.rs`.
+
 ---
 
 ## Tooling / QA
@@ -235,3 +275,9 @@ Reference: `docs/MIGRATION.md`
 
 - [ ] `MIGRATE-001` Implement a real params mapping layer in the migrator (legacy keys -> canonical recipe schemas).
 - [ ] `MIGRATE-002` Add migration fixtures + tests that validate migrated specs against `speccade validate`.
+- [ ] `MIGRATE-003` Map legacy `ANIMATION` dict keys to canonical `skeletal_animation` params (incl. rig_setup/poses/phases/IK).
+  - Deliverable: a tested conversion that produces canonical `skeletal_animation.blender_rigged_v1` params (and rejects/flags unknown keys with actionable diagnostics).
+  - Touch points: `crates/speccade-cli/src/commands/migrate/`, `docs/legacy/PARITY_MATRIX_LEGACY_SPEC_PY.md`, `crates/speccade-spec/src/recipe/animation/`.
+- [ ] `MIGRATE-004` Map legacy `CHARACTER` dict keys to canonical `skeletal_mesh` params (skeleton + parts/body_parts + skinning/export).
+  - Deliverable: a tested conversion that emits canonical `skeletal_mesh.blender_rigged_mesh_v1` params and preserves triangle budgets/material intent where possible.
+  - Touch points: `crates/speccade-cli/src/commands/migrate/`, `docs/legacy/PARITY_MATRIX_LEGACY_SPEC_PY.md`, `crates/speccade-spec/src/recipe/character/`.

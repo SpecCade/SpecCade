@@ -43,16 +43,28 @@ fn register_dynamics_effects(builder: &mut GlobalsBuilder) {
         heap: &'v Heap,
     ) -> anyhow::Result<Dict<'v>> {
         if !(-24.0..=0.0).contains(&threshold_db) {
-            return Err(anyhow::anyhow!("S103: limiter(): 'threshold_db' must be -24 to 0, got {}", threshold_db));
+            return Err(anyhow::anyhow!(
+                "S103: limiter(): 'threshold_db' must be -24 to 0, got {}",
+                threshold_db
+            ));
         }
         if !(10.0..=500.0).contains(&release_ms) {
-            return Err(anyhow::anyhow!("S103: limiter(): 'release_ms' must be 10-500, got {}", release_ms));
+            return Err(anyhow::anyhow!(
+                "S103: limiter(): 'release_ms' must be 10-500, got {}",
+                release_ms
+            ));
         }
         if !(1.0..=10.0).contains(&lookahead_ms) {
-            return Err(anyhow::anyhow!("S103: limiter(): 'lookahead_ms' must be 1-10, got {}", lookahead_ms));
+            return Err(anyhow::anyhow!(
+                "S103: limiter(): 'lookahead_ms' must be 1-10, got {}",
+                lookahead_ms
+            ));
         }
         if !(-6.0..=0.0).contains(&ceiling_db) {
-            return Err(anyhow::anyhow!("S103: limiter(): 'ceiling_db' must be -6 to 0, got {}", ceiling_db));
+            return Err(anyhow::anyhow!(
+                "S103: limiter(): 'ceiling_db' must be -6 to 0, got {}",
+                ceiling_db
+            ));
         }
 
         let mut dict = new_dict(heap);
@@ -85,20 +97,14 @@ fn register_dynamics_effects(builder: &mut GlobalsBuilder) {
     ///
     /// # Arguments
     /// * `bands` - List of EQ band dicts from eq_band()
-    fn parametric_eq<'v>(
-        bands: Value<'v>,
-        heap: &'v Heap,
-    ) -> anyhow::Result<Dict<'v>> {
+    fn parametric_eq<'v>(bands: Value<'v>, heap: &'v Heap) -> anyhow::Result<Dict<'v>> {
         let mut dict = new_dict(heap);
 
         dict.insert_hashed(
             hashed_key(heap, "type"),
             heap.alloc_str("parametric_eq").to_value(),
         );
-        dict.insert_hashed(
-            hashed_key(heap, "bands"),
-            bands,
-        );
+        dict.insert_hashed(hashed_key(heap, "bands"), bands);
 
         Ok(dict)
     }
@@ -117,13 +123,18 @@ fn register_dynamics_effects(builder: &mut GlobalsBuilder) {
         band_type: &str,
         heap: &'v Heap,
     ) -> anyhow::Result<Dict<'v>> {
-        validate_positive(frequency, "eq_band", "frequency")
-            .map_err(|e| anyhow::anyhow!(e))?;
+        validate_positive(frequency, "eq_band", "frequency").map_err(|e| anyhow::anyhow!(e))?;
         if !(-24.0..=24.0).contains(&gain_db) {
-            return Err(anyhow::anyhow!("S103: eq_band(): 'gain_db' must be -24 to +24, got {}", gain_db));
+            return Err(anyhow::anyhow!(
+                "S103: eq_band(): 'gain_db' must be -24 to +24, got {}",
+                gain_db
+            ));
         }
         if !(0.1..=10.0).contains(&q) {
-            return Err(anyhow::anyhow!("S103: eq_band(): 'q' must be 0.1-10.0, got {}", q));
+            return Err(anyhow::anyhow!(
+                "S103: eq_band(): 'q' must be 0.1-10.0, got {}",
+                q
+            ));
         }
         const BAND_TYPES: &[&str] = &["lowshelf", "highshelf", "peak", "notch"];
         validate_enum(band_type, BAND_TYPES, "eq_band", "band_type")
@@ -135,14 +146,8 @@ fn register_dynamics_effects(builder: &mut GlobalsBuilder) {
             hashed_key(heap, "frequency"),
             heap.alloc(frequency).to_value(),
         );
-        dict.insert_hashed(
-            hashed_key(heap, "gain_db"),
-            heap.alloc(gain_db).to_value(),
-        );
-        dict.insert_hashed(
-            hashed_key(heap, "q"),
-            heap.alloc(q).to_value(),
-        );
+        dict.insert_hashed(hashed_key(heap, "gain_db"), heap.alloc(gain_db).to_value());
+        dict.insert_hashed(hashed_key(heap, "q"), heap.alloc(q).to_value());
         dict.insert_hashed(
             hashed_key(heap, "band_type"),
             heap.alloc_str(band_type).to_value(),
@@ -173,8 +178,7 @@ fn register_dynamics_effects(builder: &mut GlobalsBuilder) {
         #[starlark(require = named)] output_gain_db: f64,
         heap: &'v Heap,
     ) -> anyhow::Result<Dict<'v>> {
-        validate_pan_range(attack, "transient_shaper", "attack")
-            .map_err(|e| anyhow::anyhow!(e))?;
+        validate_pan_range(attack, "transient_shaper", "attack").map_err(|e| anyhow::anyhow!(e))?;
         validate_pan_range(sustain, "transient_shaper", "sustain")
             .map_err(|e| anyhow::anyhow!(e))?;
         if !(-12.0..=12.0).contains(&output_gain_db) {
@@ -190,17 +194,65 @@ fn register_dynamics_effects(builder: &mut GlobalsBuilder) {
             hashed_key(heap, "type"),
             heap.alloc_str("transient_shaper").to_value(),
         );
-        dict.insert_hashed(
-            hashed_key(heap, "attack"),
-            heap.alloc(attack).to_value(),
-        );
-        dict.insert_hashed(
-            hashed_key(heap, "sustain"),
-            heap.alloc(sustain).to_value(),
-        );
+        dict.insert_hashed(hashed_key(heap, "attack"), heap.alloc(attack).to_value());
+        dict.insert_hashed(hashed_key(heap, "sustain"), heap.alloc(sustain).to_value());
         dict.insert_hashed(
             hashed_key(heap, "output_gain_db"),
             heap.alloc(output_gain_db).to_value(),
+        );
+
+        Ok(dict)
+    }
+
+    /// Creates a true-peak limiter effect for broadcast/streaming compliance.
+    ///
+    /// Uses oversampling to detect and limit inter-sample peaks that exceed the
+    /// ceiling. Essential for meeting loudness standards like EBU R128 or ATSC A/85.
+    ///
+    /// # Arguments
+    /// * `ceiling_db` - Maximum output level in dBTP (-6 to 0). Common values: -1.0 for streaming, -2.0 for broadcast.
+    /// * `release_ms` - Release time in ms for gain recovery (10-500).
+    ///
+    /// # Returns
+    /// A dict matching the Effect::TruePeakLimiter IR structure.
+    ///
+    /// # Example
+    /// ```starlark
+    /// true_peak_limiter(ceiling_db = -1.0, release_ms = 100.0)  # Streaming
+    /// true_peak_limiter(ceiling_db = -2.0, release_ms = 200.0)  # Broadcast
+    /// ```
+    #[starlark(speculative_exec_safe)]
+    fn true_peak_limiter<'v>(
+        #[starlark(require = named)] ceiling_db: f64,
+        #[starlark(require = named, default = 100.0)] release_ms: f64,
+        heap: &'v Heap,
+    ) -> anyhow::Result<Dict<'v>> {
+        if !(-6.0..=0.0).contains(&ceiling_db) {
+            return Err(anyhow::anyhow!(
+                "S103: true_peak_limiter(): 'ceiling_db' must be -6 to 0, got {}",
+                ceiling_db
+            ));
+        }
+        if !(10.0..=500.0).contains(&release_ms) {
+            return Err(anyhow::anyhow!(
+                "S103: true_peak_limiter(): 'release_ms' must be 10-500, got {}",
+                release_ms
+            ));
+        }
+
+        let mut dict = new_dict(heap);
+
+        dict.insert_hashed(
+            hashed_key(heap, "type"),
+            heap.alloc_str("true_peak_limiter").to_value(),
+        );
+        dict.insert_hashed(
+            hashed_key(heap, "ceiling_db"),
+            heap.alloc(ceiling_db).to_value(),
+        );
+        dict.insert_hashed(
+            hashed_key(heap, "release_ms"),
+            heap.alloc(release_ms).to_value(),
         );
 
         Ok(dict)

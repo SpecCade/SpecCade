@@ -4,6 +4,7 @@
 //! and quality gating. All metrics are computed to produce byte-identical JSON output
 //! across runs on the same input.
 
+mod loudness;
 mod quality;
 mod spectral;
 mod temporal;
@@ -25,6 +26,7 @@ pub use types::{
 use types::WavHeader;
 
 // Import metric calculation functions
+use loudness::{calculate_lufs_integrated, calculate_true_peak_db};
 use quality::{
     calculate_dc_offset, calculate_peak, calculate_rms, calculate_silence_ratio, detect_clipping,
 };
@@ -242,6 +244,11 @@ pub fn analyze_wav(wav_data: &[u8]) -> Result<AudioMetrics, AudioAnalysisError> 
     let dc_offset = round_f64(calculate_dc_offset(&mono_samples), FLOAT_PRECISION);
     let silence_ratio = round_f64(calculate_silence_ratio(&mono_samples), FLOAT_PRECISION);
 
+    // Calculate LUFS and true peak
+    let lufs_integrated = calculate_lufs_integrated(&mono_samples, header.sample_rate)
+        .map(|v| round_f64(v, FLOAT_PRECISION));
+    let true_peak_db = calculate_true_peak_db(&mono_samples).map(|v| round_f64(v, FLOAT_PRECISION));
+
     // Calculate temporal metrics
     let attack_ms = round_f64(
         calculate_attack_ms(&mono_samples, header.sample_rate),
@@ -274,6 +281,8 @@ pub fn analyze_wav(wav_data: &[u8]) -> Result<AudioMetrics, AudioAnalysisError> 
             clipping_detected,
             dc_offset,
             silence_ratio,
+            lufs_integrated,
+            true_peak_db,
         },
         temporal: AudioTemporalMetrics {
             attack_ms,
@@ -324,6 +333,9 @@ pub fn metrics_to_btree(metrics: &AudioMetrics) -> BTreeMap<String, serde_json::
         "dc_offset".to_string(),
         serde_json::json!(metrics.quality.dc_offset),
     );
+    if let Some(lufs) = metrics.quality.lufs_integrated {
+        quality.insert("lufs_integrated".to_string(), serde_json::json!(lufs));
+    }
     quality.insert(
         "peak_db".to_string(),
         serde_json::json!(metrics.quality.peak_db),
@@ -336,6 +348,9 @@ pub fn metrics_to_btree(metrics: &AudioMetrics) -> BTreeMap<String, serde_json::
         "silence_ratio".to_string(),
         serde_json::json!(metrics.quality.silence_ratio),
     );
+    if let Some(tp) = metrics.quality.true_peak_db {
+        quality.insert("true_peak_db".to_string(), serde_json::json!(tp));
+    }
     map.insert("quality".to_string(), serde_json::json!(quality));
 
     // Spectral section

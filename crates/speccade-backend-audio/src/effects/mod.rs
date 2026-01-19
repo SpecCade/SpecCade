@@ -485,6 +485,12 @@ fn apply_effect_with_lfo(
                 )?;
             }
         }
+        Effect::TruePeakLimiter {
+            ceiling_db,
+            release_ms,
+        } => {
+            dynamics::apply_true_peak_limiter(stereo, *ceiling_db, *release_ms, sample_rate)?;
+        }
     }
     Ok(())
 }

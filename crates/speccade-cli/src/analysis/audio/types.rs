@@ -43,6 +43,12 @@ pub struct AudioQualityMetrics {
     pub dc_offset: f64,
     /// Ratio of silent samples (below threshold)
     pub silence_ratio: f64,
+    /// Integrated LUFS (ITU-R BS.1770 loudness). None if audio is too short.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub lufs_integrated: Option<f64>,
+    /// True peak level in dB (oversampled peak detection). None if measurement unavailable.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub true_peak_db: Option<f64>,
 }
 
 /// Audio temporal metrics.

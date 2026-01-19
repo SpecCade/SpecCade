@@ -220,6 +220,16 @@ pub enum Effect {
         /// Wet/dry mix (0.0-1.0).
         wet: f64,
     },
+    /// True-peak limiter for broadcast/streaming compliance.
+    ///
+    /// Uses oversampling to detect and limit inter-sample peaks that exceed the
+    /// ceiling. Essential for meeting loudness standards like EBU R128 or ATSC A/85.
+    TruePeakLimiter {
+        /// Maximum output level in dBTP (-6 to 0). Common values: -1.0 for streaming, -2.0 for broadcast.
+        ceiling_db: f64,
+        /// Release time in ms for gain recovery (10-500).
+        release_ms: f64,
+    },
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]

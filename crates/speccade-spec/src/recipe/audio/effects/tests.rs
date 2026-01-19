@@ -728,3 +728,84 @@ fn test_ring_modulator_from_json() {
         _ => panic!("Expected RingModulator variant"),
     }
 }
+
+#[test]
+fn test_true_peak_limiter_serde_roundtrip() {
+    let effect = Effect::TruePeakLimiter {
+        ceiling_db: -1.0,
+        release_ms: 100.0,
+    };
+
+    let json = serde_json::to_string(&effect).unwrap();
+    assert!(json.contains("\"type\":\"true_peak_limiter\""));
+    assert!(json.contains("\"ceiling_db\":-1.0"));
+    assert!(json.contains("\"release_ms\":100.0"));
+
+    let parsed: Effect = serde_json::from_str(&json).unwrap();
+    assert_eq!(parsed, effect);
+}
+
+#[test]
+fn test_true_peak_limiter_from_json() {
+    let json = r#"{
+        "type": "true_peak_limiter",
+        "ceiling_db": -2.0,
+        "release_ms": 200.0
+    }"#;
+
+    let effect: Effect = serde_json::from_str(json).unwrap();
+    match effect {
+        Effect::TruePeakLimiter {
+            ceiling_db,
+            release_ms,
+        } => {
+            assert_eq!(ceiling_db, -2.0);
+            assert_eq!(release_ms, 200.0);
+        }
+        _ => panic!("Expected TruePeakLimiter variant"),
+    }
+}
+
+#[test]
+fn test_true_peak_limiter_streaming_preset() {
+    // Common streaming preset: -1 dBTP ceiling, 100ms release
+    let json = r#"{
+        "type": "true_peak_limiter",
+        "ceiling_db": -1.0,
+        "release_ms": 100.0
+    }"#;
+
+    let effect: Effect = serde_json::from_str(json).unwrap();
+    match effect {
+        Effect::TruePeakLimiter {
+            ceiling_db,
+            release_ms,
+        } => {
+            assert_eq!(ceiling_db, -1.0);
+            assert_eq!(release_ms, 100.0);
+        }
+        _ => panic!("Expected TruePeakLimiter variant"),
+    }
+}
+
+#[test]
+fn test_true_peak_limiter_broadcast_preset() {
+    // Common broadcast preset: -2 dBTP ceiling, 200ms release
+    let json = r#"{
+        "type": "true_peak_limiter",
+        "ceiling_db": -2.0,
+        "release_ms": 200.0
+    }"#;
+
+    let effect: Effect = serde_json::from_str(json).unwrap();
+    match effect {
+        Effect::TruePeakLimiter {
+            ceiling_db,
+            release_ms,
+        } => {
+            assert_eq!(ceiling_db, -2.0);
+            assert_eq!(release_ms, 200.0);
+        }
+        _ => panic!("Expected TruePeakLimiter variant"),
+    }
+}
