@@ -286,4 +286,92 @@ audio_spec(
         let err = result.unwrap_err();
         assert!(err.contains("seed"));
     }
+
+    #[test]
+    fn test_notch_filter_basic() {
+        let result = eval_to_json(r#"notch(1000.0, 2.0)"#).unwrap();
+        assert_eq!(result["type"], "notch");
+        assert_eq!(result["center"], 1000.0);
+        assert_eq!(result["resonance"], 2.0);
+        assert!(result.get("center_end").is_none());
+    }
+
+    #[test]
+    fn test_notch_filter_with_sweep() {
+        let result = eval_to_json(r#"notch(500.0, 1.5, 2000.0)"#).unwrap();
+        assert_eq!(result["type"], "notch");
+        assert_eq!(result["center"], 500.0);
+        assert_eq!(result["resonance"], 1.5);
+        assert_eq!(result["center_end"], 2000.0);
+    }
+
+    #[test]
+    fn test_notch_filter_default_resonance() {
+        let result = eval_to_json(r#"notch(1000.0)"#).unwrap();
+        assert_eq!(result["type"], "notch");
+        assert_eq!(result["center"], 1000.0);
+        assert_eq!(result["resonance"], 1.0);
+    }
+
+    #[test]
+    fn test_notch_filter_invalid_center() {
+        let result = eval_to_json(r#"notch(-100.0)"#);
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert!(err.contains("S103"));
+    }
+
+    #[test]
+    fn test_allpass_filter_basic() {
+        let result = eval_to_json(r#"allpass(1000.0, 2.0)"#).unwrap();
+        assert_eq!(result["type"], "allpass");
+        assert_eq!(result["frequency"], 1000.0);
+        assert_eq!(result["resonance"], 2.0);
+        assert!(result.get("frequency_end").is_none());
+    }
+
+    #[test]
+    fn test_allpass_filter_with_sweep() {
+        let result = eval_to_json(r#"allpass(500.0, 1.5, 2000.0)"#).unwrap();
+        assert_eq!(result["type"], "allpass");
+        assert_eq!(result["frequency"], 500.0);
+        assert_eq!(result["resonance"], 1.5);
+        assert_eq!(result["frequency_end"], 2000.0);
+    }
+
+    #[test]
+    fn test_allpass_filter_default_resonance() {
+        let result = eval_to_json(r#"allpass(1000.0)"#).unwrap();
+        assert_eq!(result["type"], "allpass");
+        assert_eq!(result["frequency"], 1000.0);
+        assert_eq!(result["resonance"], 0.707);
+    }
+
+    #[test]
+    fn test_allpass_filter_invalid_frequency() {
+        let result = eval_to_json(r#"allpass(-100.0)"#);
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert!(err.contains("S103"));
+    }
+
+    #[test]
+    fn test_layer_with_notch_filter() {
+        let result = eval_to_json(
+            r#"audio_layer(oscillator(440.0), filter = notch(1000.0, 2.0))"#,
+        )
+        .unwrap();
+        assert_eq!(result["filter"]["type"], "notch");
+        assert_eq!(result["filter"]["center"], 1000.0);
+    }
+
+    #[test]
+    fn test_layer_with_allpass_filter() {
+        let result = eval_to_json(
+            r#"audio_layer(oscillator(440.0), filter = allpass(1000.0, 2.0))"#,
+        )
+        .unwrap();
+        assert_eq!(result["filter"]["type"], "allpass");
+        assert_eq!(result["filter"]["frequency"], 1000.0);
+    }
 }

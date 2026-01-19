@@ -109,6 +109,66 @@ fn test_filter_highpass() {
 }
 
 #[test]
+fn test_filter_bandpass() {
+    let filter = Filter::Bandpass {
+        center: 1000.0,
+        resonance: 2.0,
+        center_end: None,
+    };
+
+    let json = serde_json::to_string(&filter).unwrap();
+    assert!(json.contains("bandpass"));
+    assert!(json.contains("center"));
+    let parsed: Filter = serde_json::from_str(&json).unwrap();
+    assert_eq!(parsed, filter);
+}
+
+#[test]
+fn test_filter_bandpass_with_sweep() {
+    let filter = Filter::Bandpass {
+        center: 500.0,
+        resonance: 1.5,
+        center_end: Some(2000.0),
+    };
+
+    let json = serde_json::to_string(&filter).unwrap();
+    assert!(json.contains("bandpass"));
+    assert!(json.contains("center_end"));
+    let parsed: Filter = serde_json::from_str(&json).unwrap();
+    assert_eq!(parsed, filter);
+}
+
+#[test]
+fn test_filter_notch() {
+    let filter = Filter::Notch {
+        center: 1000.0,
+        resonance: 2.0,
+        center_end: None,
+    };
+
+    let json = serde_json::to_string(&filter).unwrap();
+    assert!(json.contains("notch"));
+    assert!(json.contains("center"));
+    let parsed: Filter = serde_json::from_str(&json).unwrap();
+    assert_eq!(parsed, filter);
+}
+
+#[test]
+fn test_filter_notch_with_sweep() {
+    let filter = Filter::Notch {
+        center: 500.0,
+        resonance: 1.5,
+        center_end: Some(2000.0),
+    };
+
+    let json = serde_json::to_string(&filter).unwrap();
+    assert!(json.contains("notch"));
+    assert!(json.contains("center_end"));
+    let parsed: Filter = serde_json::from_str(&json).unwrap();
+    assert_eq!(parsed, filter);
+}
+
+#[test]
 fn test_filter_allpass() {
     let filter = Filter::Allpass {
         frequency: 1000.0,
