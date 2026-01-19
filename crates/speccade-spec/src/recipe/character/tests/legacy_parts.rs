@@ -110,7 +110,7 @@ fn test_legacy_part_basic() {
         "cap_end": false
     }"#;
     let part: LegacyPart = serde_json::from_str(json).unwrap();
-    assert_eq!(part.bone, "chest");
+    assert_eq!(part.bone, Some("chest".to_string()));
     assert_eq!(part.base, Some("hexagon(6)".to_string()));
     assert_eq!(part.base_radius, Some(BaseRadius::Uniform(0.2)));
     assert_eq!(part.cap_start, Some(true));

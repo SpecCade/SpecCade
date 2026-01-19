@@ -83,7 +83,7 @@ fn test_roundtrip_full_character() {
             map.insert(
                 "torso".to_string(),
                 LegacyPart {
-                    bone: "root".to_string(),
+                    bone: Some("root".to_string()),
                     base: Some("hexagon(6)".to_string()),
                     base_radius: Some(BaseRadius::Uniform(0.2)),
                     steps: vec![Step::Full(StepDefinition {

@@ -64,7 +64,7 @@ pub use hash::{
     derive_variant_spec_seed,
 };
 pub use output::{EngineTarget, OutputFormat, OutputKind, OutputSpec, VariantSpec};
-pub use recipe::Recipe;
+pub use recipe::{Recipe, RecipeParamsError};
 pub use report::{
     BoundingBox, OutputMetrics, OutputResult, Report, ReportBuilder, ReportError, ReportWarning,
     StageTiming, REPORT_VERSION,

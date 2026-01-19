@@ -2,6 +2,7 @@
 
 use crate::error::{ErrorCode, ValidationError, ValidationResult};
 use crate::output::{OutputFormat, OutputKind};
+use crate::recipe::Recipe;
 use crate::spec::Spec;
 use crate::validation::BudgetProfile;
 
@@ -29,9 +30,7 @@ pub(super) fn validate_outputs_for_recipe_with_budget(
 ) {
     match recipe.kind.as_str() {
         "audio_v1" => validate_audio_outputs_with_budget(spec, recipe, budget, result),
-        "music.tracker_song_v1" => {
-            validate_music_outputs_with_budget(spec, recipe, budget, result)
-        }
+        "music.tracker_song_v1" => validate_music_outputs_with_budget(spec, recipe, budget, result),
         "music.tracker_song_compose_v1" => {
             validate_music_compose_outputs_with_budget(spec, recipe, budget, result)
         }
@@ -39,13 +38,20 @@ pub(super) fn validate_outputs_for_recipe_with_budget(
             validate_texture_procedural_outputs_with_budget(spec, recipe, budget, result)
         }
         "static_mesh.blender_primitives_v1" => {
-            validate_single_primary_output_format(spec, OutputFormat::Glb, result)
+            validate_static_mesh_blender_primitives(recipe, result);
+            validate_single_primary_output_format(spec, OutputFormat::Glb, result);
         }
         "skeletal_mesh.blender_rigged_mesh_v1" => {
-            validate_single_primary_output_format(spec, OutputFormat::Glb, result)
+            validate_skeletal_mesh_blender_rigged(recipe, result);
+            validate_single_primary_output_format(spec, OutputFormat::Glb, result);
         }
         "skeletal_animation.blender_clip_v1" => {
-            validate_single_primary_output_format(spec, OutputFormat::Glb, result)
+            validate_skeletal_animation_blender_clip(recipe, result);
+            validate_single_primary_output_format(spec, OutputFormat::Glb, result);
+        }
+        "skeletal_animation.blender_rigged_v1" => {
+            validate_skeletal_animation_blender_rigged(recipe, result);
+            validate_single_primary_output_format(spec, OutputFormat::Glb, result);
         }
         _ if recipe.kind.starts_with("texture.") => {
             result.add_error(ValidationError::with_path(
@@ -109,5 +115,173 @@ pub(crate) fn validate_single_primary_output_format(
             ),
             format!("outputs[{}].format", index),
         ));
+    }
+}
+
+// =============================================================================
+// Tier-2 Recipe Params Validation
+// =============================================================================
+
+/// Validates params for `static_mesh.blender_primitives_v1` recipe.
+///
+/// This validates that the params match the expected schema and rejects
+/// unknown fields.
+fn validate_static_mesh_blender_primitives(recipe: &Recipe, result: &mut ValidationResult) {
+    match recipe.as_static_mesh_blender_primitives() {
+        Ok(params) => {
+            // Validate dimensions are positive
+            for (i, &dim) in params.dimensions.iter().enumerate() {
+                if dim <= 0.0 {
+                    let axis = ["X", "Y", "Z"][i];
+                    result.add_error(ValidationError::with_path(
+                        ErrorCode::InvalidRecipeParams,
+                        format!("dimensions[{}] ({}) must be positive, got {}", i, axis, dim),
+                        format!("recipe.params.dimensions[{}]", i),
+                    ));
+                }
+            }
+        }
+        Err(e) => {
+            result.add_error(ValidationError::with_path(
+                ErrorCode::InvalidRecipeParams,
+                format!("invalid params for {}: {}", recipe.kind, e),
+                "recipe.params",
+            ));
+        }
+    }
+}
+
+/// Validates params for `skeletal_mesh.blender_rigged_mesh_v1` recipe.
+///
+/// This validates that the params match the expected schema and rejects
+/// unknown fields.
+fn validate_skeletal_mesh_blender_rigged(recipe: &Recipe, result: &mut ValidationResult) {
+    match recipe.as_skeletal_mesh_blender_rigged_mesh() {
+        Ok(params) => {
+            // Validate that either skeleton_preset or skeleton is provided
+            if params.skeleton_preset.is_none() && params.skeleton.is_empty() {
+                // Only warn if both body_parts and parts are also empty
+                // (legacy specs may rely on external armature)
+                if params.body_parts.is_empty() && params.parts.is_empty() {
+                    result.add_error(ValidationError::with_path(
+                        ErrorCode::InvalidRecipeParams,
+                        "either 'skeleton_preset', 'skeleton', 'body_parts', or 'parts' must be provided",
+                        "recipe.params",
+                    ));
+                }
+            }
+        }
+        Err(e) => {
+            result.add_error(ValidationError::with_path(
+                ErrorCode::InvalidRecipeParams,
+                format!("invalid params for {}: {}", recipe.kind, e),
+                "recipe.params",
+            ));
+        }
+    }
+}
+
+/// Validates params for `skeletal_animation.blender_clip_v1` recipe.
+///
+/// This validates that the params match the expected schema and rejects
+/// unknown fields.
+fn validate_skeletal_animation_blender_clip(recipe: &Recipe, result: &mut ValidationResult) {
+    match recipe.as_skeletal_animation_blender_clip() {
+        Ok(params) => {
+            // Validate duration is positive
+            if params.duration_seconds <= 0.0 {
+                result.add_error(ValidationError::with_path(
+                    ErrorCode::InvalidRecipeParams,
+                    format!(
+                        "duration_seconds must be positive, got {}",
+                        params.duration_seconds
+                    ),
+                    "recipe.params.duration_seconds",
+                ));
+            }
+
+            // Validate fps is reasonable
+            if params.fps == 0 {
+                result.add_error(ValidationError::with_path(
+                    ErrorCode::InvalidRecipeParams,
+                    "fps must be greater than 0",
+                    "recipe.params.fps",
+                ));
+            }
+
+            // Validate clip_name is not empty
+            if params.clip_name.is_empty() {
+                result.add_error(ValidationError::with_path(
+                    ErrorCode::InvalidRecipeParams,
+                    "clip_name must not be empty",
+                    "recipe.params.clip_name",
+                ));
+            }
+        }
+        Err(e) => {
+            result.add_error(ValidationError::with_path(
+                ErrorCode::InvalidRecipeParams,
+                format!("invalid params for {}: {}", recipe.kind, e),
+                "recipe.params",
+            ));
+        }
+    }
+}
+
+/// Validates params for `skeletal_animation.blender_rigged_v1` recipe.
+///
+/// This validates that the params match the expected schema and rejects
+/// unknown fields.
+fn validate_skeletal_animation_blender_rigged(recipe: &Recipe, result: &mut ValidationResult) {
+    match recipe.as_skeletal_animation_blender_rigged() {
+        Ok(params) => {
+            // Validate duration_frames is positive
+            if params.duration_frames == 0 {
+                result.add_error(ValidationError::with_path(
+                    ErrorCode::InvalidRecipeParams,
+                    "duration_frames must be greater than 0",
+                    "recipe.params.duration_frames",
+                ));
+            }
+
+            // Validate fps is reasonable
+            if params.fps == 0 {
+                result.add_error(ValidationError::with_path(
+                    ErrorCode::InvalidRecipeParams,
+                    "fps must be greater than 0",
+                    "recipe.params.fps",
+                ));
+            }
+
+            // Validate clip_name is not empty
+            if params.clip_name.is_empty() {
+                result.add_error(ValidationError::with_path(
+                    ErrorCode::InvalidRecipeParams,
+                    "clip_name must not be empty",
+                    "recipe.params.clip_name",
+                ));
+            }
+
+            // If duration_seconds is provided, it should be positive
+            if let Some(duration_seconds) = params.duration_seconds {
+                if duration_seconds <= 0.0 {
+                    result.add_error(ValidationError::with_path(
+                        ErrorCode::InvalidRecipeParams,
+                        format!(
+                            "duration_seconds must be positive, got {}",
+                            duration_seconds
+                        ),
+                        "recipe.params.duration_seconds",
+                    ));
+                }
+            }
+        }
+        Err(e) => {
+            result.add_error(ValidationError::with_path(
+                ErrorCode::InvalidRecipeParams,
+                format!("invalid params for {}: {}", recipe.kind, e),
+                "recipe.params",
+            ));
+        }
     }
 }

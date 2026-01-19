@@ -152,7 +152,8 @@ Open questions:
   - Verified: ParametricEq and Limiter effects exist in spec (effects/mod.rs), backend DSP (effects/chain.rs), and stdlib helpers (dynamics.rs).
 - [x] `AUDIO-005` Add missing filter types (notch/allpass first; then comb/formant/shelves as needed). **Done: 2026-01-19**
   - Verified: Notch and Allpass filters exist in spec, backend DSP, and Starlark stdlib; tests added for coverage.
-- [ ] `AUDIO-006` Add missing synthesis types with highest leverage (unison/supersaw, waveguide, bowed string, membrane/drum).
+- [x] `AUDIO-006` Add missing synthesis types with highest leverage (unison/supersaw, waveguide, bowed string, membrane/drum). **Done: 2026-01-19**
+  - Verified: SupersawUnison, Waveguide, BowedString, MembraneDrum exist in spec (synthesis_core.rs) and backend.
 - [x] `AUDIO-007` Add loudness targets (LUFS) and true-peak limiting workflows for production-ready output levels. **Done: 2026-01-19**
   - Implemented: ITU-R BS.1770 integrated LUFS + true_peak_db in analyze; TruePeakLimiter effect with oversampling; true_peak_limiter() Starlark helper.
 - [x] `AUDIO-008` Add one-shot + loop pairing helpers (transient + loopable sustain from the same recipe). **Done: 2026-01-19**
@@ -274,9 +275,9 @@ Migrated from `docs/FUTURE_GENERATORS.md` (now deprecated).
 - [x] `QA-008` Add a Starlark coverage guard for stdlib helpers (prevent "dead" helpers or missing examples). **Done: 2026-01-19**
   - Deliverable: a test that ensures every function in the stdlib dump is referenced by at least one `golden/starlark/*.star` file (with an explicit allowlist for intentionally-unexercised helpers).
   - Implemented: stdlib_coverage.rs scans golden/*.star for function calls; 98.1% coverage (51/52); allowlist for mesh_primitive.
-- [ ] `QA-009` Validate Tier-2 recipe params at `speccade validate` time (no Blender required).
-  - Deliverable: `speccade validate` rejects unknown/invalid fields for `static_mesh`, `skeletal_mesh`, and `skeletal_animation` recipe params (matching the Rust `deny_unknown_fields` structs), so Starlark/JSON IR can’t silently drift.
-  - Touch points: `crates/speccade-spec/src/validation/`, `crates/speccade-spec/src/recipe/{mesh,character,animation}/`, `schemas/speccade-spec-v1.schema.json`.
+- [x] `QA-009` Validate Tier-2 recipe params at `speccade validate` time (no Blender required). **Done: 2026-01-19**
+  - Deliverable: `speccade validate` rejects unknown/invalid fields for `static_mesh`, `skeletal_mesh`, and `skeletal_animation` recipe params (matching the Rust `deny_unknown_fields` structs), so Starlark/JSON IR can't silently drift.
+  - Implemented: Recipe::try_parse_params() + validation for 4 Tier-2 recipe kinds; E012 errors with field paths.
 
 ---
 

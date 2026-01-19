@@ -6,8 +6,9 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct LegacyPart {
-    /// Associated bone name.
-    pub bone: String,
+    /// Associated bone name (optional for mirrored parts).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub bone: Option<String>,
     /// Base shape definition (e.g., "hexagon(6)", "circle(8)").
     #[serde(skip_serializing_if = "Option::is_none")]
     pub base: Option<String>,

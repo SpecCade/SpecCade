@@ -200,7 +200,102 @@ impl Recipe {
     ) -> Result<SkeletalAnimationBlenderRiggedV1Params, serde_json::Error> {
         serde_json::from_value(self.params.clone())
     }
+
+    /// Attempts to parse recipe params according to the recipe kind.
+    ///
+    /// This method validates that the params match the expected schema for the
+    /// recipe kind. Unknown fields will be rejected due to `deny_unknown_fields`
+    /// on the param types.
+    ///
+    /// # Returns
+    ///
+    /// - `Ok(())` if params parse successfully
+    /// - `Err(RecipeParamsError)` with details about the parsing failure
+    pub fn try_parse_params(&self) -> Result<(), RecipeParamsError> {
+        match self.kind.as_str() {
+            "audio_v1" => {
+                self.as_audio().map_err(|e| RecipeParamsError {
+                    recipe_kind: self.kind.clone(),
+                    error_message: e.to_string(),
+                })?;
+            }
+            "music.tracker_song_v1" => {
+                self.as_music_tracker_song().map_err(|e| RecipeParamsError {
+                    recipe_kind: self.kind.clone(),
+                    error_message: e.to_string(),
+                })?;
+            }
+            "music.tracker_song_compose_v1" => {
+                self.as_music_tracker_song_compose()
+                    .map_err(|e| RecipeParamsError {
+                        recipe_kind: self.kind.clone(),
+                        error_message: e.to_string(),
+                    })?;
+            }
+            "texture.procedural_v1" => {
+                self.as_texture_procedural()
+                    .map_err(|e| RecipeParamsError {
+                        recipe_kind: self.kind.clone(),
+                        error_message: e.to_string(),
+                    })?;
+            }
+            "static_mesh.blender_primitives_v1" => {
+                self.as_static_mesh_blender_primitives()
+                    .map_err(|e| RecipeParamsError {
+                        recipe_kind: self.kind.clone(),
+                        error_message: e.to_string(),
+                    })?;
+            }
+            "skeletal_mesh.blender_rigged_mesh_v1" => {
+                self.as_skeletal_mesh_blender_rigged_mesh()
+                    .map_err(|e| RecipeParamsError {
+                        recipe_kind: self.kind.clone(),
+                        error_message: e.to_string(),
+                    })?;
+            }
+            "skeletal_animation.blender_clip_v1" => {
+                self.as_skeletal_animation_blender_clip()
+                    .map_err(|e| RecipeParamsError {
+                        recipe_kind: self.kind.clone(),
+                        error_message: e.to_string(),
+                    })?;
+            }
+            "skeletal_animation.blender_rigged_v1" => {
+                self.as_skeletal_animation_blender_rigged()
+                    .map_err(|e| RecipeParamsError {
+                        recipe_kind: self.kind.clone(),
+                        error_message: e.to_string(),
+                    })?;
+            }
+            _ => {
+                // Unknown recipe kind - we don't validate params for unrecognized kinds
+                // as they may be handled by external backends
+            }
+        }
+        Ok(())
+    }
 }
+
+/// Error returned when recipe params fail to parse.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct RecipeParamsError {
+    /// The recipe kind that failed to parse.
+    pub recipe_kind: String,
+    /// The error message from serde.
+    pub error_message: String,
+}
+
+impl std::fmt::Display for RecipeParamsError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "invalid params for {}: {}",
+            self.recipe_kind, self.error_message
+        )
+    }
+}
+
+impl std::error::Error for RecipeParamsError {}
 
 #[cfg(test)]
 mod tests {

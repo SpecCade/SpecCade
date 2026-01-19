@@ -156,7 +156,7 @@ fn test_parity_skeleton_bone_mirror() {
 fn test_parity_part_bone() {
     let json = r#"{"bone": "torso", "base": "hexagon(6)", "base_radius": 0.1}"#;
     let part: LegacyPart = serde_json::from_str(json).unwrap();
-    assert_eq!(part.bone, "torso");
+    assert_eq!(part.bone, Some("torso".to_string()));
 }
 
 /// Test: Part key 'base'
