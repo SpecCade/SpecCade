@@ -256,9 +256,10 @@ Migrated from `docs/FUTURE_GENERATORS.md` (now deprecated).
   - Deliverable: `speccade generate` supports `skeletal_animation.blender_rigged_v1` and dispatches Blender with `--mode rigged_animation`.
   - Touch points: `crates/speccade-spec/src/validation/mod.rs`, `schemas/speccade-spec-v1.schema.json`, `crates/speccade-cli`, `crates/speccade-backend-blender/src/orchestrator.rs`, `blender/entrypoint.py`.
   - Implemented: Added `RiggedAnimation` variant to `GenerationMode`, `rigged_animation` module, dispatch wiring, and tests.
-- [ ] `ANIM-002` Decide and enforce the clip-vs-rigged schema split, then migrate fixtures/examples.
+- [x] `ANIM-002` Decide and enforce the clip-vs-rigged schema split, then migrate fixtures/examples. **Done: 2026-01-20**
   - Deliverable: `skeletal_animation.blender_clip_v1` stays "simple keyframes"; all IK/rigging keys live under `skeletal_animation.blender_rigged_v1`; migrate `golden/speccade/specs/skeletal_animation/*.json` accordingly.
   - Touch points: `golden/speccade/specs/skeletal_animation/`, `crates/speccade-backend-blender/src/animation.rs`, `crates/speccade-backend-blender/src/orchestrator.rs`.
+  - Implemented: Added validation that emits clear errors when IK fields (rig_setup, poses, phases, ik_keyframes, procedural_layers, etc.) appear in `blender_clip_v1` specs, with helpful message directing to `blender_rigged_v1`; created `walk_cycle_ik.json` golden spec demonstrating `blender_rigged_v1` with IK targets; updated `docs/spec-reference/animation.md` with schema split documentation; added 15 new tests.
 - [x] `ANIM-003` Add Starlark constructors for `skeletal_animation` authoring (phases/poses/procedural layers/IK keyframes). **Done: 2026-01-19**
   - Deliverable: ergonomic helpers with safe defaults, plus docs/examples.
   - Touch points: `crates/speccade-cli/src/compiler/stdlib/` (new module), `docs/stdlib-reference.md`, `docs/examples/`.

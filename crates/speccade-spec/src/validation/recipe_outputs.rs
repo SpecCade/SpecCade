@@ -184,11 +184,44 @@ fn validate_skeletal_mesh_blender_rigged(recipe: &Recipe, result: &mut Validatio
     }
 }
 
+/// IK-specific field names that are only valid in `blender_rigged_v1`.
+const IK_ONLY_FIELDS: &[&str] = &[
+    "rig_setup",
+    "poses",
+    "phases",
+    "ik_keyframes",
+    "procedural_layers",
+    "animator_rig",
+    "input_armature",
+    "character",
+    "duration_frames",
+    "ground_offset",
+    "conventions",
+];
+
 /// Validates params for `skeletal_animation.blender_clip_v1` recipe.
 ///
 /// This validates that the params match the expected schema and rejects
-/// unknown fields.
+/// unknown fields. Additionally provides clear guidance if IK-specific
+/// fields are incorrectly used.
 fn validate_skeletal_animation_blender_clip(recipe: &Recipe, result: &mut ValidationResult) {
+    // First check if any IK-only fields are present and provide helpful error
+    if let Some(obj) = recipe.params.as_object() {
+        for &ik_field in IK_ONLY_FIELDS {
+            if obj.contains_key(ik_field) {
+                result.add_error(ValidationError::with_path(
+                    ErrorCode::InvalidRecipeParams,
+                    format!(
+                        "'{}' is an IK/rigging feature not supported by 'skeletal_animation.blender_clip_v1'; \
+                         use 'skeletal_animation.blender_rigged_v1' instead for IK targets, poses, phases, and procedural layers",
+                        ik_field
+                    ),
+                    format!("recipe.params.{}", ik_field),
+                ));
+            }
+        }
+    }
+
     match recipe.as_skeletal_animation_blender_clip() {
         Ok(params) => {
             // Validate duration is positive
@@ -222,11 +255,27 @@ fn validate_skeletal_animation_blender_clip(recipe: &Recipe, result: &mut Valida
             }
         }
         Err(e) => {
-            result.add_error(ValidationError::with_path(
-                ErrorCode::InvalidRecipeParams,
-                format!("invalid params for {}: {}", recipe.kind, e),
-                "recipe.params",
-            ));
+            // Check if the error mentions any IK fields to provide better guidance
+            let err_str = e.to_string();
+            let is_ik_field_error = IK_ONLY_FIELDS.iter().any(|f| err_str.contains(f));
+
+            if is_ik_field_error {
+                result.add_error(ValidationError::with_path(
+                    ErrorCode::InvalidRecipeParams,
+                    format!(
+                        "invalid params for {}: {}. Note: IK features (rig_setup, poses, phases, \
+                         ik_keyframes, procedural_layers) require 'skeletal_animation.blender_rigged_v1'",
+                        recipe.kind, e
+                    ),
+                    "recipe.params",
+                ));
+            } else {
+                result.add_error(ValidationError::with_path(
+                    ErrorCode::InvalidRecipeParams,
+                    format!("invalid params for {}: {}", recipe.kind, e),
+                    "recipe.params",
+                ));
+            }
         }
     }
 }
