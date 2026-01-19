@@ -123,7 +123,8 @@ Open questions:
 ## Music (Content / Workflow)
 
 - [ ] `MUSIC-005` Prefer `TrackerInstrument.ref` (external `audio_v1` specs) in examples/goldens where possible.
-- [ ] `MUSIC-006` Add a tuned, high-quality drum example (kick/snare/hat) and gate it with basic metrics (no clipping, sane levels).
+- [x] `MUSIC-006` Add a tuned, high-quality drum example (kick/snare/hat) and gate it with basic metrics (no clipping, sane levels). **Done: 2026-01-19**
+  - Implemented: docs/examples/music/drums/ with kick.star, snare.star, hihat.star; quality test validates peak_db < 0, dc_offset < 0.01, rms_db in range.
 - [ ] `MUSIC-007` Grow "genre kits" as data packages: curated compose defs + instrument refs + timebase/harmony defaults.
 - [ ] `MUSIC-010` Add cue templates (`loop_low/loop_main/loop_hi`, stingers, transitions) as compile-time helpers or templates.
 
