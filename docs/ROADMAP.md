@@ -267,6 +267,15 @@ Migrated from `docs/FUTURE_GENERATORS.md` (now deprecated).
 - [x] `QA-005` Add profiling/observability: per-stage timings, memory stats, and reproducible perf runs. **Done: 2026-01-18**
   - Implemented: `--profile` flag adds `stages[]` timing breakdown to report; documented in `docs/profiling.md`.
 - [ ] `QA-006` Define a plugin/backends extension story (subprocess or WASM) with strict I/O contracts + determinism reporting.
+- [ ] `QA-007` Add a Starlark stdlib drift guard (CI) using `speccade stdlib dump --format json`.
+  - Deliverable: a checked-in stdlib snapshot (JSON) + a test/CI step that fails if the dump changes without updating the snapshot.
+  - Touch points: `crates/speccade-cli/src/commands/stdlib/`, `crates/speccade-tests/`.
+- [ ] `QA-008` Add a Starlark coverage guard for stdlib helpers (prevent “dead” helpers or missing examples).
+  - Deliverable: a test that ensures every function in the stdlib dump is referenced by at least one `golden/starlark/*.star` file (with an explicit allowlist for intentionally-unexercised helpers).
+  - Touch points: `golden/starlark/`, `crates/speccade-tests/`.
+- [ ] `QA-009` Validate Tier-2 recipe params at `speccade validate` time (no Blender required).
+  - Deliverable: `speccade validate` rejects unknown/invalid fields for `static_mesh`, `skeletal_mesh`, and `skeletal_animation` recipe params (matching the Rust `deny_unknown_fields` structs), so Starlark/JSON IR can’t silently drift.
+  - Touch points: `crates/speccade-spec/src/validation/`, `crates/speccade-spec/src/recipe/{mesh,character,animation}/`, `schemas/speccade-spec-v1.schema.json`.
 
 ---
 
