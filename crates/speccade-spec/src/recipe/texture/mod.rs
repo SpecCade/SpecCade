@@ -9,6 +9,7 @@ mod packed;
 mod packing;
 mod pbr_maps;
 mod procedural;
+mod splat_set;
 mod trimsheet;
 
 pub use common::*;
@@ -20,6 +21,7 @@ pub use packed::*;
 pub use packing::*;
 pub use pbr_maps::*;
 pub use procedural::*;
+pub use splat_set::*;
 pub use trimsheet::*;
 
 #[cfg(test)]

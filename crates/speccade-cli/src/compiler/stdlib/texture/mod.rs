@@ -6,6 +6,7 @@ mod decal;
 mod graph;
 mod nodes;
 mod spec;
+mod splat_set;
 mod trimsheet;
 
 use starlark::collections::SmallMap;
@@ -39,4 +40,5 @@ pub fn register(builder: &mut GlobalsBuilder) {
     spec::register(builder);
     trimsheet::register(builder);
     decal::register(builder);
+    splat_set::register(builder);
 }

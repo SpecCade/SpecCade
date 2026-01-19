@@ -187,8 +187,8 @@ Open questions:
   - Implemented: `texture.trimsheet_v1` recipe kind with deterministic shelf packing algorithm, mip-safe gutter generation, UV metadata JSON output, Starlark helpers (trimsheet_tile, trimsheet_spec), full test coverage, and documentation.
 - [x] `TEX-006` Add decal workflows (RGBA + optional normal/roughness + placement metadata). **Done: 2026-01-20**
   - Implemented: `texture.decal_v1` recipe kind with RGBA albedo (alpha composited), optional normal/roughness outputs, placement metadata JSON sidecar; Starlark helpers (decal_metadata, decal_spec); full test coverage.
-- [ ] `TEX-007` Add terrain "splat set" workflows (albedo/normal/roughness + splat masks + macro variation).
-  - Candidate: `texture.splat_set_v1`.
+- [x] `TEX-007` Add terrain "splat set" workflows (albedo/normal/roughness + splat masks + macro variation). **Done: 2026-01-20**
+  - Implemented: `texture.splat_set_v1` recipe kind with multiple terrain layers (up to 4 per mask), per-layer PBR textures (albedo, normal, roughness), RGBA splat mask generation (noise/height/slope/height_slope modes), optional macro variation texture; Starlark helpers (splat_layer, splat_set_spec); full test coverage and documentation.
 - [ ] `TEX-008` Define and implement matcap generation (`texture.matcap_v1`) for stylized shading presets.
   - Notes: toon steps/ramps, curvature/cavity masks, outline, "preset + overrides" art direction.
 - [ ] `TEX-009` Add a material preset system for stable art direction ("preset + parameterization" at CLI-time).

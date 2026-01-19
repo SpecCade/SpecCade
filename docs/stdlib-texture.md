@@ -11,6 +11,7 @@ Texture functions provide a node-based procedural texture graph system.
 - [Graph Functions](#graph-functions)
 - [Trimsheet Functions](#trimsheet-functions)
 - [Decal Functions](#decal-functions)
+- [Splat Set Functions](#splat-set-functions)
 
 ---
 
@@ -612,6 +613,140 @@ decal_spec(
   "projection_size": [0.5, 0.33],
   "has_normal_map": true,
   "has_roughness_map": true
+}
+```
+
+---
+
+## Splat Set Functions
+
+Splat set functions create terrain texture sets with multiple material layers,
+blend masks (splat maps), per-layer PBR outputs, and macro variation overlays.
+
+### splat_layer()
+
+Creates a terrain splat layer definition.
+
+**Parameters:**
+| Name | Type | Required | Default | Description |
+|------|------|----------|---------|-------------|
+| id | str | Yes | - | Unique layer identifier (e.g., "grass", "dirt", "rock") |
+| albedo_color | list | Yes | - | Base color [r, g, b, a] (0.0-1.0) |
+| normal_strength | f64 | No | 1.0 | Normal map strength |
+| roughness | f64 | No | 0.8 | Roughness value (0.0-1.0) |
+| detail_scale | f64 | No | 0.2 | Detail noise scale |
+| detail_intensity | f64 | No | 0.3 | Detail noise intensity |
+
+**Returns:** Dict matching SplatLayer.
+
+**Example:**
+```python
+splat_layer(id = "grass", albedo_color = [0.2, 0.5, 0.1, 1.0])
+splat_layer(id = "dirt", albedo_color = [0.4, 0.3, 0.2, 1.0], roughness = 0.9)
+splat_layer(id = "rock", albedo_color = [0.5, 0.5, 0.5, 1.0], roughness = 0.7, normal_strength = 0.8)
+```
+
+### splat_set_spec()
+
+Creates a complete splat set spec with splat_set_v1 recipe.
+
+The splat set recipe generates terrain texture sets including:
+- Per-layer albedo, normal, and roughness textures
+- RGBA splat mask textures (up to 4 layers per mask)
+- Optional macro variation texture for large-scale detail
+- JSON metadata with layer info and mask channel assignments
+
+**Parameters:**
+| Name | Type | Required | Default | Description |
+|------|------|----------|---------|-------------|
+| asset_id | str | Yes | - | Kebab-case identifier for the asset |
+| seed | int | Yes | - | Deterministic seed (0 to 2^32-1) |
+| resolution | list | Yes | - | [width, height] in pixels |
+| layers | list | Yes | - | List of splat_layer() definitions (max 4 per mask) |
+| output_prefix | str | Yes | - | Output path prefix for generated textures |
+| mask_mode | str | No | "noise" | "noise", "height", "slope", "height_slope" |
+| noise_scale | f64 | No | 0.1 | Noise scale for noise-based blending |
+| macro_variation | bool | No | False | Generate macro variation texture |
+| macro_scale | f64 | No | 0.05 | Macro variation scale |
+| macro_intensity | f64 | No | 0.3 | Macro variation intensity (0.0-1.0) |
+| metadata_path | str | No | None | Output path for metadata JSON |
+| description | str | No | None | Asset description |
+| tags | list | No | None | Style tags |
+| license | str | No | "CC0-1.0" | SPDX license identifier |
+
+**Returns:** A complete spec dict ready for serialization.
+
+**Mask Modes:**
+- `noise`: Pure noise-based blending (uniform distribution)
+- `height`: Height-based blending (lower layers at bottom, higher at top)
+- `slope`: Slope-based blending (flat areas vs steep areas)
+- `height_slope`: Combined height and slope blending
+
+**Example:**
+```python
+# Basic terrain with grass and dirt
+splat_set_spec(
+    asset_id = "terrain-basic-01",
+    seed = 42,
+    resolution = [512, 512],
+    layers = [
+        splat_layer(id = "grass", albedo_color = [0.2, 0.5, 0.1, 1.0], roughness = 0.8),
+        splat_layer(id = "dirt", albedo_color = [0.4, 0.3, 0.2, 1.0], roughness = 0.9)
+    ],
+    output_prefix = "terrain/basic"
+)
+
+# Full terrain with 4 layers, macro variation, and metadata
+splat_set_spec(
+    asset_id = "terrain-full-01",
+    seed = 123,
+    resolution = [1024, 1024],
+    layers = [
+        splat_layer(id = "grass", albedo_color = [0.2, 0.5, 0.1, 1.0], roughness = 0.8),
+        splat_layer(id = "dirt", albedo_color = [0.4, 0.3, 0.2, 1.0], roughness = 0.9),
+        splat_layer(id = "rock", albedo_color = [0.5, 0.5, 0.5, 1.0], roughness = 0.7),
+        splat_layer(id = "sand", albedo_color = [0.8, 0.7, 0.5, 1.0], roughness = 0.6)
+    ],
+    output_prefix = "terrain/full",
+    mask_mode = "height_slope",
+    macro_variation = True,
+    macro_intensity = 0.4,
+    metadata_path = "terrain/full.splat.json"
+)
+```
+
+**Generated Outputs:**
+```
+terrain/basic_grass.albedo.png
+terrain/basic_grass.normal.png
+terrain/basic_grass.roughness.png
+terrain/basic_dirt.albedo.png
+terrain/basic_dirt.normal.png
+terrain/basic_dirt.roughness.png
+terrain/basic_mask0.png          # RGBA: R=grass, G=dirt
+```
+
+**Metadata Output Format:**
+```json
+{
+  "resolution": [512, 512],
+  "layers": [
+    {
+      "id": "grass",
+      "mask_index": 0,
+      "mask_channel": 0,
+      "roughness": 0.8
+    },
+    {
+      "id": "dirt",
+      "mask_index": 0,
+      "mask_channel": 1,
+      "roughness": 0.9
+    }
+  ],
+  "mask_mode": "noise",
+  "has_macro_variation": false,
+  "splat_mask_count": 1
 }
 ```
 
