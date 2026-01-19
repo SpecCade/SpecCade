@@ -59,6 +59,17 @@ pub enum MeshModifier {
         /// Ratio (0.0 to 1.0).
         ratio: f64,
     },
+    /// Triangulate modifier.
+    Triangulate {
+        /// How to triangulate n-gons (polygons with more than 4 vertices).
+        /// Options: "beauty", "clip", "fixed" (default: "beauty").
+        #[serde(skip_serializing_if = "Option::is_none")]
+        ngon_method: Option<String>,
+        /// How to triangulate quads.
+        /// Options: "beauty", "fixed", "shortest_diagonal", "longest_diagonal" (default: "shortest_diagonal").
+        #[serde(skip_serializing_if = "Option::is_none")]
+        quad_method: Option<String>,
+    },
 }
 
 /// UV projection method.
@@ -355,6 +366,93 @@ mod tests {
         };
         let json = serde_json::to_string(&modifier).unwrap();
         assert!(json.contains("\"offset\":[2.0,1.5,0.5]"));
+    }
+
+    // ========================================================================
+    // Triangulate Modifier Tests
+    // ========================================================================
+
+    #[test]
+    fn test_modifier_triangulate_defaults() {
+        let modifier = MeshModifier::Triangulate {
+            ngon_method: None,
+            quad_method: None,
+        };
+
+        let json = serde_json::to_string(&modifier).unwrap();
+        assert!(json.contains("triangulate"));
+        // Optional fields should not be serialized when None
+        assert!(!json.contains("ngon_method"));
+        assert!(!json.contains("quad_method"));
+
+        let parsed: MeshModifier = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed, modifier);
+    }
+
+    #[test]
+    fn test_modifier_triangulate_with_ngon_method() {
+        let modifier = MeshModifier::Triangulate {
+            ngon_method: Some("beauty".to_string()),
+            quad_method: None,
+        };
+
+        let json = serde_json::to_string(&modifier).unwrap();
+        assert!(json.contains("triangulate"));
+        assert!(json.contains("\"ngon_method\":\"beauty\""));
+        assert!(!json.contains("quad_method"));
+
+        let parsed: MeshModifier = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed, modifier);
+    }
+
+    #[test]
+    fn test_modifier_triangulate_with_quad_method() {
+        let modifier = MeshModifier::Triangulate {
+            ngon_method: None,
+            quad_method: Some("shortest_diagonal".to_string()),
+        };
+
+        let json = serde_json::to_string(&modifier).unwrap();
+        assert!(json.contains("triangulate"));
+        assert!(!json.contains("ngon_method"));
+        assert!(json.contains("\"quad_method\":\"shortest_diagonal\""));
+
+        let parsed: MeshModifier = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed, modifier);
+    }
+
+    #[test]
+    fn test_modifier_triangulate_with_both_methods() {
+        let modifier = MeshModifier::Triangulate {
+            ngon_method: Some("clip".to_string()),
+            quad_method: Some("fixed".to_string()),
+        };
+
+        let json = serde_json::to_string(&modifier).unwrap();
+        assert!(json.contains("triangulate"));
+        assert!(json.contains("\"ngon_method\":\"clip\""));
+        assert!(json.contains("\"quad_method\":\"fixed\""));
+
+        let parsed: MeshModifier = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed, modifier);
+    }
+
+    #[test]
+    fn test_modifier_triangulate_roundtrip() {
+        // Test JSON deserialization from spec format
+        let json = r#"{"type":"triangulate","ngon_method":"beauty","quad_method":"longest_diagonal"}"#;
+        let parsed: MeshModifier = serde_json::from_str(json).unwrap();
+
+        match parsed {
+            MeshModifier::Triangulate {
+                ngon_method,
+                quad_method,
+            } => {
+                assert_eq!(ngon_method, Some("beauty".to_string()));
+                assert_eq!(quad_method, Some("longest_diagonal".to_string()));
+            }
+            _ => panic!("Expected Triangulate modifier"),
+        }
     }
 
     // ========================================================================

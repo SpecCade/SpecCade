@@ -389,6 +389,26 @@ def apply_modifier(obj: 'bpy.types.Object', modifier_spec: Dict) -> None:
         mod = obj.modifiers.new(name="Decimate", type='DECIMATE')
         mod.ratio = modifier_spec.get("ratio", 0.5)
 
+    elif mod_type == "triangulate":
+        mod = obj.modifiers.new(name="Triangulate", type='TRIANGULATE')
+        # Map ngon_method to Blender's ngon_method enum
+        ngon_method = modifier_spec.get("ngon_method", "beauty").upper()
+        ngon_map = {
+            "BEAUTY": 'BEAUTY',
+            "CLIP": 'CLIP',
+            "FIXED": 'FIXED'
+        }
+        mod.ngon_method = ngon_map.get(ngon_method, 'BEAUTY')
+        # Map quad_method to Blender's quad_method enum
+        quad_method = modifier_spec.get("quad_method", "shortest_diagonal").upper()
+        quad_map = {
+            "BEAUTY": 'BEAUTY',
+            "FIXED": 'FIXED',
+            "SHORTEST_DIAGONAL": 'SHORTEST_DIAGONAL',
+            "LONGEST_DIAGONAL": 'LONGEST_DIAGONAL'
+        }
+        mod.quad_method = quad_map.get(quad_method, 'SHORTEST_DIAGONAL')
+
     else:
         print(f"Warning: Unknown modifier type: {mod_type}")
 

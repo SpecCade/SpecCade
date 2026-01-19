@@ -232,6 +232,7 @@ Tracker-style music composition with instruments, patterns, and arrangements.
 | `mirror_modifier()` | Mirror modifier |
 | `array_modifier()` | Array modifier |
 | `solidify_modifier()` | Solidify modifier |
+| `triangulate_modifier()` | Triangulate modifier |
 
 ### Character Body Parts
 | Function | Description |

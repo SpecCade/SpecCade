@@ -316,6 +316,83 @@ fn register_mesh_modifier_functions(builder: &mut GlobalsBuilder) {
 
         Ok(dict)
     }
+
+    /// Creates a triangulate modifier.
+    ///
+    /// # Arguments
+    /// * `ngon_method` - How to triangulate n-gons (default: "beauty")
+    ///   Options: "beauty", "clip", "fixed"
+    /// * `quad_method` - How to triangulate quads (default: "shortest_diagonal")
+    ///   Options: "beauty", "fixed", "shortest_diagonal", "longest_diagonal"
+    ///
+    /// # Returns
+    /// A dict matching the MeshModifier::Triangulate IR structure.
+    ///
+    /// # Example
+    /// ```starlark
+    /// triangulate_modifier()  // Use defaults
+    /// triangulate_modifier("beauty", "shortest_diagonal")  // Explicit methods
+    /// triangulate_modifier("clip", "fixed")  // Alternative methods
+    /// ```
+    fn triangulate_modifier<'v>(
+        #[starlark(default = NoneType)] ngon_method: Value<'v>,
+        #[starlark(default = NoneType)] quad_method: Value<'v>,
+        heap: &'v Heap,
+    ) -> anyhow::Result<Dict<'v>> {
+        const VALID_NGON_METHODS: &[&str] = &["beauty", "clip", "fixed"];
+        const VALID_QUAD_METHODS: &[&str] = &["beauty", "fixed", "shortest_diagonal", "longest_diagonal"];
+
+        let mut dict = new_dict(heap);
+
+        dict.insert_hashed(
+            hashed_key(heap, "type"),
+            heap.alloc_str("triangulate").to_value(),
+        );
+
+        // Validate and add ngon_method if provided
+        if !ngon_method.is_none() {
+            let method_str = ngon_method.unpack_str().ok_or_else(|| {
+                anyhow::anyhow!(
+                    "S102: triangulate_modifier(): 'ngon_method' expected string, got {}",
+                    ngon_method.get_type()
+                )
+            })?;
+            if !VALID_NGON_METHODS.contains(&method_str) {
+                return Err(anyhow::anyhow!(
+                    "S104: triangulate_modifier(): 'ngon_method' must be one of {:?}, got \"{}\"",
+                    VALID_NGON_METHODS,
+                    method_str
+                ));
+            }
+            dict.insert_hashed(
+                hashed_key(heap, "ngon_method"),
+                heap.alloc_str(method_str).to_value(),
+            );
+        }
+
+        // Validate and add quad_method if provided
+        if !quad_method.is_none() {
+            let method_str = quad_method.unpack_str().ok_or_else(|| {
+                anyhow::anyhow!(
+                    "S102: triangulate_modifier(): 'quad_method' expected string, got {}",
+                    quad_method.get_type()
+                )
+            })?;
+            if !VALID_QUAD_METHODS.contains(&method_str) {
+                return Err(anyhow::anyhow!(
+                    "S104: triangulate_modifier(): 'quad_method' must be one of {:?}, got \"{}\"",
+                    VALID_QUAD_METHODS,
+                    method_str
+                ));
+            }
+            dict.insert_hashed(
+                hashed_key(heap, "quad_method"),
+                heap.alloc_str(method_str).to_value(),
+            );
+        }
+
+        Ok(dict)
+    }
 }
 
 #[cfg(test)]
@@ -492,5 +569,95 @@ mod tests {
         assert!(result.is_err());
         let err = result.unwrap_err();
         assert!(err.contains("S103"));
+    }
+
+    // ========================================================================
+    // triangulate_modifier() tests
+    // ========================================================================
+
+    #[test]
+    fn test_triangulate_modifier_defaults() {
+        let result = eval_to_json("triangulate_modifier()").unwrap();
+        assert_eq!(result["type"], "triangulate");
+        // Optional fields should not be present when using defaults
+        assert!(result.get("ngon_method").is_none());
+        assert!(result.get("quad_method").is_none());
+    }
+
+    #[test]
+    fn test_triangulate_modifier_with_ngon_method() {
+        let result = eval_to_json("triangulate_modifier(\"beauty\")").unwrap();
+        assert_eq!(result["type"], "triangulate");
+        assert_eq!(result["ngon_method"], "beauty");
+    }
+
+    #[test]
+    fn test_triangulate_modifier_with_quad_method() {
+        let result = eval_to_json("triangulate_modifier(None, \"shortest_diagonal\")").unwrap();
+        assert_eq!(result["type"], "triangulate");
+        assert!(result.get("ngon_method").is_none());
+        assert_eq!(result["quad_method"], "shortest_diagonal");
+    }
+
+    #[test]
+    fn test_triangulate_modifier_with_both_methods() {
+        let result = eval_to_json("triangulate_modifier(\"clip\", \"fixed\")").unwrap();
+        assert_eq!(result["type"], "triangulate");
+        assert_eq!(result["ngon_method"], "clip");
+        assert_eq!(result["quad_method"], "fixed");
+    }
+
+    #[test]
+    fn test_triangulate_modifier_all_ngon_methods() {
+        // Test all valid ngon methods
+        for method in &["beauty", "clip", "fixed"] {
+            let expr = format!("triangulate_modifier(\"{}\")", method);
+            let result = eval_to_json(&expr).unwrap();
+            assert_eq!(result["ngon_method"], *method);
+        }
+    }
+
+    #[test]
+    fn test_triangulate_modifier_all_quad_methods() {
+        // Test all valid quad methods
+        for method in &["beauty", "fixed", "shortest_diagonal", "longest_diagonal"] {
+            let expr = format!("triangulate_modifier(None, \"{}\")", method);
+            let result = eval_to_json(&expr).unwrap();
+            assert_eq!(result["quad_method"], *method);
+        }
+    }
+
+    #[test]
+    fn test_triangulate_modifier_invalid_ngon_method() {
+        let result = eval_to_json("triangulate_modifier(\"invalid\")");
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert!(err.contains("S104"));
+        assert!(err.contains("ngon_method"));
+    }
+
+    #[test]
+    fn test_triangulate_modifier_invalid_quad_method() {
+        let result = eval_to_json("triangulate_modifier(None, \"invalid\")");
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert!(err.contains("S104"));
+        assert!(err.contains("quad_method"));
+    }
+
+    #[test]
+    fn test_triangulate_modifier_wrong_type_ngon() {
+        let result = eval_to_json("triangulate_modifier(123)");
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert!(err.contains("S102"));
+    }
+
+    #[test]
+    fn test_triangulate_modifier_wrong_type_quad() {
+        let result = eval_to_json("triangulate_modifier(None, 456)");
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert!(err.contains("S102"));
     }
 }
