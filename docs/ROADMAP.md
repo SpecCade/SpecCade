@@ -115,8 +115,9 @@ Open questions:
 - [x] `MUSIC-001` Add snapshot tests for `docs/examples/music/*.expanded.params.json` via `speccade expand`. **Done: 2026-01-18**
   - Deliverable: tests that compare expansion output to checked-in snapshots (stable formatting).
   - Implemented: Generated eurobeat_4bars.expanded.params.json; all compose specs now have snapshot coverage.
-- [ ] `MUSIC-002` Extend Pattern IR operators and hard limits (keep determinism + reviewability).
+- [x] `MUSIC-002` Extend Pattern IR operators and hard limits (keep determinism + reviewability). **Done: 2026-01-20**
   - Deliverable: RFC + schema/types changes + tests for any new ops; avoid silent behavior changes.
+  - Implemented: RFC-0011 Pattern IR Extensions with 5 new pattern operators (reverse, mirror, interleave, remap_channel, filter) and 4 new transform operators (invert_pitch, quantize_pitch, ratchet, arpeggiate); 27 new tests; documentation updates.
 - [x] `MUSIC-003` Improve `speccade expand` UX for review workflows. **Done: 2026-01-18**
   - Deliverable: stable formatting, optional file output, and diff-friendly mode.
   - Implemented: `--output`, `--pretty`, `--compact`, `--json` flags; Starlark input support.

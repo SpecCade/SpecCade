@@ -427,6 +427,150 @@ impl<'a> Expander<'a> {
                 // Fallback (shouldn't happen).
                 self.eval_expr(&choices[0].body, depth + 1)
             }
+            PatternExpr::Reverse { len_rows, body } => {
+                if *len_rows == 0 {
+                    return Err(ExpandError::InvalidExpr {
+                        pattern: self.pattern_name.to_string(),
+                        message: "reverse len_rows must be > 0".to_string(),
+                    });
+                }
+                let map = self.eval_expr(body, depth + 1)?;
+                let reversed = map
+                    .into_iter()
+                    .map(|((row, channel), cell)| {
+                        let new_row = (*len_rows as i32 - 1) - row;
+                        ((new_row, channel), cell)
+                    })
+                    .collect();
+                Ok(reversed)
+            }
+            PatternExpr::Mirror {
+                len_rows,
+                axis: _,
+                body,
+            } => {
+                // Currently only time axis is supported, which is equivalent to reverse
+                if *len_rows == 0 {
+                    return Err(ExpandError::InvalidExpr {
+                        pattern: self.pattern_name.to_string(),
+                        message: "mirror len_rows must be > 0".to_string(),
+                    });
+                }
+                let map = self.eval_expr(body, depth + 1)?;
+                let mirrored = map
+                    .into_iter()
+                    .map(|((row, channel), cell)| {
+                        let new_row = (*len_rows as i32 - 1) - row;
+                        ((new_row, channel), cell)
+                    })
+                    .collect();
+                Ok(mirrored)
+            }
+            PatternExpr::Interleave { stride, parts } => {
+                if *stride == 0 {
+                    return Err(ExpandError::InvalidExpr {
+                        pattern: self.pattern_name.to_string(),
+                        message: "interleave stride must be > 0".to_string(),
+                    });
+                }
+                if parts.is_empty() {
+                    return Err(ExpandError::InvalidExpr {
+                        pattern: self.pattern_name.to_string(),
+                        message: "interleave requires at least one part".to_string(),
+                    });
+                }
+                if parts.len() > 16 {
+                    return Err(ExpandError::InvalidExpr {
+                        pattern: self.pattern_name.to_string(),
+                        message: "interleave supports at most 16 parts".to_string(),
+                    });
+                }
+                let mut map = CellMap::new();
+                let num_parts = parts.len();
+                for (part_idx, part) in parts.iter().enumerate() {
+                    let part_map = self.eval_expr(&part.body, depth + 1)?;
+                    // Filter to only include rows that belong to this part
+                    for ((row, channel), cell) in part_map {
+                        // Determine which part owns this row
+                        let block = (row / *stride as i32) as usize;
+                        if block % num_parts == part_idx {
+                            insert_cell_merge(
+                                &mut map,
+                                (row, channel),
+                                cell,
+                                MergePolicy::MergeFields,
+                                self.pattern_name,
+                            )?;
+                        }
+                    }
+                }
+                Ok(map)
+            }
+            PatternExpr::RemapChannel { from, to, body } => {
+                let map = self.eval_expr(body, depth + 1)?;
+                let remapped = map
+                    .into_iter()
+                    .map(|((row, channel), cell)| {
+                        let new_channel = if channel == *from { *to } else { channel };
+                        ((row, new_channel), cell)
+                    })
+                    .collect();
+                Ok(remapped)
+            }
+            PatternExpr::Filter { criteria, body } => {
+                if !criteria.has_any_criteria() {
+                    return Err(ExpandError::InvalidExpr {
+                        pattern: self.pattern_name.to_string(),
+                        message: "filter requires at least one criterion".to_string(),
+                    });
+                }
+                let map = self.eval_expr(body, depth + 1)?;
+                let filtered = map
+                    .into_iter()
+                    .filter(|((row, channel), cell)| {
+                        // Check min_row
+                        if let Some(min_row) = criteria.min_row {
+                            if *row < min_row {
+                                return false;
+                            }
+                        }
+                        // Check max_row
+                        if let Some(max_row) = criteria.max_row {
+                            if *row >= max_row {
+                                return false;
+                            }
+                        }
+                        // Check channel
+                        if let Some(filter_channel) = criteria.channel {
+                            if *channel != filter_channel {
+                                return false;
+                            }
+                        }
+                        // Check has_note
+                        if let Some(has_note) = criteria.has_note {
+                            let cell_has_note = cell.note.is_some()
+                                && !matches!(
+                                    cell.note.as_deref(),
+                                    Some("---") | Some("...") | Some("OFF") | Some("===")
+                                );
+                            if has_note != cell_has_note {
+                                return false;
+                            }
+                        }
+                        // Check has_effect
+                        if let Some(has_effect) = criteria.has_effect {
+                            let cell_has_effect = cell.effect.is_some()
+                                || cell.effect_name.is_some()
+                                || cell.effect_xy.is_some();
+                            if has_effect != cell_has_effect {
+                                return false;
+                            }
+                        }
+                        true
+                    })
+                    .collect();
+                Ok(filtered)
+            }
         }
     }
 

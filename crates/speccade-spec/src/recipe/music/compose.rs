@@ -262,6 +262,54 @@ pub struct PitchSeq {
     pub allow_accidentals: bool,
 }
 
+/// Mirror axis for the `mirror` operator.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum MirrorAxis {
+    /// Mirror in time (retrograde).
+    #[default]
+    Time,
+}
+
+/// Filter criteria for the `filter` operator.
+#[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct FilterCriteria {
+    /// Include only events at row >= value.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub min_row: Option<i32>,
+    /// Include only events at row < value.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub max_row: Option<i32>,
+    /// Include only events on this channel.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub channel: Option<u8>,
+    /// If true, include only events with a note set.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub has_note: Option<bool>,
+    /// If true, include only events with an effect set.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub has_effect: Option<bool>,
+}
+
+impl FilterCriteria {
+    /// Returns true if at least one criterion is specified.
+    pub fn has_any_criteria(&self) -> bool {
+        self.min_row.is_some()
+            || self.max_row.is_some()
+            || self.channel.is_some()
+            || self.has_note.is_some()
+            || self.has_effect.is_some()
+    }
+}
+
+/// Interleave part for the `interleave` operator.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct InterleavePart {
+    pub body: PatternExpr,
+}
+
 /// Pattern IR expression.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "op", rename_all = "snake_case", deny_unknown_fields)]
@@ -328,6 +376,48 @@ pub enum PatternExpr {
         seed_salt: String,
         choices: Vec<WeightedChoice>,
     },
+    /// Reverse the time ordering of events within a pattern.
+    ///
+    /// Events at row 0 move to row `len_rows - 1`, etc.
+    Reverse {
+        /// Length of the pattern in rows (must be >= 1).
+        len_rows: u16,
+        body: Box<PatternExpr>,
+    },
+    /// Mirror (retrograde) pattern in time.
+    ///
+    /// Currently equivalent to `reverse`; future versions may support pitch inversion.
+    Mirror {
+        /// Length of the pattern in rows (must be >= 1).
+        len_rows: u16,
+        /// Axis to mirror along (currently only `time` is supported).
+        #[serde(default)]
+        axis: MirrorAxis,
+        body: Box<PatternExpr>,
+    },
+    /// Interleave events from multiple parts based on row position.
+    ///
+    /// Each part handles rows at its index offset within each stride-sized block.
+    Interleave {
+        /// Stride for interleaving (must be >= 1).
+        stride: u16,
+        /// Parts to interleave (max 16).
+        parts: Vec<InterleavePart>,
+    },
+    /// Remap events to different channels.
+    RemapChannel {
+        /// Source channel to remap from.
+        from: u8,
+        /// Destination channel to remap to.
+        to: u8,
+        body: Box<PatternExpr>,
+    },
+    /// Filter events based on criteria.
+    Filter {
+        /// Filter criteria (at least one must be specified).
+        criteria: FilterCriteria,
+        body: Box<PatternExpr>,
+    },
 }
 
 /// Concatenation part with declared length.
@@ -385,6 +475,34 @@ pub enum TimeExpr {
     },
 }
 
+/// Scale type for quantize_pitch transform.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum QuantizeScale {
+    Major,
+    Minor,
+    HarmonicMinor,
+    MelodicMinor,
+    PentatonicMajor,
+    PentatonicMinor,
+    Chromatic,
+}
+
+impl QuantizeScale {
+    /// Returns the semitone intervals for this scale (relative to root).
+    pub fn intervals(&self) -> &'static [u8] {
+        match self {
+            QuantizeScale::Major => &[0, 2, 4, 5, 7, 9, 11],
+            QuantizeScale::Minor => &[0, 2, 3, 5, 7, 8, 10],
+            QuantizeScale::HarmonicMinor => &[0, 2, 3, 5, 7, 8, 11],
+            QuantizeScale::MelodicMinor => &[0, 2, 3, 5, 7, 9, 11],
+            QuantizeScale::PentatonicMajor => &[0, 2, 4, 7, 9],
+            QuantizeScale::PentatonicMinor => &[0, 3, 5, 7, 10],
+            QuantizeScale::Chromatic => &[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+        }
+    }
+}
+
 /// Transform operators for Pattern IR.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "op", rename_all = "snake_case", deny_unknown_fields)]
@@ -431,6 +549,42 @@ pub enum TransformOp {
         stride: u32,
         /// Salt for deterministic randomization.
         seed_salt: String,
+    },
+    /// Melodic inversion around a pivot note.
+    ///
+    /// Reflects each note's semitone distance from pivot.
+    /// Example: If pivot is C4 and note is E4 (+4), result is G#3 (-4).
+    InvertPitch {
+        /// Pivot note for inversion (e.g., "C4").
+        pivot: String,
+    },
+    /// Snap notes to a scale.
+    ///
+    /// Notes not in the scale are snapped to the nearest scale degree.
+    /// Ties snap down (toward lower pitch).
+    QuantizePitch {
+        /// Scale to quantize to.
+        scale: QuantizeScale,
+        /// Root note of the scale (e.g., "C").
+        root: String,
+    },
+    /// Add retriggering (ratchet) effect to notes.
+    ///
+    /// Adds a note-retrigger effect (E9x in XM).
+    Ratchet {
+        /// Retrigger divisions (1-16).
+        divisions: u8,
+        /// Salt for deterministic selection.
+        seed_salt: String,
+    },
+    /// Apply arpeggio effect to notes.
+    ///
+    /// Adds arpeggio effect (0xy in XM/IT).
+    Arpeggiate {
+        /// Semitones up (x nibble, 0-15).
+        semitones_up: u8,
+        /// Semitones down (y nibble, 0-15).
+        semitones_down: u8,
     },
 }
 

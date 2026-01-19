@@ -21,6 +21,7 @@ This proposal is specified in:
 
 See also:
 
+- [RFC-0011: Pattern IR Extensions](../rfcs/RFC-0011-pattern-ir-extensions.md) (new operators)
 - [Music Pattern IR — Quickstart](../music-pattern-ir-quickstart.md)
 - [Music Pattern IR — Examples](../music-pattern-ir-examples.md)
 - [Music Pattern IR — Implementation](../music-pattern-ir-implementation.md)
@@ -75,6 +76,57 @@ To inspect the fully expanded tracker params, run:
 ```
 speccade expand --spec <path-to-spec.json>
 ```
+
+### Pattern IR Operators
+
+The Pattern IR supports these operators for building patterns:
+
+**Structural Operators (RFC-0003):**
+
+| Operator | Description |
+|----------|-------------|
+| `stack` | Overlay multiple expressions (merge: `error`/`merge_fields`/`last_wins`) |
+| `concat` | Concatenate parts in time (each part declares `len_rows`) |
+| `repeat` | Repeat a sub-expression `times` with time shift by `len_rows` |
+| `shift` | Shift all produced cells by `rows` (can be negative) |
+| `slice` | Keep only events in `[start, start+len)` |
+| `ref` | Reference a reusable fragment from `params.defs` |
+| `emit` | Emit a cell template at positions defined by a `TimeExpr` |
+| `emit_seq` | Emit a sequence of values aligned to time positions |
+| `transform` | Apply transform operations to produced cells |
+| `prob` | Deterministically drop events with probability `p_permille` (0-1000) |
+| `choose` | Choose one branch deterministically based on RNG |
+
+**Structural Operators (RFC-0011):**
+
+| Operator | Description |
+|----------|-------------|
+| `reverse` | Reverse time ordering of events (row 0 -> `len_rows - 1`, etc.) |
+| `mirror` | Mirror pattern in time (currently equivalent to `reverse`) |
+| `interleave` | Interleave events from multiple parts based on row position |
+| `remap_channel` | Remap events from one channel to another |
+| `filter` | Filter events by criteria (row range, channel, has_note, has_effect) |
+
+**Transform Operators (RFC-0003):**
+
+| Transform | Description |
+|-----------|-------------|
+| `transpose_semitones` | Transpose note names by semitones |
+| `vol_mul` | Multiply volume by a rational (`mul`/`div`) |
+| `set` | Set missing fields (inst, vol, effect, etc.) |
+| `humanize_vol` | Per-cell volume variation for humanization |
+| `swing` | Offbeat timing offset (note delay on offbeat positions) |
+
+**Transform Operators (RFC-0011):**
+
+| Transform | Description |
+|-----------|-------------|
+| `invert_pitch` | Melodic inversion around a pivot note |
+| `quantize_pitch` | Snap notes to a scale (major, minor, pentatonic, etc.) |
+| `ratchet` | Add retriggering (ratchet) effect to notes |
+| `arpeggiate` | Apply arpeggio effect (0xy in XM/IT) |
+
+For full details, see [RFC-0003](../rfcs/RFC-0003-music-pattern-ir.md) and [RFC-0011](../rfcs/RFC-0011-pattern-ir-extensions.md).
 
 ### Optional (RFC-0004): Names, Beats, Harmony
 
