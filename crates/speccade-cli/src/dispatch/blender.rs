@@ -199,3 +199,67 @@ pub(super) fn generate_blender_animation(
         metrics,
     )])
 }
+
+/// Generate rigged animation using the Blender backend
+pub(super) fn generate_blender_rigged_animation(
+    spec: &Spec,
+    out_root: &Path,
+) -> Result<Vec<OutputResult>, DispatchError> {
+    let result = speccade_backend_blender::rigged_animation::generate(spec, out_root).map_err(
+        |e| DispatchError::BackendError(format!("Rigged animation generation failed: {}", e)),
+    )?;
+
+    // Get primary output path
+    let primary_output = spec
+        .outputs
+        .iter()
+        .find(|o| o.kind == OutputKind::Primary)
+        .ok_or_else(|| DispatchError::BackendError("No primary output specified".to_string()))?;
+    if primary_output.format != OutputFormat::Glb {
+        return Err(DispatchError::BackendError(format!(
+            "skeletal_animation.blender_rigged_v1 requires primary output format 'glb', got '{}'",
+            primary_output.format
+        )));
+    }
+
+    // Convert metrics to OutputMetrics
+    let metrics = speccade_spec::OutputMetrics {
+        vertex_count: None,
+        face_count: None,
+        edge_count: None,
+        triangle_count: None,
+        quad_count: None,
+        quad_percentage: None,
+        manifold: None,
+        non_manifold_edge_count: None,
+        degenerate_face_count: None,
+        uv_island_count: None,
+        uv_coverage: None,
+        uv_overlap_percentage: None,
+        bounding_box: None,
+        bounds_min: None,
+        bounds_max: None,
+        bone_count: result.metrics.bone_count,
+        max_bone_influences: None,
+        unweighted_vertex_count: None,
+        weight_normalization_percentage: None,
+        material_slot_count: None,
+        animation_frame_count: result.metrics.animation_frame_count,
+        animation_duration_seconds: result.metrics.animation_duration_seconds.map(|d| d as f32),
+        // Motion verification metrics (MESHVER-005)
+        hinge_axis_violations: result.metrics.hinge_axis_violations,
+        range_violations: result.metrics.range_violations,
+        velocity_spikes: result.metrics.velocity_spikes,
+        root_motion_delta: result
+            .metrics
+            .root_motion_delta
+            .map(|d| [d[0] as f32, d[1] as f32, d[2] as f32]),
+    };
+
+    Ok(vec![OutputResult::tier2(
+        OutputKind::Primary,
+        OutputFormat::Glb,
+        PathBuf::from(&primary_output.path),
+        metrics,
+    )])
+}

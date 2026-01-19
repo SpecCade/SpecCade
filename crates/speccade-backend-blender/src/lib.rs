@@ -5,11 +5,12 @@
 //!
 //! # Overview
 //!
-//! The Blender backend supports three recipe kinds:
+//! The Blender backend supports four recipe kinds:
 //!
 //! - **`static_mesh.blender_primitives_v1`** - Generate static meshes from primitives
 //! - **`skeletal_mesh.blender_rigged_mesh_v1`** - Generate rigged character meshes
-//! - **`skeletal_animation.blender_clip_v1`** - Generate animation clips
+//! - **`skeletal_animation.blender_clip_v1`** - Generate animation clips (simple keyframes)
+//! - **`skeletal_animation.blender_rigged_v1`** - Generate IK/rig-aware animations
 //!
 //! # Architecture
 //!
@@ -65,7 +66,8 @@
 //!
 //! - [`static_mesh`] - Static mesh generation
 //! - [`skeletal_mesh`] - Skeletal mesh generation
-//! - [`animation`] - Animation clip generation
+//! - [`animation`] - Animation clip generation (simple keyframes)
+//! - [`rigged_animation`] - IK/rig-aware animation generation
 //! - [`orchestrator`] - Blender subprocess management
 //! - [`metrics`] - Tier 2 validation metrics
 //! - [`error`] - Error types
@@ -74,6 +76,7 @@ pub mod animation;
 pub mod error;
 pub mod metrics;
 pub mod orchestrator;
+pub mod rigged_animation;
 pub mod skeletal_mesh;
 pub mod static_mesh;
 
@@ -84,6 +87,7 @@ pub use orchestrator::{GenerationMode, Orchestrator, OrchestratorConfig};
 
 // Re-export result types
 pub use animation::AnimationResult;
+pub use rigged_animation::RiggedAnimationResult;
 pub use skeletal_mesh::SkeletalMeshResult;
 pub use static_mesh::StaticMeshResult;
 
@@ -110,6 +114,10 @@ pub fn generate(
             let result = animation::generate(spec, out_root)?;
             Ok(GenerateResult::Animation(result))
         }
+        "skeletal_animation.blender_rigged_v1" => {
+            let result = rigged_animation::generate(spec, out_root)?;
+            Ok(GenerateResult::RiggedAnimation(result))
+        }
         _ => Err(BlenderError::InvalidRecipeKind {
             kind: recipe.kind.clone(),
         }),
@@ -123,8 +131,10 @@ pub enum GenerateResult {
     StaticMesh(StaticMeshResult),
     /// Skeletal mesh result.
     SkeletalMesh(SkeletalMeshResult),
-    /// Animation result.
+    /// Animation result (simple keyframes).
     Animation(AnimationResult),
+    /// Rigged animation result (IK/rig-aware).
+    RiggedAnimation(RiggedAnimationResult),
 }
 
 impl GenerateResult {
@@ -134,6 +144,7 @@ impl GenerateResult {
             GenerateResult::StaticMesh(r) => &r.output_path,
             GenerateResult::SkeletalMesh(r) => &r.output_path,
             GenerateResult::Animation(r) => &r.output_path,
+            GenerateResult::RiggedAnimation(r) => &r.output_path,
         }
     }
 
@@ -143,6 +154,7 @@ impl GenerateResult {
             GenerateResult::StaticMesh(r) => &r.metrics,
             GenerateResult::SkeletalMesh(r) => &r.metrics,
             GenerateResult::Animation(r) => &r.metrics,
+            GenerateResult::RiggedAnimation(r) => &r.metrics,
         }
     }
 
@@ -152,6 +164,7 @@ impl GenerateResult {
             GenerateResult::StaticMesh(r) => &r.report,
             GenerateResult::SkeletalMesh(r) => &r.report,
             GenerateResult::Animation(r) => &r.report,
+            GenerateResult::RiggedAnimation(r) => &r.report,
         }
     }
 
@@ -165,9 +178,14 @@ impl GenerateResult {
         matches!(self, GenerateResult::SkeletalMesh(_))
     }
 
-    /// Returns true if this is an animation result.
+    /// Returns true if this is an animation result (simple keyframes).
     pub fn is_animation(&self) -> bool {
         matches!(self, GenerateResult::Animation(_))
+    }
+
+    /// Returns true if this is a rigged animation result (IK/rig-aware).
+    pub fn is_rigged_animation(&self) -> bool {
+        matches!(self, GenerateResult::RiggedAnimation(_))
     }
 }
 
@@ -182,6 +200,7 @@ mod tests {
             orchestrator::mode_from_recipe_kind("skeletal_mesh.blender_rigged_mesh_v1").is_ok()
         );
         assert!(orchestrator::mode_from_recipe_kind("skeletal_animation.blender_clip_v1").is_ok());
+        assert!(orchestrator::mode_from_recipe_kind("skeletal_animation.blender_rigged_v1").is_ok());
         assert!(orchestrator::mode_from_recipe_kind("invalid.kind").is_err());
     }
 

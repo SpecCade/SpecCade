@@ -244,9 +244,10 @@ Migrated from `docs/FUTURE_GENERATORS.md` (now deprecated).
 
 ### Skeletal Animation / Rigging / IK (Blender Tier)
 
-- [ ] `ANIM-001` Expose `skeletal_animation.blender_rigged_v1` end-to-end (IK/rig-aware animation generation).
+- [x] `ANIM-001` Expose `skeletal_animation.blender_rigged_v1` end-to-end (IK/rig-aware animation generation). **Done: 2026-01-20**
   - Deliverable: `speccade generate` supports `skeletal_animation.blender_rigged_v1` and dispatches Blender with `--mode rigged_animation`.
   - Touch points: `crates/speccade-spec/src/validation/mod.rs`, `schemas/speccade-spec-v1.schema.json`, `crates/speccade-cli`, `crates/speccade-backend-blender/src/orchestrator.rs`, `blender/entrypoint.py`.
+  - Implemented: Added `RiggedAnimation` variant to `GenerationMode`, `rigged_animation` module, dispatch wiring, and tests.
 - [ ] `ANIM-002` Decide and enforce the clip-vs-rigged schema split, then migrate fixtures/examples.
   - Deliverable: `skeletal_animation.blender_clip_v1` stays "simple keyframes"; all IK/rigging keys live under `skeletal_animation.blender_rigged_v1`; migrate `golden/speccade/specs/skeletal_animation/*.json` accordingly.
   - Touch points: `golden/speccade/specs/skeletal_animation/`, `crates/speccade-backend-blender/src/animation.rs`, `crates/speccade-backend-blender/src/orchestrator.rs`.

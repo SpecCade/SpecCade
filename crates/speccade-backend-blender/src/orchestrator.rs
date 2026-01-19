@@ -26,8 +26,10 @@ pub enum GenerationMode {
     StaticMesh,
     /// Skeletal mesh generation.
     SkeletalMesh,
-    /// Animation generation.
+    /// Animation generation (simple keyframes).
     Animation,
+    /// Rigged animation generation (IK/rig-aware).
+    RiggedAnimation,
 }
 
 impl GenerationMode {
@@ -37,6 +39,7 @@ impl GenerationMode {
             GenerationMode::StaticMesh => "static_mesh",
             GenerationMode::SkeletalMesh => "skeletal_mesh",
             GenerationMode::Animation => "animation",
+            GenerationMode::RiggedAnimation => "rigged_animation",
         }
     }
 }
@@ -358,6 +361,7 @@ pub fn mode_from_recipe_kind(kind: &str) -> BlenderResult<GenerationMode> {
         "static_mesh.blender_primitives_v1" => Ok(GenerationMode::StaticMesh),
         "skeletal_mesh.blender_rigged_mesh_v1" => Ok(GenerationMode::SkeletalMesh),
         "skeletal_animation.blender_clip_v1" => Ok(GenerationMode::Animation),
+        "skeletal_animation.blender_rigged_v1" => Ok(GenerationMode::RiggedAnimation),
         _ => Err(BlenderError::InvalidRecipeKind {
             kind: kind.to_string(),
         }),
@@ -373,6 +377,7 @@ mod tests {
         assert_eq!(GenerationMode::StaticMesh.as_str(), "static_mesh");
         assert_eq!(GenerationMode::SkeletalMesh.as_str(), "skeletal_mesh");
         assert_eq!(GenerationMode::Animation.as_str(), "animation");
+        assert_eq!(GenerationMode::RiggedAnimation.as_str(), "rigged_animation");
     }
 
     #[test]
@@ -388,6 +393,10 @@ mod tests {
         assert_eq!(
             mode_from_recipe_kind("skeletal_animation.blender_clip_v1").unwrap(),
             GenerationMode::Animation
+        );
+        assert_eq!(
+            mode_from_recipe_kind("skeletal_animation.blender_rigged_v1").unwrap(),
+            GenerationMode::RiggedAnimation
         );
 
         assert!(mode_from_recipe_kind("invalid.kind").is_err());

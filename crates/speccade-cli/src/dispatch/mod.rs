@@ -109,9 +109,14 @@ pub fn dispatch_generate(
             blender::generate_blender_skeletal_mesh(spec, out_root_path)
         }
 
-        // Blender animation backend
+        // Blender animation backend (simple keyframes)
         "skeletal_animation.blender_clip_v1" => {
             blender::generate_blender_animation(spec, out_root_path)
+        }
+
+        // Blender rigged animation backend (IK/rig-aware)
+        "skeletal_animation.blender_rigged_v1" => {
+            blender::generate_blender_rigged_animation(spec, out_root_path)
         }
 
         // Unknown recipe kind
@@ -222,6 +227,11 @@ pub fn dispatch_generate_profiled(
             blender::generate_blender_animation(spec, out_root_path).map(DispatchResult::new)
         }
 
+        // Blender rigged animation backend (no profiling instrumentation yet)
+        "skeletal_animation.blender_rigged_v1" => {
+            blender::generate_blender_rigged_animation(spec, out_root_path).map(DispatchResult::new)
+        }
+
         _ => Err(DispatchError::BackendNotImplemented(kind.clone())),
     }
 }
@@ -267,6 +277,7 @@ pub fn is_backend_available(kind: &str) -> bool {
             | "static_mesh.blender_primitives_v1"
             | "skeletal_mesh.blender_rigged_mesh_v1"
             | "skeletal_animation.blender_clip_v1"
+            | "skeletal_animation.blender_rigged_v1"
     )
 }
 
@@ -320,6 +331,10 @@ mod tests {
             get_backend_tier("skeletal_animation.blender_clip_v1"),
             Some(2)
         );
+        assert_eq!(
+            get_backend_tier("skeletal_animation.blender_rigged_v1"),
+            Some(2)
+        );
 
         // Unknown
         assert_eq!(get_backend_tier("unknown.kind"), None);
@@ -335,6 +350,7 @@ mod tests {
         assert!(is_backend_available("static_mesh.blender_primitives_v1"));
         assert!(is_backend_available("skeletal_mesh.blender_rigged_mesh_v1"));
         assert!(is_backend_available("skeletal_animation.blender_clip_v1"));
+        assert!(is_backend_available("skeletal_animation.blender_rigged_v1"));
 
         // Unknown backends should not be available
         assert!(!is_backend_available("unknown.kind"));
