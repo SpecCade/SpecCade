@@ -71,6 +71,19 @@ Primitive mesh generation with modifiers.
 
 ---
 
+### Character Functions
+Skeletal mesh generation with armatures, body parts, and skinning.
+
+**Categories:**
+- **Body Part Functions** - Attach mesh primitives to bones
+- **Material Functions** - Material slot definitions
+- **Skinning Functions** - Weight painting and bone influence settings
+- **Spec Functions** - Complete skeletal mesh specs
+
+**Key Functions:** `body_part()`, `material_slot()`, `skinning_config()`, `skeletal_mesh_spec()`
+
+---
+
 ### [Music Functions](stdlib-music.md)
 Tracker-style music composition with instruments, patterns, and arrangements.
 
@@ -207,6 +220,26 @@ Tracker-style music composition with instruments, patterns, and arrangements.
 | `array_modifier()` | Array modifier |
 | `solidify_modifier()` | Solidify modifier |
 
+### Character Body Parts
+| Function | Description |
+|----------|-------------|
+| `body_part()` | Attach mesh primitive to bone |
+| `custom_bone()` | Custom skeleton bone definition |
+
+### Character Materials & Config
+| Function | Description |
+|----------|-------------|
+| `material_slot()` | Material slot definition |
+| `skinning_config()` | Skinning/weight settings |
+| `skeletal_export_settings()` | Export settings for skeletal mesh |
+| `skeletal_constraints()` | Validation constraints |
+| `skeletal_texturing()` | Texturing/UV settings |
+
+### Character Spec
+| Function | Description |
+|----------|-------------|
+| `skeletal_mesh_spec()` | Complete skeletal mesh spec |
+
 ### Music Instruments
 | Function | Description |
 |----------|-------------|
@@ -294,6 +327,40 @@ spec(
             [bevel_modifier(0.1, 3), subdivision_modifier(2)]
         )
     }
+)
+```
+
+### Creating a Character Spec
+```starlark
+skeletal_mesh_spec(
+    asset_id = "humanoid-01",
+    seed = 42,
+    output_path = "characters/humanoid.glb",
+    format = "glb",
+    skeleton_preset = "humanoid_basic_v1",
+    body_parts = [
+        body_part(
+            bone = "chest",
+            primitive = "cylinder",
+            dimensions = [0.3, 0.3, 0.28],
+            segments = 8,
+            offset = [0, 0, 0.6],
+            material_index = 0
+        ),
+        body_part(
+            bone = "head",
+            primitive = "sphere",
+            dimensions = [0.15, 0.18, 0.15],
+            segments = 12,
+            material_index = 1
+        )
+    ],
+    material_slots = [
+        material_slot(name = "body", base_color = [0.8, 0.6, 0.5, 1.0]),
+        material_slot(name = "head", base_color = [0.9, 0.7, 0.6, 1.0])
+    ],
+    skinning = skinning_config(max_bone_influences = 4),
+    constraints = skeletal_constraints(max_triangles = 5000, max_bones = 64)
 )
 ```
 

@@ -19,6 +19,7 @@
 //! - **Mesh**: `mesh_primitive()`, `mesh_recipe()` - Mesh generation
 
 pub mod audio;
+pub mod character;
 pub mod core;
 pub mod mesh;
 pub mod music;
@@ -48,6 +49,7 @@ pub fn register_stdlib(builder: &mut GlobalsBuilder) {
     music::register(builder);
     texture::register(builder);
     mesh::register(builder);
+    character::register(builder);
 }
 
 #[cfg(test)]
