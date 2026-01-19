@@ -215,7 +215,7 @@ Migrated from `docs/FUTURE_GENERATORS.md` (now deprecated).
 Migrated from `docs/FUTURE_GENERATORS.md` (now deprecated).
 
 - [x] `MESH-001` Add a curated `modifier_stack[]` for `static_mesh.blender_primitives_v1` (mirror/solidify/bevel/subdivide/array/triangulate). Done: 2026-01-20
-- [ ] `MESH-002` Add UV unwrap/pack automation with texel-density targets (optional lightmap UVs).
+- [x] `MESH-002` Add UV unwrap/pack automation with texel-density targets (optional lightmap UVs). Done: 2026-01-20
 - [x] `MESH-003` Add normals automation presets (auto_smooth, weighted normals, hard-edge-by-angle). Done: 2026-01-20
 - [ ] `MESH-004` Add deterministic LOD generation (decimate to target tri counts) + validate bounds/tri metrics.
 - [ ] `MESH-005` Add collision mesh generation outputs (convex hull / simplified mesh).

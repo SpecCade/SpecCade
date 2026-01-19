@@ -88,6 +88,17 @@ pub enum UvProjection {
         /// Cube projection size (for cube/box projection).
         #[serde(skip_serializing_if = "Option::is_none")]
         cube_size: Option<f64>,
+        /// Target texel density in pixels per unit.
+        /// When specified, UVs are scaled to achieve this density.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        texel_density: Option<f64>,
+        /// UV island margin/padding (0.0 to 1.0, default 0.001).
+        /// Used when packing UV islands.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        uv_margin: Option<f64>,
+        /// Generate a secondary UV channel for lightmaps (UV1).
+        #[serde(skip_serializing_if = "Option::is_none")]
+        lightmap_uv: Option<bool>,
     },
 }
 
@@ -521,10 +532,16 @@ mod tests {
                 method,
                 angle_limit,
                 cube_size,
+                texel_density,
+                uv_margin,
+                lightmap_uv,
             } => {
                 assert_eq!(method, UvProjectionMethod::Smart);
                 assert_eq!(angle_limit, Some(66.0));
                 assert_eq!(cube_size, None);
+                assert_eq!(texel_density, None);
+                assert_eq!(uv_margin, None);
+                assert_eq!(lightmap_uv, None);
             }
             _ => panic!("Expected projection with settings"),
         }
@@ -543,10 +560,16 @@ mod tests {
                 method,
                 angle_limit,
                 cube_size,
+                texel_density,
+                uv_margin,
+                lightmap_uv,
             } => {
                 assert_eq!(method, UvProjectionMethod::Box);
                 assert_eq!(angle_limit, None);
                 assert_eq!(cube_size, Some(1.5));
+                assert_eq!(texel_density, None);
+                assert_eq!(uv_margin, None);
+                assert_eq!(lightmap_uv, None);
             }
             _ => panic!("Expected projection with settings"),
         }
@@ -561,10 +584,121 @@ mod tests {
                 method,
                 angle_limit,
                 cube_size,
+                texel_density,
+                uv_margin,
+                lightmap_uv,
             } => {
                 assert_eq!(method, UvProjectionMethod::Smart);
                 assert_eq!(angle_limit, Some(45.0));
                 assert_eq!(cube_size, Some(2.0));
+                assert_eq!(texel_density, None);
+                assert_eq!(uv_margin, None);
+                assert_eq!(lightmap_uv, None);
+            }
+            _ => panic!("Expected projection with settings"),
+        }
+    }
+
+    // ========================================================================
+    // UV Projection with Texel Density and Lightmap Tests
+    // ========================================================================
+
+    #[test]
+    fn test_uv_projection_with_texel_density() {
+        let json = r#"{"method":"smart","texel_density":512.0}"#;
+        let proj: UvProjection = serde_json::from_str(json).unwrap();
+        match proj {
+            UvProjection::WithSettings {
+                method,
+                texel_density,
+                ..
+            } => {
+                assert_eq!(method, UvProjectionMethod::Smart);
+                assert_eq!(texel_density, Some(512.0));
+            }
+            _ => panic!("Expected projection with settings"),
+        }
+
+        let serialized = serde_json::to_string(&proj).unwrap();
+        assert!(serialized.contains("texel_density"));
+        assert!(serialized.contains("512"));
+    }
+
+    #[test]
+    fn test_uv_projection_with_uv_margin() {
+        let json = r#"{"method":"smart","uv_margin":0.002}"#;
+        let proj: UvProjection = serde_json::from_str(json).unwrap();
+        match proj {
+            UvProjection::WithSettings {
+                method,
+                uv_margin,
+                ..
+            } => {
+                assert_eq!(method, UvProjectionMethod::Smart);
+                assert_eq!(uv_margin, Some(0.002));
+            }
+            _ => panic!("Expected projection with settings"),
+        }
+    }
+
+    #[test]
+    fn test_uv_projection_with_lightmap_uv() {
+        let json = r#"{"method":"smart","lightmap_uv":true}"#;
+        let proj: UvProjection = serde_json::from_str(json).unwrap();
+        match proj {
+            UvProjection::WithSettings {
+                method,
+                lightmap_uv,
+                ..
+            } => {
+                assert_eq!(method, UvProjectionMethod::Smart);
+                assert_eq!(lightmap_uv, Some(true));
+            }
+            _ => panic!("Expected projection with settings"),
+        }
+    }
+
+    #[test]
+    fn test_uv_projection_complete() {
+        let json = r#"{"method":"smart","angle_limit":66.0,"texel_density":1024.0,"uv_margin":0.001,"lightmap_uv":true}"#;
+        let proj: UvProjection = serde_json::from_str(json).unwrap();
+        match proj {
+            UvProjection::WithSettings {
+                method,
+                angle_limit,
+                cube_size,
+                texel_density,
+                uv_margin,
+                lightmap_uv,
+            } => {
+                assert_eq!(method, UvProjectionMethod::Smart);
+                assert_eq!(angle_limit, Some(66.0));
+                assert_eq!(cube_size, None);
+                assert_eq!(texel_density, Some(1024.0));
+                assert_eq!(uv_margin, Some(0.001));
+                assert_eq!(lightmap_uv, Some(true));
+            }
+            _ => panic!("Expected projection with settings"),
+        }
+
+        let serialized = serde_json::to_string(&proj).unwrap();
+        assert!(serialized.contains("texel_density"));
+        assert!(serialized.contains("uv_margin"));
+        assert!(serialized.contains("lightmap_uv"));
+    }
+
+    #[test]
+    fn test_uv_projection_lightmap_with_margin() {
+        let json = r#"{"method":"lightmap","uv_margin":0.005}"#;
+        let proj: UvProjection = serde_json::from_str(json).unwrap();
+        match proj {
+            UvProjection::WithSettings {
+                method,
+                uv_margin,
+                ..
+            } => {
+                assert_eq!(method, UvProjectionMethod::Lightmap);
+                assert_eq!(uv_margin, Some(0.005));
             }
             _ => panic!("Expected projection with settings"),
         }

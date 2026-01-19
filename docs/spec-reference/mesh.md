@@ -173,6 +173,27 @@ UV projection can be a simple string or an object with settings.
 }
 ```
 
+**Extended form with texel density and lightmap UVs:**
+
+```json
+"uv_projection": {
+  "method": "smart",
+  "angle_limit": 66.0,
+  "texel_density": 512.0,
+  "uv_margin": 0.002,
+  "lightmap_uv": true
+}
+```
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `method` | string | `smart` | UV projection method (see methods below) |
+| `angle_limit` | f64 | - | Angle limit in degrees (for smart projection) |
+| `cube_size` | f64 | - | Cube size (for box projection) |
+| `texel_density` | f64 | - | Target texel density in pixels per world unit |
+| `uv_margin` | f64 | 0.001 | UV island margin/padding (0.0 to 1.0) |
+| `lightmap_uv` | bool | false | Generate secondary UV channel for lightmaps |
+
 | Method | Description |
 |--------|-------------|
 | `box` | Box/cube projection |
@@ -180,6 +201,19 @@ UV projection can be a simple string or an object with settings.
 | `sphere` | Sphere projection |
 | `smart` | Smart UV project |
 | `lightmap` | Lightmap pack |
+
+#### Texel Density
+
+The `texel_density` parameter specifies the target pixel-per-unit ratio for the UVs. When specified, UVs are scaled after unwrapping to achieve the target density. This helps ensure consistent texture resolution across different meshes.
+
+For example, a `texel_density` of 512.0 means 512 pixels per world unit (assuming a 1024x1024 texture).
+
+#### Lightmap UVs
+
+When `lightmap_uv` is true, a secondary UV channel named "UVMap_Lightmap" is generated using lightmap packing. This is useful for:
+- Lightmap baking (static lighting)
+- Ambient occlusion maps
+- Any per-surface data that needs non-overlapping UVs
 
 ### Normals Settings
 
@@ -360,6 +394,9 @@ Generation produces a report with mesh metrics:
 | `degenerate_face_count` | Degenerate face count |
 | `uv_island_count` | Number of UV islands |
 | `uv_coverage` | UV coverage ratio (0-1) |
+| `uv_overlap_percentage` | UV overlap percentage (0-100) |
+| `uv_layer_count` | Number of UV layers |
+| `texel_density` | Average texel density (pixels per world unit at 1024x1024) |
 | `bounding_box` | Axis-aligned bounding box |
 | `material_slot_count` | Number of materials |
 
