@@ -10,6 +10,7 @@ Music functions provide tracker-style music composition with instruments, patter
 - [Instrument Functions](#instrument-functions)
 - [Pattern Functions](#pattern-functions)
 - [Song Functions](#song-functions)
+- [Cue Template Functions](#cue-template-functions)
 
 ---
 
@@ -286,6 +287,152 @@ music_spec(
     patterns = {"intro": tracker_pattern(64)},
     arrangement = [arrangement_entry("intro")]
 )
+```
+
+---
+
+## Cue Template Functions
+
+Cue templates provide structured helpers for creating common game audio patterns. They produce metadata and suggested parameters for use with `tracker_song()`.
+
+### loop_low()
+
+Creates a loop cue template with low intensity settings (exploration, menus, calm moments).
+
+**Parameters:**
+| Name | Type | Required | Default | Description |
+|------|------|----------|---------|-------------|
+| name | str | Yes (named) | - | Cue name |
+| bpm | int | No | 90 | Beats per minute (30-300) |
+| measures | int | No | 8 | Number of measures (1-64) |
+| rows_per_beat | int | No | 4 | Rows per beat for pattern timing |
+| channels | int | No | 4 | Number of channels |
+| format | str | No | "xm" | Tracker format: "xm" or "it" |
+
+**Returns:** Dict with cue metadata, timing info, song_params, and track_layout suggestions.
+
+**Example:**
+```python
+loop_low(name = "explore_ambient")
+loop_low(name = "menu_music", bpm = 80, measures = 16)
+```
+
+### loop_main()
+
+Creates a loop cue template with main/standard intensity settings (general gameplay).
+
+**Parameters:**
+| Name | Type | Required | Default | Description |
+|------|------|----------|---------|-------------|
+| name | str | Yes (named) | - | Cue name |
+| bpm | int | No | 120 | Beats per minute (30-300) |
+| measures | int | No | 8 | Number of measures (1-64) |
+| rows_per_beat | int | No | 4 | Rows per beat for pattern timing |
+| channels | int | No | 8 | Number of channels |
+| format | str | No | "xm" | Tracker format: "xm" or "it" |
+
+**Returns:** Dict with cue metadata, timing info, song_params, and track_layout suggestions.
+
+**Example:**
+```python
+loop_main(name = "gameplay_theme")
+loop_main(name = "level_1", bpm = 128, channels = 8)
+```
+
+### loop_hi()
+
+Creates a loop cue template with high intensity settings (combat, boss encounters).
+
+**Parameters:**
+| Name | Type | Required | Default | Description |
+|------|------|----------|---------|-------------|
+| name | str | Yes (named) | - | Cue name |
+| bpm | int | No | 140 | Beats per minute (30-300) |
+| measures | int | No | 8 | Number of measures (1-64) |
+| rows_per_beat | int | No | 4 | Rows per beat for pattern timing |
+| channels | int | No | 12 | Number of channels |
+| format | str | No | "xm" | Tracker format: "xm" or "it" |
+
+**Returns:** Dict with cue metadata, timing info, song_params, and track_layout suggestions.
+
+**Example:**
+```python
+loop_hi(name = "boss_battle")
+loop_hi(name = "combat_intense", bpm = 160, channels = 16)
+```
+
+### loop_cue()
+
+Creates a loop cue with explicit intensity level (generic version).
+
+**Parameters:**
+| Name | Type | Required | Default | Description |
+|------|------|----------|---------|-------------|
+| name | str | Yes (named) | - | Cue name |
+| intensity | str | Yes (named) | - | "low", "main", or "hi" |
+| bpm | int | No | varies | BPM (defaults based on intensity) |
+| measures | int | No | 8 | Number of measures (1-64) |
+| rows_per_beat | int | No | 4 | Rows per beat for pattern timing |
+| channels | int | No | varies | Channels (defaults based on intensity) |
+| format | str | No | "xm" | Tracker format: "xm" or "it" |
+
+**Returns:** Dict with cue metadata, timing info, song_params, and track_layout suggestions.
+
+**Example:**
+```python
+loop_cue(name = "ambient", intensity = "low", bpm = 80)
+loop_cue(name = "action", intensity = "hi", bpm = 150, channels = 16)
+```
+
+### stinger()
+
+Creates a stinger cue template for one-shot musical events (victory, defeat, pickup, etc.).
+
+**Parameters:**
+| Name | Type | Required | Default | Description |
+|------|------|----------|---------|-------------|
+| name | str | Yes (named) | - | Cue name |
+| stinger_type | str | No | "custom" | "victory", "defeat", "pickup", "levelup", "discovery", "danger", "alert", "custom" |
+| duration_beats | int | No | 4 | Duration in beats (1-32) |
+| bpm | int | No | 120 | Beats per minute (30-300) |
+| rows_per_beat | int | No | 4 | Rows per beat for pattern timing |
+| channels | int | No | 4 | Number of channels |
+| format | str | No | "xm" | Tracker format: "xm" or "it" |
+| tail_beats | int | No | 0 | Optional decay/reverb tail in beats (0-16) |
+
+**Returns:** Dict with cue metadata, timing info, song_params, and stinger-specific track_layout suggestions.
+
+**Example:**
+```python
+stinger(name = "coin_pickup", stinger_type = "pickup", duration_beats = 2)
+stinger(name = "level_complete", stinger_type = "victory", duration_beats = 8)
+stinger(name = "enemy_alert", stinger_type = "alert", duration_beats = 2, tail_beats = 2)
+```
+
+### transition()
+
+Creates a transition cue template for bridging between music states.
+
+**Parameters:**
+| Name | Type | Required | Default | Description |
+|------|------|----------|---------|-------------|
+| name | str | Yes (named) | - | Cue name |
+| transition_type | str | No | "bridge" | "build", "breakdown", "bridge", "fill", "custom" |
+| from_intensity | str | No | "main" | Starting intensity: "low", "main", "hi" |
+| to_intensity | str | No | "main" | Target intensity: "low", "main", "hi" |
+| measures | int | No | 2 | Number of measures (1-8) |
+| bpm | int | No | 120 | Beats per minute (30-300) |
+| rows_per_beat | int | No | 4 | Rows per beat for pattern timing |
+| channels | int | No | 8 | Number of channels |
+| format | str | No | "xm" | Tracker format: "xm" or "it" |
+
+**Returns:** Dict with cue metadata, timing info, song_params, track_layout, and automation_hints.
+
+**Example:**
+```python
+transition(name = "to_combat", transition_type = "build", from_intensity = "main", to_intensity = "hi")
+transition(name = "combat_end", transition_type = "breakdown", from_intensity = "hi", to_intensity = "low")
+transition(name = "drum_fill", transition_type = "fill", measures = 1)
 ```
 
 ---

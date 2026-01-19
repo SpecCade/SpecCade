@@ -15,17 +15,21 @@
 //! - **Patterns**: `tracker_pattern()`, `pattern_note()` - Define patterns and notes
 //! - **Song**: `tracker_song()`, `arrangement_entry()` - Compose complete songs
 //! - **Effects**: `it_options()`, `automation_entry()` - Module options and automation
+//! - **Cues**: `loop_low()`, `loop_main()`, `loop_hi()`, `stinger()`, `transition()` - Game audio cue templates
 
 use starlark::environment::GlobalsBuilder;
 
-mod util;
+mod cue_layouts;
+mod cues;
 mod instruments;
 mod patterns;
 mod song;
+mod util;
 
 /// Registers music stdlib functions into a GlobalsBuilder.
 pub fn register(builder: &mut GlobalsBuilder) {
     instruments::register(builder);
     patterns::register(builder);
     song::register(builder);
+    cues::register(builder);
 }
