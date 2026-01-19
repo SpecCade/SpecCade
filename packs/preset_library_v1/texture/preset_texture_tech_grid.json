@@ -1,0 +1,109 @@
+{
+  "spec_version": 1,
+  "asset_id": "preset_texture_tech_grid",
+  "asset_type": "texture",
+  "license": "CC0-1.0",
+  "seed": 1022,
+  "description": "Sci-fi tech grid pattern with overlaid stripes using UV scaling and blend modes.",
+  "style_tags": ["tech", "sci-fi", "grid", "futuristic", "pattern"],
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "png",
+      "path": "textures/preset_texture_tech_grid_albedo.png",
+      "source": "albedo"
+    },
+    {
+      "kind": "primary",
+      "format": "png",
+      "path": "textures/preset_texture_tech_grid_emissive.png",
+      "source": "emissive"
+    }
+  ],
+  "recipe": {
+    "kind": "texture.procedural_v1",
+    "params": {
+      "resolution": [512, 512],
+      "tileable": true,
+      "nodes": [
+        {
+          "id": "base_checker",
+          "type": "checkerboard",
+          "tile_size": 64,
+          "color1": 0.1,
+          "color2": 0.15
+        },
+        {
+          "id": "fine_grid",
+          "type": "checkerboard",
+          "tile_size": 16,
+          "color1": 0.0,
+          "color2": 0.05
+        },
+        {
+          "id": "h_stripes",
+          "type": "stripes",
+          "direction": "horizontal",
+          "stripe_width": 4,
+          "color1": 0.0,
+          "color2": 0.3
+        },
+        {
+          "id": "v_stripes",
+          "type": "stripes",
+          "direction": "vertical",
+          "stripe_width": 4,
+          "color1": 0.0,
+          "color2": 0.3
+        },
+        {
+          "id": "grid_lines",
+          "type": "blend_screen",
+          "base": "h_stripes",
+          "blend": "v_stripes"
+        },
+        {
+          "id": "base_combined",
+          "type": "blend_overlay",
+          "base": "base_checker",
+          "blend": "fine_grid"
+        },
+        {
+          "id": "with_lines",
+          "type": "blend_screen",
+          "base": "base_combined",
+          "blend": "grid_lines"
+        },
+        {
+          "id": "highlight_noise",
+          "type": "noise",
+          "noise": {
+            "algorithm": "perlin",
+            "scale": 0.02,
+            "octaves": 1,
+            "persistence": 0.5,
+            "lacunarity": 2.0
+          }
+        },
+        {
+          "id": "highlight_mask",
+          "type": "threshold",
+          "input": "highlight_noise",
+          "threshold": 0.7
+        },
+        {
+          "id": "emissive",
+          "type": "multiply",
+          "a": "grid_lines",
+          "b": "highlight_mask"
+        },
+        {
+          "id": "albedo",
+          "type": "color_ramp",
+          "input": "with_lines",
+          "ramp": ["#0d1117", "#1a2332", "#2d3748", "#4a5568"]
+        }
+      ]
+    }
+  }
+}

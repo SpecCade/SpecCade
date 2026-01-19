@@ -1,0 +1,97 @@
+{
+  "spec_version": 1,
+  "asset_id": "preset_texture_terrain_blend",
+  "asset_type": "texture",
+  "license": "CC0-1.0",
+  "seed": 1020,
+  "description": "Height-based terrain blending with two noise layers (rock/dirt) using lerp.",
+  "style_tags": ["terrain", "environment", "blend", "procedural"],
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "png",
+      "path": "textures/preset_texture_terrain_blend_albedo.png",
+      "source": "albedo"
+    },
+    {
+      "kind": "primary",
+      "format": "png",
+      "path": "textures/preset_texture_terrain_blend_height.png",
+      "source": "height"
+    },
+    {
+      "kind": "primary",
+      "format": "png",
+      "path": "textures/preset_texture_terrain_blend_normal.png",
+      "source": "normal"
+    }
+  ],
+  "recipe": {
+    "kind": "texture.procedural_v1",
+    "params": {
+      "resolution": [512, 512],
+      "tileable": true,
+      "nodes": [
+        {
+          "id": "height",
+          "type": "noise",
+          "noise": {
+            "algorithm": "perlin",
+            "scale": 0.06,
+            "octaves": 4,
+            "persistence": 0.5,
+            "lacunarity": 2.0
+          }
+        },
+        {
+          "id": "rock_noise",
+          "type": "noise",
+          "noise": {
+            "algorithm": "perlin",
+            "scale": 0.12,
+            "octaves": 3,
+            "persistence": 0.4,
+            "lacunarity": 2.2
+          }
+        },
+        {
+          "id": "dirt_noise",
+          "type": "noise",
+          "noise": {
+            "algorithm": "perlin",
+            "scale": 0.08,
+            "octaves": 2,
+            "persistence": 0.6,
+            "lacunarity": 1.8
+          }
+        },
+        {
+          "id": "blend_mask",
+          "type": "clamp",
+          "input": "height",
+          "min": 0.3,
+          "max": 0.7
+        },
+        {
+          "id": "blended_grayscale",
+          "type": "lerp",
+          "a": "dirt_noise",
+          "b": "rock_noise",
+          "t": "blend_mask"
+        },
+        {
+          "id": "albedo",
+          "type": "color_ramp",
+          "input": "blended_grayscale",
+          "ramp": ["#4a3728", "#6b5344", "#5a5a5a", "#787878", "#9a9a9a"]
+        },
+        {
+          "id": "normal",
+          "type": "normal_from_height",
+          "input": "height",
+          "strength": 1.5
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,110 @@
+{
+  "spec_version": 1,
+  "asset_id": "preset_texture_blended_layers",
+  "asset_type": "texture",
+  "license": "CC0-1.0",
+  "seed": 1024,
+  "description": "Multi-layer texture demonstrating screen, overlay, and difference blend modes.",
+  "style_tags": ["blend", "layers", "composite", "abstract", "artistic"],
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "png",
+      "path": "textures/preset_texture_blended_layers_albedo.png",
+      "source": "albedo"
+    },
+    {
+      "kind": "primary",
+      "format": "png",
+      "path": "textures/preset_texture_blended_layers_mask.png",
+      "source": "blend_mask"
+    }
+  ],
+  "recipe": {
+    "kind": "texture.procedural_v1",
+    "params": {
+      "resolution": [512, 512],
+      "tileable": true,
+      "nodes": [
+        {
+          "id": "layer1",
+          "type": "noise",
+          "noise": {
+            "algorithm": "perlin",
+            "scale": 0.04,
+            "octaves": 3,
+            "persistence": 0.5,
+            "lacunarity": 2.0
+          }
+        },
+        {
+          "id": "layer2",
+          "type": "noise",
+          "noise": {
+            "algorithm": "perlin",
+            "scale": 0.08,
+            "octaves": 2,
+            "persistence": 0.6,
+            "lacunarity": 1.9
+          }
+        },
+        {
+          "id": "layer3",
+          "type": "noise",
+          "noise": {
+            "algorithm": "perlin",
+            "scale": 0.15,
+            "octaves": 4,
+            "persistence": 0.4,
+            "lacunarity": 2.2
+          }
+        },
+        {
+          "id": "radial_mask",
+          "type": "gradient",
+          "direction": "radial",
+          "center": [0.5, 0.5],
+          "inner": 1.0,
+          "outer": 0.0
+        },
+        {
+          "id": "screen_blend",
+          "type": "blend_screen",
+          "base": "layer1",
+          "blend": "layer2"
+        },
+        {
+          "id": "overlay_blend",
+          "type": "blend_overlay",
+          "base": "screen_blend",
+          "blend": "layer3"
+        },
+        {
+          "id": "difference_accent",
+          "type": "blend_difference",
+          "base": "layer1",
+          "blend": "layer3"
+        },
+        {
+          "id": "blend_mask",
+          "type": "multiply",
+          "a": "radial_mask",
+          "b": "difference_accent"
+        },
+        {
+          "id": "final_blend",
+          "type": "lerp",
+          "a": "overlay_blend",
+          "b": "difference_accent",
+          "t": "radial_mask"
+        },
+        {
+          "id": "albedo",
+          "type": "color_ramp",
+          "input": "final_blend",
+          "ramp": ["#1a1a2e", "#16213e", "#0f3460", "#e94560", "#f39c12"]
+        }
+      ]
+    }
+  }
+}

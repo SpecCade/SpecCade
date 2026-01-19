@@ -1,0 +1,88 @@
+{
+  "spec_version": 1,
+  "asset_id": "preset_texture_stylized_toon",
+  "asset_type": "texture",
+  "license": "CC0-1.0",
+  "seed": 1021,
+  "description": "Stylized toon shading ramp with sharp steps for cel-shaded art styles.",
+  "style_tags": ["toon", "stylized", "cel-shaded", "cartoon", "flat"],
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "png",
+      "path": "textures/preset_texture_stylized_toon_ramp.png",
+      "source": "toon_ramp"
+    },
+    {
+      "kind": "primary",
+      "format": "png",
+      "path": "textures/preset_texture_stylized_toon_shadow.png",
+      "source": "shadow_mask"
+    }
+  ],
+  "recipe": {
+    "kind": "texture.procedural_v1",
+    "params": {
+      "resolution": [256, 256],
+      "tileable": false,
+      "nodes": [
+        {
+          "id": "base_gradient",
+          "type": "gradient",
+          "direction": "horizontal",
+          "start": 0.0,
+          "end": 1.0
+        },
+        {
+          "id": "step1",
+          "type": "threshold",
+          "input": "base_gradient",
+          "threshold": 0.25
+        },
+        {
+          "id": "step2",
+          "type": "threshold",
+          "input": "base_gradient",
+          "threshold": 0.5
+        },
+        {
+          "id": "step3",
+          "type": "threshold",
+          "input": "base_gradient",
+          "threshold": 0.75
+        },
+        {
+          "id": "combined_steps",
+          "type": "add",
+          "a": "step1",
+          "b": "step2"
+        },
+        {
+          "id": "all_steps",
+          "type": "add",
+          "a": "combined_steps",
+          "b": "step3"
+        },
+        {
+          "id": "normalized",
+          "type": "clamp",
+          "input": "all_steps",
+          "min": 0.0,
+          "max": 1.0
+        },
+        {
+          "id": "toon_ramp",
+          "type": "color_ramp",
+          "input": "normalized",
+          "ramp": ["#1a1a2e", "#4a4e69", "#9a8c98", "#f2e9e4"]
+        },
+        {
+          "id": "shadow_mask",
+          "type": "threshold",
+          "input": "base_gradient",
+          "threshold": 0.35
+        }
+      ]
+    }
+  }
+}

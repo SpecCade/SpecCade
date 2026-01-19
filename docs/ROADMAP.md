@@ -175,8 +175,9 @@ Open questions:
 - [x] `TEX-001` Add additional `texture.procedural_v1` ops (blur/warp/morphology/blend modes/UV transforms). **Done: 2026-01-18**
   - References: RFC-0005/0006 future-work notes.
   - Implemented: Blur, Erode, Dilate, Warp, BlendScreen/Overlay/SoftLight/Difference, UvScale/Rotate/Translate.
-- [ ] `TEX-002` Add graph libraries/templates without introducing new recipe kinds.
+- [x] `TEX-002` Add graph libraries/templates without introducing new recipe kinds. **Done: 2026-01-19**
   - Deliverable: reusable templates in `packs/` + CLI support to copy/instantiate.
+  - Implemented: 5 new texture templates showcasing TEX-001 ops (terrain_blend, stylized_toon, tech_grid, organic_warp, blended_layers) with style_tags for searchability.
 - [ ] `TEX-003` Decide if richer channel "swizzle/component extract" ops are needed for packing workflows.
 - [ ] `TEX-004` Add stochastic tiling (Wang tiles / texture bombing) to reduce visible repetition.
 - [ ] `TEX-005` Add trimsheets/atlases with deterministic packing + mip-safe gutters and metadata.

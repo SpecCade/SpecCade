@@ -1,0 +1,108 @@
+{
+  "spec_version": 1,
+  "asset_id": "preset_texture_organic_warp",
+  "asset_type": "texture",
+  "license": "CC0-1.0",
+  "seed": 1023,
+  "description": "Organic flowing texture using warp distortion and blur for soft, natural patterns.",
+  "style_tags": ["organic", "natural", "fluid", "warp", "soft"],
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "png",
+      "path": "textures/preset_texture_organic_warp_albedo.png",
+      "source": "albedo"
+    },
+    {
+      "kind": "primary",
+      "format": "png",
+      "path": "textures/preset_texture_organic_warp_height.png",
+      "source": "height"
+    },
+    {
+      "kind": "primary",
+      "format": "png",
+      "path": "textures/preset_texture_organic_warp_normal.png",
+      "source": "normal"
+    }
+  ],
+  "recipe": {
+    "kind": "texture.procedural_v1",
+    "params": {
+      "resolution": [512, 512],
+      "tileable": true,
+      "nodes": [
+        {
+          "id": "base_noise",
+          "type": "noise",
+          "noise": {
+            "algorithm": "perlin",
+            "scale": 0.05,
+            "octaves": 3,
+            "persistence": 0.5,
+            "lacunarity": 2.0
+          }
+        },
+        {
+          "id": "warp_noise",
+          "type": "noise",
+          "noise": {
+            "algorithm": "perlin",
+            "scale": 0.03,
+            "octaves": 2,
+            "persistence": 0.6,
+            "lacunarity": 1.8
+          }
+        },
+        {
+          "id": "warped",
+          "type": "warp",
+          "input": "base_noise",
+          "displacement": "warp_noise",
+          "strength": 0.15
+        },
+        {
+          "id": "blurred",
+          "type": "blur",
+          "input": "warped",
+          "radius": 3.0
+        },
+        {
+          "id": "detail_noise",
+          "type": "noise",
+          "noise": {
+            "algorithm": "perlin",
+            "scale": 0.15,
+            "octaves": 2,
+            "persistence": 0.4,
+            "lacunarity": 2.2
+          }
+        },
+        {
+          "id": "detail_blurred",
+          "type": "blur",
+          "input": "detail_noise",
+          "radius": 1.5
+        },
+        {
+          "id": "height",
+          "type": "blend_soft_light",
+          "base": "blurred",
+          "blend": "detail_blurred"
+        },
+        {
+          "id": "albedo",
+          "type": "color_ramp",
+          "input": "height",
+          "ramp": ["#2d4a3e", "#4a7c59", "#7cb07a", "#a8d5a2"]
+        },
+        {
+          "id": "normal",
+          "type": "normal_from_height",
+          "input": "height",
+          "strength": 0.8
+        }
+      ]
+    }
+  }
+}
