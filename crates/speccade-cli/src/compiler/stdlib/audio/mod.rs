@@ -13,6 +13,7 @@ use super::validation::validate_non_empty;
 
 mod effects;
 mod filters;
+mod foley;
 mod layers;
 mod modulation;
 mod synthesis;
@@ -41,6 +42,7 @@ pub fn register(builder: &mut GlobalsBuilder) {
     filters::register(builder);
     effects::register(builder);
     layers::register(builder);
+    foley::register(builder);
     register_audio_spec_functions(builder);
 }
 
@@ -357,20 +359,17 @@ audio_spec(
 
     #[test]
     fn test_layer_with_notch_filter() {
-        let result = eval_to_json(
-            r#"audio_layer(oscillator(440.0), filter = notch(1000.0, 2.0))"#,
-        )
-        .unwrap();
+        let result =
+            eval_to_json(r#"audio_layer(oscillator(440.0), filter = notch(1000.0, 2.0))"#).unwrap();
         assert_eq!(result["filter"]["type"], "notch");
         assert_eq!(result["filter"]["center"], 1000.0);
     }
 
     #[test]
     fn test_layer_with_allpass_filter() {
-        let result = eval_to_json(
-            r#"audio_layer(oscillator(440.0), filter = allpass(1000.0, 2.0))"#,
-        )
-        .unwrap();
+        let result =
+            eval_to_json(r#"audio_layer(oscillator(440.0), filter = allpass(1000.0, 2.0))"#)
+                .unwrap();
         assert_eq!(result["filter"]["type"], "allpass");
         assert_eq!(result["filter"]["frequency"], 1000.0);
     }
