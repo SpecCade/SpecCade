@@ -8,4 +8,6 @@ mod static_mesh;
 pub use common::{MaterialSlot, MeshConstraints, MeshExportSettings, NormalsPreset, NormalsSettings};
 pub use modifiers::{MeshModifier, UvProjection, UvProjectionMethod};
 pub use primitives::MeshPrimitive;
-pub use static_mesh::StaticMeshBlenderPrimitivesV1Params;
+pub use static_mesh::{
+    LodChainSettings, LodDecimateMethod, LodLevel, StaticMeshBlenderPrimitivesV1Params,
+};

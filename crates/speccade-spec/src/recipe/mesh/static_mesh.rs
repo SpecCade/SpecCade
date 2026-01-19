@@ -6,6 +6,44 @@ use super::common::{MaterialSlot, MeshConstraints, MeshExportSettings, NormalsSe
 use super::modifiers::{MeshModifier, UvProjection};
 use super::primitives::MeshPrimitive;
 
+/// Decimate method for LOD generation.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[serde(rename_all = "snake_case")]
+pub enum LodDecimateMethod {
+    /// Collapse edges (default, best quality).
+    #[default]
+    Collapse,
+    /// Planar decimation (good for architectural meshes).
+    Planar,
+}
+
+/// A single LOD level specification.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct LodLevel {
+    /// LOD level index (0 = highest detail / original).
+    pub level: u8,
+    /// Target triangle count for this LOD level.
+    /// If `None`, this is the original mesh (typically LOD0).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub target_tris: Option<u32>,
+}
+
+/// LOD chain configuration for multi-LOD mesh export.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct LodChainSettings {
+    /// List of LOD levels to generate.
+    pub levels: Vec<LodLevel>,
+    /// Decimation method to use for LOD generation.
+    #[serde(default, skip_serializing_if = "is_default_decimate_method")]
+    pub decimate_method: LodDecimateMethod,
+}
+
+fn is_default_decimate_method(method: &LodDecimateMethod) -> bool {
+    *method == LodDecimateMethod::default()
+}
+
 /// Parameters for the `static_mesh.blender_primitives_v1` recipe.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -32,6 +70,10 @@ pub struct StaticMeshBlenderPrimitivesV1Params {
     /// Mesh constraints.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub constraints: Option<MeshConstraints>,
+    /// LOD chain configuration for multi-LOD mesh export.
+    /// When specified, generates multiple mesh LODs using decimation.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub lod_chain: Option<LodChainSettings>,
 }
 
 #[cfg(test)]
@@ -55,6 +97,7 @@ mod tests {
             material_slots: vec![],
             export: None,
             constraints: None,
+            lod_chain: None,
         };
 
         let json = serde_json::to_string(&params).unwrap();
@@ -76,6 +119,7 @@ mod tests {
             material_slots: vec![],
             export: None,
             constraints: None,
+            lod_chain: None,
         };
 
         let json = serde_json::to_string(&params).unwrap();
@@ -103,6 +147,7 @@ mod tests {
             material_slots: vec![],
             export: None,
             constraints: None,
+            lod_chain: None,
         };
 
         let json = serde_json::to_string(&params).unwrap();
@@ -131,6 +176,7 @@ mod tests {
             material_slots: vec![],
             export: None,
             constraints: None,
+            lod_chain: None,
         };
 
         let json = serde_json::to_string(&params).unwrap();
@@ -156,6 +202,7 @@ mod tests {
             material_slots: vec![],
             export: None,
             constraints: None,
+            lod_chain: None,
         };
 
         let json = serde_json::to_string(&params).unwrap();
@@ -185,6 +232,7 @@ mod tests {
             material_slots: vec![],
             export: None,
             constraints: None,
+            lod_chain: None,
         };
 
         let json = serde_json::to_string(&params).unwrap();
@@ -212,6 +260,7 @@ mod tests {
             material_slots: vec![],
             export: None,
             constraints: None,
+            lod_chain: None,
         };
 
         let json = serde_json::to_string(&params).unwrap();
@@ -241,6 +290,7 @@ mod tests {
                 tangents: true,
             }),
             constraints: None,
+            lod_chain: None,
         };
 
         let json = serde_json::to_string(&params).unwrap();
@@ -291,6 +341,7 @@ mod tests {
                 max_materials: Some(4),
                 max_vertices: Some(2000),
             }),
+            lod_chain: None,
         };
 
         let json = serde_json::to_string(&params).unwrap();
@@ -303,5 +354,197 @@ mod tests {
         assert!(parsed.normals.is_some());
         assert!(parsed.export.is_some());
         assert!(parsed.constraints.is_some());
+    }
+
+    // ========================================================================
+    // LOD Chain Tests
+    // ========================================================================
+
+    #[test]
+    fn test_lod_level_basic() {
+        let level = LodLevel {
+            level: 0,
+            target_tris: None,
+        };
+
+        let json = serde_json::to_string(&level).unwrap();
+        assert!(json.contains("\"level\":0"));
+        assert!(!json.contains("target_tris"));
+
+        let parsed: LodLevel = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed.level, 0);
+        assert_eq!(parsed.target_tris, None);
+    }
+
+    #[test]
+    fn test_lod_level_with_target() {
+        let level = LodLevel {
+            level: 1,
+            target_tris: Some(500),
+        };
+
+        let json = serde_json::to_string(&level).unwrap();
+        assert!(json.contains("\"level\":1"));
+        assert!(json.contains("\"target_tris\":500"));
+
+        let parsed: LodLevel = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed.level, 1);
+        assert_eq!(parsed.target_tris, Some(500));
+    }
+
+    #[test]
+    fn test_lod_decimate_method_collapse() {
+        let method = LodDecimateMethod::Collapse;
+        let json = serde_json::to_string(&method).unwrap();
+        assert_eq!(json, "\"collapse\"");
+
+        let parsed: LodDecimateMethod = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed, LodDecimateMethod::Collapse);
+    }
+
+    #[test]
+    fn test_lod_decimate_method_planar() {
+        let method = LodDecimateMethod::Planar;
+        let json = serde_json::to_string(&method).unwrap();
+        assert_eq!(json, "\"planar\"");
+
+        let parsed: LodDecimateMethod = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed, LodDecimateMethod::Planar);
+    }
+
+    #[test]
+    fn test_lod_chain_settings_basic() {
+        let chain = LodChainSettings {
+            levels: vec![
+                LodLevel {
+                    level: 0,
+                    target_tris: None,
+                },
+                LodLevel {
+                    level: 1,
+                    target_tris: Some(500),
+                },
+                LodLevel {
+                    level: 2,
+                    target_tris: Some(100),
+                },
+            ],
+            decimate_method: LodDecimateMethod::Collapse,
+        };
+
+        let json = serde_json::to_string(&chain).unwrap();
+        assert!(json.contains("\"levels\""));
+        assert!(json.contains("\"level\":0"));
+        assert!(json.contains("\"level\":1"));
+        assert!(json.contains("\"level\":2"));
+        assert!(json.contains("\"target_tris\":500"));
+        assert!(json.contains("\"target_tris\":100"));
+        // Default decimate_method should not be serialized
+        assert!(!json.contains("decimate_method"));
+
+        let parsed: LodChainSettings = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed.levels.len(), 3);
+        assert_eq!(parsed.levels[0].level, 0);
+        assert_eq!(parsed.levels[1].target_tris, Some(500));
+        assert_eq!(parsed.decimate_method, LodDecimateMethod::Collapse);
+    }
+
+    #[test]
+    fn test_lod_chain_settings_planar() {
+        let chain = LodChainSettings {
+            levels: vec![LodLevel {
+                level: 0,
+                target_tris: None,
+            }],
+            decimate_method: LodDecimateMethod::Planar,
+        };
+
+        let json = serde_json::to_string(&chain).unwrap();
+        assert!(json.contains("\"decimate_method\":\"planar\""));
+
+        let parsed: LodChainSettings = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed.decimate_method, LodDecimateMethod::Planar);
+    }
+
+    #[test]
+    fn test_mesh_params_with_lod_chain() {
+        let params = StaticMeshBlenderPrimitivesV1Params {
+            base_primitive: MeshPrimitive::IcoSphere,
+            dimensions: [1.0, 1.0, 1.0],
+            modifiers: vec![MeshModifier::Subdivision {
+                levels: 2,
+                render_levels: 2,
+            }],
+            uv_projection: None,
+            normals: None,
+            material_slots: vec![],
+            export: None,
+            constraints: None,
+            lod_chain: Some(LodChainSettings {
+                levels: vec![
+                    LodLevel {
+                        level: 0,
+                        target_tris: None,
+                    },
+                    LodLevel {
+                        level: 1,
+                        target_tris: Some(500),
+                    },
+                    LodLevel {
+                        level: 2,
+                        target_tris: Some(100),
+                    },
+                ],
+                decimate_method: LodDecimateMethod::Collapse,
+            }),
+        };
+
+        let json = serde_json::to_string(&params).unwrap();
+        assert!(json.contains("lod_chain"));
+        assert!(json.contains("\"target_tris\":500"));
+
+        let parsed: StaticMeshBlenderPrimitivesV1Params = serde_json::from_str(&json).unwrap();
+        assert!(parsed.lod_chain.is_some());
+        let lod_chain = parsed.lod_chain.unwrap();
+        assert_eq!(lod_chain.levels.len(), 3);
+        assert_eq!(lod_chain.levels[0].target_tris, None);
+        assert_eq!(lod_chain.levels[1].target_tris, Some(500));
+        assert_eq!(lod_chain.levels[2].target_tris, Some(100));
+    }
+
+    #[test]
+    fn test_lod_chain_from_json() {
+        let json = r#"{
+            "levels": [
+                { "level": 0, "target_tris": null },
+                { "level": 1, "target_tris": 500 },
+                { "level": 2, "target_tris": 100 }
+            ]
+        }"#;
+
+        let parsed: LodChainSettings = serde_json::from_str(json).unwrap();
+        assert_eq!(parsed.levels.len(), 3);
+        assert_eq!(parsed.levels[0].target_tris, None);
+        assert_eq!(parsed.levels[1].target_tris, Some(500));
+        assert_eq!(parsed.levels[2].target_tris, Some(100));
+        assert_eq!(parsed.decimate_method, LodDecimateMethod::Collapse);
+    }
+
+    #[test]
+    fn test_lod_chain_rejects_unknown_fields() {
+        let json = r#"{
+            "levels": [{ "level": 0 }],
+            "unknown_field": true
+        }"#;
+
+        let result: Result<LodChainSettings, _> = serde_json::from_str(json);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_lod_level_rejects_unknown_fields() {
+        let json = r#"{ "level": 0, "unknown_field": true }"#;
+        let result: Result<LodLevel, _> = serde_json::from_str(json);
+        assert!(result.is_err());
     }
 }

@@ -218,7 +218,8 @@ Migrated from `docs/FUTURE_GENERATORS.md` (now deprecated).
 - [x] `MESH-001` Add a curated `modifier_stack[]` for `static_mesh.blender_primitives_v1` (mirror/solidify/bevel/subdivide/array/triangulate). Done: 2026-01-20
 - [x] `MESH-002` Add UV unwrap/pack automation with texel-density targets (optional lightmap UVs). Done: 2026-01-20
 - [x] `MESH-003` Add normals automation presets (auto_smooth, weighted normals, hard-edge-by-angle). Done: 2026-01-20
-- [ ] `MESH-004` Add deterministic LOD generation (decimate to target tri counts) + validate bounds/tri metrics.
+- [x] `MESH-004` Add deterministic LOD generation (decimate to target tri counts) + validate bounds/tri metrics. **Done: 2026-01-20**
+  - Implemented: `lod_chain` field with `LodLevel` (level, target_tris) and `LodDecimateMethod` (collapse/planar); Blender LOD generation via Decimate modifier; per-LOD metrics in reports (vertex_count, face_count, triangle_count, simplification_ratio, bounds).
 - [ ] `MESH-005` Add collision mesh generation outputs (convex hull / simplified mesh).
 - [ ] `MESH-006` Add navmesh hints/metadata outputs (walkable surfaces, slope/stair tagging).
 - [ ] `MESH-007` Add a baking suite (high->low normal/AO/curvature, vertex colors, dilation).

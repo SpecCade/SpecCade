@@ -3608,6 +3608,179 @@ def export_glb(output_path: Path, include_armature: bool = True,
 
 
 # =============================================================================
+# LOD Generation
+# =============================================================================
+
+def compute_decimate_ratio_for_target(
+    current_tris: int,
+    target_tris: int
+) -> float:
+    """
+    Compute the decimate ratio needed to achieve a target triangle count.
+
+    Args:
+        current_tris: Current triangle count.
+        target_tris: Target triangle count.
+
+    Returns:
+        Decimate ratio (0.0 to 1.0).
+    """
+    if current_tris <= 0 or target_tris <= 0:
+        return 1.0
+    if target_tris >= current_tris:
+        return 1.0
+    return target_tris / current_tris
+
+
+def create_lod_mesh(
+    source_obj: 'bpy.types.Object',
+    lod_level: int,
+    target_tris: Optional[int],
+    decimate_method: str = "collapse"
+) -> Tuple['bpy.types.Object', Dict[str, Any]]:
+    """
+    Create an LOD mesh by decimating the source object.
+
+    Args:
+        source_obj: The source mesh object (will be duplicated).
+        lod_level: LOD level index (0, 1, 2, ...).
+        target_tris: Target triangle count (None = keep original).
+        decimate_method: 'collapse' or 'planar'.
+
+    Returns:
+        Tuple of (lod_mesh_object, metrics_dict).
+    """
+    # Duplicate the source object
+    bpy.ops.object.select_all(action='DESELECT')
+    source_obj.select_set(True)
+    bpy.context.view_layer.objects.active = source_obj
+    bpy.ops.object.duplicate(linked=False)
+    lod_obj = bpy.context.active_object
+    lod_obj.name = f"{source_obj.name}_LOD{lod_level}"
+
+    # Get current triangle count
+    depsgraph = bpy.context.evaluated_depsgraph_get()
+    obj_eval = lod_obj.evaluated_get(depsgraph)
+    mesh = obj_eval.to_mesh()
+    current_tris = sum(
+        len(poly.vertices) - 2 if len(poly.vertices) > 3 else 1
+        for poly in mesh.polygons
+    )
+    obj_eval.to_mesh_clear()
+
+    # Apply decimate if target is specified and lower than current
+    if target_tris is not None and target_tris < current_tris:
+        ratio = compute_decimate_ratio_for_target(current_tris, target_tris)
+
+        # Add and apply decimate modifier
+        bpy.context.view_layer.objects.active = lod_obj
+        mod = lod_obj.modifiers.new(name="LOD_Decimate", type='DECIMATE')
+
+        if decimate_method == "planar":
+            mod.decimate_type = 'DISSOLVE'
+            # Planar uses angle limit instead of ratio
+            # Estimate angle from target ratio
+            mod.angle_limit = math.radians(5.0 + (1.0 - ratio) * 40.0)
+        else:
+            # Collapse (default)
+            mod.decimate_type = 'COLLAPSE'
+            mod.ratio = ratio
+
+        bpy.ops.object.modifier_apply(modifier=mod.name)
+
+    # Compute metrics for this LOD
+    metrics = compute_mesh_metrics(lod_obj)
+    metrics["lod_level"] = lod_level
+    if target_tris is not None:
+        metrics["target_tris"] = target_tris
+        metrics["simplification_ratio"] = round(
+            metrics["triangle_count"] / current_tris if current_tris > 0 else 1.0,
+            4
+        )
+    else:
+        metrics["simplification_ratio"] = 1.0
+
+    return lod_obj, metrics
+
+
+def generate_lod_chain(
+    source_obj: 'bpy.types.Object',
+    lod_chain_spec: Dict
+) -> Tuple[List['bpy.types.Object'], List[Dict[str, Any]]]:
+    """
+    Generate a chain of LOD meshes from the source object.
+
+    Args:
+        source_obj: The source mesh object.
+        lod_chain_spec: LOD chain specification with 'levels' and 'decimate_method'.
+
+    Returns:
+        Tuple of (list_of_lod_objects, list_of_per_lod_metrics).
+    """
+    levels = lod_chain_spec.get("levels", [])
+    decimate_method = lod_chain_spec.get("decimate_method", "collapse")
+
+    # Sort levels by level index
+    levels = sorted(levels, key=lambda x: x.get("level", 0))
+
+    lod_objects = []
+    lod_metrics = []
+
+    for level_spec in levels:
+        lod_level = level_spec.get("level", 0)
+        target_tris = level_spec.get("target_tris")
+
+        lod_obj, metrics = create_lod_mesh(
+            source_obj,
+            lod_level,
+            target_tris,
+            decimate_method
+        )
+
+        lod_objects.append(lod_obj)
+        lod_metrics.append(metrics)
+
+    return lod_objects, lod_metrics
+
+
+def export_glb_with_lods(
+    output_path: Path,
+    lod_objects: List['bpy.types.Object'],
+    export_tangents: bool = False
+) -> None:
+    """
+    Export LOD meshes to a GLB file.
+    Each LOD is exported as a separate mesh named "Mesh_LOD0", "Mesh_LOD1", etc.
+
+    Args:
+        output_path: Output GLB file path.
+        lod_objects: List of LOD mesh objects in order (LOD0, LOD1, ...).
+        export_tangents: Whether to export tangents.
+    """
+    # Ensure only LOD objects are selected
+    bpy.ops.object.select_all(action='DESELECT')
+    for lod_obj in lod_objects:
+        lod_obj.select_set(True)
+
+    if lod_objects:
+        bpy.context.view_layer.objects.active = lod_objects[0]
+
+    export_settings = {
+        'filepath': str(output_path),
+        'export_format': 'GLB',
+        'export_apply': True,
+        'export_texcoords': True,
+        'export_normals': True,
+        'export_colors': True,
+        'export_tangents': export_tangents,
+        'export_animations': False,
+        'use_selection': True,
+    }
+
+    bpy.ops.export_scene.gltf(**export_settings)
+
+
+# =============================================================================
 # Mode Handlers
 # =============================================================================
 
@@ -3663,12 +3836,42 @@ def handle_static_mesh(spec: Dict, out_root: Path, report_path: Path) -> None:
         output_path = out_root / output_rel_path
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
-        # Compute metrics before export
-        metrics = compute_mesh_metrics(obj)
-
         # Export with tangents if requested
         export_tangents = export_settings.get("tangents", False)
-        export_glb(output_path, export_tangents=export_tangents)
+
+        # Check for LOD chain
+        lod_chain_spec = params.get("lod_chain")
+
+        if lod_chain_spec:
+            # Generate LOD chain
+            lod_objects, lod_metrics = generate_lod_chain(obj, lod_chain_spec)
+
+            # Delete the original object (LOD objects are copies)
+            bpy.data.objects.remove(obj, do_unlink=True)
+
+            # Export all LODs to GLB
+            export_glb_with_lods(output_path, lod_objects, export_tangents=export_tangents)
+
+            # Build combined metrics report
+            metrics = {
+                "lod_count": len(lod_objects),
+                "lod_levels": lod_metrics,
+            }
+
+            # Add summary from LOD0 (original)
+            if lod_metrics:
+                lod0 = lod_metrics[0]
+                metrics["vertex_count"] = lod0.get("vertex_count", 0)
+                metrics["face_count"] = lod0.get("face_count", 0)
+                metrics["triangle_count"] = lod0.get("triangle_count", 0)
+                metrics["bounding_box"] = lod0.get("bounding_box", {})
+                metrics["bounds_min"] = lod0.get("bounds_min", [0, 0, 0])
+                metrics["bounds_max"] = lod0.get("bounds_max", [0, 0, 0])
+                metrics["material_slot_count"] = lod0.get("material_slot_count", 0)
+        else:
+            # No LOD chain - export single mesh
+            metrics = compute_mesh_metrics(obj)
+            export_glb(output_path, export_tangents=export_tangents)
 
         duration_ms = int((time.time() - start_time) * 1000)
         write_report(report_path, ok=True, metrics=metrics,

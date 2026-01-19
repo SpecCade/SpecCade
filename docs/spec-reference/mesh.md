@@ -31,6 +31,7 @@ The `static_mesh.blender_primitives_v1` recipe builds meshes from Blender primit
 | `material_slots` | array | No | Material definitions (see materials below) |
 | `export` | object | No | GLB export settings (see export below) |
 | `constraints` | object | No | Validation constraints (see constraints below) |
+| `lod_chain` | object | No | LOD chain settings for multi-LOD export (see LOD chain below) |
 
 ### Primitives
 
@@ -333,6 +334,81 @@ Constraints define validation limits. Reports include metrics for verification.
 | `max_materials` | u32 | Maximum material count |
 | `max_vertices` | u32 | Maximum vertex count |
 
+### LOD Chain
+
+LOD (Level of Detail) chain settings enable generation of multiple mesh LODs at different triangle counts. Each LOD is exported as a separate mesh in the GLB file (e.g., "Mesh_LOD0", "Mesh_LOD1", etc.).
+
+```json
+"lod_chain": {
+  "levels": [
+    { "level": 0, "target_tris": null },
+    { "level": 1, "target_tris": 500 },
+    { "level": 2, "target_tris": 100 }
+  ],
+  "decimate_method": "collapse"
+}
+```
+
+#### LOD Chain Settings
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `levels` | array | Yes | List of LOD level specifications |
+| `decimate_method` | string | No | Decimation method: `collapse` (default) or `planar` |
+
+#### LOD Level Specification
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `level` | u8 | Yes | LOD level index (0 = highest detail) |
+| `target_tris` | u32 | No | Target triangle count. If `null`, mesh is not decimated (original) |
+
+#### Decimation Methods
+
+| Method | Description |
+|--------|-------------|
+| `collapse` | Edge collapse decimation (default). Best quality for organic meshes. |
+| `planar` | Planar decimation (dissolve). Good for architectural/mechanical meshes with flat surfaces. |
+
+#### LOD Generation Notes
+
+- LOD0 should typically have `target_tris: null` to preserve the original mesh
+- The decimator targets the specified triangle count but may not hit it exactly
+- UVs and materials are preserved across all LOD levels
+- Each LOD is exported as a separate mesh object in the GLB file
+
+#### Example with LODs
+
+```json
+{
+  "spec_version": 1,
+  "asset_id": "prop_with_lods",
+  "asset_type": "static_mesh",
+  "license": "CC0-1.0",
+  "seed": 7001,
+  "outputs": [
+    { "kind": "primary", "format": "glb", "path": "prop_with_lods.glb" }
+  ],
+  "recipe": {
+    "kind": "static_mesh.blender_primitives_v1",
+    "params": {
+      "base_primitive": "ico_sphere",
+      "dimensions": [1.0, 1.0, 1.0],
+      "modifiers": [
+        { "type": "subdivision", "levels": 2, "render_levels": 2 }
+      ],
+      "lod_chain": {
+        "levels": [
+          { "level": 0, "target_tris": null },
+          { "level": 1, "target_tris": 500 },
+          { "level": 2, "target_tris": 100 }
+        ]
+      }
+    }
+  }
+}
+```
+
 ## Example Spec
 
 ```json
@@ -399,6 +475,27 @@ Generation produces a report with mesh metrics:
 | `texel_density` | Average texel density (pixels per world unit at 1024x1024) |
 | `bounding_box` | Axis-aligned bounding box |
 | `material_slot_count` | Number of materials |
+
+### LOD-Specific Metrics
+
+When `lod_chain` is specified, the report includes additional per-LOD metrics:
+
+| Metric | Description |
+|--------|-------------|
+| `lod_count` | Total number of LOD levels generated |
+| `lod_levels` | Array of per-LOD metrics (see below) |
+
+Each entry in `lod_levels` includes:
+
+| Metric | Description |
+|--------|-------------|
+| `lod_level` | LOD level index (0, 1, 2, ...) |
+| `vertex_count` | Vertex count for this LOD |
+| `face_count` | Face count for this LOD |
+| `triangle_count` | Triangle count for this LOD |
+| `target_tris` | Target triangle count (if specified) |
+| `simplification_ratio` | Actual ratio vs original (1.0 = no reduction) |
+| `bounding_box` | Bounding box for this LOD |
 
 ## Post-Generation Verification
 

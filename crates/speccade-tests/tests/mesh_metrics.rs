@@ -247,3 +247,112 @@ fn test_empty_glb_returns_error() {
     let result = analyze_glb(&[]);
     assert!(result.is_err(), "Should fail on empty data");
 }
+
+// =============================================================================
+// LOD Chain Tests (MESH-004)
+// =============================================================================
+
+/// Test that a spec with LOD chain parses correctly.
+#[test]
+fn test_lod_chain_spec_parses() {
+    use speccade_spec::recipe::mesh::{
+        LodDecimateMethod, StaticMeshBlenderPrimitivesV1Params,
+    };
+
+    let json = r#"{
+        "base_primitive": "ico_sphere",
+        "dimensions": [1.0, 1.0, 1.0],
+        "lod_chain": {
+            "levels": [
+                { "level": 0, "target_tris": null },
+                { "level": 1, "target_tris": 500 },
+                { "level": 2, "target_tris": 100 }
+            ],
+            "decimate_method": "collapse"
+        }
+    }"#;
+
+    let params: StaticMeshBlenderPrimitivesV1Params = serde_json::from_str(json).unwrap();
+
+    assert!(params.lod_chain.is_some());
+    let lod_chain = params.lod_chain.unwrap();
+    assert_eq!(lod_chain.levels.len(), 3);
+    assert_eq!(lod_chain.levels[0].level, 0);
+    assert_eq!(lod_chain.levels[0].target_tris, None);
+    assert_eq!(lod_chain.levels[1].level, 1);
+    assert_eq!(lod_chain.levels[1].target_tris, Some(500));
+    assert_eq!(lod_chain.levels[2].level, 2);
+    assert_eq!(lod_chain.levels[2].target_tris, Some(100));
+    assert_eq!(lod_chain.decimate_method, LodDecimateMethod::Collapse);
+}
+
+/// Test that LOD chain with planar decimate parses correctly.
+#[test]
+fn test_lod_chain_planar_decimate() {
+    use speccade_spec::recipe::mesh::{LodChainSettings, LodDecimateMethod};
+
+    let json = r#"{
+        "levels": [{ "level": 0 }, { "level": 1, "target_tris": 200 }],
+        "decimate_method": "planar"
+    }"#;
+
+    let chain: LodChainSettings = serde_json::from_str(json).unwrap();
+    assert_eq!(chain.decimate_method, LodDecimateMethod::Planar);
+}
+
+/// Test that LOD chain defaults decimate_method to collapse.
+#[test]
+fn test_lod_chain_default_decimate_method() {
+    use speccade_spec::recipe::mesh::{LodChainSettings, LodDecimateMethod};
+
+    let json = r#"{
+        "levels": [{ "level": 0 }]
+    }"#;
+
+    let chain: LodChainSettings = serde_json::from_str(json).unwrap();
+    assert_eq!(chain.decimate_method, LodDecimateMethod::Collapse);
+}
+
+/// Test that a complete spec with LOD chain validates.
+#[test]
+fn test_lod_chain_full_spec_validates() {
+    use speccade_spec::validation::validate_spec;
+    use speccade_spec::Spec;
+
+    let spec_json = r#"{
+        "spec_version": 1,
+        "asset_id": "mesh-with-lods",
+        "asset_type": "static_mesh",
+        "license": "CC0-1.0",
+        "seed": 12345,
+        "outputs": [
+            { "kind": "primary", "format": "glb", "path": "mesh_with_lods.glb" }
+        ],
+        "recipe": {
+            "kind": "static_mesh.blender_primitives_v1",
+            "params": {
+                "base_primitive": "cube",
+                "dimensions": [1.0, 1.0, 1.0],
+                "modifiers": [
+                    { "type": "subdivision", "levels": 2, "render_levels": 2 }
+                ],
+                "lod_chain": {
+                    "levels": [
+                        { "level": 0, "target_tris": null },
+                        { "level": 1, "target_tris": 500 },
+                        { "level": 2, "target_tris": 100 }
+                    ]
+                }
+            }
+        }
+    }"#;
+
+    let spec: Spec = serde_json::from_str(spec_json).unwrap();
+    let result = validate_spec(&spec);
+
+    assert!(
+        result.errors.is_empty(),
+        "LOD chain spec should validate without errors: {:?}",
+        result.errors
+    );
+}

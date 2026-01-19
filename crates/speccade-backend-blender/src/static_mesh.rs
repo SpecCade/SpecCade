@@ -177,6 +177,7 @@ mod tests {
                 max_materials: Some(4),
                 max_vertices: None,
             }),
+            lod_chain: None,
         }
     }
 
