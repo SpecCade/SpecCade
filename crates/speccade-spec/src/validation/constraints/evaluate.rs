@@ -78,6 +78,27 @@ impl Constraint {
             Constraint::MaxBoneCount { value } => {
                 evaluate_max_u32(self, metrics.bone_count, *value, "bone count", "bone_count")
             }
+            Constraint::MaxBoneInfluences { value } => evaluate_max_u32(
+                self,
+                metrics.max_bone_influences,
+                *value,
+                "bone influences",
+                "max_bone_influences",
+            ),
+            Constraint::MaxUnweightedVertices { value } => evaluate_max_u32(
+                self,
+                metrics.unweighted_vertex_count,
+                *value,
+                "unweighted vertices",
+                "unweighted_vertex_count",
+            ),
+            Constraint::MinWeightNormalization { value } => evaluate_min_f64_percentage(
+                self,
+                metrics.weight_normalization_percentage,
+                *value,
+                "weight normalization",
+                "weight_normalization_percentage",
+            ),
         }
     }
 }

@@ -94,9 +94,10 @@ Reference: `docs/rfcs/RFC-0010-mesh-llm-verification.md`
   - Implemented: `speccade verify` command with 10 constraint types; JSON constraint files; pass/fail results with actual values.
 - [ ] `MESHVER-003` Decide if/when VLM integration is supported (and how it is configured).
   - Deliverable: explicit policy: off by default; user-provided credentials; what gets uploaded (renders only).
-- [ ] `MESHVER-004` Add skeletal mesh deformation/weight verification probes (result-based, not spec-based).
+- [x] `MESHVER-004` Add skeletal mesh deformation/weight verification probes (result-based, not spec-based). **Done: 2026-01-19**
   - Deliverable: additional `speccade verify` constraints and/or Blender-side probes for max influences, unweighted verts, and deformation sanity poses.
   - Touch points: `blender/entrypoint.py`, `crates/speccade-backend-blender/src/metrics.rs`, `crates/speccade-spec/src/validation/constraints/`.
+  - Implemented: Added 3 new constraint types (MaxBoneInfluences, MaxUnweightedVertices, MinWeightNormalization), 2 new OutputMetrics fields (unweighted_vertex_count, weight_normalization_percentage), 13 new tests.
 - [ ] `MESHVER-005` Add animation motion verification (post-IK/post-bake) for joint direction + constraint enforcement.
   - Deliverable: machine-readable motion validation section in reports (hinge axis/sign calibration, range violations, knee/elbow pops, root motion sanity).
   - Touch points: `blender/entrypoint.py`, `crates/speccade-backend-blender/src/metrics.rs`, `crates/speccade-spec/src/validation/constraints/`.

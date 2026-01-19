@@ -120,6 +120,12 @@ pub struct OutputMetrics {
     /// Maximum number of bone influences per vertex.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub max_bone_influences: Option<u32>,
+    /// Number of unweighted vertices (vertices with zero total skin weight).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub unweighted_vertex_count: Option<u32>,
+    /// Percentage of vertices with properly normalized weights (0.0-100.0).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub weight_normalization_percentage: Option<f64>,
 
     // ========== Material metrics ==========
     /// Number of material slots.
@@ -156,6 +162,8 @@ impl OutputMetrics {
             bounds_max: None,
             bone_count: None,
             max_bone_influences: None,
+            unweighted_vertex_count: None,
+            weight_normalization_percentage: None,
             material_slot_count: None,
             animation_frame_count: None,
             animation_duration_seconds: None,
@@ -261,6 +269,18 @@ impl OutputMetrics {
     /// Sets the maximum bone influences.
     pub fn with_max_bone_influences(mut self, max: u32) -> Self {
         self.max_bone_influences = Some(max);
+        self
+    }
+
+    /// Sets the unweighted vertex count.
+    pub fn with_unweighted_vertex_count(mut self, count: u32) -> Self {
+        self.unweighted_vertex_count = Some(count);
+        self
+    }
+
+    /// Sets the weight normalization percentage.
+    pub fn with_weight_normalization_percentage(mut self, percentage: f64) -> Self {
+        self.weight_normalization_percentage = Some(percentage);
         self
     }
 

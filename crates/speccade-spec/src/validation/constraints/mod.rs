@@ -66,6 +66,21 @@ pub enum Constraint {
         /// The maximum number of bones allowed.
         value: u32,
     },
+    /// Maximum bone influences per vertex.
+    MaxBoneInfluences {
+        /// The maximum number of bone influences allowed per vertex.
+        value: u32,
+    },
+    /// Maximum number of unweighted vertices (vertices with zero total skin weight).
+    MaxUnweightedVertices {
+        /// The maximum number of unweighted vertices allowed.
+        value: u32,
+    },
+    /// Minimum percentage of vertices with normalized weights (weights sum to 1.0).
+    MinWeightNormalization {
+        /// The minimum percentage of vertices that must have normalized weights (0.0-100.0).
+        value: f64,
+    },
 }
 
 impl fmt::Display for Constraint {
@@ -85,6 +100,15 @@ impl fmt::Display for Constraint {
             }
             Constraint::MaxTriangleCount { value } => write!(f, "max_triangle_count({})", value),
             Constraint::MaxBoneCount { value } => write!(f, "max_bone_count({})", value),
+            Constraint::MaxBoneInfluences { value } => {
+                write!(f, "max_bone_influences({})", value)
+            }
+            Constraint::MaxUnweightedVertices { value } => {
+                write!(f, "max_unweighted_vertices({})", value)
+            }
+            Constraint::MinWeightNormalization { value } => {
+                write!(f, "min_weight_normalization({})", value)
+            }
         }
     }
 }

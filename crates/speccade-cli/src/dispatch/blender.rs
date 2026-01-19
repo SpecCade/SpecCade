@@ -51,6 +51,8 @@ pub(super) fn generate_blender_static_mesh(
             bounds_max: result.metrics.bounds_max,
             bone_count: None,
             max_bone_influences: None,
+            unweighted_vertex_count: None,
+            weight_normalization_percentage: None,
             material_slot_count: result.metrics.material_slot_count,
             animation_frame_count: None,
             animation_duration_seconds: None,
@@ -112,6 +114,8 @@ pub(super) fn generate_blender_skeletal_mesh(
             bounds_max: result.metrics.bounds_max,
             bone_count: result.metrics.bone_count,
             max_bone_influences: result.metrics.max_bone_influences,
+            unweighted_vertex_count: None, // TODO: Add to BlenderMetrics when Python reports this
+            weight_normalization_percentage: None, // TODO: Add to BlenderMetrics when Python reports this
             material_slot_count: result.metrics.material_slot_count,
             animation_frame_count: None,
             animation_duration_seconds: None,
@@ -165,6 +169,8 @@ pub(super) fn generate_blender_animation(
         bounds_max: None,
         bone_count: result.metrics.bone_count,
         max_bone_influences: None,
+        unweighted_vertex_count: None,
+        weight_normalization_percentage: None,
         material_slot_count: None,
         animation_frame_count: result.metrics.animation_frame_count,
         animation_duration_seconds: result.metrics.animation_duration_seconds.map(|d| d as f32),
