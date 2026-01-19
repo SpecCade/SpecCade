@@ -2,7 +2,7 @@
 
 use serde::{Deserialize, Serialize};
 
-use super::common::{MaterialSlot, MeshConstraints, MeshExportSettings, NormalsSettings};
+use super::common::{CollisionMeshSettings, MaterialSlot, MeshConstraints, MeshExportSettings, NormalsSettings};
 use super::modifiers::{MeshModifier, UvProjection};
 use super::primitives::MeshPrimitive;
 
@@ -74,6 +74,10 @@ pub struct StaticMeshBlenderPrimitivesV1Params {
     /// When specified, generates multiple mesh LODs using decimation.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub lod_chain: Option<LodChainSettings>,
+    /// Collision mesh generation settings.
+    /// When specified, generates a collision mesh alongside the primary mesh.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub collision_mesh: Option<CollisionMeshSettings>,
 }
 
 #[cfg(test)]
@@ -98,6 +102,7 @@ mod tests {
             export: None,
             constraints: None,
             lod_chain: None,
+            collision_mesh: None,
         };
 
         let json = serde_json::to_string(&params).unwrap();
@@ -120,6 +125,7 @@ mod tests {
             export: None,
             constraints: None,
             lod_chain: None,
+            collision_mesh: None,
         };
 
         let json = serde_json::to_string(&params).unwrap();
@@ -148,6 +154,7 @@ mod tests {
             export: None,
             constraints: None,
             lod_chain: None,
+            collision_mesh: None,
         };
 
         let json = serde_json::to_string(&params).unwrap();
@@ -177,6 +184,7 @@ mod tests {
             export: None,
             constraints: None,
             lod_chain: None,
+            collision_mesh: None,
         };
 
         let json = serde_json::to_string(&params).unwrap();
@@ -203,6 +211,7 @@ mod tests {
             export: None,
             constraints: None,
             lod_chain: None,
+            collision_mesh: None,
         };
 
         let json = serde_json::to_string(&params).unwrap();
@@ -233,6 +242,7 @@ mod tests {
             export: None,
             constraints: None,
             lod_chain: None,
+            collision_mesh: None,
         };
 
         let json = serde_json::to_string(&params).unwrap();
@@ -261,6 +271,7 @@ mod tests {
             export: None,
             constraints: None,
             lod_chain: None,
+            collision_mesh: None,
         };
 
         let json = serde_json::to_string(&params).unwrap();
@@ -291,6 +302,7 @@ mod tests {
             }),
             constraints: None,
             lod_chain: None,
+            collision_mesh: None,
         };
 
         let json = serde_json::to_string(&params).unwrap();
@@ -342,6 +354,7 @@ mod tests {
                 max_vertices: Some(2000),
             }),
             lod_chain: None,
+            collision_mesh: None,
         };
 
         let json = serde_json::to_string(&params).unwrap();
@@ -497,6 +510,7 @@ mod tests {
                 ],
                 decimate_method: LodDecimateMethod::Collapse,
             }),
+            collision_mesh: None,
         };
 
         let json = serde_json::to_string(&params).unwrap();
@@ -546,5 +560,153 @@ mod tests {
         let json = r#"{ "level": 0, "unknown_field": true }"#;
         let result: Result<LodLevel, _> = serde_json::from_str(json);
         assert!(result.is_err());
+    }
+
+    // ========================================================================
+    // Collision Mesh Integration Tests
+    // ========================================================================
+
+    #[test]
+    fn test_mesh_params_with_collision_mesh_convex_hull() {
+        use super::super::common::{CollisionMeshSettings, CollisionType};
+
+        let params = StaticMeshBlenderPrimitivesV1Params {
+            base_primitive: MeshPrimitive::Cube,
+            dimensions: [1.0, 1.0, 1.0],
+            modifiers: vec![],
+            uv_projection: None,
+            normals: None,
+            material_slots: vec![],
+            export: None,
+            constraints: None,
+            lod_chain: None,
+            collision_mesh: Some(CollisionMeshSettings {
+                collision_type: CollisionType::ConvexHull,
+                target_faces: None,
+                output_suffix: "_col".to_string(),
+            }),
+        };
+
+        let json = serde_json::to_string(&params).unwrap();
+        assert!(json.contains("collision_mesh"));
+        assert!(json.contains("convex_hull"));
+
+        let parsed: StaticMeshBlenderPrimitivesV1Params = serde_json::from_str(&json).unwrap();
+        assert!(parsed.collision_mesh.is_some());
+        let collision = parsed.collision_mesh.unwrap();
+        assert_eq!(collision.collision_type, CollisionType::ConvexHull);
+        assert_eq!(collision.output_suffix, "_col");
+    }
+
+    #[test]
+    fn test_mesh_params_with_collision_mesh_simplified() {
+        use super::super::common::{CollisionMeshSettings, CollisionType};
+
+        let params = StaticMeshBlenderPrimitivesV1Params {
+            base_primitive: MeshPrimitive::IcoSphere,
+            dimensions: [1.0, 1.0, 1.0],
+            modifiers: vec![MeshModifier::Subdivision {
+                levels: 2,
+                render_levels: 2,
+            }],
+            uv_projection: None,
+            normals: None,
+            material_slots: vec![],
+            export: None,
+            constraints: None,
+            lod_chain: None,
+            collision_mesh: Some(CollisionMeshSettings {
+                collision_type: CollisionType::SimplifiedMesh,
+                target_faces: Some(64),
+                output_suffix: "_col".to_string(),
+            }),
+        };
+
+        let json = serde_json::to_string(&params).unwrap();
+        assert!(json.contains("collision_mesh"));
+        assert!(json.contains("simplified_mesh"));
+        assert!(json.contains("\"target_faces\":64"));
+
+        let parsed: StaticMeshBlenderPrimitivesV1Params = serde_json::from_str(&json).unwrap();
+        assert!(parsed.collision_mesh.is_some());
+        let collision = parsed.collision_mesh.unwrap();
+        assert_eq!(collision.collision_type, CollisionType::SimplifiedMesh);
+        assert_eq!(collision.target_faces, Some(64));
+    }
+
+    #[test]
+    fn test_mesh_params_with_collision_mesh_box() {
+        use super::super::common::{CollisionMeshSettings, CollisionType};
+
+        let params = StaticMeshBlenderPrimitivesV1Params {
+            base_primitive: MeshPrimitive::Cylinder,
+            dimensions: [1.0, 1.0, 2.0],
+            modifiers: vec![],
+            uv_projection: None,
+            normals: None,
+            material_slots: vec![],
+            export: None,
+            constraints: None,
+            lod_chain: None,
+            collision_mesh: Some(CollisionMeshSettings {
+                collision_type: CollisionType::Box,
+                target_faces: None,
+                output_suffix: "_box".to_string(),
+            }),
+        };
+
+        let json = serde_json::to_string(&params).unwrap();
+        assert!(json.contains("\"collision_type\":\"box\""));
+        assert!(json.contains("\"output_suffix\":\"_box\""));
+
+        let parsed: StaticMeshBlenderPrimitivesV1Params = serde_json::from_str(&json).unwrap();
+        assert!(parsed.collision_mesh.is_some());
+        let collision = parsed.collision_mesh.unwrap();
+        assert_eq!(collision.collision_type, CollisionType::Box);
+    }
+
+    #[test]
+    fn test_mesh_params_with_lod_and_collision() {
+        use super::super::common::{CollisionMeshSettings, CollisionType};
+
+        let params = StaticMeshBlenderPrimitivesV1Params {
+            base_primitive: MeshPrimitive::IcoSphere,
+            dimensions: [1.0, 1.0, 1.0],
+            modifiers: vec![MeshModifier::Subdivision {
+                levels: 2,
+                render_levels: 2,
+            }],
+            uv_projection: None,
+            normals: None,
+            material_slots: vec![],
+            export: None,
+            constraints: None,
+            lod_chain: Some(LodChainSettings {
+                levels: vec![
+                    LodLevel {
+                        level: 0,
+                        target_tris: None,
+                    },
+                    LodLevel {
+                        level: 1,
+                        target_tris: Some(500),
+                    },
+                ],
+                decimate_method: LodDecimateMethod::Collapse,
+            }),
+            collision_mesh: Some(CollisionMeshSettings {
+                collision_type: CollisionType::ConvexHull,
+                target_faces: None,
+                output_suffix: "_col".to_string(),
+            }),
+        };
+
+        let json = serde_json::to_string(&params).unwrap();
+        assert!(json.contains("lod_chain"));
+        assert!(json.contains("collision_mesh"));
+
+        let parsed: StaticMeshBlenderPrimitivesV1Params = serde_json::from_str(&json).unwrap();
+        assert!(parsed.lod_chain.is_some());
+        assert!(parsed.collision_mesh.is_some());
     }
 }

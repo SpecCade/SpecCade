@@ -178,6 +178,7 @@ mod tests {
                 max_vertices: None,
             }),
             lod_chain: None,
+            collision_mesh: None,
         }
     }
 

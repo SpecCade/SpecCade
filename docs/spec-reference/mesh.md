@@ -32,6 +32,7 @@ The `static_mesh.blender_primitives_v1` recipe builds meshes from Blender primit
 | `export` | object | No | GLB export settings (see export below) |
 | `constraints` | object | No | Validation constraints (see constraints below) |
 | `lod_chain` | object | No | LOD chain settings for multi-LOD export (see LOD chain below) |
+| `collision_mesh` | object | No | Collision mesh generation settings (see collision mesh below) |
 
 ### Primitives
 
@@ -409,6 +410,104 @@ LOD (Level of Detail) chain settings enable generation of multiple mesh LODs at 
 }
 ```
 
+### Collision Mesh
+
+Collision mesh settings enable generation of simplified collision geometry alongside the primary mesh. The collision mesh is exported as a separate GLB file with a configurable suffix.
+
+```json
+"collision_mesh": {
+  "collision_type": "convex_hull",
+  "output_suffix": "_col"
+}
+```
+
+#### Collision Mesh Settings
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `collision_type` | string | `convex_hull` | Type of collision mesh to generate (see types below) |
+| `target_faces` | u32 | - | Target face count for simplified mesh type only |
+| `output_suffix` | string | `_col` | Suffix appended to output filename for collision mesh |
+
+#### Collision Types
+
+| Type | Description |
+|------|-------------|
+| `convex_hull` | Convex hull collision (default). Fast collision detection, wraps around the mesh. Good for most props. |
+| `simplified_mesh` | Simplified mesh collision using decimation. Preserves general shape with reduced triangles. Good for complex concave objects. |
+| `box` | Axis-aligned bounding box collision. Fastest collision detection but least accurate. Good for rectangular objects. |
+
+#### Collision Mesh Examples
+
+**Convex hull (default):**
+
+```json
+"collision_mesh": {
+  "collision_type": "convex_hull",
+  "output_suffix": "_col"
+}
+```
+
+**Simplified mesh with target face count:**
+
+```json
+"collision_mesh": {
+  "collision_type": "simplified_mesh",
+  "target_faces": 64,
+  "output_suffix": "_col"
+}
+```
+
+**Box collision:**
+
+```json
+"collision_mesh": {
+  "collision_type": "box",
+  "output_suffix": "_box"
+}
+```
+
+#### Example with Collision Mesh
+
+```json
+{
+  "spec_version": 1,
+  "asset_id": "prop_with_collision",
+  "asset_type": "static_mesh",
+  "license": "CC0-1.0",
+  "seed": 7002,
+  "outputs": [
+    { "kind": "primary", "format": "glb", "path": "prop.glb" }
+  ],
+  "recipe": {
+    "kind": "static_mesh.blender_primitives_v1",
+    "params": {
+      "base_primitive": "ico_sphere",
+      "dimensions": [1.0, 1.0, 1.0],
+      "modifiers": [
+        { "type": "subdivision", "levels": 2, "render_levels": 2 }
+      ],
+      "collision_mesh": {
+        "collision_type": "convex_hull",
+        "output_suffix": "_col"
+      }
+    }
+  }
+}
+```
+
+This will generate two files:
+- `prop.glb` - The primary mesh (high detail)
+- `prop_col.glb` - The collision mesh (convex hull)
+
+#### Collision Mesh Notes
+
+- The collision mesh is generated from the primary mesh before LOD chain processing
+- Materials and UVs are not included in collision mesh exports
+- The collision mesh filename uses the primary output path with the configured suffix
+- Box collision is the fastest but least accurate; convex hull provides a good balance
+- For complex concave objects, use `simplified_mesh` with an appropriate `target_faces` count
+
 ## Example Spec
 
 ```json
@@ -496,6 +595,27 @@ Each entry in `lod_levels` includes:
 | `target_tris` | Target triangle count (if specified) |
 | `simplification_ratio` | Actual ratio vs original (1.0 = no reduction) |
 | `bounding_box` | Bounding box for this LOD |
+
+### Collision Mesh Metrics
+
+When `collision_mesh` is specified, the report includes collision mesh metrics:
+
+| Metric | Description |
+|--------|-------------|
+| `collision_mesh_path` | Filename of the exported collision mesh |
+| `collision_mesh` | Object containing collision mesh metrics (see below) |
+
+The `collision_mesh` object includes:
+
+| Metric | Description |
+|--------|-------------|
+| `collision_type` | Type of collision mesh generated |
+| `output_suffix` | Suffix used for the collision mesh filename |
+| `vertex_count` | Vertex count of the collision mesh |
+| `face_count` | Face count of the collision mesh |
+| `triangle_count` | Triangle count of the collision mesh |
+| `target_faces` | Target face count (for simplified_mesh type only) |
+| `bounding_box` | Bounding box of the collision mesh |
 
 ## Post-Generation Verification
 

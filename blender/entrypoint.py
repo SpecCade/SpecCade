@@ -3743,6 +3743,284 @@ def generate_lod_chain(
     return lod_objects, lod_metrics
 
 
+# =============================================================================
+# Collision Mesh Generation
+# =============================================================================
+
+def generate_collision_mesh(
+    source_obj: 'bpy.types.Object',
+    collision_spec: Dict
+) -> Tuple['bpy.types.Object', Dict[str, Any]]:
+    """
+    Generate a collision mesh from the source object.
+
+    Args:
+        source_obj: The source mesh object.
+        collision_spec: Collision mesh specification with:
+            - collision_type: 'convex_hull', 'simplified_mesh', or 'box'
+            - target_faces: Target face count for simplified mesh
+            - output_suffix: Suffix for collision mesh name
+
+    Returns:
+        Tuple of (collision_mesh_object, collision_metrics).
+    """
+    collision_type = collision_spec.get("collision_type", "convex_hull")
+    target_faces = collision_spec.get("target_faces")
+    output_suffix = collision_spec.get("output_suffix", "_col")
+
+    # Create a copy of the source mesh for collision
+    bpy.ops.object.select_all(action='DESELECT')
+    source_obj.select_set(True)
+    bpy.context.view_layer.objects.active = source_obj
+    bpy.ops.object.duplicate(linked=False)
+    col_obj = bpy.context.active_object
+    col_obj.name = f"{source_obj.name}{output_suffix}"
+
+    bpy.context.view_layer.objects.active = col_obj
+
+    if collision_type == "convex_hull":
+        # Generate convex hull collision
+        _generate_convex_hull(col_obj)
+    elif collision_type == "simplified_mesh":
+        # Generate simplified mesh collision
+        _generate_simplified_collision(col_obj, target_faces)
+    elif collision_type == "box":
+        # Generate box collision from bounding box
+        _generate_box_collision(col_obj)
+    else:
+        print(f"Warning: Unknown collision type '{collision_type}', defaulting to convex_hull")
+        _generate_convex_hull(col_obj)
+
+    # Compute metrics for the collision mesh
+    metrics = compute_collision_mesh_metrics(col_obj, collision_type)
+    metrics["collision_type"] = collision_type
+    metrics["output_suffix"] = output_suffix
+    if target_faces is not None:
+        metrics["target_faces"] = target_faces
+
+    return col_obj, metrics
+
+
+def _generate_convex_hull(obj: 'bpy.types.Object') -> None:
+    """
+    Generate a convex hull from the mesh.
+
+    Args:
+        obj: The mesh object to convert to convex hull.
+    """
+    bpy.context.view_layer.objects.active = obj
+    bpy.ops.object.mode_set(mode='EDIT')
+    bpy.ops.mesh.select_all(action='SELECT')
+
+    # Generate convex hull
+    bpy.ops.mesh.convex_hull()
+
+    bpy.ops.object.mode_set(mode='OBJECT')
+
+
+def _generate_simplified_collision(obj: 'bpy.types.Object', target_faces: Optional[int]) -> None:
+    """
+    Generate a simplified collision mesh using decimation.
+
+    Args:
+        obj: The mesh object to simplify.
+        target_faces: Target face count (if None, uses default ratio of 0.1).
+    """
+    bpy.context.view_layer.objects.active = obj
+
+    # Get current face count
+    depsgraph = bpy.context.evaluated_depsgraph_get()
+    obj_eval = obj.evaluated_get(depsgraph)
+    mesh = obj_eval.to_mesh()
+    current_faces = len(mesh.polygons)
+    obj_eval.to_mesh_clear()
+
+    # Calculate ratio
+    if target_faces is not None and current_faces > 0:
+        ratio = min(1.0, target_faces / current_faces)
+    else:
+        ratio = 0.1  # Default: reduce to 10%
+
+    # Add and apply decimate modifier
+    mod = obj.modifiers.new(name="Collision_Decimate", type='DECIMATE')
+    mod.decimate_type = 'COLLAPSE'
+    mod.ratio = ratio
+
+    bpy.ops.object.modifier_apply(modifier=mod.name)
+
+
+def _generate_box_collision(obj: 'bpy.types.Object') -> None:
+    """
+    Generate a box collision mesh from the bounding box.
+
+    Args:
+        obj: The mesh object to replace with a box collision.
+    """
+    # Get world-space bounding box
+    depsgraph = bpy.context.evaluated_depsgraph_get()
+    obj_eval = obj.evaluated_get(depsgraph)
+    mesh_eval = obj_eval.to_mesh()
+
+    bbox_min = [float('inf')] * 3
+    bbox_max = [float('-inf')] * 3
+    for v in mesh_eval.vertices:
+        co = obj.matrix_world @ v.co
+        for i in range(3):
+            bbox_min[i] = min(bbox_min[i], co[i])
+            bbox_max[i] = max(bbox_max[i], co[i])
+
+    obj_eval.to_mesh_clear()
+
+    # Calculate box dimensions and center
+    dimensions = [bbox_max[i] - bbox_min[i] for i in range(3)]
+    center = [(bbox_max[i] + bbox_min[i]) / 2.0 for i in range(3)]
+
+    # Remove all geometry from the object
+    bpy.context.view_layer.objects.active = obj
+    bpy.ops.object.mode_set(mode='EDIT')
+    bpy.ops.mesh.select_all(action='SELECT')
+    bpy.ops.mesh.delete(type='VERT')
+    bpy.ops.object.mode_set(mode='OBJECT')
+
+    # Create a new cube at the correct location
+    # We'll use bmesh to add a box to the existing mesh
+    mesh = obj.data
+    bm = bmesh.new()
+
+    # Create box vertices
+    half_dims = [d / 2.0 for d in dimensions]
+    verts = []
+    for x_sign in [-1, 1]:
+        for y_sign in [-1, 1]:
+            for z_sign in [-1, 1]:
+                v = bm.verts.new((
+                    center[0] + x_sign * half_dims[0],
+                    center[1] + y_sign * half_dims[1],
+                    center[2] + z_sign * half_dims[2]
+                ))
+                verts.append(v)
+
+    # Ensure vertex lookup table is updated
+    bm.verts.ensure_lookup_table()
+
+    # Create faces (in local space since we're adding directly to mesh data)
+    # Vertex indices: 0=(-,-,-), 1=(-,-,+), 2=(-,+,-), 3=(-,+,+), 4=(+,-,-), 5=(+,-,+), 6=(+,+,-), 7=(+,+,+)
+    # Transform to local coordinates
+    inv_matrix = obj.matrix_world.inverted()
+    for v in bm.verts:
+        v.co = inv_matrix @ v.co
+
+    # Define box faces
+    face_indices = [
+        [0, 1, 3, 2],  # -X face
+        [4, 6, 7, 5],  # +X face
+        [0, 4, 5, 1],  # -Y face
+        [2, 3, 7, 6],  # +Y face
+        [0, 2, 6, 4],  # -Z face
+        [1, 5, 7, 3],  # +Z face
+    ]
+
+    for indices in face_indices:
+        try:
+            bm.faces.new([bm.verts[i] for i in indices])
+        except ValueError:
+            # Face might already exist or be degenerate
+            pass
+
+    bm.to_mesh(mesh)
+    bm.free()
+
+    # Recalculate normals
+    bpy.context.view_layer.objects.active = obj
+    bpy.ops.object.mode_set(mode='EDIT')
+    bpy.ops.mesh.select_all(action='SELECT')
+    bpy.ops.mesh.normals_make_consistent(inside=False)
+    bpy.ops.object.mode_set(mode='OBJECT')
+
+
+def compute_collision_mesh_metrics(obj: 'bpy.types.Object', collision_type: str) -> Dict[str, Any]:
+    """
+    Compute metrics for a collision mesh.
+
+    Args:
+        obj: The collision mesh object.
+        collision_type: Type of collision mesh ('convex_hull', 'simplified_mesh', 'box').
+
+    Returns:
+        Dictionary of collision mesh metrics.
+    """
+    depsgraph = bpy.context.evaluated_depsgraph_get()
+    obj_eval = obj.evaluated_get(depsgraph)
+    mesh = obj_eval.to_mesh()
+
+    vertex_count = len(mesh.vertices)
+    face_count = len(mesh.polygons)
+
+    # Count triangles
+    triangle_count = 0
+    for poly in mesh.polygons:
+        vert_count = len(poly.vertices)
+        if vert_count == 3:
+            triangle_count += 1
+        elif vert_count == 4:
+            triangle_count += 2
+        else:
+            triangle_count += vert_count - 2
+
+    # Bounding box
+    bbox_min = [float('inf')] * 3
+    bbox_max = [float('-inf')] * 3
+    for v in mesh.vertices:
+        co = obj.matrix_world @ v.co
+        for i in range(3):
+            bbox_min[i] = min(bbox_min[i], co[i])
+            bbox_max[i] = max(bbox_max[i], co[i])
+
+    obj_eval.to_mesh_clear()
+
+    return {
+        "vertex_count": vertex_count,
+        "face_count": face_count,
+        "triangle_count": triangle_count,
+        "bounding_box": {
+            "min": bbox_min,
+            "max": bbox_max
+        }
+    }
+
+
+def export_collision_mesh(
+    collision_obj: 'bpy.types.Object',
+    output_path: Path,
+    export_tangents: bool = False
+) -> None:
+    """
+    Export a collision mesh to a GLB file.
+
+    Args:
+        collision_obj: The collision mesh object.
+        output_path: Output GLB file path.
+        export_tangents: Whether to export tangents.
+    """
+    bpy.ops.object.select_all(action='DESELECT')
+    collision_obj.select_set(True)
+    bpy.context.view_layer.objects.active = collision_obj
+
+    export_settings = {
+        'filepath': str(output_path),
+        'export_format': 'GLB',
+        'export_apply': True,
+        'export_texcoords': False,  # Collision meshes don't need UVs
+        'export_normals': True,
+        'export_colors': False,
+        'export_tangents': export_tangents,
+        'export_animations': False,
+        'use_selection': True,
+    }
+
+    bpy.ops.export_scene.gltf(**export_settings)
+
+
 def export_glb_with_lods(
     output_path: Path,
     lod_objects: List['bpy.types.Object'],
@@ -3839,8 +4117,20 @@ def handle_static_mesh(spec: Dict, out_root: Path, report_path: Path) -> None:
         # Export with tangents if requested
         export_tangents = export_settings.get("tangents", False)
 
-        # Check for LOD chain
+        # Check for LOD chain and collision mesh
         lod_chain_spec = params.get("lod_chain")
+        collision_mesh_spec = params.get("collision_mesh")
+
+        # Generate collision mesh first (before LOD chain modifies the object)
+        collision_obj = None
+        collision_metrics = None
+        collision_output_path = None
+        if collision_mesh_spec:
+            collision_obj, collision_metrics = generate_collision_mesh(obj, collision_mesh_spec)
+            # Determine collision mesh output path
+            output_suffix = collision_mesh_spec.get("output_suffix", "_col")
+            collision_filename = output_path.stem + output_suffix + output_path.suffix
+            collision_output_path = output_path.parent / collision_filename
 
         if lod_chain_spec:
             # Generate LOD chain
@@ -3872,6 +4162,15 @@ def handle_static_mesh(spec: Dict, out_root: Path, report_path: Path) -> None:
             # No LOD chain - export single mesh
             metrics = compute_mesh_metrics(obj)
             export_glb(output_path, export_tangents=export_tangents)
+
+        # Export collision mesh if generated
+        if collision_obj and collision_output_path:
+            export_collision_mesh(collision_obj, collision_output_path, export_tangents=False)
+            # Add collision mesh metrics to report
+            metrics["collision_mesh"] = collision_metrics
+            metrics["collision_mesh_path"] = str(collision_output_path.name)
+            # Clean up collision object
+            bpy.data.objects.remove(collision_obj, do_unlink=True)
 
         duration_ms = int((time.time() - start_time) * 1000)
         write_report(report_path, ok=True, metrics=metrics,

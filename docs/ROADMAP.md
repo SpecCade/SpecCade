@@ -220,7 +220,8 @@ Migrated from `docs/FUTURE_GENERATORS.md` (now deprecated).
 - [x] `MESH-003` Add normals automation presets (auto_smooth, weighted normals, hard-edge-by-angle). Done: 2026-01-20
 - [x] `MESH-004` Add deterministic LOD generation (decimate to target tri counts) + validate bounds/tri metrics. **Done: 2026-01-20**
   - Implemented: `lod_chain` field with `LodLevel` (level, target_tris) and `LodDecimateMethod` (collapse/planar); Blender LOD generation via Decimate modifier; per-LOD metrics in reports (vertex_count, face_count, triangle_count, simplification_ratio, bounds).
-- [ ] `MESH-005` Add collision mesh generation outputs (convex hull / simplified mesh).
+- [x] `MESH-005` Add collision mesh generation outputs (convex hull / simplified mesh). **Done: 2026-01-20**
+  - Implemented: `CollisionMeshSettings` with `CollisionType` enum (convex_hull/simplified_mesh/box); `collision_mesh` field on `StaticMeshBlenderPrimitivesV1Params`; Blender collision generation via convex_hull operator, Decimate modifier, or box generation; collision mesh metrics in reports.
 - [ ] `MESH-006` Add navmesh hints/metadata outputs (walkable surfaces, slope/stair tagging).
 - [ ] `MESH-007` Add a baking suite (high->low normal/AO/curvature, vertex colors, dilation).
 - [ ] `MESH-008` Add a render-to-sprite bridge (render `static_mesh` with lighting preset -> `sprite.sheet_v1`).

@@ -111,6 +111,48 @@ pub struct MeshConstraints {
     pub max_vertices: Option<u32>,
 }
 
+/// Collision mesh type.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[serde(rename_all = "snake_case")]
+pub enum CollisionType {
+    /// Convex hull collision (fast, wraps around the mesh).
+    #[default]
+    ConvexHull,
+    /// Simplified mesh collision (preserves general shape, reduced triangles).
+    SimplifiedMesh,
+    /// Bounding box collision (axis-aligned box).
+    Box,
+}
+
+/// Collision mesh generation settings.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct CollisionMeshSettings {
+    /// Type of collision mesh to generate.
+    #[serde(default)]
+    pub collision_type: CollisionType,
+    /// Target face count for simplified mesh (only used with SimplifiedMesh type).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub target_faces: Option<u32>,
+    /// Filename suffix for collision mesh (default: "_col").
+    #[serde(default = "default_collision_suffix")]
+    pub output_suffix: String,
+}
+
+fn default_collision_suffix() -> String {
+    "_col".to_string()
+}
+
+impl Default for CollisionMeshSettings {
+    fn default() -> Self {
+        Self {
+            collision_type: CollisionType::ConvexHull,
+            target_faces: None,
+            output_suffix: default_collision_suffix(),
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -427,6 +469,139 @@ mod tests {
     fn test_normals_settings_rejects_unknown_fields() {
         let json = r#"{"preset":"smooth","unknown_field":123}"#;
         let result: Result<NormalsSettings, _> = serde_json::from_str(json);
+        assert!(result.is_err());
+    }
+
+    // ========================================================================
+    // CollisionType Tests
+    // ========================================================================
+
+    #[test]
+    fn test_collision_type_convex_hull() {
+        let ct = CollisionType::ConvexHull;
+        let json = serde_json::to_string(&ct).unwrap();
+        assert_eq!(json, "\"convex_hull\"");
+
+        let parsed: CollisionType = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed, CollisionType::ConvexHull);
+    }
+
+    #[test]
+    fn test_collision_type_simplified_mesh() {
+        let ct = CollisionType::SimplifiedMesh;
+        let json = serde_json::to_string(&ct).unwrap();
+        assert_eq!(json, "\"simplified_mesh\"");
+
+        let parsed: CollisionType = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed, CollisionType::SimplifiedMesh);
+    }
+
+    #[test]
+    fn test_collision_type_box() {
+        let ct = CollisionType::Box;
+        let json = serde_json::to_string(&ct).unwrap();
+        assert_eq!(json, "\"box\"");
+
+        let parsed: CollisionType = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed, CollisionType::Box);
+    }
+
+    #[test]
+    fn test_collision_type_default() {
+        let ct = CollisionType::default();
+        assert_eq!(ct, CollisionType::ConvexHull);
+    }
+
+    // ========================================================================
+    // CollisionMeshSettings Tests
+    // ========================================================================
+
+    #[test]
+    fn test_collision_mesh_settings_default() {
+        let settings = CollisionMeshSettings::default();
+        assert_eq!(settings.collision_type, CollisionType::ConvexHull);
+        assert_eq!(settings.target_faces, None);
+        assert_eq!(settings.output_suffix, "_col");
+    }
+
+    #[test]
+    fn test_collision_mesh_settings_convex_hull() {
+        let settings = CollisionMeshSettings {
+            collision_type: CollisionType::ConvexHull,
+            target_faces: None,
+            output_suffix: "_col".to_string(),
+        };
+
+        let json = serde_json::to_string(&settings).unwrap();
+        assert!(json.contains("\"collision_type\":\"convex_hull\""));
+        assert!(json.contains("\"output_suffix\":\"_col\""));
+        assert!(!json.contains("target_faces"));
+
+        let parsed: CollisionMeshSettings = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed.collision_type, CollisionType::ConvexHull);
+        assert_eq!(parsed.output_suffix, "_col");
+    }
+
+    #[test]
+    fn test_collision_mesh_settings_simplified_mesh() {
+        let settings = CollisionMeshSettings {
+            collision_type: CollisionType::SimplifiedMesh,
+            target_faces: Some(64),
+            output_suffix: "_col".to_string(),
+        };
+
+        let json = serde_json::to_string(&settings).unwrap();
+        assert!(json.contains("\"collision_type\":\"simplified_mesh\""));
+        assert!(json.contains("\"target_faces\":64"));
+
+        let parsed: CollisionMeshSettings = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed.collision_type, CollisionType::SimplifiedMesh);
+        assert_eq!(parsed.target_faces, Some(64));
+    }
+
+    #[test]
+    fn test_collision_mesh_settings_box() {
+        let settings = CollisionMeshSettings {
+            collision_type: CollisionType::Box,
+            target_faces: None,
+            output_suffix: "_box".to_string(),
+        };
+
+        let json = serde_json::to_string(&settings).unwrap();
+        assert!(json.contains("\"collision_type\":\"box\""));
+        assert!(json.contains("\"output_suffix\":\"_box\""));
+
+        let parsed: CollisionMeshSettings = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed.collision_type, CollisionType::Box);
+        assert_eq!(parsed.output_suffix, "_box");
+    }
+
+    #[test]
+    fn test_collision_mesh_settings_from_json_minimal() {
+        let json = r#"{}"#;
+        let parsed: CollisionMeshSettings = serde_json::from_str(json).unwrap();
+        assert_eq!(parsed.collision_type, CollisionType::ConvexHull);
+        assert_eq!(parsed.target_faces, None);
+        assert_eq!(parsed.output_suffix, "_col");
+    }
+
+    #[test]
+    fn test_collision_mesh_settings_from_json_complete() {
+        let json = r#"{
+            "collision_type": "simplified_mesh",
+            "target_faces": 128,
+            "output_suffix": "_collision"
+        }"#;
+        let parsed: CollisionMeshSettings = serde_json::from_str(json).unwrap();
+        assert_eq!(parsed.collision_type, CollisionType::SimplifiedMesh);
+        assert_eq!(parsed.target_faces, Some(128));
+        assert_eq!(parsed.output_suffix, "_collision");
+    }
+
+    #[test]
+    fn test_collision_mesh_settings_rejects_unknown_fields() {
+        let json = r#"{"collision_type":"convex_hull","unknown_field":123}"#;
+        let result: Result<CollisionMeshSettings, _> = serde_json::from_str(json);
         assert!(result.is_err());
     }
 }
