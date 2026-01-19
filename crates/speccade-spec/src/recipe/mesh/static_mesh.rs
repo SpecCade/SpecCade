@@ -2,7 +2,7 @@
 
 use serde::{Deserialize, Serialize};
 
-use super::common::{CollisionMeshSettings, MaterialSlot, MeshConstraints, MeshExportSettings, NavmeshSettings, NormalsSettings};
+use super::common::{BakingSettings, CollisionMeshSettings, MaterialSlot, MeshConstraints, MeshExportSettings, NavmeshSettings, NormalsSettings};
 use super::modifiers::{MeshModifier, UvProjection};
 use super::primitives::MeshPrimitive;
 
@@ -84,6 +84,10 @@ pub struct StaticMeshBlenderPrimitivesV1Params {
     /// Note: This produces classification metadata only, not actual navmesh generation.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub navmesh: Option<NavmeshSettings>,
+    /// Baking settings for texture map generation.
+    /// When specified, bakes normal/AO/curvature maps from the mesh (or a high-poly source).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub baking: Option<BakingSettings>,
 }
 
 #[cfg(test)]
@@ -110,6 +114,7 @@ mod tests {
             lod_chain: None,
             collision_mesh: None,
             navmesh: None,
+            baking: None,
         };
 
         let json = serde_json::to_string(&params).unwrap();
@@ -134,6 +139,7 @@ mod tests {
             lod_chain: None,
             collision_mesh: None,
             navmesh: None,
+            baking: None,
         };
 
         let json = serde_json::to_string(&params).unwrap();
@@ -164,6 +170,7 @@ mod tests {
             lod_chain: None,
             collision_mesh: None,
             navmesh: None,
+            baking: None,
         };
 
         let json = serde_json::to_string(&params).unwrap();
@@ -195,6 +202,7 @@ mod tests {
             lod_chain: None,
             collision_mesh: None,
             navmesh: None,
+            baking: None,
         };
 
         let json = serde_json::to_string(&params).unwrap();
@@ -223,6 +231,7 @@ mod tests {
             lod_chain: None,
             collision_mesh: None,
             navmesh: None,
+            baking: None,
         };
 
         let json = serde_json::to_string(&params).unwrap();
@@ -255,6 +264,7 @@ mod tests {
             lod_chain: None,
             collision_mesh: None,
             navmesh: None,
+            baking: None,
         };
 
         let json = serde_json::to_string(&params).unwrap();
@@ -285,6 +295,7 @@ mod tests {
             lod_chain: None,
             collision_mesh: None,
             navmesh: None,
+            baking: None,
         };
 
         let json = serde_json::to_string(&params).unwrap();
@@ -317,6 +328,7 @@ mod tests {
             lod_chain: None,
             collision_mesh: None,
             navmesh: None,
+            baking: None,
         };
 
         let json = serde_json::to_string(&params).unwrap();
@@ -370,6 +382,7 @@ mod tests {
             lod_chain: None,
             collision_mesh: None,
             navmesh: None,
+            baking: None,
         };
 
         let json = serde_json::to_string(&params).unwrap();
@@ -527,6 +540,7 @@ mod tests {
             }),
             collision_mesh: None,
             navmesh: None,
+            baking: None,
         };
 
         let json = serde_json::to_string(&params).unwrap();
@@ -602,6 +616,7 @@ mod tests {
                 output_suffix: "_col".to_string(),
             }),
             navmesh: None,
+            baking: None,
         };
 
         let json = serde_json::to_string(&params).unwrap();
@@ -638,6 +653,7 @@ mod tests {
                 output_suffix: "_col".to_string(),
             }),
             navmesh: None,
+            baking: None,
         };
 
         let json = serde_json::to_string(&params).unwrap();
@@ -672,6 +688,7 @@ mod tests {
                 output_suffix: "_box".to_string(),
             }),
             navmesh: None,
+            baking: None,
         };
 
         let json = serde_json::to_string(&params).unwrap();
@@ -719,6 +736,7 @@ mod tests {
                 output_suffix: "_col".to_string(),
             }),
             navmesh: None,
+            baking: None,
         };
 
         let json = serde_json::to_string(&params).unwrap();
@@ -748,6 +766,7 @@ mod tests {
             lod_chain: None,
             collision_mesh: None,
             navmesh: Some(NavmeshSettings::default()),
+            baking: None,
         };
 
         let json = serde_json::to_string(&params).unwrap();
@@ -779,6 +798,7 @@ mod tests {
                 stair_detection: true,
                 stair_step_height: Some(0.25),
             }),
+            baking: None,
         };
 
         let json = serde_json::to_string(&params).unwrap();
@@ -816,6 +836,7 @@ mod tests {
                 stair_detection: false,
                 stair_step_height: None,
             }),
+            baking: None,
         };
 
         let json = serde_json::to_string(&params).unwrap();
@@ -845,5 +866,187 @@ mod tests {
         assert_eq!(navmesh.walkable_slope_max, 30.0);
         assert!(navmesh.stair_detection);
         assert_eq!(navmesh.stair_step_height, Some(0.3));
+    }
+
+    // ========================================================================
+    // Baking Integration Tests
+    // ========================================================================
+
+    #[test]
+    fn test_mesh_params_with_baking_basic() {
+        use super::super::common::{BakeType, BakingSettings};
+
+        let params = StaticMeshBlenderPrimitivesV1Params {
+            base_primitive: MeshPrimitive::Cube,
+            dimensions: [1.0, 1.0, 1.0],
+            modifiers: vec![],
+            uv_projection: None,
+            normals: None,
+            material_slots: vec![],
+            export: None,
+            constraints: None,
+            lod_chain: None,
+            collision_mesh: None,
+            navmesh: None,
+            baking: Some(BakingSettings {
+                bake_types: vec![BakeType::Normal],
+                ray_distance: 0.1,
+                margin: 16,
+                resolution: [1024, 1024],
+                high_poly_source: None,
+            }),
+        };
+
+        let json = serde_json::to_string(&params).unwrap();
+        assert!(json.contains("baking"));
+        assert!(json.contains("\"normal\""));
+        assert!(json.contains("\"ray_distance\":0.1"));
+
+        let parsed: StaticMeshBlenderPrimitivesV1Params = serde_json::from_str(&json).unwrap();
+        assert!(parsed.baking.is_some());
+        let baking = parsed.baking.unwrap();
+        assert_eq!(baking.bake_types, vec![BakeType::Normal]);
+        assert_eq!(baking.margin, 16);
+    }
+
+    #[test]
+    fn test_mesh_params_with_baking_multiple_types() {
+        use super::super::common::{BakeType, BakingSettings};
+
+        let params = StaticMeshBlenderPrimitivesV1Params {
+            base_primitive: MeshPrimitive::IcoSphere,
+            dimensions: [1.0, 1.0, 1.0],
+            modifiers: vec![MeshModifier::Subdivision {
+                levels: 2,
+                render_levels: 2,
+            }],
+            uv_projection: None,
+            normals: None,
+            material_slots: vec![],
+            export: None,
+            constraints: None,
+            lod_chain: None,
+            collision_mesh: None,
+            navmesh: None,
+            baking: Some(BakingSettings {
+                bake_types: vec![BakeType::Normal, BakeType::Ao],
+                ray_distance: 0.1,
+                margin: 16,
+                resolution: [1024, 1024],
+                high_poly_source: None,
+            }),
+        };
+
+        let json = serde_json::to_string(&params).unwrap();
+        assert!(json.contains("\"normal\""));
+        assert!(json.contains("\"ao\""));
+
+        let parsed: StaticMeshBlenderPrimitivesV1Params = serde_json::from_str(&json).unwrap();
+        let baking = parsed.baking.unwrap();
+        assert_eq!(baking.bake_types.len(), 2);
+    }
+
+    #[test]
+    fn test_mesh_params_with_baking_high_poly_source() {
+        use super::super::common::{BakeType, BakingSettings};
+
+        let params = StaticMeshBlenderPrimitivesV1Params {
+            base_primitive: MeshPrimitive::Cube,
+            dimensions: [1.0, 1.0, 1.0],
+            modifiers: vec![],
+            uv_projection: None,
+            normals: None,
+            material_slots: vec![],
+            export: None,
+            constraints: None,
+            lod_chain: None,
+            collision_mesh: None,
+            navmesh: None,
+            baking: Some(BakingSettings {
+                bake_types: vec![BakeType::Normal],
+                ray_distance: 0.2,
+                margin: 32,
+                resolution: [2048, 2048],
+                high_poly_source: Some("meshes/high_detail.glb".to_string()),
+            }),
+        };
+
+        let json = serde_json::to_string(&params).unwrap();
+        assert!(json.contains("\"high_poly_source\":\"meshes/high_detail.glb\""));
+
+        let parsed: StaticMeshBlenderPrimitivesV1Params = serde_json::from_str(&json).unwrap();
+        let baking = parsed.baking.unwrap();
+        assert_eq!(
+            baking.high_poly_source,
+            Some("meshes/high_detail.glb".to_string())
+        );
+    }
+
+    #[test]
+    fn test_mesh_params_baking_from_json() {
+        let json = r#"{
+            "base_primitive": "cube",
+            "dimensions": [1.0, 1.0, 1.0],
+            "baking": {
+                "bake_types": ["normal", "ao"],
+                "ray_distance": 0.1,
+                "margin": 16,
+                "resolution": [1024, 1024]
+            }
+        }"#;
+
+        let parsed: StaticMeshBlenderPrimitivesV1Params = serde_json::from_str(json).unwrap();
+        assert!(parsed.baking.is_some());
+        let baking = parsed.baking.unwrap();
+        assert_eq!(baking.bake_types.len(), 2);
+        assert_eq!(baking.ray_distance, 0.1);
+        assert_eq!(baking.margin, 16);
+        assert_eq!(baking.resolution, [1024, 1024]);
+    }
+
+    #[test]
+    fn test_mesh_params_with_baking_and_lod() {
+        use super::super::common::{BakeType, BakingSettings};
+
+        let params = StaticMeshBlenderPrimitivesV1Params {
+            base_primitive: MeshPrimitive::IcoSphere,
+            dimensions: [1.0, 1.0, 1.0],
+            modifiers: vec![],
+            uv_projection: None,
+            normals: None,
+            material_slots: vec![],
+            export: None,
+            constraints: None,
+            lod_chain: Some(LodChainSettings {
+                levels: vec![
+                    LodLevel {
+                        level: 0,
+                        target_tris: None,
+                    },
+                    LodLevel {
+                        level: 1,
+                        target_tris: Some(500),
+                    },
+                ],
+                decimate_method: LodDecimateMethod::Collapse,
+            }),
+            collision_mesh: None,
+            navmesh: None,
+            baking: Some(BakingSettings {
+                bake_types: vec![BakeType::Normal, BakeType::Ao, BakeType::Curvature],
+                ray_distance: 0.1,
+                margin: 16,
+                resolution: [1024, 1024],
+                high_poly_source: None,
+            }),
+        };
+
+        let json = serde_json::to_string(&params).unwrap();
+        assert!(json.contains("lod_chain"));
+        assert!(json.contains("baking"));
+
+        let parsed: StaticMeshBlenderPrimitivesV1Params = serde_json::from_str(&json).unwrap();
+        assert!(parsed.lod_chain.is_some());
+        assert!(parsed.baking.is_some());
     }
 }

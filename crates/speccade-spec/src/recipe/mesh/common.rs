@@ -83,6 +83,71 @@ pub(crate) fn default_true() -> bool {
     true
 }
 
+/// Type of bake map to generate.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum BakeType {
+    /// Normal map (tangent-space by default).
+    Normal,
+    /// Ambient occlusion map.
+    Ao,
+    /// Curvature map (convex/concave edges).
+    Curvature,
+    /// Combined map (RGB channels: AO, Curvature, Metallic or similar packing).
+    Combined,
+}
+
+/// Baking settings for high-to-low mesh map transfer.
+///
+/// Used to bake normal maps, AO, curvature, etc. from a high-poly source
+/// onto the UVs of a low-poly target mesh.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct BakingSettings {
+    /// Types of maps to bake.
+    pub bake_types: Vec<BakeType>,
+    /// Ray distance for ray casting from low to high poly.
+    /// Default: 0.1
+    #[serde(default = "default_ray_distance")]
+    pub ray_distance: f64,
+    /// Margin (dilation) in pixels for mip-safe edges.
+    /// Default: 16
+    #[serde(default = "default_margin")]
+    pub margin: u32,
+    /// Resolution of baked textures [width, height].
+    /// Default: [1024, 1024]
+    #[serde(default = "default_bake_resolution")]
+    pub resolution: [u32; 2],
+    /// Optional path or reference to high-poly source mesh.
+    /// If not specified, bakes from the mesh itself (e.g., for AO).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub high_poly_source: Option<String>,
+}
+
+fn default_ray_distance() -> f64 {
+    0.1
+}
+
+fn default_margin() -> u32 {
+    16
+}
+
+fn default_bake_resolution() -> [u32; 2] {
+    [1024, 1024]
+}
+
+impl Default for BakingSettings {
+    fn default() -> Self {
+        Self {
+            bake_types: vec![BakeType::Normal],
+            ray_distance: default_ray_distance(),
+            margin: default_margin(),
+            resolution: default_bake_resolution(),
+            high_poly_source: None,
+        }
+    }
+}
+
 impl Default for MeshExportSettings {
     fn default() -> Self {
         Self {
@@ -741,6 +806,189 @@ mod tests {
 
         let json = serde_json::to_string(&settings).unwrap();
         let parsed: NavmeshSettings = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed, settings);
+    }
+
+    // ========================================================================
+    // BakeType Tests
+    // ========================================================================
+
+    #[test]
+    fn test_bake_type_normal() {
+        let bt = BakeType::Normal;
+        let json = serde_json::to_string(&bt).unwrap();
+        assert_eq!(json, "\"normal\"");
+
+        let parsed: BakeType = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed, BakeType::Normal);
+    }
+
+    #[test]
+    fn test_bake_type_ao() {
+        let bt = BakeType::Ao;
+        let json = serde_json::to_string(&bt).unwrap();
+        assert_eq!(json, "\"ao\"");
+
+        let parsed: BakeType = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed, BakeType::Ao);
+    }
+
+    #[test]
+    fn test_bake_type_curvature() {
+        let bt = BakeType::Curvature;
+        let json = serde_json::to_string(&bt).unwrap();
+        assert_eq!(json, "\"curvature\"");
+
+        let parsed: BakeType = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed, BakeType::Curvature);
+    }
+
+    #[test]
+    fn test_bake_type_combined() {
+        let bt = BakeType::Combined;
+        let json = serde_json::to_string(&bt).unwrap();
+        assert_eq!(json, "\"combined\"");
+
+        let parsed: BakeType = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed, BakeType::Combined);
+    }
+
+    // ========================================================================
+    // BakingSettings Tests
+    // ========================================================================
+
+    #[test]
+    fn test_baking_settings_default() {
+        let settings = BakingSettings::default();
+        assert_eq!(settings.bake_types, vec![BakeType::Normal]);
+        assert_eq!(settings.ray_distance, 0.1);
+        assert_eq!(settings.margin, 16);
+        assert_eq!(settings.resolution, [1024, 1024]);
+        assert_eq!(settings.high_poly_source, None);
+    }
+
+    #[test]
+    fn test_baking_settings_from_json_minimal() {
+        let json = r#"{"bake_types":["normal"]}"#;
+        let parsed: BakingSettings = serde_json::from_str(json).unwrap();
+        assert_eq!(parsed.bake_types, vec![BakeType::Normal]);
+        assert_eq!(parsed.ray_distance, 0.1);
+        assert_eq!(parsed.margin, 16);
+        assert_eq!(parsed.resolution, [1024, 1024]);
+        assert_eq!(parsed.high_poly_source, None);
+    }
+
+    #[test]
+    fn test_baking_settings_from_json_complete() {
+        let json = r#"{
+            "bake_types": ["normal", "ao"],
+            "ray_distance": 0.2,
+            "margin": 32,
+            "resolution": [2048, 2048],
+            "high_poly_source": "meshes/high_poly.glb"
+        }"#;
+        let parsed: BakingSettings = serde_json::from_str(json).unwrap();
+        assert_eq!(parsed.bake_types, vec![BakeType::Normal, BakeType::Ao]);
+        assert_eq!(parsed.ray_distance, 0.2);
+        assert_eq!(parsed.margin, 32);
+        assert_eq!(parsed.resolution, [2048, 2048]);
+        assert_eq!(
+            parsed.high_poly_source,
+            Some("meshes/high_poly.glb".to_string())
+        );
+    }
+
+    #[test]
+    fn test_baking_settings_multiple_bake_types() {
+        let settings = BakingSettings {
+            bake_types: vec![BakeType::Normal, BakeType::Ao, BakeType::Curvature],
+            ray_distance: 0.15,
+            margin: 16,
+            resolution: [1024, 1024],
+            high_poly_source: None,
+        };
+
+        let json = serde_json::to_string(&settings).unwrap();
+        assert!(json.contains("\"normal\""));
+        assert!(json.contains("\"ao\""));
+        assert!(json.contains("\"curvature\""));
+
+        let parsed: BakingSettings = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed.bake_types.len(), 3);
+    }
+
+    #[test]
+    fn test_baking_settings_combined_bake_type() {
+        let settings = BakingSettings {
+            bake_types: vec![BakeType::Combined],
+            ray_distance: 0.1,
+            margin: 16,
+            resolution: [512, 512],
+            high_poly_source: None,
+        };
+
+        let json = serde_json::to_string(&settings).unwrap();
+        assert!(json.contains("\"combined\""));
+        assert!(json.contains("\"resolution\":[512,512]"));
+
+        let parsed: BakingSettings = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed.bake_types, vec![BakeType::Combined]);
+        assert_eq!(parsed.resolution, [512, 512]);
+    }
+
+    #[test]
+    fn test_baking_settings_with_high_poly_source() {
+        let settings = BakingSettings {
+            bake_types: vec![BakeType::Normal],
+            ray_distance: 0.05,
+            margin: 8,
+            resolution: [4096, 4096],
+            high_poly_source: Some("assets/sculpt_high.glb".to_string()),
+        };
+
+        let json = serde_json::to_string(&settings).unwrap();
+        assert!(json.contains("\"high_poly_source\":\"assets/sculpt_high.glb\""));
+
+        let parsed: BakingSettings = serde_json::from_str(&json).unwrap();
+        assert_eq!(
+            parsed.high_poly_source,
+            Some("assets/sculpt_high.glb".to_string())
+        );
+    }
+
+    #[test]
+    fn test_baking_settings_serialization_omits_none() {
+        let settings = BakingSettings {
+            bake_types: vec![BakeType::Ao],
+            ray_distance: 0.1,
+            margin: 16,
+            resolution: [1024, 1024],
+            high_poly_source: None,
+        };
+
+        let json = serde_json::to_string(&settings).unwrap();
+        assert!(!json.contains("high_poly_source"));
+    }
+
+    #[test]
+    fn test_baking_settings_rejects_unknown_fields() {
+        let json = r#"{"bake_types":["normal"],"unknown_field":123}"#;
+        let result: Result<BakingSettings, _> = serde_json::from_str(json);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_baking_settings_roundtrip() {
+        let settings = BakingSettings {
+            bake_types: vec![BakeType::Normal, BakeType::Ao],
+            ray_distance: 0.15,
+            margin: 24,
+            resolution: [2048, 2048],
+            high_poly_source: Some("high.glb".to_string()),
+        };
+
+        let json = serde_json::to_string(&settings).unwrap();
+        let parsed: BakingSettings = serde_json::from_str(&json).unwrap();
         assert_eq!(parsed, settings);
     }
 }

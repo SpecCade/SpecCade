@@ -34,6 +34,7 @@ The `static_mesh.blender_primitives_v1` recipe builds meshes from Blender primit
 | `lod_chain` | object | No | LOD chain settings for multi-LOD export (see LOD chain below) |
 | `collision_mesh` | object | No | Collision mesh generation settings (see collision mesh below) |
 | `navmesh` | object | No | Navmesh analysis settings for walkability metadata (see navmesh below) |
+| `baking` | object | No | Texture baking settings for normal/AO/curvature maps (see baking below) |
 
 ### Primitives
 
@@ -598,6 +599,119 @@ When `stair_detection` is enabled, the analyzer looks for clusters of walkable s
 - Stair detection uses height clustering to identify step-like patterns
 - Results are metadata only; actual navmesh generation requires game engine tools (e.g., Recast/Detour)
 
+### Baking
+
+Baking settings enable generation of texture maps (normal, AO, curvature) from the mesh geometry. Uses Cycles CPU renderer for deterministic output.
+
+```json
+"baking": {
+  "bake_types": ["normal", "ao"],
+  "ray_distance": 0.1,
+  "margin": 16,
+  "resolution": [1024, 1024]
+}
+```
+
+#### Baking Settings
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `bake_types` | array | - | Types of maps to bake (required, see types below) |
+| `ray_distance` | f64 | 0.1 | Ray casting distance for high-to-low baking |
+| `margin` | u32 | 16 | Dilation in pixels for mip-safe edges |
+| `resolution` | `[u32; 2]` | `[1024, 1024]` | Resolution of baked textures [width, height] |
+| `high_poly_source` | string | - | Optional path to high-poly mesh for baking |
+
+#### Bake Types
+
+| Type | Description |
+|------|-------------|
+| `normal` | Tangent-space normal map |
+| `ao` | Ambient occlusion map |
+| `curvature` | Curvature map (convex/concave edges via Geometry Pointiness) |
+| `combined` | Combined/full lighting bake |
+
+#### Baking Examples
+
+**Normal and AO baking:**
+
+```json
+"baking": {
+  "bake_types": ["normal", "ao"],
+  "ray_distance": 0.1,
+  "margin": 16,
+  "resolution": [1024, 1024]
+}
+```
+
+**High-to-low baking with external high-poly source:**
+
+```json
+"baking": {
+  "bake_types": ["normal"],
+  "ray_distance": 0.2,
+  "margin": 32,
+  "resolution": [2048, 2048],
+  "high_poly_source": "meshes/sculpt_high.glb"
+}
+```
+
+**Curvature baking for edge wear/highlighting:**
+
+```json
+"baking": {
+  "bake_types": ["curvature"],
+  "margin": 16,
+  "resolution": [512, 512]
+}
+```
+
+#### Example with Baking
+
+```json
+{
+  "spec_version": 1,
+  "asset_id": "baked_prop",
+  "asset_type": "static_mesh",
+  "license": "CC0-1.0",
+  "seed": 7004,
+  "outputs": [
+    { "kind": "primary", "format": "glb", "path": "prop.glb" }
+  ],
+  "recipe": {
+    "kind": "static_mesh.blender_primitives_v1",
+    "params": {
+      "base_primitive": "cube",
+      "dimensions": [1.0, 1.0, 1.0],
+      "modifiers": [
+        { "type": "bevel", "width": 0.05, "segments": 3 }
+      ],
+      "uv_projection": "smart",
+      "baking": {
+        "bake_types": ["normal", "ao"],
+        "ray_distance": 0.1,
+        "margin": 16,
+        "resolution": [1024, 1024]
+      }
+    }
+  }
+}
+```
+
+This will generate:
+- `prop.glb` - The primary mesh
+- `baked_prop_normal.png` - Normal map (1024x1024)
+- `baked_prop_ao.png` - Ambient occlusion map (1024x1024)
+
+#### Baking Notes
+
+- Baking is performed before LOD chain or collision mesh generation
+- If the mesh has no UVs, smart UV projection is applied automatically
+- Uses Cycles CPU renderer for deterministic output
+- Margin (dilation) extends texture edges for mip-safe sampling
+- For high-to-low baking, the high_poly_source mesh is imported, baked, then removed
+- Curvature is baked using Blender's Geometry > Pointiness attribute
+
 ## Example Spec
 
 ```json
@@ -723,6 +837,30 @@ The `navmesh` object includes:
 | `non_walkable_face_count` | Number of faces classified as non-walkable |
 | `walkable_percentage` | Percentage of faces that are walkable (0-100) |
 | `stair_candidates` | Number of potential stair surfaces detected (only if stair_detection enabled) |
+
+### Baking Metrics
+
+When `baking` is specified, the report includes baked texture map metrics:
+
+| Metric | Description |
+|--------|-------------|
+| `baking` | Object containing baking metrics (see below) |
+
+The `baking` object includes:
+
+| Metric | Description |
+|--------|-------------|
+| `baked_maps` | Array of baked map info (type, path, resolution) |
+| `ray_distance` | Ray distance used for baking |
+| `margin` | Margin (dilation) in pixels used |
+
+Each entry in `baked_maps` includes:
+
+| Metric | Description |
+|--------|-------------|
+| `type` | Bake type (normal, ao, curvature, combined) |
+| `path` | Output filename of the baked texture |
+| `resolution` | [width, height] of the baked texture |
 
 ## Post-Generation Verification
 

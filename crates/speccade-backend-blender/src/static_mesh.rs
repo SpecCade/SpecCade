@@ -180,6 +180,7 @@ mod tests {
             lod_chain: None,
             collision_mesh: None,
             navmesh: None,
+            baking: None,
         }
     }
 

@@ -2,6 +2,7 @@
 //!
 //! Provides helper functions for creating mesh primitives and modifiers.
 
+mod baking;
 mod modifiers;
 mod primitives;
 mod spec;
@@ -46,6 +47,7 @@ pub(crate) const MESH_FORMATS: &[&str] = &["glb", "gltf", "obj", "fbx"];
 pub fn register(builder: &mut GlobalsBuilder) {
     primitives::register(builder);
     modifiers::register(builder);
+    baking::register(builder);
     spec::register(builder);
 }
 

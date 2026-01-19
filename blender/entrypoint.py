@@ -4211,6 +4211,257 @@ def _detect_stair_candidates(
     return stair_candidates
 
 
+def bake_textures(
+    obj: 'bpy.types.Object',
+    baking_spec: Dict,
+    out_root: Path,
+    base_name: str
+) -> Dict[str, Any]:
+    """
+    Bake texture maps (normal, AO, curvature) from a mesh.
+
+    Uses Cycles CPU renderer for deterministic output.
+
+    Args:
+        obj: The target mesh object (low-poly) to bake onto.
+        baking_spec: Baking settings with:
+            - bake_types: List of map types to bake (normal, ao, curvature, combined)
+            - ray_distance: Ray casting distance for high-to-low baking
+            - margin: Dilation in pixels for mip-safe edges
+            - resolution: [width, height] of baked textures
+            - high_poly_source: Optional path to high-poly mesh
+        out_root: Output directory for baked textures.
+        base_name: Base filename for outputs (e.g., asset_id).
+
+    Returns:
+        Dictionary of baking metrics:
+            - baked_maps: List of baked map info (type, path, resolution)
+            - ray_distance: Ray distance used
+            - margin: Margin used
+    """
+    bake_types = baking_spec.get("bake_types", ["normal"])
+    ray_distance = baking_spec.get("ray_distance", 0.1)
+    margin = baking_spec.get("margin", 16)
+    resolution = baking_spec.get("resolution", [1024, 1024])
+    high_poly_source = baking_spec.get("high_poly_source")
+
+    # Switch to Cycles for baking (CPU only for determinism)
+    bpy.context.scene.render.engine = 'CYCLES'
+    bpy.context.scene.cycles.device = 'CPU'
+    bpy.context.scene.cycles.samples = 128  # Reasonable quality for baking
+
+    # Ensure the mesh has UVs
+    if not obj.data.uv_layers:
+        # Auto-unwrap if no UVs exist
+        bpy.context.view_layer.objects.active = obj
+        bpy.ops.object.mode_set(mode='EDIT')
+        bpy.ops.mesh.select_all(action='SELECT')
+        bpy.ops.uv.smart_project(angle_limit=66.0)
+        bpy.ops.object.mode_set(mode='OBJECT')
+
+    # Load high-poly source if specified
+    high_poly_obj = None
+    if high_poly_source:
+        # Import the high-poly mesh
+        high_poly_path = out_root / high_poly_source
+        if high_poly_path.exists():
+            ext = high_poly_path.suffix.lower()
+            if ext in ['.glb', '.gltf']:
+                bpy.ops.import_scene.gltf(filepath=str(high_poly_path))
+            elif ext == '.obj':
+                bpy.ops.import_scene.obj(filepath=str(high_poly_path))
+            elif ext == '.fbx':
+                bpy.ops.import_scene.fbx(filepath=str(high_poly_path))
+
+            # Find the imported high-poly object
+            for imported_obj in bpy.context.selected_objects:
+                if imported_obj.type == 'MESH' and imported_obj != obj:
+                    high_poly_obj = imported_obj
+                    break
+
+    baked_maps = []
+
+    # Create or get the bake material
+    mat = _get_or_create_bake_material(obj)
+
+    for bake_type in bake_types:
+        # Create image for baking
+        img_name = f"{base_name}_{bake_type}"
+        img_width, img_height = resolution
+
+        # Delete existing image if it exists
+        if img_name in bpy.data.images:
+            bpy.data.images.remove(bpy.data.images[img_name])
+
+        # Create new image
+        if bake_type in ["normal"]:
+            # Normal maps need specific color space
+            img = bpy.data.images.new(img_name, width=img_width, height=img_height, float_buffer=True)
+            img.colorspace_settings.name = 'Non-Color'
+        else:
+            img = bpy.data.images.new(img_name, width=img_width, height=img_height)
+            if bake_type != "combined":
+                img.colorspace_settings.name = 'Non-Color'
+
+        # Set up the image node in the material for baking target
+        _setup_bake_target_node(mat, img)
+
+        # Configure bake settings
+        bpy.context.scene.render.bake.use_pass_direct = False
+        bpy.context.scene.render.bake.use_pass_indirect = False
+        bpy.context.scene.render.bake.use_pass_color = True
+        bpy.context.scene.render.bake.margin = margin
+        bpy.context.scene.render.bake.margin_type = 'EXTEND'
+
+        # Select objects for baking
+        bpy.ops.object.select_all(action='DESELECT')
+        obj.select_set(True)
+        bpy.context.view_layer.objects.active = obj
+
+        # Set up for selected-to-active baking if high-poly source exists
+        use_selected_to_active = high_poly_obj is not None
+
+        if use_selected_to_active:
+            high_poly_obj.select_set(True)
+            bpy.context.scene.render.bake.use_selected_to_active = True
+            bpy.context.scene.render.bake.cage_extrusion = ray_distance
+        else:
+            bpy.context.scene.render.bake.use_selected_to_active = False
+
+        # Perform the bake based on type
+        if bake_type == "normal":
+            bpy.ops.object.bake(type='NORMAL')
+        elif bake_type == "ao":
+            bpy.ops.object.bake(type='AO')
+        elif bake_type == "curvature":
+            # Curvature is not a native Blender bake type
+            # We emulate it using pointiness from geometry node or bake from a material
+            _bake_curvature(obj, img, margin)
+        elif bake_type == "combined":
+            bpy.ops.object.bake(type='COMBINED')
+
+        # Save the baked image
+        output_filename = f"{base_name}_{bake_type}.png"
+        output_path = out_root / output_filename
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+
+        img.filepath_raw = str(output_path)
+        img.file_format = 'PNG'
+        img.save()
+
+        baked_maps.append({
+            "type": bake_type,
+            "path": output_filename,
+            "resolution": [img_width, img_height],
+        })
+
+    # Clean up high-poly object if we imported it
+    if high_poly_obj:
+        bpy.data.objects.remove(high_poly_obj, do_unlink=True)
+
+    return {
+        "baked_maps": baked_maps,
+        "ray_distance": ray_distance,
+        "margin": margin,
+    }
+
+
+def _get_or_create_bake_material(obj: 'bpy.types.Object') -> 'bpy.types.Material':
+    """Get or create a material for baking on the object."""
+    if obj.data.materials:
+        mat = obj.data.materials[0]
+    else:
+        mat = bpy.data.materials.new(name="BakeMaterial")
+        mat.use_nodes = True
+        obj.data.materials.append(mat)
+    return mat
+
+
+def _setup_bake_target_node(mat: 'bpy.types.Material', img: 'bpy.types.Image') -> None:
+    """Set up an image texture node as the bake target."""
+    if not mat.use_nodes:
+        mat.use_nodes = True
+
+    nodes = mat.node_tree.nodes
+
+    # Find or create image texture node
+    img_node = None
+    for node in nodes:
+        if node.type == 'TEX_IMAGE' and node.name == 'BakeTarget':
+            img_node = node
+            break
+
+    if not img_node:
+        img_node = nodes.new(type='ShaderNodeTexImage')
+        img_node.name = 'BakeTarget'
+
+    img_node.image = img
+    img_node.select = True
+    nodes.active = img_node
+
+
+def _bake_curvature(obj: 'bpy.types.Object', img: 'bpy.types.Image', margin: int) -> None:
+    """
+    Bake curvature map using geometry pointiness.
+
+    Since Blender doesn't have a native curvature bake type, we use
+    a shader that outputs the Geometry > Pointiness value.
+    """
+    mat = obj.data.materials[0] if obj.data.materials else None
+    if not mat:
+        return
+
+    nodes = mat.node_tree.nodes
+    links = mat.node_tree.links
+
+    # Store original output link
+    output_node = None
+    original_surface_input = None
+    for node in nodes:
+        if node.type == 'OUTPUT_MATERIAL':
+            output_node = node
+            if node.inputs['Surface'].links:
+                original_surface_input = node.inputs['Surface'].links[0].from_socket
+            break
+
+    # Create geometry node for pointiness
+    geom_node = nodes.new(type='ShaderNodeNewGeometry')
+    geom_node.name = 'CurvatureGeom'
+
+    # Create color ramp to control curvature contrast
+    ramp_node = nodes.new(type='ShaderNodeValToRGB')
+    ramp_node.name = 'CurvatureRamp'
+    # Set up ramp: 0.0 (concave) -> black, 0.5 (flat) -> gray, 1.0 (convex) -> white
+    ramp_node.color_ramp.elements[0].position = 0.4
+    ramp_node.color_ramp.elements[0].color = (0, 0, 0, 1)
+    ramp_node.color_ramp.elements[1].position = 0.6
+    ramp_node.color_ramp.elements[1].color = (1, 1, 1, 1)
+
+    # Create emission shader to output the curvature value
+    emit_node = nodes.new(type='ShaderNodeEmission')
+    emit_node.name = 'CurvatureEmit'
+
+    # Connect nodes
+    links.new(geom_node.outputs['Pointiness'], ramp_node.inputs['Fac'])
+    links.new(ramp_node.outputs['Color'], emit_node.inputs['Color'])
+    links.new(emit_node.outputs['Emission'], output_node.inputs['Surface'])
+
+    # Configure bake settings for emit
+    bpy.context.scene.render.bake.margin = margin
+
+    # Bake emit (which now outputs our curvature)
+    bpy.ops.object.bake(type='EMIT')
+
+    # Restore original material connection
+    if original_surface_input:
+        links.new(original_surface_input, output_node.inputs['Surface'])
+
+    # Clean up temporary nodes
+    nodes.remove(geom_node)
+    nodes.remove(ramp_node)
+    nodes.remove(emit_node)
+
+
 def export_glb_with_lods(
     output_path: Path,
     lod_objects: List['bpy.types.Object'],
@@ -4307,15 +4558,22 @@ def handle_static_mesh(spec: Dict, out_root: Path, report_path: Path) -> None:
         # Export with tangents if requested
         export_tangents = export_settings.get("tangents", False)
 
-        # Check for LOD chain, collision mesh, and navmesh analysis
+        # Check for LOD chain, collision mesh, navmesh analysis, and baking
         lod_chain_spec = params.get("lod_chain")
         collision_mesh_spec = params.get("collision_mesh")
         navmesh_spec = params.get("navmesh")
+        baking_spec = params.get("baking")
 
         # Analyze navmesh first (before collision mesh or LOD chain modifies the object)
         navmesh_metrics = None
         if navmesh_spec:
             navmesh_metrics = analyze_navmesh(obj, navmesh_spec)
+
+        # Bake textures (before LOD chain modifies the object)
+        baking_metrics = None
+        if baking_spec:
+            asset_id = spec.get("asset_id", "mesh")
+            baking_metrics = bake_textures(obj, baking_spec, output_path.parent, asset_id)
 
         # Generate collision mesh first (before LOD chain modifies the object)
         collision_obj = None
@@ -4371,6 +4629,10 @@ def handle_static_mesh(spec: Dict, out_root: Path, report_path: Path) -> None:
         # Add navmesh metrics if analyzed
         if navmesh_metrics:
             metrics["navmesh"] = navmesh_metrics
+
+        # Add baking metrics if baking was performed
+        if baking_metrics:
+            metrics["baking"] = baking_metrics
 
         duration_ms = int((time.time() - start_time) * 1000)
         write_report(report_path, ok=True, metrics=metrics,

@@ -226,7 +226,8 @@ Migrated from `docs/FUTURE_GENERATORS.md` (now deprecated).
   - Implemented: `CollisionMeshSettings` with `CollisionType` enum (convex_hull/simplified_mesh/box); `collision_mesh` field on `StaticMeshBlenderPrimitivesV1Params`; Blender collision generation via convex_hull operator, Decimate modifier, or box generation; collision mesh metrics in reports.
 - [x] `MESH-006` Add navmesh hints/metadata outputs (walkable surfaces, slope/stair tagging). **Done: 2026-01-20**
   - Implemented: `NavmeshSettings` struct with `walkable_slope_max` (degrees), `stair_detection` (bool), `stair_step_height` (Option<f64>); `navmesh` field on `StaticMeshBlenderPrimitivesV1Params`; Blender analysis for walkability classification and stair detection; navmesh metrics in reports (walkable_face_count, non_walkable_face_count, walkable_percentage, stair_candidates).
-- [ ] `MESH-007` Add a baking suite (high->low normal/AO/curvature, vertex colors, dilation).
+- [x] `MESH-007` Add a baking suite (high->low normal/AO/curvature, vertex colors, dilation). **Done: 2026-01-20**
+  - Implemented: `BakingSettings` struct with `bake_types` (normal/ao/curvature/combined), `ray_distance`, `margin`, `resolution`, `high_poly_source`; `baking` field on `StaticMeshBlenderPrimitivesV1Params`; Blender baking via Cycles CPU with margin dilation; `baking_settings()` Starlark helper; full test coverage and documentation.
 - [ ] `MESH-008` Add a render-to-sprite bridge (render `static_mesh` with lighting preset -> `sprite.sheet_v1`).
 - [ ] `MESH-009` Add modular kit generators (walls/doors/pipes) built from primitives + modifiers.
 - [ ] `MESH-010` Add organic modeling gap-fill (metaballs -> remesh -> smooth -> displacement noise) with strict budgets.

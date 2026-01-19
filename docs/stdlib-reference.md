@@ -66,8 +66,9 @@ Primitive mesh generation with modifiers.
 **Categories:**
 - **Primitive Functions** - Basic mesh shapes
 - **Modifier Functions** - Bevel, subdivision, decimation, and other modifiers
+- **Baking Functions** - Texture map baking settings
 
-**Key Functions:** `mesh_primitive()`, `mesh_recipe()`, `bevel_modifier()`, `subdivision_modifier()`
+**Key Functions:** `mesh_primitive()`, `mesh_recipe()`, `bevel_modifier()`, `subdivision_modifier()`, `baking_settings()`
 
 ---
 
@@ -234,6 +235,11 @@ Tracker-style music composition with instruments, patterns, and arrangements.
 | `solidify_modifier()` | Solidify modifier |
 | `triangulate_modifier()` | Triangulate modifier |
 
+### Mesh Baking
+| Function | Description |
+|----------|-------------|
+| `baking_settings()` | Texture map baking settings (normal/AO/curvature) |
+
 ### Character Body Parts
 | Function | Description |
 |----------|-------------|
@@ -358,6 +364,31 @@ spec(
             [2.0, 2.0, 2.0],
             [bevel_modifier(0.1, 3), subdivision_modifier(2)]
         )
+    }
+)
+```
+
+### Creating a Mesh Spec with Baking
+```starlark
+spec(
+    asset_id = "baked-prop-01",
+    asset_type = "static_mesh",
+    seed = 789,
+    outputs = [output("meshes/prop.glb", "glb")],
+    recipe = {
+        "kind": "static_mesh.blender_primitives_v1",
+        "params": {
+            "base_primitive": "cube",
+            "dimensions": [1.0, 1.0, 1.0],
+            "modifiers": [bevel_modifier(0.05, 3)],
+            "uv_projection": "smart",
+            "baking": baking_settings(
+                ["normal", "ao"],
+                ray_distance = 0.1,
+                margin = 16,
+                resolution = [1024, 1024]
+            )
+        }
     }
 )
 ```
