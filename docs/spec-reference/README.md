@@ -15,6 +15,9 @@ If a doc/example disagrees with validation, treat `speccade validate` + Rust typ
 - [Texture Specs](texture.md) - Unified procedural texture graphs
 - [Audio Specs](audio.md) - Sound effects and instrument samples
 - [Music Specs](music.md) - Tracker module songs
+- [Static Mesh Specs](mesh.md) - Blender primitive meshes with modifiers
+- [Character Specs](character.md) - Skeletal meshes with armatures
+- [Animation Specs](animation.md) - Skeletal animation clips
 - [Game Music Genre Kits (Draft)](../music-genre-kits-master-list.md) - Target kit inventory + instrument roles
 - [Game Music Genre Kits Audit (Draft)](../music-genre-kits-audit.md) - Checklist for validation/coverage/listening
 - [Audio Preset Library (Draft)](../audio-preset-library-master-list.md) - Target `audio_v1` preset inventory for music kits
@@ -179,9 +182,9 @@ Currently supported output kinds are:
 | `audio` | `audio_v1` | WAV | [audio.md](audio.md) |
 | `music` | `music.tracker_song_v1` (canonical), `music.tracker_song_compose_v1` (draft) | XM, IT | [music.md](music.md) |
 | `texture` | `texture.procedural_v1` | PNG | [texture.md](texture.md) |
-| `static_mesh` | `static_mesh.blender_primitives_v1` | GLB | See `docs/SPEC_REFERENCE.md` |
-| `skeletal_mesh` | `skeletal_mesh.blender_rigged_mesh_v1` | GLB | See `docs/SPEC_REFERENCE.md` |
-| `skeletal_animation` | `skeletal_animation.blender_clip_v1` | GLB | See `docs/SPEC_REFERENCE.md` |
+| `static_mesh` | `static_mesh.blender_primitives_v1` | GLB | [mesh.md](mesh.md) |
+| `skeletal_mesh` | `skeletal_mesh.blender_rigged_mesh_v1` | GLB | [character.md](character.md) |
+| `skeletal_animation` | `skeletal_animation.blender_clip_v1` | GLB | [animation.md](animation.md) |
 
 ## Recipe Structure
 

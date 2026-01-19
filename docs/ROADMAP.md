@@ -229,9 +229,10 @@ Migrated from `docs/FUTURE_GENERATORS.md` (now deprecated).
 
 ### Skeletal Mesh / Character (Blender Tier)
 
-- [ ] `CHAR-001` Add spec reference docs for Blender-backed mesh/character/animation assets.
+- [x] `CHAR-001` Add spec reference docs for Blender-backed mesh/character/animation assets. **Done: 2026-01-19**
   - Deliverable: `docs/spec-reference/mesh.md` (static mesh), `docs/spec-reference/character.md` (skeletal mesh), `docs/spec-reference/animation.md` (skeletal animation), plus updates to `docs/SPEC_REFERENCE.md`.
   - Touch points: `docs/spec-reference/`, `crates/speccade-spec/src/recipe/{mesh,character,animation}/`, `schemas/speccade-spec-v1.schema.json`.
+  - Implemented: Created 3 new spec-reference docs covering all recipe params, primitives, modifiers, export settings, constraints, and examples. Updated README.md quick links and asset types table.
 - [ ] `CHAR-002` Add Starlark constructors for `skeletal_mesh` authoring (and docs).
   - Deliverable: ergonomic helpers for skeleton presets/custom skeletons, body parts, skinning/export settings; documented under `docs/stdlib-reference.md`.
   - Touch points: `crates/speccade-cli/src/compiler/stdlib/` (new module), `docs/stdlib-*.md`.

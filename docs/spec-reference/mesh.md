@@ -1,0 +1,318 @@
+# Static Mesh Specs
+
+Static meshes are non-deforming 3D geometry for props, environments, and other objects.
+
+| Property | Value |
+|----------|-------|
+| Asset Type | `static_mesh` |
+| Recipe Kind | `static_mesh.blender_primitives_v1` |
+| Output Formats | `glb` |
+| Determinism | Tier 2 (metric validation) |
+
+## SSOT (Source Of Truth)
+
+- Rust types: `crates/speccade-spec/src/recipe/mesh/`
+- Golden specs: `golden/speccade/specs/static_mesh/`
+- CLI validation: `speccade validate --spec file.json`
+
+## Recipe Parameters
+
+The `static_mesh.blender_primitives_v1` recipe builds meshes from Blender primitives with modifiers.
+
+### Main Parameters
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `base_primitive` | string | Yes | Base mesh primitive (see primitives below) |
+| `dimensions` | `[f64; 3]` | Yes | Dimensions [X, Y, Z] in Blender units |
+| `modifiers` | array | No | List of modifiers to apply (see modifiers below) |
+| `uv_projection` | string/object | No | UV unwrapping method (see UV projection below) |
+| `material_slots` | array | No | Material definitions (see materials below) |
+| `export` | object | No | GLB export settings (see export below) |
+| `constraints` | object | No | Validation constraints (see constraints below) |
+
+### Primitives
+
+| Value | Description |
+|-------|-------------|
+| `cube` | Cube/box |
+| `sphere` | UV sphere |
+| `cylinder` | Cylinder |
+| `cone` | Cone |
+| `torus` | Torus |
+| `plane` | Plane |
+| `ico_sphere` | Icosphere |
+
+### Modifiers
+
+Modifiers are applied in order. Each modifier has a `type` field.
+
+#### Bevel
+
+```json
+{
+  "type": "bevel",
+  "width": 0.02,
+  "segments": 2,
+  "angle_limit": 0.785
+}
+```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `width` | f64 | Yes | Bevel width |
+| `segments` | u8 | Yes | Number of segments |
+| `angle_limit` | f64 | No | Angle limit in radians (only bevel edges below this angle) |
+
+#### Subdivision
+
+```json
+{
+  "type": "subdivision",
+  "levels": 2,
+  "render_levels": 3
+}
+```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `levels` | u8 | Yes | Subdivision levels for viewport |
+| `render_levels` | u8 | Yes | Subdivision levels for render |
+
+#### Decimate
+
+```json
+{
+  "type": "decimate",
+  "ratio": 0.5
+}
+```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `ratio` | f64 | Yes | Decimate ratio (0.0 to 1.0) |
+
+#### Mirror
+
+```json
+{
+  "type": "mirror",
+  "axis_x": true,
+  "axis_y": false,
+  "axis_z": false
+}
+```
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `axis_x` | bool | false | Mirror along X axis |
+| `axis_y` | bool | false | Mirror along Y axis |
+| `axis_z` | bool | false | Mirror along Z axis |
+
+#### Array
+
+```json
+{
+  "type": "array",
+  "count": 5,
+  "offset": [1.0, 0.0, 0.0]
+}
+```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `count` | u32 | Yes | Number of copies |
+| `offset` | `[f64; 3]` | Yes | Offset between copies |
+
+#### Solidify
+
+```json
+{
+  "type": "solidify",
+  "thickness": 0.1,
+  "offset": 0.0
+}
+```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `thickness` | f64 | Yes | Shell thickness |
+| `offset` | f64 | Yes | Offset (-1 to 1) |
+
+#### Edge Split
+
+```json
+{
+  "type": "edge_split",
+  "angle": 30.0
+}
+```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `angle` | f64 | Yes | Split angle in degrees |
+
+### UV Projection
+
+UV projection can be a simple string or an object with settings.
+
+**Simple form:**
+
+```json
+"uv_projection": "smart"
+```
+
+**Object form:**
+
+```json
+"uv_projection": {
+  "method": "smart",
+  "angle_limit": 66.0,
+  "cube_size": 1.0
+}
+```
+
+| Method | Description |
+|--------|-------------|
+| `box` | Box/cube projection |
+| `cylinder` | Cylinder projection |
+| `sphere` | Sphere projection |
+| `smart` | Smart UV project |
+| `lightmap` | Lightmap pack |
+
+### Material Slots
+
+```json
+"material_slots": [
+  {
+    "name": "Metal",
+    "base_color": [0.8, 0.8, 0.9, 1.0],
+    "metallic": 1.0,
+    "roughness": 0.2
+  }
+]
+```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `name` | string | Yes | Material name |
+| `base_color` | `[f64; 4]` | No | RGBA color (0.0 to 1.0) |
+| `metallic` | f64 | No | Metallic value (0.0 to 1.0) |
+| `roughness` | f64 | No | Roughness value (0.0 to 1.0) |
+| `emissive` | `[f64; 3]` | No | Emissive RGB color |
+| `emissive_strength` | f64 | No | Emissive strength |
+
+### Export Settings
+
+```json
+"export": {
+  "apply_modifiers": true,
+  "triangulate": true,
+  "include_normals": true,
+  "include_uvs": true,
+  "include_vertex_colors": false,
+  "tangents": false
+}
+```
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `apply_modifiers` | bool | true | Apply modifiers before export |
+| `triangulate` | bool | true | Triangulate mesh |
+| `include_normals` | bool | true | Include vertex normals |
+| `include_uvs` | bool | true | Include UV coordinates |
+| `include_vertex_colors` | bool | false | Include vertex colors |
+| `tangents` | bool | false | Export tangents for normal mapping |
+
+### Constraints
+
+Constraints define validation limits. Reports include metrics for verification.
+
+```json
+"constraints": {
+  "max_triangles": 1000,
+  "max_materials": 4,
+  "max_vertices": 2000
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `max_triangles` | u32 | Maximum triangle count |
+| `max_materials` | u32 | Maximum material count |
+| `max_vertices` | u32 | Maximum vertex count |
+
+## Example Spec
+
+```json
+{
+  "spec_version": 1,
+  "asset_id": "simple_cube",
+  "asset_type": "static_mesh",
+  "license": "CC0-1.0",
+  "seed": 6001,
+  "description": "Simple beveled cube",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "glb",
+      "path": "simple_cube.glb"
+    }
+  ],
+  "recipe": {
+    "kind": "static_mesh.blender_primitives_v1",
+    "params": {
+      "base_primitive": "cube",
+      "dimensions": [1.0, 1.0, 1.0],
+      "modifiers": [
+        {
+          "type": "bevel",
+          "width": 0.02,
+          "segments": 2
+        }
+      ],
+      "uv_projection": "box",
+      "export": {
+        "apply_modifiers": true,
+        "triangulate": true,
+        "include_normals": true,
+        "include_uvs": true
+      }
+    }
+  }
+}
+```
+
+## Output Metrics
+
+Generation produces a report with mesh metrics:
+
+| Metric | Description |
+|--------|-------------|
+| `vertex_count` | Number of vertices |
+| `face_count` | Number of faces |
+| `triangle_count` | Number of triangles |
+| `quad_count` | Number of quads |
+| `quad_percentage` | Percentage of quads (0-100) |
+| `manifold` | Whether mesh is watertight |
+| `non_manifold_edge_count` | Non-manifold edge count |
+| `degenerate_face_count` | Degenerate face count |
+| `uv_island_count` | Number of UV islands |
+| `uv_coverage` | UV coverage ratio (0-1) |
+| `bounding_box` | Axis-aligned bounding box |
+| `material_slot_count` | Number of materials |
+
+## Post-Generation Verification
+
+Use `speccade verify` to validate metrics against constraints:
+
+```bash
+speccade verify --report output.report.json --constraints constraints.json
+```
+
+See [../README.md](../README.md) for constraint definitions.
+
+## See Also
+
+- [Character Specs](character.md) - Skeletal meshes with armatures
+- [Animation Specs](animation.md) - Skeletal animations
