@@ -26,7 +26,10 @@ use speccade_spec::recipe::audio::{Effect, LfoModulation, ModulationTarget};
 
 use crate::error::AudioResult;
 use crate::mixer::{MixerOutput, StereoOutput};
-use crate::modulation::lfo::Lfo;
+use crate::modulation::lfo::{
+    apply_delay_time_modulation, apply_distortion_drive_modulation, apply_reverb_size_modulation,
+    Lfo,
+};
 use crate::rng::create_rng;
 
 // Re-export the main entry points
@@ -171,8 +174,7 @@ fn apply_effect_with_lfo(
                 let room_size_mod_curve: Vec<f64> = lfo_curve
                     .iter()
                     .map(|&lfo_value| {
-                        let bipolar = (lfo_value - 0.5) * 2.0;
-                        (*room_size + bipolar * amount).clamp(0.0, 1.0)
+                        apply_reverb_size_modulation(*room_size, lfo_value, *amount, 1.0)
                     })
                     .collect();
                 reverb::apply_with_modulation(
@@ -197,8 +199,7 @@ fn apply_effect_with_lfo(
                 let time_curve: Vec<f64> = lfo_curve
                     .iter()
                     .map(|&lfo_value| {
-                        let bipolar = (lfo_value - 0.5) * 2.0;
-                        (*time_ms + bipolar * amount_ms).clamp(1.0, 2000.0)
+                        apply_delay_time_modulation(*time_ms, lfo_value, *amount_ms, 1.0)
                     })
                     .collect();
                 delay::apply_with_modulation(
@@ -240,8 +241,7 @@ fn apply_effect_with_lfo(
                 let drive_mod_curve: Vec<f64> = lfo_curve
                     .iter()
                     .map(|&lfo_value| {
-                        let bipolar = (lfo_value - 0.5) * 2.0;
-                        (*drive + bipolar * amount).clamp(1.0, 100.0)
+                        apply_distortion_drive_modulation(*drive, lfo_value, *amount, 1.0)
                     })
                     .collect();
                 distortion::apply_waveshaper_with_modulation(stereo, &drive_mod_curve, curve, *wet);
@@ -362,8 +362,7 @@ fn apply_effect_with_lfo(
                         lfo_curve
                             .iter()
                             .map(|&lfo_value| {
-                                let bipolar = (lfo_value - 0.5) * 2.0;
-                                (tap.time_ms + bipolar * amount_ms).clamp(1.0, 2000.0)
+                                apply_delay_time_modulation(tap.time_ms, lfo_value, *amount_ms, 1.0)
                             })
                             .collect()
                     })
@@ -458,8 +457,8 @@ fn apply_effect_with_lfo(
                 let time_curve: Vec<f64> = lfo_curve
                     .iter()
                     .map(|&lfo_value| {
-                        let bipolar = (lfo_value - 0.5) * 2.0;
-                        (*time_ms + bipolar * amount_ms).clamp(10.0, 2000.0)
+                        // Granular delay uses 10ms minimum instead of 1ms
+                        apply_delay_time_modulation(*time_ms, lfo_value, *amount_ms, 1.0).max(10.0)
                     })
                     .collect();
                 granular_delay::apply_with_modulation(

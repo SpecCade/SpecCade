@@ -6,4 +6,7 @@
 
 pub mod lfo;
 
+#[cfg(test)]
+mod tests;
+
 pub use lfo::Lfo;

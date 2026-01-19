@@ -162,7 +162,8 @@ Open questions:
   - Implemented: impact_builder() for 3-layer impacts, whoosh_builder() for swept noise SFX; 22 tests.
 - [x] `AUDIO-010` Add batch SFX variation sets (seed sweeps + constraints + sample-set export). **Done: 2026-01-19**
   - Implemented: `--variations N` flag for seed sweeps, `--max-peak-db` and `--max-dc-offset` quality constraints, `variations.json` manifest output.
-- [ ] `AUDIO-011` Expand LFO targets where it materially improves sound design (pulse_width, fm_index, delay_time, etc.).
+- [x] `AUDIO-011` Expand LFO targets where it materially improves sound design (pulse_width, fm_index, delay_time, etc.). **Done: 2026-01-19**
+  - Implemented: Full suite of 13 LFO modulation targets (pitch, volume, filter_cutoff, pan, pulse_width, fm_index, grain_size, grain_density, delay_time, reverb_size, distortion_drive). Added dedicated modulation functions with tests for reverb_size and distortion_drive. Updated effects chain to use centralized modulation functions.
 
 ---
 
