@@ -160,7 +160,8 @@ Open questions:
   - Implemented: oneshot_envelope(), loop_envelope(), with_loop_config() Starlark helpers with full documentation and 22 tests.
 - [x] `AUDIO-009` Add foley layering helpers (impact builder: transient/body/tail; whoosh builder: noise + sweep). **Done: 2026-01-19**
   - Implemented: impact_builder() for 3-layer impacts, whoosh_builder() for swept noise SFX; 22 tests.
-- [ ] `AUDIO-010` Add batch SFX variation sets (seed sweeps + constraints + sample-set export).
+- [x] `AUDIO-010` Add batch SFX variation sets (seed sweeps + constraints + sample-set export). **Done: 2026-01-19**
+  - Implemented: `--variations N` flag for seed sweeps, `--max-peak-db` and `--max-dc-offset` quality constraints, `variations.json` manifest output.
 - [ ] `AUDIO-011` Expand LFO targets where it materially improves sound design (pulse_width, fm_index, delay_time, etc.).
 
 ---

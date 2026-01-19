@@ -9,10 +9,10 @@ pub mod doctor;
 pub mod eval;
 pub mod expand;
 pub mod fmt;
-pub mod generate;
+pub mod generate; // Directory module: human, json, quality, variations, tests
 pub mod generate_all;
 pub mod inspect;
-pub mod json_output;
+pub mod json_output; // Directory module: analysis, convert, manifest, records
 pub mod migrate;
 pub mod preview;
 #[cfg(feature = "serve")]
