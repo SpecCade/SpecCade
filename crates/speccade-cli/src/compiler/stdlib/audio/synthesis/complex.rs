@@ -5,9 +5,7 @@ use starlark::environment::GlobalsBuilder;
 use starlark::starlark_module;
 use starlark::values::{dict::Dict, none::NoneType, Heap, Value, ValueLike};
 
-use super::super::super::validation::{
-    validate_enum, validate_positive, validate_unit_range,
-};
+use super::super::super::validation::{validate_enum, validate_positive, validate_unit_range};
 
 /// Helper to create a hashed key for dict insertion.
 fn hashed_key<'v>(heap: &'v Heap, key: &str) -> starlark::collections::Hashed<Value<'v>> {
@@ -35,7 +33,9 @@ fn extract_float(value: Value, function: &str, param: &str) -> anyhow::Result<f6
     }
     Err(anyhow::anyhow!(
         "S102: {}(): '{}' expected float, got {}",
-        function, param, value.get_type()
+        function,
+        param,
+        value.get_type()
     ))
 }
 
@@ -71,11 +71,11 @@ fn register_complex_synthesis(builder: &mut GlobalsBuilder) {
         harmonics: Value<'v>,
         heap: &'v Heap,
     ) -> anyhow::Result<Dict<'v>> {
-        validate_positive(base_freq, "additive", "base_freq")
-            .map_err(|e| anyhow::anyhow!(e))?;
+        validate_positive(base_freq, "additive", "base_freq").map_err(|e| anyhow::anyhow!(e))?;
 
         // Extract harmonics list
-        let harmonics_list = harmonics.iterate(heap)
+        let harmonics_list = harmonics
+            .iterate(heap)
             .map_err(|_| anyhow::anyhow!("S102: additive(): 'harmonics' must be a list"))?;
 
         let mut harmonic_values: Vec<f64> = Vec::new();
@@ -85,7 +85,9 @@ fn register_complex_synthesis(builder: &mut GlobalsBuilder) {
         }
 
         if harmonic_values.is_empty() {
-            return Err(anyhow::anyhow!("S103: additive(): 'harmonics' must not be empty"));
+            return Err(anyhow::anyhow!(
+                "S103: additive(): 'harmonics' must not be empty"
+            ));
         }
 
         let mut dict = new_dict(heap);
@@ -140,17 +142,35 @@ fn register_complex_synthesis(builder: &mut GlobalsBuilder) {
         validate_positive(frequency, "supersaw_unison", "frequency")
             .map_err(|e| anyhow::anyhow!(e))?;
         if !(1..=16).contains(&voices) {
-            return Err(anyhow::anyhow!("S103: supersaw_unison(): 'voices' must be 1-16, got {}", voices));
+            return Err(anyhow::anyhow!(
+                "S103: supersaw_unison(): 'voices' must be 1-16, got {}",
+                voices
+            ));
         }
         validate_positive(detune_cents, "supersaw_unison", "detune_cents")
-            .or_else(|_| if detune_cents == 0.0 { Ok(()) } else { Err("".to_string()) })
-            .map_err(|_| anyhow::anyhow!("S103: supersaw_unison(): 'detune_cents' must be >= 0, got {}", detune_cents))?;
-        validate_unit_range(spread, "supersaw_unison", "spread")
-            .map_err(|e| anyhow::anyhow!(e))?;
+            .or_else(|_| {
+                if detune_cents == 0.0 {
+                    Ok(())
+                } else {
+                    Err("".to_string())
+                }
+            })
+            .map_err(|_| {
+                anyhow::anyhow!(
+                    "S103: supersaw_unison(): 'detune_cents' must be >= 0, got {}",
+                    detune_cents
+                )
+            })?;
+        validate_unit_range(spread, "supersaw_unison", "spread").map_err(|e| anyhow::anyhow!(e))?;
 
         const DETUNE_CURVES: &[&str] = &["linear", "exp2"];
-        validate_enum(detune_curve, DETUNE_CURVES, "supersaw_unison", "detune_curve")
-            .map_err(|e| anyhow::anyhow!(e))?;
+        validate_enum(
+            detune_curve,
+            DETUNE_CURVES,
+            "supersaw_unison",
+            "detune_curve",
+        )
+        .map_err(|e| anyhow::anyhow!(e))?;
 
         let mut dict = new_dict(heap);
 
@@ -162,18 +182,12 @@ fn register_complex_synthesis(builder: &mut GlobalsBuilder) {
             hashed_key(heap, "frequency"),
             heap.alloc(frequency).to_value(),
         );
-        dict.insert_hashed(
-            hashed_key(heap, "voices"),
-            heap.alloc(voices).to_value(),
-        );
+        dict.insert_hashed(hashed_key(heap, "voices"), heap.alloc(voices).to_value());
         dict.insert_hashed(
             hashed_key(heap, "detune_cents"),
             heap.alloc(detune_cents).to_value(),
         );
-        dict.insert_hashed(
-            hashed_key(heap, "spread"),
-            heap.alloc(spread).to_value(),
-        );
+        dict.insert_hashed(hashed_key(heap, "spread"), heap.alloc(spread).to_value());
         dict.insert_hashed(
             hashed_key(heap, "detune_curve"),
             heap.alloc_str(detune_curve).to_value(),
@@ -212,12 +226,9 @@ fn register_complex_synthesis(builder: &mut GlobalsBuilder) {
         heap: &'v Heap,
     ) -> anyhow::Result<Dict<'v>> {
         const TABLES: &[&str] = &["basic", "analog", "digital", "pwm", "formant", "organ"];
-        validate_enum(table, TABLES, "wavetable", "table")
-            .map_err(|e| anyhow::anyhow!(e))?;
-        validate_positive(frequency, "wavetable", "frequency")
-            .map_err(|e| anyhow::anyhow!(e))?;
-        validate_unit_range(position, "wavetable", "position")
-            .map_err(|e| anyhow::anyhow!(e))?;
+        validate_enum(table, TABLES, "wavetable", "table").map_err(|e| anyhow::anyhow!(e))?;
+        validate_positive(frequency, "wavetable", "frequency").map_err(|e| anyhow::anyhow!(e))?;
+        validate_unit_range(position, "wavetable", "position").map_err(|e| anyhow::anyhow!(e))?;
 
         let mut dict = new_dict(heap);
 
@@ -225,10 +236,7 @@ fn register_complex_synthesis(builder: &mut GlobalsBuilder) {
             hashed_key(heap, "type"),
             heap.alloc_str("wavetable").to_value(),
         );
-        dict.insert_hashed(
-            hashed_key(heap, "table"),
-            heap.alloc_str(table).to_value(),
-        );
+        dict.insert_hashed(hashed_key(heap, "table"), heap.alloc_str(table).to_value());
         dict.insert_hashed(
             hashed_key(heap, "frequency"),
             heap.alloc(frequency).to_value(),
@@ -261,10 +269,14 @@ fn register_complex_synthesis(builder: &mut GlobalsBuilder) {
 
         // Add voices if provided
         if !voices.is_none() {
-            let voices_val = voices.unpack_i32()
+            let voices_val = voices
+                .unpack_i32()
                 .ok_or_else(|| anyhow::anyhow!("S102: wavetable(): 'voices' expected int"))?;
             if !(1..=8).contains(&voices_val) {
-                return Err(anyhow::anyhow!("S103: wavetable(): 'voices' must be 1-8, got {}", voices_val));
+                return Err(anyhow::anyhow!(
+                    "S103: wavetable(): 'voices' must be 1-8, got {}",
+                    voices_val
+                ));
             }
             dict.insert_hashed(
                 hashed_key(heap, "voices"),
@@ -312,10 +324,16 @@ fn register_complex_synthesis(builder: &mut GlobalsBuilder) {
         heap: &'v Heap,
     ) -> anyhow::Result<Dict<'v>> {
         if !(10.0..=500.0).contains(&grain_size_ms) {
-            return Err(anyhow::anyhow!("S103: granular(): 'grain_size_ms' must be 10-500, got {}", grain_size_ms));
+            return Err(anyhow::anyhow!(
+                "S103: granular(): 'grain_size_ms' must be 10-500, got {}",
+                grain_size_ms
+            ));
         }
         if !(1.0..=100.0).contains(&grain_density) {
-            return Err(anyhow::anyhow!("S103: granular(): 'grain_density' must be 1-100, got {}", grain_density));
+            return Err(anyhow::anyhow!(
+                "S103: granular(): 'grain_density' must be 1-100, got {}",
+                grain_density
+            ));
         }
         validate_unit_range(position_spread, "granular", "position_spread")
             .map_err(|e| anyhow::anyhow!(e))?;
@@ -328,10 +346,7 @@ fn register_complex_synthesis(builder: &mut GlobalsBuilder) {
             hashed_key(heap, "type"),
             heap.alloc_str("granular").to_value(),
         );
-        dict.insert_hashed(
-            hashed_key(heap, "source"),
-            source,
-        );
+        dict.insert_hashed(hashed_key(heap, "source"), source);
         dict.insert_hashed(
             hashed_key(heap, "grain_size_ms"),
             heap.alloc(grain_size_ms).to_value(),
@@ -382,23 +397,22 @@ fn register_complex_synthesis(builder: &mut GlobalsBuilder) {
 
         match source_type {
             "noise" => {
-                let noise_type = param1.unpack_str()
-                    .ok_or_else(|| anyhow::anyhow!("S102: granular_source(): noise type must be a string"))?;
+                let noise_type = param1.unpack_str().ok_or_else(|| {
+                    anyhow::anyhow!("S102: granular_source(): noise type must be a string")
+                })?;
                 validate_enum(noise_type, NOISE_TYPES, "granular_source", "noise_type")
                     .map_err(|e| anyhow::anyhow!(e))?;
 
-                dict.insert_hashed(
-                    hashed_key(heap, "type"),
-                    heap.alloc_str("noise").to_value(),
-                );
+                dict.insert_hashed(hashed_key(heap, "type"), heap.alloc_str("noise").to_value());
                 dict.insert_hashed(
                     hashed_key(heap, "noise_type"),
                     heap.alloc_str(noise_type).to_value(),
                 );
             }
             "tone" => {
-                let waveform = param1.unpack_str()
-                    .ok_or_else(|| anyhow::anyhow!("S102: granular_source(): waveform must be a string"))?;
+                let waveform = param1.unpack_str().ok_or_else(|| {
+                    anyhow::anyhow!("S102: granular_source(): waveform must be a string")
+                })?;
                 validate_enum(waveform, WAVEFORMS, "granular_source", "waveform")
                     .map_err(|e| anyhow::anyhow!(e))?;
 
@@ -406,10 +420,7 @@ fn register_complex_synthesis(builder: &mut GlobalsBuilder) {
                 validate_positive(frequency, "granular_source", "frequency")
                     .map_err(|e| anyhow::anyhow!(e))?;
 
-                dict.insert_hashed(
-                    hashed_key(heap, "type"),
-                    heap.alloc_str("tone").to_value(),
-                );
+                dict.insert_hashed(hashed_key(heap, "type"), heap.alloc_str("tone").to_value());
                 dict.insert_hashed(
                     hashed_key(heap, "waveform"),
                     heap.alloc_str(waveform).to_value(),
@@ -442,7 +453,9 @@ fn register_complex_synthesis(builder: &mut GlobalsBuilder) {
                 );
             }
             _ => {
-                return Err(anyhow::anyhow!("S104: granular_source(): 'source_type' must be one of: noise, tone, formant"));
+                return Err(anyhow::anyhow!(
+                    "S104: granular_source(): 'source_type' must be one of: noise, tone, formant"
+                ));
             }
         }
 
@@ -466,12 +479,10 @@ fn register_complex_synthesis(builder: &mut GlobalsBuilder) {
         #[starlark(default = NoneType)] sweep_to: Value<'v>,
         heap: &'v Heap,
     ) -> anyhow::Result<Dict<'v>> {
-        validate_positive(carrier, "ring_mod_synth", "carrier")
-            .map_err(|e| anyhow::anyhow!(e))?;
+        validate_positive(carrier, "ring_mod_synth", "carrier").map_err(|e| anyhow::anyhow!(e))?;
         validate_positive(modulator, "ring_mod_synth", "modulator")
             .map_err(|e| anyhow::anyhow!(e))?;
-        validate_unit_range(mix, "ring_mod_synth", "mix")
-            .map_err(|e| anyhow::anyhow!(e))?;
+        validate_unit_range(mix, "ring_mod_synth", "mix").map_err(|e| anyhow::anyhow!(e))?;
 
         let mut dict = new_dict(heap);
 
@@ -487,10 +498,7 @@ fn register_complex_synthesis(builder: &mut GlobalsBuilder) {
             hashed_key(heap, "modulator_freq"),
             heap.alloc(modulator).to_value(),
         );
-        dict.insert_hashed(
-            hashed_key(heap, "mix"),
-            heap.alloc(mix).to_value(),
-        );
+        dict.insert_hashed(hashed_key(heap, "mix"), heap.alloc(mix).to_value());
 
         if !sweep_to.is_none() {
             let end_freq = extract_float(sweep_to, "ring_mod_synth", "sweep_to")?;
@@ -543,10 +551,7 @@ fn register_complex_synthesis(builder: &mut GlobalsBuilder) {
             hashed_key(heap, "frequency"),
             heap.alloc(frequency).to_value(),
         );
-        dict.insert_hashed(
-            hashed_key(heap, "oscillators"),
-            oscillators,
-        );
+        dict.insert_hashed(hashed_key(heap, "oscillators"), oscillators);
 
         if !sweep_to.is_none() {
             let end_freq = extract_float(sweep_to, "multi_oscillator", "sweep_to")?;
@@ -598,10 +603,7 @@ fn register_complex_synthesis(builder: &mut GlobalsBuilder) {
             hashed_key(heap, "waveform"),
             heap.alloc_str(waveform).to_value(),
         );
-        dict.insert_hashed(
-            hashed_key(heap, "volume"),
-            heap.alloc(volume).to_value(),
-        );
+        dict.insert_hashed(hashed_key(heap, "volume"), heap.alloc(volume).to_value());
 
         if !detune.is_none() {
             let detune_val = extract_float(detune, "oscillator_config", "detune")?;
@@ -615,20 +617,14 @@ fn register_complex_synthesis(builder: &mut GlobalsBuilder) {
             let phase_val = extract_float(phase, "oscillator_config", "phase")?;
             validate_unit_range(phase_val, "oscillator_config", "phase")
                 .map_err(|e| anyhow::anyhow!(e))?;
-            dict.insert_hashed(
-                hashed_key(heap, "phase"),
-                heap.alloc(phase_val).to_value(),
-            );
+            dict.insert_hashed(hashed_key(heap, "phase"), heap.alloc(phase_val).to_value());
         }
 
         if !duty.is_none() {
             let duty_val = extract_float(duty, "oscillator_config", "duty")?;
             validate_unit_range(duty_val, "oscillator_config", "duty")
                 .map_err(|e| anyhow::anyhow!(e))?;
-            dict.insert_hashed(
-                hashed_key(heap, "duty"),
-                heap.alloc(duty_val).to_value(),
-            );
+            dict.insert_hashed(hashed_key(heap, "duty"), heap.alloc(duty_val).to_value());
         }
 
         Ok(dict)

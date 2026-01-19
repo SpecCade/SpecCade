@@ -49,8 +49,7 @@ fn register_spatial_effects(builder: &mut GlobalsBuilder) {
             ));
         }
         const MODES: &[&str] = &["simple", "haas", "mid_side"];
-        validate_enum(mode, MODES, "stereo_widener", "mode")
-            .map_err(|e| anyhow::anyhow!(e))?;
+        validate_enum(mode, MODES, "stereo_widener", "mode").map_err(|e| anyhow::anyhow!(e))?;
         if !(1.0..=30.0).contains(&delay_ms) {
             return Err(anyhow::anyhow!(
                 "S103: stereo_widener(): 'delay_ms' must be 1-30, got {}",
@@ -64,14 +63,8 @@ fn register_spatial_effects(builder: &mut GlobalsBuilder) {
             hashed_key(heap, "type"),
             heap.alloc_str("stereo_widener").to_value(),
         );
-        dict.insert_hashed(
-            hashed_key(heap, "width"),
-            heap.alloc(width).to_value(),
-        );
-        dict.insert_hashed(
-            hashed_key(heap, "mode"),
-            heap.alloc_str(mode).to_value(),
-        );
+        dict.insert_hashed(hashed_key(heap, "width"), heap.alloc(width).to_value());
+        dict.insert_hashed(hashed_key(heap, "mode"), heap.alloc_str(mode).to_value());
         dict.insert_hashed(
             hashed_key(heap, "delay_ms"),
             heap.alloc(delay_ms).to_value(),
@@ -118,10 +111,8 @@ fn register_spatial_effects(builder: &mut GlobalsBuilder) {
                 feedback
             ));
         }
-        validate_pan_range(pan, "delay_tap", "pan")
-            .map_err(|e| anyhow::anyhow!(e))?;
-        validate_unit_range(level, "delay_tap", "level")
-            .map_err(|e| anyhow::anyhow!(e))?;
+        validate_pan_range(pan, "delay_tap", "pan").map_err(|e| anyhow::anyhow!(e))?;
+        validate_unit_range(level, "delay_tap", "level").map_err(|e| anyhow::anyhow!(e))?;
         if filter_cutoff < 0.0 {
             return Err(anyhow::anyhow!(
                 "S103: delay_tap(): 'filter_cutoff' must be >= 0, got {}",
@@ -131,22 +122,13 @@ fn register_spatial_effects(builder: &mut GlobalsBuilder) {
 
         let mut dict = new_dict(heap);
 
-        dict.insert_hashed(
-            hashed_key(heap, "time_ms"),
-            heap.alloc(time_ms).to_value(),
-        );
+        dict.insert_hashed(hashed_key(heap, "time_ms"), heap.alloc(time_ms).to_value());
         dict.insert_hashed(
             hashed_key(heap, "feedback"),
             heap.alloc(feedback).to_value(),
         );
-        dict.insert_hashed(
-            hashed_key(heap, "pan"),
-            heap.alloc(pan).to_value(),
-        );
-        dict.insert_hashed(
-            hashed_key(heap, "level"),
-            heap.alloc(level).to_value(),
-        );
+        dict.insert_hashed(hashed_key(heap, "pan"), heap.alloc(pan).to_value());
+        dict.insert_hashed(hashed_key(heap, "level"), heap.alloc(level).to_value());
         dict.insert_hashed(
             hashed_key(heap, "filter_cutoff"),
             heap.alloc(filter_cutoff).to_value(),
@@ -176,7 +158,8 @@ fn register_spatial_effects(builder: &mut GlobalsBuilder) {
         heap: &'v Heap,
     ) -> anyhow::Result<Dict<'v>> {
         // Validate taps is a list
-        let _taps_iter = taps.iterate(heap)
+        let _taps_iter = taps
+            .iterate(heap)
             .map_err(|_| anyhow::anyhow!("S102: multi_tap_delay(): 'taps' must be a list"))?;
 
         let mut dict = new_dict(heap);
@@ -185,10 +168,7 @@ fn register_spatial_effects(builder: &mut GlobalsBuilder) {
             hashed_key(heap, "type"),
             heap.alloc_str("multi_tap_delay").to_value(),
         );
-        dict.insert_hashed(
-            hashed_key(heap, "taps"),
-            taps,
-        );
+        dict.insert_hashed(hashed_key(heap, "taps"), taps);
 
         Ok(dict)
     }
@@ -255,14 +235,8 @@ fn register_spatial_effects(builder: &mut GlobalsBuilder) {
             hashed_key(heap, "type"),
             heap.alloc_str("tape_saturation").to_value(),
         );
-        dict.insert_hashed(
-            hashed_key(heap, "drive"),
-            heap.alloc(drive).to_value(),
-        );
-        dict.insert_hashed(
-            hashed_key(heap, "bias"),
-            heap.alloc(bias).to_value(),
-        );
+        dict.insert_hashed(hashed_key(heap, "drive"), heap.alloc(drive).to_value());
+        dict.insert_hashed(hashed_key(heap, "bias"), heap.alloc(bias).to_value());
         dict.insert_hashed(
             hashed_key(heap, "wow_rate"),
             heap.alloc(wow_rate).to_value(),
@@ -299,7 +273,13 @@ fn register_spatial_effects(builder: &mut GlobalsBuilder) {
         #[starlark(require = named, default = 0.0)] mic_position: f64,
         heap: &'v Heap,
     ) -> anyhow::Result<Dict<'v>> {
-        const CABINET_TYPES: &[&str] = &["guitar_1x12", "guitar_4x12", "bass_1x15", "radio", "telephone"];
+        const CABINET_TYPES: &[&str] = &[
+            "guitar_1x12",
+            "guitar_4x12",
+            "bass_1x15",
+            "radio",
+            "telephone",
+        ];
         validate_enum(cabinet_type, CABINET_TYPES, "cabinet_sim", "cabinet_type")
             .map_err(|e| anyhow::anyhow!(e))?;
         validate_unit_range(mic_position, "cabinet_sim", "mic_position")
@@ -373,8 +353,7 @@ fn register_spatial_effects(builder: &mut GlobalsBuilder) {
                 pitch_semitones
             ));
         }
-        validate_unit_range(wet, "granular_delay", "wet")
-            .map_err(|e| anyhow::anyhow!(e))?;
+        validate_unit_range(wet, "granular_delay", "wet").map_err(|e| anyhow::anyhow!(e))?;
 
         let mut dict = new_dict(heap);
 
@@ -382,10 +361,7 @@ fn register_spatial_effects(builder: &mut GlobalsBuilder) {
             hashed_key(heap, "type"),
             heap.alloc_str("granular_delay").to_value(),
         );
-        dict.insert_hashed(
-            hashed_key(heap, "time_ms"),
-            heap.alloc(time_ms).to_value(),
-        );
+        dict.insert_hashed(hashed_key(heap, "time_ms"), heap.alloc(time_ms).to_value());
         dict.insert_hashed(
             hashed_key(heap, "feedback"),
             heap.alloc(feedback).to_value(),
@@ -398,10 +374,7 @@ fn register_spatial_effects(builder: &mut GlobalsBuilder) {
             hashed_key(heap, "pitch_semitones"),
             heap.alloc(pitch_semitones).to_value(),
         );
-        dict.insert_hashed(
-            hashed_key(heap, "wet"),
-            heap.alloc(wet).to_value(),
-        );
+        dict.insert_hashed(hashed_key(heap, "wet"), heap.alloc(wet).to_value());
 
         Ok(dict)
     }

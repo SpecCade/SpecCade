@@ -4,6 +4,7 @@
 //! to ensure they compile and validate successfully.
 
 use speccade_cli::input::load_spec;
+use speccade_spec::validation::{validate_spec_with_budget, BudgetProfile};
 use std::fs;
 use std::path::PathBuf;
 
@@ -30,9 +31,7 @@ fn validate_all_golden_starlark_files() {
     let entries: Vec<_> = fs::read_dir(&golden_dir)
         .expect("Failed to read golden/starlark directory")
         .filter_map(|entry| entry.ok())
-        .filter(|entry| {
-            entry.path().extension().map_or(false, |e| e == "star")
-        })
+        .filter(|entry| entry.path().extension().map_or(false, |e| e == "star"))
         .collect();
 
     println!("\n=== Validating {} .star files ===\n", entries.len());
@@ -46,10 +45,9 @@ fn validate_all_golden_starlark_files() {
         match load_spec(&path) {
             Ok(result) => {
                 successes += 1;
-                println!("✓ {} (asset_id: {}, type: {:?})",
-                    filename,
-                    result.spec.asset_id,
-                    result.spec.asset_type
+                println!(
+                    "✓ {} (asset_id: {}, type: {:?})",
+                    filename, result.spec.asset_id, result.spec.asset_type
                 );
 
                 // Additional validation checks

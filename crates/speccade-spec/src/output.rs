@@ -14,13 +14,25 @@ pub enum OutputKind {
     Preview,
 }
 
+impl OutputKind {
+    /// Returns the output kind as a string.
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            OutputKind::Primary => "primary",
+            OutputKind::Metadata => "metadata",
+            OutputKind::Preview => "preview",
+        }
+    }
+
+    /// Returns all output kinds.
+    pub fn all() -> &'static [OutputKind] {
+        &[OutputKind::Primary, OutputKind::Metadata, OutputKind::Preview]
+    }
+}
+
 impl std::fmt::Display for OutputKind {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            OutputKind::Primary => write!(f, "primary"),
-            OutputKind::Metadata => write!(f, "metadata"),
-            OutputKind::Preview => write!(f, "preview"),
-        }
+        write!(f, "{}", self.as_str())
     }
 }
 
@@ -45,6 +57,19 @@ pub enum OutputFormat {
 }
 
 impl OutputFormat {
+    /// Returns all output formats.
+    pub fn all() -> &'static [OutputFormat] {
+        &[
+            OutputFormat::Wav,
+            OutputFormat::Xm,
+            OutputFormat::It,
+            OutputFormat::Png,
+            OutputFormat::Glb,
+            OutputFormat::Gltf,
+            OutputFormat::Json,
+        ]
+    }
+
     /// Returns the expected file extension for this format.
     pub fn extension(&self) -> &'static str {
         match self {

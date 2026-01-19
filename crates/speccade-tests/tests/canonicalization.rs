@@ -7,7 +7,7 @@
 //!
 //! These are acceptance criteria for Phase 3 of the Starlark migration.
 
-use speccade_spec::hash::{canonicalize_json, canonical_spec_hash, canonical_value_hash};
+use speccade_spec::hash::{canonical_spec_hash, canonical_value_hash, canonicalize_json};
 use speccade_spec::{AssetType, OutputFormat, OutputSpec, Spec};
 
 // ============================================================================
@@ -46,10 +46,7 @@ fn test_spec_hash_stability() {
         .license("MIT")
         .seed(12345)
         .description("A test texture")
-        .output(OutputSpec::primary(
-            OutputFormat::Png,
-            "textures/test.png",
-        ))
+        .output(OutputSpec::primary(OutputFormat::Png, "textures/test.png"))
         .build();
 
     let hash1 = canonical_spec_hash(&spec).expect("first hash should succeed");
@@ -58,11 +55,7 @@ fn test_spec_hash_stability() {
 
     assert_eq!(hash1, hash2);
     assert_eq!(hash2, hash3);
-    assert_eq!(
-        hash1.len(),
-        64,
-        "BLAKE3 hash should be 64 hex characters"
-    );
+    assert_eq!(hash1.len(), 64, "BLAKE3 hash should be 64 hex characters");
 }
 
 // ============================================================================
@@ -129,10 +122,7 @@ fn test_nested_key_order_independence() {
     let hash1 = canonical_value_hash(&json1).unwrap();
     let hash2 = canonical_value_hash(&json2).unwrap();
 
-    assert_eq!(
-        hash1, hash2,
-        "nested key order should not affect hash"
-    );
+    assert_eq!(hash1, hash2, "nested key order should not affect hash");
 }
 
 // ============================================================================
@@ -184,7 +174,10 @@ fn test_float_normalization() {
     let canon_int = canonicalize_json(&json_int).unwrap();
 
     // Both should canonicalize to the same form
-    assert_eq!(canon_float, canon_int, "1.0 and 1 should have same canonical form");
+    assert_eq!(
+        canon_float, canon_int,
+        "1.0 and 1 should have same canonical form"
+    );
 }
 
 /// Test that zero is handled consistently.
@@ -280,14 +273,8 @@ fn test_string_escaping() {
 
     // Verify round-trip
     let reparsed: serde_json::Value = serde_json::from_str(&canon).unwrap();
-    assert_eq!(
-        reparsed["newline"].as_str().unwrap(),
-        "line1\nline2"
-    );
-    assert_eq!(
-        reparsed["quote"].as_str().unwrap(),
-        "she said \"hello\""
-    );
+    assert_eq!(reparsed["newline"].as_str().unwrap(), "line1\nline2");
+    assert_eq!(reparsed["quote"].as_str().unwrap(), "she said \"hello\"");
 }
 
 // ============================================================================

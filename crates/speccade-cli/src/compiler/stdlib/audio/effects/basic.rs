@@ -35,12 +35,9 @@ fn register_basic_effects(builder: &mut GlobalsBuilder) {
         #[starlark(default = 1.0)] width: f64,
         heap: &'v Heap,
     ) -> anyhow::Result<Dict<'v>> {
-        validate_unit_range(wet, "reverb", "wet")
-            .map_err(|e| anyhow::anyhow!(e))?;
-        validate_unit_range(room_size, "reverb", "room_size")
-            .map_err(|e| anyhow::anyhow!(e))?;
-        validate_unit_range(width, "reverb", "width")
-            .map_err(|e| anyhow::anyhow!(e))?;
+        validate_unit_range(wet, "reverb", "wet").map_err(|e| anyhow::anyhow!(e))?;
+        validate_unit_range(room_size, "reverb", "room_size").map_err(|e| anyhow::anyhow!(e))?;
+        validate_unit_range(width, "reverb", "width").map_err(|e| anyhow::anyhow!(e))?;
 
         let mut dict = new_dict(heap);
 
@@ -52,18 +49,9 @@ fn register_basic_effects(builder: &mut GlobalsBuilder) {
             hashed_key(heap, "room_size"),
             heap.alloc(room_size).to_value(),
         );
-        dict.insert_hashed(
-            hashed_key(heap, "damping"),
-            heap.alloc(decay).to_value(),
-        );
-        dict.insert_hashed(
-            hashed_key(heap, "wet"),
-            heap.alloc(wet).to_value(),
-        );
-        dict.insert_hashed(
-            hashed_key(heap, "width"),
-            heap.alloc(width).to_value(),
-        );
+        dict.insert_hashed(hashed_key(heap, "damping"), heap.alloc(decay).to_value());
+        dict.insert_hashed(hashed_key(heap, "wet"), heap.alloc(wet).to_value());
+        dict.insert_hashed(hashed_key(heap, "width"), heap.alloc(width).to_value());
 
         Ok(dict)
     }
@@ -92,31 +80,19 @@ fn register_basic_effects(builder: &mut GlobalsBuilder) {
         #[starlark(default = false)] ping_pong: bool,
         heap: &'v Heap,
     ) -> anyhow::Result<Dict<'v>> {
-        validate_positive(time_ms, "delay", "time_ms")
-            .map_err(|e| anyhow::anyhow!(e))?;
-        validate_unit_range(feedback, "delay", "feedback")
-            .map_err(|e| anyhow::anyhow!(e))?;
-        validate_unit_range(wet, "delay", "wet")
-            .map_err(|e| anyhow::anyhow!(e))?;
+        validate_positive(time_ms, "delay", "time_ms").map_err(|e| anyhow::anyhow!(e))?;
+        validate_unit_range(feedback, "delay", "feedback").map_err(|e| anyhow::anyhow!(e))?;
+        validate_unit_range(wet, "delay", "wet").map_err(|e| anyhow::anyhow!(e))?;
 
         let mut dict = new_dict(heap);
 
-        dict.insert_hashed(
-            hashed_key(heap, "type"),
-            heap.alloc_str("delay").to_value(),
-        );
-        dict.insert_hashed(
-            hashed_key(heap, "time_ms"),
-            heap.alloc(time_ms).to_value(),
-        );
+        dict.insert_hashed(hashed_key(heap, "type"), heap.alloc_str("delay").to_value());
+        dict.insert_hashed(hashed_key(heap, "time_ms"), heap.alloc(time_ms).to_value());
         dict.insert_hashed(
             hashed_key(heap, "feedback"),
             heap.alloc(feedback).to_value(),
         );
-        dict.insert_hashed(
-            hashed_key(heap, "wet"),
-            heap.alloc(wet).to_value(),
-        );
+        dict.insert_hashed(hashed_key(heap, "wet"), heap.alloc(wet).to_value());
         dict.insert_hashed(
             hashed_key(heap, "ping_pong"),
             heap.alloc(ping_pong).to_value(),
@@ -151,10 +127,8 @@ fn register_basic_effects(builder: &mut GlobalsBuilder) {
         #[starlark(default = 0.0)] makeup_db: f64,
         heap: &'v Heap,
     ) -> anyhow::Result<Dict<'v>> {
-        validate_positive(ratio, "compressor", "ratio")
-            .map_err(|e| anyhow::anyhow!(e))?;
-        validate_positive(attack_ms, "compressor", "attack_ms")
-            .map_err(|e| anyhow::anyhow!(e))?;
+        validate_positive(ratio, "compressor", "ratio").map_err(|e| anyhow::anyhow!(e))?;
+        validate_positive(attack_ms, "compressor", "attack_ms").map_err(|e| anyhow::anyhow!(e))?;
         validate_positive(release_ms, "compressor", "release_ms")
             .map_err(|e| anyhow::anyhow!(e))?;
 
@@ -168,10 +142,7 @@ fn register_basic_effects(builder: &mut GlobalsBuilder) {
             hashed_key(heap, "threshold_db"),
             heap.alloc(threshold_db).to_value(),
         );
-        dict.insert_hashed(
-            hashed_key(heap, "ratio"),
-            heap.alloc(ratio).to_value(),
-        );
+        dict.insert_hashed(hashed_key(heap, "ratio"), heap.alloc(ratio).to_value());
         dict.insert_hashed(
             hashed_key(heap, "attack_ms"),
             heap.alloc(attack_ms).to_value(),
@@ -211,14 +182,14 @@ fn register_basic_effects(builder: &mut GlobalsBuilder) {
         #[starlark(default = 2)] voices: i32,
         heap: &'v Heap,
     ) -> anyhow::Result<Dict<'v>> {
-        validate_positive(rate, "chorus", "rate")
-            .map_err(|e| anyhow::anyhow!(e))?;
-        validate_unit_range(depth, "chorus", "depth")
-            .map_err(|e| anyhow::anyhow!(e))?;
-        validate_unit_range(wet, "chorus", "wet")
-            .map_err(|e| anyhow::anyhow!(e))?;
+        validate_positive(rate, "chorus", "rate").map_err(|e| anyhow::anyhow!(e))?;
+        validate_unit_range(depth, "chorus", "depth").map_err(|e| anyhow::anyhow!(e))?;
+        validate_unit_range(wet, "chorus", "wet").map_err(|e| anyhow::anyhow!(e))?;
         if !(1..=4).contains(&voices) {
-            return Err(anyhow::anyhow!("S103: chorus(): 'voices' must be 1-4, got {}", voices));
+            return Err(anyhow::anyhow!(
+                "S103: chorus(): 'voices' must be 1-4, got {}",
+                voices
+            ));
         }
 
         let mut dict = new_dict(heap);
@@ -227,22 +198,10 @@ fn register_basic_effects(builder: &mut GlobalsBuilder) {
             hashed_key(heap, "type"),
             heap.alloc_str("chorus").to_value(),
         );
-        dict.insert_hashed(
-            hashed_key(heap, "rate"),
-            heap.alloc(rate).to_value(),
-        );
-        dict.insert_hashed(
-            hashed_key(heap, "depth"),
-            heap.alloc(depth).to_value(),
-        );
-        dict.insert_hashed(
-            hashed_key(heap, "wet"),
-            heap.alloc(wet).to_value(),
-        );
-        dict.insert_hashed(
-            hashed_key(heap, "voices"),
-            heap.alloc(voices).to_value(),
-        );
+        dict.insert_hashed(hashed_key(heap, "rate"), heap.alloc(rate).to_value());
+        dict.insert_hashed(hashed_key(heap, "depth"), heap.alloc(depth).to_value());
+        dict.insert_hashed(hashed_key(heap, "wet"), heap.alloc(wet).to_value());
+        dict.insert_hashed(hashed_key(heap, "voices"), heap.alloc(voices).to_value());
 
         Ok(dict)
     }
@@ -261,15 +220,15 @@ fn register_basic_effects(builder: &mut GlobalsBuilder) {
         wet: f64,
         heap: &'v Heap,
     ) -> anyhow::Result<Dict<'v>> {
-        validate_positive(rate, "phaser", "rate")
-            .map_err(|e| anyhow::anyhow!(e))?;
-        validate_unit_range(depth, "phaser", "depth")
-            .map_err(|e| anyhow::anyhow!(e))?;
+        validate_positive(rate, "phaser", "rate").map_err(|e| anyhow::anyhow!(e))?;
+        validate_unit_range(depth, "phaser", "depth").map_err(|e| anyhow::anyhow!(e))?;
         if !(2..=12).contains(&stages) {
-            return Err(anyhow::anyhow!("S103: phaser(): 'stages' must be 2-12, got {}", stages));
+            return Err(anyhow::anyhow!(
+                "S103: phaser(): 'stages' must be 2-12, got {}",
+                stages
+            ));
         }
-        validate_unit_range(wet, "phaser", "wet")
-            .map_err(|e| anyhow::anyhow!(e))?;
+        validate_unit_range(wet, "phaser", "wet").map_err(|e| anyhow::anyhow!(e))?;
 
         let mut dict = new_dict(heap);
 
@@ -277,22 +236,10 @@ fn register_basic_effects(builder: &mut GlobalsBuilder) {
             hashed_key(heap, "type"),
             heap.alloc_str("phaser").to_value(),
         );
-        dict.insert_hashed(
-            hashed_key(heap, "rate"),
-            heap.alloc(rate).to_value(),
-        );
-        dict.insert_hashed(
-            hashed_key(heap, "depth"),
-            heap.alloc(depth).to_value(),
-        );
-        dict.insert_hashed(
-            hashed_key(heap, "stages"),
-            heap.alloc(stages).to_value(),
-        );
-        dict.insert_hashed(
-            hashed_key(heap, "wet"),
-            heap.alloc(wet).to_value(),
-        );
+        dict.insert_hashed(hashed_key(heap, "rate"), heap.alloc(rate).to_value());
+        dict.insert_hashed(hashed_key(heap, "depth"), heap.alloc(depth).to_value());
+        dict.insert_hashed(hashed_key(heap, "stages"), heap.alloc(stages).to_value());
+        dict.insert_hashed(hashed_key(heap, "wet"), heap.alloc(wet).to_value());
 
         Ok(dict)
     }
@@ -308,10 +255,16 @@ fn register_basic_effects(builder: &mut GlobalsBuilder) {
         heap: &'v Heap,
     ) -> anyhow::Result<Dict<'v>> {
         if !(1..=16).contains(&bits) {
-            return Err(anyhow::anyhow!("S103: bitcrush(): 'bits' must be 1-16, got {}", bits));
+            return Err(anyhow::anyhow!(
+                "S103: bitcrush(): 'bits' must be 1-16, got {}",
+                bits
+            ));
         }
         if sample_rate_reduction < 1.0 {
-            return Err(anyhow::anyhow!("S103: bitcrush(): 'sample_rate_reduction' must be >= 1.0, got {}", sample_rate_reduction));
+            return Err(anyhow::anyhow!(
+                "S103: bitcrush(): 'sample_rate_reduction' must be >= 1.0, got {}",
+                sample_rate_reduction
+            ));
         }
 
         let mut dict = new_dict(heap);
@@ -320,10 +273,7 @@ fn register_basic_effects(builder: &mut GlobalsBuilder) {
             hashed_key(heap, "type"),
             heap.alloc_str("bitcrush").to_value(),
         );
-        dict.insert_hashed(
-            hashed_key(heap, "bits"),
-            heap.alloc(bits).to_value(),
-        );
+        dict.insert_hashed(hashed_key(heap, "bits"), heap.alloc(bits).to_value());
         dict.insert_hashed(
             hashed_key(heap, "sample_rate_reduction"),
             heap.alloc(sample_rate_reduction).to_value(),

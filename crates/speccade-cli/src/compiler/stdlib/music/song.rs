@@ -55,10 +55,7 @@ fn register_song_functions(builder: &mut GlobalsBuilder) {
 
         let mut dict = new_dict(heap);
 
-        dict.insert_hashed(
-            hashed_key(heap, "stereo"),
-            heap.alloc(stereo).to_value(),
-        );
+        dict.insert_hashed(hashed_key(heap, "stereo"), heap.alloc(stereo).to_value());
         dict.insert_hashed(
             hashed_key(heap, "global_volume"),
             heap.alloc(global_volume).to_value(),
@@ -148,7 +145,9 @@ fn register_song_functions(builder: &mut GlobalsBuilder) {
         if !(1..=max_channels).contains(&channels) {
             return Err(anyhow::anyhow!(
                 "S103: tracker_song(): 'channels' must be 1-{} for {} format, got {}",
-                max_channels, format, channels
+                max_channels,
+                format,
+                channels
             ));
         }
 
@@ -167,22 +166,13 @@ fn register_song_functions(builder: &mut GlobalsBuilder) {
             hashed_key(heap, "format"),
             heap.alloc_str(format).to_value(),
         );
-        params.insert_hashed(
-            hashed_key(heap, "bpm"),
-            heap.alloc(bpm).to_value(),
-        );
-        params.insert_hashed(
-            hashed_key(heap, "speed"),
-            heap.alloc(speed).to_value(),
-        );
+        params.insert_hashed(hashed_key(heap, "bpm"), heap.alloc(bpm).to_value());
+        params.insert_hashed(hashed_key(heap, "speed"), heap.alloc(speed).to_value());
         params.insert_hashed(
             hashed_key(heap, "channels"),
             heap.alloc(channels).to_value(),
         );
-        params.insert_hashed(
-            hashed_key(heap, "loop"),
-            heap.alloc(r#loop).to_value(),
-        );
+        params.insert_hashed(hashed_key(heap, "loop"), heap.alloc(r#loop).to_value());
 
         // Optional: name
         if !name.is_none() {
@@ -216,45 +206,26 @@ fn register_song_functions(builder: &mut GlobalsBuilder) {
 
         // instruments
         let instruments_list = heap.alloc(AllocList(instruments.items));
-        params.insert_hashed(
-            hashed_key(heap, "instruments"),
-            instruments_list,
-        );
+        params.insert_hashed(hashed_key(heap, "instruments"), instruments_list);
 
         // patterns
-        params.insert_hashed(
-            hashed_key(heap, "patterns"),
-            patterns,
-        );
+        params.insert_hashed(hashed_key(heap, "patterns"), patterns);
 
         // arrangement
         let arrangement_list = heap.alloc(AllocList(arrangement.items));
-        params.insert_hashed(
-            hashed_key(heap, "arrangement"),
-            arrangement_list,
-        );
+        params.insert_hashed(hashed_key(heap, "arrangement"), arrangement_list);
 
         // Optional: automation
         if !automation.is_none() {
-            params.insert_hashed(
-                hashed_key(heap, "automation"),
-                automation,
-            );
+            params.insert_hashed(hashed_key(heap, "automation"), automation);
         }
 
         // Optional: it_options (only for IT format)
-        if !it_options.is_none()
-            && format == "it" {
-                params.insert_hashed(
-                    hashed_key(heap, "it_options"),
-                    it_options,
-                );
-            }
+        if !it_options.is_none() && format == "it" {
+            params.insert_hashed(hashed_key(heap, "it_options"), it_options);
+        }
 
-        dict.insert_hashed(
-            hashed_key(heap, "params"),
-            heap.alloc(params).to_value(),
-        );
+        dict.insert_hashed(hashed_key(heap, "params"), heap.alloc(params).to_value());
 
         Ok(dict)
     }
@@ -319,8 +290,7 @@ fn register_song_functions(builder: &mut GlobalsBuilder) {
         heap: &'v Heap,
     ) -> anyhow::Result<Dict<'v>> {
         // Validate asset_id
-        validate_non_empty(asset_id, "music_spec", "asset_id")
-            .map_err(|e| anyhow::anyhow!(e))?;
+        validate_non_empty(asset_id, "music_spec", "asset_id").map_err(|e| anyhow::anyhow!(e))?;
 
         // Validate format
         validate_enum(format, TRACKER_FORMATS, "music_spec", "format")
@@ -356,17 +326,16 @@ fn register_song_functions(builder: &mut GlobalsBuilder) {
         if !(1..=max_channels).contains(&channels) {
             return Err(anyhow::anyhow!(
                 "S103: music_spec(): 'channels' must be 1-{} for {} format, got {}",
-                max_channels, format, channels
+                max_channels,
+                format,
+                channels
             ));
         }
 
         let mut spec = new_dict(heap);
 
         // spec_version
-        spec.insert_hashed(
-            hashed_key(heap, "spec_version"),
-            heap.alloc(1).to_value(),
-        );
+        spec.insert_hashed(hashed_key(heap, "spec_version"), heap.alloc(1).to_value());
 
         // asset_id
         spec.insert_hashed(
@@ -387,10 +356,7 @@ fn register_song_functions(builder: &mut GlobalsBuilder) {
         );
 
         // seed
-        spec.insert_hashed(
-            hashed_key(heap, "seed"),
-            heap.alloc(seed).to_value(),
-        );
+        spec.insert_hashed(hashed_key(heap, "seed"), heap.alloc(seed).to_value());
 
         // outputs
         let mut output = new_dict(heap);
@@ -407,10 +373,7 @@ fn register_song_functions(builder: &mut GlobalsBuilder) {
             heap.alloc_str(output_path).to_value(),
         );
         let outputs_list = heap.alloc(AllocList(vec![heap.alloc(output).to_value()]));
-        spec.insert_hashed(
-            hashed_key(heap, "outputs"),
-            outputs_list,
-        );
+        spec.insert_hashed(hashed_key(heap, "outputs"), outputs_list);
 
         // Optional: description
         if !description.is_none() {
@@ -424,10 +387,7 @@ fn register_song_functions(builder: &mut GlobalsBuilder) {
 
         // Optional: style_tags
         if !tags.is_none() {
-            spec.insert_hashed(
-                hashed_key(heap, "style_tags"),
-                tags,
-            );
+            spec.insert_hashed(hashed_key(heap, "style_tags"), tags);
         }
 
         // Build recipe
@@ -443,22 +403,13 @@ fn register_song_functions(builder: &mut GlobalsBuilder) {
             hashed_key(heap, "format"),
             heap.alloc_str(format).to_value(),
         );
-        params.insert_hashed(
-            hashed_key(heap, "bpm"),
-            heap.alloc(bpm).to_value(),
-        );
-        params.insert_hashed(
-            hashed_key(heap, "speed"),
-            heap.alloc(speed).to_value(),
-        );
+        params.insert_hashed(hashed_key(heap, "bpm"), heap.alloc(bpm).to_value());
+        params.insert_hashed(hashed_key(heap, "speed"), heap.alloc(speed).to_value());
         params.insert_hashed(
             hashed_key(heap, "channels"),
             heap.alloc(channels).to_value(),
         );
-        params.insert_hashed(
-            hashed_key(heap, "loop"),
-            heap.alloc(r#loop).to_value(),
-        );
+        params.insert_hashed(hashed_key(heap, "loop"), heap.alloc(r#loop).to_value());
 
         // Optional name/title
         if !name.is_none() {
@@ -480,33 +431,18 @@ fn register_song_functions(builder: &mut GlobalsBuilder) {
 
         // instruments
         let instruments_list = heap.alloc(AllocList(instruments.items));
-        params.insert_hashed(
-            hashed_key(heap, "instruments"),
-            instruments_list,
-        );
+        params.insert_hashed(hashed_key(heap, "instruments"), instruments_list);
 
         // patterns
-        params.insert_hashed(
-            hashed_key(heap, "patterns"),
-            patterns,
-        );
+        params.insert_hashed(hashed_key(heap, "patterns"), patterns);
 
         // arrangement
         let arrangement_list = heap.alloc(AllocList(arrangement.items));
-        params.insert_hashed(
-            hashed_key(heap, "arrangement"),
-            arrangement_list,
-        );
+        params.insert_hashed(hashed_key(heap, "arrangement"), arrangement_list);
 
-        recipe.insert_hashed(
-            hashed_key(heap, "params"),
-            heap.alloc(params).to_value(),
-        );
+        recipe.insert_hashed(hashed_key(heap, "params"), heap.alloc(params).to_value());
 
-        spec.insert_hashed(
-            hashed_key(heap, "recipe"),
-            heap.alloc(recipe).to_value(),
-        );
+        spec.insert_hashed(hashed_key(heap, "recipe"), heap.alloc(recipe).to_value());
 
         Ok(spec)
     }
@@ -526,7 +462,8 @@ mod tests {
 
     #[test]
     fn test_tracker_song_basic() {
-        let result = eval_to_json(r#"
+        let result = eval_to_json(
+            r#"
 tracker_song(
     format = "xm",
     bpm = 120,
@@ -536,7 +473,9 @@ tracker_song(
     patterns = {"intro": tracker_pattern(64)},
     arrangement = [arrangement_entry("intro")]
 )
-"#).unwrap();
+"#,
+        )
+        .unwrap();
         assert_eq!(result["kind"], "music.tracker_song_v1");
         assert_eq!(result["params"]["format"], "xm");
         assert_eq!(result["params"]["bpm"], 120);
@@ -545,7 +484,8 @@ tracker_song(
 
     #[test]
     fn test_tracker_song_invalid_format() {
-        let result = eval_to_json(r#"
+        let result = eval_to_json(
+            r#"
 tracker_song(
     format = "mod",
     bpm = 120,
@@ -555,7 +495,8 @@ tracker_song(
     patterns = {},
     arrangement = []
 )
-"#);
+"#,
+        );
         assert!(result.is_err());
         let err = result.unwrap_err();
         assert!(err.contains("S104"));
@@ -563,7 +504,8 @@ tracker_song(
 
     #[test]
     fn test_tracker_song_invalid_bpm() {
-        let result = eval_to_json(r#"
+        let result = eval_to_json(
+            r#"
 tracker_song(
     format = "xm",
     bpm = 500,
@@ -573,7 +515,8 @@ tracker_song(
     patterns = {},
     arrangement = []
 )
-"#);
+"#,
+        );
         assert!(result.is_err());
         let err = result.unwrap_err();
         assert!(err.contains("bpm"));
@@ -581,7 +524,8 @@ tracker_song(
 
     #[test]
     fn test_music_spec_basic() {
-        let result = eval_to_json(r#"
+        let result = eval_to_json(
+            r#"
 music_spec(
     asset_id = "test-song-01",
     seed = 42,
@@ -594,7 +538,9 @@ music_spec(
     patterns = {"intro": tracker_pattern(64)},
     arrangement = [arrangement_entry("intro")]
 )
-"#).unwrap();
+"#,
+        )
+        .unwrap();
         assert_eq!(result["spec_version"], 1);
         assert_eq!(result["asset_id"], "test-song-01");
         assert_eq!(result["asset_type"], "music");

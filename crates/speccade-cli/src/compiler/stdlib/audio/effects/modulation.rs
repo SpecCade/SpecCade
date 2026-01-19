@@ -45,18 +45,25 @@ fn register_modulation_effects(builder: &mut GlobalsBuilder) {
         heap: &'v Heap,
     ) -> anyhow::Result<Dict<'v>> {
         if !(0.1..=10.0).contains(&rate) {
-            return Err(anyhow::anyhow!("S103: flanger(): 'rate' must be 0.1-10.0, got {}", rate));
+            return Err(anyhow::anyhow!(
+                "S103: flanger(): 'rate' must be 0.1-10.0, got {}",
+                rate
+            ));
         }
-        validate_unit_range(depth, "flanger", "depth")
-            .map_err(|e| anyhow::anyhow!(e))?;
+        validate_unit_range(depth, "flanger", "depth").map_err(|e| anyhow::anyhow!(e))?;
         if !(-0.99..=0.99).contains(&feedback) {
-            return Err(anyhow::anyhow!("S103: flanger(): 'feedback' must be -0.99 to 0.99, got {}", feedback));
+            return Err(anyhow::anyhow!(
+                "S103: flanger(): 'feedback' must be -0.99 to 0.99, got {}",
+                feedback
+            ));
         }
         if !(1.0..=20.0).contains(&delay_ms) {
-            return Err(anyhow::anyhow!("S103: flanger(): 'delay_ms' must be 1-20, got {}", delay_ms));
+            return Err(anyhow::anyhow!(
+                "S103: flanger(): 'delay_ms' must be 1-20, got {}",
+                delay_ms
+            ));
         }
-        validate_unit_range(wet, "flanger", "wet")
-            .map_err(|e| anyhow::anyhow!(e))?;
+        validate_unit_range(wet, "flanger", "wet").map_err(|e| anyhow::anyhow!(e))?;
 
         let mut dict = new_dict(heap);
 
@@ -64,14 +71,8 @@ fn register_modulation_effects(builder: &mut GlobalsBuilder) {
             hashed_key(heap, "type"),
             heap.alloc_str("flanger").to_value(),
         );
-        dict.insert_hashed(
-            hashed_key(heap, "rate"),
-            heap.alloc(rate).to_value(),
-        );
-        dict.insert_hashed(
-            hashed_key(heap, "depth"),
-            heap.alloc(depth).to_value(),
-        );
+        dict.insert_hashed(hashed_key(heap, "rate"), heap.alloc(rate).to_value());
+        dict.insert_hashed(hashed_key(heap, "depth"), heap.alloc(depth).to_value());
         dict.insert_hashed(
             hashed_key(heap, "feedback"),
             heap.alloc(feedback).to_value(),
@@ -80,10 +81,7 @@ fn register_modulation_effects(builder: &mut GlobalsBuilder) {
             hashed_key(heap, "delay_ms"),
             heap.alloc(delay_ms).to_value(),
         );
-        dict.insert_hashed(
-            hashed_key(heap, "wet"),
-            heap.alloc(wet).to_value(),
-        );
+        dict.insert_hashed(hashed_key(heap, "wet"), heap.alloc(wet).to_value());
 
         Ok(dict)
     }
@@ -101,13 +99,14 @@ fn register_modulation_effects(builder: &mut GlobalsBuilder) {
         heap: &'v Heap,
     ) -> anyhow::Result<Dict<'v>> {
         if !(1.0..=100.0).contains(&drive) {
-            return Err(anyhow::anyhow!("S103: waveshaper(): 'drive' must be 1.0-100.0, got {}", drive));
+            return Err(anyhow::anyhow!(
+                "S103: waveshaper(): 'drive' must be 1.0-100.0, got {}",
+                drive
+            ));
         }
         const CURVES: &[&str] = &["tanh", "soft_clip", "hard_clip", "sine"];
-        validate_enum(curve, CURVES, "waveshaper", "curve")
-            .map_err(|e| anyhow::anyhow!(e))?;
-        validate_unit_range(wet, "waveshaper", "wet")
-            .map_err(|e| anyhow::anyhow!(e))?;
+        validate_enum(curve, CURVES, "waveshaper", "curve").map_err(|e| anyhow::anyhow!(e))?;
+        validate_unit_range(wet, "waveshaper", "wet").map_err(|e| anyhow::anyhow!(e))?;
 
         let mut dict = new_dict(heap);
 
@@ -115,18 +114,9 @@ fn register_modulation_effects(builder: &mut GlobalsBuilder) {
             hashed_key(heap, "type"),
             heap.alloc_str("waveshaper").to_value(),
         );
-        dict.insert_hashed(
-            hashed_key(heap, "drive"),
-            heap.alloc(drive).to_value(),
-        );
-        dict.insert_hashed(
-            hashed_key(heap, "curve"),
-            heap.alloc_str(curve).to_value(),
-        );
-        dict.insert_hashed(
-            hashed_key(heap, "wet"),
-            heap.alloc(wet).to_value(),
-        );
+        dict.insert_hashed(hashed_key(heap, "drive"), heap.alloc(drive).to_value());
+        dict.insert_hashed(hashed_key(heap, "curve"), heap.alloc_str(curve).to_value());
+        dict.insert_hashed(hashed_key(heap, "wet"), heap.alloc(wet).to_value());
 
         Ok(dict)
     }
@@ -170,8 +160,7 @@ fn register_modulation_effects(builder: &mut GlobalsBuilder) {
                 release_ms
             ));
         }
-        validate_unit_range(depth, "auto_filter", "depth")
-            .map_err(|e| anyhow::anyhow!(e))?;
+        validate_unit_range(depth, "auto_filter", "depth").map_err(|e| anyhow::anyhow!(e))?;
         if !(100.0..=8000.0).contains(&base_frequency) {
             return Err(anyhow::anyhow!(
                 "S103: auto_filter(): 'base_frequency' must be 100-8000, got {}",
@@ -197,10 +186,7 @@ fn register_modulation_effects(builder: &mut GlobalsBuilder) {
             hashed_key(heap, "release_ms"),
             heap.alloc(release_ms).to_value(),
         );
-        dict.insert_hashed(
-            hashed_key(heap, "depth"),
-            heap.alloc(depth).to_value(),
-        );
+        dict.insert_hashed(hashed_key(heap, "depth"), heap.alloc(depth).to_value());
         dict.insert_hashed(
             hashed_key(heap, "base_frequency"),
             heap.alloc(base_frequency).to_value(),
@@ -237,10 +223,8 @@ fn register_modulation_effects(builder: &mut GlobalsBuilder) {
                 rate
             ));
         }
-        validate_unit_range(depth, "rotary_speaker", "depth")
-            .map_err(|e| anyhow::anyhow!(e))?;
-        validate_unit_range(wet, "rotary_speaker", "wet")
-            .map_err(|e| anyhow::anyhow!(e))?;
+        validate_unit_range(depth, "rotary_speaker", "depth").map_err(|e| anyhow::anyhow!(e))?;
+        validate_unit_range(wet, "rotary_speaker", "wet").map_err(|e| anyhow::anyhow!(e))?;
 
         let mut dict = new_dict(heap);
 
@@ -248,18 +232,9 @@ fn register_modulation_effects(builder: &mut GlobalsBuilder) {
             hashed_key(heap, "type"),
             heap.alloc_str("rotary_speaker").to_value(),
         );
-        dict.insert_hashed(
-            hashed_key(heap, "rate"),
-            heap.alloc(rate).to_value(),
-        );
-        dict.insert_hashed(
-            hashed_key(heap, "depth"),
-            heap.alloc(depth).to_value(),
-        );
-        dict.insert_hashed(
-            hashed_key(heap, "wet"),
-            heap.alloc(wet).to_value(),
-        );
+        dict.insert_hashed(hashed_key(heap, "rate"), heap.alloc(rate).to_value());
+        dict.insert_hashed(hashed_key(heap, "depth"), heap.alloc(depth).to_value());
+        dict.insert_hashed(hashed_key(heap, "wet"), heap.alloc(wet).to_value());
 
         Ok(dict)
     }
@@ -290,8 +265,7 @@ fn register_modulation_effects(builder: &mut GlobalsBuilder) {
                 frequency
             ));
         }
-        validate_unit_range(mix, "ring_modulator", "mix")
-            .map_err(|e| anyhow::anyhow!(e))?;
+        validate_unit_range(mix, "ring_modulator", "mix").map_err(|e| anyhow::anyhow!(e))?;
 
         let mut dict = new_dict(heap);
 
@@ -303,10 +277,7 @@ fn register_modulation_effects(builder: &mut GlobalsBuilder) {
             hashed_key(heap, "frequency"),
             heap.alloc(frequency).to_value(),
         );
-        dict.insert_hashed(
-            hashed_key(heap, "mix"),
-            heap.alloc(mix).to_value(),
-        );
+        dict.insert_hashed(hashed_key(heap, "mix"), heap.alloc(mix).to_value());
 
         Ok(dict)
     }

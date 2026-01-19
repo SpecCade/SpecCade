@@ -33,7 +33,9 @@ fn extract_float(value: Value, function: &str, param: &str) -> anyhow::Result<f6
     }
     Err(anyhow::anyhow!(
         "S102: {}(): '{}' expected float, got {}",
-        function, param, value.get_type()
+        function,
+        param,
+        value.get_type()
     ))
 }
 
@@ -56,35 +58,46 @@ fn register_modulation_functions(builder: &mut GlobalsBuilder) {
     ) -> anyhow::Result<Dict<'v>> {
         // Validate ranges
         validate_positive(attack, "envelope", "attack")
-            .or_else(|_| if attack == 0.0 { Ok(()) } else { Err("".to_string()) })
-            .map_err(|_| anyhow::anyhow!("S103: envelope(): 'attack' must be >= 0, got {}", attack))?;
+            .or_else(|_| {
+                if attack == 0.0 {
+                    Ok(())
+                } else {
+                    Err("".to_string())
+                }
+            })
+            .map_err(|_| {
+                anyhow::anyhow!("S103: envelope(): 'attack' must be >= 0, got {}", attack)
+            })?;
         validate_positive(decay, "envelope", "decay")
-            .or_else(|_| if decay == 0.0 { Ok(()) } else { Err("".to_string()) })
-            .map_err(|_| anyhow::anyhow!("S103: envelope(): 'decay' must be >= 0, got {}", decay))?;
-        validate_unit_range(sustain, "envelope", "sustain")
-            .map_err(|e| anyhow::anyhow!(e))?;
+            .or_else(|_| {
+                if decay == 0.0 {
+                    Ok(())
+                } else {
+                    Err("".to_string())
+                }
+            })
+            .map_err(|_| {
+                anyhow::anyhow!("S103: envelope(): 'decay' must be >= 0, got {}", decay)
+            })?;
+        validate_unit_range(sustain, "envelope", "sustain").map_err(|e| anyhow::anyhow!(e))?;
         validate_positive(release, "envelope", "release")
-            .or_else(|_| if release == 0.0 { Ok(()) } else { Err("".to_string()) })
-            .map_err(|_| anyhow::anyhow!("S103: envelope(): 'release' must be >= 0, got {}", release))?;
+            .or_else(|_| {
+                if release == 0.0 {
+                    Ok(())
+                } else {
+                    Err("".to_string())
+                }
+            })
+            .map_err(|_| {
+                anyhow::anyhow!("S103: envelope(): 'release' must be >= 0, got {}", release)
+            })?;
 
         let mut dict = new_dict(heap);
 
-        dict.insert_hashed(
-            hashed_key(heap, "attack"),
-            heap.alloc(attack).to_value(),
-        );
-        dict.insert_hashed(
-            hashed_key(heap, "decay"),
-            heap.alloc(decay).to_value(),
-        );
-        dict.insert_hashed(
-            hashed_key(heap, "sustain"),
-            heap.alloc(sustain).to_value(),
-        );
-        dict.insert_hashed(
-            hashed_key(heap, "release"),
-            heap.alloc(release).to_value(),
-        );
+        dict.insert_hashed(hashed_key(heap, "attack"), heap.alloc(attack).to_value());
+        dict.insert_hashed(hashed_key(heap, "decay"), heap.alloc(decay).to_value());
+        dict.insert_hashed(hashed_key(heap, "sustain"), heap.alloc(sustain).to_value());
+        dict.insert_hashed(hashed_key(heap, "release"), heap.alloc(release).to_value());
 
         Ok(dict)
     }
@@ -117,12 +130,9 @@ fn register_modulation_functions(builder: &mut GlobalsBuilder) {
         #[starlark(default = NoneType)] phase: Value<'v>,
         heap: &'v Heap,
     ) -> anyhow::Result<Dict<'v>> {
-        validate_enum(waveform, WAVEFORMS, "lfo", "waveform")
-            .map_err(|e| anyhow::anyhow!(e))?;
-        validate_positive(rate, "lfo", "rate")
-            .map_err(|e| anyhow::anyhow!(e))?;
-        validate_unit_range(depth, "lfo", "depth")
-            .map_err(|e| anyhow::anyhow!(e))?;
+        validate_enum(waveform, WAVEFORMS, "lfo", "waveform").map_err(|e| anyhow::anyhow!(e))?;
+        validate_positive(rate, "lfo", "rate").map_err(|e| anyhow::anyhow!(e))?;
+        validate_unit_range(depth, "lfo", "depth").map_err(|e| anyhow::anyhow!(e))?;
 
         let mut dict = new_dict(heap);
 
@@ -130,24 +140,14 @@ fn register_modulation_functions(builder: &mut GlobalsBuilder) {
             hashed_key(heap, "waveform"),
             heap.alloc_str(waveform).to_value(),
         );
-        dict.insert_hashed(
-            hashed_key(heap, "rate"),
-            heap.alloc(rate).to_value(),
-        );
-        dict.insert_hashed(
-            hashed_key(heap, "depth"),
-            heap.alloc(depth).to_value(),
-        );
+        dict.insert_hashed(hashed_key(heap, "rate"), heap.alloc(rate).to_value());
+        dict.insert_hashed(hashed_key(heap, "depth"), heap.alloc(depth).to_value());
 
         // Add phase if provided
         if !phase.is_none() {
             let phase_val = extract_float(phase, "lfo", "phase")?;
-            validate_unit_range(phase_val, "lfo", "phase")
-                .map_err(|e| anyhow::anyhow!(e))?;
-            dict.insert_hashed(
-                hashed_key(heap, "phase"),
-                heap.alloc(phase_val).to_value(),
-            );
+            validate_unit_range(phase_val, "lfo", "phase").map_err(|e| anyhow::anyhow!(e))?;
+            dict.insert_hashed(hashed_key(heap, "phase"), heap.alloc(phase_val).to_value());
         }
 
         Ok(dict)
@@ -176,19 +176,24 @@ fn register_modulation_functions(builder: &mut GlobalsBuilder) {
         heap: &'v Heap,
     ) -> anyhow::Result<Dict<'v>> {
         const TARGETS: &[&str] = &[
-            "pitch", "volume", "filter_cutoff", "pan", "pulse_width",
-            "fm_index", "grain_size", "grain_density", "delay_time",
-            "reverb_size", "distortion_drive"
+            "pitch",
+            "volume",
+            "filter_cutoff",
+            "pan",
+            "pulse_width",
+            "fm_index",
+            "grain_size",
+            "grain_density",
+            "delay_time",
+            "reverb_size",
+            "distortion_drive",
         ];
         validate_enum(target, TARGETS, "lfo_modulation", "target")
             .map_err(|e| anyhow::anyhow!(e))?;
 
         let mut dict = new_dict(heap);
 
-        dict.insert_hashed(
-            hashed_key(heap, "config"),
-            config,
-        );
+        dict.insert_hashed(hashed_key(heap, "config"), config);
 
         // Build target dict based on target type
         let mut target_dict = new_dict(heap);
@@ -203,10 +208,7 @@ fn register_modulation_functions(builder: &mut GlobalsBuilder) {
             "grain_size" | "delay_time" => "amount_ms",
             _ => "amount",
         };
-        target_dict.insert_hashed(
-            hashed_key(heap, amount_key),
-            heap.alloc(amount).to_value(),
-        );
+        target_dict.insert_hashed(hashed_key(heap, amount_key), heap.alloc(amount).to_value());
 
         dict.insert_hashed(
             hashed_key(heap, "target"),
@@ -245,39 +247,42 @@ fn register_modulation_functions(builder: &mut GlobalsBuilder) {
         heap: &'v Heap,
     ) -> anyhow::Result<Dict<'v>> {
         validate_positive(attack, "pitch_envelope", "attack")
-            .or_else(|_| if attack == 0.0 { Ok(()) } else { Err("".to_string()) })
+            .or_else(|_| {
+                if attack == 0.0 {
+                    Ok(())
+                } else {
+                    Err("".to_string())
+                }
+            })
             .map_err(|_| anyhow::anyhow!("S103: pitch_envelope(): 'attack' must be >= 0"))?;
         validate_positive(decay, "pitch_envelope", "decay")
-            .or_else(|_| if decay == 0.0 { Ok(()) } else { Err("".to_string()) })
+            .or_else(|_| {
+                if decay == 0.0 {
+                    Ok(())
+                } else {
+                    Err("".to_string())
+                }
+            })
             .map_err(|_| anyhow::anyhow!("S103: pitch_envelope(): 'decay' must be >= 0"))?;
         validate_unit_range(sustain, "pitch_envelope", "sustain")
             .map_err(|e| anyhow::anyhow!(e))?;
         validate_positive(release, "pitch_envelope", "release")
-            .or_else(|_| if release == 0.0 { Ok(()) } else { Err("".to_string()) })
+            .or_else(|_| {
+                if release == 0.0 {
+                    Ok(())
+                } else {
+                    Err("".to_string())
+                }
+            })
             .map_err(|_| anyhow::anyhow!("S103: pitch_envelope(): 'release' must be >= 0"))?;
 
         let mut dict = new_dict(heap);
 
-        dict.insert_hashed(
-            hashed_key(heap, "attack"),
-            heap.alloc(attack).to_value(),
-        );
-        dict.insert_hashed(
-            hashed_key(heap, "decay"),
-            heap.alloc(decay).to_value(),
-        );
-        dict.insert_hashed(
-            hashed_key(heap, "sustain"),
-            heap.alloc(sustain).to_value(),
-        );
-        dict.insert_hashed(
-            hashed_key(heap, "release"),
-            heap.alloc(release).to_value(),
-        );
-        dict.insert_hashed(
-            hashed_key(heap, "depth"),
-            heap.alloc(depth).to_value(),
-        );
+        dict.insert_hashed(hashed_key(heap, "attack"), heap.alloc(attack).to_value());
+        dict.insert_hashed(hashed_key(heap, "decay"), heap.alloc(decay).to_value());
+        dict.insert_hashed(hashed_key(heap, "sustain"), heap.alloc(sustain).to_value());
+        dict.insert_hashed(hashed_key(heap, "release"), heap.alloc(release).to_value());
+        dict.insert_hashed(hashed_key(heap, "depth"), heap.alloc(depth).to_value());
 
         Ok(dict)
     }

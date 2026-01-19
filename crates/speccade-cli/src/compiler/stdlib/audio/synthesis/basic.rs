@@ -5,9 +5,7 @@ use starlark::environment::GlobalsBuilder;
 use starlark::starlark_module;
 use starlark::values::{dict::Dict, none::NoneType, Heap, Value, ValueLike};
 
-use super::super::super::validation::{
-    validate_enum, validate_positive, validate_unit_range,
-};
+use super::super::super::validation::{validate_enum, validate_positive, validate_unit_range};
 
 /// Helper to create a hashed key for dict insertion.
 fn hashed_key<'v>(heap: &'v Heap, key: &str) -> starlark::collections::Hashed<Value<'v>> {
@@ -35,7 +33,9 @@ fn extract_float(value: Value, function: &str, param: &str) -> anyhow::Result<f6
     }
     Err(anyhow::anyhow!(
         "S102: {}(): '{}' expected float, got {}",
-        function, param, value.get_type()
+        function,
+        param,
+        value.get_type()
     ))
 }
 
@@ -64,8 +64,7 @@ fn register_basic_synthesis(builder: &mut GlobalsBuilder) {
         #[starlark(default = NoneType)] duty: Value<'v>,
         heap: &'v Heap,
     ) -> anyhow::Result<Dict<'v>> {
-        validate_positive(frequency, "oscillator", "frequency")
-            .map_err(|e| anyhow::anyhow!(e))?;
+        validate_positive(frequency, "oscillator", "frequency").map_err(|e| anyhow::anyhow!(e))?;
         validate_enum(waveform, WAVEFORMS, "oscillator", "waveform")
             .map_err(|e| anyhow::anyhow!(e))?;
         validate_enum(curve, SWEEP_CURVES, "oscillator", "curve")
@@ -97,10 +96,7 @@ fn register_basic_synthesis(builder: &mut GlobalsBuilder) {
                 hashed_key(heap, "end_freq"),
                 heap.alloc(end_freq).to_value(),
             );
-            sweep_dict.insert_hashed(
-                hashed_key(heap, "curve"),
-                heap.alloc_str(curve).to_value(),
-            );
+            sweep_dict.insert_hashed(hashed_key(heap, "curve"), heap.alloc_str(curve).to_value());
             dict.insert_hashed(
                 hashed_key(heap, "freq_sweep"),
                 heap.alloc(sweep_dict).to_value(),
@@ -119,12 +115,8 @@ fn register_basic_synthesis(builder: &mut GlobalsBuilder) {
         // Add duty if provided
         if !duty.is_none() {
             let duty_val = extract_float(duty, "oscillator", "duty")?;
-            validate_unit_range(duty_val, "oscillator", "duty")
-                .map_err(|e| anyhow::anyhow!(e))?;
-            dict.insert_hashed(
-                hashed_key(heap, "duty"),
-                heap.alloc(duty_val).to_value(),
-            );
+            validate_unit_range(duty_val, "oscillator", "duty").map_err(|e| anyhow::anyhow!(e))?;
+            dict.insert_hashed(hashed_key(heap, "duty"), heap.alloc(duty_val).to_value());
         }
 
         Ok(dict)
@@ -153,13 +145,19 @@ fn register_basic_synthesis(builder: &mut GlobalsBuilder) {
         #[starlark(default = NoneType)] sweep_to: Value<'v>,
         heap: &'v Heap,
     ) -> anyhow::Result<Dict<'v>> {
-        validate_positive(carrier, "fm_synth", "carrier")
-            .map_err(|e| anyhow::anyhow!(e))?;
-        validate_positive(modulator, "fm_synth", "modulator")
-            .map_err(|e| anyhow::anyhow!(e))?;
+        validate_positive(carrier, "fm_synth", "carrier").map_err(|e| anyhow::anyhow!(e))?;
+        validate_positive(modulator, "fm_synth", "modulator").map_err(|e| anyhow::anyhow!(e))?;
         validate_positive(index, "fm_synth", "index")
-            .or_else(|_| if index == 0.0 { Ok(()) } else { Err("".to_string()) })
-            .map_err(|_| anyhow::anyhow!("S103: fm_synth(): 'index' must be >= 0, got {}", index))?;
+            .or_else(|_| {
+                if index == 0.0 {
+                    Ok(())
+                } else {
+                    Err("".to_string())
+                }
+            })
+            .map_err(|_| {
+                anyhow::anyhow!("S103: fm_synth(): 'index' must be >= 0, got {}", index)
+            })?;
 
         let mut dict = new_dict(heap);
 
@@ -183,8 +181,7 @@ fn register_basic_synthesis(builder: &mut GlobalsBuilder) {
         // Add freq_sweep if sweep_to is provided
         if !sweep_to.is_none() {
             let end_freq = extract_float(sweep_to, "fm_synth", "sweep_to")?;
-            validate_positive(end_freq, "fm_synth", "sweep_to")
-                .map_err(|e| anyhow::anyhow!(e))?;
+            validate_positive(end_freq, "fm_synth", "sweep_to").map_err(|e| anyhow::anyhow!(e))?;
 
             let mut sweep_dict = new_dict(heap);
             sweep_dict.insert_hashed(
@@ -221,12 +218,9 @@ fn register_basic_synthesis(builder: &mut GlobalsBuilder) {
         #[starlark(default = NoneType)] sweep_to: Value<'v>,
         heap: &'v Heap,
     ) -> anyhow::Result<Dict<'v>> {
-        validate_positive(carrier, "am_synth", "carrier")
-            .map_err(|e| anyhow::anyhow!(e))?;
-        validate_positive(modulator, "am_synth", "modulator")
-            .map_err(|e| anyhow::anyhow!(e))?;
-        validate_unit_range(depth, "am_synth", "depth")
-            .map_err(|e| anyhow::anyhow!(e))?;
+        validate_positive(carrier, "am_synth", "carrier").map_err(|e| anyhow::anyhow!(e))?;
+        validate_positive(modulator, "am_synth", "modulator").map_err(|e| anyhow::anyhow!(e))?;
+        validate_unit_range(depth, "am_synth", "depth").map_err(|e| anyhow::anyhow!(e))?;
 
         let mut dict = new_dict(heap);
 
@@ -250,8 +244,7 @@ fn register_basic_synthesis(builder: &mut GlobalsBuilder) {
         // Add freq_sweep if sweep_to is provided
         if !sweep_to.is_none() {
             let end_freq = extract_float(sweep_to, "am_synth", "sweep_to")?;
-            validate_positive(end_freq, "am_synth", "sweep_to")
-                .map_err(|e| anyhow::anyhow!(e))?;
+            validate_positive(end_freq, "am_synth", "sweep_to").map_err(|e| anyhow::anyhow!(e))?;
 
             let mut sweep_dict = new_dict(heap);
             sweep_dict.insert_hashed(
@@ -307,10 +300,7 @@ fn register_basic_synthesis(builder: &mut GlobalsBuilder) {
 
         // Add filter if provided
         if !filter.is_none() {
-            dict.insert_hashed(
-                hashed_key(heap, "filter"),
-                filter,
-            );
+            dict.insert_hashed(hashed_key(heap, "filter"), filter);
         }
 
         Ok(dict)
@@ -340,8 +330,7 @@ fn register_basic_synthesis(builder: &mut GlobalsBuilder) {
             .map_err(|e| anyhow::anyhow!(e))?;
         validate_unit_range(damping, "karplus_strong", "damping")
             .map_err(|e| anyhow::anyhow!(e))?;
-        validate_unit_range(blend, "karplus_strong", "blend")
-            .map_err(|e| anyhow::anyhow!(e))?;
+        validate_unit_range(blend, "karplus_strong", "blend").map_err(|e| anyhow::anyhow!(e))?;
 
         let mut dict = new_dict(heap);
 
@@ -353,14 +342,8 @@ fn register_basic_synthesis(builder: &mut GlobalsBuilder) {
             hashed_key(heap, "frequency"),
             heap.alloc(frequency).to_value(),
         );
-        dict.insert_hashed(
-            hashed_key(heap, "damping"),
-            heap.alloc(damping).to_value(),
-        );
-        dict.insert_hashed(
-            hashed_key(heap, "blend"),
-            heap.alloc(blend).to_value(),
-        );
+        dict.insert_hashed(hashed_key(heap, "damping"), heap.alloc(damping).to_value());
+        dict.insert_hashed(hashed_key(heap, "blend"), heap.alloc(blend).to_value());
 
         Ok(dict)
     }

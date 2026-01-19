@@ -159,6 +159,18 @@ enum Commands {
         /// Enable per-stage timing profiling (timings included in report)
         #[arg(long)]
         profile: bool,
+
+        /// Generate N SFX variations by incrementing seed (outputs variations.json manifest)
+        #[arg(long)]
+        variations: Option<u32>,
+
+        /// Maximum peak level in dB; reject variations exceeding this (e.g., 0.0 for no clipping)
+        #[arg(long, allow_hyphen_values = true)]
+        max_peak_db: Option<f64>,
+
+        /// Maximum DC offset (absolute value); reject variations exceeding this threshold
+        #[arg(long)]
+        max_dc_offset: Option<f64>,
     },
 
     /// Generate all assets from a directory of spec files
@@ -433,6 +445,9 @@ fn main() -> ExitCode {
             preview,
             no_cache,
             profile,
+            variations,
+            max_peak_db,
+            max_dc_offset,
         } => commands::generate::run(
             &spec,
             out_root.as_deref(),
@@ -442,6 +457,9 @@ fn main() -> ExitCode {
             preview,
             no_cache,
             profile,
+            variations,
+            max_peak_db,
+            max_dc_offset,
         ),
         Commands::GenerateAll {
             spec_dir,
@@ -733,6 +751,9 @@ mod tests {
                 preview,
                 no_cache,
                 profile,
+                variations,
+                max_peak_db,
+                max_dc_offset,
             } => {
                 assert_eq!(spec, "spec.json");
                 assert_eq!(out_root.as_deref(), Some("out"));
@@ -742,6 +763,9 @@ mod tests {
                 assert!(preview.is_none());
                 assert!(!no_cache);
                 assert!(!profile);
+                assert!(variations.is_none());
+                assert!(max_peak_db.is_none());
+                assert!(max_dc_offset.is_none());
             }
             _ => panic!("expected generate command"),
         }
@@ -768,6 +792,9 @@ mod tests {
                 preview,
                 no_cache,
                 profile,
+                variations,
+                max_peak_db,
+                max_dc_offset,
             } => {
                 assert_eq!(spec, "spec.json");
                 assert!(out_root.is_none());
@@ -777,6 +804,9 @@ mod tests {
                 assert!(preview.is_none());
                 assert!(!no_cache);
                 assert!(!profile);
+                assert!(variations.is_none());
+                assert!(max_peak_db.is_none());
+                assert!(max_dc_offset.is_none());
             }
             _ => panic!("expected generate command"),
         }
@@ -796,6 +826,9 @@ mod tests {
                 preview,
                 no_cache,
                 profile,
+                variations,
+                max_peak_db,
+                max_dc_offset,
             } => {
                 assert_eq!(spec, "spec.json");
                 assert!(out_root.is_none());
@@ -805,6 +838,9 @@ mod tests {
                 assert!(preview.is_none());
                 assert!(!no_cache);
                 assert!(!profile);
+                assert!(variations.is_none());
+                assert!(max_peak_db.is_none());
+                assert!(max_dc_offset.is_none());
             }
             _ => panic!("expected generate command"),
         }
@@ -824,6 +860,9 @@ mod tests {
                 preview,
                 no_cache,
                 profile,
+                variations,
+                max_peak_db,
+                max_dc_offset,
             } => {
                 assert_eq!(spec, "spec.json");
                 assert!(out_root.is_none());
@@ -833,6 +872,95 @@ mod tests {
                 assert!(preview.is_none());
                 assert!(!no_cache);
                 assert!(profile);
+                assert!(variations.is_none());
+                assert!(max_peak_db.is_none());
+                assert!(max_dc_offset.is_none());
+            }
+            _ => panic!("expected generate command"),
+        }
+    }
+
+    #[test]
+    fn test_cli_parses_generate_with_variations() {
+        let cli = Cli::try_parse_from([
+            "speccade",
+            "generate",
+            "--spec",
+            "spec.json",
+            "--variations",
+            "5",
+        ])
+        .unwrap();
+        match cli.command {
+            Commands::Generate {
+                spec,
+                out_root,
+                expand_variants,
+                budget,
+                json,
+                preview,
+                no_cache,
+                profile,
+                variations,
+                max_peak_db,
+                max_dc_offset,
+            } => {
+                assert_eq!(spec, "spec.json");
+                assert!(out_root.is_none());
+                assert!(!expand_variants);
+                assert!(budget.is_none());
+                assert!(!json);
+                assert!(preview.is_none());
+                assert!(!no_cache);
+                assert!(!profile);
+                assert_eq!(variations, Some(5));
+                assert!(max_peak_db.is_none());
+                assert!(max_dc_offset.is_none());
+            }
+            _ => panic!("expected generate command"),
+        }
+    }
+
+    #[test]
+    fn test_cli_parses_generate_with_quality_constraints() {
+        let cli = Cli::try_parse_from([
+            "speccade",
+            "generate",
+            "--spec",
+            "spec.json",
+            "--variations",
+            "10",
+            "--max-peak-db",
+            "-3.0",
+            "--max-dc-offset",
+            "0.01",
+        ])
+        .unwrap();
+        match cli.command {
+            Commands::Generate {
+                spec,
+                out_root,
+                expand_variants,
+                budget,
+                json,
+                preview,
+                no_cache,
+                profile,
+                variations,
+                max_peak_db,
+                max_dc_offset,
+            } => {
+                assert_eq!(spec, "spec.json");
+                assert!(out_root.is_none());
+                assert!(!expand_variants);
+                assert!(budget.is_none());
+                assert!(!json);
+                assert!(preview.is_none());
+                assert!(!no_cache);
+                assert!(!profile);
+                assert_eq!(variations, Some(10));
+                assert!((max_peak_db.unwrap() - (-3.0)).abs() < 0.001);
+                assert!((max_dc_offset.unwrap() - 0.01).abs() < 0.0001);
             }
             _ => panic!("expected generate command"),
         }

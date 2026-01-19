@@ -5,9 +5,7 @@ use starlark::environment::GlobalsBuilder;
 use starlark::starlark_module;
 use starlark::values::{dict::Dict, none::NoneType, Heap, Value, ValueLike};
 
-use super::super::super::validation::{
-    validate_enum, validate_positive, validate_unit_range,
-};
+use super::super::super::validation::{validate_enum, validate_positive, validate_unit_range};
 
 /// Helper to create a hashed key for dict insertion.
 fn hashed_key<'v>(heap: &'v Heap, key: &str) -> starlark::collections::Hashed<Value<'v>> {
@@ -35,7 +33,9 @@ fn extract_float(value: Value, function: &str, param: &str) -> anyhow::Result<f6
     }
     Err(anyhow::anyhow!(
         "S102: {}(): '{}' expected float, got {}",
-        function, param, value.get_type()
+        function,
+        param,
+        value.get_type()
     ))
 }
 
@@ -85,7 +85,10 @@ fn register_exotic_synthesis(builder: &mut GlobalsBuilder) {
             .map_err(|e| anyhow::anyhow!(e))?;
 
         if !(8..=32).contains(&num_bands) {
-            return Err(anyhow::anyhow!("S103: vocoder(): 'num_bands' must be 8-32, got {}", num_bands));
+            return Err(anyhow::anyhow!(
+                "S103: vocoder(): 'num_bands' must be 8-32, got {}",
+                num_bands
+            ));
         }
 
         const BAND_SPACINGS: &[&str] = &["linear", "logarithmic"];
@@ -135,10 +138,7 @@ fn register_exotic_synthesis(builder: &mut GlobalsBuilder) {
         );
 
         if !bands.is_none() {
-            dict.insert_hashed(
-                hashed_key(heap, "bands"),
-                bands,
-            );
+            dict.insert_hashed(hashed_key(heap, "bands"), bands);
         }
 
         Ok(dict)
@@ -180,10 +180,7 @@ fn register_exotic_synthesis(builder: &mut GlobalsBuilder) {
         );
 
         if !envelope_pattern.is_none() {
-            dict.insert_hashed(
-                hashed_key(heap, "envelope_pattern"),
-                envelope_pattern,
-            );
+            dict.insert_hashed(hashed_key(heap, "envelope_pattern"), envelope_pattern);
         }
 
         Ok(dict)
@@ -235,15 +232,13 @@ fn register_exotic_synthesis(builder: &mut GlobalsBuilder) {
         );
 
         if !formants.is_none() {
-            dict.insert_hashed(
-                hashed_key(heap, "formants"),
-                formants,
-            );
+            dict.insert_hashed(hashed_key(heap, "formants"), formants);
         }
 
         if !vowel.is_none() {
-            let vowel_str = vowel.unpack_str()
-                .ok_or_else(|| anyhow::anyhow!("S102: formant_synth(): 'vowel' must be a string"))?;
+            let vowel_str = vowel.unpack_str().ok_or_else(|| {
+                anyhow::anyhow!("S102: formant_synth(): 'vowel' must be a string")
+            })?;
             validate_enum(vowel_str, VOWELS, "formant_synth", "vowel")
                 .map_err(|e| anyhow::anyhow!(e))?;
             dict.insert_hashed(
@@ -253,8 +248,9 @@ fn register_exotic_synthesis(builder: &mut GlobalsBuilder) {
         }
 
         if !vowel_morph.is_none() {
-            let vowel_morph_str = vowel_morph.unpack_str()
-                .ok_or_else(|| anyhow::anyhow!("S102: formant_synth(): 'vowel_morph' must be a string"))?;
+            let vowel_morph_str = vowel_morph.unpack_str().ok_or_else(|| {
+                anyhow::anyhow!("S102: formant_synth(): 'vowel_morph' must be a string")
+            })?;
             validate_enum(vowel_morph_str, VOWELS, "formant_synth", "vowel_morph")
                 .map_err(|e| anyhow::anyhow!(e))?;
             dict.insert_hashed(
@@ -364,11 +360,15 @@ fn register_exotic_synthesis(builder: &mut GlobalsBuilder) {
             .map_err(|e| anyhow::anyhow!(e))?;
 
         // Verify sources is a list of 4 items
-        let sources_list: Vec<Value<'v>> = sources.iterate(heap)
+        let sources_list: Vec<Value<'v>> = sources
+            .iterate(heap)
             .map_err(|_| anyhow::anyhow!("S102: vector_synth(): 'sources' must be a list"))?
             .collect();
         if sources_list.len() != 4 {
-            return Err(anyhow::anyhow!("S103: vector_synth(): 'sources' must have exactly 4 elements, got {}", sources_list.len()));
+            return Err(anyhow::anyhow!(
+                "S103: vector_synth(): 'sources' must have exactly 4 elements, got {}",
+                sources_list.len()
+            ));
         }
 
         let mut dict = new_dict(heap);
@@ -381,10 +381,7 @@ fn register_exotic_synthesis(builder: &mut GlobalsBuilder) {
             hashed_key(heap, "frequency"),
             heap.alloc(frequency).to_value(),
         );
-        dict.insert_hashed(
-            hashed_key(heap, "sources"),
-            sources,
-        );
+        dict.insert_hashed(hashed_key(heap, "sources"), sources);
         dict.insert_hashed(
             hashed_key(heap, "position_x"),
             heap.alloc(position_x).to_value(),
@@ -395,10 +392,7 @@ fn register_exotic_synthesis(builder: &mut GlobalsBuilder) {
         );
 
         if !path.is_none() {
-            dict.insert_hashed(
-                hashed_key(heap, "path"),
-                path,
-            );
+            dict.insert_hashed(hashed_key(heap, "path"), path);
         }
 
         dict.insert_hashed(
@@ -430,7 +424,8 @@ fn register_exotic_synthesis(builder: &mut GlobalsBuilder) {
         #[starlark(default = 1.0)] frequency_ratio: f64,
         heap: &'v Heap,
     ) -> anyhow::Result<Dict<'v>> {
-        const VECTOR_SOURCES: &[&str] = &["sine", "saw", "square", "triangle", "noise", "wavetable"];
+        const VECTOR_SOURCES: &[&str] =
+            &["sine", "saw", "square", "triangle", "noise", "wavetable"];
         validate_enum(source_type, VECTOR_SOURCES, "vector_source", "source_type")
             .map_err(|e| anyhow::anyhow!(e))?;
         validate_positive(frequency_ratio, "vector_source", "frequency_ratio")
@@ -468,23 +463,15 @@ fn register_exotic_synthesis(builder: &mut GlobalsBuilder) {
         duration: f64,
         heap: &'v Heap,
     ) -> anyhow::Result<Dict<'v>> {
-        validate_unit_range(x, "vector_path_point", "x")
-            .map_err(|e| anyhow::anyhow!(e))?;
-        validate_unit_range(y, "vector_path_point", "y")
-            .map_err(|e| anyhow::anyhow!(e))?;
+        validate_unit_range(x, "vector_path_point", "x").map_err(|e| anyhow::anyhow!(e))?;
+        validate_unit_range(y, "vector_path_point", "y").map_err(|e| anyhow::anyhow!(e))?;
         validate_positive(duration, "vector_path_point", "duration")
             .map_err(|e| anyhow::anyhow!(e))?;
 
         let mut dict = new_dict(heap);
 
-        dict.insert_hashed(
-            hashed_key(heap, "x"),
-            heap.alloc(x).to_value(),
-        );
-        dict.insert_hashed(
-            hashed_key(heap, "y"),
-            heap.alloc(y).to_value(),
-        );
+        dict.insert_hashed(hashed_key(heap, "x"), heap.alloc(x).to_value());
+        dict.insert_hashed(hashed_key(heap, "y"), heap.alloc(y).to_value());
         dict.insert_hashed(
             hashed_key(heap, "duration"),
             heap.alloc(duration).to_value(),
@@ -521,16 +508,11 @@ fn register_exotic_synthesis(builder: &mut GlobalsBuilder) {
         #[starlark(require = named)] resonance: f64,
         heap: &'v Heap,
     ) -> anyhow::Result<Dict<'v>> {
-        validate_positive(frequency, "waveguide", "frequency")
-            .map_err(|e| anyhow::anyhow!(e))?;
-        validate_unit_range(breath, "waveguide", "breath")
-            .map_err(|e| anyhow::anyhow!(e))?;
-        validate_unit_range(noise, "waveguide", "noise")
-            .map_err(|e| anyhow::anyhow!(e))?;
-        validate_unit_range(damping, "waveguide", "damping")
-            .map_err(|e| anyhow::anyhow!(e))?;
-        validate_unit_range(resonance, "waveguide", "resonance")
-            .map_err(|e| anyhow::anyhow!(e))?;
+        validate_positive(frequency, "waveguide", "frequency").map_err(|e| anyhow::anyhow!(e))?;
+        validate_unit_range(breath, "waveguide", "breath").map_err(|e| anyhow::anyhow!(e))?;
+        validate_unit_range(noise, "waveguide", "noise").map_err(|e| anyhow::anyhow!(e))?;
+        validate_unit_range(damping, "waveguide", "damping").map_err(|e| anyhow::anyhow!(e))?;
+        validate_unit_range(resonance, "waveguide", "resonance").map_err(|e| anyhow::anyhow!(e))?;
 
         let mut dict = new_dict(heap);
 
@@ -542,18 +524,9 @@ fn register_exotic_synthesis(builder: &mut GlobalsBuilder) {
             hashed_key(heap, "frequency"),
             heap.alloc(frequency).to_value(),
         );
-        dict.insert_hashed(
-            hashed_key(heap, "breath"),
-            heap.alloc(breath).to_value(),
-        );
-        dict.insert_hashed(
-            hashed_key(heap, "noise"),
-            heap.alloc(noise).to_value(),
-        );
-        dict.insert_hashed(
-            hashed_key(heap, "damping"),
-            heap.alloc(damping).to_value(),
-        );
+        dict.insert_hashed(hashed_key(heap, "breath"), heap.alloc(breath).to_value());
+        dict.insert_hashed(hashed_key(heap, "noise"), heap.alloc(noise).to_value());
+        dict.insert_hashed(hashed_key(heap, "damping"), heap.alloc(damping).to_value());
         dict.insert_hashed(
             hashed_key(heap, "resonance"),
             heap.alloc(resonance).to_value(),
@@ -593,8 +566,7 @@ fn register_exotic_synthesis(builder: &mut GlobalsBuilder) {
             .map_err(|e| anyhow::anyhow!(e))?;
         validate_unit_range(bow_position, "bowed_string", "bow_position")
             .map_err(|e| anyhow::anyhow!(e))?;
-        validate_unit_range(damping, "bowed_string", "damping")
-            .map_err(|e| anyhow::anyhow!(e))?;
+        validate_unit_range(damping, "bowed_string", "damping").map_err(|e| anyhow::anyhow!(e))?;
 
         let mut dict = new_dict(heap);
 
@@ -614,10 +586,7 @@ fn register_exotic_synthesis(builder: &mut GlobalsBuilder) {
             hashed_key(heap, "bow_position"),
             heap.alloc(bow_position).to_value(),
         );
-        dict.insert_hashed(
-            hashed_key(heap, "damping"),
-            heap.alloc(damping).to_value(),
-        );
+        dict.insert_hashed(hashed_key(heap, "damping"), heap.alloc(damping).to_value());
 
         Ok(dict)
     }
@@ -647,14 +616,11 @@ fn register_exotic_synthesis(builder: &mut GlobalsBuilder) {
         #[starlark(require = named)] shape: &str,
         heap: &'v Heap,
     ) -> anyhow::Result<Dict<'v>> {
-        validate_positive(frequency, "pulsar", "frequency")
-            .map_err(|e| anyhow::anyhow!(e))?;
-        validate_positive(pulse_rate, "pulsar", "pulse_rate")
-            .map_err(|e| anyhow::anyhow!(e))?;
+        validate_positive(frequency, "pulsar", "frequency").map_err(|e| anyhow::anyhow!(e))?;
+        validate_positive(pulse_rate, "pulsar", "pulse_rate").map_err(|e| anyhow::anyhow!(e))?;
         validate_positive(grain_size_ms, "pulsar", "grain_size_ms")
             .map_err(|e| anyhow::anyhow!(e))?;
-        validate_enum(shape, WAVEFORMS, "pulsar", "shape")
-            .map_err(|e| anyhow::anyhow!(e))?;
+        validate_enum(shape, WAVEFORMS, "pulsar", "shape").map_err(|e| anyhow::anyhow!(e))?;
 
         let mut dict = new_dict(heap);
 
@@ -674,10 +640,7 @@ fn register_exotic_synthesis(builder: &mut GlobalsBuilder) {
             hashed_key(heap, "grain_size_ms"),
             heap.alloc(grain_size_ms).to_value(),
         );
-        dict.insert_hashed(
-            hashed_key(heap, "shape"),
-            heap.alloc_str(shape).to_value(),
-        );
+        dict.insert_hashed(hashed_key(heap, "shape"), heap.alloc_str(shape).to_value());
 
         Ok(dict)
     }
@@ -707,22 +670,19 @@ fn register_exotic_synthesis(builder: &mut GlobalsBuilder) {
         #[starlark(require = named, default = 0.0)] breathiness: f64,
         heap: &'v Heap,
     ) -> anyhow::Result<Dict<'v>> {
-        validate_positive(frequency, "vosim", "frequency")
-            .map_err(|e| anyhow::anyhow!(e))?;
-        validate_positive(formant_freq, "vosim", "formant_freq")
-            .map_err(|e| anyhow::anyhow!(e))?;
+        validate_positive(frequency, "vosim", "frequency").map_err(|e| anyhow::anyhow!(e))?;
+        validate_positive(formant_freq, "vosim", "formant_freq").map_err(|e| anyhow::anyhow!(e))?;
         if !(1..=16).contains(&pulses) {
-            return Err(anyhow::anyhow!("S103: vosim(): 'pulses' must be 1-16, got {}", pulses));
+            return Err(anyhow::anyhow!(
+                "S103: vosim(): 'pulses' must be 1-16, got {}",
+                pulses
+            ));
         }
-        validate_unit_range(breathiness, "vosim", "breathiness")
-            .map_err(|e| anyhow::anyhow!(e))?;
+        validate_unit_range(breathiness, "vosim", "breathiness").map_err(|e| anyhow::anyhow!(e))?;
 
         let mut dict = new_dict(heap);
 
-        dict.insert_hashed(
-            hashed_key(heap, "type"),
-            heap.alloc_str("vosim").to_value(),
-        );
+        dict.insert_hashed(hashed_key(heap, "type"), heap.alloc_str("vosim").to_value());
         dict.insert_hashed(
             hashed_key(heap, "frequency"),
             heap.alloc(frequency).to_value(),
@@ -731,10 +691,7 @@ fn register_exotic_synthesis(builder: &mut GlobalsBuilder) {
             hashed_key(heap, "formant_freq"),
             heap.alloc(formant_freq).to_value(),
         );
-        dict.insert_hashed(
-            hashed_key(heap, "pulses"),
-            heap.alloc(pulses).to_value(),
-        );
+        dict.insert_hashed(hashed_key(heap, "pulses"), heap.alloc(pulses).to_value());
         dict.insert_hashed(
             hashed_key(heap, "breathiness"),
             heap.alloc(breathiness).to_value(),
@@ -764,10 +721,7 @@ fn register_exotic_synthesis(builder: &mut GlobalsBuilder) {
             hashed_key(heap, "type"),
             heap.alloc_str("spectral_freeze").to_value(),
         );
-        dict.insert_hashed(
-            hashed_key(heap, "source"),
-            source,
-        );
+        dict.insert_hashed(hashed_key(heap, "source"), source);
 
         Ok(dict)
     }
@@ -795,23 +749,22 @@ fn register_exotic_synthesis(builder: &mut GlobalsBuilder) {
 
         match source_type {
             "noise" => {
-                let noise_type = param1.unpack_str()
-                    .ok_or_else(|| anyhow::anyhow!("S102: spectral_source(): noise type must be a string"))?;
+                let noise_type = param1.unpack_str().ok_or_else(|| {
+                    anyhow::anyhow!("S102: spectral_source(): noise type must be a string")
+                })?;
                 validate_enum(noise_type, NOISE_TYPES, "spectral_source", "noise_type")
                     .map_err(|e| anyhow::anyhow!(e))?;
 
-                dict.insert_hashed(
-                    hashed_key(heap, "type"),
-                    heap.alloc_str("noise").to_value(),
-                );
+                dict.insert_hashed(hashed_key(heap, "type"), heap.alloc_str("noise").to_value());
                 dict.insert_hashed(
                     hashed_key(heap, "noise_type"),
                     heap.alloc_str(noise_type).to_value(),
                 );
             }
             "tone" => {
-                let waveform = param1.unpack_str()
-                    .ok_or_else(|| anyhow::anyhow!("S102: spectral_source(): waveform must be a string"))?;
+                let waveform = param1.unpack_str().ok_or_else(|| {
+                    anyhow::anyhow!("S102: spectral_source(): waveform must be a string")
+                })?;
                 validate_enum(waveform, WAVEFORMS, "spectral_source", "waveform")
                     .map_err(|e| anyhow::anyhow!(e))?;
 
@@ -819,10 +772,7 @@ fn register_exotic_synthesis(builder: &mut GlobalsBuilder) {
                 validate_positive(frequency, "spectral_source", "frequency")
                     .map_err(|e| anyhow::anyhow!(e))?;
 
-                dict.insert_hashed(
-                    hashed_key(heap, "type"),
-                    heap.alloc_str("tone").to_value(),
-                );
+                dict.insert_hashed(hashed_key(heap, "type"), heap.alloc_str("tone").to_value());
                 dict.insert_hashed(
                     hashed_key(heap, "waveform"),
                     heap.alloc_str(waveform).to_value(),
@@ -833,7 +783,9 @@ fn register_exotic_synthesis(builder: &mut GlobalsBuilder) {
                 );
             }
             _ => {
-                return Err(anyhow::anyhow!("S104: spectral_source(): 'source_type' must be one of: noise, tone"));
+                return Err(anyhow::anyhow!(
+                    "S104: spectral_source(): 'source_type' must be one of: noise, tone"
+                ));
             }
         }
 
@@ -858,8 +810,7 @@ fn register_exotic_synthesis(builder: &mut GlobalsBuilder) {
     ) -> anyhow::Result<Dict<'v>> {
         validate_positive(start_freq, "pitched_body", "start_freq")
             .map_err(|e| anyhow::anyhow!(e))?;
-        validate_positive(end_freq, "pitched_body", "end_freq")
-            .map_err(|e| anyhow::anyhow!(e))?;
+        validate_positive(end_freq, "pitched_body", "end_freq").map_err(|e| anyhow::anyhow!(e))?;
 
         let mut dict = new_dict(heap);
 

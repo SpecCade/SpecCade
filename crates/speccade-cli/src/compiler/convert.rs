@@ -88,10 +88,7 @@ fn convert_value(value: Value) -> Result<serde_json::Value, CompileError> {
             let key = k
                 .unpack_str()
                 .ok_or_else(|| CompileError::JsonConversion {
-                    message: format!(
-                        "dict keys must be strings, got {}",
-                        k.get_type()
-                    ),
+                    message: format!("dict keys must be strings, got {}", k.get_type()),
                 })?
                 .to_string();
             let val = convert_value(v)?;
@@ -115,20 +112,24 @@ mod tests {
 
     /// Helper to evaluate a Starlark expression and convert to JSON
     fn eval_to_json(expr: &str) -> Result<serde_json::Value, CompileError> {
-        let ast = AstModule::parse("test.star", expr.to_string(), &Dialect::Standard)
-            .map_err(|e| CompileError::Syntax {
-                location: "test.star".to_string(),
-                message: e.to_string(),
+        let ast =
+            AstModule::parse("test.star", expr.to_string(), &Dialect::Standard).map_err(|e| {
+                CompileError::Syntax {
+                    location: "test.star".to_string(),
+                    message: e.to_string(),
+                }
             })?;
 
         let module = Module::new();
         let globals = Globals::standard();
         let mut eval = Evaluator::new(&module);
 
-        let value = eval.eval_module(ast, &globals).map_err(|e| CompileError::Runtime {
-            location: "test.star".to_string(),
-            message: e.to_string(),
-        })?;
+        let value = eval
+            .eval_module(ast, &globals)
+            .map_err(|e| CompileError::Runtime {
+                location: "test.star".to_string(),
+                message: e.to_string(),
+            })?;
 
         starlark_to_json(value)
     }
@@ -211,9 +212,6 @@ mod tests {
     #[test]
     fn test_convert_mixed_list() {
         let result = eval_to_json("[1, \"two\", 3.0, None, True]").unwrap();
-        assert_eq!(
-            result,
-            serde_json::json!([1, "two", 3.0, null, true])
-        );
+        assert_eq!(result, serde_json::json!([1, "two", 3.0, null, true]));
     }
 }

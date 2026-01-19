@@ -535,7 +535,10 @@ mod tests {
         let reparsed: serde_json::Value = serde_json::from_str(&canon1).unwrap();
         let canon2 = canonicalize_json(&reparsed).unwrap();
 
-        assert_eq!(canon1, canon2, "nested canonicalization should be idempotent");
+        assert_eq!(
+            canon1, canon2,
+            "nested canonicalization should be idempotent"
+        );
     }
 
     #[test]
@@ -552,7 +555,10 @@ mod tests {
         let reparsed: serde_json::Value = serde_json::from_str(&canon1).unwrap();
         let canon2 = canonicalize_json(&reparsed).unwrap();
 
-        assert_eq!(canon1, canon2, "array canonicalization should be idempotent");
+        assert_eq!(
+            canon1, canon2,
+            "array canonicalization should be idempotent"
+        );
     }
 
     #[test]
@@ -567,7 +573,10 @@ mod tests {
         let reparsed: serde_json::Value = serde_json::from_str(&canon1).unwrap();
         let canon2 = canonicalize_json(&reparsed).unwrap();
 
-        assert_eq!(canon1, canon2, "empty structure canonicalization should be idempotent");
+        assert_eq!(
+            canon1, canon2,
+            "empty structure canonicalization should be idempotent"
+        );
     }
 
     // ========================================================================
@@ -598,7 +607,12 @@ mod tests {
         for (input, expected) in test_cases {
             let value = serde_json::json!({"x": input});
             let canon = canonicalize_json(&value).unwrap();
-            assert_eq!(canon, format!(r#"{{"x":{}}}"#, expected), "Failed for {}", input);
+            assert_eq!(
+                canon,
+                format!(r#"{{"x":{}}}"#, expected),
+                "Failed for {}",
+                input
+            );
 
             // Verify idempotence
             let reparsed: serde_json::Value = serde_json::from_str(&canon).unwrap();
@@ -647,7 +661,10 @@ mod tests {
         // These become None because serde_json doesn't allow NaN/Infinity
         assert!(n.is_none(), "NaN should not be representable");
         assert!(inf.is_none(), "Infinity should not be representable");
-        assert!(neg_inf.is_none(), "Negative infinity should not be representable");
+        assert!(
+            neg_inf.is_none(),
+            "Negative infinity should not be representable"
+        );
     }
 
     // ========================================================================
@@ -746,10 +763,13 @@ mod tests {
 
     #[test]
     fn test_canonicalization_key_ordering_nested() {
-        let json: serde_json::Value = serde_json::from_str(r#"{
+        let json: serde_json::Value = serde_json::from_str(
+            r#"{
             "z": {"b": 1, "a": 2},
             "a": {"d": 3, "c": 4}
-        }"#).unwrap();
+        }"#,
+        )
+        .unwrap();
 
         let canon = canonicalize_json(&json).unwrap();
 
@@ -814,11 +834,16 @@ mod tests {
         let reparsed: serde_json::Value = serde_json::from_str(&canon1).unwrap();
         let canon2 = canonicalize_json(&reparsed).unwrap();
 
-        assert_eq!(canon1, canon2, "deep nesting canonicalization should be idempotent");
+        assert_eq!(
+            canon1, canon2,
+            "deep nesting canonicalization should be idempotent"
+        );
 
         // Verify the value is accessible
         assert_eq!(
-            reparsed["level1"]["level2"]["level3"]["level4"]["level5"]["value"].as_i64().unwrap(),
+            reparsed["level1"]["level2"]["level3"]["level4"]["level5"]["value"]
+                .as_i64()
+                .unwrap(),
             42
         );
     }
@@ -842,6 +867,9 @@ mod tests {
         let reparsed: serde_json::Value = serde_json::from_str(&canon1).unwrap();
         let canon2 = canonicalize_json(&reparsed).unwrap();
 
-        assert_eq!(canon1, canon2, "mixed nesting canonicalization should be idempotent");
+        assert_eq!(
+            canon1, canon2,
+            "mixed nesting canonicalization should be idempotent"
+        );
     }
 }

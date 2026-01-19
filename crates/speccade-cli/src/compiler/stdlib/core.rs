@@ -59,10 +59,8 @@ fn register_core_functions(builder: &mut GlobalsBuilder) {
         #[starlark(default = NoneType)] source: Value<'v>,
         heap: &'v Heap,
     ) -> anyhow::Result<Dict<'v>> {
-        validate_non_empty(path, "output", "path")
-            .map_err(|e| anyhow::anyhow!(e))?;
-        validate_non_empty(format, "output", "format")
-            .map_err(|e| anyhow::anyhow!(e))?;
+        validate_non_empty(path, "output", "path").map_err(|e| anyhow::anyhow!(e))?;
+        validate_non_empty(format, "output", "format").map_err(|e| anyhow::anyhow!(e))?;
 
         // Validate kind
         let normalized_kind = if kind == "secondary" { "preview" } else { kind };
@@ -83,10 +81,7 @@ fn register_core_functions(builder: &mut GlobalsBuilder) {
             hashed_key(heap, "format"),
             heap.alloc_str(format).to_value(),
         );
-        dict.insert_hashed(
-            hashed_key(heap, "path"),
-            heap.alloc_str(path).to_value(),
-        );
+        dict.insert_hashed(hashed_key(heap, "path"), heap.alloc_str(path).to_value());
 
         // Optional: source
         if !source.is_none() {
@@ -98,9 +93,7 @@ fn register_core_functions(builder: &mut GlobalsBuilder) {
                     heap.alloc_str(source_str).to_value(),
                 );
             } else {
-                return Err(anyhow::anyhow!(
-                    "S104: output(): 'source' must be a string"
-                ));
+                return Err(anyhow::anyhow!("S104: output(): 'source' must be a string"));
             }
         }
 
@@ -143,8 +136,7 @@ fn register_core_functions(builder: &mut GlobalsBuilder) {
         heap: &'v Heap,
     ) -> anyhow::Result<Dict<'v>> {
         // Validate asset_id
-        validate_non_empty(asset_id, "spec", "asset_id")
-            .map_err(|e| anyhow::anyhow!(e))?;
+        validate_non_empty(asset_id, "spec", "asset_id").map_err(|e| anyhow::anyhow!(e))?;
 
         // Validate asset_type
         if asset_type.parse::<AssetType>().is_err() {
@@ -174,10 +166,7 @@ fn register_core_functions(builder: &mut GlobalsBuilder) {
         let mut dict = new_dict(heap);
 
         // spec_version (always 1)
-        dict.insert_hashed(
-            hashed_key(heap, "spec_version"),
-            heap.alloc(1).to_value(),
-        );
+        dict.insert_hashed(hashed_key(heap, "spec_version"), heap.alloc(1).to_value());
 
         // asset_id
         dict.insert_hashed(
@@ -198,17 +187,11 @@ fn register_core_functions(builder: &mut GlobalsBuilder) {
         );
 
         // seed
-        dict.insert_hashed(
-            hashed_key(heap, "seed"),
-            heap.alloc(seed).to_value(),
-        );
+        dict.insert_hashed(hashed_key(heap, "seed"), heap.alloc(seed).to_value());
 
         // outputs (convert from list)
         let outputs_list = heap.alloc(AllocList(outputs.items));
-        dict.insert_hashed(
-            hashed_key(heap, "outputs"),
-            outputs_list,
-        );
+        dict.insert_hashed(hashed_key(heap, "outputs"), outputs_list);
 
         // Optional: description
         if !description.is_none() {
@@ -222,18 +205,12 @@ fn register_core_functions(builder: &mut GlobalsBuilder) {
 
         // Optional: style_tags
         if !tags.is_none() {
-            dict.insert_hashed(
-                hashed_key(heap, "style_tags"),
-                tags,
-            );
+            dict.insert_hashed(hashed_key(heap, "style_tags"), tags);
         }
 
         // Optional: recipe
         if !recipe.is_none() {
-            dict.insert_hashed(
-                hashed_key(heap, "recipe"),
-                recipe,
-            );
+            dict.insert_hashed(hashed_key(heap, "recipe"), recipe);
         }
 
         Ok(dict)
@@ -274,14 +251,17 @@ mod tests {
 
     #[test]
     fn test_spec_minimal() {
-        let result = eval_to_json(r#"
+        let result = eval_to_json(
+            r#"
 spec(
     asset_id = "test-asset-01",
     asset_type = "audio",
     seed = 42,
     outputs = [output("test.wav", "wav")]
 )
-"#).unwrap();
+"#,
+        )
+        .unwrap();
 
         assert_eq!(result["spec_version"], 1);
         assert_eq!(result["asset_id"], "test-asset-01");
@@ -294,7 +274,8 @@ spec(
 
     #[test]
     fn test_spec_with_all_options() {
-        let result = eval_to_json(r#"
+        let result = eval_to_json(
+            r#"
 spec(
     asset_id = "full-asset-01",
     asset_type = "audio",
@@ -305,7 +286,9 @@ spec(
     license = "MIT",
     recipe = {"kind": "audio_v1", "params": {}}
 )
-"#).unwrap();
+"#,
+        )
+        .unwrap();
 
         assert_eq!(result["description"], "Test description");
         assert_eq!(result["license"], "MIT");
@@ -315,14 +298,16 @@ spec(
 
     #[test]
     fn test_spec_invalid_asset_type() {
-        let result = eval_to_json(r#"
+        let result = eval_to_json(
+            r#"
 spec(
     asset_id = "test",
     asset_type = "invalid_type",
     seed = 42,
     outputs = [output("test.wav", "wav")]
 )
-"#);
+"#,
+        );
         assert!(result.is_err());
         let err = result.unwrap_err();
         assert!(err.contains("S104"));
@@ -330,14 +315,16 @@ spec(
 
     #[test]
     fn test_spec_empty_outputs() {
-        let result = eval_to_json(r#"
+        let result = eval_to_json(
+            r#"
 spec(
     asset_id = "test",
     asset_type = "audio",
     seed = 42,
     outputs = []
 )
-"#);
+"#,
+        );
         assert!(result.is_err());
         let err = result.unwrap_err();
         assert!(err.contains("S101"));
@@ -345,14 +332,16 @@ spec(
 
     #[test]
     fn test_spec_negative_seed() {
-        let result = eval_to_json(r#"
+        let result = eval_to_json(
+            r#"
 spec(
     asset_id = "test",
     asset_type = "audio",
     seed = -1,
     outputs = [output("test.wav", "wav")]
 )
-"#);
+"#,
+        );
         assert!(result.is_err());
         let err = result.unwrap_err();
         assert!(err.contains("S103"));
@@ -360,14 +349,16 @@ spec(
 
     #[test]
     fn test_spec_large_seed_u32_max() {
-        let result = eval_to_json(r#"
+        let result = eval_to_json(
+            r#"
 spec(
     asset_id = "big-seed-01",
     asset_type = "audio",
     seed = 4294967295,
     outputs = [output("test.wav", "wav")]
 )
-"#)
+"#,
+        )
         .unwrap();
 
         assert_eq!(result["seed"].as_u64(), Some(4294967295));
@@ -375,14 +366,16 @@ spec(
 
     #[test]
     fn test_spec_supports_skeletal_asset_types() {
-        let result = eval_to_json(r#"
+        let result = eval_to_json(
+            r#"
 spec(
     asset_id = "skel-01",
     asset_type = "skeletal_mesh",
     seed = 1,
     outputs = [output("meshes/skel.glb", "glb")]
 )
-"#)
+"#,
+        )
         .unwrap();
 
         assert_eq!(result["asset_type"], "skeletal_mesh");

@@ -43,8 +43,13 @@ fn register_instrument_functions(builder: &mut GlobalsBuilder) {
         #[starlark(default = false)] periodic: bool,
         heap: &'v Heap,
     ) -> anyhow::Result<Dict<'v>> {
-        validate_enum(synth_type, SYNTHESIS_TYPES, "instrument_synthesis", "synth_type")
-            .map_err(|e| anyhow::anyhow!(e))?;
+        validate_enum(
+            synth_type,
+            SYNTHESIS_TYPES,
+            "instrument_synthesis",
+            "synth_type",
+        )
+        .map_err(|e| anyhow::anyhow!(e))?;
 
         let mut dict = new_dict(heap);
 
@@ -112,14 +117,16 @@ fn register_instrument_functions(builder: &mut GlobalsBuilder) {
         #[starlark(default = NoneType)] comment: Value<'v>,
         heap: &'v Heap,
     ) -> anyhow::Result<Dict<'v>> {
-        validate_non_empty(name, "tracker_instrument", "name")
-            .map_err(|e| anyhow::anyhow!(e))?;
+        validate_non_empty(name, "tracker_instrument", "name").map_err(|e| anyhow::anyhow!(e))?;
 
         // Validate mutual exclusivity
         let has_synthesis = !synthesis.is_none();
         let has_wav = !wav.is_none();
         let has_ref = !r#ref.is_none();
-        let source_count = [has_synthesis, has_wav, has_ref].iter().filter(|&&x| x).count();
+        let source_count = [has_synthesis, has_wav, has_ref]
+            .iter()
+            .filter(|&&x| x)
+            .count();
 
         if source_count > 1 {
             return Err(anyhow::anyhow!(
@@ -129,30 +136,18 @@ fn register_instrument_functions(builder: &mut GlobalsBuilder) {
 
         let mut dict = new_dict(heap);
 
-        dict.insert_hashed(
-            hashed_key(heap, "name"),
-            heap.alloc_str(name).to_value(),
-        );
+        dict.insert_hashed(hashed_key(heap, "name"), heap.alloc_str(name).to_value());
 
         // Add source (synthesis, wav, or ref)
         if has_synthesis {
-            dict.insert_hashed(
-                hashed_key(heap, "synthesis"),
-                synthesis,
-            );
+            dict.insert_hashed(hashed_key(heap, "synthesis"), synthesis);
         } else if has_wav {
             if let Some(wav_str) = wav.unpack_str() {
-                dict.insert_hashed(
-                    hashed_key(heap, "wav"),
-                    heap.alloc_str(wav_str).to_value(),
-                );
+                dict.insert_hashed(hashed_key(heap, "wav"), heap.alloc_str(wav_str).to_value());
             }
         } else if has_ref {
             if let Some(ref_str) = r#ref.unpack_str() {
-                dict.insert_hashed(
-                    hashed_key(heap, "ref"),
-                    heap.alloc_str(ref_str).to_value(),
-                );
+                dict.insert_hashed(hashed_key(heap, "ref"), heap.alloc_str(ref_str).to_value());
             }
         }
 
@@ -169,41 +164,23 @@ fn register_instrument_functions(builder: &mut GlobalsBuilder) {
         // Optional: sample_rate
         if !sample_rate.is_none() {
             if let Some(rate) = sample_rate.unpack_i32() {
-                dict.insert_hashed(
-                    hashed_key(heap, "sample_rate"),
-                    heap.alloc(rate).to_value(),
-                );
+                dict.insert_hashed(hashed_key(heap, "sample_rate"), heap.alloc(rate).to_value());
             }
         }
 
         // Envelope - use default if not provided
         if envelope.is_none() {
             let mut env_dict = new_dict(heap);
-            env_dict.insert_hashed(
-                hashed_key(heap, "attack"),
-                heap.alloc(0.01).to_value(),
-            );
-            env_dict.insert_hashed(
-                hashed_key(heap, "decay"),
-                heap.alloc(0.1).to_value(),
-            );
-            env_dict.insert_hashed(
-                hashed_key(heap, "sustain"),
-                heap.alloc(0.7).to_value(),
-            );
-            env_dict.insert_hashed(
-                hashed_key(heap, "release"),
-                heap.alloc(0.2).to_value(),
-            );
+            env_dict.insert_hashed(hashed_key(heap, "attack"), heap.alloc(0.01).to_value());
+            env_dict.insert_hashed(hashed_key(heap, "decay"), heap.alloc(0.1).to_value());
+            env_dict.insert_hashed(hashed_key(heap, "sustain"), heap.alloc(0.7).to_value());
+            env_dict.insert_hashed(hashed_key(heap, "release"), heap.alloc(0.2).to_value());
             dict.insert_hashed(
                 hashed_key(heap, "envelope"),
                 heap.alloc(env_dict).to_value(),
             );
         } else {
-            dict.insert_hashed(
-                hashed_key(heap, "envelope"),
-                envelope,
-            );
+            dict.insert_hashed(hashed_key(heap, "envelope"), envelope);
         }
 
         // Optional: loop_mode
@@ -289,33 +266,41 @@ mod tests {
 
     #[test]
     fn test_tracker_instrument_with_synthesis() {
-        let result = eval_to_json(r#"
+        let result = eval_to_json(
+            r#"
 tracker_instrument(
     name = "lead",
     synthesis = instrument_synthesis("sawtooth")
 )
-"#).unwrap();
+"#,
+        )
+        .unwrap();
         assert_eq!(result["name"], "lead");
         assert_eq!(result["synthesis"]["type"], "sawtooth");
     }
 
     #[test]
     fn test_tracker_instrument_with_wav() {
-        let result = eval_to_json(r#"
+        let result = eval_to_json(
+            r#"
 tracker_instrument(name = "kick", wav = "samples/kick.wav")
-"#).unwrap();
+"#,
+        )
+        .unwrap();
         assert_eq!(result["wav"], "samples/kick.wav");
     }
 
     #[test]
     fn test_tracker_instrument_mutual_exclusivity() {
-        let result = eval_to_json(r#"
+        let result = eval_to_json(
+            r#"
 tracker_instrument(
     name = "bad",
     synthesis = instrument_synthesis("sine"),
     wav = "samples/test.wav"
 )
-"#);
+"#,
+        );
         assert!(result.is_err());
         let err = result.unwrap_err();
         assert!(err.contains("mutually exclusive"));

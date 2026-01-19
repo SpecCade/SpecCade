@@ -5,9 +5,7 @@ use starlark::environment::GlobalsBuilder;
 use starlark::starlark_module;
 use starlark::values::{dict::Dict, none::NoneType, Heap, Value, ValueLike};
 
-use super::super::super::validation::{
-    validate_enum, validate_positive, validate_unit_range,
-};
+use super::super::super::validation::{validate_enum, validate_positive, validate_unit_range};
 
 /// Helper to create a hashed key for dict insertion.
 fn hashed_key<'v>(heap: &'v Heap, key: &str) -> starlark::collections::Hashed<Value<'v>> {
@@ -35,7 +33,9 @@ fn extract_float(value: Value, function: &str, param: &str) -> anyhow::Result<f6
     }
     Err(anyhow::anyhow!(
         "S102: {}(): '{}' expected float, got {}",
-        function, param, value.get_type()
+        function,
+        param,
+        value.get_type()
     ))
 }
 
@@ -62,12 +62,9 @@ fn register_physical_synthesis(builder: &mut GlobalsBuilder) {
     ) -> anyhow::Result<Dict<'v>> {
         validate_positive(frequency, "membrane_drum", "frequency")
             .map_err(|e| anyhow::anyhow!(e))?;
-        validate_unit_range(decay, "membrane_drum", "decay")
-            .map_err(|e| anyhow::anyhow!(e))?;
-        validate_unit_range(tone, "membrane_drum", "tone")
-            .map_err(|e| anyhow::anyhow!(e))?;
-        validate_unit_range(strike, "membrane_drum", "strike")
-            .map_err(|e| anyhow::anyhow!(e))?;
+        validate_unit_range(decay, "membrane_drum", "decay").map_err(|e| anyhow::anyhow!(e))?;
+        validate_unit_range(tone, "membrane_drum", "tone").map_err(|e| anyhow::anyhow!(e))?;
+        validate_unit_range(strike, "membrane_drum", "strike").map_err(|e| anyhow::anyhow!(e))?;
 
         let mut dict = new_dict(heap);
 
@@ -79,18 +76,9 @@ fn register_physical_synthesis(builder: &mut GlobalsBuilder) {
             hashed_key(heap, "frequency"),
             heap.alloc(frequency).to_value(),
         );
-        dict.insert_hashed(
-            hashed_key(heap, "decay"),
-            heap.alloc(decay).to_value(),
-        );
-        dict.insert_hashed(
-            hashed_key(heap, "tone"),
-            heap.alloc(tone).to_value(),
-        );
-        dict.insert_hashed(
-            hashed_key(heap, "strike"),
-            heap.alloc(strike).to_value(),
-        );
+        dict.insert_hashed(hashed_key(heap, "decay"), heap.alloc(decay).to_value());
+        dict.insert_hashed(hashed_key(heap, "tone"), heap.alloc(tone).to_value());
+        dict.insert_hashed(hashed_key(heap, "strike"), heap.alloc(strike).to_value());
 
         Ok(dict)
     }
@@ -109,12 +97,16 @@ fn register_physical_synthesis(builder: &mut GlobalsBuilder) {
         #[starlark(default = NoneType)] sweep_to: Value<'v>,
         heap: &'v Heap,
     ) -> anyhow::Result<Dict<'v>> {
-        validate_positive(frequency, "feedback_fm", "frequency")
-            .map_err(|e| anyhow::anyhow!(e))?;
-        validate_unit_range(feedback, "feedback_fm", "feedback")
-            .map_err(|e| anyhow::anyhow!(e))?;
+        validate_positive(frequency, "feedback_fm", "frequency").map_err(|e| anyhow::anyhow!(e))?;
+        validate_unit_range(feedback, "feedback_fm", "feedback").map_err(|e| anyhow::anyhow!(e))?;
         validate_positive(modulation_index, "feedback_fm", "modulation_index")
-            .or_else(|_| if modulation_index == 0.0 { Ok(()) } else { Err("".to_string()) })
+            .or_else(|_| {
+                if modulation_index == 0.0 {
+                    Ok(())
+                } else {
+                    Err("".to_string())
+                }
+            })
             .map_err(|_| anyhow::anyhow!("S103: feedback_fm(): 'modulation_index' must be >= 0"))?;
 
         let mut dict = new_dict(heap);
@@ -175,10 +167,15 @@ fn register_physical_synthesis(builder: &mut GlobalsBuilder) {
         #[starlark(default = NoneType)] sweep_to: Value<'v>,
         heap: &'v Heap,
     ) -> anyhow::Result<Dict<'v>> {
-        validate_positive(frequency, "pd_synth", "frequency")
-            .map_err(|e| anyhow::anyhow!(e))?;
+        validate_positive(frequency, "pd_synth", "frequency").map_err(|e| anyhow::anyhow!(e))?;
         validate_positive(distortion, "pd_synth", "distortion")
-            .or_else(|_| if distortion == 0.0 { Ok(()) } else { Err("".to_string()) })
+            .or_else(|_| {
+                if distortion == 0.0 {
+                    Ok(())
+                } else {
+                    Err("".to_string())
+                }
+            })
             .map_err(|_| anyhow::anyhow!("S103: pd_synth(): 'distortion' must be >= 0"))?;
 
         const PD_WAVEFORMS: &[&str] = &["resonant", "sawtooth", "pulse"];
@@ -210,8 +207,7 @@ fn register_physical_synthesis(builder: &mut GlobalsBuilder) {
 
         if !sweep_to.is_none() {
             let end_freq = extract_float(sweep_to, "pd_synth", "sweep_to")?;
-            validate_positive(end_freq, "pd_synth", "sweep_to")
-                .map_err(|e| anyhow::anyhow!(e))?;
+            validate_positive(end_freq, "pd_synth", "sweep_to").map_err(|e| anyhow::anyhow!(e))?;
 
             let mut sweep_dict = new_dict(heap);
             sweep_dict.insert_hashed(
@@ -245,8 +241,7 @@ fn register_physical_synthesis(builder: &mut GlobalsBuilder) {
         #[starlark(default = NoneType)] sweep_to: Value<'v>,
         heap: &'v Heap,
     ) -> anyhow::Result<Dict<'v>> {
-        validate_positive(frequency, "modal", "frequency")
-            .map_err(|e| anyhow::anyhow!(e))?;
+        validate_positive(frequency, "modal", "frequency").map_err(|e| anyhow::anyhow!(e))?;
 
         const EXCITATIONS: &[&str] = &["impulse", "noise", "pluck"];
         validate_enum(excitation, EXCITATIONS, "modal", "excitation")
@@ -254,18 +249,12 @@ fn register_physical_synthesis(builder: &mut GlobalsBuilder) {
 
         let mut dict = new_dict(heap);
 
-        dict.insert_hashed(
-            hashed_key(heap, "type"),
-            heap.alloc_str("modal").to_value(),
-        );
+        dict.insert_hashed(hashed_key(heap, "type"), heap.alloc_str("modal").to_value());
         dict.insert_hashed(
             hashed_key(heap, "frequency"),
             heap.alloc(frequency).to_value(),
         );
-        dict.insert_hashed(
-            hashed_key(heap, "modes"),
-            modes,
-        );
+        dict.insert_hashed(hashed_key(heap, "modes"), modes);
         dict.insert_hashed(
             hashed_key(heap, "excitation"),
             heap.alloc_str(excitation).to_value(),
@@ -273,8 +262,7 @@ fn register_physical_synthesis(builder: &mut GlobalsBuilder) {
 
         if !sweep_to.is_none() {
             let end_freq = extract_float(sweep_to, "modal", "sweep_to")?;
-            validate_positive(end_freq, "modal", "sweep_to")
-                .map_err(|e| anyhow::anyhow!(e))?;
+            validate_positive(end_freq, "modal", "sweep_to").map_err(|e| anyhow::anyhow!(e))?;
 
             let mut sweep_dict = new_dict(heap);
             sweep_dict.insert_hashed(
@@ -343,13 +331,16 @@ fn register_physical_synthesis(builder: &mut GlobalsBuilder) {
         inharmonicity: f64,
         heap: &'v Heap,
     ) -> anyhow::Result<Dict<'v>> {
-        validate_positive(base_freq, "metallic", "base_freq")
-            .map_err(|e| anyhow::anyhow!(e))?;
+        validate_positive(base_freq, "metallic", "base_freq").map_err(|e| anyhow::anyhow!(e))?;
         if num_partials < 1 {
-            return Err(anyhow::anyhow!("S103: metallic(): 'num_partials' must be >= 1"));
+            return Err(anyhow::anyhow!(
+                "S103: metallic(): 'num_partials' must be >= 1"
+            ));
         }
         if inharmonicity < 1.0 {
-            return Err(anyhow::anyhow!("S103: metallic(): 'inharmonicity' must be >= 1.0"));
+            return Err(anyhow::anyhow!(
+                "S103: metallic(): 'inharmonicity' must be >= 1.0"
+            ));
         }
 
         let mut dict = new_dict(heap);
@@ -388,8 +379,7 @@ fn register_physical_synthesis(builder: &mut GlobalsBuilder) {
     ) -> anyhow::Result<Dict<'v>> {
         validate_positive(frequency, "comb_filter_synth", "frequency")
             .map_err(|e| anyhow::anyhow!(e))?;
-        validate_unit_range(decay, "comb_filter_synth", "decay")
-            .map_err(|e| anyhow::anyhow!(e))?;
+        validate_unit_range(decay, "comb_filter_synth", "decay").map_err(|e| anyhow::anyhow!(e))?;
 
         const EXCITATIONS: &[&str] = &["impulse", "noise", "saw"];
         validate_enum(excitation, EXCITATIONS, "comb_filter_synth", "excitation")
@@ -405,10 +395,7 @@ fn register_physical_synthesis(builder: &mut GlobalsBuilder) {
             hashed_key(heap, "frequency"),
             heap.alloc(frequency).to_value(),
         );
-        dict.insert_hashed(
-            hashed_key(heap, "decay"),
-            heap.alloc(decay).to_value(),
-        );
+        dict.insert_hashed(hashed_key(heap, "decay"), heap.alloc(decay).to_value());
         dict.insert_hashed(
             hashed_key(heap, "excitation"),
             heap.alloc_str(excitation).to_value(),

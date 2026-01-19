@@ -1,8 +1,13 @@
 //! Core stdlib functions (spec, output, envelope)
 
 use super::{func, param, FunctionInfo};
+use speccade_spec::{AssetType, OutputFormat, OutputKind};
 
 pub(super) fn register_functions() -> Vec<FunctionInfo> {
+    let asset_types: Vec<&str> = AssetType::all().iter().map(|t| t.as_str()).collect();
+    let output_formats: Vec<&str> = OutputFormat::all().iter().map(|f| f.extension()).collect();
+    let output_kinds: Vec<&str> = OutputKind::all().iter().map(|k| k.as_str()).collect();
+
     vec![
         func!(
             "spec",
@@ -10,10 +15,10 @@ pub(super) fn register_functions() -> Vec<FunctionInfo> {
             "Creates a complete spec dictionary with all required fields.",
             vec![
                 param!("asset_id", "string", req),
-                param!("asset_type", "string", req, enum: &["audio", "texture", "static_mesh", "music"]),
+                param!("asset_type", "string", req, enum: &asset_types),
                 param!("seed", "int", req, range: Some(0.0), Some(4294967295.0)),
                 param!("outputs", "list", req),
-                param!("recipe", "dict", req),
+                param!("recipe", "dict", opt_none),
                 param!("license", "string", opt, "CC0-1.0"),
                 param!("description", "string", opt_none),
                 param!("style_tags", "list", opt_none),
@@ -27,8 +32,9 @@ pub(super) fn register_functions() -> Vec<FunctionInfo> {
             "Creates an output specification for an asset.",
             vec![
                 param!("path", "string", req),
-                param!("format", "string", req, enum: &["wav", "ogg", "png", "glb", "xm", "it"]),
-                param!("kind", "string", opt, "primary", enum: &["primary", "variant"]),
+                param!("format", "string", req, enum: &output_formats),
+                param!("kind", "string", opt, "primary", enum: &output_kinds),
+                param!("source", "string", opt_none),
             ],
             "An output dict for the spec outputs list.",
             r#"output("sounds/laser.wav", "wav")"#

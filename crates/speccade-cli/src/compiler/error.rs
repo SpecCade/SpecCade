@@ -43,10 +43,7 @@ pub enum CompileError {
 
     /// S101: Invalid stdlib function argument.
     #[error("S101: {function}(): missing required argument '{param}'")]
-    StdlibArgument {
-        function: String,
-        param: String,
-    },
+    StdlibArgument { function: String, param: String },
 
     /// S102: Type mismatch in stdlib function.
     #[error("S102: {function}(): '{param}' expected {expected}, got {got}")]

@@ -44,7 +44,12 @@ fn load_starlark_with_functions() {
     assert_eq!(result.spec.outputs.len(), 2);
 
     // Check that outputs were generated correctly
-    let paths: Vec<_> = result.spec.outputs.iter().map(|o| o.path.as_str()).collect();
+    let paths: Vec<_> = result
+        .spec
+        .outputs
+        .iter()
+        .map(|o| o.path.as_str())
+        .collect();
     assert!(paths.contains(&"sounds/laser_blast.wav"));
     assert!(paths.contains(&"sounds/laser_charge.wav"));
 
@@ -64,7 +69,12 @@ fn load_starlark_with_comprehensions() {
     assert_eq!(result.spec.outputs.len(), 4);
 
     // Check that outputs were generated via comprehension
-    let paths: Vec<_> = result.spec.outputs.iter().map(|o| o.path.as_str()).collect();
+    let paths: Vec<_> = result
+        .spec
+        .outputs
+        .iter()
+        .map(|o| o.path.as_str())
+        .collect();
     assert!(paths.contains(&"drums/kick.wav"));
     assert!(paths.contains(&"drums/snare.wav"));
     assert!(paths.contains(&"drums/hihat.wav"));
@@ -82,7 +92,10 @@ fn starlark_spec_produces_valid_json() {
     let result = load_spec(&path).expect("should load minimal.star");
 
     // Should be able to serialize to JSON and back
-    let json = result.spec.to_json_pretty().expect("should serialize to JSON");
+    let json = result
+        .spec
+        .to_json_pretty()
+        .expect("should serialize to JSON");
     let parsed = Spec::from_json(&json).expect("should parse JSON");
 
     assert_eq!(parsed.asset_id, result.spec.asset_id);
@@ -165,7 +178,10 @@ fn equivalent_json_and_starlark_produce_same_ir() {
     assert_eq!(json_result.spec.asset_id, star_result.spec.asset_id);
     assert_eq!(json_result.spec.seed, star_result.spec.seed);
     assert_eq!(json_result.spec.license, star_result.spec.license);
-    assert_eq!(json_result.spec.outputs.len(), star_result.spec.outputs.len());
+    assert_eq!(
+        json_result.spec.outputs.len(),
+        star_result.spec.outputs.len()
+    );
 
     // The canonical JSON should be identical
     let json_canonical = json_result.spec.to_json().unwrap();

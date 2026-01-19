@@ -239,13 +239,12 @@ fn load_starlark_spec(path: &Path) -> Result<LoadResult, InputError> {
 
     // Compile Starlark to Spec
     let config = compiler::CompilerConfig::default();
-    let compile_result =
-        compiler::compile(filename, &content, &config).map_err(|e| match e {
-            compiler::CompileError::Timeout { seconds } => InputError::Timeout { seconds },
-            other => InputError::StarlarkCompile {
-                message: other.to_string(),
-            },
-        })?;
+    let compile_result = compiler::compile(filename, &content, &config).map_err(|e| match e {
+        compiler::CompileError::Timeout { seconds } => InputError::Timeout { seconds },
+        other => InputError::StarlarkCompile {
+            message: other.to_string(),
+        },
+    })?;
 
     // Convert compiler warnings to input warnings
     let warnings = compile_result

@@ -49,9 +49,7 @@ fn eval_starlark_sync(
 
     // Create evaluation environment with stdlib
     let module = Module::new();
-    let globals = GlobalsBuilder::standard()
-        .with(register_stdlib)
-        .build();
+    let globals = GlobalsBuilder::standard().with(register_stdlib).build();
     let mut eval = Evaluator::new(&module);
 
     // Evaluate the module
@@ -120,10 +118,8 @@ pub fn eval_with_timeout(
     rt.block_on(async {
         match timeout(timeout_duration, async {
             // Starlark evaluation is synchronous, but we wrap it for timeout
-            tokio::task::spawn_blocking(move || {
-                eval_starlark_sync(&filename, &source, &config)
-            })
-            .await
+            tokio::task::spawn_blocking(move || eval_starlark_sync(&filename, &source, &config))
+                .await
         })
         .await
         {
