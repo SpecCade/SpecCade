@@ -20,6 +20,7 @@ pub mod serve;
 pub mod stdlib;
 pub mod template;
 pub mod validate;
+pub mod verify;
 
 mod reporting;
 
@@ -42,6 +43,7 @@ mod tests {
         let _ = preview::run;
         let _ = template::list;
         let _ = validate::run;
+        let _ = verify::run;
     }
 
     #[cfg(feature = "serve")]

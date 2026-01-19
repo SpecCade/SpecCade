@@ -2,6 +2,7 @@
 
 pub mod budgets;
 pub mod common;
+pub mod constraints;
 mod path_safety;
 mod recipe_outputs;
 mod recipe_outputs_audio;
@@ -266,10 +267,7 @@ pub fn validate_for_generate(spec: &Spec) -> ValidationResult {
 /// # Returns
 /// * `ValidationResult` with `ok=true` if validation passed, with any warnings.
 /// * `ValidationResult` with `ok=false` and errors if validation failed.
-pub fn validate_for_generate_with_budget(
-    spec: &Spec,
-    budget: &BudgetProfile,
-) -> ValidationResult {
+pub fn validate_for_generate_with_budget(spec: &Spec, budget: &BudgetProfile) -> ValidationResult {
     let mut result = validate_spec_with_budget(spec, budget);
 
     // E010: Recipe required for generate

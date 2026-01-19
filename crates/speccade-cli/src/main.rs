@@ -279,6 +279,21 @@ enum Commands {
         #[command(subcommand)]
         command: CacheCommands,
     },
+
+    /// Verify generated assets against constraints
+    Verify {
+        /// Path to the report file (*.report.json)
+        #[arg(long)]
+        report: String,
+
+        /// Path to the constraints file (*.constraints.json)
+        #[arg(long)]
+        constraints: String,
+
+        /// Output machine-readable JSON diagnostics (no colored output)
+        #[arg(long)]
+        json: bool,
+    },
 }
 
 #[derive(Subcommand)]
@@ -493,6 +508,11 @@ fn main() -> ExitCode {
             CacheCommands::Clear => commands::cache::clear(),
             CacheCommands::Info => commands::cache::info(),
         },
+        Commands::Verify {
+            report,
+            constraints,
+            json,
+        } => commands::verify::run(&report, &constraints, json),
     };
 
     match result {
@@ -1576,5 +1596,77 @@ mod tests {
             .err()
             .unwrap();
         assert!(err.to_string().contains("--out-dir"));
+    }
+
+    #[test]
+    fn test_cli_parses_verify() {
+        let cli = Cli::try_parse_from([
+            "speccade",
+            "verify",
+            "--report",
+            "test.report.json",
+            "--constraints",
+            "test.constraints.json",
+        ])
+        .unwrap();
+        match cli.command {
+            Commands::Verify {
+                report,
+                constraints,
+                json,
+            } => {
+                assert_eq!(report, "test.report.json");
+                assert_eq!(constraints, "test.constraints.json");
+                assert!(!json);
+            }
+            _ => panic!("expected verify command"),
+        }
+    }
+
+    #[test]
+    fn test_cli_parses_verify_with_json() {
+        let cli = Cli::try_parse_from([
+            "speccade",
+            "verify",
+            "--report",
+            "test.report.json",
+            "--constraints",
+            "test.constraints.json",
+            "--json",
+        ])
+        .unwrap();
+        match cli.command {
+            Commands::Verify {
+                report,
+                constraints,
+                json,
+            } => {
+                assert_eq!(report, "test.report.json");
+                assert_eq!(constraints, "test.constraints.json");
+                assert!(json);
+            }
+            _ => panic!("expected verify command"),
+        }
+    }
+
+    #[test]
+    fn test_cli_requires_report_for_verify() {
+        let err = Cli::try_parse_from([
+            "speccade",
+            "verify",
+            "--constraints",
+            "test.constraints.json",
+        ])
+        .err()
+        .unwrap();
+        assert!(err.to_string().contains("--report"));
+    }
+
+    #[test]
+    fn test_cli_requires_constraints_for_verify() {
+        let err = Cli::try_parse_from(["speccade", "verify", "--report", "test.report.json"])
+            .err()
+            .unwrap();
+        assert!(err.to_string().contains("--constraints"));
     }
 }

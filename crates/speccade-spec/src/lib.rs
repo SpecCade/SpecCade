@@ -70,6 +70,9 @@ pub use report::{
     StageTiming, REPORT_VERSION,
 };
 pub use spec::{AssetType, Spec, SpecBuilder, MAX_SEED, SPEC_VERSION};
+pub use validation::constraints::{
+    evaluate_constraints, Constraint, ConstraintResult, ConstraintSet, VerifyResult,
+};
 pub use validation::{
     is_safe_output_path, is_valid_asset_id, validate_for_generate,
     validate_for_generate_with_budget, validate_spec, validate_spec_with_budget, AudioBudget,
