@@ -4,7 +4,7 @@
   "asset_type": "skeletal_animation",
   "license": "CC0-1.0",
   "seed": 8002,
-  "description": "Walk cycle animation - basic locomotion",
+  "description": "Walk cycle animation - basic bipedal locomotion",
   "outputs": [
     {
       "kind": "primary",
@@ -15,149 +15,74 @@
   "recipe": {
     "kind": "skeletal_animation.blender_clip_v1",
     "params": {
-      "input_armature": "simple_biped.glb",
-      "character": "simple_biped",
-      "duration_frames": 30,
+      "skeleton_preset": "humanoid_basic_v1",
+      "clip_name": "walk_cycle",
+      "duration_seconds": 1.0,
       "fps": 30,
       "loop": true,
-      "ground_offset": 0.0,
-      "poses": {
-        "contact_L": {
-          "leg_upper_L": {
-            "pitch": -20
-          },
-          "leg_lower_L": {
-            "pitch": 10
-          },
-          "leg_upper_R": {
-            "pitch": 20
-          },
-          "leg_lower_R": {
-            "pitch": -30
-          },
-          "arm_upper_L": {
-            "pitch": 15
-          },
-          "arm_upper_R": {
-            "pitch": -15
-          },
-          "spine": {
-            "roll": -3
+      "interpolation": "bezier",
+      "keyframes": [
+        {
+          "time": 0.0,
+          "bones": {
+            "upper_leg_l": { "rotation": [-20, 0, 0] },
+            "lower_leg_l": { "rotation": [10, 0, 0] },
+            "upper_leg_r": { "rotation": [20, 0, 0] },
+            "lower_leg_r": { "rotation": [-30, 0, 0] },
+            "upper_arm_l": { "rotation": [15, 0, 0] },
+            "upper_arm_r": { "rotation": [-15, 0, 0] },
+            "spine": { "rotation": [0, 0, -3] }
           }
         },
-        "passing_L": {
-          "leg_upper_L": {
-            "pitch": 0
-          },
-          "leg_lower_L": {
-            "pitch": -40
-          },
-          "leg_upper_R": {
-            "pitch": 0
-          },
-          "leg_lower_R": {
-            "pitch": 0
-          },
-          "arm_upper_L": {
-            "pitch": 0
-          },
-          "arm_upper_R": {
-            "pitch": 0
-          },
-          "spine": {
-            "roll": 0
+        {
+          "time": 0.25,
+          "bones": {
+            "upper_leg_l": { "rotation": [0, 0, 0] },
+            "lower_leg_l": { "rotation": [-40, 0, 0] },
+            "upper_leg_r": { "rotation": [0, 0, 0] },
+            "lower_leg_r": { "rotation": [0, 0, 0] },
+            "upper_arm_l": { "rotation": [0, 0, 0] },
+            "upper_arm_r": { "rotation": [0, 0, 0] },
+            "spine": { "rotation": [0, 0, 0] }
           }
         },
-        "contact_R": {
-          "leg_upper_L": {
-            "pitch": 20
-          },
-          "leg_lower_L": {
-            "pitch": -30
-          },
-          "leg_upper_R": {
-            "pitch": -20
-          },
-          "leg_lower_R": {
-            "pitch": 10
-          },
-          "arm_upper_L": {
-            "pitch": -15
-          },
-          "arm_upper_R": {
-            "pitch": 15
-          },
-          "spine": {
-            "roll": 3
+        {
+          "time": 0.5,
+          "bones": {
+            "upper_leg_l": { "rotation": [20, 0, 0] },
+            "lower_leg_l": { "rotation": [-30, 0, 0] },
+            "upper_leg_r": { "rotation": [-20, 0, 0] },
+            "lower_leg_r": { "rotation": [10, 0, 0] },
+            "upper_arm_l": { "rotation": [-15, 0, 0] },
+            "upper_arm_r": { "rotation": [15, 0, 0] },
+            "spine": { "rotation": [0, 0, 3] }
           }
         },
-        "passing_R": {
-          "leg_upper_L": {
-            "pitch": 0
-          },
-          "leg_lower_L": {
-            "pitch": 0
-          },
-          "leg_upper_R": {
-            "pitch": 0
-          },
-          "leg_lower_R": {
-            "pitch": -40
-          },
-          "arm_upper_L": {
-            "pitch": 0
-          },
-          "arm_upper_R": {
-            "pitch": 0
-          },
-          "spine": {
-            "roll": 0
+        {
+          "time": 0.75,
+          "bones": {
+            "upper_leg_l": { "rotation": [0, 0, 0] },
+            "lower_leg_l": { "rotation": [0, 0, 0] },
+            "upper_leg_r": { "rotation": [0, 0, 0] },
+            "lower_leg_r": { "rotation": [-40, 0, 0] },
+            "upper_arm_l": { "rotation": [0, 0, 0] },
+            "upper_arm_r": { "rotation": [0, 0, 0] },
+            "spine": { "rotation": [0, 0, 0] }
+          }
+        },
+        {
+          "time": 1.0,
+          "bones": {
+            "upper_leg_l": { "rotation": [-20, 0, 0] },
+            "lower_leg_l": { "rotation": [10, 0, 0] },
+            "upper_leg_r": { "rotation": [20, 0, 0] },
+            "lower_leg_r": { "rotation": [-30, 0, 0] },
+            "upper_arm_l": { "rotation": [15, 0, 0] },
+            "upper_arm_r": { "rotation": [-15, 0, 0] },
+            "spine": { "rotation": [0, 0, -3] }
           }
         }
-      },
-      "phases": [
-        {
-          "name": "contact_L",
-          "frames": [
-            0,
-            7
-          ],
-          "pose": "contact_L",
-          "timing_curve": "ease_in_out"
-        },
-        {
-          "name": "passing_L",
-          "frames": [
-            7,
-            15
-          ],
-          "pose": "passing_L",
-          "timing_curve": "ease_in_out"
-        },
-        {
-          "name": "contact_R",
-          "frames": [
-            15,
-            22
-          ],
-          "pose": "contact_R",
-          "timing_curve": "ease_in_out"
-        },
-        {
-          "name": "passing_R",
-          "frames": [
-            22,
-            30
-          ],
-          "pose": "passing_R",
-          "timing_curve": "ease_in_out"
-        }
-      ],
-      "rig_setup": {
-        "presets": {
-          "humanoid_legs": true
-        }
-      }
+      ]
     }
   }
 }

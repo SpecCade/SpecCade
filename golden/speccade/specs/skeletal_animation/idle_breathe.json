@@ -4,7 +4,7 @@
   "asset_type": "skeletal_animation",
   "license": "CC0-1.0",
   "seed": 8001,
-  "description": "Idle breathing animation - subtle procedural movement",
+  "description": "Idle breathing animation - subtle chest expansion",
   "outputs": [
     {
       "kind": "primary",
@@ -15,61 +15,38 @@
   "recipe": {
     "kind": "skeletal_animation.blender_clip_v1",
     "params": {
-      "input_armature": "simple_biped.glb",
-      "character": "simple_biped",
-      "duration_frames": 60,
+      "skeleton_preset": "humanoid_basic_v1",
+      "clip_name": "idle_breathe",
+      "duration_seconds": 2.0,
       "fps": 30,
       "loop": true,
-      "ground_offset": 0.0,
-      "poses": {
-        "neutral": {
-          "spine": {
-            "pitch": 0,
-            "yaw": 0,
-            "roll": 0
-          },
-          "chest": {
-            "pitch": 0,
-            "yaw": 0,
-            "roll": 0
-          },
-          "head": {
-            "pitch": 0,
-            "yaw": 0,
-            "roll": 0
+      "interpolation": "bezier",
+      "keyframes": [
+        {
+          "time": 0.0,
+          "bones": {
+            "spine": { "rotation": [0, 0, 0] },
+            "chest": { "rotation": [0, 0, 0] },
+            "head": { "rotation": [0, 0, 0] }
           }
-        }
-      },
-      "phases": [
-        {
-          "name": "idle",
-          "frames": [
-            0,
-            60
-          ],
-          "pose": "neutral",
-          "timing_curve": "linear"
-        }
-      ],
-      "procedural_layers": [
-        {
-          "type": "breathing",
-          "target": "chest",
-          "axis": "pitch",
-          "period_frames": 60,
-          "amplitude": 0.03
         },
         {
-          "type": "sway",
-          "target": "spine",
-          "axis": "roll",
-          "period_frames": 90,
-          "amplitude": 0.01
+          "time": 1.0,
+          "bones": {
+            "spine": { "rotation": [1, 0, 0] },
+            "chest": { "rotation": [2, 0, 0] },
+            "head": { "rotation": [-1, 0, 0] }
+          }
+        },
+        {
+          "time": 2.0,
+          "bones": {
+            "spine": { "rotation": [0, 0, 0] },
+            "chest": { "rotation": [0, 0, 0] },
+            "head": { "rotation": [0, 0, 0] }
+          }
         }
-      ],
-      "rig_setup": {
-        "presets": {}
-      }
+      ]
     }
   }
 }

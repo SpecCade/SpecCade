@@ -15,169 +15,42 @@
   "recipe": {
     "kind": "skeletal_animation.blender_clip_v1",
     "params": {
-      "input_armature": "simple_biped.glb",
-      "character": "simple_biped",
-      "duration_frames": 45,
+      "skeleton_preset": "humanoid_basic_v1",
+      "clip_name": "death_fall",
+      "duration_seconds": 1.5,
       "fps": 30,
       "loop": false,
-      "ground_offset": 0.0,
-      "poses": {
-        "hit_react": {
-          "spine": {
-            "pitch": -15,
-            "roll": 10
-          },
-          "chest": {
-            "pitch": -20,
-            "roll": 15
-          },
-          "head": {
-            "pitch": 20,
-            "yaw": -30
-          },
-          "arm_upper_L": {
-            "pitch": -45,
-            "yaw": 30
-          },
-          "arm_upper_R": {
-            "pitch": -30,
-            "yaw": -45
-          },
-          "leg_upper_L": {
-            "pitch": 10
-          },
-          "leg_upper_R": {
-            "pitch": -5
+      "interpolation": "bezier",
+      "keyframes": [
+        {
+          "time": 0.0,
+          "bones": {
+            "spine": { "rotation": [0, 0, 0] },
+            "head": { "rotation": [0, 0, 0] }
           }
         },
-        "falling": {
-          "spine": {
-            "pitch": -45,
-            "roll": 20
-          },
-          "chest": {
-            "pitch": -30,
-            "roll": 25
-          },
-          "head": {
-            "pitch": 40,
-            "yaw": -45,
-            "roll": 20
-          },
-          "arm_upper_L": {
-            "pitch": -90,
-            "yaw": 60
-          },
-          "arm_lower_L": {
-            "pitch": -30
-          },
-          "arm_upper_R": {
-            "pitch": -60,
-            "yaw": -90
-          },
-          "arm_lower_R": {
-            "pitch": -45
-          },
-          "leg_upper_L": {
-            "pitch": 30,
-            "yaw": 20
-          },
-          "leg_lower_L": {
-            "pitch": -45
-          },
-          "leg_upper_R": {
-            "pitch": 15,
-            "yaw": -15
-          },
-          "leg_lower_R": {
-            "pitch": -30
+        {
+          "time": 0.2,
+          "bones": {
+            "spine": { "rotation": [-15, 0, 10] },
+            "head": { "rotation": [20, -30, 0] }
           }
         },
-        "grounded": {
-          "spine": {
-            "pitch": -80,
-            "roll": 30
-          },
-          "chest": {
-            "pitch": -60,
-            "roll": 40
-          },
-          "head": {
-            "pitch": 60,
-            "yaw": -60,
-            "roll": 30
-          },
-          "arm_upper_L": {
-            "pitch": -120,
-            "yaw": 90
-          },
-          "arm_lower_L": {
-            "pitch": -60
-          },
-          "arm_upper_R": {
-            "pitch": -90,
-            "yaw": -120
-          },
-          "arm_lower_R": {
-            "pitch": -90
-          },
-          "leg_upper_L": {
-            "pitch": 45,
-            "yaw": 30
-          },
-          "leg_lower_L": {
-            "pitch": -60
-          },
-          "leg_upper_R": {
-            "pitch": 20,
-            "yaw": -30
-          },
-          "leg_lower_R": {
-            "pitch": -45
+        {
+          "time": 0.8,
+          "bones": {
+            "spine": { "rotation": [-45, 0, 20] },
+            "head": { "rotation": [40, -45, 20] }
+          }
+        },
+        {
+          "time": 1.5,
+          "bones": {
+            "spine": { "rotation": [-80, 0, 30] },
+            "head": { "rotation": [60, -60, 30] }
           }
         }
-      },
-      "phases": [
-        {
-          "name": "hit_react",
-          "frames": [
-            0,
-            6
-          ],
-          "pose": "hit_react",
-          "timing_curve": "ease_out"
-        },
-        {
-          "name": "falling",
-          "frames": [
-            6,
-            25
-          ],
-          "pose": "falling",
-          "timing_curve": "ease_in"
-        },
-        {
-          "name": "impact",
-          "frames": [
-            25,
-            45
-          ],
-          "pose": "grounded",
-          "timing_curve": "ease_out"
-        }
-      ],
-      "procedural_layers": [
-        {
-          "type": "noise",
-          "target": "head",
-          "axis": "roll",
-          "frequency": 0.5,
-          "amplitude": 3.0
-        }
-      ],
-      "rig_setup": {
-        "presets": {}
-      }
+      ]
     }
   }
 }

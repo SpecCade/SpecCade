@@ -4,7 +4,7 @@
   "asset_type": "static_mesh",
   "license": "CC0-1.0",
   "seed": 999006,
-  "description": "Golden comprehensive test - exercises ALL static_mesh/MESH keys: all primitives (cube, cylinder, sphere, icosphere, cone, torus), all primitive params, location/rotation/scale, shade modes, all modifiers (bevel, decimate, triangulate) with angle_limit, UV projection with all modes and params (angle_limit, cube_size), export with tangents, constraints",
+  "description": "Golden comprehensive test - exercises static_mesh.blender_primitives_v1 keys: base_primitive, dimensions, modifiers (bevel, decimate, triangulate) with angle_limit, uv_projection, material_slots, export with tangents, constraints",
   "style_tags": [
     "golden",
     "comprehensive",
@@ -37,260 +37,43 @@
   "recipe": {
     "kind": "static_mesh.blender_primitives_v1",
     "params": {
-      "name": "comprehensive_mesh",
       "base_primitive": "cube",
       "dimensions": [
         1.0,
         1.0,
         1.0
       ],
-      "primitives": [
-        {
-          "comment": "Primitive 1: Cube with all params",
-          "primitive": "cube",
-          "params": {
-            "size": 1.0
-          },
-          "location": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "scale": [
-            1.0,
-            1.0,
-            1.0
-          ],
-          "shade": "smooth"
-        },
-        {
-          "comment": "Primitive 2: Cylinder with all params",
-          "primitive": "cylinder",
-          "params": {
-            "radius": 0.5,
-            "depth": 2.0,
-            "vertices": 32
-          },
-          "location": [
-            3.0,
-            0.0,
-            0.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "scale": [
-            1.0,
-            1.0,
-            1.0
-          ],
-          "shade": "smooth"
-        },
-        {
-          "comment": "Primitive 3: UV Sphere with all params",
-          "primitive": "sphere",
-          "params": {
-            "radius": 0.6,
-            "segments": 32,
-            "rings": 16
-          },
-          "location": [
-            6.0,
-            0.0,
-            0.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "scale": [
-            1.0,
-            1.0,
-            1.0
-          ],
-          "shade": "smooth"
-        },
-        {
-          "comment": "Primitive 4: Icosphere with all params",
-          "primitive": "icosphere",
-          "params": {
-            "radius": 0.55,
-            "subdivisions": 3
-          },
-          "location": [
-            9.0,
-            0.0,
-            0.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "scale": [
-            1.0,
-            1.0,
-            1.0
-          ],
-          "shade": "flat"
-        },
-        {
-          "comment": "Primitive 5: Cone with all params",
-          "primitive": "cone",
-          "params": {
-            "radius1": 0.5,
-            "radius2": 0.0,
-            "depth": 1.5,
-            "vertices": 24
-          },
-          "location": [
-            12.0,
-            0.0,
-            0.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "scale": [
-            1.0,
-            1.0,
-            1.0
-          ],
-          "shade": "smooth"
-        },
-        {
-          "comment": "Primitive 6: Truncated cone (both radii)",
-          "primitive": "cone",
-          "params": {
-            "radius1": 0.6,
-            "radius2": 0.3,
-            "depth": 1.2,
-            "vertices": 20
-          },
-          "location": [
-            15.0,
-            0.0,
-            0.0
-          ],
-          "rotation": [
-            0.7854,
-            0.0,
-            0.0
-          ],
-          "scale": [
-            1.0,
-            1.2,
-            1.0
-          ],
-          "shade": "smooth"
-        },
-        {
-          "comment": "Primitive 7: Torus with all params",
-          "primitive": "torus",
-          "params": {
-            "major_radius": 0.75,
-            "minor_radius": 0.25,
-            "major_segments": 48,
-            "minor_segments": 16
-          },
-          "location": [
-            18.0,
-            0.0,
-            0.0
-          ],
-          "rotation": [
-            1.5708,
-            0.0,
-            0.0
-          ],
-          "scale": [
-            1.0,
-            1.0,
-            1.0
-          ],
-          "shade": "smooth"
-        }
-      ],
-      "primitive": "cube",
-      "primitive_params": {
-        "size": 1.0
-      },
-      "location": [
-        0.0,
-        0.0,
-        0.0
-      ],
-      "rotation": [
-        0.0,
-        0.0,
-        0.0
-      ],
-      "scale": [
-        1.0,
-        1.0,
-        1.0
-      ],
-      "shade": "smooth",
       "modifiers": [
         {
-          "comment": "Modifier 1: Bevel with all params including angle_limit",
           "type": "bevel",
           "width": 0.05,
           "segments": 3,
           "angle_limit": 0.785398
         },
         {
-          "comment": "Modifier 2: Another bevel with different angle",
           "type": "bevel",
           "width": 0.02,
           "segments": 2,
           "angle_limit": 0.5236
         },
         {
-          "comment": "Modifier 3: Decimate with ratio",
           "type": "decimate",
           "ratio": 0.8
-        },
-        {
-          "comment": "Modifier 4: Triangulate for game export",
-          "type": "triangulate"
         }
       ],
-      "uv": {
-        "comment": "Smart project UV with angle_limit",
-        "mode": "smart_project",
-        "angle_limit": 66.0,
-        "cube_size": 1.0
-      },
       "uv_projection": "smart",
       "material_slots": [
         {
           "name": "main_material",
-          "color": [
-            0.8,
-            0.8,
-            0.8,
-            1.0
-          ]
+          "base_color": [0.8, 0.8, 0.8, 1.0],
+          "metallic": 0.0,
+          "roughness": 0.5
         },
         {
           "name": "accent_material",
-          "color": [
-            0.2,
-            0.4,
-            0.8,
-            1.0
-          ]
+          "base_color": [0.2, 0.4, 0.8, 1.0],
+          "metallic": 0.2,
+          "roughness": 0.3
         }
       ],
       "export": {

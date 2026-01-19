@@ -4,7 +4,7 @@
   "asset_type": "skeletal_animation",
   "license": "CC0-1.0",
   "seed": 8007,
-  "description": "Floating bob animation - demonstrates bob procedural layer, phase_offset, and constant timing curve",
+  "description": "Floating bob animation - gentle vertical oscillation",
   "outputs": [
     {
       "kind": "primary",
@@ -15,97 +15,38 @@
   "recipe": {
     "kind": "skeletal_animation.blender_clip_v1",
     "params": {
-      "input_armature": "simple_biped.glb",
-      "character": "simple_biped",
-      "duration_frames": 90,
+      "skeleton_preset": "humanoid_basic_v1",
+      "clip_name": "floating_bob",
+      "duration_seconds": 3.0,
       "fps": 30,
       "loop": true,
-      "ground_offset": 0.5,
-      "poses": {
-        "floating": {
-          "spine": {
-            "pitch": 5
-          },
-          "chest": {
-            "pitch": 3
-          },
-          "arm_upper_L": {
-            "pitch": -30,
-            "roll": 15
-          },
-          "arm_upper_R": {
-            "pitch": -30,
-            "roll": -15
-          },
-          "leg_upper_L": {
-            "pitch": 20
-          },
-          "leg_lower_L": {
-            "pitch": -30
-          },
-          "leg_upper_R": {
-            "pitch": 15
-          },
-          "leg_lower_R": {
-            "pitch": -25
+      "interpolation": "bezier",
+      "keyframes": [
+        {
+          "time": 0.0,
+          "bones": {
+            "spine": { "rotation": [5, 0, 0] },
+            "upper_arm_l": { "rotation": [-30, 0, 15] },
+            "upper_arm_r": { "rotation": [-30, 0, -15] }
+          }
+        },
+        {
+          "time": 1.5,
+          "bones": {
+            "spine": { "rotation": [0, 0, 0] },
+            "upper_arm_l": { "rotation": [-35, 0, 20] },
+            "upper_arm_r": { "rotation": [-35, 0, -20] }
+          }
+        },
+        {
+          "time": 3.0,
+          "bones": {
+            "spine": { "rotation": [5, 0, 0] },
+            "upper_arm_l": { "rotation": [-30, 0, 15] },
+            "upper_arm_r": { "rotation": [-30, 0, -15] }
           }
         }
-      },
-      "phases": [
-        {
-          "name": "float_hold",
-          "frames": [
-            0,
-            90
-          ],
-          "pose": "floating",
-          "timing_curve": "constant"
-        }
-      ],
-      "procedural_layers": [
-        {
-          "type": "bob",
-          "target": "hips",
-          "axis": "pitch",
-          "period_frames": 45,
-          "amplitude": 0.05,
-          "phase_offset": 0.0
-        },
-        {
-          "type": "bob",
-          "target": "chest",
-          "axis": "pitch",
-          "period_frames": 45,
-          "amplitude": 0.02,
-          "phase_offset": 0.25
-        },
-        {
-          "type": "sway",
-          "target": "arm_upper_L",
-          "axis": "roll",
-          "period_frames": 60,
-          "amplitude": 0.04,
-          "phase_offset": 0.0
-        },
-        {
-          "type": "sway",
-          "target": "arm_upper_R",
-          "axis": "roll",
-          "period_frames": 60,
-          "amplitude": 0.04,
-          "phase_offset": 0.5
-        },
-        {
-          "type": "noise",
-          "target": "head",
-          "axis": "yaw",
-          "frequency": 0.2,
-          "amplitude": 2.0
-        }
-      ],
-      "rig_setup": {
-        "presets": {}
-      }
+      ]
     }
   }
 }

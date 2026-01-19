@@ -4,7 +4,7 @@
   "asset_type": "skeletal_animation",
   "license": "CC0-1.0",
   "seed": 8006,
-  "description": "IK arm reach animation - demonstrates arm IK chains, aim constraints, and animator rig features",
+  "description": "Arm reach animation - reaching forward motion",
   "outputs": [
     {
       "kind": "primary",
@@ -15,242 +15,52 @@
   "recipe": {
     "kind": "skeletal_animation.blender_clip_v1",
     "params": {
-      "input_armature": "simple_biped.glb",
-      "character": "simple_biped",
-      "duration_frames": 60,
+      "skeleton_preset": "humanoid_basic_v1",
+      "clip_name": "arm_reach",
+      "duration_seconds": 2.0,
       "fps": 30,
       "loop": false,
-      "ground_offset": 0.0,
-      "save_blend": true,
-      "poses": {
-        "rest": {
-          "arm_upper_R": {
-            "pitch": 0,
-            "yaw": 0,
-            "roll": 0
-          },
-          "arm_lower_R": {
-            "pitch": 0
-          },
-          "spine": {
-            "pitch": 0
-          },
-          "head": {
-            "pitch": 0,
-            "yaw": 0
-          }
-        },
-        "reach_up": {
-          "arm_upper_R": {
-            "pitch": -90,
-            "yaw": 20
-          },
-          "arm_lower_R": {
-            "pitch": -15
-          },
-          "spine": {
-            "pitch": -10
-          },
-          "head": {
-            "pitch": -20,
-            "yaw": 15
-          }
-        },
-        "reach_extended": {
-          "arm_upper_R": {
-            "pitch": -120,
-            "yaw": 30
-          },
-          "arm_lower_R": {
-            "pitch": 0,
-            "location": [
-              0.0,
-              0.05,
-              0.0
-            ]
-          },
-          "spine": {
-            "pitch": -15,
-            "roll": 5
-          },
-          "head": {
-            "pitch": -30,
-            "yaw": 20
-          }
-        }
-      },
-      "phases": [
+      "interpolation": "bezier",
+      "keyframes": [
         {
-          "name": "anticipation",
-          "frames": [
-            0,
-            10
-          ],
-          "pose": "rest",
-          "timing_curve": "linear"
-        },
-        {
-          "name": "reach_up",
-          "frames": [
-            10,
-            30
-          ],
-          "pose": "reach_up",
-          "timing_curve": "ease_out",
-          "ik_targets": {
-            "ik_hand_R": [
-              {
-                "frame": 10,
-                "location": [
-                  0.3,
-                  0.0,
-                  1.2
-                ]
-              },
-              {
-                "frame": 30,
-                "location": [
-                  0.4,
-                  0.2,
-                  1.8
-                ],
-                "ikfk": 1.0
-              }
-            ]
+          "time": 0.0,
+          "bones": {
+            "upper_arm_r": { "rotation": [0, 0, 0] },
+            "lower_arm_r": { "rotation": [0, 0, 0] },
+            "spine": { "rotation": [0, 0, 0] },
+            "head": { "rotation": [0, 0, 0] }
           }
         },
         {
-          "name": "extend",
-          "frames": [
-            30,
-            45
-          ],
-          "pose": "reach_extended",
-          "timing_curve": "ease_in_out",
-          "ik_targets": {
-            "ik_hand_R": [
-              {
-                "frame": 30,
-                "location": [
-                  0.4,
-                  0.2,
-                  1.8
-                ],
-                "ikfk": 1.0
-              },
-              {
-                "frame": 45,
-                "location": [
-                  0.5,
-                  0.3,
-                  2.0
-                ],
-                "ikfk": 1.0
-              }
-            ]
-          },
-          "ikfk_blend": {
-            "ik_arm_R": [
-              [
-                30,
-                1.0
-              ],
-              [
-                45,
-                1.0
-              ]
-            ]
+          "time": 0.33,
+          "bones": {
+            "upper_arm_r": { "rotation": [-90, 20, 0] },
+            "lower_arm_r": { "rotation": [-15, 0, 0] },
+            "spine": { "rotation": [-10, 0, 0] },
+            "head": { "rotation": [-20, 15, 0] }
           }
         },
         {
-          "name": "return",
-          "frames": [
-            45,
-            60
-          ],
-          "pose": "rest",
-          "timing_curve": "ease_in"
+          "time": 1.0,
+          "bones": {
+            "upper_arm_r": { "rotation": [-120, 30, 0] },
+            "lower_arm_r": { "rotation": [0, 0, 0] },
+            "spine": { "rotation": [-15, 0, 5] },
+            "head": { "rotation": [-30, 20, 0] }
+          }
+        },
+        {
+          "time": 2.0,
+          "bones": {
+            "upper_arm_r": { "rotation": [0, 0, 0] },
+            "lower_arm_r": { "rotation": [0, 0, 0] },
+            "spine": { "rotation": [0, 0, 0] },
+            "head": { "rotation": [0, 0, 0] }
+          }
         }
       ],
-      "rig_setup": {
-        "presets": {
-          "humanoid_arms": true
-        },
-        "ik_chains": [
-          {
-            "name": "ik_spine_tip",
-            "bones": [
-              "spine",
-              "chest"
-            ],
-            "target": {
-              "name": "ik_spine_target",
-              "at": "tip"
-            }
-          }
-        ],
-        "aim_constraints": [
-          {
-            "name": "head_look",
-            "bone": "head",
-            "target": "look_target",
-            "track_axis": "Y",
-            "up_axis": "Z",
-            "influence": 0.8
-          }
-        ],
-        "constraints": [
-          {
-            "bone": "arm_lower_R",
-            "type": "hinge",
-            "axis": "X",
-            "limits": [
-              0,
-              145
-            ]
-          },
-          {
-            "bone": "arm_upper_R",
-            "type": "ball",
-            "cone_angle": 90,
-            "twist_min": -45,
-            "twist_max": 45
-          }
-        ],
-        "twist_bones": [
-          {
-            "name": "upper_arm_twist",
-            "source": "arm_upper_R",
-            "target": "arm_upper_twist_R",
-            "axis": "Y",
-            "influence": 0.5
-          }
-        ],
-        "stretch": {
-          "enabled": true,
-          "max_stretch": 1.3,
-          "min_stretch": 0.8,
-          "volume_preservation": "uniform"
-        },
-        "bake": {
-          "simplify": true,
-          "start_frame": 0,
-          "end_frame": 60,
-          "visual_keying": true,
-          "clear_constraints": true,
-          "frame_step": 1,
-          "remove_ik_bones": true,
-          "tolerance": 0.001
-        }
-      },
-      "animator_rig": {
-        "collections": true,
-        "shapes": true,
-        "colors": true,
-        "display": "STICK"
-      },
-      "conventions": {
-        "strict": false
+      "export": {
+        "save_blend": true
       }
     }
   }

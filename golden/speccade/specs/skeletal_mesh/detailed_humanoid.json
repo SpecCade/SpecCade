@@ -524,7 +524,7 @@
             "parts": [
               "torso"
             ],
-            "uv_scale": 1.0
+            "material_index": 0
           },
           "limbs": {
             "parts": [
@@ -533,13 +533,13 @@
               "leg_L",
               "leg_R"
             ],
-            "uv_scale": 0.8
+            "material_index": 0
           },
           "head": {
             "parts": [
               "head_mesh"
             ],
-            "uv_scale": 1.2
+            "material_index": 0
           }
         }
       }
