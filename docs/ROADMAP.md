@@ -155,7 +155,8 @@ Open questions:
 - [ ] `AUDIO-006` Add missing synthesis types with highest leverage (unison/supersaw, waveguide, bowed string, membrane/drum).
 - [x] `AUDIO-007` Add loudness targets (LUFS) and true-peak limiting workflows for production-ready output levels. **Done: 2026-01-19**
   - Implemented: ITU-R BS.1770 integrated LUFS + true_peak_db in analyze; TruePeakLimiter effect with oversampling; true_peak_limiter() Starlark helper.
-- [ ] `AUDIO-008` Add one-shot + loop pairing helpers (transient + loopable sustain from the same recipe).
+- [x] `AUDIO-008` Add one-shot + loop pairing helpers (transient + loopable sustain from the same recipe). **Done: 2026-01-19**
+  - Implemented: oneshot_envelope(), loop_envelope(), with_loop_config() Starlark helpers with full documentation and 22 tests.
 - [ ] `AUDIO-009` Add foley layering helpers (impact builder: transient/body/tail; whoosh builder: noise + sweep).
 - [ ] `AUDIO-010` Add batch SFX variation sets (seed sweeps + constraints + sample-set export).
 - [ ] `AUDIO-011` Expand LFO targets where it materially improves sound design (pulse_width, fm_index, delay_time, etc.).
