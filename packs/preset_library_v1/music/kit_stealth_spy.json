@@ -1,0 +1,198 @@
+{
+  "spec_version": 1,
+  "asset_id": "kit_stealth_spy",
+  "asset_type": "music_kit",
+  "license": "CC0-1.0",
+  "description": "Stealth / spy kit with muted tones, soft percussion, and tension elements for infiltration, heists, and suspenseful non-horror gameplay",
+  "kit": {
+    "name": "Stealth / Spy",
+    "genre": "cinematic",
+    "subgenre": "stealth",
+    "bpm_range": [
+      80,
+      130
+    ],
+    "time_signature": [
+      4,
+      4
+    ],
+    "instruments": {
+      "kick": {
+        "preset": "drums/kicks/kick_soft",
+        "role": "kick",
+        "description": "Soft subtle kick"
+      },
+      "kick_soft": {
+        "preset": "drums/kicks/kick_soft",
+        "role": "kick",
+        "description": "Alias for soft kick"
+      },
+      "snare": {
+        "preset": "drums/snares/snare_brush",
+        "role": "snare",
+        "description": "Brushed snare for subtle rhythm"
+      },
+      "snare_brush": {
+        "preset": "drums/snares/snare_brush",
+        "role": "snare",
+        "description": "Alias for brush snare"
+      },
+      "rim": {
+        "preset": "drums/snares/rimshot",
+        "role": "rim",
+        "description": "Rimshot for accents"
+      },
+      "hat_closed": {
+        "preset": "drums/hats/hat_tick",
+        "role": "hat",
+        "description": "Ticking hi-hat for tension"
+      },
+      "hat_tick": {
+        "preset": "drums/hats/hat_tick",
+        "role": "hat",
+        "description": "Alias for tick hat"
+      },
+      "perc_click": {
+        "preset": "drums/percussion/perc_click",
+        "role": "perc_1",
+        "description": "Subtle click percussion"
+      },
+      "bass": {
+        "preset": "bass/bass_muted",
+        "role": "bass",
+        "description": "Muted understated bass"
+      },
+      "bass_muted": {
+        "preset": "bass/bass_muted",
+        "role": "bass",
+        "description": "Alias for muted bass"
+      },
+      "bass_round": {
+        "preset": "bass/bass_round",
+        "role": "bass",
+        "description": "Round bass alternative"
+      },
+      "chord_pluck": {
+        "preset": "plucks/chord_pluck_muted",
+        "role": "chords",
+        "description": "Muted chord plucks"
+      },
+      "chord_pluck_muted": {
+        "preset": "plucks/chord_pluck_muted",
+        "role": "chords",
+        "description": "Alias for muted chords"
+      },
+      "pad": {
+        "preset": "pads/pad_cold",
+        "role": "pad",
+        "description": "Cold atmospheric pad"
+      },
+      "pad_cold": {
+        "preset": "pads/pad_cold",
+        "role": "pad",
+        "description": "Alias for cold pad"
+      },
+      "lead": {
+        "preset": "leads/synth/lead_muted",
+        "role": "lead",
+        "description": "Muted understated lead"
+      },
+      "lead_muted": {
+        "preset": "leads/synth/lead_muted",
+        "role": "lead",
+        "description": "Alias for muted lead"
+      },
+      "stinger": {
+        "preset": "fx/stinger",
+        "role": "stinger",
+        "description": "Musical punctuation for alerts"
+      },
+      "riser": {
+        "preset": "fx/riser_tension",
+        "role": "riser",
+        "description": "Tension building riser"
+      },
+      "riser_tension": {
+        "preset": "fx/riser_tension",
+        "role": "riser",
+        "description": "Alias for tension riser"
+      },
+      "whoosh": {
+        "preset": "fx/whoosh",
+        "role": "whoosh",
+        "description": "Movement whoosh"
+      },
+      "whoosh_soft": {
+        "preset": "fx/whoosh",
+        "role": "whoosh",
+        "description": "Alias for soft whoosh"
+      }
+    },
+    "channel_ids": {
+      "kick": 0,
+      "kick_soft": 0,
+      "snare": 1,
+      "snare_brush": 1,
+      "rim": 2,
+      "hat_closed": 3,
+      "hat_tick": 3,
+      "perc_click": 4,
+      "perc_1": 4,
+      "bass": 5,
+      "bass_muted": 5,
+      "bass_round": 5,
+      "chord_pluck": 6,
+      "chord_pluck_muted": 6,
+      "chords": 6,
+      "pad": 7,
+      "pad_cold": 7,
+      "lead": 8,
+      "lead_muted": 8,
+      "lead_1": 8,
+      "stinger": 9,
+      "riser": 10,
+      "riser_tension": 10,
+      "whoosh": 11,
+      "whoosh_soft": 11
+    },
+    "instrument_ids": {
+      "kick": 0,
+      "kick_soft": 0,
+      "snare": 1,
+      "snare_brush": 1,
+      "rim": 2,
+      "hat_closed": 3,
+      "hat_tick": 3,
+      "perc_click": 4,
+      "perc_1": 4,
+      "bass": 5,
+      "bass_muted": 5,
+      "bass_round": 5,
+      "chord_pluck": 6,
+      "chord_pluck_muted": 6,
+      "chords": 6,
+      "pad": 7,
+      "pad_cold": 7,
+      "lead": 8,
+      "lead_muted": 8,
+      "lead_1": 8,
+      "stinger": 9,
+      "riser": 10,
+      "riser_tension": 10,
+      "whoosh": 11,
+      "whoosh_soft": 11
+    },
+    "tags": [
+      "stealth",
+      "spy",
+      "infiltration",
+      "heist",
+      "suspense",
+      "tension",
+      "muted",
+      "subtle",
+      "quiet",
+      "sneaking"
+    ]
+  }
+}

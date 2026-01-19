@@ -1,0 +1,160 @@
+{
+  "spec_version": 1,
+  "asset_id": "kit_cyberpunk_industrial",
+  "asset_type": "music_kit",
+  "license": "CC0-1.0",
+  "description": "Cyberpunk / industrial kit with aggressive textures, distorted drums, and cold atmospheres for hacking sequences, dystopian cities, and intense combat",
+  "kit": {
+    "name": "Cyberpunk / Industrial",
+    "genre": "electronic",
+    "subgenre": "industrial",
+    "bpm_range": [
+      90,
+      160
+    ],
+    "time_signature": [
+      4,
+      4
+    ],
+    "instruments": {
+      "kick": {
+        "preset": "drums/kicks/kick_dist",
+        "role": "kick",
+        "description": "Distorted aggressive kick"
+      },
+      "kick_dist": {
+        "preset": "drums/kicks/kick_dist",
+        "role": "kick",
+        "description": "Alias for distorted kick"
+      },
+      "snare": {
+        "preset": "drums/snares/snare_noise",
+        "role": "snare",
+        "description": "Noisy industrial snare"
+      },
+      "snare_noise": {
+        "preset": "drums/snares/snare_noise",
+        "role": "snare",
+        "description": "Alias for noise snare"
+      },
+      "hat_closed": {
+        "preset": "drums/hats/hat_metallic",
+        "role": "hat",
+        "description": "Metallic hi-hat"
+      },
+      "hat_metallic": {
+        "preset": "drums/hats/hat_metallic",
+        "role": "hat",
+        "description": "Alias for metallic hat"
+      },
+      "perc_metal": {
+        "preset": "drums/percussion/perc_metal",
+        "role": "perc_1",
+        "description": "Metallic percussion hit"
+      },
+      "bass": {
+        "preset": "bass/bass_growl",
+        "role": "bass",
+        "description": "Aggressive growling bass"
+      },
+      "bass_aggressive": {
+        "preset": "bass/bass_growl",
+        "role": "bass",
+        "description": "Alias for aggressive bass"
+      },
+      "bass_sub": {
+        "preset": "bass/bass_round",
+        "role": "bass_sub",
+        "description": "Sub bass layer for depth"
+      },
+      "pad": {
+        "preset": "pads/pad_cold",
+        "role": "pad",
+        "description": "Cold icy pad"
+      },
+      "pad_cold": {
+        "preset": "pads/pad_cold",
+        "role": "pad",
+        "description": "Alias for cold pad"
+      },
+      "drone": {
+        "preset": "textures/drone_dark",
+        "role": "drone",
+        "description": "Dark menacing drone"
+      },
+      "impact": {
+        "preset": "fx/impact_sub",
+        "role": "impact",
+        "description": "Sub-frequency impact hit"
+      },
+      "riser": {
+        "preset": "fx/riser_tension",
+        "role": "riser",
+        "description": "Tension building riser"
+      },
+      "whoosh": {
+        "preset": "fx/whoosh",
+        "role": "whoosh",
+        "description": "Movement whoosh"
+      },
+      "glitch": {
+        "preset": "fx/glitch",
+        "role": "glitch",
+        "description": "Digital glitch effect"
+      }
+    },
+    "channel_ids": {
+      "kick": 0,
+      "kick_dist": 0,
+      "snare": 1,
+      "snare_noise": 1,
+      "hat_closed": 2,
+      "hat_metallic": 2,
+      "perc_metal": 3,
+      "perc_1": 3,
+      "bass": 4,
+      "bass_aggressive": 4,
+      "bass_sub": 5,
+      "pad": 6,
+      "pad_cold": 6,
+      "drone": 7,
+      "impact": 8,
+      "riser": 9,
+      "whoosh": 10,
+      "glitch": 11
+    },
+    "instrument_ids": {
+      "kick": 0,
+      "kick_dist": 0,
+      "snare": 1,
+      "snare_noise": 1,
+      "hat_closed": 2,
+      "hat_metallic": 2,
+      "perc_metal": 3,
+      "perc_1": 3,
+      "bass": 4,
+      "bass_aggressive": 4,
+      "bass_sub": 5,
+      "pad": 6,
+      "pad_cold": 6,
+      "drone": 7,
+      "impact": 8,
+      "riser": 9,
+      "whoosh": 10,
+      "glitch": 11
+    },
+    "tags": [
+      "cyberpunk",
+      "industrial",
+      "dark",
+      "aggressive",
+      "dystopian",
+      "hacking",
+      "combat",
+      "boss",
+      "tension",
+      "glitch",
+      "metallic"
+    ]
+  }
+}

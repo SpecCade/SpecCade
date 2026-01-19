@@ -1,6 +1,6 @@
 # Game Music Genre Kits — Master Inventory
 
-**Last updated:** 2026-01-13
+**Last updated:** 2026-01-20
 **Location:** `packs/preset_library_v1/music/`
 
 This document is the single source of truth for genre kits in the preset library.
@@ -11,8 +11,8 @@ For a per-kit validation/listening checklist, see `docs/music-genre-kits-audit.m
 
 | Status | Count |
 |--------|-------|
-| Implemented | 26 |
-| Not yet implemented | 16 |
+| Implemented | 30 |
+| Not yet implemented | 12 |
 | **Total** | **42** |
 
 ---
@@ -209,7 +209,7 @@ Legend: `[x]` = implemented, `[ ]` = not yet implemented
   - drums: `kick`, `snare`, `hat_closed`
   - FX: `stinger`, `pickup`
 
-#### `[ ]` Kit: **DX7 / FM Pop Keys**
+#### `[x]` Kit: **DX7 / FM Pop Keys** — `kit_dx7_fm_pop.json`
 
 - Use cases: towns/shops, menus, nostalgic themes.
 - Typical tempo: 80–140 BPM
@@ -231,7 +231,7 @@ Legend: `[x]` = implemented, `[ ]` = not yet implemented
   - melody: `lead_1`
   - FX: `riser`, `impact`, `downlifter`
 
-#### `[ ]` Kit: **Cyberpunk / Industrial**
+#### `[x]` Kit: **Cyberpunk / Industrial** — `kit_cyberpunk_industrial.json`
 
 - Use cases: hacking, dystopian city, combat.
 - Typical tempo: 90–160 BPM
@@ -333,7 +333,7 @@ Legend: `[x]` = implemented, `[ ]` = not yet implemented
   - hits: `impact_metal`, `stinger_horror`
   - FX: `riser_tension`, `downlifter_tension`
 
-#### `[ ]` Kit: **Stealth / Spy (stylized)**
+#### `[x]` Kit: **Stealth / Spy (stylized)** — `kit_stealth_spy.json`
 
 - Use cases: stealth levels, infiltration, heists, suspense (non-horror).
 - Typical tempo: 80–130 (often sparse)
@@ -481,7 +481,7 @@ Legend: `[x]` = implemented, `[ ]` = not yet implemented
 
 ### 5.7 Casual / Whimsical / Pop
 
-#### `[ ]` Kit: **Kawaii / Whimsical**
+#### `[x]` Kit: **Kawaii / Whimsical** — `kit_kawaii_whimsical.json`
 
 - Use cases: cozy games, platformers, character themes.
 - Typical tempo: 90–160
@@ -612,7 +612,7 @@ Legend: `[x]` = implemented, `[ ]` = not yet implemented
 
 ## 7) Next curation steps (for the public-facing "pack")
 
-1. Implement remaining kits (16 remaining)
+1. Implement remaining kits (12 remaining)
 2. For each kit:
    - build presets (original synthesis)
    - build compose templates (`defs`) with variation knobs

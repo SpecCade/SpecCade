@@ -1,0 +1,171 @@
+{
+  "spec_version": 1,
+  "asset_id": "kit_kawaii_whimsical",
+  "asset_type": "music_kit",
+  "license": "CC0-1.0",
+  "description": "Kawaii / whimsical kit with bright playful sounds for cozy games, cute platformers, and lighthearted character themes",
+  "kit": {
+    "name": "Kawaii / Whimsical",
+    "genre": "pop",
+    "subgenre": "kawaii",
+    "bpm_range": [
+      90,
+      160
+    ],
+    "time_signature": [
+      4,
+      4
+    ],
+    "instruments": {
+      "kick": {
+        "preset": "drums/kicks/toy_kick",
+        "role": "kick",
+        "description": "Toy-like playful kick"
+      },
+      "toy_kick": {
+        "preset": "drums/kicks/toy_kick",
+        "role": "kick",
+        "description": "Alias for toy kick"
+      },
+      "snare": {
+        "preset": "drums/snares/toy_snare",
+        "role": "snare",
+        "description": "Light toy snare"
+      },
+      "toy_snare": {
+        "preset": "drums/snares/toy_snare",
+        "role": "snare",
+        "description": "Alias for toy snare"
+      },
+      "hat_closed": {
+        "preset": "drums/hats/hat_closed",
+        "role": "hat",
+        "description": "Standard closed hi-hat"
+      },
+      "perc_shaker": {
+        "preset": "drums/percussion/perc_shaker",
+        "role": "perc_1",
+        "description": "Cheerful shaker"
+      },
+      "triangle": {
+        "preset": "drums/percussion/triangle_perc",
+        "role": "perc_2",
+        "description": "Bright triangle accent"
+      },
+      "pluck": {
+        "preset": "plucks/pluck_bright",
+        "role": "pluck",
+        "description": "Bright sparkling pluck"
+      },
+      "pluck_bright": {
+        "preset": "plucks/pluck_bright",
+        "role": "pluck",
+        "description": "Alias for bright pluck"
+      },
+      "pad": {
+        "preset": "pads/pad_warm",
+        "role": "pad",
+        "description": "Warm cozy pad"
+      },
+      "pad_warm": {
+        "preset": "pads/pad_warm",
+        "role": "pad",
+        "description": "Alias for warm pad"
+      },
+      "lead": {
+        "preset": "leads/synth/lead_cute",
+        "role": "lead",
+        "description": "Cute melodic lead"
+      },
+      "lead_cute": {
+        "preset": "leads/synth/lead_cute",
+        "role": "lead",
+        "description": "Alias for cute lead"
+      },
+      "bell": {
+        "preset": "bells/music_box",
+        "role": "bell",
+        "description": "Music box bell for magical touches"
+      },
+      "bell_soft": {
+        "preset": "bells/bell_soft",
+        "role": "bell",
+        "description": "Soft bell alternative"
+      },
+      "arp": {
+        "preset": "plucks/arp_bright",
+        "role": "arp",
+        "description": "Bright bouncy arpeggio"
+      },
+      "pickup": {
+        "preset": "fx/pickup",
+        "role": "pickup",
+        "description": "Cheerful pickup/collect sound"
+      },
+      "stinger": {
+        "preset": "fx/stinger",
+        "role": "stinger",
+        "description": "Musical punctuation"
+      }
+    },
+    "channel_ids": {
+      "kick": 0,
+      "toy_kick": 0,
+      "snare": 1,
+      "toy_snare": 1,
+      "hat_closed": 2,
+      "perc_shaker": 3,
+      "perc_1": 3,
+      "triangle": 4,
+      "perc_2": 4,
+      "pluck": 5,
+      "pluck_bright": 5,
+      "pad": 6,
+      "pad_warm": 6,
+      "lead": 7,
+      "lead_cute": 7,
+      "lead_1": 7,
+      "bell": 8,
+      "bell_soft": 8,
+      "arp": 9,
+      "pickup": 10,
+      "stinger": 11
+    },
+    "instrument_ids": {
+      "kick": 0,
+      "toy_kick": 0,
+      "snare": 1,
+      "toy_snare": 1,
+      "hat_closed": 2,
+      "perc_shaker": 3,
+      "perc_1": 3,
+      "triangle": 4,
+      "perc_2": 4,
+      "pluck": 5,
+      "pluck_bright": 5,
+      "pad": 6,
+      "pad_warm": 6,
+      "lead": 7,
+      "lead_cute": 7,
+      "lead_1": 7,
+      "bell": 8,
+      "bell_soft": 8,
+      "arp": 9,
+      "pickup": 10,
+      "stinger": 11
+    },
+    "tags": [
+      "kawaii",
+      "whimsical",
+      "cute",
+      "playful",
+      "cozy",
+      "casual",
+      "platformer",
+      "character",
+      "bright",
+      "cheerful",
+      "happy"
+    ]
+  }
+}

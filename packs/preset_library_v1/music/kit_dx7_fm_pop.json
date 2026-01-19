@@ -1,0 +1,128 @@
+{
+  "spec_version": 1,
+  "asset_id": "kit_dx7_fm_pop",
+  "asset_type": "music_kit",
+  "license": "CC0-1.0",
+  "description": "DX7 / FM pop keys kit with nostalgic 80s FM synthesis for towns, shops, menus, and warm nostalgic themes",
+  "kit": {
+    "name": "DX7 / FM Pop Keys",
+    "genre": "retro",
+    "subgenre": "fm_pop",
+    "bpm_range": [
+      80,
+      140
+    ],
+    "time_signature": [
+      4,
+      4
+    ],
+    "instruments": {
+      "kick": {
+        "preset": "drums/kicks/kick_soft",
+        "role": "kick",
+        "description": "Soft kick for laid-back grooves"
+      },
+      "snare": {
+        "preset": "drums/snares/snare_soft",
+        "role": "snare",
+        "description": "Gentle snare for pop context"
+      },
+      "hat_closed": {
+        "preset": "drums/hats/hat_closed",
+        "role": "hat",
+        "description": "Standard closed hi-hat"
+      },
+      "dx7_ep": {
+        "preset": "keys/dx7_ep",
+        "role": "keys",
+        "description": "Classic DX7 electric piano - the signature sound"
+      },
+      "dx7_bass": {
+        "preset": "bass/bass_dx7",
+        "role": "bass",
+        "description": "FM bass with punchy attack"
+      },
+      "dx7_bell": {
+        "preset": "bells/dx7_bell",
+        "role": "bell",
+        "description": "Crystalline FM bell for accents"
+      },
+      "dx7_marimba": {
+        "preset": "keys/dx7_marimba",
+        "role": "mallet",
+        "description": "Warm FM marimba for melodic fills"
+      },
+      "dx7_lead": {
+        "preset": "leads/synth/dx7_lead",
+        "role": "lead",
+        "description": "Bright FM lead for melodies"
+      },
+      "pad": {
+        "preset": "pads/pad_warm",
+        "role": "pad",
+        "description": "Warm sustaining pad for background"
+      },
+      "stinger": {
+        "preset": "fx/stinger",
+        "role": "stinger",
+        "description": "Musical punctuation"
+      },
+      "pickup": {
+        "preset": "fx/pickup",
+        "role": "pickup",
+        "description": "UI/powerup blip"
+      }
+    },
+    "channel_ids": {
+      "kick": 0,
+      "snare": 1,
+      "hat_closed": 2,
+      "dx7_ep": 3,
+      "keys": 3,
+      "dx7_bass": 4,
+      "bass": 4,
+      "bass_sub": 4,
+      "dx7_bell": 5,
+      "bell": 5,
+      "dx7_marimba": 6,
+      "mallet": 6,
+      "dx7_lead": 7,
+      "lead_1": 7,
+      "pad": 8,
+      "stinger": 9,
+      "pickup": 10
+    },
+    "instrument_ids": {
+      "kick": 0,
+      "snare": 1,
+      "hat_closed": 2,
+      "dx7_ep": 3,
+      "keys": 3,
+      "dx7_bass": 4,
+      "bass": 4,
+      "bass_sub": 4,
+      "dx7_bell": 5,
+      "bell": 5,
+      "dx7_marimba": 6,
+      "mallet": 6,
+      "dx7_lead": 7,
+      "lead_1": 7,
+      "pad": 8,
+      "stinger": 9,
+      "pickup": 10
+    },
+    "tags": [
+      "dx7",
+      "fm",
+      "80s",
+      "retro",
+      "pop",
+      "nostalgic",
+      "warm",
+      "town",
+      "shop",
+      "menu",
+      "yamaha"
+    ]
+  }
+}
