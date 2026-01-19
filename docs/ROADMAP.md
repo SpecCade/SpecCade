@@ -250,9 +250,10 @@ Migrated from `docs/FUTURE_GENERATORS.md` (now deprecated).
 - [ ] `ANIM-002` Decide and enforce the clip-vs-rigged schema split, then migrate fixtures/examples.
   - Deliverable: `skeletal_animation.blender_clip_v1` stays "simple keyframes"; all IK/rigging keys live under `skeletal_animation.blender_rigged_v1`; migrate `golden/speccade/specs/skeletal_animation/*.json` accordingly.
   - Touch points: `golden/speccade/specs/skeletal_animation/`, `crates/speccade-backend-blender/src/animation.rs`, `crates/speccade-backend-blender/src/orchestrator.rs`.
-- [ ] `ANIM-003` Add Starlark constructors for `skeletal_animation` authoring (phases/poses/procedural layers/IK keyframes).
+- [x] `ANIM-003` Add Starlark constructors for `skeletal_animation` authoring (phases/poses/procedural layers/IK keyframes). **Done: 2026-01-19**
   - Deliverable: ergonomic helpers with safe defaults, plus docs/examples.
   - Touch points: `crates/speccade-cli/src/compiler/stdlib/` (new module), `docs/stdlib-reference.md`, `docs/examples/`.
+  - Implemented: New `animation` stdlib module with 6 functions (bone_transform, animation_keyframe, animation_export_settings, ik_target_transform, ik_keyframe, skeletal_animation_spec), 25 tests, golden example, and docs update.
 - [ ] `ANIM-004` Fill remaining rigging parity gaps and document them (IK stretch, foot roll, missing presets).
   - Deliverable: reference docs + probe specs for IK stretch settings, foot roll systems, and any missing presets (e.g. basic spine).
   - Touch points: `blender/entrypoint.py`, `crates/speccade-spec/src/recipe/animation/`, `golden/speccade/specs/skeletal_animation/`.

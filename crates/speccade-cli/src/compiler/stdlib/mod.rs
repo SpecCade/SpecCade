@@ -18,6 +18,7 @@
 //! - **Texture**: `noise_node()`, `gradient_node()`, etc. - Texture generation
 //! - **Mesh**: `mesh_primitive()`, `mesh_recipe()` - Mesh generation
 
+pub mod animation;
 pub mod audio;
 pub mod character;
 pub mod core;
@@ -50,6 +51,7 @@ pub fn register_stdlib(builder: &mut GlobalsBuilder) {
     texture::register(builder);
     mesh::register(builder);
     character::register(builder);
+    animation::register(builder);
 }
 
 #[cfg(test)]

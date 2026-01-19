@@ -84,6 +84,19 @@ Skeletal mesh generation with armatures, body parts, and skinning.
 
 ---
 
+### Animation Functions
+Skeletal animation with keyframes, bone transforms, and export settings.
+
+**Categories:**
+- **Transform Functions** - Bone and IK target transforms
+- **Keyframe Functions** - Animation keyframes with bone data
+- **Export Functions** - Animation export settings
+- **Spec Functions** - Complete skeletal animation specs
+
+**Key Functions:** `bone_transform()`, `animation_keyframe()`, `animation_export_settings()`, `skeletal_animation_spec()`
+
+---
+
 ### [Music Functions](stdlib-music.md)
 Tracker-style music composition with instruments, patterns, and arrangements.
 
@@ -240,6 +253,24 @@ Tracker-style music composition with instruments, patterns, and arrangements.
 |----------|-------------|
 | `skeletal_mesh_spec()` | Complete skeletal mesh spec |
 
+### Animation Transforms
+| Function | Description |
+|----------|-------------|
+| `bone_transform()` | Bone position/rotation/scale transform |
+| `ik_target_transform()` | IK target transform with blend |
+
+### Animation Keyframes
+| Function | Description |
+|----------|-------------|
+| `animation_keyframe()` | Keyframe with bone transforms |
+| `ik_keyframe()` | IK keyframe with target transforms |
+
+### Animation Export & Spec
+| Function | Description |
+|----------|-------------|
+| `animation_export_settings()` | Export settings for animation |
+| `skeletal_animation_spec()` | Complete skeletal animation spec |
+
 ### Music Instruments
 | Function | Description |
 |----------|-------------|
@@ -361,6 +392,39 @@ skeletal_mesh_spec(
     ],
     skinning = skinning_config(max_bone_influences = 4),
     constraints = skeletal_constraints(max_triangles = 5000, max_bones = 64)
+)
+```
+
+### Creating an Animation Spec
+```starlark
+skeletal_animation_spec(
+    asset_id = "walk-cycle-01",
+    seed = 42,
+    output_path = "animations/walk.glb",
+    format = "glb",
+    skeleton_preset = "humanoid_basic_v1",
+    clip_name = "walk",
+    duration_seconds = 1.0,
+    fps = 24,
+    loop = True,
+    keyframes = [
+        animation_keyframe(
+            time = 0.0,
+            bones = {
+                "upper_leg_l": bone_transform(rotation = [25.0, 0.0, 0.0]),
+                "upper_leg_r": bone_transform(rotation = [-25.0, 0.0, 0.0])
+            }
+        ),
+        animation_keyframe(
+            time = 0.5,
+            bones = {
+                "upper_leg_l": bone_transform(rotation = [-25.0, 0.0, 0.0]),
+                "upper_leg_r": bone_transform(rotation = [25.0, 0.0, 0.0])
+            }
+        )
+    ],
+    interpolation = "linear",
+    export = animation_export_settings(bake_transforms = True)
 )
 ```
 
