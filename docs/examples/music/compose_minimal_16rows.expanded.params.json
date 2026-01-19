@@ -7,20 +7,29 @@
   "instruments": [
     {
       "name": "kick",
-      "base_note": "C4",
-      "default_volume": 64,
-      "synthesis": {
-        "type": "sine"
-      }
+      "ref": "drums/kick.spec.json",
+      "envelope": {
+        "attack": 0.01,
+        "decay": 0.1,
+        "sustain": 0.7,
+        "release": 0.2
+      },
+      "default_volume": 64
     },
     {
       "name": "hat",
-      "base_note": "C1",
-      "default_volume": 32,
       "synthesis": {
         "type": "noise",
         "periodic": false
-      }
+      },
+      "base_note": "C1",
+      "envelope": {
+        "attack": 0.01,
+        "decay": 0.1,
+        "sustain": 0.7,
+        "release": 0.2
+      },
+      "default_volume": 32
     }
   ],
   "patterns": {

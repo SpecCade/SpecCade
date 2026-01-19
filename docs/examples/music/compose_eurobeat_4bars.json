@@ -4,7 +4,7 @@
   "asset_type": "music",
   "license": "CC0-1.0",
   "seed": 2024,
-  "description": "Draft compose-v1 example: eurobeat-ish 4 bars (drums + bass + lead + deterministic fill)",
+  "description": "Draft compose-v1 example: eurobeat-ish 4 bars (drums + bass + lead + deterministic fill). Demonstrates ref pattern for external audio_v1 drum specs.",
   "outputs": [
     {
       "kind": "primary",
@@ -23,26 +23,36 @@
       "instruments": [
         {
           "name": "kick",
-          "base_note": "C4",
-          "synthesis": {
-            "type": "sine"
-          }
+          "ref": "drums/kick.spec.json",
+          "envelope": {
+            "attack": 0.001,
+            "decay": 0.15,
+            "sustain": 0.0,
+            "release": 0.2
+          },
+          "default_volume": 64
         },
         {
           "name": "snare",
-          "base_note": "D4",
-          "synthesis": {
-            "type": "noise",
-            "periodic": false
-          }
+          "ref": "drums/snare.spec.json",
+          "envelope": {
+            "attack": 0.001,
+            "decay": 0.08,
+            "sustain": 0.1,
+            "release": 0.12
+          },
+          "default_volume": 56
         },
         {
           "name": "hat",
-          "base_note": "C1",
-          "synthesis": {
-            "type": "noise",
-            "periodic": true
-          }
+          "ref": "drums/hihat.spec.json",
+          "envelope": {
+            "attack": 0.001,
+            "decay": 0.03,
+            "sustain": 0.1,
+            "release": 0.04
+          },
+          "default_volume": 32
         },
         {
           "name": "bass",

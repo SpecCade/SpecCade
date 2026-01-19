@@ -7,44 +7,36 @@
   "instruments": [
     {
       "name": "kick",
-      "synthesis": {
-        "type": "sine"
-      },
-      "base_note": "C4",
+      "ref": "drums/kick.spec.json",
       "envelope": {
-        "attack": 0.01,
-        "decay": 0.1,
-        "sustain": 0.7,
+        "attack": 0.001,
+        "decay": 0.15,
+        "sustain": 0.0,
         "release": 0.2
-      }
+      },
+      "default_volume": 64
     },
     {
       "name": "snare",
-      "synthesis": {
-        "type": "noise",
-        "periodic": false
-      },
-      "base_note": "D4",
+      "ref": "drums/snare.spec.json",
       "envelope": {
-        "attack": 0.01,
-        "decay": 0.1,
-        "sustain": 0.7,
-        "release": 0.2
-      }
+        "attack": 0.001,
+        "decay": 0.08,
+        "sustain": 0.1,
+        "release": 0.12
+      },
+      "default_volume": 56
     },
     {
       "name": "hat",
-      "synthesis": {
-        "type": "noise",
-        "periodic": true
-      },
-      "base_note": "C1",
+      "ref": "drums/hihat.spec.json",
       "envelope": {
-        "attack": 0.01,
-        "decay": 0.1,
-        "sustain": 0.7,
-        "release": 0.2
-      }
+        "attack": 0.001,
+        "decay": 0.03,
+        "sustain": 0.1,
+        "release": 0.04
+      },
+      "default_volume": 32
     },
     {
       "name": "bass",

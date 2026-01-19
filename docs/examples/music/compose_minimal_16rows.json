@@ -4,7 +4,7 @@
   "asset_type": "music",
   "license": "CC0-1.0",
   "seed": 1,
-  "description": "Draft compose-v1 example: 16-row beat (expected expansion snapshot lives next to this file)",
+  "description": "Draft compose-v1 example: 16-row beat (expected expansion snapshot lives next to this file). Demonstrates ref pattern for external audio_v1 specs.",
   "outputs": [
     {
       "kind": "primary",
@@ -23,11 +23,8 @@
       "instruments": [
         {
           "name": "kick",
-          "base_note": "C4",
-          "default_volume": 64,
-          "synthesis": {
-            "type": "sine"
-          }
+          "ref": "drums/kick.spec.json",
+          "default_volume": 64
         },
         {
           "name": "hat",
