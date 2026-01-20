@@ -1,10 +1,10 @@
-# SpecCade Docs
+﻿# SpecCade Docs
 
 ## Start Here
 
 - `README.md` (repo overview + how to run)
 - `ROADMAP.md` (single source of truth for planned work + open questions)
-- `SPEC_REFERENCE.md` (index of canonical spec docs under `docs/spec-reference/`)
+- `spec-reference/README.md` (canonical spec contract + per-asset reference)
 - `starlark-authoring.md` (authoring `.star` specs)
 - `stdlib-reference.md` (Starlark stdlib index)
 - `budgets.md` (budget profiles and how to use `--budget`)
@@ -20,4 +20,4 @@
   - `stdlib-music.md`
   - `stdlib-texture.md`
   - `stdlib-mesh.md`
-- Large “master list” docs (e.g. preset libraries / genre kits) are reference appendices; they’re not required reading for basic usage.
+- Pack inventories live under `packs/`; treat docs that enumerate pack contents as convenience views (not the source of truth).

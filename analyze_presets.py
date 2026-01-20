@@ -345,7 +345,25 @@ def generate_markdown_report(results, output_path):
     print(f"Markdown report saved to: {output_path}")
 
 def main():
-    pack_path = sys.argv[1] if len(sys.argv) > 1 else "packs/preset_library_v1/audio"
+    pack_path = "packs/preset_library_v1/audio"
+    write_md = False
+    md_out = None
+
+    args = sys.argv[1:]
+    if "--write-md" in args:
+        write_md = True
+        args = [a for a in args if a != "--write-md"]
+
+    if "--md" in args:
+        i = args.index("--md")
+        if i + 1 >= len(args):
+            raise SystemExit("Expected a path after --md")
+        md_out = args[i + 1]
+        write_md = True
+        args = args[:i] + args[i + 2 :]
+
+    if args:
+        pack_path = args[0]
 
     print(f"Analyzing presets in: {pack_path}")
     print()
@@ -358,9 +376,9 @@ def main():
 
     print_report(results)
 
-    # Generate markdown report
-    md_path = Path(pack_path).parent / "FEATURE_ANALYSIS.md"
-    generate_markdown_report(results, md_path)
+    if write_md:
+        md_path = Path(md_out) if md_out is not None else Path(pack_path).parent / "FEATURE_ANALYSIS.md"
+        generate_markdown_report(results, md_path)
 
 if __name__ == "__main__":
     main()

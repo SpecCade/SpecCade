@@ -66,8 +66,9 @@ pub use hash::{
 pub use output::{EngineTarget, OutputFormat, OutputKind, OutputSpec, VariantSpec};
 pub use recipe::{Recipe, RecipeParamsError};
 pub use report::{
-    BoundingBox, OutputMetrics, OutputResult, Report, ReportBuilder, ReportError, ReportWarning,
-    StageTiming, REPORT_VERSION,
+    BakedMapInfo, BakingMetrics, BoundingBox, CollisionBoundingBox, CollisionMeshMetrics,
+    NavmeshMetrics, OutputMetrics, OutputResult, Report, ReportBuilder, ReportError, ReportWarning,
+    StageTiming, StaticMeshLodLevelMetrics, REPORT_VERSION,
 };
 pub use spec::{AssetType, Spec, SpecBuilder, MAX_SEED, SPEC_VERSION};
 pub use validation::constraints::{

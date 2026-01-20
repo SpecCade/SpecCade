@@ -517,6 +517,178 @@ fn test_generate_static_mesh() {
     assert!(gen_result.metrics.triangle_count.is_some());
 }
 
+/// Test static mesh generation with collision, navmesh analysis, and baking enabled.
+#[test]
+#[ignore] // Run with SPECCADE_RUN_BLENDER_TESTS=1
+fn test_generate_static_mesh_with_collision_navmesh_baking() {
+    if !should_run_blender_tests() {
+        println!("Blender tests not enabled, skipping");
+        return;
+    }
+
+    if !is_blender_available() {
+        println!("Blender not available, skipping");
+        return;
+    }
+
+    let harness = TestHarness::new();
+
+    let spec = Spec::builder("test-static-advanced-01", AssetType::StaticMesh)
+        .license("CC0-1.0")
+        .seed(42)
+        .output(OutputSpec::primary(
+            OutputFormat::Glb,
+            "meshes/test_static_advanced.glb",
+        ))
+        .recipe(Recipe::new(
+            "static_mesh.blender_primitives_v1",
+            serde_json::json!({
+                "base_primitive": "cube",
+                "dimensions": [1.0, 1.0, 1.0],
+                "modifiers": [],
+                "uv_projection": "smart",
+                "material_slots": [{
+                    "name": "mat0",
+                    "base_color": [0.8, 0.8, 0.8, 1.0],
+                    "metallic": 0.0,
+                    "roughness": 0.5
+                }],
+                "export": {
+                    "apply_modifiers": true,
+                    "triangulate": true,
+                    "include_normals": true,
+                    "include_uvs": true,
+                    "include_vertex_colors": false
+                },
+                "collision_mesh": {
+                    "collision_type": "box",
+                    "output_suffix": "_col"
+                },
+                "navmesh": {
+                    "walkable_slope_max": 45.0,
+                    "stair_detection": false
+                },
+                "baking": {
+                    "bake_types": ["normal"],
+                    "ray_distance": 0.1,
+                    "margin": 2,
+                    "resolution": [32, 32]
+                }
+            }),
+        ))
+        .build();
+
+    let result = speccade_backend_blender::static_mesh::generate(&spec, harness.path());
+    assert!(
+        result.is_ok(),
+        "Static mesh generation failed: {:?}",
+        result.err()
+    );
+
+    let gen_result = result.unwrap();
+    assert!(gen_result.metrics.collision_mesh.is_some());
+    assert!(gen_result.metrics.collision_mesh_path.is_some());
+    assert!(gen_result.metrics.navmesh.is_some());
+    assert!(gen_result.metrics.baking.is_some());
+
+    // baking_metrics should include at least one baked map entry.
+    let baked_maps = gen_result
+        .metrics
+        .baking
+        .as_ref()
+        .unwrap()
+        .baked_maps
+        .as_slice();
+    assert!(!baked_maps.is_empty());
+
+    // Primary output exists
+    let primary = harness.path().join("meshes").join("test_static_advanced.glb");
+    assert!(primary.exists(), "Primary GLB missing: {}", primary.display());
+
+    // Collision mesh output exists (suffix-based)
+    let collision = harness
+        .path()
+        .join("meshes")
+        .join("test_static_advanced_col.glb");
+    assert!(collision.exists(), "Collision GLB missing: {}", collision.display());
+
+    // Baked normal map output exists (asset_id-based)
+    let baked = harness
+        .path()
+        .join("meshes")
+        .join("test-static-advanced-01_normal.png");
+    assert!(baked.exists(), "Baked texture missing: {}", baked.display());
+}
+
+/// Test static mesh generation with LOD chain enabled surfaces per-LOD metrics.
+#[test]
+#[ignore] // Run with SPECCADE_RUN_BLENDER_TESTS=1
+fn test_generate_static_mesh_with_lod_chain_metrics() {
+    if !should_run_blender_tests() {
+        println!("Blender tests not enabled, skipping");
+        return;
+    }
+
+    if !is_blender_available() {
+        println!("Blender not available, skipping");
+        return;
+    }
+
+    let harness = TestHarness::new();
+
+    let spec = Spec::builder("test-static-lod-01", AssetType::StaticMesh)
+        .license("CC0-1.0")
+        .seed(42)
+        .output(OutputSpec::primary(OutputFormat::Glb, "meshes/test_static_lod.glb"))
+        .recipe(Recipe::new(
+            "static_mesh.blender_primitives_v1",
+            serde_json::json!({
+                "base_primitive": "cube",
+                "dimensions": [1.0, 1.0, 1.0],
+                "modifiers": [{
+                    "type": "subdivision",
+                    "levels": 3,
+                    "render_levels": 3
+                }],
+                "uv_projection": {
+                    "method": "smart",
+                    "texel_density": 256.0
+                },
+                "material_slots": [],
+                "lod_chain": {
+                    "levels": [
+                        { "level": 0 },
+                        { "level": 1, "target_tris": 200 }
+                    ],
+                    "decimate_method": "collapse"
+                },
+                "export": {
+                    "apply_modifiers": true,
+                    "triangulate": true,
+                    "include_normals": true,
+                    "include_uvs": true,
+                    "include_vertex_colors": false
+                }
+            }),
+        ))
+        .build();
+
+    let result = speccade_backend_blender::static_mesh::generate(&spec, harness.path());
+    assert!(result.is_ok(), "Static mesh generation failed: {:?}", result.err());
+
+    let gen_result = result.unwrap();
+    assert_eq!(gen_result.metrics.lod_count, Some(2));
+
+    let levels = gen_result.metrics.lod_levels.as_ref().expect("missing lod_levels");
+    assert_eq!(levels.len(), 2);
+    assert_eq!(levels[0].lod_level, 0);
+    assert_eq!(levels[1].lod_level, 1);
+
+    // Ensure texel density and UV layer count were computed on LOD0 metrics.
+    assert!(levels[0].uv_layer_count.is_some());
+    assert!(levels[0].texel_density.is_some());
+}
+
 /// Test skeletal mesh generation with Blender.
 #[test]
 #[ignore] // Run with SPECCADE_RUN_BLENDER_TESTS=1
@@ -597,6 +769,49 @@ fn test_generate_animation() {
 
     let gen_result = result.unwrap();
     assert!(gen_result.metrics.animation_frame_count.is_some());
+}
+
+/// Test rigged (IK-aware) animation generation with Blender.
+#[test]
+#[ignore] // Run with SPECCADE_RUN_BLENDER_TESTS=1
+fn test_generate_rigged_animation_motion_metrics() {
+    if !should_run_blender_tests() {
+        println!("Blender tests not enabled, skipping");
+        return;
+    }
+
+    if !is_blender_available() {
+        println!("Blender not available, skipping");
+        return;
+    }
+
+    // Load a golden rigged animation spec
+    if !GoldenFixtures::exists() {
+        println!("Golden fixtures not found, skipping");
+        return;
+    }
+
+    let spec_path = GoldenFixtures::speccade_specs_dir()
+        .join("skeletal_animation")
+        .join("walk_cycle_ik.json");
+    if !spec_path.exists() {
+        println!("Rigged animation fixture not found, skipping");
+        return;
+    }
+
+    let harness = TestHarness::new();
+    let spec = parse_spec_file(&spec_path).expect("Failed to parse rigged animation spec");
+
+    let result = speccade_backend_blender::rigged_animation::generate(&spec, harness.path());
+    assert!(result.is_ok(), "Rigged animation generation failed: {:?}", result.err());
+
+    let gen_result = result.unwrap();
+
+    // Motion verification metrics (MESHVER-005) should be present in reports.
+    assert!(gen_result.metrics.hinge_axis_violations.is_some());
+    assert!(gen_result.metrics.range_violations.is_some());
+    assert!(gen_result.metrics.velocity_spikes.is_some());
+    assert!(gen_result.metrics.root_motion_delta.is_some());
 }
 
 /// Test golden static mesh specs can be generated.

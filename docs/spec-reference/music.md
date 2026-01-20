@@ -1,4 +1,4 @@
-# Music Spec Reference
+﻿# Music Spec Reference
 
 This document covers tracker module generation in SpecCade.
 
@@ -12,7 +12,7 @@ SpecCade generates fully playable tracker modules with embedded instruments and 
 
 ## Draft: Recipe `music.tracker_song_compose_v1` (Pattern IR)
 
-Tracker music is dense; fully-expanded note event lists can be thousands of lines and are hard to author and review. The draft authoring recipe `music.tracker_song_compose_v1` introduces a **JSON Pattern IR** (“macros”) that expands deterministically into the canonical `music.tracker_song_v1` event format before generating XM/IT.
+Tracker music is dense; fully-expanded note event lists can be thousands of lines and are hard to author and review. The draft authoring recipe `music.tracker_song_compose_v1` introduces a **JSON Pattern IR** (窶徇acros窶・ that expands deterministically into the canonical `music.tracker_song_v1` event format before generating XM/IT.
 
 This proposal is specified in:
 
@@ -22,13 +22,9 @@ This proposal is specified in:
 See also:
 
 - [RFC-0011: Pattern IR Extensions](../rfcs/RFC-0011-pattern-ir-extensions.md) (new operators)
-- [Music Pattern IR — Quickstart](../music-pattern-ir-quickstart.md)
-- [Music Pattern IR — Examples](../music-pattern-ir-examples.md)
-- [Music Pattern IR — Implementation](../music-pattern-ir-implementation.md)
+- [Music Pattern IR 窶・Quickstart](../music-pattern-ir-quickstart.md)
+- [Music Pattern IR 窶・Examples](../music-pattern-ir-examples.md)
 - [Music Chord Spec](../music-chord-spec.md)
-- [Game Music Genre Kits — Master Inventory](../music-genre-kits-master-list.md)
-- [Game Music Genre Kits — Audit Checklist](../music-genre-kits-audit.md)
-
 Minimal example (16th hats + 4-on-the-floor kick, 64-row pattern):
 
 ```json
@@ -162,16 +158,16 @@ Example:
 
 | Param | Type | Required | Default | Notes |
 |------:|------|:--------:|---------|-------|
-| `format` | string | yes | — | `"xm"` or `"it"` |
-| `bpm` | integer | yes | — | Validated at generate time (`30..=300`) |
-| `speed` | integer | yes | — | Validated at generate time (`1..=31`) |
-| `channels` | integer | yes | — | XM: `1..=32`, IT: `1..=64` |
+| `format` | string | yes | 窶・| `"xm"` or `"it"` |
+| `bpm` | integer | yes | 窶・| Validated at generate time (`30..=300`) |
+| `speed` | integer | yes | 窶・| Validated at generate time (`1..=31`) |
+| `channels` | integer | yes | 窶・| XM: `1..=32`, IT: `1..=64` |
 | `name` | string | no | omitted | Module internal name |
 | `title` | string | no | omitted | Display title (metadata) |
 | `loop` | boolean | no | `false` | XM only (IT currently ignores looping) |
 | `restart_position` | integer | no | omitted | XM only; order-table index used when `loop: true` |
 | `instruments` | array | no | `[]` | Instrument definitions |
-| `patterns` | object | no | `{}` | Map of pattern name → pattern |
+| `patterns` | object | no | `{}` | Map of pattern name 竊・pattern |
 | `arrangement` | array | no | `[]` | Sequence of patterns by name |
 | `automation` | array | no | `[]` | Volume fades / tempo changes |
 | `it_options` | object | no | omitted | IT-only module options |
@@ -202,7 +198,7 @@ Each entry in `instruments[]` is a `TrackerInstrument`. You must specify **exact
 
 ### Referential Instruments (`ref`)
 
-`ref` loads an external spec file relative to the music spec’s directory. The referenced spec must be:
+`ref` loads an external spec file relative to the music spec窶冱 directory. The referenced spec must be:
 
 - `asset_type: "audio"`
 - `recipe.kind: "audio_v1"`
@@ -215,8 +211,8 @@ Notes / rules:
 - **Mono policy:** baked samples are always mono; stereo `audio_v1` output is downmixed deterministically.
 - **`base_note` precedence:** `TrackerInstrument.base_note` overrides `audio_v1.base_note` for pitch mapping.
 - **`sample_rate` precedence:** `TrackerInstrument.sample_rate` overrides `audio_v1.sample_rate` when baking.
-- **Envelope policy:** `TrackerInstrument.envelope` is the *only* amplitude envelope applied at playback time. When baking `audio_v1` instruments, per-layer `audio_v1` envelopes are neutralized to avoid “double enveloping”.
-- **One-shot envelope note:** if `TrackerInstrument.envelope.sustain == 0`, the generator treats `release` as additional “tail” time (so one-shots decay without requiring an explicit note-off).
+- **Envelope policy:** `TrackerInstrument.envelope` is the *only* amplitude envelope applied at playback time. When baking `audio_v1` instruments, per-layer `audio_v1` envelopes are neutralized to avoid 窶彭ouble enveloping窶・
+- **One-shot envelope note:** if `TrackerInstrument.envelope.sustain == 0`, the generator treats `release` as additional 窶徼ail窶・time (so one-shots decay without requiring an explicit note-off).
 - **Loop policy:** if `TrackerInstrument.envelope.sustain > 0`, the baked sample loops (loop start is derived from `attack + decay`); otherwise it is a one-shot.
 - **Safety limit:** extremely long baked samples are rejected to prevent huge modules.
 
@@ -266,7 +262,7 @@ Note: for music instruments, use `TrackerInstrument.envelope` to shape amplitude
 
 ## Patterns
 
-`patterns` is an object mapping pattern name → `TrackerPattern`.
+`patterns` is an object mapping pattern name 竊・`TrackerPattern`.
 
 Each pattern can use one of two formats:
 
@@ -291,18 +287,18 @@ Each note event is a `PatternNote`:
 |------:|------|------|
 | `row` | integer | 0-indexed |
 | `channel` | integer | Required for `data` format; ignored for `notes` format |
-| `note` | string \| integer | Note name (e.g. `"C-4"`, `"C4"`) or MIDI number; may be omitted to trigger the instrument’s base note (see below) |
+| `note` | string \| integer | Note name (e.g. `"C-4"`, `"C4"`) or MIDI number; may be omitted to trigger the instrument窶冱 base note (see below) |
 | `inst` | integer | Instrument index (0-based); alias: `instrument` |
-| `vol` | integer | Optional volume (0–64); alias: `volume` |
+| `vol` | integer | Optional volume (0窶・4); alias: `volume` |
 | `effect` | integer | Optional effect code |
 | `param` | integer | Optional effect parameter byte |
 | `effect_name` | string | Optional effect name (backend maps to code) |
-| `effect_xy` | [integer, integer] | Optional `[x, y]` nibbles → parameter byte |
+| `effect_xy` | [integer, integer] | Optional `[x, y]` nibbles 竊・parameter byte |
 
 Special note strings are format-specific, but these are commonly accepted:
 
-- `"---"` / `"..."` → no note (instrument-only / volume / effect updates)
-- `"OFF"` / `"==="` → note off / cut (format-dependent)
+- `"---"` / `"..."` 竊・no note (instrument-only / volume / effect updates)
+- `"OFF"` / `"==="` 竊・note off / cut (format-dependent)
 
 If `note` is omitted or empty, the generator triggers the instrument at:
 
@@ -379,3 +375,5 @@ Example:
   }
 }
 ```
+
+

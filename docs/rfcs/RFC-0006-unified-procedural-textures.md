@@ -251,7 +251,7 @@ Because we are pre-release, we prioritize simplicity and clarity over compatibil
 
 - Update:
   - `docs/spec-reference/texture.md`
-  - `docs/SPEC_REFERENCE.md`
+- `docs/spec-reference/README.md`
   - `PARITY_MATRIX.md`
   - any references in RFC-0001 and other docs
 

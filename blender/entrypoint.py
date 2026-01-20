@@ -375,7 +375,166 @@ def compute_skeletal_mesh_metrics(obj: 'bpy.types.Object', armature: 'bpy.types.
     return mesh_metrics
 
 
-def compute_animation_metrics(armature: 'bpy.types.Object', action: 'bpy.types.Action') -> Dict[str, Any]:
+def _wrap_degrees(angle_deg: float) -> float:
+    """Wrap an angle to [-180, 180] degrees."""
+    while angle_deg > 180.0:
+        angle_deg -= 360.0
+    while angle_deg < -180.0:
+        angle_deg += 360.0
+    return angle_deg
+
+
+def _pose_bone_local_euler_degrees(pose_bone: 'bpy.types.PoseBone') -> Tuple[float, float, float]:
+    """
+    Get pose bone local rotation (matrix_basis) as XYZ Euler degrees.
+
+    We intentionally use matrix_basis (local) to align with how LIMIT_ROTATION
+    constraints are configured in LOCAL space.
+    """
+    try:
+        e = pose_bone.matrix_basis.to_euler('XYZ')
+        return (
+            math.degrees(e.x),
+            math.degrees(e.y),
+            math.degrees(e.z),
+        )
+    except Exception:
+        e = pose_bone.rotation_euler
+        return (
+            math.degrees(e.x),
+            math.degrees(e.y),
+            math.degrees(e.z),
+        )
+
+
+def compute_motion_verification_metrics(
+    armature: 'bpy.types.Object',
+    frame_start: int,
+    frame_end: int,
+    constraints_list: Optional[List[Dict[str, Any]]] = None,
+) -> Dict[str, Any]:
+    """
+    Compute motion verification metrics (MESHVER-005).
+
+    - hinge_axis_violations: rotation leakage on locked axes for hinge joints
+    - range_violations: rotations outside declared limits for constrained joints
+    - velocity_spikes: root motion direction flips between consecutive frames
+    - root_motion_delta: root bone head delta from first->last frame
+    """
+    constraints_list = constraints_list or []
+
+    hinge_axis_violations = 0
+    range_violations = 0
+    velocity_spikes = 0
+    root_motion_delta = [0.0, 0.0, 0.0]
+
+    if frame_end < frame_start:
+        return {
+            "hinge_axis_violations": 0,
+            "range_violations": 0,
+            "velocity_spikes": 0,
+            "root_motion_delta": root_motion_delta,
+        }
+
+    # Pre-filter to hinge constraints (highest-leverage / clearest semantics)
+    hinge_constraints = [
+        c for c in constraints_list
+        if c.get("type", "").lower() == "hinge" and c.get("bone")
+    ]
+
+    # Root bone selection for motion metrics
+    root_pose_bone = armature.pose.bones.get("root")
+    if root_pose_bone is None and armature.pose.bones:
+        root_pose_bone = armature.pose.bones[0]
+
+    # Tolerances
+    lock_axis_tolerance_deg = 0.25
+    range_tolerance_deg = 0.25
+    velocity_epsilon = 1e-6
+
+    # Ensure pose mode for consistent pose evaluation
+    bpy.ops.object.select_all(action='DESELECT')
+    armature.select_set(True)
+    bpy.context.view_layer.objects.active = armature
+    bpy.ops.object.mode_set(mode='POSE')
+
+    root_positions: List[Tuple[float, float, float]] = []
+
+    for frame in range(frame_start, frame_end + 1):
+        bpy.context.scene.frame_set(frame)
+        bpy.context.view_layer.update()
+
+        # Root motion samples
+        if root_pose_bone is not None:
+            root_world = armature.matrix_world @ root_pose_bone.head
+            root_positions.append((root_world.x, root_world.y, root_world.z))
+
+        # Constraint checks
+        for c in hinge_constraints:
+            bone_name = c.get("bone")
+            pose_bone = armature.pose.bones.get(bone_name)
+            if pose_bone is None:
+                continue
+
+            axis = c.get("axis", "X").upper()
+            min_angle = float(c.get("min_angle", 0.0))
+            max_angle = float(c.get("max_angle", 160.0))
+
+            rx, ry, rz = _pose_bone_local_euler_degrees(pose_bone)
+            angles = {
+                "X": _wrap_degrees(rx),
+                "Y": _wrap_degrees(ry),
+                "Z": _wrap_degrees(rz),
+            }
+
+            # Range check on hinge axis
+            hinge_angle = angles.get(axis, 0.0)
+            if hinge_angle < (min_angle - range_tolerance_deg) or hinge_angle > (max_angle + range_tolerance_deg):
+                range_violations += 1
+
+            # Leakage on locked axes
+            for ax in ("X", "Y", "Z"):
+                if ax == axis:
+                    continue
+                if abs(angles.get(ax, 0.0)) > lock_axis_tolerance_deg:
+                    hinge_axis_violations += 1
+
+    bpy.ops.object.mode_set(mode='OBJECT')
+
+    # Root motion delta and velocity spikes
+    if len(root_positions) >= 2:
+        start = root_positions[0]
+        end = root_positions[-1]
+        root_motion_delta = [end[0] - start[0], end[1] - start[1], end[2] - start[2]]
+
+        for i in range(2, len(root_positions)):
+            p0 = root_positions[i - 2]
+            p1 = root_positions[i - 1]
+            p2 = root_positions[i]
+
+            v_prev = (p1[0] - p0[0], p1[1] - p0[1], p1[2] - p0[2])
+            v_cur = (p2[0] - p1[0], p2[1] - p1[1], p2[2] - p1[2])
+
+            dot = v_prev[0] * v_cur[0] + v_prev[1] * v_cur[1] + v_prev[2] * v_cur[2]
+            mag_prev = math.sqrt(v_prev[0] ** 2 + v_prev[1] ** 2 + v_prev[2] ** 2)
+            mag_cur = math.sqrt(v_cur[0] ** 2 + v_cur[1] ** 2 + v_cur[2] ** 2)
+
+            if mag_prev > velocity_epsilon and mag_cur > velocity_epsilon and dot < -velocity_epsilon:
+                velocity_spikes += 1
+
+    return {
+        "hinge_axis_violations": hinge_axis_violations,
+        "range_violations": range_violations,
+        "velocity_spikes": velocity_spikes,
+        "root_motion_delta": root_motion_delta,
+    }
+
+
+def compute_animation_metrics(
+    armature: 'bpy.types.Object',
+    action: 'bpy.types.Action',
+    constraints_list: Optional[List[Dict[str, Any]]] = None,
+) -> Dict[str, Any]:
     """Compute metrics for an animation."""
     bone_count = len(armature.data.bones)
 
@@ -388,11 +547,23 @@ def compute_animation_metrics(armature: 'bpy.types.Object', action: 'bpy.types.A
     fps = bpy.context.scene.render.fps
     duration_seconds = frame_count / fps
 
-    return {
+    metrics = {
         "bone_count": bone_count,
         "animation_frame_count": frame_count,
         "animation_duration_seconds": duration_seconds
     }
+
+    # Motion verification metrics (optional; depends on rig_setup constraints).
+    metrics.update(
+        compute_motion_verification_metrics(
+            armature,
+            frame_start=frame_start,
+            frame_end=frame_end,
+            constraints_list=constraints_list,
+        )
+    )
+
+    return metrics
 
 
 # =============================================================================
@@ -977,6 +1148,60 @@ def create_armature(preset_name: str) -> 'bpy.types.Object':
     bpy.ops.object.mode_set(mode='OBJECT')
 
     return armature_obj
+
+
+def apply_skeleton_overrides(
+    armature_obj: 'bpy.types.Object',
+    skeleton_spec: List[Dict[str, Any]],
+) -> None:
+    """
+    Apply skeleton overrides/additions to an existing armature.
+
+    This supports specs that provide a `skeleton_preset` plus a `skeleton` list
+    to tweak bone positions/hierarchy or add extra bones.
+    """
+    armature_data = armature_obj.data
+
+    bpy.ops.object.select_all(action='DESELECT')
+    armature_obj.select_set(True)
+    bpy.context.view_layer.objects.active = armature_obj
+    bpy.ops.object.mode_set(mode='EDIT')
+
+    edit_bones = armature_data.edit_bones
+    created_or_updated = {}
+
+    # Create or update bones
+    for bone_spec in skeleton_spec:
+        bone_name = bone_spec.get("bone")
+        if not bone_name:
+            continue
+
+        bone = edit_bones.get(bone_name)
+        if bone is None:
+            bone = edit_bones.new(bone_name)
+
+        if "head" in bone_spec:
+            bone.head = Vector(tuple(bone_spec["head"]))
+        if "tail" in bone_spec:
+            bone.tail = Vector(tuple(bone_spec["tail"]))
+
+        created_or_updated[bone_name] = bone
+
+    # Apply parent overrides
+    for bone_spec in skeleton_spec:
+        bone_name = bone_spec.get("bone")
+        if not bone_name:
+            continue
+        parent_name = bone_spec.get("parent")
+        if not parent_name:
+            continue
+
+        bone = edit_bones.get(bone_name)
+        parent = edit_bones.get(parent_name)
+        if bone is not None and parent is not None:
+            bone.parent = parent
+
+    bpy.ops.object.mode_set(mode='OBJECT')
 
 
 def get_bone_position(armature: 'bpy.types.Object', bone_name: str) -> Vector:
@@ -2929,7 +3154,7 @@ def apply_poses_and_phases(
         # Set interpolation for all keyframes in this phase range
         action = armature.animation_data.action if armature.animation_data else None
         if action:
-            for fcurve in action.fcurves:
+            for fcurve in _iter_action_fcurves(action):
                 for kp in fcurve.keyframe_points:
                     if start_frame <= kp.co[0] <= end_frame:
                         kp.interpolation = interp
@@ -2997,7 +3222,7 @@ def bake_animation(
     # Simplify curves if requested
     if simplify and armature.animation_data and armature.animation_data.action:
         action = armature.animation_data.action
-        for fcurve in action.fcurves:
+        for fcurve in _iter_action_fcurves(action):
             # Use Blender's keyframe reduction
             keyframe_count_before = len(fcurve.keyframe_points)
             # Note: Blender doesn't have a direct "simplify" operator for fcurves
@@ -3574,7 +3799,12 @@ def create_animation(armature: 'bpy.types.Object', params: Dict) -> 'bpy.types.A
     # Apply keyframes
     for kf_spec in keyframes:
         time = kf_spec.get("time", 0)
-        frame = 1 + int(time * fps)
+        # Clamp times so time == duration doesn't create an extra frame.
+        # SpecCade defines frame_count = duration_seconds * fps.
+        frame_index = int(time * fps)
+        if frame_count > 0:
+            frame_index = max(0, min(frame_index, frame_count - 1))
+        frame = 1 + frame_index
         bones_data = kf_spec.get("bones", {})
 
         for bone_name, transform in bones_data.items():
@@ -3594,12 +3824,12 @@ def create_animation(armature: 'bpy.types.Object', params: Dict) -> 'bpy.types.A
                 ))
                 pose_bone.keyframe_insert(data_path="rotation_euler", frame=frame)
 
-                # Set interpolation
-                for fcurve in action.fcurves:
-                    if pose_bone.name in fcurve.data_path and "rotation" in fcurve.data_path:
-                        for kp in fcurve.keyframe_points:
-                            if kp.co[0] == frame:
-                                kp.interpolation = interp_mode
+            # Set interpolation
+            for fcurve in _iter_action_fcurves(action):
+                if pose_bone.name in fcurve.data_path and "rotation" in fcurve.data_path:
+                    for kp in fcurve.keyframe_points:
+                        if kp.co[0] == frame:
+                            kp.interpolation = interp_mode
 
             # Apply position
             if "position" in transform:
@@ -3608,7 +3838,7 @@ def create_animation(armature: 'bpy.types.Object', params: Dict) -> 'bpy.types.A
                 pose_bone.keyframe_insert(data_path="location", frame=frame)
 
                 # Set interpolation
-                for fcurve in action.fcurves:
+                for fcurve in _iter_action_fcurves(action):
                     if pose_bone.name in fcurve.data_path and "location" in fcurve.data_path:
                         for kp in fcurve.keyframe_points:
                             if kp.co[0] == frame:
@@ -3627,6 +3857,109 @@ def create_animation(armature: 'bpy.types.Object', params: Dict) -> 'bpy.types.A
 # Export
 # =============================================================================
 
+def _normalize_operator_kwargs(op, kwargs: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Normalize kwargs for a Blender operator across Blender versions.
+
+    Blender operator signatures can change across versions; passing unknown
+    keywords hard-fails the whole generation run. This helper makes exports
+    forwards/backwards compatible by dropping unknown args and coercing
+    values where reasonable.
+    """
+    try:
+        rna = op.get_rna_type()
+        props = getattr(rna, "properties", None)
+        if props is None:
+            return kwargs
+
+        allowed = {p.identifier for p in props}
+
+        def pick_enum(prop: Any, enabled: bool) -> Optional[str]:
+            try:
+                ids = [it.identifier for it in prop.enum_items]
+            except Exception:
+                return None
+            if not ids:
+                return None
+            if not enabled:
+                for cand in ("NONE", "OFF", "DISABLED", "NO"):
+                    if cand in ids:
+                        return cand
+                return ids[0]
+
+            for cand in ("MATERIAL", "ACTIVE", "ALL", "EXPORT", "ENABLED", "YES", "ON"):
+                if cand in ids:
+                    return cand
+            for ident in ids:
+                if ident not in ("NONE", "OFF", "DISABLED", "NO"):
+                    return ident
+            return ids[0]
+
+        normalized: Dict[str, Any] = {}
+        for k, v in kwargs.items():
+            if k not in allowed:
+                continue
+            try:
+                prop = props[k]
+                prop_type = getattr(prop, "type", None)
+            except Exception:
+                normalized[k] = v
+                continue
+
+            if prop_type == "BOOLEAN":
+                if isinstance(v, bool):
+                    normalized[k] = v
+                elif isinstance(v, int) and v in (0, 1):
+                    normalized[k] = bool(v)
+                else:
+                    continue
+            elif prop_type == "ENUM":
+                if isinstance(v, str):
+                    normalized[k] = v
+                elif isinstance(v, bool):
+                    choice = pick_enum(prop, v)
+                    if choice is not None:
+                        normalized[k] = choice
+                else:
+                    continue
+            elif prop_type == "INT":
+                if isinstance(v, bool):
+                    normalized[k] = int(v)
+                elif isinstance(v, int):
+                    normalized[k] = v
+                else:
+                    continue
+            elif prop_type == "FLOAT":
+                if isinstance(v, bool):
+                    normalized[k] = float(int(v))
+                elif isinstance(v, (int, float)):
+                    normalized[k] = float(v)
+                else:
+                    continue
+            elif prop_type == "STRING":
+                if isinstance(v, str):
+                    normalized[k] = v
+                else:
+                    continue
+            else:
+                normalized[k] = v
+
+        return normalized
+    except Exception:
+        return kwargs
+
+
+def _iter_action_fcurves(action: Any):
+    """
+    Return an iterable of fcurves for an action if available.
+
+    Blender's animation API has evolved; some versions expose fcurves directly
+    on the Action, others may not. We treat missing fcurves as "no-op" for
+    interpolation tweaking rather than hard failing generation.
+    """
+    return getattr(action, "fcurves", []) or []
+
+
 def export_glb(output_path: Path, include_armature: bool = True,
                include_animation: bool = False, export_tangents: bool = False) -> None:
     """Export scene to GLB format."""
@@ -3636,7 +3969,10 @@ def export_glb(output_path: Path, include_armature: bool = True,
         'export_apply': True,
         'export_texcoords': True,
         'export_normals': True,
+        # Vertex color export flag has changed names across Blender versions.
+        # We include both and filter to supported kwargs at call time.
         'export_colors': True,
+        'export_vertex_color': True,
         'export_tangents': export_tangents,
     }
 
@@ -3646,6 +3982,8 @@ def export_glb(output_path: Path, include_armature: bool = True,
     else:
         export_settings['export_animations'] = False
 
+    export_settings = _normalize_operator_kwargs(bpy.ops.export_scene.gltf, export_settings)
+    export_settings = _normalize_operator_kwargs(bpy.ops.export_scene.gltf, export_settings)
     bpy.ops.export_scene.gltf(**export_settings)
 
 
@@ -4060,6 +4398,7 @@ def export_collision_mesh(
         'use_selection': True,
     }
 
+    export_settings = _normalize_operator_kwargs(bpy.ops.export_scene.gltf, export_settings)
     bpy.ops.export_scene.gltf(**export_settings)
 
 
@@ -4496,6 +4835,7 @@ def export_glb_with_lods(
         'use_selection': True,
     }
 
+    export_settings = _normalize_operator_kwargs(bpy.ops.export_scene.gltf, export_settings)
     bpy.ops.export_scene.gltf(**export_settings)
 
 
@@ -4612,6 +4952,9 @@ def handle_static_mesh(spec: Dict, out_root: Path, report_path: Path) -> None:
                 metrics["bounds_min"] = lod0.get("bounds_min", [0, 0, 0])
                 metrics["bounds_max"] = lod0.get("bounds_max", [0, 0, 0])
                 metrics["material_slot_count"] = lod0.get("material_slot_count", 0)
+                # UV summary from LOD0 (MESH-002)
+                metrics["uv_layer_count"] = lod0.get("uv_layer_count", 0)
+                metrics["texel_density"] = lod0.get("texel_density", 0.0)
         else:
             # No LOD chain - export single mesh
             metrics = compute_mesh_metrics(obj)
@@ -4655,12 +4998,14 @@ def handle_skeletal_mesh(spec: Dict, out_root: Path, report_path: Path) -> None:
         skeleton_spec = params.get("skeleton", [])
         skeleton_preset = params.get("skeleton_preset")
 
-        if skeleton_spec:
+        if skeleton_preset:
+            # Use preset skeleton, then apply optional overrides/additions.
+            armature = create_armature(skeleton_preset)
+            if skeleton_spec:
+                apply_skeleton_overrides(armature, skeleton_spec)
+        elif skeleton_spec:
             # Use custom skeleton definition
             armature = create_custom_skeleton(skeleton_spec)
-        elif skeleton_preset:
-            # Use preset skeleton
-            armature = create_armature(skeleton_preset)
         else:
             # Default to humanoid basic
             armature = create_armature("humanoid_basic_v1")
@@ -4789,7 +5134,7 @@ def handle_animation(spec: Dict, out_root: Path, report_path: Path) -> None:
         output_path = out_root / output_rel_path
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
-        # Compute metrics
+        # Compute metrics (motion verification only uses constraints when provided)
         metrics = compute_animation_metrics(armature, action)
 
         # Export GLB with animation and tangents if requested
@@ -4912,7 +5257,11 @@ def handle_rigged_animation(spec: Dict, out_root: Path, report_path: Path) -> No
         ik_keyframes = params.get("ik_keyframes", [])
         for ik_kf in ik_keyframes:
             time_sec = ik_kf.get("time", 0)
-            frame = 1 + int(time_sec * fps)
+            # Clamp so time == duration doesn't create an extra frame.
+            frame_index = int(time_sec * fps)
+            if frame_count > 0:
+                frame_index = max(0, min(frame_index, frame_count - 1))
+            frame = 1 + frame_index
             targets = ik_kf.get("targets", {})
 
             for target_name, transform in targets.items():
@@ -4970,8 +5319,9 @@ def handle_rigged_animation(spec: Dict, out_root: Path, report_path: Path) -> No
             )
             bpy.ops.object.mode_set(mode='OBJECT')
 
-        # Compute metrics
-        metrics = compute_animation_metrics(armature, action)
+        # Compute metrics (include motion verification using rig constraints)
+        constraints_list = rig_setup.get("constraints", {}).get("constraints", [])
+        metrics = compute_animation_metrics(armature, action, constraints_list=constraints_list)
 
         # Add IK-specific metrics
         metrics["ik_chain_count"] = len(rig_setup.get("presets", [])) + len(rig_setup.get("ik_chains", []))

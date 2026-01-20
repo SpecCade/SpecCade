@@ -1,4 +1,4 @@
-# SpecCade Determinism Policy
+﻿# SpecCade Determinism Policy
 
 This document defines the complete determinism policy for SpecCade asset generation. Determinism ensures that identical specs with identical seeds produce identical (or measurably equivalent) outputs, enabling reproducible builds, caching, and verification.
 
@@ -865,15 +865,6 @@ pub fn validate_glb_metrics(
     }
 }
 
-/// Extracts metrics from a GLB file.
-///
-/// Note: This is a placeholder signature. Actual implementation requires
-/// a glTF parsing library like `gltf` crate.
-pub fn extract_glb_metrics(path: &Path) -> Result<GlbMetrics, Box<dyn std::error::Error>> {
-    // Implementation would use the `gltf` crate to parse the GLB
-    // and extract the relevant metrics.
-    todo!("Implement GLB metric extraction")
-}
 ```
 
 ### Complete Example: RNG Initialization
@@ -939,3 +930,4 @@ pub fn generate_noise_layer(base_seed: u32, layer_index: u32, num_samples: usize
 *Document version: 1.0*
 *Last updated: 2026-01-10*
 *SpecCade Phase 1 Task 1.3*
+

@@ -74,8 +74,10 @@ Each entry in `outputs[]` declares an expected artifact:
 
 **At least one output with `kind: "primary"` is required.**
 
-**Reserved kinds:** `metadata` and `preview` are reserved for future use and are **invalid** in v1.
-Validation rejects them; use the `${asset_id}.report.json` sibling file instead.
+**Reserved kinds:**
+
+- `preview` is reserved and invalid in v1 (validation rejects it).
+- `metadata` is reserved by default; use the `${asset_id}.report.json` sibling file unless a recipe explicitly allows metadata outputs (e.g. `texture.trimsheet_v1`).
 
 ### 1.4 Variant Specification
 

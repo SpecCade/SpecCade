@@ -1,5 +1,8 @@
 # Rust
 target/
+target_alt/
+_codex_target/
+.cargo-target-*/
 **/*.rs.bk
 Cargo.lock
 !/Cargo.lock
@@ -14,3 +17,6 @@ test_spec.json
 __pycache__/
 test-outputs/
 nul
+
+# Local-only files (agent/dev artifacts)
+docs/ROADMAP_COMPLETION_AUDIT.md

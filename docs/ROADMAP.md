@@ -39,7 +39,7 @@ Reference: `docs/rfcs/RFC-0008-llm-native-asset-authoring.md`
   - Deliverable: `BudgetProfile::nethercore()` (or `by_name("nethercore")`) with documented limits; avoids "zx-8bit" naming confusion.
   - Touch points: `crates/speccade-spec/src/validation/budgets.rs`, `docs/budgets.md`.
 - [x] `LLM-003` Add `speccade analyze` baseline metrics (start with audio + textures). **Done: 2026-01-18**
-  - Deliverable: deterministic metrics JSON for iteration loops (audio peak/clipping/DC/loudness proxy; texture histogram/contrast/tileability checks).
+  - Deliverable: deterministic metrics JSON for iteration loops (audio peak/clipping/DC/loudness proxy; texture histogram/contrast).
   - Reference spec: `docs/rfcs/RFC-0008-appendix-audio-analysis-spec.md`.
 - [x] `LLM-004` Add preset/template retrieval primitives (CLI-time, no runtime IO in Starlark). **Done: 2026-01-18**
   - Deliverable: a way to pick "known good" starting points by tags/keywords (e.g. `style_tags`, curated kit IDs) without copying 200-line presets into every spec.
@@ -68,7 +68,7 @@ Reference: `docs/rfcs/RFC-0009-editor-architecture.md`
 - [ ] `EDITOR-001` Decide "editor" delivery shape (Tauri app vs VSCode extension vs both).
   - Deliverable: a committed decision + minimal repo layout plan (new crate? new top-level directory?).
 - [x] `EDITOR-002` Implement CLI-side preview artifacts (useful even without a full editor). **Done: 2026-01-18**
-  - Deliverable: standardized preview outputs (audio waveform/spectrogram PNG; texture thumbnails) emitted by `generate` and recorded in reports.
+  - Deliverable: preview artifacts emitted by `generate` and recorded in reports (currently: audio waveform PNG).
   - Touch points: `crates/speccade-cli`, `crates/speccade-spec` report structures.
   - Implemented: audio waveform PNG (1024x256) generated alongside WAV output and recorded in reports with `kind: "preview"`.
 - [x] `EDITOR-003` Add fast "preview mode" generation knobs. **Done: 2026-01-18** (via LLM-007)
@@ -239,7 +239,7 @@ Migrated from `docs/FUTURE_GENERATORS.md` (now deprecated).
 ### Skeletal Mesh / Character (Blender Tier)
 
 - [x] `CHAR-001` Add spec reference docs for Blender-backed mesh/character/animation assets. **Done: 2026-01-19**
-  - Deliverable: `docs/spec-reference/mesh.md` (static mesh), `docs/spec-reference/character.md` (skeletal mesh), `docs/spec-reference/animation.md` (skeletal animation), plus updates to `docs/SPEC_REFERENCE.md`.
+  - Deliverable: `docs/spec-reference/mesh.md` (static mesh), `docs/spec-reference/character.md` (skeletal mesh), `docs/spec-reference/animation.md` (skeletal animation), plus updates to `docs/spec-reference/README.md` (and the `docs/SPEC_REFERENCE.md` redirect).
   - Touch points: `docs/spec-reference/`, `crates/speccade-spec/src/recipe/{mesh,character,animation}/`, `schemas/speccade-spec-v1.schema.json`.
   - Implemented: Created 3 new spec-reference docs covering all recipe params, primitives, modifiers, export settings, constraints, and examples. Updated README.md quick links and asset types table.
 - [x] `CHAR-002` Add Starlark constructors for `skeletal_mesh` authoring (and docs). **Done: 2026-01-19**
@@ -286,7 +286,7 @@ Migrated from `docs/FUTURE_GENERATORS.md` (now deprecated).
 - [x] `QA-003` Add content-addressed caching keyed by canonical spec/recipe hash + backend versions (iteration speed). **Done: 2026-01-18**
 - [x] `QA-004` Add perceptual diffing / quality controls (image SSIM/DeltaE; audio loudness/spectral) where feasible. **Done: 2026-01-18**
   - Implemented: `speccade compare` command with SSIM, DeltaE (CIE76), histogram diff for textures; spectral correlation for audio.
-- [x] `QA-005` Add profiling/observability: per-stage timings, memory stats, and reproducible perf runs. **Done: 2026-01-18**
+- [x] `QA-005` Add profiling/observability: per-stage timings. **Done: 2026-01-18**
   - Implemented: `--profile` flag adds `stages[]` timing breakdown to report; documented in `docs/profiling.md`.
 - [ ] `QA-006` Define a plugin/backends extension story (subprocess or WASM) with strict I/O contracts + determinism reporting.
 - [x] `QA-007` Add a Starlark stdlib drift guard (CI) using `speccade stdlib dump --format json`. **Done: 2026-01-19**

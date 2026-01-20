@@ -6,7 +6,7 @@ use speccade_spec::recipe::audio::{
 use speccade_spec::recipe::Recipe;
 use speccade_spec::{AssetType, OutputFormat, OutputSpec, Spec};
 
-use super::{generate, generate_from_params};
+use super::{generate, generate_from_params, generate_preview};
 
 fn create_test_spec() -> Spec {
     let params = AudioV1Params {
@@ -69,6 +69,44 @@ fn test_generate_determinism() {
     let result2 = generate(&spec).expect("should generate");
 
     assert_eq!(result1.wav.pcm_hash, result2.wav.pcm_hash);
+}
+
+#[test]
+fn test_generate_preview_truncates() {
+    let mut spec = create_test_spec();
+    // Make the base spec long enough to truncate.
+    if let Some(recipe) = spec.recipe.as_mut() {
+        let mut params: AudioV1Params = serde_json::from_value(recipe.params.clone()).unwrap();
+        params.duration_seconds = 1.0;
+        recipe.params = serde_json::to_value(&params).unwrap();
+    }
+
+    let full = generate(&spec).expect("should generate full");
+    let preview = generate_preview(&spec, 0.1).expect("should generate preview");
+
+    assert!(
+        preview.wav.wav_data.len() < full.wav.wav_data.len(),
+        "preview wav should be smaller than full wav"
+    );
+
+    let ratio = preview.wav.wav_data.len() as f64 / full.wav.wav_data.len() as f64;
+    assert!(
+        ratio < 0.3,
+        "preview wav should be substantially smaller (ratio={})",
+        ratio
+    );
+}
+
+#[test]
+fn test_generate_preview_no_truncation_when_longer() {
+    let spec = create_test_spec();
+    let full = generate(&spec).expect("should generate full");
+    let preview = generate_preview(&spec, 10.0).expect("should generate preview");
+
+    assert_eq!(
+        preview.wav.pcm_hash, full.wav.pcm_hash,
+        "preview should match full when preview_duration >= duration_seconds"
+    );
 }
 
 #[test]
@@ -164,6 +202,50 @@ fn test_generate_stereo() {
 
     let result = generate_from_params(&params, 42).expect("should generate");
     assert!(result.wav.is_stereo);
+}
+
+#[test]
+fn test_generate_loop_points_enabled_produces_loop_metadata() {
+    let params = AudioV1Params {
+        duration_seconds: 1.0,
+        sample_rate: 44100,
+        master_filter: None,
+        layers: vec![AudioLayer {
+            synthesis: Synthesis::Oscillator {
+                waveform: Waveform::Sine,
+                frequency: 220.0,
+                freq_sweep: None,
+                detune: None,
+                duty: None,
+            },
+            envelope: Envelope {
+                attack: 0.01,
+                decay: 0.05,
+                sustain: 0.8,
+                release: 0.1,
+            },
+            volume: 0.8,
+            pan: 0.0,
+            delay: None,
+            filter: None,
+            lfo: None,
+        }],
+        pitch_envelope: None,
+        base_note: None,
+        loop_config: None,
+        generate_loop_points: true,
+        effects: vec![],
+        post_fx_lfos: vec![],
+    };
+
+    let result = generate_from_params(&params, 42).expect("should generate");
+    assert!(result.loop_point.is_some());
+    assert!(result.loop_end.is_some());
+
+    let loop_point = result.loop_point.unwrap();
+    let loop_end = result.loop_end.unwrap();
+    assert!(loop_point < loop_end);
+    assert!(loop_end <= result.wav.num_samples);
 }
 
 #[test]

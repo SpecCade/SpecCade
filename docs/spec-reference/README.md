@@ -18,9 +18,6 @@ If a doc/example disagrees with validation, treat `speccade validate` + Rust typ
 - [Static Mesh Specs](mesh.md) - Blender primitive meshes with modifiers
 - [Character Specs](character.md) - Skeletal meshes with armatures
 - [Animation Specs](animation.md) - Skeletal animation clips
-- [Game Music Genre Kits (Draft)](../music-genre-kits-master-list.md) - Target kit inventory + instrument roles
-- [Game Music Genre Kits Audit (Draft)](../music-genre-kits-audit.md) - Checklist for validation/coverage/listening
-- [Audio Preset Library (Draft)](../audio-preset-library-master-list.md) - Target `audio_v1` preset inventory for music kits
 
 ## Spec Structure
 
@@ -132,13 +129,15 @@ Currently supported output kinds are:
 
 - `primary` (most recipes)
 
-`preview` and `metadata` are reserved and currently rejected by validation.
+`preview` is reserved and currently rejected by validation.
+
+`metadata` is reserved by default, but some recipe kinds may explicitly allow it (e.g. `texture.trimsheet_v1`).
 
 | Kind | Description | Use Case |
 |------|-------------|----------|
 | `primary` | Main asset output | The generated asset file |
-| `preview` | Preview/thumbnail | Reserved (currently rejected by validation) |
-| `metadata` | Generation metadata | Reserved (currently rejected; use `${asset_id}.report.json`) |
+| `preview` | Preview/thumbnail | Reserved (not declared in `outputs[]`) |
+| `metadata` | Extra JSON output | Reserved by default; use `${asset_id}.report.json` unless a recipe explicitly allows metadata outputs |
 
 ### Path Constraints
 

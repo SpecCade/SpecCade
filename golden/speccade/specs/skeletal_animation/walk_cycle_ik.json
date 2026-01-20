@@ -50,17 +50,17 @@
       "phases": [
         {
           "name": "contact_left",
-          "start_frame": 0,
+          "start_frame": 1,
           "end_frame": 15,
           "curve": "ease_in_out",
           "pose": "contact_left",
           "ik_targets": {
             "ik_leg_l": [
-              { "frame": 0, "location": [0.1, 0.3, 0.0] },
+              { "frame": 1, "location": [0.1, 0.3, 0.0] },
               { "frame": 15, "location": [0.1, -0.1, 0.0] }
             ],
             "ik_leg_r": [
-              { "frame": 0, "location": [-0.1, -0.1, 0.0] },
+              { "frame": 1, "location": [-0.1, -0.1, 0.0] },
               { "frame": 15, "location": [-0.1, 0.2, 0.15] }
             ]
           }

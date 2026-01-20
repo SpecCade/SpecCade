@@ -191,17 +191,8 @@ pub fn run_human(
     };
 
     // Compute cache key
-    let cache_key = if let Some(recipe) = spec.recipe.as_ref() {
-        CacheKey::new(
-            recipe,
-            spec.seed,
-            backend_version.clone(),
-            preview_duration.is_some(),
-        )
-        .ok()
-    } else {
-        None
-    };
+    let cache_key =
+        CacheKey::new(&spec, backend_version.clone(), preview_duration.is_some()).ok();
 
     // Check cache
     let base_report_path = reporting::report_path(spec_path, &spec.asset_id);

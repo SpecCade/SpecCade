@@ -27,8 +27,54 @@ pub(super) fn generate_blender_static_mesh(
     }
 
     // Convert metrics to OutputMetrics
-    let metrics =
-        speccade_spec::OutputMetrics {
+    let lod_levels = result.metrics.lod_levels.clone().map(|levels| {
+        levels
+            .into_iter()
+            .map(|level| speccade_spec::StaticMeshLodLevelMetrics {
+                lod_level: level.lod_level,
+                target_tris: level.target_tris,
+                simplification_ratio: level.simplification_ratio,
+                vertex_count: level.vertex_count,
+                face_count: level.face_count,
+                edge_count: level.edge_count,
+                triangle_count: level.triangle_count,
+                quad_count: level.quad_count,
+                quad_percentage: level.quad_percentage,
+                manifold: level.manifold,
+                non_manifold_edge_count: level.non_manifold_edge_count,
+                degenerate_face_count: level.degenerate_face_count,
+                zero_area_face_count: level.zero_area_face_count,
+                uv_island_count: level.uv_island_count,
+                uv_coverage: level.uv_coverage,
+                uv_overlap_percentage: level.uv_overlap_percentage,
+                has_uv_map: level.has_uv_map,
+                uv_layer_count: level.uv_layer_count,
+                texel_density: level.texel_density,
+                bounding_box: level.bounding_box.as_ref().map(|bb| speccade_spec::BoundingBox {
+                    min: [bb.min[0] as f32, bb.min[1] as f32, bb.min[2] as f32],
+                    max: [bb.max[0] as f32, bb.max[1] as f32, bb.max[2] as f32],
+                }),
+                bounds_min: level.bounds_min,
+                bounds_max: level.bounds_max,
+                material_slot_count: level.material_slot_count,
+            })
+            .collect()
+    });
+
+    let collision_mesh = result.metrics.collision_mesh.clone().map(|m| {
+        speccade_spec::CollisionMeshMetrics {
+            vertex_count: m.vertex_count,
+            face_count: m.face_count,
+            triangle_count: m.triangle_count,
+            bounding_box: speccade_spec::CollisionBoundingBox {
+                min: m.bounding_box.min,
+                max: m.bounding_box.max,
+            },
+            collision_type: m.collision_type,
+        }
+    });
+
+    let metrics = speccade_spec::OutputMetrics {
             vertex_count: result.metrics.vertex_count,
             face_count: result.metrics.face_count,
             edge_count: result.metrics.edge_count,
@@ -43,6 +89,8 @@ pub(super) fn generate_blender_static_mesh(
             uv_coverage: result.metrics.uv_coverage,
             uv_overlap_percentage: result.metrics.uv_overlap_percentage,
             has_uv_map: result.metrics.has_uv_map,
+            uv_layer_count: result.metrics.uv_layer_count,
+            texel_density: result.metrics.texel_density,
             bounding_box: result.metrics.bounding_box.as_ref().map(|bb| {
                 speccade_spec::BoundingBox {
                     min: [bb.min[0] as f32, bb.min[1] as f32, bb.min[2] as f32],
@@ -51,6 +99,29 @@ pub(super) fn generate_blender_static_mesh(
             }),
             bounds_min: result.metrics.bounds_min,
             bounds_max: result.metrics.bounds_max,
+            lod_count: result.metrics.lod_count,
+            lod_levels,
+            collision_mesh,
+            collision_mesh_path: result.metrics.collision_mesh_path.clone(),
+            navmesh: result.metrics.navmesh.clone().map(|m| speccade_spec::NavmeshMetrics {
+                walkable_face_count: m.walkable_face_count,
+                non_walkable_face_count: m.non_walkable_face_count,
+                walkable_percentage: m.walkable_percentage,
+                stair_candidates: m.stair_candidates,
+            }),
+            baking: result.metrics.baking.clone().map(|b| speccade_spec::BakingMetrics {
+                baked_maps: b
+                    .baked_maps
+                    .into_iter()
+                    .map(|m| speccade_spec::BakedMapInfo {
+                        bake_type: m.bake_type,
+                        path: m.path,
+                        resolution: m.resolution,
+                    })
+                    .collect(),
+                ray_distance: b.ray_distance,
+                margin: b.margin,
+            }),
             bone_count: None,
             max_bone_influences: None,
             unweighted_vertex_count: None,
@@ -113,6 +184,8 @@ pub(super) fn generate_blender_skeletal_mesh(
             uv_coverage: result.metrics.uv_coverage,
             uv_overlap_percentage: result.metrics.uv_overlap_percentage,
             has_uv_map: result.metrics.has_uv_map,
+            uv_layer_count: result.metrics.uv_layer_count,
+            texel_density: result.metrics.texel_density,
             bounding_box: result.metrics.bounding_box.as_ref().map(|bb| {
                 speccade_spec::BoundingBox {
                     min: [bb.min[0] as f32, bb.min[1] as f32, bb.min[2] as f32],
@@ -121,6 +194,12 @@ pub(super) fn generate_blender_skeletal_mesh(
             }),
             bounds_min: result.metrics.bounds_min,
             bounds_max: result.metrics.bounds_max,
+            lod_count: None,
+            lod_levels: None,
+            collision_mesh: None,
+            collision_mesh_path: None,
+            navmesh: None,
+            baking: None,
             bone_count: result.metrics.bone_count,
             max_bone_influences: result.metrics.max_bone_influences,
             unweighted_vertex_count: result.metrics.unweighted_vertex_count,
@@ -180,9 +259,17 @@ pub(super) fn generate_blender_animation(
         uv_coverage: None,
         uv_overlap_percentage: None,
         has_uv_map: None,
+        uv_layer_count: None,
+        texel_density: None,
         bounding_box: None,
         bounds_min: None,
         bounds_max: None,
+        lod_count: None,
+        lod_levels: None,
+        collision_mesh: None,
+        collision_mesh_path: None,
+        navmesh: None,
+        baking: None,
         bone_count: result.metrics.bone_count,
         max_bone_influences: None,
         unweighted_vertex_count: None,
@@ -247,9 +334,17 @@ pub(super) fn generate_blender_rigged_animation(
         uv_coverage: None,
         uv_overlap_percentage: None,
         has_uv_map: None,
+        uv_layer_count: None,
+        texel_density: None,
         bounding_box: None,
         bounds_min: None,
         bounds_max: None,
+        lod_count: None,
+        lod_levels: None,
+        collision_mesh: None,
+        collision_mesh_path: None,
+        navmesh: None,
+        baking: None,
         bone_count: result.metrics.bone_count,
         max_bone_influences: None,
         unweighted_vertex_count: None,

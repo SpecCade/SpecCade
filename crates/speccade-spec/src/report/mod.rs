@@ -14,7 +14,10 @@ mod tests;
 
 pub use builder::ReportBuilder;
 pub use error::{ReportError, ReportWarning};
-pub use output::{BoundingBox, OutputMetrics, OutputResult};
+pub use output::{
+    BakedMapInfo, BakingMetrics, BoundingBox, CollisionBoundingBox, CollisionMeshMetrics,
+    NavmeshMetrics, OutputMetrics, OutputResult, StaticMeshLodLevelMetrics,
+};
 pub use timing::StageTiming;
 
 use crate::spec::AssetType;

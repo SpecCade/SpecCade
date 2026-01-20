@@ -1,8 +1,7 @@
 //! Content-addressed caching for generated assets.
 //!
 //! This module implements a local cache keyed by:
-//! - Canonical recipe hash
-//! - Spec seed
+//! - Canonical spec hash
 //! - Backend version string
 //! - Preview mode flag
 //!
@@ -10,17 +9,15 @@
 
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
-use speccade_spec::{canonical_recipe_hash, OutputResult, Recipe};
+use speccade_spec::{canonical_spec_hash, OutputResult, Spec};
 use std::fs;
 use std::path::{Path, PathBuf};
 
 /// Cache key components for deterministic cache lookups.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CacheKey {
-    /// BLAKE3 hash of the canonical recipe
-    pub recipe_hash: String,
-    /// Spec seed
-    pub seed: u32,
+    /// BLAKE3 hash of the canonical spec.
+    pub spec_hash: String,
     /// Backend version string
     pub backend_version: String,
     /// Preview mode flag
@@ -29,12 +26,11 @@ pub struct CacheKey {
 
 impl CacheKey {
     /// Create a new cache key
-    pub fn new(recipe: &Recipe, seed: u32, backend_version: String, preview: bool) -> Result<Self> {
-        let recipe_hash =
-            canonical_recipe_hash(recipe).context("Failed to compute canonical recipe hash")?;
+    pub fn new(spec: &Spec, backend_version: String, preview: bool) -> Result<Self> {
+        let spec_hash =
+            canonical_spec_hash(spec).context("Failed to compute canonical spec hash")?;
         Ok(Self {
-            recipe_hash,
-            seed,
+            spec_hash,
             backend_version,
             preview,
         })
@@ -43,8 +39,8 @@ impl CacheKey {
     /// Compute the cache entry hash (deterministic cache directory name)
     pub fn compute_hash(&self) -> String {
         let canonical = format!(
-            "recipe:{},seed:{},backend:{},preview:{}",
-            self.recipe_hash, self.seed, self.backend_version, self.preview
+            "spec:{},backend:{},preview:{}",
+            self.spec_hash, self.backend_version, self.preview
         );
         blake3::hash(canonical.as_bytes()).to_hex().to_string()
     }
@@ -299,22 +295,29 @@ mod tests {
     use speccade_spec::{OutputFormat, OutputKind};
     use tempfile::TempDir;
 
-    fn create_test_recipe() -> Recipe {
-        speccade_spec::Recipe::new(
-            "audio_v1",
-            serde_json::json!({
-                "duration_seconds": 0.5,
-                "sample_rate": 22050,
-                "layers": []
-            }),
-        )
+    fn create_test_spec(asset_id: &str, output_path: &str) -> Spec {
+        use speccade_spec::{AssetType, OutputSpec};
+
+        Spec::builder(asset_id, AssetType::Audio)
+            .license("CC0-1.0")
+            .seed(42)
+            .output(OutputSpec::primary(OutputFormat::Wav, output_path))
+            .recipe(speccade_spec::Recipe::new(
+                "audio_v1",
+                serde_json::json!({
+                    "duration_seconds": 0.5,
+                    "sample_rate": 22050,
+                    "layers": []
+                }),
+            ))
+            .build()
     }
 
     #[test]
     fn test_cache_key_compute_hash() {
-        let recipe = create_test_recipe();
-        let key1 = CacheKey::new(&recipe, 42, "v1.0.0".to_string(), false).unwrap();
-        let key2 = CacheKey::new(&recipe, 42, "v1.0.0".to_string(), false).unwrap();
+        let spec = create_test_spec("cache-test-01", "test.wav");
+        let key1 = CacheKey::new(&spec, "v1.0.0".to_string(), false).unwrap();
+        let key2 = CacheKey::new(&spec, "v1.0.0".to_string(), false).unwrap();
 
         // Same key components should produce same hash
         assert_eq!(key1.compute_hash(), key2.compute_hash());
@@ -322,19 +325,34 @@ mod tests {
 
     #[test]
     fn test_cache_key_different_seeds() {
-        let recipe = create_test_recipe();
-        let key1 = CacheKey::new(&recipe, 42, "v1.0.0".to_string(), false).unwrap();
-        let key2 = CacheKey::new(&recipe, 43, "v1.0.0".to_string(), false).unwrap();
+        let spec1 = create_test_spec("cache-test-seed-01", "test.wav");
+        let mut spec2 = spec1.clone();
+        spec2.seed = spec2.seed.wrapping_add(1);
+
+        let key1 = CacheKey::new(&spec1, "v1.0.0".to_string(), false).unwrap();
+        let key2 = CacheKey::new(&spec2, "v1.0.0".to_string(), false).unwrap();
 
         // Different seeds should produce different hashes
         assert_ne!(key1.compute_hash(), key2.compute_hash());
     }
 
     #[test]
+    fn test_cache_key_different_output_paths() {
+        let spec1 = create_test_spec("cache-test-out-01", "out/a.wav");
+        let spec2 = create_test_spec("cache-test-out-01", "out/b.wav");
+
+        let key1 = CacheKey::new(&spec1, "v1.0.0".to_string(), false).unwrap();
+        let key2 = CacheKey::new(&spec2, "v1.0.0".to_string(), false).unwrap();
+
+        // Different output paths should produce different cache keys (prevents path drift on restore).
+        assert_ne!(key1.compute_hash(), key2.compute_hash());
+    }
+
+    #[test]
     fn test_cache_key_different_versions() {
-        let recipe = create_test_recipe();
-        let key1 = CacheKey::new(&recipe, 42, "v1.0.0".to_string(), false).unwrap();
-        let key2 = CacheKey::new(&recipe, 42, "v1.0.1".to_string(), false).unwrap();
+        let spec = create_test_spec("cache-test-ver-01", "test.wav");
+        let key1 = CacheKey::new(&spec, "v1.0.0".to_string(), false).unwrap();
+        let key2 = CacheKey::new(&spec, "v1.0.1".to_string(), false).unwrap();
 
         // Different versions should produce different hashes
         assert_ne!(key1.compute_hash(), key2.compute_hash());
@@ -342,9 +360,9 @@ mod tests {
 
     #[test]
     fn test_cache_key_different_preview() {
-        let recipe = create_test_recipe();
-        let key1 = CacheKey::new(&recipe, 42, "v1.0.0".to_string(), false).unwrap();
-        let key2 = CacheKey::new(&recipe, 42, "v1.0.0".to_string(), true).unwrap();
+        let spec = create_test_spec("cache-test-preview-01", "test.wav");
+        let key1 = CacheKey::new(&spec, "v1.0.0".to_string(), false).unwrap();
+        let key2 = CacheKey::new(&spec, "v1.0.0".to_string(), true).unwrap();
 
         // Different preview flags should produce different hashes
         assert_ne!(key1.compute_hash(), key2.compute_hash());
@@ -358,8 +376,8 @@ mod tests {
         let mut cache_mgr = CacheManager::new().unwrap();
         cache_mgr.cache_dir = tmp_cache.path().to_path_buf();
 
-        let recipe = create_test_recipe();
-        let key = CacheKey::new(&recipe, 42, "v1.0.0".to_string(), false).unwrap();
+        let spec = create_test_spec("cache-roundtrip-01", "test.wav");
+        let key = CacheKey::new(&spec, "v1.0.0".to_string(), false).unwrap();
 
         // Initially no cache entry
         assert!(!cache_mgr.has_entry(&key));
@@ -408,9 +426,11 @@ mod tests {
         let mut cache_mgr = CacheManager::new().unwrap();
         cache_mgr.cache_dir = tmp_cache.path().to_path_buf();
 
-        let recipe = create_test_recipe();
-        let key1 = CacheKey::new(&recipe, 42, "v1.0.0".to_string(), false).unwrap();
-        let key2 = CacheKey::new(&recipe, 43, "v1.0.0".to_string(), false).unwrap();
+        let spec1 = create_test_spec("cache-clear-01", "test.wav");
+        let mut spec2 = spec1.clone();
+        spec2.seed = spec2.seed.wrapping_add(1);
+        let key1 = CacheKey::new(&spec1, "v1.0.0".to_string(), false).unwrap();
+        let key2 = CacheKey::new(&spec2, "v1.0.0".to_string(), false).unwrap();
 
         // Create test outputs
         let output_path = tmp_out.path().join("test.wav");
@@ -453,8 +473,8 @@ mod tests {
         assert_eq!(info.total_size_bytes, 0);
 
         // Add an entry
-        let recipe = create_test_recipe();
-        let key = CacheKey::new(&recipe, 42, "v1.0.0".to_string(), false).unwrap();
+        let spec = create_test_spec("cache-info-01", "test.wav");
+        let key = CacheKey::new(&spec, "v1.0.0".to_string(), false).unwrap();
         let output_path = tmp_out.path().join("test.wav");
         fs::write(&output_path, b"test data").unwrap();
         let outputs = vec![OutputResult {

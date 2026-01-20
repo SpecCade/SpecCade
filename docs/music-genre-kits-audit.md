@@ -1,20 +1,20 @@
-# Game Music Genre Kits — Audit Checklist (Draft)
+﻿# Game Music Genre Kits - Audit Checklist
 
-**Last updated:** 2026-01-13  
 **Location:** `packs/preset_library_v1/music/`
 
-This document is a lightweight checklist for auditing **genre kits** in the preset library.
-For the master inventory of kits (and the design targets for future kits), see `docs/music-genre-kits-master-list.md`.
+Checklist for reviewing `kit_*.json` files.
 
-## What “audit” means here
+Conventions (recommended role taxonomy, naming): `docs/music-genre-kits-master-list.md`
 
-A kit is considered “healthy” when:
+## What "audit" means here
 
-- The kit JSON validates (`speccade validate --spec <kit.json>`)
-- The kit can be expanded (if it uses compose IR): `speccade expand --spec <kit.json>`
-- The kit can be generated into a playable XM/IT (and ideally has at least one short audition/demo spec)
-- Instrument and channel naming is consistent (`instrument_ids`, `channel_ids`) and follows the role taxonomy in the master list
-- Referenced `audio_v1` presets exist (and are reasonable: no clipping/DC offset, sane base notes)
+A kit is considered healthy when:
+
+- It validates: `speccade validate --spec <kit.json>`
+- It expands if it uses compose IR: `speccade expand --spec <kit.json>`
+- It generates into a playable XM/IT: `speccade generate --spec <kit.json> --out-root <out>`
+- Naming is consistent (`instrument_ids`, `channel_ids`) and follows the role taxonomy
+- Referenced `audio_v1` presets exist and are reasonable (no clipping/DC offset, sane `base_note`)
 
 ## Suggested per-kit checklist
 
@@ -22,15 +22,15 @@ For each `packs/preset_library_v1/music/kit_*.json`:
 
 ### 1) Contract + validation
 
-- [ ] `asset_id` matches file name intent (stable, descriptive)
-- [ ] `license` present and appropriate for the pack
+- [ ] `asset_id` matches file name intent
+- [ ] `license` present and appropriate
 - [ ] `outputs[]` include at least one `primary` output (XM and/or IT)
-- [ ] `speccade validate --spec ...` passes with no errors
+- [ ] `speccade validate` passes with no errors
 
 ### 2) Pattern authoring (compose kits)
 
-- [ ] `speccade expand --spec ...` succeeds
-- [ ] Expanded output is reviewable (no accidental density, no merge collisions)
+- [ ] `speccade expand` succeeds
+- [ ] Expanded output is reviewable
 - [ ] If `harmony`/`pitch_seq` is used, defaults keep parts in-key
 
 ### 3) Roles and naming
@@ -42,13 +42,11 @@ For each `packs/preset_library_v1/music/kit_*.json`:
 
 ### 4) Audio preset references
 
-- [ ] All referenced `audio_v1` preset paths exist
-- [ ] Pitched instruments have sensible `base_note` and don’t alias badly in common ranges
-- [ ] One-shots have click-free envelopes (attack/release) and no obvious DC offset
+- [ ] All referenced preset paths exist
+- [ ] Pitched instruments have sensible `base_note`
+- [ ] One-shots have click-free envelopes and no obvious DC offset
 
 ### 5) Generate + listen
 
-- [ ] `speccade generate --spec ... --out-root <out>` produces the expected XM/IT
-- [ ] Quick listen check in a known player (no silent channels, missing instruments, broken loops)
-- [ ] Optional: render-to-WAV workflow documented (if used by the project)
-
+- [ ] Generation produces the expected XM/IT
+- [ ] Quick listen check in a known player

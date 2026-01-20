@@ -5,6 +5,7 @@ mod test_color;
 mod test_filter;
 mod test_math;
 mod test_primitive;
+mod test_stochastic;
 mod test_uv;
 
 use crate::color::Color;

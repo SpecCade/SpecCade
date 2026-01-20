@@ -70,6 +70,14 @@ pub struct BlenderMetrics {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub has_uv_map: Option<bool>,
 
+    /// Number of UV layers present on the mesh (MESH-002).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub uv_layer_count: Option<u32>,
+
+    /// Approximate texel density at a 1024x1024 reference texture (MESH-002).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub texel_density: Option<f64>,
+
     // ========== Bounds metrics ==========
     /// Axis-aligned bounding box of the mesh.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -82,6 +90,31 @@ pub struct BlenderMetrics {
     /// Maximum corner of bounding box [x, y, z].
     #[serde(skip_serializing_if = "Option::is_none")]
     pub bounds_max: Option<[f64; 3]>,
+
+    // ========== Static mesh extra outputs/metrics (Blender Tier) ==========
+    /// Number of generated LOD levels (MESH-004).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub lod_count: Option<u32>,
+
+    /// Per-LOD metrics (MESH-004).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub lod_levels: Option<Vec<StaticMeshLodLevelMetrics>>,
+
+    /// Collision mesh metrics (MESH-005).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub collision_mesh: Option<CollisionMeshMetrics>,
+
+    /// Collision mesh output path (relative, file name) if generated (MESH-005).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub collision_mesh_path: Option<String>,
+
+    /// Navmesh analysis metrics (MESH-006).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub navmesh: Option<NavmeshMetrics>,
+
+    /// Baking metrics (MESH-007).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub baking: Option<BakingMetrics>,
 
     // ========== Skeleton metrics ==========
     /// Number of bones in the armature.
@@ -189,6 +222,103 @@ pub struct BoundingBox {
     pub min: [f64; 3],
     /// Maximum corner [X, Y, Z].
     pub max: [f64; 3],
+}
+
+/// Per-LOD metrics for static meshes (MESH-004).
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct StaticMeshLodLevelMetrics {
+    /// LOD index (0, 1, 2, ...).
+    pub lod_level: u32,
+    /// Target triangle count requested for this LOD.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub target_tris: Option<u32>,
+    /// Simplification ratio relative to the pre-decimate triangle count.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub simplification_ratio: Option<f64>,
+
+    // Mesh metrics (subset of BlenderMetrics).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub vertex_count: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub face_count: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub edge_count: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub triangle_count: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub quad_count: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub quad_percentage: Option<f64>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub manifold: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub non_manifold_edge_count: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub degenerate_face_count: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub zero_area_face_count: Option<u32>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub uv_island_count: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub uv_coverage: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub uv_overlap_percentage: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub has_uv_map: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub uv_layer_count: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub texel_density: Option<f64>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub bounding_box: Option<BoundingBox>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub bounds_min: Option<[f64; 3]>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub bounds_max: Option<[f64; 3]>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub material_slot_count: Option<u32>,
+}
+
+/// Collision mesh metrics (MESH-005).
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct CollisionMeshMetrics {
+    pub vertex_count: u32,
+    pub face_count: u32,
+    pub triangle_count: u32,
+    pub bounding_box: BoundingBox,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub collision_type: Option<String>,
+}
+
+/// Navmesh analysis metrics (MESH-006).
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct NavmeshMetrics {
+    pub walkable_face_count: u32,
+    pub non_walkable_face_count: u32,
+    pub walkable_percentage: f64,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub stair_candidates: Option<u32>,
+}
+
+/// Baking metrics (MESH-007).
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct BakingMetrics {
+    pub baked_maps: Vec<BakedMapInfo>,
+    pub ray_distance: f64,
+    pub margin: u32,
+}
+
+/// Single baked map info.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct BakedMapInfo {
+    #[serde(rename = "type")]
+    pub bake_type: String,
+    pub path: String,
+    pub resolution: [u32; 2],
 }
 
 impl BoundingBox {
