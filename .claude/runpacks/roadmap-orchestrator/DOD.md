@@ -6,6 +6,8 @@ This DoD is referenced by `.claude/runpacks/roadmap-orchestrator/ORCHESTRATOR.md
 
 - The task's deliverable is implemented end-to-end (not partially wired).
 - No new placeholders: no `TODO`, `todo!()`, `unimplemented!()`, "stub", or commented-out dead code.
+- No struct defaults to fix compiler errors when actual data is required.
+- No silent failures.
 - Determinism guardrails preserved (no wall-clock time, OS RNG, unstable iteration ordering, etc.).
 - No file should end up > 600 LoC (split into modules if needed).
 - `docs/ROADMAP.md` is updated only after verification passes:
