@@ -38,8 +38,8 @@ fn blur_smooths_values() {
     let edge_val = blurred.get(4, 4);
 
     // Just verify blur produced some smoothing effect
-    assert!(center_val >= 0.0 && center_val <= 1.0);
-    assert!(edge_val >= 0.0 && edge_val <= 1.0);
+    assert!((0.0..=1.0).contains(&center_val));
+    assert!((0.0..=1.0).contains(&edge_val));
 }
 
 #[test]

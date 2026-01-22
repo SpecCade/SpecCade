@@ -85,8 +85,13 @@ fn register_skeletal_animation_spec_functions(builder: &mut GlobalsBuilder) {
             .map_err(|e| anyhow::anyhow!(e))?;
 
         // Validate format
-        validate_enum(format, ANIMATION_FORMATS, "skeletal_animation_spec", "format")
-            .map_err(|e| anyhow::anyhow!(e))?;
+        validate_enum(
+            format,
+            ANIMATION_FORMATS,
+            "skeletal_animation_spec",
+            "format",
+        )
+        .map_err(|e| anyhow::anyhow!(e))?;
 
         // Validate skeleton_preset
         validate_enum(
@@ -193,7 +198,8 @@ fn register_skeletal_animation_spec_functions(builder: &mut GlobalsBuilder) {
         let mut recipe = new_dict(heap);
         recipe.insert_hashed(
             hashed_key(heap, "kind"),
-            heap.alloc_str("skeletal_animation.blender_clip_v1").to_value(),
+            heap.alloc_str("skeletal_animation.blender_clip_v1")
+                .to_value(),
         );
 
         // Create params
@@ -374,7 +380,10 @@ skeletal_animation_spec(
         assert_eq!(result["style_tags"][0], "combat");
         assert_eq!(result["recipe"]["params"]["interpolation"], "bezier");
         assert!(result["recipe"]["params"]["export"].is_object());
-        assert_eq!(result["recipe"]["params"]["export"]["optimize_keyframes"], true);
+        assert_eq!(
+            result["recipe"]["params"]["export"]["optimize_keyframes"],
+            true
+        );
     }
 
     #[test]

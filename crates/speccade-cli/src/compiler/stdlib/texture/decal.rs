@@ -75,8 +75,10 @@ fn register_decal_functions(builder: &mut GlobalsBuilder) {
 
         // Handle anchor
         if anchor.is_none() {
-            let default_anchor =
-                heap.alloc(AllocList(vec![heap.alloc(0.5).to_value(), heap.alloc(0.5).to_value()]));
+            let default_anchor = heap.alloc(AllocList(vec![
+                heap.alloc(0.5).to_value(),
+                heap.alloc(0.5).to_value(),
+            ]));
             dict.insert_hashed(hashed_key(heap, "anchor"), default_anchor);
         } else {
             // Just pass through the anchor value - Starlark will validate the list at runtime
@@ -229,10 +231,7 @@ fn register_decal_functions(builder: &mut GlobalsBuilder) {
             hashed_key(heap, "kind"),
             heap.alloc_str("primary").to_value(),
         );
-        primary_output.insert_hashed(
-            hashed_key(heap, "format"),
-            heap.alloc_str("png").to_value(),
-        );
+        primary_output.insert_hashed(hashed_key(heap, "format"), heap.alloc_str("png").to_value());
         primary_output.insert_hashed(
             hashed_key(heap, "path"),
             heap.alloc_str(output_path).to_value(),
@@ -247,14 +246,10 @@ fn register_decal_functions(builder: &mut GlobalsBuilder) {
                     hashed_key(heap, "kind"),
                     heap.alloc_str("primary").to_value(),
                 );
-                normal_output_spec.insert_hashed(
-                    hashed_key(heap, "format"),
-                    heap.alloc_str("png").to_value(),
-                );
-                normal_output_spec.insert_hashed(
-                    hashed_key(heap, "path"),
-                    heap.alloc_str(path).to_value(),
-                );
+                normal_output_spec
+                    .insert_hashed(hashed_key(heap, "format"), heap.alloc_str("png").to_value());
+                normal_output_spec
+                    .insert_hashed(hashed_key(heap, "path"), heap.alloc_str(path).to_value());
                 normal_output_spec.insert_hashed(
                     hashed_key(heap, "source"),
                     heap.alloc_str("normal").to_value(),
@@ -271,14 +266,10 @@ fn register_decal_functions(builder: &mut GlobalsBuilder) {
                     hashed_key(heap, "kind"),
                     heap.alloc_str("primary").to_value(),
                 );
-                roughness_output_spec.insert_hashed(
-                    hashed_key(heap, "format"),
-                    heap.alloc_str("png").to_value(),
-                );
-                roughness_output_spec.insert_hashed(
-                    hashed_key(heap, "path"),
-                    heap.alloc_str(path).to_value(),
-                );
+                roughness_output_spec
+                    .insert_hashed(hashed_key(heap, "format"), heap.alloc_str("png").to_value());
+                roughness_output_spec
+                    .insert_hashed(hashed_key(heap, "path"), heap.alloc_str(path).to_value());
                 roughness_output_spec.insert_hashed(
                     hashed_key(heap, "source"),
                     heap.alloc_str("roughness").to_value(),
@@ -299,10 +290,8 @@ fn register_decal_functions(builder: &mut GlobalsBuilder) {
                     hashed_key(heap, "format"),
                     heap.alloc_str("json").to_value(),
                 );
-                metadata_output.insert_hashed(
-                    hashed_key(heap, "path"),
-                    heap.alloc_str(path).to_value(),
-                );
+                metadata_output
+                    .insert_hashed(hashed_key(heap, "path"), heap.alloc_str(path).to_value());
                 outputs_vec.push(heap.alloc(metadata_output).to_value());
             }
         }
@@ -508,14 +497,8 @@ decal_spec(
 
         // Find outputs by kind
         let primary = outputs.iter().find(|o| o["kind"] == "primary").unwrap();
-        let normal = outputs
-            .iter()
-            .find(|o| o["source"] == "normal")
-            .unwrap();
-        let roughness = outputs
-            .iter()
-            .find(|o| o["source"] == "roughness")
-            .unwrap();
+        let normal = outputs.iter().find(|o| o["source"] == "normal").unwrap();
+        let roughness = outputs.iter().find(|o| o["source"] == "roughness").unwrap();
         let metadata = outputs.iter().find(|o| o["kind"] == "metadata").unwrap();
 
         assert_eq!(primary["format"], "png");

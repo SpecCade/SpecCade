@@ -251,7 +251,11 @@ async fn test_analyze_path_wav() {
     };
     let output = send_request(&mut ws, &request).await.unwrap();
 
-    assert!(output.success, "Expected success, got errors: {:?}", output.errors);
+    assert!(
+        output.success,
+        "Expected success, got errors: {:?}",
+        output.errors
+    );
     let result = output.result.unwrap();
     assert_eq!(result.asset_type, "audio");
     assert!(!result.input_hash.is_empty());
@@ -286,7 +290,11 @@ async fn test_analyze_path_png() {
     };
     let output = send_request(&mut ws, &request).await.unwrap();
 
-    assert!(output.success, "Expected success, got errors: {:?}", output.errors);
+    assert!(
+        output.success,
+        "Expected success, got errors: {:?}",
+        output.errors
+    );
     let result = output.result.unwrap();
     assert_eq!(result.asset_type, "texture");
     assert!(!result.input_hash.is_empty());
@@ -318,7 +326,11 @@ async fn test_analyze_data_wav() {
     };
     let output = send_request(&mut ws, &request).await.unwrap();
 
-    assert!(output.success, "Expected success, got errors: {:?}", output.errors);
+    assert!(
+        output.success,
+        "Expected success, got errors: {:?}",
+        output.errors
+    );
     let result = output.result.unwrap();
     assert_eq!(result.asset_type, "audio");
     assert_eq!(result.input, "test.wav");
@@ -350,7 +362,11 @@ async fn test_analyze_data_png() {
     };
     let output = send_request(&mut ws, &request).await.unwrap();
 
-    assert!(output.success, "Expected success, got errors: {:?}", output.errors);
+    assert!(
+        output.success,
+        "Expected success, got errors: {:?}",
+        output.errors
+    );
     let result = output.result.unwrap();
     assert_eq!(result.asset_type, "texture");
     assert_eq!(result.input, "test.png");
@@ -383,9 +399,16 @@ async fn test_analyze_with_embeddings() {
     };
     let output = send_request(&mut ws, &request).await.unwrap();
 
-    assert!(output.success, "Expected success, got errors: {:?}", output.errors);
+    assert!(
+        output.success,
+        "Expected success, got errors: {:?}",
+        output.errors
+    );
     let result = output.result.unwrap();
-    assert!(result.embedding.is_some(), "Expected embedding to be present");
+    assert!(
+        result.embedding.is_some(),
+        "Expected embedding to be present"
+    );
     let embedding = result.embedding.unwrap();
     assert!(!embedding.is_empty(), "Expected non-empty embedding");
 

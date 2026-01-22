@@ -887,8 +887,13 @@ fn register_texture_node_functions(builder: &mut GlobalsBuilder) {
         }
 
         let valid_blend_modes = ["max", "add", "average"];
-        validate_enum(blend_mode, &valid_blend_modes, "texture_bomb_node", "blend_mode")
-            .map_err(|e| anyhow::anyhow!(e))?;
+        validate_enum(
+            blend_mode,
+            &valid_blend_modes,
+            "texture_bomb_node",
+            "blend_mode",
+        )
+        .map_err(|e| anyhow::anyhow!(e))?;
 
         let mut dict = new_dict(heap);
 
@@ -1295,9 +1300,10 @@ mod tests {
 
     #[test]
     fn test_texture_bomb_node_custom() {
-        let result =
-            eval_to_json("texture_bomb_node(\"scattered\", \"base\", 0.7, 0.5, 1.5, 180.0, \"add\")")
-                .unwrap();
+        let result = eval_to_json(
+            "texture_bomb_node(\"scattered\", \"base\", 0.7, 0.5, 1.5, 180.0, \"add\")",
+        )
+        .unwrap();
         assert_eq!(result["density"], 0.7);
         let scale = result["scale_variation"].as_array().unwrap();
         assert_eq!(scale[0], 0.5);
@@ -1309,7 +1315,8 @@ mod tests {
     #[test]
     fn test_texture_bomb_node_average_blend() {
         let result =
-            eval_to_json("texture_bomb_node(\"s\", \"b\", 0.5, 1.0, 1.0, 0.0, \"average\")").unwrap();
+            eval_to_json("texture_bomb_node(\"s\", \"b\", 0.5, 1.0, 1.0, 0.0, \"average\")")
+                .unwrap();
         assert_eq!(result["blend_mode"], "average");
     }
 
@@ -1342,7 +1349,8 @@ mod tests {
 
     #[test]
     fn test_texture_bomb_node_invalid_blend_mode() {
-        let result = eval_to_json("texture_bomb_node(\"s\", \"b\", 0.5, 0.8, 1.2, 0.0, \"invalid\")");
+        let result =
+            eval_to_json("texture_bomb_node(\"s\", \"b\", 0.5, 0.8, 1.2, 0.0, \"invalid\")");
         assert!(result.is_err());
         let err = result.unwrap_err();
         assert!(err.contains("S104"));

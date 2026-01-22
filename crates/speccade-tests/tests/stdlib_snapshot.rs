@@ -66,20 +66,12 @@ fn stdlib_matches_snapshot() {
 
         let expected_names: std::collections::HashSet<&str> = expected["functions"]
             .as_array()
-            .map(|arr| {
-                arr.iter()
-                    .filter_map(|f| f["name"].as_str())
-                    .collect()
-            })
+            .map(|arr| arr.iter().filter_map(|f| f["name"].as_str()).collect())
             .unwrap_or_default();
 
         let current_names: std::collections::HashSet<&str> = current["functions"]
             .as_array()
-            .map(|arr| {
-                arr.iter()
-                    .filter_map(|f| f["name"].as_str())
-                    .collect()
-            })
+            .map(|arr| arr.iter().filter_map(|f| f["name"].as_str()).collect())
             .unwrap_or_default();
 
         let added: Vec<_> = current_names.difference(&expected_names).collect();
@@ -110,11 +102,7 @@ fn stdlib_matches_snapshot() {
         let max_diff_lines = 20;
         let mut diff_count = 0;
 
-        for (i, (exp, cur)) in expected_lines
-            .iter()
-            .zip(current_lines.iter())
-            .enumerate()
-        {
+        for (i, (exp, cur)) in expected_lines.iter().zip(current_lines.iter()).enumerate() {
             if exp != cur && diff_count < max_diff_lines {
                 diff_lines.push(format!("Line {}: ", i + 1));
                 diff_lines.push(format!("  - {}", exp));

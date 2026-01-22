@@ -313,4 +313,3 @@ pub fn apply_distortion_drive_modulation(
     let bipolar = (lfo_value - 0.5) * 2.0;
     (base_drive + bipolar * strength).clamp(1.0, 100.0)
 }
-

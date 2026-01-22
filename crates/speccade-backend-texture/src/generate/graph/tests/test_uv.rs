@@ -39,8 +39,8 @@ fn uv_scale_tiles_pattern() {
     let v1 = scaled.get(8, 0);
     let v2 = scaled.get(24, 0);
     // Due to scaling, both should be valid grayscale values
-    assert!(v1 >= 0.0 && v1 <= 1.0);
-    assert!(v2 >= 0.0 && v2 <= 1.0);
+    assert!((0.0..=1.0).contains(&v1));
+    assert!((0.0..=1.0).contains(&v2));
 }
 
 #[test]

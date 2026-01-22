@@ -829,9 +829,9 @@ pub(super) fn generate_texture_splat_set(
                     ));
                 }
             }
-        } else if source.starts_with("mask") {
+        } else if let Some(stripped) = source.strip_prefix("mask") {
             // Splat mask (e.g., "mask0", "mask1")
-            if let Ok(mask_idx) = source[4..].parse::<usize>() {
+            if let Ok(mask_idx) = stripped.parse::<usize>() {
                 if mask_idx < result.splat_masks.len() {
                     let mask = &result.splat_masks[mask_idx];
                     write_output_bytes(out_root, &output_spec.path, &mask.png_data)?;
@@ -1046,8 +1046,8 @@ pub(super) fn generate_texture_splat_set_profiled(
                     ));
                 }
             }
-        } else if source.starts_with("mask") {
-            if let Ok(mask_idx) = source[4..].parse::<usize>() {
+        } else if let Some(stripped) = source.strip_prefix("mask") {
+            if let Ok(mask_idx) = stripped.parse::<usize>() {
                 if mask_idx < result.splat_masks.len() {
                     let mask = &result.splat_masks[mask_idx];
                     write_output_bytes(out_root, &output_spec.path, &mask.png_data)?;

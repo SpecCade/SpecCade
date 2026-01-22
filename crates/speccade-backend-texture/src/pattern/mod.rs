@@ -93,7 +93,7 @@ mod tests {
 
         // u=0.49 -> floor(0.49*4)=1
         let v = p.sample_normalized(0.49, 0.0, width, height);
-        assert_eq!(v, (1 * 1000 + 0) as f64);
+        assert_eq!(v, 1000.0);
     }
 
     #[test]

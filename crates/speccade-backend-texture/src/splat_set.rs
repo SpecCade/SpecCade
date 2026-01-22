@@ -11,7 +11,9 @@ use thiserror::Error;
 use crate::color::Color;
 use crate::maps::{GrayscaleBuffer, NormalGenerator, TextureBuffer};
 use crate::noise::{Fbm, Noise2D, PerlinNoise, SimplexNoise};
-use crate::png::{write_grayscale_to_vec_with_hash, write_rgba_to_vec_with_hash, PngConfig, PngError};
+use crate::png::{
+    write_grayscale_to_vec_with_hash, write_rgba_to_vec_with_hash, PngConfig, PngError,
+};
 use crate::rng::DeterministicRng;
 
 /// Errors that can occur during splat set generation.
@@ -260,7 +262,7 @@ fn generate_splat_masks(
     config: &PngConfig,
 ) -> Result<Vec<SplatTextureResult>, SplatSetError> {
     let num_layers = params.layers.len();
-    let num_masks = (num_layers + 3) / 4; // Ceiling division by 4
+    let num_masks = num_layers.div_ceil(4);
 
     let mut masks = Vec::with_capacity(num_masks);
 
@@ -280,8 +282,7 @@ fn generate_splat_masks(
         }
 
         // Normalize weights so they sum to 1.0 at each pixel
-        let mut mask_buffer =
-            TextureBuffer::new(width, height, Color::rgba(0.0, 0.0, 0.0, 0.0));
+        let mut mask_buffer = TextureBuffer::new(width, height, Color::rgba(0.0, 0.0, 0.0, 0.0));
 
         for y in 0..height {
             for x in 0..width {
@@ -654,10 +655,7 @@ mod tests {
             result1.layer_outputs[0].albedo.hash,
             result2.layer_outputs[0].albedo.hash
         );
-        assert_eq!(
-            result1.splat_masks[0].hash,
-            result2.splat_masks[0].hash
-        );
+        assert_eq!(result1.splat_masks[0].hash, result2.splat_masks[0].hash);
         assert_eq!(
             result1.macro_variation.as_ref().unwrap().hash,
             result2.macro_variation.as_ref().unwrap().hash
@@ -700,7 +698,10 @@ mod tests {
 
         let result = generate_splat_set(&params, 42);
         assert!(result.is_err());
-        assert!(matches!(result.unwrap_err(), SplatSetError::InvalidParameter(_)));
+        assert!(matches!(
+            result.unwrap_err(),
+            SplatSetError::InvalidParameter(_)
+        ));
     }
 
     #[test]
@@ -717,7 +718,10 @@ mod tests {
 
         let result = generate_splat_set(&params, 42);
         assert!(result.is_err());
-        assert!(matches!(result.unwrap_err(), SplatSetError::InvalidParameter(_)));
+        assert!(matches!(
+            result.unwrap_err(),
+            SplatSetError::InvalidParameter(_)
+        ));
     }
 
     #[test]

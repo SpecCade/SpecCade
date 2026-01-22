@@ -113,7 +113,6 @@ fn stochastic_ops_produce_unit_range_output() {
     for id in ["wang", "bomb"] {
         let grid = nodes.get(id).unwrap().as_grayscale().unwrap();
         let v = grid.get(7, 9);
-        assert!(v >= 0.0 && v <= 1.0, "{} out of range: {}", id, v);
+        assert!((0.0..=1.0).contains(&v), "{} out of range: {}", id, v);
     }
 }
-

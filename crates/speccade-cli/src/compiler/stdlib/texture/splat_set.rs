@@ -270,15 +270,9 @@ fn register_splat_set_functions(builder: &mut GlobalsBuilder) {
                     hashed_key(heap, "kind"),
                     heap.alloc_str("primary").to_value(),
                 );
-                output.insert_hashed(
-                    hashed_key(heap, "format"),
-                    heap.alloc_str("png").to_value(),
-                );
+                output.insert_hashed(hashed_key(heap, "format"), heap.alloc_str("png").to_value());
                 let path = format!("{}_{}.{}.png", output_prefix, layer_id, map_type);
-                output.insert_hashed(
-                    hashed_key(heap, "path"),
-                    heap.alloc_str(&path).to_value(),
-                );
+                output.insert_hashed(hashed_key(heap, "path"), heap.alloc_str(&path).to_value());
                 let source = format!("{}.{}", layer_id, map_type);
                 output.insert_hashed(
                     hashed_key(heap, "source"),
@@ -289,17 +283,14 @@ fn register_splat_set_functions(builder: &mut GlobalsBuilder) {
         }
 
         // Splat mask outputs (one per 4 layers)
-        let num_masks = (layer_ids.len() + 3) / 4;
+        let num_masks = layer_ids.len().div_ceil(4);
         for mask_idx in 0..num_masks {
             let mut output = new_dict(heap);
             output.insert_hashed(
                 hashed_key(heap, "kind"),
                 heap.alloc_str("primary").to_value(),
             );
-            output.insert_hashed(
-                hashed_key(heap, "format"),
-                heap.alloc_str("png").to_value(),
-            );
+            output.insert_hashed(hashed_key(heap, "format"), heap.alloc_str("png").to_value());
             let path = format!("{}_mask{}.png", output_prefix, mask_idx);
             output.insert_hashed(hashed_key(heap, "path"), heap.alloc_str(&path).to_value());
             let source = format!("mask{}", mask_idx);
@@ -317,10 +308,7 @@ fn register_splat_set_functions(builder: &mut GlobalsBuilder) {
                 hashed_key(heap, "kind"),
                 heap.alloc_str("primary").to_value(),
             );
-            output.insert_hashed(
-                hashed_key(heap, "format"),
-                heap.alloc_str("png").to_value(),
-            );
+            output.insert_hashed(hashed_key(heap, "format"), heap.alloc_str("png").to_value());
             let path = format!("{}_macro.png", output_prefix);
             output.insert_hashed(hashed_key(heap, "path"), heap.alloc_str(&path).to_value());
             output.insert_hashed(
@@ -342,10 +330,8 @@ fn register_splat_set_functions(builder: &mut GlobalsBuilder) {
                     hashed_key(heap, "format"),
                     heap.alloc_str("json").to_value(),
                 );
-                metadata_output.insert_hashed(
-                    hashed_key(heap, "path"),
-                    heap.alloc_str(path).to_value(),
-                );
+                metadata_output
+                    .insert_hashed(hashed_key(heap, "path"), heap.alloc_str(path).to_value());
                 outputs_vec.push(heap.alloc(metadata_output).to_value());
             }
         }
@@ -433,10 +419,9 @@ mod tests {
 
     #[test]
     fn test_splat_layer_basic() {
-        let result = eval_to_json(
-            r#"splat_layer(id = "grass", albedo_color = [0.2, 0.5, 0.1, 1.0])"#,
-        )
-        .unwrap();
+        let result =
+            eval_to_json(r#"splat_layer(id = "grass", albedo_color = [0.2, 0.5, 0.1, 1.0])"#)
+                .unwrap();
 
         assert_eq!(result["id"], "grass");
         assert_eq!(result["albedo_color"][0], 0.2);
@@ -472,9 +457,7 @@ mod tests {
 
     #[test]
     fn test_splat_layer_invalid_color() {
-        let result = eval_to_json(
-            r#"splat_layer(id = "grass", albedo_color = [0.2, 0.5, 0.1])"#,
-        );
+        let result = eval_to_json(r#"splat_layer(id = "grass", albedo_color = [0.2, 0.5, 0.1])"#);
         assert!(result.is_err());
         assert!(result.unwrap_err().contains("S101"));
     }
@@ -512,7 +495,9 @@ splat_set_spec(
         assert_eq!(result["seed"], 42);
         assert_eq!(result["recipe"]["kind"], "texture.splat_set_v1");
         assert_eq!(result["recipe"]["params"]["mask_mode"], "noise");
-        assert!(!result["recipe"]["params"]["macro_variation"].as_bool().unwrap());
+        assert!(!result["recipe"]["params"]["macro_variation"]
+            .as_bool()
+            .unwrap());
 
         let outputs = result["outputs"].as_array().unwrap();
         // 2 layers * 3 maps + 1 mask = 7 outputs
@@ -538,7 +523,9 @@ splat_set_spec(
         )
         .unwrap();
 
-        assert!(result["recipe"]["params"]["macro_variation"].as_bool().unwrap());
+        assert!(result["recipe"]["params"]["macro_variation"]
+            .as_bool()
+            .unwrap());
         assert_eq!(result["recipe"]["params"]["macro_intensity"], 0.5);
 
         let outputs = result["outputs"].as_array().unwrap();
@@ -577,7 +564,12 @@ splat_set_spec(
         // Should have exactly 1 mask for 4 layers
         let mask_outputs: Vec<_> = outputs
             .iter()
-            .filter(|o| o["source"].as_str().map(|s| s.starts_with("mask")).unwrap_or(false))
+            .filter(|o| {
+                o["source"]
+                    .as_str()
+                    .map(|s| s.starts_with("mask"))
+                    .unwrap_or(false)
+            })
             .collect();
         assert_eq!(mask_outputs.len(), 1);
     }

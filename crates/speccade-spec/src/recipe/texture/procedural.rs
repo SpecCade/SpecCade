@@ -547,7 +547,10 @@ mod tests {
 
         assert_eq!(input, "src");
         assert_eq!(*tile_count, [4, 4]);
-        assert!((*blend_width - 0.1).abs() < 1e-6, "default blend_width should be 0.1");
+        assert!(
+            (*blend_width - 0.1).abs() < 1e-6,
+            "default blend_width should be 0.1"
+        );
 
         let reserialized = serde_json::to_string(&params).unwrap();
         let reparsed: TextureProceduralV1Params = serde_json::from_str(&reserialized).unwrap();
@@ -607,7 +610,10 @@ mod tests {
         assert_eq!(input, "src");
         assert!((*density - 0.5).abs() < 1e-6);
         assert_eq!(*scale_variation, [1.0, 1.0], "default scale_variation");
-        assert!(rotation_variation.abs() < 1e-6, "default rotation_variation");
+        assert!(
+            rotation_variation.abs() < 1e-6,
+            "default rotation_variation"
+        );
         assert_eq!(blend_mode, "max", "default blend_mode");
 
         let reserialized = serde_json::to_string(&params).unwrap();

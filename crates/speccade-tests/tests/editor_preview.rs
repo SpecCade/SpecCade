@@ -86,4 +86,3 @@ fn generate_emits_waveform_preview_and_reports_it() {
         "report.outputs should include preview png"
     );
 }
-

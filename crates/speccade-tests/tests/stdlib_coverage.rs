@@ -52,9 +52,8 @@ fn load_stdlib_function_names() -> Vec<String> {
         )
     });
 
-    let parsed: serde_json::Value = serde_json::from_str(&contents).unwrap_or_else(|e| {
-        panic!("Failed to parse stdlib snapshot as JSON: {}", e)
-    });
+    let parsed: serde_json::Value = serde_json::from_str(&contents)
+        .unwrap_or_else(|e| panic!("Failed to parse stdlib snapshot as JSON: {}", e));
 
     parsed["functions"]
         .as_array()
@@ -170,7 +169,9 @@ fn all_stdlib_functions_are_covered() {
         .collect();
 
     if !unnecessarily_allowlisted.is_empty() {
-        println!("Note: These allowlisted functions are now covered and can be removed from ALLOWLIST:");
+        println!(
+            "Note: These allowlisted functions are now covered and can be removed from ALLOWLIST:"
+        );
         for name in &unnecessarily_allowlisted {
             println!("  - {}", name);
         }
@@ -221,17 +222,15 @@ fn coverage_report() {
         let name = func["name"].as_str().unwrap().to_string();
         let category = func["category"].as_str().unwrap_or("unknown").to_string();
         let is_covered = called_functions.contains(&name);
-        by_category.entry(category).or_default().push((name, is_covered));
+        by_category
+            .entry(category)
+            .or_default()
+            .push((name, is_covered));
     }
 
     for (category, functions) in &by_category {
         let covered_count = functions.iter().filter(|(_, c)| *c).count();
-        println!(
-            "{} ({}/{})",
-            category,
-            covered_count,
-            functions.len()
-        );
+        println!("{} ({}/{})", category, covered_count, functions.len());
         for (name, is_covered) in functions {
             let marker = if *is_covered { "[x]" } else { "[ ]" };
             println!("  {} {}", marker, name);

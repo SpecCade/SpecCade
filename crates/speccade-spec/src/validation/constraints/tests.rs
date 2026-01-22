@@ -486,7 +486,10 @@ fn test_max_skin_weight_sum_zero_deviation() {
 
 #[test]
 fn test_char003_constraint_display() {
-    assert_eq!(Constraint::RequireUvPresence.to_string(), "require_uv_presence");
+    assert_eq!(
+        Constraint::RequireUvPresence.to_string(),
+        "require_uv_presence"
+    );
     assert_eq!(
         Constraint::MaxZeroAreaFaces { value: 5 }.to_string(),
         "max_zero_area_faces(5)"
@@ -540,7 +543,7 @@ fn test_evaluate_skeletal_mesh_char003_constraints() {
 #[test]
 fn test_evaluate_skeletal_mesh_char003_mixed_failures() {
     let metrics = OutputMetrics::new()
-        .with_has_uv_map(false)     // Will fail: no UV map
+        .with_has_uv_map(false) // Will fail: no UV map
         .with_zero_area_face_count(10) // Will fail: exceeds 0
         .with_max_weight_deviation(0.25); // Will fail: exceeds 0.01
 

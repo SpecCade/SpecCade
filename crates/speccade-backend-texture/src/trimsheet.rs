@@ -28,7 +28,9 @@ pub enum TrimsheetError {
     TileTooLarge(String, u32, u32, u32, u32),
 
     /// Not enough space to pack all tiles.
-    #[error("Cannot fit all tiles into atlas. Consider increasing resolution or reducing tile sizes")]
+    #[error(
+        "Cannot fit all tiles into atlas. Consider increasing resolution or reducing tile sizes"
+    )]
     PackingFailed,
 
     /// Duplicate tile id.
@@ -489,7 +491,12 @@ mod tests {
 
         // Metadata should be identical
         assert_eq!(result1.metadata.tiles.len(), result2.metadata.tiles.len());
-        for (t1, t2) in result1.metadata.tiles.iter().zip(result2.metadata.tiles.iter()) {
+        for (t1, t2) in result1
+            .metadata
+            .tiles
+            .iter()
+            .zip(result2.metadata.tiles.iter())
+        {
             assert_eq!(t1.id, t2.id);
             assert!((t1.u_min - t2.u_min).abs() < 1e-10);
             assert!((t1.v_min - t2.v_min).abs() < 1e-10);
@@ -582,7 +589,12 @@ mod tests {
         let result = generate_trimsheet(&params, 42).unwrap();
 
         // The tall tile should be on the first shelf (lowest y)
-        let tall = result.metadata.tiles.iter().find(|t| t.id == "tall").unwrap();
+        let tall = result
+            .metadata
+            .tiles
+            .iter()
+            .find(|t| t.id == "tall")
+            .unwrap();
         let medium = result
             .metadata
             .tiles

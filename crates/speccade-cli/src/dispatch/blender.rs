@@ -50,10 +50,13 @@ pub(super) fn generate_blender_static_mesh(
                 has_uv_map: level.has_uv_map,
                 uv_layer_count: level.uv_layer_count,
                 texel_density: level.texel_density,
-                bounding_box: level.bounding_box.as_ref().map(|bb| speccade_spec::BoundingBox {
-                    min: [bb.min[0] as f32, bb.min[1] as f32, bb.min[2] as f32],
-                    max: [bb.max[0] as f32, bb.max[1] as f32, bb.max[2] as f32],
-                }),
+                bounding_box: level
+                    .bounding_box
+                    .as_ref()
+                    .map(|bb| speccade_spec::BoundingBox {
+                        min: [bb.min[0] as f32, bb.min[1] as f32, bb.min[2] as f32],
+                        max: [bb.max[0] as f32, bb.max[1] as f32, bb.max[2] as f32],
+                    }),
                 bounds_min: level.bounds_min,
                 bounds_max: level.bounds_max,
                 material_slot_count: level.material_slot_count,
@@ -61,20 +64,24 @@ pub(super) fn generate_blender_static_mesh(
             .collect()
     });
 
-    let collision_mesh = result.metrics.collision_mesh.clone().map(|m| {
-        speccade_spec::CollisionMeshMetrics {
-            vertex_count: m.vertex_count,
-            face_count: m.face_count,
-            triangle_count: m.triangle_count,
-            bounding_box: speccade_spec::CollisionBoundingBox {
-                min: m.bounding_box.min,
-                max: m.bounding_box.max,
-            },
-            collision_type: m.collision_type,
-        }
-    });
+    let collision_mesh =
+        result
+            .metrics
+            .collision_mesh
+            .clone()
+            .map(|m| speccade_spec::CollisionMeshMetrics {
+                vertex_count: m.vertex_count,
+                face_count: m.face_count,
+                triangle_count: m.triangle_count,
+                bounding_box: speccade_spec::CollisionBoundingBox {
+                    min: m.bounding_box.min,
+                    max: m.bounding_box.max,
+                },
+                collision_type: m.collision_type,
+            });
 
-    let metrics = speccade_spec::OutputMetrics {
+    let metrics =
+        speccade_spec::OutputMetrics {
             vertex_count: result.metrics.vertex_count,
             face_count: result.metrics.face_count,
             edge_count: result.metrics.edge_count,
@@ -103,25 +110,33 @@ pub(super) fn generate_blender_static_mesh(
             lod_levels,
             collision_mesh,
             collision_mesh_path: result.metrics.collision_mesh_path.clone(),
-            navmesh: result.metrics.navmesh.clone().map(|m| speccade_spec::NavmeshMetrics {
-                walkable_face_count: m.walkable_face_count,
-                non_walkable_face_count: m.non_walkable_face_count,
-                walkable_percentage: m.walkable_percentage,
-                stair_candidates: m.stair_candidates,
-            }),
-            baking: result.metrics.baking.clone().map(|b| speccade_spec::BakingMetrics {
-                baked_maps: b
-                    .baked_maps
-                    .into_iter()
-                    .map(|m| speccade_spec::BakedMapInfo {
-                        bake_type: m.bake_type,
-                        path: m.path,
-                        resolution: m.resolution,
-                    })
-                    .collect(),
-                ray_distance: b.ray_distance,
-                margin: b.margin,
-            }),
+            navmesh: result
+                .metrics
+                .navmesh
+                .clone()
+                .map(|m| speccade_spec::NavmeshMetrics {
+                    walkable_face_count: m.walkable_face_count,
+                    non_walkable_face_count: m.non_walkable_face_count,
+                    walkable_percentage: m.walkable_percentage,
+                    stair_candidates: m.stair_candidates,
+                }),
+            baking: result
+                .metrics
+                .baking
+                .clone()
+                .map(|b| speccade_spec::BakingMetrics {
+                    baked_maps: b
+                        .baked_maps
+                        .into_iter()
+                        .map(|m| speccade_spec::BakedMapInfo {
+                            bake_type: m.bake_type,
+                            path: m.path,
+                            resolution: m.resolution,
+                        })
+                        .collect(),
+                    ray_distance: b.ray_distance,
+                    margin: b.margin,
+                }),
             bone_count: None,
             max_bone_influences: None,
             unweighted_vertex_count: None,
@@ -301,9 +316,10 @@ pub(super) fn generate_blender_rigged_animation(
     spec: &Spec,
     out_root: &Path,
 ) -> Result<Vec<OutputResult>, DispatchError> {
-    let result = speccade_backend_blender::rigged_animation::generate(spec, out_root).map_err(
-        |e| DispatchError::BackendError(format!("Rigged animation generation failed: {}", e)),
-    )?;
+    let result =
+        speccade_backend_blender::rigged_animation::generate(spec, out_root).map_err(|e| {
+            DispatchError::BackendError(format!("Rigged animation generation failed: {}", e))
+        })?;
 
     // Get primary output path
     let primary_output = spec

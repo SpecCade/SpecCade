@@ -255,9 +255,7 @@ fn test_empty_glb_returns_error() {
 /// Test that a spec with LOD chain parses correctly.
 #[test]
 fn test_lod_chain_spec_parses() {
-    use speccade_spec::recipe::mesh::{
-        LodDecimateMethod, StaticMeshBlenderPrimitivesV1Params,
-    };
+    use speccade_spec::recipe::mesh::{LodDecimateMethod, StaticMeshBlenderPrimitivesV1Params};
 
     let json = r#"{
         "base_primitive": "ico_sphere",

@@ -2,7 +2,10 @@
 
 use serde::{Deserialize, Serialize};
 
-use super::common::{BakingSettings, CollisionMeshSettings, MaterialSlot, MeshConstraints, MeshExportSettings, NavmeshSettings, NormalsSettings};
+use super::common::{
+    BakingSettings, CollisionMeshSettings, MaterialSlot, MeshConstraints, MeshExportSettings,
+    NavmeshSettings, NormalsSettings,
+};
 use super::modifiers::{MeshModifier, UvProjection};
 use super::primitives::MeshPrimitive;
 

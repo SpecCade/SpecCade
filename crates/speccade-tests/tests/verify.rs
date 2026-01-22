@@ -150,7 +150,11 @@ fn test_verify_some_fail_human_output() {
 
     let stdout = String::from_utf8_lossy(&output.stdout);
 
-    assert!(!output.status.success(), "Expected failure, got: {}", stdout);
+    assert!(
+        !output.status.success(),
+        "Expected failure, got: {}",
+        stdout
+    );
     assert!(
         stdout.contains("FAIL") || stdout.contains("FAILED"),
         "Expected FAIL in output: {}",
@@ -232,7 +236,11 @@ fn test_verify_json_output_failure() {
 
     let stdout = String::from_utf8_lossy(&output.stdout);
 
-    assert!(!output.status.success(), "Expected failure, got: {}", stdout);
+    assert!(
+        !output.status.success(),
+        "Expected failure, got: {}",
+        stdout
+    );
 
     // Parse JSON output
     let json: serde_json::Value = serde_json::from_str(&stdout)
@@ -360,7 +368,12 @@ fn test_verify_skipped_constraints() {
     let results = json["result"]["results"].as_array().unwrap();
     let vertex_result = results
         .iter()
-        .find(|r| r["constraint"].as_str().unwrap().contains("max_vertex_count"))
+        .find(|r| {
+            r["constraint"]
+                .as_str()
+                .unwrap()
+                .contains("max_vertex_count")
+        })
         .unwrap();
     assert_eq!(vertex_result["passed"], true);
     assert!(vertex_result["message"]

@@ -87,14 +87,14 @@ pub fn generate_decal(params: &TextureDecalV1Params, seed: u32) -> Result<DecalR
     let nodes = generate_graph(&procedural_params, seed)?;
 
     // Get albedo output
-    let albedo_value = nodes.get(&params.albedo_output).ok_or_else(|| {
-        DecalError::NodeNotFound(params.albedo_output.clone())
-    })?;
+    let albedo_value = nodes
+        .get(&params.albedo_output)
+        .ok_or_else(|| DecalError::NodeNotFound(params.albedo_output.clone()))?;
 
     // Get alpha output
-    let alpha_value = nodes.get(&params.alpha_output).ok_or_else(|| {
-        DecalError::NodeNotFound(params.alpha_output.clone())
-    })?;
+    let alpha_value = nodes
+        .get(&params.alpha_output)
+        .ok_or_else(|| DecalError::NodeNotFound(params.alpha_output.clone()))?;
 
     // Composite albedo and alpha into RGBA texture
     let albedo_buffer = composite_albedo_with_alpha(albedo_value, alpha_value, width, height)?;
@@ -105,9 +105,9 @@ pub fn generate_decal(params: &TextureDecalV1Params, seed: u32) -> Result<DecalR
 
     // Generate optional normal map
     let normal = if let Some(ref normal_id) = params.normal_output {
-        let normal_value = nodes.get(normal_id).ok_or_else(|| {
-            DecalError::NodeNotFound(normal_id.clone())
-        })?;
+        let normal_value = nodes
+            .get(normal_id)
+            .ok_or_else(|| DecalError::NodeNotFound(normal_id.clone()))?;
         let normal_buffer = graph_value_to_rgba(normal_value, width, height)?;
         let (png_data, hash) = write_rgba_to_vec_with_hash(&normal_buffer, &config)?;
         Some(DecalTextureResult { png_data, hash })
@@ -117,9 +117,9 @@ pub fn generate_decal(params: &TextureDecalV1Params, seed: u32) -> Result<DecalR
 
     // Generate optional roughness map
     let roughness = if let Some(ref roughness_id) = params.roughness_output {
-        let roughness_value = nodes.get(roughness_id).ok_or_else(|| {
-            DecalError::NodeNotFound(roughness_id.clone())
-        })?;
+        let roughness_value = nodes
+            .get(roughness_id)
+            .ok_or_else(|| DecalError::NodeNotFound(roughness_id.clone()))?;
         let roughness_buffer = graph_value_to_grayscale_rgba(roughness_value, width, height)?;
         let (png_data, hash) = write_rgba_to_vec_with_hash(&roughness_buffer, &config)?;
         Some(DecalTextureResult { png_data, hash })
@@ -421,7 +421,10 @@ mod tests {
 
         let result = generate_decal(&params, 42);
         assert!(result.is_err());
-        assert!(matches!(result.unwrap_err(), DecalError::InvalidParameter(_)));
+        assert!(matches!(
+            result.unwrap_err(),
+            DecalError::InvalidParameter(_)
+        ));
     }
 
     #[test]

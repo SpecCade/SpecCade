@@ -47,10 +47,10 @@ struct DrumQualityThresholds {
 impl Default for DrumQualityThresholds {
     fn default() -> Self {
         Self {
-            max_peak_db: 0.0,     // No clipping
-            max_dc_offset: 0.01,  // Very low DC offset
-            min_rms_db: -24.0,    // Not too quiet
-            max_rms_db: -6.0,     // Not too loud
+            max_peak_db: 0.0,    // No clipping
+            max_dc_offset: 0.01, // Very low DC offset
+            min_rms_db: -24.0,   // Not too quiet
+            max_rms_db: -6.0,    // Not too loud
         }
     }
 }
@@ -67,7 +67,10 @@ struct QualityCheckResult {
 }
 
 /// Check audio metrics against quality thresholds
-fn check_drum_quality(metrics: &AudioMetrics, thresholds: &DrumQualityThresholds) -> QualityCheckResult {
+fn check_drum_quality(
+    metrics: &AudioMetrics,
+    thresholds: &DrumQualityThresholds,
+) -> QualityCheckResult {
     let mut failures = Vec::new();
 
     // Check peak (no clipping)
@@ -121,8 +124,8 @@ fn generate_and_analyze_drum(spec_name: &str) -> Result<AudioMetrics, String> {
     let spec_path = drum_examples_path().join(format!("{}.star", spec_name));
 
     // Load and parse the Starlark spec
-    let load_result = load_spec(&spec_path)
-        .map_err(|e| format!("Failed to load {}.star: {}", spec_name, e))?;
+    let load_result =
+        load_spec(&spec_path).map_err(|e| format!("Failed to load {}.star: {}", spec_name, e))?;
 
     // Generate the audio
     let gen_result = speccade_backend_audio::generate(&load_result.spec)
@@ -143,10 +146,9 @@ fn validate_drum(name: &str, thresholds: &DrumQualityThresholds) -> bool {
         Ok(metrics) => {
             let result = check_drum_quality(&metrics, thresholds);
 
-            println!("  Format: {}Hz, {} channels, {} bits",
-                metrics.format.sample_rate,
-                metrics.format.channels,
-                metrics.format.bits_per_sample
+            println!(
+                "  Format: {}Hz, {} channels, {} bits",
+                metrics.format.sample_rate, metrics.format.channels, metrics.format.bits_per_sample
             );
             println!("  Duration: {:.1}ms", metrics.format.duration_ms);
             println!("  Quality:");
@@ -215,9 +217,15 @@ fn test_all_drums_pass_quality_gates() {
     println!("  Drum Kit Quality Gate Validation");
     println!("========================================");
     println!("\nThresholds:");
-    println!("  max_peak_db: < {:.1} dB (no clipping)", thresholds.max_peak_db);
+    println!(
+        "  max_peak_db: < {:.1} dB (no clipping)",
+        thresholds.max_peak_db
+    );
     println!("  max_dc_offset: < {:.4}", thresholds.max_dc_offset);
-    println!("  rms_db range: {:.1} to {:.1} dB", thresholds.min_rms_db, thresholds.max_rms_db);
+    println!(
+        "  rms_db range: {:.1} to {:.1} dB",
+        thresholds.min_rms_db, thresholds.max_rms_db
+    );
 
     let mut passed = 0;
     let mut failed = 0;
@@ -251,15 +259,31 @@ mod additional_tests {
     #[test]
     fn test_drum_examples_exist() {
         let path = drum_examples_path();
-        assert!(path.exists(), "Drum examples directory does not exist: {:?}", path);
+        assert!(
+            path.exists(),
+            "Drum examples directory does not exist: {:?}",
+            path
+        );
 
         let kick_path = path.join("kick.star");
         let snare_path = path.join("snare.star");
         let hihat_path = path.join("hihat.star");
 
-        assert!(kick_path.exists(), "kick.star does not exist: {:?}", kick_path);
-        assert!(snare_path.exists(), "snare.star does not exist: {:?}", snare_path);
-        assert!(hihat_path.exists(), "hihat.star does not exist: {:?}", hihat_path);
+        assert!(
+            kick_path.exists(),
+            "kick.star does not exist: {:?}",
+            kick_path
+        );
+        assert!(
+            snare_path.exists(),
+            "snare.star does not exist: {:?}",
+            snare_path
+        );
+        assert!(
+            hihat_path.exists(),
+            "hihat.star does not exist: {:?}",
+            hihat_path
+        );
     }
 
     /// Test that all drum specs can be loaded without errors
@@ -305,8 +329,8 @@ mod additional_tests {
         let drums = ["kick", "snare", "hihat"];
 
         for drum in &drums {
-            let metrics = generate_and_analyze_drum(drum)
-                .expect(&format!("Failed to generate {}", drum));
+            let metrics =
+                generate_and_analyze_drum(drum).expect(&format!("Failed to generate {}", drum));
 
             // Drums should be short samples (less than 1 second)
             assert!(

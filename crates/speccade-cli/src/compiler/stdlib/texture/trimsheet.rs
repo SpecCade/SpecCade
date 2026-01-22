@@ -83,7 +83,11 @@ fn register_trimsheet_functions(builder: &mut GlobalsBuilder) {
 
         // Create color array
         let color_list = heap.alloc(AllocList(
-            color.items.iter().map(|&c| heap.alloc(c).to_value()).collect::<Vec<_>>(),
+            color
+                .items
+                .iter()
+                .map(|&c| heap.alloc(c).to_value())
+                .collect::<Vec<_>>(),
         ));
         dict.insert_hashed(hashed_key(heap, "color"), color_list);
 
@@ -207,10 +211,7 @@ fn register_trimsheet_functions(builder: &mut GlobalsBuilder) {
             hashed_key(heap, "kind"),
             heap.alloc_str("primary").to_value(),
         );
-        primary_output.insert_hashed(
-            hashed_key(heap, "format"),
-            heap.alloc_str("png").to_value(),
-        );
+        primary_output.insert_hashed(hashed_key(heap, "format"), heap.alloc_str("png").to_value());
         primary_output.insert_hashed(
             hashed_key(heap, "path"),
             heap.alloc_str(output_path).to_value(),
@@ -229,10 +230,8 @@ fn register_trimsheet_functions(builder: &mut GlobalsBuilder) {
                     hashed_key(heap, "format"),
                     heap.alloc_str("json").to_value(),
                 );
-                metadata_output.insert_hashed(
-                    hashed_key(heap, "path"),
-                    heap.alloc_str(path).to_value(),
-                );
+                metadata_output
+                    .insert_hashed(hashed_key(heap, "path"), heap.alloc_str(path).to_value());
                 outputs_vec.push(heap.alloc(metadata_output).to_value());
             }
         }
@@ -385,14 +384,8 @@ trimsheet_spec(
         assert_eq!(outputs.len(), 2);
 
         // Find primary and metadata outputs
-        let primary = outputs
-            .iter()
-            .find(|o| o["kind"] == "primary")
-            .unwrap();
-        let metadata = outputs
-            .iter()
-            .find(|o| o["kind"] == "metadata")
-            .unwrap();
+        let primary = outputs.iter().find(|o| o["kind"] == "primary").unwrap();
+        let metadata = outputs.iter().find(|o| o["kind"] == "metadata").unwrap();
 
         assert_eq!(primary["format"], "png");
         assert_eq!(primary["path"], "atlas/test.png");

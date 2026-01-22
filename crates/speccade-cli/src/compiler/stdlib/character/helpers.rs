@@ -490,8 +490,8 @@ material_slot(
 
     #[test]
     fn test_skinning_config_custom() {
-        let result = eval_to_json("skinning_config(max_bone_influences = 2, auto_weights = False)")
-            .unwrap();
+        let result =
+            eval_to_json("skinning_config(max_bone_influences = 2, auto_weights = False)").unwrap();
         assert_eq!(result["max_bone_influences"], 2);
         assert_eq!(result["auto_weights"], false);
     }

@@ -334,7 +334,6 @@ animation_keyframe(
         assert!(err.contains("non-negative"));
     }
 
-
     // ========================================================================
     // animation_export_settings() tests
     // ========================================================================
@@ -377,10 +376,9 @@ animation_keyframe(
 
     #[test]
     fn test_ik_target_transform_with_blend() {
-        let result = eval_to_json(
-            r#"ik_target_transform(position = [0.0, 0.1, 0.0], ik_fk_blend = 0.5)"#,
-        )
-        .unwrap();
+        let result =
+            eval_to_json(r#"ik_target_transform(position = [0.0, 0.1, 0.0], ik_fk_blend = 0.5)"#)
+                .unwrap();
 
         assert!(result["position"].is_array());
         assert_eq!(result["ik_fk_blend"], 0.5);
@@ -393,7 +391,6 @@ animation_keyframe(
         let err = result.unwrap_err();
         assert!(err.contains("S101"));
     }
-
 
     // ========================================================================
     // ik_keyframe() tests
@@ -426,5 +423,4 @@ ik_keyframe(
         let err = result.unwrap_err();
         assert!(err.contains("S103"));
     }
-
 }

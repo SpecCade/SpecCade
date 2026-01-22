@@ -161,8 +161,7 @@ pub fn run_json(
     };
 
     // Compute cache key
-    let cache_key =
-        CacheKey::new(&spec, backend_version.clone(), preview_duration.is_some()).ok();
+    let cache_key = CacheKey::new(&spec, backend_version.clone(), preview_duration.is_some()).ok();
 
     // Check cache
     let base_report_path = reporting::report_path(spec_path, &spec.asset_id);

@@ -200,7 +200,9 @@ mod tests {
             orchestrator::mode_from_recipe_kind("skeletal_mesh.blender_rigged_mesh_v1").is_ok()
         );
         assert!(orchestrator::mode_from_recipe_kind("skeletal_animation.blender_clip_v1").is_ok());
-        assert!(orchestrator::mode_from_recipe_kind("skeletal_animation.blender_rigged_v1").is_ok());
+        assert!(
+            orchestrator::mode_from_recipe_kind("skeletal_animation.blender_rigged_v1").is_ok()
+        );
         assert!(orchestrator::mode_from_recipe_kind("invalid.kind").is_err());
     }
 

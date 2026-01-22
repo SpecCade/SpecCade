@@ -602,15 +602,26 @@ fn test_generate_static_mesh_with_collision_navmesh_baking() {
     assert!(!baked_maps.is_empty());
 
     // Primary output exists
-    let primary = harness.path().join("meshes").join("test_static_advanced.glb");
-    assert!(primary.exists(), "Primary GLB missing: {}", primary.display());
+    let primary = harness
+        .path()
+        .join("meshes")
+        .join("test_static_advanced.glb");
+    assert!(
+        primary.exists(),
+        "Primary GLB missing: {}",
+        primary.display()
+    );
 
     // Collision mesh output exists (suffix-based)
     let collision = harness
         .path()
         .join("meshes")
         .join("test_static_advanced_col.glb");
-    assert!(collision.exists(), "Collision GLB missing: {}", collision.display());
+    assert!(
+        collision.exists(),
+        "Collision GLB missing: {}",
+        collision.display()
+    );
 
     // Baked normal map output exists (asset_id-based)
     let baked = harness
@@ -639,7 +650,10 @@ fn test_generate_static_mesh_with_lod_chain_metrics() {
     let spec = Spec::builder("test-static-lod-01", AssetType::StaticMesh)
         .license("CC0-1.0")
         .seed(42)
-        .output(OutputSpec::primary(OutputFormat::Glb, "meshes/test_static_lod.glb"))
+        .output(OutputSpec::primary(
+            OutputFormat::Glb,
+            "meshes/test_static_lod.glb",
+        ))
         .recipe(Recipe::new(
             "static_mesh.blender_primitives_v1",
             serde_json::json!({
@@ -674,12 +688,20 @@ fn test_generate_static_mesh_with_lod_chain_metrics() {
         .build();
 
     let result = speccade_backend_blender::static_mesh::generate(&spec, harness.path());
-    assert!(result.is_ok(), "Static mesh generation failed: {:?}", result.err());
+    assert!(
+        result.is_ok(),
+        "Static mesh generation failed: {:?}",
+        result.err()
+    );
 
     let gen_result = result.unwrap();
     assert_eq!(gen_result.metrics.lod_count, Some(2));
 
-    let levels = gen_result.metrics.lod_levels.as_ref().expect("missing lod_levels");
+    let levels = gen_result
+        .metrics
+        .lod_levels
+        .as_ref()
+        .expect("missing lod_levels");
     assert_eq!(levels.len(), 2);
     assert_eq!(levels[0].lod_level, 0);
     assert_eq!(levels[1].lod_level, 1);
@@ -803,7 +825,11 @@ fn test_generate_rigged_animation_motion_metrics() {
     let spec = parse_spec_file(&spec_path).expect("Failed to parse rigged animation spec");
 
     let result = speccade_backend_blender::rigged_animation::generate(&spec, harness.path());
-    assert!(result.is_ok(), "Rigged animation generation failed: {:?}", result.err());
+    assert!(
+        result.is_ok(),
+        "Rigged animation generation failed: {:?}",
+        result.err()
+    );
 
     let gen_result = result.unwrap();
 

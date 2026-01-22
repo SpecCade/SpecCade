@@ -42,7 +42,8 @@ pub(crate) const PRIMITIVES: &[&str] = &[
 ];
 
 /// Valid UV modes for texturing.
-pub(crate) const UV_MODES: &[&str] = &["cylinder_project", "box_project", "sphere_project", "smart"];
+pub(crate) const UV_MODES: &[&str] =
+    &["cylinder_project", "box_project", "sphere_project", "smart"];
 
 /// Registers character stdlib functions into a GlobalsBuilder.
 pub fn register(builder: &mut GlobalsBuilder) {

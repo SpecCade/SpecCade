@@ -26,7 +26,11 @@ impl OutputKind {
 
     /// Returns all output kinds.
     pub fn all() -> &'static [OutputKind] {
-        &[OutputKind::Primary, OutputKind::Metadata, OutputKind::Preview]
+        &[
+            OutputKind::Primary,
+            OutputKind::Metadata,
+            OutputKind::Preview,
+        ]
     }
 }
 

@@ -340,7 +340,8 @@ fn register_mesh_modifier_functions(builder: &mut GlobalsBuilder) {
         heap: &'v Heap,
     ) -> anyhow::Result<Dict<'v>> {
         const VALID_NGON_METHODS: &[&str] = &["beauty", "clip", "fixed"];
-        const VALID_QUAD_METHODS: &[&str] = &["beauty", "fixed", "shortest_diagonal", "longest_diagonal"];
+        const VALID_QUAD_METHODS: &[&str] =
+            &["beauty", "fixed", "shortest_diagonal", "longest_diagonal"];
 
         let mut dict = new_dict(heap);
 

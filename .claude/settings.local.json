@@ -30,7 +30,18 @@
       "Bash(then echo \"OK: $preset\")",
       "Bash(else echo \"MISSING: $preset\")",
       "Bash(fi)",
-      "Bash(del /f \"D:\\\\Development\\\\nethercore-project\\\\speccade\\\\golden\\\\speccade\\\\specs\\\\skeletal_animation\\\\walk_cycle_ik.report.json\")"
+      "Bash(del /f \"D:\\\\Development\\\\nethercore-project\\\\speccade\\\\golden\\\\speccade\\\\specs\\\\skeletal_animation\\\\walk_cycle_ik.report.json\")",
+      "Bash(cargo test:*)",
+      "Bash(cargo fmt:*)",
+      "Bash(cargo clippy:*)",
+      "Bash(cargo run:*)",
+      "Bash(cargo check:*)",
+      "Bash(cargo build:*)",
+      "Bash(ls:*)",
+      "Bash(rustc:*)",
+      "Bash(wc:*)",
+      "Bash(dir:*)",
+      "Bash(Select-String -Pattern \"\\(vfx|flipbook|nine.slice|icon.set|bitmap\\)\" -Context 2,2)"
     ]
   }
 }

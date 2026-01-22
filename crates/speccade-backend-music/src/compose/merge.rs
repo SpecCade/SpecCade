@@ -339,10 +339,11 @@ pub(super) fn apply_transforms(
                     }
 
                     // Parse pivot note
-                    let pivot_midi = parse_note_name(pivot).ok_or_else(|| ExpandError::InvalidExpr {
-                        pattern: ctx.pattern_name.to_string(),
-                        message: format!("invert_pitch: invalid pivot note '{}'", pivot),
-                    })? as i32;
+                    let pivot_midi =
+                        parse_note_name(pivot).ok_or_else(|| ExpandError::InvalidExpr {
+                            pattern: ctx.pattern_name.to_string(),
+                            message: format!("invert_pitch: invalid pivot note '{}'", pivot),
+                        })? as i32;
 
                     // Parse cell note
                     let Some(note_midi) = parse_note_name(note) else {
@@ -354,7 +355,7 @@ pub(super) fn apply_transforms(
                     let inverted = 2 * pivot_midi - note_midi;
 
                     // Clamp to valid MIDI range
-                    if inverted < 0 || inverted > 127 {
+                    if !(0..=127).contains(&inverted) {
                         return Err(ExpandError::InvalidExpr {
                             pattern: ctx.pattern_name.to_string(),
                             message: format!(
@@ -384,12 +385,11 @@ pub(super) fn apply_transforms(
                     }
 
                     // Parse root note to get pitch class
-                    let root_pc = parse_root_pitch_class(root).ok_or_else(|| {
-                        ExpandError::InvalidExpr {
+                    let root_pc =
+                        parse_root_pitch_class(root).ok_or_else(|| ExpandError::InvalidExpr {
                             pattern: ctx.pattern_name.to_string(),
                             message: format!("quantize_pitch: invalid root note '{}'", root),
-                        }
-                    })?;
+                        })?;
 
                     // Parse cell note
                     let Some(note_midi) = parse_note_name(note) else {

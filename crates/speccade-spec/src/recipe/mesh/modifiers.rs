@@ -451,7 +451,8 @@ mod tests {
     #[test]
     fn test_modifier_triangulate_roundtrip() {
         // Test JSON deserialization from spec format
-        let json = r#"{"type":"triangulate","ngon_method":"beauty","quad_method":"longest_diagonal"}"#;
+        let json =
+            r#"{"type":"triangulate","ngon_method":"beauty","quad_method":"longest_diagonal"}"#;
         let parsed: MeshModifier = serde_json::from_str(json).unwrap();
 
         match parsed {
@@ -630,9 +631,7 @@ mod tests {
         let proj: UvProjection = serde_json::from_str(json).unwrap();
         match proj {
             UvProjection::WithSettings {
-                method,
-                uv_margin,
-                ..
+                method, uv_margin, ..
             } => {
                 assert_eq!(method, UvProjectionMethod::Smart);
                 assert_eq!(uv_margin, Some(0.002));
@@ -693,9 +692,7 @@ mod tests {
         let proj: UvProjection = serde_json::from_str(json).unwrap();
         match proj {
             UvProjection::WithSettings {
-                method,
-                uv_margin,
-                ..
+                method, uv_margin, ..
             } => {
                 assert_eq!(method, UvProjectionMethod::Lightmap);
                 assert_eq!(uv_margin, Some(0.005));

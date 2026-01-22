@@ -93,9 +93,9 @@ pub fn generate_bitmap_font(
     };
 
     // Calculate atlas size (simple heuristic: pack glyphs in rows)
-    let glyph_count = (end - start + 1) as u32;
+    let glyph_count = end - start + 1;
     let glyphs_per_row = 16u32;
-    let rows = (glyph_count + glyphs_per_row - 1) / glyphs_per_row;
+    let rows = glyph_count.div_ceil(glyphs_per_row);
     let atlas_width = glyphs_per_row * (glyph_width + padding);
     let atlas_height = rows * (glyph_height + padding);
 
@@ -211,6 +211,7 @@ pub fn generate_bitmap_font(
 }
 
 /// Render a glyph into the atlas with gutter/padding.
+#[allow(clippy::too_many_arguments)]
 fn render_glyph_with_gutter(
     atlas: &mut TextureBuffer,
     pattern: &[u8],

@@ -7,8 +7,10 @@ use starlark::values::dict::Dict;
 use starlark::values::list::AllocList;
 use starlark::values::{Heap, ValueLike};
 
-use crate::compiler::stdlib::validation::{validate_enum, validate_non_empty, validate_positive_int};
 use super::util::{hashed_key, new_dict};
+use crate::compiler::stdlib::validation::{
+    validate_enum, validate_non_empty, validate_positive_int,
+};
 
 /// Builds a suggested track layout for loop cues based on intensity.
 pub fn build_loop_track_layout<'v>(heap: &'v Heap, intensity: &str, channels: i32) -> Dict<'v> {

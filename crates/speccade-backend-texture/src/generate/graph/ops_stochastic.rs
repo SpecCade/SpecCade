@@ -66,7 +66,7 @@ pub fn eval_wang_tiles(
             // Generate corner colors based on position hash for determinism
             let hash = rng.gen_u32();
             let mut corners = [
-                ((hash >> 0) & 1) as u8, // top-left
+                (hash & 1) as u8,        // top-left
                 ((hash >> 1) & 1) as u8, // top-right
                 ((hash >> 2) & 1) as u8, // bottom-left
                 ((hash >> 3) & 1) as u8, // bottom-right
@@ -160,6 +160,7 @@ pub fn eval_wang_tiles(
 ///
 /// Places randomized stamps of the input texture across the output,
 /// with configurable density, scale variation, rotation, and blend mode.
+#[allow(clippy::too_many_arguments)]
 pub fn eval_texture_bomb(
     input: &GrayscaleBuffer,
     width: u32,
@@ -238,7 +239,7 @@ pub fn eval_texture_bomb(
                 let src_v = (dy as f64 / scale + input.height as f64 / 2.0) / input.height as f64;
 
                 // Skip if outside input bounds
-                if src_u < 0.0 || src_u >= 1.0 || src_v < 0.0 || src_v >= 1.0 {
+                if !(0.0..1.0).contains(&src_u) || !(0.0..1.0).contains(&src_v) {
                     continue;
                 }
 
@@ -272,9 +273,9 @@ pub fn eval_texture_bomb(
 
     // Finalize average blend mode
     if blend_mode == BombBlendMode::Average {
-        for i in 0..output.data.len() {
-            if blend_counts[i] > 0 {
-                output.data[i] /= blend_counts[i] as f64;
+        for (i, &count) in blend_counts.iter().enumerate().take(output.data.len()) {
+            if count > 0 {
+                output.data[i] /= count as f64;
             }
         }
     }
@@ -320,7 +321,13 @@ mod tests {
         for y in 0..output.height {
             for x in 0..output.width {
                 let v = output.get(x, y);
-                assert!(v >= 0.0 && v <= 1.0, "value out of range at ({}, {}): {}", x, y, v);
+                assert!(
+                    (0.0..=1.0).contains(&v),
+                    "value out of range at ({}, {}): {}",
+                    x,
+                    y,
+                    v
+                );
                 if (v - first).abs() > 0.01 {
                     has_variation = true;
                 }
@@ -343,7 +350,10 @@ mod tests {
             panic!("expected grayscale");
         };
 
-        assert_eq!(out1.data, out2.data, "same seed should produce identical output");
+        assert_eq!(
+            out1.data, out2.data,
+            "same seed should produce identical output"
+        );
     }
 
     #[test]
@@ -360,13 +370,25 @@ mod tests {
             panic!("expected grayscale");
         };
 
-        assert_ne!(out1.data, out2.data, "different seeds should produce different output");
+        assert_ne!(
+            out1.data, out2.data,
+            "different seeds should produce different output"
+        );
     }
 
     #[test]
     fn test_texture_bomb_basic() {
         let input = make_test_buffer(16, 16, 0.8);
-        let result = eval_texture_bomb(&input, 64, 64, 0.5, [0.8, 1.2], 90.0, BombBlendMode::Max, 42);
+        let result = eval_texture_bomb(
+            &input,
+            64,
+            64,
+            0.5,
+            [0.8, 1.2],
+            90.0,
+            BombBlendMode::Max,
+            42,
+        );
 
         let GraphValue::Grayscale(output) = result else {
             panic!("expected grayscale output");
@@ -384,8 +406,10 @@ mod tests {
     fn test_texture_bomb_deterministic() {
         let input = make_test_buffer(16, 16, 0.5);
 
-        let result1 = eval_texture_bomb(&input, 32, 32, 0.5, [1.0, 1.0], 0.0, BombBlendMode::Max, 42);
-        let result2 = eval_texture_bomb(&input, 32, 32, 0.5, [1.0, 1.0], 0.0, BombBlendMode::Max, 42);
+        let result1 =
+            eval_texture_bomb(&input, 32, 32, 0.5, [1.0, 1.0], 0.0, BombBlendMode::Max, 42);
+        let result2 =
+            eval_texture_bomb(&input, 32, 32, 0.5, [1.0, 1.0], 0.0, BombBlendMode::Max, 42);
 
         let GraphValue::Grayscale(out1) = result1 else {
             panic!("expected grayscale");
@@ -394,15 +418,20 @@ mod tests {
             panic!("expected grayscale");
         };
 
-        assert_eq!(out1.data, out2.data, "same seed should produce identical output");
+        assert_eq!(
+            out1.data, out2.data,
+            "same seed should produce identical output"
+        );
     }
 
     #[test]
     fn test_texture_bomb_different_seeds() {
         let input = make_test_buffer(16, 16, 0.5);
 
-        let result1 = eval_texture_bomb(&input, 32, 32, 0.5, [1.0, 1.0], 0.0, BombBlendMode::Max, 42);
-        let result2 = eval_texture_bomb(&input, 32, 32, 0.5, [1.0, 1.0], 0.0, BombBlendMode::Max, 43);
+        let result1 =
+            eval_texture_bomb(&input, 32, 32, 0.5, [1.0, 1.0], 0.0, BombBlendMode::Max, 42);
+        let result2 =
+            eval_texture_bomb(&input, 32, 32, 0.5, [1.0, 1.0], 0.0, BombBlendMode::Max, 43);
 
         let GraphValue::Grayscale(out1) = result1 else {
             panic!("expected grayscale");
@@ -411,16 +440,30 @@ mod tests {
             panic!("expected grayscale");
         };
 
-        assert_ne!(out1.data, out2.data, "different seeds should produce different output");
+        assert_ne!(
+            out1.data, out2.data,
+            "different seeds should produce different output"
+        );
     }
 
     #[test]
     fn test_texture_bomb_blend_modes() {
         let input = make_test_buffer(16, 16, 0.5);
 
-        let result_max = eval_texture_bomb(&input, 32, 32, 0.8, [1.0, 1.0], 0.0, BombBlendMode::Max, 42);
-        let result_add = eval_texture_bomb(&input, 32, 32, 0.8, [1.0, 1.0], 0.0, BombBlendMode::Add, 42);
-        let result_avg = eval_texture_bomb(&input, 32, 32, 0.8, [1.0, 1.0], 0.0, BombBlendMode::Average, 42);
+        let result_max =
+            eval_texture_bomb(&input, 32, 32, 0.8, [1.0, 1.0], 0.0, BombBlendMode::Max, 42);
+        let result_add =
+            eval_texture_bomb(&input, 32, 32, 0.8, [1.0, 1.0], 0.0, BombBlendMode::Add, 42);
+        let result_avg = eval_texture_bomb(
+            &input,
+            32,
+            32,
+            0.8,
+            [1.0, 1.0],
+            0.0,
+            BombBlendMode::Average,
+            42,
+        );
 
         let GraphValue::Grayscale(out_max) = result_max else {
             panic!("expected grayscale");
@@ -439,16 +482,34 @@ mod tests {
         let sum_avg: f64 = out_avg.data.iter().sum();
 
         // These assertions are probabilistic but should hold for reasonable densities
-        assert!(sum_add >= sum_max * 0.5, "add mode should have significant values");
-        assert!(sum_avg >= 0.0, "average mode should have non-negative values");
+        assert!(
+            sum_add >= sum_max * 0.5,
+            "add mode should have significant values"
+        );
+        assert!(
+            sum_avg >= 0.0,
+            "average mode should have non-negative values"
+        );
     }
 
     #[test]
     fn test_blend_mode_parsing() {
-        assert!(matches!(BombBlendMode::from_str("max"), Ok(BombBlendMode::Max)));
-        assert!(matches!(BombBlendMode::from_str("MAX"), Ok(BombBlendMode::Max)));
-        assert!(matches!(BombBlendMode::from_str("add"), Ok(BombBlendMode::Add)));
-        assert!(matches!(BombBlendMode::from_str("average"), Ok(BombBlendMode::Average)));
+        assert!(matches!(
+            BombBlendMode::from_str("max"),
+            Ok(BombBlendMode::Max)
+        ));
+        assert!(matches!(
+            BombBlendMode::from_str("MAX"),
+            Ok(BombBlendMode::Max)
+        ));
+        assert!(matches!(
+            BombBlendMode::from_str("add"),
+            Ok(BombBlendMode::Add)
+        ));
+        assert!(matches!(
+            BombBlendMode::from_str("average"),
+            Ok(BombBlendMode::Average)
+        ));
         assert!(BombBlendMode::from_str("invalid").is_err());
     }
 }

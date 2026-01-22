@@ -108,9 +108,9 @@ fn validate_rigged_animation_metrics(
     let tolerances = MetricTolerances::default();
 
     // Calculate expected duration in seconds
-    let expected_duration_seconds = params.duration_seconds.unwrap_or_else(|| {
-        params.duration_frames as f64 / params.fps as f64
-    });
+    let expected_duration_seconds = params
+        .duration_seconds
+        .unwrap_or_else(|| params.duration_frames as f64 / params.fps as f64);
 
     // Calculate expected frame count
     let expected_frame_count = (expected_duration_seconds * params.fps as f64).ceil() as u32;
@@ -183,17 +183,16 @@ pub fn generate_from_params(
 ///
 /// Useful for validation and testing.
 pub fn expected_metrics(params: &SkeletalAnimationBlenderRiggedV1Params) -> BlenderMetrics {
-    let duration_seconds = params.duration_seconds.unwrap_or_else(|| {
-        params.duration_frames as f64 / params.fps as f64
-    });
+    let duration_seconds = params
+        .duration_seconds
+        .unwrap_or_else(|| params.duration_frames as f64 / params.fps as f64);
     let frame_count = (duration_seconds * params.fps as f64).ceil() as u32;
-    let bone_count = params.skeleton_preset.as_ref().map(|p| p.bone_count() as u32);
+    let bone_count = params
+        .skeleton_preset
+        .as_ref()
+        .map(|p| p.bone_count() as u32);
 
-    BlenderMetrics::for_animation(
-        bone_count.unwrap_or(0),
-        frame_count,
-        duration_seconds,
-    )
+    BlenderMetrics::for_animation(bone_count.unwrap_or(0), frame_count, duration_seconds)
 }
 
 #[cfg(test)]
