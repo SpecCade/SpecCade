@@ -10,6 +10,7 @@ pub mod mesh;
 pub mod music;
 pub mod sprite;
 pub mod texture;
+pub mod ui;
 pub mod vfx;
 
 pub use animation::*;
@@ -19,6 +20,7 @@ pub use mesh::*;
 pub use music::*;
 pub use sprite::*;
 pub use texture::*;
+pub use ui::*;
 pub use vfx::*;
 
 use serde::{Deserialize, Serialize};
@@ -69,6 +71,12 @@ pub enum RecipeKind {
     /// `vfx.flipbook_v1` - VFX flipbook animation with procedural frame generation.
     #[serde(rename = "vfx.flipbook_v1")]
     VfxFlipbookV1,
+    /// `ui.nine_slice_v1` - Nine-slice panel generation with corner/edge/center regions.
+    #[serde(rename = "ui.nine_slice_v1")]
+    UiNineSliceV1,
+    /// `ui.icon_set_v1` - Icon pack assembly with sprite frames.
+    #[serde(rename = "ui.icon_set_v1")]
+    UiIconSetV1,
 }
 
 impl RecipeKind {
@@ -89,6 +97,8 @@ impl RecipeKind {
             RecipeKind::SpriteSheetV1 => "sprite.sheet_v1",
             RecipeKind::SpriteAnimationV1 => "sprite.animation_v1",
             RecipeKind::VfxFlipbookV1 => "vfx.flipbook_v1",
+            RecipeKind::UiNineSliceV1 => "ui.nine_slice_v1",
+            RecipeKind::UiIconSetV1 => "ui.icon_set_v1",
         }
     }
 
@@ -109,6 +119,8 @@ impl RecipeKind {
             RecipeKind::SpriteSheetV1 => "sprite",
             RecipeKind::SpriteAnimationV1 => "sprite",
             RecipeKind::VfxFlipbookV1 => "vfx",
+            RecipeKind::UiNineSliceV1 => "ui",
+            RecipeKind::UiIconSetV1 => "ui",
         }
     }
 
@@ -124,7 +136,9 @@ impl RecipeKind {
             | RecipeKind::TextureSplatSetV1
             | RecipeKind::SpriteSheetV1
             | RecipeKind::SpriteAnimationV1
-            | RecipeKind::VfxFlipbookV1 => true,
+            | RecipeKind::VfxFlipbookV1
+            | RecipeKind::UiNineSliceV1
+            | RecipeKind::UiIconSetV1 => true,
             RecipeKind::StaticMeshBlenderPrimitivesV1
             | RecipeKind::SkeletalMeshBlenderRiggedMeshV1
             | RecipeKind::SkeletalAnimationBlenderClipV1
@@ -181,6 +195,8 @@ impl Recipe {
             "sprite.sheet_v1" => Some(RecipeKind::SpriteSheetV1),
             "sprite.animation_v1" => Some(RecipeKind::SpriteAnimationV1),
             "vfx.flipbook_v1" => Some(RecipeKind::VfxFlipbookV1),
+            "ui.nine_slice_v1" => Some(RecipeKind::UiNineSliceV1),
+            "ui.icon_set_v1" => Some(RecipeKind::UiIconSetV1),
             _ => None,
         }
     }
@@ -274,6 +290,16 @@ impl Recipe {
 
     /// Attempts to parse params as VFX flipbook params.
     pub fn as_vfx_flipbook(&self) -> Result<VfxFlipbookV1Params, serde_json::Error> {
+        serde_json::from_value(self.params.clone())
+    }
+
+    /// Attempts to parse params as UI nine-slice params.
+    pub fn as_ui_nine_slice(&self) -> Result<UiNineSliceV1Params, serde_json::Error> {
+        serde_json::from_value(self.params.clone())
+    }
+
+    /// Attempts to parse params as UI icon set params.
+    pub fn as_ui_icon_set(&self) -> Result<UiIconSetV1Params, serde_json::Error> {
         serde_json::from_value(self.params.clone())
     }
 
@@ -376,6 +402,18 @@ impl Recipe {
             }
             "vfx.flipbook_v1" => {
                 self.as_vfx_flipbook().map_err(|e| RecipeParamsError {
+                    recipe_kind: self.kind.clone(),
+                    error_message: e.to_string(),
+                })?;
+            }
+            "ui.nine_slice_v1" => {
+                self.as_ui_nine_slice().map_err(|e| RecipeParamsError {
+                    recipe_kind: self.kind.clone(),
+                    error_message: e.to_string(),
+                })?;
+            }
+            "ui.icon_set_v1" => {
+                self.as_ui_icon_set().map_err(|e| RecipeParamsError {
                     recipe_kind: self.kind.clone(),
                     error_message: e.to_string(),
                 })?;

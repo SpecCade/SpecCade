@@ -54,6 +54,11 @@ pub(super) fn validate_outputs_for_recipe_with_budget(
             validate_skeletal_animation_blender_rigged(recipe, result);
             validate_single_primary_output_format(spec, OutputFormat::Glb, result);
         }
+        "sprite.sheet_v1" => validate_sprite_sheet_outputs(spec, recipe, result),
+        "sprite.animation_v1" => validate_sprite_animation_outputs(spec, recipe, result),
+        "vfx.flipbook_v1" => validate_vfx_flipbook_outputs(spec, recipe, result),
+        "ui.nine_slice_v1" => validate_ui_nine_slice_outputs(spec, recipe, result),
+        "ui.icon_set_v1" => validate_ui_icon_set_outputs(spec, recipe, result),
         _ if recipe.kind.starts_with("texture.") => {
             result.add_error(ValidationError::with_path(
                 ErrorCode::UnsupportedRecipeKind,
@@ -427,6 +432,208 @@ fn validate_texture_trimsheet_outputs(spec: &Spec, recipe: &Recipe, result: &mut
             result.add_error(ValidationError::with_path(
                 ErrorCode::OutputValidationFailed,
                 "texture.trimsheet_v1 metadata outputs must have format 'json'",
+                format!("outputs[{}].format", i),
+            ));
+        }
+    }
+}
+
+/// Validates outputs for `sprite.sheet_v1` recipe.
+fn validate_sprite_sheet_outputs(spec: &Spec, recipe: &Recipe, result: &mut ValidationResult) {
+    match recipe.as_sprite_sheet() {
+        Ok(params) => {
+            if params.resolution[0] == 0 || params.resolution[1] == 0 {
+                result.add_error(ValidationError::with_path(
+                    ErrorCode::InvalidRecipeParams,
+                    format!(
+                        "resolution must be positive, got [{}, {}]",
+                        params.resolution[0], params.resolution[1]
+                    ),
+                    "recipe.params.resolution",
+                ));
+            }
+        }
+        Err(e) => {
+            result.add_error(ValidationError::with_path(
+                ErrorCode::InvalidRecipeParams,
+                format!("invalid params for {}: {}", recipe.kind, e),
+                "recipe.params",
+            ));
+        }
+    }
+
+    validate_primary_output_present(spec, result);
+
+    for (i, output) in spec.outputs.iter().enumerate() {
+        if output.kind == OutputKind::Primary && output.format != OutputFormat::Png {
+            result.add_error(ValidationError::with_path(
+                ErrorCode::OutputValidationFailed,
+                "sprite.sheet_v1 primary outputs must have format 'png'",
+                format!("outputs[{}].format", i),
+            ));
+        }
+        if output.kind == OutputKind::Metadata && output.format != OutputFormat::Json {
+            result.add_error(ValidationError::with_path(
+                ErrorCode::OutputValidationFailed,
+                "sprite.sheet_v1 metadata outputs must have format 'json'",
+                format!("outputs[{}].format", i),
+            ));
+        }
+    }
+}
+
+/// Validates outputs for `sprite.animation_v1` recipe.
+fn validate_sprite_animation_outputs(spec: &Spec, recipe: &Recipe, result: &mut ValidationResult) {
+    match recipe.as_sprite_animation() {
+        Ok(_params) => {}
+        Err(e) => {
+            result.add_error(ValidationError::with_path(
+                ErrorCode::InvalidRecipeParams,
+                format!("invalid params for {}: {}", recipe.kind, e),
+                "recipe.params",
+            ));
+        }
+    }
+
+    validate_primary_output_present(spec, result);
+
+    for (i, output) in spec.outputs.iter().enumerate() {
+        if output.kind == OutputKind::Primary && output.format != OutputFormat::Json {
+            result.add_error(ValidationError::with_path(
+                ErrorCode::OutputValidationFailed,
+                "sprite.animation_v1 primary outputs must have format 'json'",
+                format!("outputs[{}].format", i),
+            ));
+        }
+    }
+}
+
+/// Validates outputs for `vfx.flipbook_v1` recipe.
+fn validate_vfx_flipbook_outputs(spec: &Spec, recipe: &Recipe, result: &mut ValidationResult) {
+    match recipe.as_vfx_flipbook() {
+        Ok(params) => {
+            if params.resolution[0] == 0 || params.resolution[1] == 0 {
+                result.add_error(ValidationError::with_path(
+                    ErrorCode::InvalidRecipeParams,
+                    format!(
+                        "resolution must be positive, got [{}, {}]",
+                        params.resolution[0], params.resolution[1]
+                    ),
+                    "recipe.params.resolution",
+                ));
+            }
+        }
+        Err(e) => {
+            result.add_error(ValidationError::with_path(
+                ErrorCode::InvalidRecipeParams,
+                format!("invalid params for {}: {}", recipe.kind, e),
+                "recipe.params",
+            ));
+        }
+    }
+
+    validate_primary_output_present(spec, result);
+
+    for (i, output) in spec.outputs.iter().enumerate() {
+        if output.kind == OutputKind::Primary && output.format != OutputFormat::Png {
+            result.add_error(ValidationError::with_path(
+                ErrorCode::OutputValidationFailed,
+                "vfx.flipbook_v1 primary outputs must have format 'png'",
+                format!("outputs[{}].format", i),
+            ));
+        }
+        if output.kind == OutputKind::Metadata && output.format != OutputFormat::Json {
+            result.add_error(ValidationError::with_path(
+                ErrorCode::OutputValidationFailed,
+                "vfx.flipbook_v1 metadata outputs must have format 'json'",
+                format!("outputs[{}].format", i),
+            ));
+        }
+    }
+}
+
+/// Validates outputs for `ui.nine_slice_v1` recipe.
+fn validate_ui_nine_slice_outputs(spec: &Spec, recipe: &Recipe, result: &mut ValidationResult) {
+    match recipe.as_ui_nine_slice() {
+        Ok(params) => {
+            if params.resolution[0] == 0 || params.resolution[1] == 0 {
+                result.add_error(ValidationError::with_path(
+                    ErrorCode::InvalidRecipeParams,
+                    format!(
+                        "resolution must be positive, got [{}, {}]",
+                        params.resolution[0], params.resolution[1]
+                    ),
+                    "recipe.params.resolution",
+                ));
+            }
+        }
+        Err(e) => {
+            result.add_error(ValidationError::with_path(
+                ErrorCode::InvalidRecipeParams,
+                format!("invalid params for {}: {}", recipe.kind, e),
+                "recipe.params",
+            ));
+        }
+    }
+
+    validate_primary_output_present(spec, result);
+
+    for (i, output) in spec.outputs.iter().enumerate() {
+        if output.kind == OutputKind::Primary && output.format != OutputFormat::Png {
+            result.add_error(ValidationError::with_path(
+                ErrorCode::OutputValidationFailed,
+                "ui.nine_slice_v1 primary outputs must have format 'png'",
+                format!("outputs[{}].format", i),
+            ));
+        }
+        if output.kind == OutputKind::Metadata && output.format != OutputFormat::Json {
+            result.add_error(ValidationError::with_path(
+                ErrorCode::OutputValidationFailed,
+                "ui.nine_slice_v1 metadata outputs must have format 'json'",
+                format!("outputs[{}].format", i),
+            ));
+        }
+    }
+}
+
+/// Validates outputs for `ui.icon_set_v1` recipe.
+fn validate_ui_icon_set_outputs(spec: &Spec, recipe: &Recipe, result: &mut ValidationResult) {
+    match recipe.as_ui_icon_set() {
+        Ok(params) => {
+            if params.resolution[0] == 0 || params.resolution[1] == 0 {
+                result.add_error(ValidationError::with_path(
+                    ErrorCode::InvalidRecipeParams,
+                    format!(
+                        "resolution must be positive, got [{}, {}]",
+                        params.resolution[0], params.resolution[1]
+                    ),
+                    "recipe.params.resolution",
+                ));
+            }
+        }
+        Err(e) => {
+            result.add_error(ValidationError::with_path(
+                ErrorCode::InvalidRecipeParams,
+                format!("invalid params for {}: {}", recipe.kind, e),
+                "recipe.params",
+            ));
+        }
+    }
+
+    validate_primary_output_present(spec, result);
+
+    for (i, output) in spec.outputs.iter().enumerate() {
+        if output.kind == OutputKind::Primary && output.format != OutputFormat::Png {
+            result.add_error(ValidationError::with_path(
+                ErrorCode::OutputValidationFailed,
+                "ui.icon_set_v1 primary outputs must have format 'png'",
+                format!("outputs[{}].format", i),
+            ));
+        }
+        if output.kind == OutputKind::Metadata && output.format != OutputFormat::Json {
+            result.add_error(ValidationError::with_path(
+                ErrorCode::OutputValidationFailed,
+                "ui.icon_set_v1 metadata outputs must have format 'json'",
                 format!("outputs[{}].format", i),
             ));
         }

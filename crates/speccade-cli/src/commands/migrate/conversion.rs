@@ -328,6 +328,14 @@ pub fn generate_outputs(
                 source: None,
             }]
         }
+        AssetType::Ui => {
+            vec![OutputSpec {
+                kind: OutputKind::Primary,
+                format: OutputFormat::Png,
+                path: format!("ui/{}.png", asset_id),
+                source: None,
+            }]
+        }
     };
 
     Ok(outputs)

@@ -117,6 +117,12 @@ pub fn dispatch_generate(
         // VFX flipbook backend
         "vfx.flipbook_v1" => texture::generate_vfx_flipbook(spec, out_root_path),
 
+        // UI nine-slice backend
+        "ui.nine_slice_v1" => texture::generate_ui_nine_slice(spec, out_root_path),
+
+        // UI icon set backend
+        "ui.icon_set_v1" => texture::generate_ui_icon_set(spec, out_root_path),
+
         // Blender static mesh backend
         "static_mesh.blender_primitives_v1" => {
             blender::generate_blender_static_mesh(spec, out_root_path)
@@ -277,6 +283,22 @@ pub fn dispatch_generate_profiled(
                 texture::generate_vfx_flipbook_profiled(spec, out_root_path)
             } else {
                 texture::generate_vfx_flipbook(spec, out_root_path).map(DispatchResult::new)
+            }
+        }
+
+        "ui.nine_slice_v1" => {
+            if profile {
+                texture::generate_ui_nine_slice_profiled(spec, out_root_path)
+            } else {
+                texture::generate_ui_nine_slice(spec, out_root_path).map(DispatchResult::new)
+            }
+        }
+
+        "ui.icon_set_v1" => {
+            if profile {
+                texture::generate_ui_icon_set_profiled(spec, out_root_path)
+            } else {
+                texture::generate_ui_icon_set(spec, out_root_path).map(DispatchResult::new)
             }
         }
 

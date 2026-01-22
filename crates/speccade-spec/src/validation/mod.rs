@@ -175,7 +175,11 @@ fn validate_outputs(spec: &Spec, result: &mut ValidationResult) {
         .is_some_and(|k| {
             matches!(
                 k,
-                "texture.trimsheet_v1" | "sprite.sheet_v1" | "vfx.flipbook_v1"
+                "texture.trimsheet_v1"
+                    | "sprite.sheet_v1"
+                    | "vfx.flipbook_v1"
+                    | "ui.nine_slice_v1"
+                    | "ui.icon_set_v1"
             )
         });
 
@@ -311,6 +315,8 @@ pub fn validate_for_generate_with_budget(spec: &Spec, budget: &BudgetProfile) ->
             "sprite.sheet_v1",
             "sprite.animation_v1",
             "vfx.flipbook_v1",
+            "ui.nine_slice_v1",
+            "ui.icon_set_v1",
             "static_mesh.blender_primitives_v1",
             "skeletal_mesh.blender_rigged_mesh_v1",
             "skeletal_animation.blender_clip_v1",

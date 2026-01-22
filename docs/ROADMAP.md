@@ -204,7 +204,8 @@ Migrated from `docs/FUTURE_GENERATORS.md` (now deprecated).
   - Implemented: RFC-0012 at docs/rfcs/RFC-0012-sprite-assets.md; SpriteSheetV1Params/SpriteAnimationV1Params in crates/speccade-spec/src/recipe/sprite/; sprite backend in crates/speccade-backend-texture/src/sprite.rs; dispatch routing; 36 tests.
 - [x] `GEN-002` Implement a baseline flipbook/VFX generator (`vfx.flipbook_v1` or `vfx.smoke_puff_v1`) with deterministic packing. **Done: 2026-01-22**
   - Implemented: `vfx.flipbook_v1` recipe kind with 4 deterministic effect types (explosion, smoke, energy, dissolve); shelf-packed atlas output with metadata JSON; golden tests; docs/spec-reference/vfx.md; 18 tests.
-- [ ] `GEN-003` Implement UI generators: nine-slice panels (`ui.nine_slice_v1`) and an icon set generator (`ui.icon_set_v1`).
+- [x] `GEN-003` Implement UI generators: nine-slice panels (`ui.nine_slice_v1`) and an icon set generator (`ui.icon_set_v1`). **Done: 2026-01-22**
+  - Implemented: `ui.nine_slice_v1` (9-region panel with mip-safe gutters) and `ui.icon_set_v1` (deterministic shelf-packed icon atlas with metadata); shared gutter utility; golden tests; docs/spec-reference/ui.md; 60 tests.
 - [ ] `GEN-004` Implement font generators (bitmap pixel fonts and/or MSDF with JSON metrics).
   - Candidates: `font.bitmap_v1`, `font.msdf_v1`.
 - [ ] `GEN-005` Add VFX particle "material/profile" presets (additive/soft/distort/etc.).
