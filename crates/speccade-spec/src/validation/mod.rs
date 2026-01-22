@@ -176,6 +176,8 @@ fn validate_outputs(spec: &Spec, result: &mut ValidationResult) {
             matches!(
                 k,
                 "texture.trimsheet_v1"
+                    | "texture.decal_v1"
+                    | "texture.splat_set_v1"
                     | "sprite.sheet_v1"
                     | "vfx.flipbook_v1"
                     | "ui.nine_slice_v1"
@@ -313,6 +315,8 @@ pub fn validate_for_generate_with_budget(spec: &Spec, budget: &BudgetProfile) ->
             "music.tracker_song_compose_v1",
             "texture.procedural_v1",
             "texture.trimsheet_v1",
+            "texture.decal_v1",
+            "texture.splat_set_v1",
             "sprite.sheet_v1",
             "sprite.animation_v1",
             "vfx.flipbook_v1",

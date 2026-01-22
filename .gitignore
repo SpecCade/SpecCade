@@ -1,7 +1,7 @@
 # Rust
 target/
 target_alt/
-_codex_target/
+_codex_target*/
 .cargo-target-*/
 **/*.rs.bk
 Cargo.lock
@@ -20,3 +20,4 @@ nul
 
 # Local-only files (agent/dev artifacts)
 docs/ROADMAP_COMPLETION_AUDIT.md
+.claude/settings.local.json

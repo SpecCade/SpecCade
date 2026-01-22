@@ -38,6 +38,8 @@ pub(super) fn validate_outputs_for_recipe_with_budget(
             validate_texture_procedural_outputs_with_budget(spec, recipe, budget, result)
         }
         "texture.trimsheet_v1" => validate_texture_trimsheet_outputs(spec, recipe, result),
+        "texture.decal_v1" => validate_texture_decal_outputs(spec, recipe, result),
+        "texture.splat_set_v1" => validate_texture_splat_set_outputs(spec, recipe, result),
         "static_mesh.blender_primitives_v1" => {
             validate_static_mesh_blender_primitives(recipe, result);
             validate_single_primary_output_format(spec, OutputFormat::Glb, result);
@@ -59,11 +61,12 @@ pub(super) fn validate_outputs_for_recipe_with_budget(
         "vfx.flipbook_v1" => validate_vfx_flipbook_outputs(spec, recipe, result),
         "ui.nine_slice_v1" => validate_ui_nine_slice_outputs(spec, recipe, result),
         "ui.icon_set_v1" => validate_ui_icon_set_outputs(spec, recipe, result),
+        "font.bitmap_v1" => validate_font_bitmap_outputs(spec, recipe, result),
         _ if recipe.kind.starts_with("texture.") => {
             result.add_error(ValidationError::with_path(
                 ErrorCode::UnsupportedRecipeKind,
                 format!(
-                    "unsupported texture recipe kind '{}'; use 'texture.procedural_v1' or 'texture.trimsheet_v1'",
+                    "unsupported texture recipe kind '{}'; use 'texture.procedural_v1', 'texture.trimsheet_v1', 'texture.decal_v1', or 'texture.splat_set_v1'",
                     recipe.kind
                 ),
                 "recipe.kind",
@@ -344,7 +347,7 @@ fn validate_skeletal_animation_blender_rigged(recipe: &Recipe, result: &mut Vali
 /// Validates outputs for `texture.trimsheet_v1` recipe.
 ///
 /// Trimsheet specs require:
-/// - Exactly one primary output with PNG format
+/// - At least one primary output with PNG format
 /// - Optional metadata output(s) with JSON format
 fn validate_texture_trimsheet_outputs(spec: &Spec, recipe: &Recipe, result: &mut ValidationResult) {
     // Validate params parse correctly
@@ -434,6 +437,269 @@ fn validate_texture_trimsheet_outputs(spec: &Spec, recipe: &Recipe, result: &mut
                 "texture.trimsheet_v1 metadata outputs must have format 'json'",
                 format!("outputs[{}].format", i),
             ));
+        }
+    }
+}
+
+/// Validates outputs for `texture.decal_v1` recipe.
+fn validate_texture_decal_outputs(spec: &Spec, recipe: &Recipe, result: &mut ValidationResult) {
+    let params = match recipe.as_texture_decal() {
+        Ok(params) => {
+            if params.resolution[0] == 0 || params.resolution[1] == 0 {
+                result.add_error(ValidationError::with_path(
+                    ErrorCode::InvalidRecipeParams,
+                    format!(
+                        "resolution must be positive, got [{}, {}]",
+                        params.resolution[0], params.resolution[1]
+                    ),
+                    "recipe.params.resolution",
+                ));
+            }
+            params
+        }
+        Err(e) => {
+            result.add_error(ValidationError::with_path(
+                ErrorCode::InvalidRecipeParams,
+                format!("invalid params for {}: {}", recipe.kind, e),
+                "recipe.params",
+            ));
+            return;
+        }
+    };
+
+    validate_primary_output_present(spec, result);
+
+    let mut has_albedo_output = false;
+    for (i, output) in spec.outputs.iter().enumerate() {
+        match output.kind {
+            OutputKind::Primary => {
+                if output.format != OutputFormat::Png {
+                    result.add_error(ValidationError::with_path(
+                        ErrorCode::OutputValidationFailed,
+                        "texture.decal_v1 primary outputs must have format 'png'",
+                        format!("outputs[{}].format", i),
+                    ));
+                }
+
+                let source = output.source.as_deref().unwrap_or("");
+                match source {
+                    "" | "albedo" => has_albedo_output = true,
+                    "normal" => {
+                        if params.normal_output.is_none() {
+                            result.add_error(ValidationError::with_path(
+                                ErrorCode::OutputValidationFailed,
+                                "texture.decal_v1 output requests normal map but recipe.params.normal_output is not set",
+                                format!("outputs[{}].source", i),
+                            ));
+                        }
+                    }
+                    "roughness" => {
+                        if params.roughness_output.is_none() {
+                            result.add_error(ValidationError::with_path(
+                                ErrorCode::OutputValidationFailed,
+                                "texture.decal_v1 output requests roughness map but recipe.params.roughness_output is not set",
+                                format!("outputs[{}].source", i),
+                            ));
+                        }
+                    }
+                    other => {
+                        result.add_error(ValidationError::with_path(
+                            ErrorCode::OutputValidationFailed,
+                            format!(
+                                "texture.decal_v1 output source '{}' is not supported (expected '', 'albedo', 'normal', or 'roughness')",
+                                other
+                            ),
+                            format!("outputs[{}].source", i),
+                        ));
+                    }
+                }
+            }
+            OutputKind::Metadata => {
+                if output.format != OutputFormat::Json {
+                    result.add_error(ValidationError::with_path(
+                        ErrorCode::OutputValidationFailed,
+                        "texture.decal_v1 metadata outputs must have format 'json'",
+                        format!("outputs[{}].format", i),
+                    ));
+                }
+            }
+            OutputKind::Preview => {}
+        }
+    }
+
+    if !has_albedo_output {
+        result.add_error(ValidationError::with_path(
+            ErrorCode::OutputValidationFailed,
+            "texture.decal_v1 requires at least one albedo output (primary output with empty source or source 'albedo')",
+            "outputs",
+        ));
+    }
+}
+
+/// Validates outputs for `texture.splat_set_v1` recipe.
+fn validate_texture_splat_set_outputs(spec: &Spec, recipe: &Recipe, result: &mut ValidationResult) {
+    let params = match recipe.as_texture_splat_set() {
+        Ok(params) => {
+            if params.resolution[0] == 0 || params.resolution[1] == 0 {
+                result.add_error(ValidationError::with_path(
+                    ErrorCode::InvalidRecipeParams,
+                    format!(
+                        "resolution must be positive, got [{}, {}]",
+                        params.resolution[0], params.resolution[1]
+                    ),
+                    "recipe.params.resolution",
+                ));
+            }
+            if params.layers.is_empty() {
+                result.add_error(ValidationError::with_path(
+                    ErrorCode::InvalidRecipeParams,
+                    "layers must not be empty",
+                    "recipe.params.layers",
+                ));
+            }
+            params
+        }
+        Err(e) => {
+            result.add_error(ValidationError::with_path(
+                ErrorCode::InvalidRecipeParams,
+                format!("invalid params for {}: {}", recipe.kind, e),
+                "recipe.params",
+            ));
+            return;
+        }
+    };
+
+    let mut layer_ids = std::collections::HashSet::new();
+    for (i, layer) in params.layers.iter().enumerate() {
+        if layer.id.is_empty() {
+            result.add_error(ValidationError::with_path(
+                ErrorCode::InvalidRecipeParams,
+                "layer.id must not be empty",
+                format!("recipe.params.layers[{}].id", i),
+            ));
+        }
+        if !layer_ids.insert(layer.id.as_str()) {
+            result.add_error(ValidationError::with_path(
+                ErrorCode::InvalidRecipeParams,
+                format!("duplicate layer id: '{}'", layer.id),
+                format!("recipe.params.layers[{}].id", i),
+            ));
+        }
+    }
+
+    let mask_count = (params.layers.len() + 3) / 4;
+
+    validate_primary_output_present(spec, result);
+
+    for (i, output) in spec.outputs.iter().enumerate() {
+        match output.kind {
+            OutputKind::Primary => {
+                if output.format != OutputFormat::Png {
+                    result.add_error(ValidationError::with_path(
+                        ErrorCode::OutputValidationFailed,
+                        "texture.splat_set_v1 primary outputs must have format 'png'",
+                        format!("outputs[{}].format", i),
+                    ));
+                }
+
+                let source = output
+                    .source
+                    .as_deref()
+                    .unwrap_or("")
+                    .trim();
+                if source.is_empty() {
+                    result.add_error(ValidationError::with_path(
+                        ErrorCode::OutputValidationFailed,
+                        "texture.splat_set_v1 primary outputs must set 'source' (e.g. 'grass.albedo', 'mask0', 'macro')",
+                        format!("outputs[{}].source", i),
+                    ));
+                    continue;
+                }
+
+                if source == "macro" {
+                    if !params.macro_variation {
+                        result.add_error(ValidationError::with_path(
+                            ErrorCode::OutputValidationFailed,
+                            "texture.splat_set_v1 output requests macro texture but recipe.params.macro_variation is false",
+                            format!("outputs[{}].source", i),
+                        ));
+                    }
+                    continue;
+                }
+
+                if let Some(rest) = source.strip_prefix("mask") {
+                    match rest.parse::<usize>() {
+                        Ok(idx) if idx < mask_count => {}
+                        Ok(_) => {
+                            result.add_error(ValidationError::with_path(
+                                ErrorCode::OutputValidationFailed,
+                                format!(
+                                    "texture.splat_set_v1 output requests '{}' but mask index is out of range (0..{})",
+                                    source,
+                                    mask_count.saturating_sub(1)
+                                ),
+                                format!("outputs[{}].source", i),
+                            ));
+                        }
+                        Err(_) => {
+                            result.add_error(ValidationError::with_path(
+                                ErrorCode::OutputValidationFailed,
+                                format!(
+                                    "texture.splat_set_v1 output source '{}' is invalid (expected 'maskN')",
+                                    source
+                                ),
+                                format!("outputs[{}].source", i),
+                            ));
+                        }
+                    }
+                    continue;
+                }
+
+                if let Some((layer_id, map_type)) = source.split_once('.') {
+                    if !layer_ids.contains(layer_id) {
+                        result.add_error(ValidationError::with_path(
+                            ErrorCode::OutputValidationFailed,
+                            format!(
+                                "texture.splat_set_v1 output source '{}' references unknown layer id '{}'",
+                                source, layer_id
+                            ),
+                            format!("outputs[{}].source", i),
+                        ));
+                        continue;
+                    }
+
+                    if !matches!(map_type, "albedo" | "normal" | "roughness") {
+                        result.add_error(ValidationError::with_path(
+                            ErrorCode::OutputValidationFailed,
+                            format!(
+                                "texture.splat_set_v1 output source '{}' has invalid map type '{}' (expected 'albedo', 'normal', or 'roughness')",
+                                source, map_type
+                            ),
+                            format!("outputs[{}].source", i),
+                        ));
+                    }
+                    continue;
+                }
+
+                result.add_error(ValidationError::with_path(
+                    ErrorCode::OutputValidationFailed,
+                    format!(
+                        "texture.splat_set_v1 output source '{}' is invalid (expected '<layer>.<map>', 'maskN', or 'macro')",
+                        source
+                    ),
+                    format!("outputs[{}].source", i),
+                ));
+            }
+            OutputKind::Metadata => {
+                if output.format != OutputFormat::Json {
+                    result.add_error(ValidationError::with_path(
+                        ErrorCode::OutputValidationFailed,
+                        "texture.splat_set_v1 metadata outputs must have format 'json'",
+                        format!("outputs[{}].format", i),
+                    ));
+                }
+            }
+            OutputKind::Preview => {}
         }
     }
 }
@@ -618,7 +884,7 @@ fn validate_ui_icon_set_outputs(spec: &Spec, recipe: &Recipe, result: &mut Valid
                 "recipe.params",
             ));
         }
-    }
+}
 
     validate_primary_output_present(spec, result);
 
@@ -634,6 +900,75 @@ fn validate_ui_icon_set_outputs(spec: &Spec, recipe: &Recipe, result: &mut Valid
             result.add_error(ValidationError::with_path(
                 ErrorCode::OutputValidationFailed,
                 "ui.icon_set_v1 metadata outputs must have format 'json'",
+                format!("outputs[{}].format", i),
+            ));
+        }
+    }
+}
+
+/// Validates outputs for `font.bitmap_v1` recipe.
+fn validate_font_bitmap_outputs(spec: &Spec, recipe: &Recipe, result: &mut ValidationResult) {
+    match recipe.as_font_bitmap() {
+        Ok(params) => {
+            if params.charset[0] > params.charset[1] {
+                result.add_error(ValidationError::with_path(
+                    ErrorCode::InvalidRecipeParams,
+                    format!(
+                        "charset start must be <= end, got [{}, {}]",
+                        params.charset[0], params.charset[1]
+                    ),
+                    "recipe.params.charset",
+                ));
+            }
+
+            match (params.glyph_size[0], params.glyph_size[1]) {
+                (5, 7) | (8, 8) | (6, 9) => {}
+                (w, h) => {
+                    result.add_error(ValidationError::with_path(
+                        ErrorCode::InvalidRecipeParams,
+                        format!(
+                            "unsupported glyph_size [{}, {}]; supported sizes: [5,7], [8,8], [6,9]",
+                            w, h
+                        ),
+                        "recipe.params.glyph_size",
+                    ));
+                }
+            }
+
+            for (idx, c) in params.color.iter().enumerate() {
+                if !(0.0..=1.0).contains(c) {
+                    result.add_error(ValidationError::with_path(
+                        ErrorCode::InvalidRecipeParams,
+                        format!("color[{}] must be in [0,1], got {}", idx, c),
+                        format!("recipe.params.color[{}]", idx),
+                    ));
+                }
+            }
+        }
+        Err(e) => {
+            result.add_error(ValidationError::with_path(
+                ErrorCode::InvalidRecipeParams,
+                format!("invalid params for {}: {}", recipe.kind, e),
+                "recipe.params",
+            ));
+            return;
+        }
+    }
+
+    validate_primary_output_present(spec, result);
+
+    for (i, output) in spec.outputs.iter().enumerate() {
+        if output.kind == OutputKind::Primary && output.format != OutputFormat::Png {
+            result.add_error(ValidationError::with_path(
+                ErrorCode::OutputValidationFailed,
+                "font.bitmap_v1 primary outputs must have format 'png'",
+                format!("outputs[{}].format", i),
+            ));
+        }
+        if output.kind == OutputKind::Metadata && output.format != OutputFormat::Json {
+            result.add_error(ValidationError::with_path(
+                ErrorCode::OutputValidationFailed,
+                "font.bitmap_v1 metadata outputs must have format 'json'",
                 format!("outputs[{}].format", i),
             ));
         }

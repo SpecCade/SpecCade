@@ -114,6 +114,82 @@ fn write_metadata_outputs<T: serde::Serialize>(
     Ok(outputs)
 }
 
+fn write_texture_decal_outputs(
+    spec: &Spec,
+    out_root: &Path,
+    result: &speccade_backend_texture::DecalResult,
+) -> Result<Vec<OutputResult>, DispatchError> {
+    let recipe_kind = "texture.decal_v1";
+
+    let primary_outputs = get_primary_outputs(spec, OutputFormat::Png, recipe_kind)?;
+    let mut outputs = Vec::new();
+    let mut wrote_albedo = false;
+
+    for (output_index, output_spec) in &primary_outputs {
+        let source = output_spec.source.as_deref().unwrap_or("");
+        match source {
+            "" | "albedo" => {
+                wrote_albedo = true;
+                write_output_bytes(out_root, &output_spec.path, &result.albedo.png_data)?;
+                outputs.push(OutputResult::tier1(
+                    output_spec.kind,
+                    OutputFormat::Png,
+                    PathBuf::from(&output_spec.path),
+                    result.albedo.hash.clone(),
+                ));
+            }
+            "normal" => {
+                let normal = result.normal.as_ref().ok_or_else(|| {
+                    DispatchError::BackendError(format!(
+                        "{} output requested normal map but recipe did not generate one (outputs[{}].source)",
+                        recipe_kind, output_index
+                    ))
+                })?;
+                write_output_bytes(out_root, &output_spec.path, &normal.png_data)?;
+                outputs.push(OutputResult::tier1(
+                    output_spec.kind,
+                    OutputFormat::Png,
+                    PathBuf::from(&output_spec.path),
+                    normal.hash.clone(),
+                ));
+            }
+            "roughness" => {
+                let roughness = result.roughness.as_ref().ok_or_else(|| {
+                    DispatchError::BackendError(format!(
+                        "{} output requested roughness map but recipe did not generate one (outputs[{}].source)",
+                        recipe_kind, output_index
+                    ))
+                })?;
+                write_output_bytes(out_root, &output_spec.path, &roughness.png_data)?;
+                outputs.push(OutputResult::tier1(
+                    output_spec.kind,
+                    OutputFormat::Png,
+                    PathBuf::from(&output_spec.path),
+                    roughness.hash.clone(),
+                ));
+            }
+            other => {
+                return Err(DispatchError::BackendError(format!(
+                    "{} primary outputs have unknown source '{}' (outputs[{}].source); expected '', 'albedo', 'normal', or 'roughness'",
+                    recipe_kind, other, output_index
+                )));
+            }
+        }
+    }
+
+    if !wrote_albedo {
+        return Err(DispatchError::BackendError(format!(
+            "{} requires at least one albedo output (primary output with empty source or source 'albedo')",
+            recipe_kind
+        )));
+    }
+
+    let metadata_outputs = get_metadata_outputs(spec, recipe_kind)?;
+    outputs.extend(write_metadata_outputs(out_root, &metadata_outputs, &result.metadata)?);
+
+    Ok(outputs)
+}
+
 /// Generate spritesheet atlas outputs using the texture backend.
 pub(super) fn generate_sprite_sheet(
     spec: &Spec,
@@ -498,121 +574,7 @@ pub(super) fn generate_texture_decal(
 
     let result = speccade_backend_texture::generate_decal(&params, spec.seed)
         .map_err(|e| DispatchError::BackendError(format!("Decal generation failed: {}", e)))?;
-
-    let mut outputs = Vec::new();
-
-    // Find primary output for the albedo PNG
-    let primary_outputs: Vec<(usize, &speccade_spec::OutputSpec)> = spec
-        .outputs
-        .iter()
-        .enumerate()
-        .filter(|(_, o)| o.kind == OutputKind::Primary)
-        .collect();
-
-    if primary_outputs.is_empty() {
-        return Err(DispatchError::BackendError(
-            "texture.decal_v1 requires at least one output of kind 'primary'".to_string(),
-        ));
-    }
-
-    for (output_index, output_spec) in &primary_outputs {
-        if output_spec.format != OutputFormat::Png {
-            return Err(DispatchError::BackendError(format!(
-                "texture.decal_v1 primary outputs must have format 'png' (outputs[{}].format)",
-                output_index
-            )));
-        }
-
-        write_output_bytes(out_root, &output_spec.path, &result.albedo.png_data)?;
-
-        outputs.push(OutputResult::tier1(
-            output_spec.kind,
-            OutputFormat::Png,
-            PathBuf::from(&output_spec.path),
-            result.albedo.hash.clone(),
-        ));
-    }
-
-    // Find additional primary outputs for normal and roughness maps (using source field)
-    for (output_index, output_spec) in spec.outputs.iter().enumerate() {
-        // Skip the first primary output (albedo) and metadata
-        if output_spec.kind != OutputKind::Primary {
-            continue;
-        }
-        // Use source field to identify normal/roughness outputs
-        let source = output_spec.source.as_deref().unwrap_or("");
-        if source.is_empty()
-            && !output_spec.path.contains("normal")
-            && !output_spec.path.contains("roughness")
-        {
-            // This is the main albedo output, already handled above
-            continue;
-        }
-
-        if output_spec.format != OutputFormat::Png {
-            return Err(DispatchError::BackendError(format!(
-                "texture.decal_v1 outputs must have format 'png' (outputs[{}].format)",
-                output_index
-            )));
-        }
-
-        if source == "normal" || output_spec.path.contains("normal") {
-            if let Some(ref normal) = result.normal {
-                write_output_bytes(out_root, &output_spec.path, &normal.png_data)?;
-                outputs.push(OutputResult::tier1(
-                    output_spec.kind,
-                    OutputFormat::Png,
-                    PathBuf::from(&output_spec.path),
-                    normal.hash.clone(),
-                ));
-            }
-        } else if source == "roughness" || output_spec.path.contains("roughness") {
-            if let Some(ref roughness) = result.roughness {
-                write_output_bytes(out_root, &output_spec.path, &roughness.png_data)?;
-                outputs.push(OutputResult::tier1(
-                    output_spec.kind,
-                    OutputFormat::Png,
-                    PathBuf::from(&output_spec.path),
-                    roughness.hash.clone(),
-                ));
-            }
-        }
-    }
-
-    // Find metadata output (JSON sidecar)
-    let metadata_outputs: Vec<(usize, &speccade_spec::OutputSpec)> = spec
-        .outputs
-        .iter()
-        .enumerate()
-        .filter(|(_, o)| o.kind == OutputKind::Metadata)
-        .collect();
-
-    for (output_index, output_spec) in &metadata_outputs {
-        if output_spec.format != OutputFormat::Json {
-            return Err(DispatchError::BackendError(format!(
-                "texture.decal_v1 metadata outputs must have format 'json' (outputs[{}].format)",
-                output_index
-            )));
-        }
-
-        let metadata_json = serde_json::to_string_pretty(&result.metadata).map_err(|e| {
-            DispatchError::BackendError(format!("Failed to serialize metadata: {}", e))
-        })?;
-
-        write_output_bytes(out_root, &output_spec.path, metadata_json.as_bytes())?;
-
-        // Calculate hash of the JSON metadata
-        let metadata_hash = blake3::hash(metadata_json.as_bytes()).to_hex().to_string();
-
-        outputs.push(OutputResult::tier1(
-            output_spec.kind,
-            OutputFormat::Json,
-            PathBuf::from(&output_spec.path),
-            metadata_hash,
-        ));
-    }
-
-    Ok(outputs)
+    write_texture_decal_outputs(spec, out_root, &result)
 }
 
 /// Generate decal texture outputs with profiling instrumentation.
@@ -644,114 +606,7 @@ pub(super) fn generate_texture_decal_profiled(
 
     // Stage: write_outputs
     let write_start = Instant::now();
-    let mut outputs = Vec::new();
-
-    // Find primary output for the albedo PNG
-    let primary_outputs: Vec<(usize, &speccade_spec::OutputSpec)> = spec
-        .outputs
-        .iter()
-        .enumerate()
-        .filter(|(_, o)| o.kind == OutputKind::Primary)
-        .collect();
-
-    if primary_outputs.is_empty() {
-        return Err(DispatchError::BackendError(
-            "texture.decal_v1 requires at least one output of kind 'primary'".to_string(),
-        ));
-    }
-
-    for (output_index, output_spec) in &primary_outputs {
-        if output_spec.format != OutputFormat::Png {
-            return Err(DispatchError::BackendError(format!(
-                "texture.decal_v1 primary outputs must have format 'png' (outputs[{}].format)",
-                output_index
-            )));
-        }
-
-        write_output_bytes(out_root, &output_spec.path, &result.albedo.png_data)?;
-
-        outputs.push(OutputResult::tier1(
-            output_spec.kind,
-            OutputFormat::Png,
-            PathBuf::from(&output_spec.path),
-            result.albedo.hash.clone(),
-        ));
-    }
-
-    // Find additional primary outputs for normal and roughness maps (using source field)
-    for (output_index, output_spec) in spec.outputs.iter().enumerate() {
-        if output_spec.kind != OutputKind::Primary {
-            continue;
-        }
-        let source = output_spec.source.as_deref().unwrap_or("");
-        if source.is_empty()
-            && !output_spec.path.contains("normal")
-            && !output_spec.path.contains("roughness")
-        {
-            continue;
-        }
-
-        if output_spec.format != OutputFormat::Png {
-            return Err(DispatchError::BackendError(format!(
-                "texture.decal_v1 outputs must have format 'png' (outputs[{}].format)",
-                output_index
-            )));
-        }
-
-        if source == "normal" || output_spec.path.contains("normal") {
-            if let Some(ref normal) = result.normal {
-                write_output_bytes(out_root, &output_spec.path, &normal.png_data)?;
-                outputs.push(OutputResult::tier1(
-                    output_spec.kind,
-                    OutputFormat::Png,
-                    PathBuf::from(&output_spec.path),
-                    normal.hash.clone(),
-                ));
-            }
-        } else if source == "roughness" || output_spec.path.contains("roughness") {
-            if let Some(ref roughness) = result.roughness {
-                write_output_bytes(out_root, &output_spec.path, &roughness.png_data)?;
-                outputs.push(OutputResult::tier1(
-                    output_spec.kind,
-                    OutputFormat::Png,
-                    PathBuf::from(&output_spec.path),
-                    roughness.hash.clone(),
-                ));
-            }
-        }
-    }
-
-    // Find metadata output (JSON sidecar)
-    let metadata_outputs: Vec<(usize, &speccade_spec::OutputSpec)> = spec
-        .outputs
-        .iter()
-        .enumerate()
-        .filter(|(_, o)| o.kind == OutputKind::Metadata)
-        .collect();
-
-    for (output_index, output_spec) in &metadata_outputs {
-        if output_spec.format != OutputFormat::Json {
-            return Err(DispatchError::BackendError(format!(
-                "texture.decal_v1 metadata outputs must have format 'json' (outputs[{}].format)",
-                output_index
-            )));
-        }
-
-        let metadata_json = serde_json::to_string_pretty(&result.metadata).map_err(|e| {
-            DispatchError::BackendError(format!("Failed to serialize metadata: {}", e))
-        })?;
-
-        write_output_bytes(out_root, &output_spec.path, metadata_json.as_bytes())?;
-
-        let metadata_hash = blake3::hash(metadata_json.as_bytes()).to_hex().to_string();
-
-        outputs.push(OutputResult::tier1(
-            output_spec.kind,
-            OutputFormat::Json,
-            PathBuf::from(&output_spec.path),
-            metadata_hash,
-        ));
-    }
+    let outputs = write_texture_decal_outputs(spec, out_root, &result)?;
 
     stages.push(StageTiming::new(
         "write_outputs",
