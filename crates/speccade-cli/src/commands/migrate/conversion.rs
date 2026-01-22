@@ -129,6 +129,7 @@ pub fn map_category_to_type(category: &str) -> Result<(AssetType, String)> {
             AssetType::SkeletalAnimation,
             "skeletal_animation.blender_clip_v1".to_string(),
         )),
+        "fonts" => Ok((AssetType::Font, "font.bitmap_v1".to_string())),
         _ => bail!("Unknown category: {}", category),
     }
 }
@@ -335,6 +336,22 @@ pub fn generate_outputs(
                 path: format!("ui/{}.png", asset_id),
                 source: None,
             }]
+        }
+        AssetType::Font => {
+            vec![
+                OutputSpec {
+                    kind: OutputKind::Primary,
+                    format: OutputFormat::Png,
+                    path: format!("fonts/{}_atlas.png", asset_id),
+                    source: None,
+                },
+                OutputSpec {
+                    kind: OutputKind::Metadata,
+                    format: OutputFormat::Json,
+                    path: format!("fonts/{}_metrics.json", asset_id),
+                    source: None,
+                },
+            ]
         }
     };
 

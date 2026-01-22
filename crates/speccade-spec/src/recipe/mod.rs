@@ -6,6 +6,7 @@
 pub mod animation;
 pub mod audio;
 pub mod character;
+pub mod font;
 pub mod mesh;
 pub mod music;
 pub mod sprite;
@@ -16,6 +17,7 @@ pub mod vfx;
 pub use animation::*;
 pub use audio::*;
 pub use character::*;
+pub use font::*;
 pub use mesh::*;
 pub use music::*;
 pub use sprite::*;
@@ -77,6 +79,9 @@ pub enum RecipeKind {
     /// `ui.icon_set_v1` - Icon pack assembly with sprite frames.
     #[serde(rename = "ui.icon_set_v1")]
     UiIconSetV1,
+    /// `font.bitmap_v1` - Bitmap pixel font with glyph atlas and metrics.
+    #[serde(rename = "font.bitmap_v1")]
+    FontBitmapV1,
 }
 
 impl RecipeKind {
@@ -99,6 +104,7 @@ impl RecipeKind {
             RecipeKind::VfxFlipbookV1 => "vfx.flipbook_v1",
             RecipeKind::UiNineSliceV1 => "ui.nine_slice_v1",
             RecipeKind::UiIconSetV1 => "ui.icon_set_v1",
+            RecipeKind::FontBitmapV1 => "font.bitmap_v1",
         }
     }
 
@@ -121,6 +127,7 @@ impl RecipeKind {
             RecipeKind::VfxFlipbookV1 => "vfx",
             RecipeKind::UiNineSliceV1 => "ui",
             RecipeKind::UiIconSetV1 => "ui",
+            RecipeKind::FontBitmapV1 => "font",
         }
     }
 
@@ -138,7 +145,8 @@ impl RecipeKind {
             | RecipeKind::SpriteAnimationV1
             | RecipeKind::VfxFlipbookV1
             | RecipeKind::UiNineSliceV1
-            | RecipeKind::UiIconSetV1 => true,
+            | RecipeKind::UiIconSetV1
+            | RecipeKind::FontBitmapV1 => true,
             RecipeKind::StaticMeshBlenderPrimitivesV1
             | RecipeKind::SkeletalMeshBlenderRiggedMeshV1
             | RecipeKind::SkeletalAnimationBlenderClipV1
@@ -197,6 +205,7 @@ impl Recipe {
             "vfx.flipbook_v1" => Some(RecipeKind::VfxFlipbookV1),
             "ui.nine_slice_v1" => Some(RecipeKind::UiNineSliceV1),
             "ui.icon_set_v1" => Some(RecipeKind::UiIconSetV1),
+            "font.bitmap_v1" => Some(RecipeKind::FontBitmapV1),
             _ => None,
         }
     }
@@ -300,6 +309,11 @@ impl Recipe {
 
     /// Attempts to parse params as UI icon set params.
     pub fn as_ui_icon_set(&self) -> Result<UiIconSetV1Params, serde_json::Error> {
+        serde_json::from_value(self.params.clone())
+    }
+
+    /// Attempts to parse params as bitmap font params.
+    pub fn as_font_bitmap(&self) -> Result<FontBitmapV1Params, serde_json::Error> {
         serde_json::from_value(self.params.clone())
     }
 
@@ -414,6 +428,12 @@ impl Recipe {
             }
             "ui.icon_set_v1" => {
                 self.as_ui_icon_set().map_err(|e| RecipeParamsError {
+                    recipe_kind: self.kind.clone(),
+                    error_message: e.to_string(),
+                })?;
+            }
+            "font.bitmap_v1" => {
+                self.as_font_bitmap().map_err(|e| RecipeParamsError {
                     recipe_kind: self.kind.clone(),
                     error_message: e.to_string(),
                 })?;

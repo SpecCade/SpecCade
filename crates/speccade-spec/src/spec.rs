@@ -27,6 +27,8 @@ pub enum AssetType {
     Vfx,
     /// UI elements (nine-slice panels, icon sets).
     Ui,
+    /// Bitmap and MSDF fonts with glyph metrics.
+    Font,
     /// Non-skinned 3D meshes (GLB).
     StaticMesh,
     /// Skinned meshes with skeleton (GLB).
@@ -45,6 +47,7 @@ impl AssetType {
             AssetType::Sprite => "sprite",
             AssetType::Vfx => "vfx",
             AssetType::Ui => "ui",
+            AssetType::Font => "font",
             AssetType::StaticMesh => "static_mesh",
             AssetType::SkeletalMesh => "skeletal_mesh",
             AssetType::SkeletalAnimation => "skeletal_animation",
@@ -72,6 +75,7 @@ impl AssetType {
             AssetType::Sprite,
             AssetType::Vfx,
             AssetType::Ui,
+            AssetType::Font,
             AssetType::StaticMesh,
             AssetType::SkeletalMesh,
             AssetType::SkeletalAnimation,
@@ -96,6 +100,7 @@ impl std::str::FromStr for AssetType {
             "sprite" => Ok(AssetType::Sprite),
             "vfx" => Ok(AssetType::Vfx),
             "ui" => Ok(AssetType::Ui),
+            "font" => Ok(AssetType::Font),
             "static_mesh" => Ok(AssetType::StaticMesh),
             "skeletal_mesh" => Ok(AssetType::SkeletalMesh),
             "skeletal_animation" => Ok(AssetType::SkeletalAnimation),

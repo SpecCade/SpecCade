@@ -123,6 +123,9 @@ pub fn dispatch_generate(
         // UI icon set backend
         "ui.icon_set_v1" => texture::generate_ui_icon_set(spec, out_root_path),
 
+        // Bitmap font backend
+        "font.bitmap_v1" => texture::generate_font_bitmap(spec, out_root_path),
+
         // Blender static mesh backend
         "static_mesh.blender_primitives_v1" => {
             blender::generate_blender_static_mesh(spec, out_root_path)
@@ -302,6 +305,14 @@ pub fn dispatch_generate_profiled(
             }
         }
 
+        "font.bitmap_v1" => {
+            if profile {
+                texture::generate_font_bitmap_profiled(spec, out_root_path)
+            } else {
+                texture::generate_font_bitmap(spec, out_root_path).map(DispatchResult::new)
+            }
+        }
+
         // Blender backends (no profiling instrumentation yet)
         "static_mesh.blender_primitives_v1" => {
             blender::generate_blender_static_mesh(spec, out_root_path).map(DispatchResult::new)
@@ -368,6 +379,9 @@ pub fn is_backend_available(kind: &str) -> bool {
             | "sprite.sheet_v1"
             | "sprite.animation_v1"
             | "vfx.flipbook_v1"
+            | "ui.nine_slice_v1"
+            | "ui.icon_set_v1"
+            | "font.bitmap_v1"
             | "static_mesh.blender_primitives_v1"
             | "skeletal_mesh.blender_rigged_mesh_v1"
             | "skeletal_animation.blender_clip_v1"
@@ -390,6 +404,8 @@ pub fn get_backend_tier(kind: &str) -> Option<u8> {
         k if k.starts_with("texture.") => Some(1),
         k if k.starts_with("sprite.") => Some(1),
         k if k.starts_with("vfx.") => Some(1),
+        k if k.starts_with("ui.") => Some(1),
+        k if k.starts_with("font.") => Some(1),
 
         // Tier 2: Blender backends (metric validation only)
         k if k.starts_with("static_mesh.") => Some(2),

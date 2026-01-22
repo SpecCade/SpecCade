@@ -180,6 +180,7 @@ fn validate_outputs(spec: &Spec, result: &mut ValidationResult) {
                     | "vfx.flipbook_v1"
                     | "ui.nine_slice_v1"
                     | "ui.icon_set_v1"
+                    | "font.bitmap_v1"
             )
         });
 
@@ -317,6 +318,7 @@ pub fn validate_for_generate_with_budget(spec: &Spec, budget: &BudgetProfile) ->
             "vfx.flipbook_v1",
             "ui.nine_slice_v1",
             "ui.icon_set_v1",
+            "font.bitmap_v1",
             "static_mesh.blender_primitives_v1",
             "skeletal_mesh.blender_rigged_mesh_v1",
             "skeletal_animation.blender_clip_v1",

@@ -206,8 +206,8 @@ Migrated from `docs/FUTURE_GENERATORS.md` (now deprecated).
   - Implemented: `vfx.flipbook_v1` recipe kind with 4 deterministic effect types (explosion, smoke, energy, dissolve); shelf-packed atlas output with metadata JSON; golden tests; docs/spec-reference/vfx.md; 18 tests.
 - [x] `GEN-003` Implement UI generators: nine-slice panels (`ui.nine_slice_v1`) and an icon set generator (`ui.icon_set_v1`). **Done: 2026-01-22**
   - Implemented: `ui.nine_slice_v1` (9-region panel with mip-safe gutters) and `ui.icon_set_v1` (deterministic shelf-packed icon atlas with metadata); shared gutter utility; golden tests; docs/spec-reference/ui.md; 60 tests.
-- [ ] `GEN-004` Implement font generators (bitmap pixel fonts and/or MSDF with JSON metrics).
-  - Candidates: `font.bitmap_v1`, `font.msdf_v1`.
+- [x] `GEN-004` Implement font generators (bitmap pixel fonts and/or MSDF with JSON metrics). **Done: 2026-01-22**
+  - Implemented: `font.bitmap_v1` with hardcoded 5x7 pixel patterns (ASCII 32-126), deterministic shelf packing, mip-safe gutters, glyph metrics JSON; monospace/proportional styles; docs/spec-reference/font.md; 5 tests. MSDF deferred.
 - [ ] `GEN-005` Add VFX particle "material/profile" presets (additive/soft/distort/etc.).
   - Candidate: `vfx.particle_profile_v1`.
 - [ ] `GEN-006` Add UI kit presets and item card templates with slots (icon/rarity/background).

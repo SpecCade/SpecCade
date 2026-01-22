@@ -64,6 +64,7 @@
 
 pub mod color;
 pub mod decal;
+pub mod font;
 pub mod generate;
 pub mod maps;
 pub mod noise;
@@ -83,6 +84,7 @@ pub mod vfx;
 // Re-export main types for convenience
 pub use color::{BlendMode, Color};
 pub use decal::{generate_decal, DecalError, DecalResult, DecalTextureResult};
+pub use font::{generate_bitmap_font, FontBitmapError, FontBitmapResult};
 pub use generate::{
     encode_graph_value_png, generate_graph, generate_material_maps, generate_packed_maps,
     save_texture_result, GenerateError, GraphValue, MapResult, TextureResult,
