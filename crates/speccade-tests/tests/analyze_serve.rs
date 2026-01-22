@@ -62,12 +62,12 @@ enum AnalyzeRequest {
     },
 }
 
-/// Find an available port for testing.
-fn find_available_port() -> u16 {
+/// Bind to an available port and return both the listener and port.
+/// The listener is kept bound to prevent race conditions between tests.
+fn bind_available_port() -> (std::net::TcpListener, u16) {
     let listener = TcpListener::bind("127.0.0.1:0").expect("Failed to bind to random port");
     let port = listener.local_addr().unwrap().port();
-    drop(listener);
-    port
+    (listener, port)
 }
 
 /// Create a test WAV file with a sine wave.
@@ -115,16 +115,17 @@ fn create_test_png(width: u32, height: u32, pixels: &[u8]) -> Vec<u8> {
 }
 
 /// Helper to start a server in the background.
-async fn start_server(port: u16) -> tokio::task::JoinHandle<()> {
-    use std::net::SocketAddr;
+/// Takes a std::net::TcpListener that's already bound to prevent race conditions.
+async fn start_server(std_listener: std::net::TcpListener) -> tokio::task::JoinHandle<()> {
     use std::sync::Arc;
     use tokio::net::TcpListener;
     use tokio::sync::broadcast;
 
-    let addr = SocketAddr::from(([127, 0, 0, 1], port));
+    // Set non-blocking before converting to tokio listener
+    std_listener.set_nonblocking(true).unwrap();
 
     tokio::spawn(async move {
-        let listener = TcpListener::bind(&addr).await.unwrap();
+        let listener = TcpListener::from_std(std_listener).unwrap();
         let (shutdown_tx, _) = broadcast::channel::<()>(1);
         let _shutdown_tx = Arc::new(shutdown_tx);
 
@@ -228,7 +229,7 @@ async fn send_request(
 /// Test analyzing a WAV file by path.
 #[tokio::test]
 async fn test_analyze_path_wav() {
-    let port = find_available_port();
+    let (listener, port) = bind_available_port();
 
     // Create test file
     let tmp = tempfile::tempdir().unwrap();
@@ -238,7 +239,7 @@ async fn test_analyze_path_wav() {
     std::fs::write(&wav_path, &wav_data).unwrap();
 
     // Start server
-    let server_handle = start_server(port).await;
+    let server_handle = start_server(listener).await;
 
     // Wait for server to be ready
     tokio::time::sleep(Duration::from_millis(100)).await;
@@ -269,7 +270,7 @@ async fn test_analyze_path_wav() {
 /// Test analyzing a PNG file by path.
 #[tokio::test]
 async fn test_analyze_path_png() {
-    let port = find_available_port();
+    let (listener, port) = bind_available_port();
 
     // Create test file
     let tmp = tempfile::tempdir().unwrap();
@@ -279,7 +280,7 @@ async fn test_analyze_path_png() {
     std::fs::write(&png_path, &png_data).unwrap();
 
     // Start server
-    let server_handle = start_server(port).await;
+    let server_handle = start_server(listener).await;
     tokio::time::sleep(Duration::from_millis(100)).await;
 
     // Connect and send request
@@ -306,7 +307,7 @@ async fn test_analyze_path_png() {
 /// Test analyzing WAV data sent as base64.
 #[tokio::test]
 async fn test_analyze_data_wav() {
-    let port = find_available_port();
+    let (listener, port) = bind_available_port();
 
     // Create test data
     let samples: Vec<f32> = (0..4410).map(|i| (i as f32 * 0.1).sin() * 0.5).collect();
@@ -314,7 +315,7 @@ async fn test_analyze_data_wav() {
     let base64_data = base64::engine::general_purpose::STANDARD.encode(&wav_data);
 
     // Start server
-    let server_handle = start_server(port).await;
+    let server_handle = start_server(listener).await;
     tokio::time::sleep(Duration::from_millis(100)).await;
 
     // Connect and send request
@@ -342,7 +343,7 @@ async fn test_analyze_data_wav() {
 /// Test analyzing PNG data sent as base64.
 #[tokio::test]
 async fn test_analyze_data_png() {
-    let port = find_available_port();
+    let (listener, port) = bind_available_port();
 
     // Create test data
     let pixels: Vec<u8> = (0..4 * 4 * 4).map(|i| (i % 256) as u8).collect();
@@ -350,7 +351,7 @@ async fn test_analyze_data_png() {
     let base64_data = base64::engine::general_purpose::STANDARD.encode(&png_data);
 
     // Start server
-    let server_handle = start_server(port).await;
+    let server_handle = start_server(listener).await;
     tokio::time::sleep(Duration::from_millis(100)).await;
 
     // Connect and send request
@@ -378,7 +379,7 @@ async fn test_analyze_data_png() {
 /// Test analyzing with embeddings flag.
 #[tokio::test]
 async fn test_analyze_with_embeddings() {
-    let port = find_available_port();
+    let (listener, port) = bind_available_port();
 
     // Create test file
     let tmp = tempfile::tempdir().unwrap();
@@ -388,7 +389,7 @@ async fn test_analyze_with_embeddings() {
     std::fs::write(&wav_path, &wav_data).unwrap();
 
     // Start server
-    let server_handle = start_server(port).await;
+    let server_handle = start_server(listener).await;
     tokio::time::sleep(Duration::from_millis(100)).await;
 
     // Connect and send request with embeddings
@@ -419,10 +420,10 @@ async fn test_analyze_with_embeddings() {
 /// Test error handling for file not found.
 #[tokio::test]
 async fn test_analyze_path_not_found() {
-    let port = find_available_port();
+    let (listener, port) = bind_available_port();
 
     // Start server
-    let server_handle = start_server(port).await;
+    let server_handle = start_server(listener).await;
     tokio::time::sleep(Duration::from_millis(100)).await;
 
     // Connect and send request for non-existent file
@@ -444,7 +445,7 @@ async fn test_analyze_path_not_found() {
 /// Test error handling for unsupported format.
 #[tokio::test]
 async fn test_analyze_unsupported_format() {
-    let port = find_available_port();
+    let (listener, port) = bind_available_port();
 
     // Create test file with unsupported extension
     let tmp = tempfile::tempdir().unwrap();
@@ -452,7 +453,7 @@ async fn test_analyze_unsupported_format() {
     std::fs::write(&txt_path, "hello").unwrap();
 
     // Start server
-    let server_handle = start_server(port).await;
+    let server_handle = start_server(listener).await;
     tokio::time::sleep(Duration::from_millis(100)).await;
 
     // Connect and send request
@@ -474,10 +475,10 @@ async fn test_analyze_unsupported_format() {
 /// Test error handling for invalid base64.
 #[tokio::test]
 async fn test_analyze_data_invalid_base64() {
-    let port = find_available_port();
+    let (listener, port) = bind_available_port();
 
     // Start server
-    let server_handle = start_server(port).await;
+    let server_handle = start_server(listener).await;
     tokio::time::sleep(Duration::from_millis(100)).await;
 
     // Connect and send request with invalid base64
@@ -500,7 +501,7 @@ async fn test_analyze_data_invalid_base64() {
 /// Test multiple requests on same connection.
 #[tokio::test]
 async fn test_multiple_requests() {
-    let port = find_available_port();
+    let (listener, port) = bind_available_port();
 
     // Create test files
     let tmp = tempfile::tempdir().unwrap();
@@ -515,7 +516,7 @@ async fn test_multiple_requests() {
     std::fs::write(&png_path, &png_data).unwrap();
 
     // Start server
-    let server_handle = start_server(port).await;
+    let server_handle = start_server(listener).await;
     tokio::time::sleep(Duration::from_millis(100)).await;
 
     // Connect and send multiple requests
@@ -546,7 +547,7 @@ async fn test_multiple_requests() {
 /// Test that responses are deterministic (same input = same output).
 #[tokio::test]
 async fn test_deterministic_responses() {
-    let port = find_available_port();
+    let (listener, port) = bind_available_port();
 
     // Create test file
     let tmp = tempfile::tempdir().unwrap();
@@ -556,7 +557,7 @@ async fn test_deterministic_responses() {
     std::fs::write(&wav_path, &wav_data).unwrap();
 
     // Start server
-    let server_handle = start_server(port).await;
+    let server_handle = start_server(listener).await;
     tokio::time::sleep(Duration::from_millis(100)).await;
 
     // Connect and send same request twice
