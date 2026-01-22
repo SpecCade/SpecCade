@@ -114,6 +114,9 @@ pub fn dispatch_generate(
         // Sprite animation backend
         "sprite.animation_v1" => texture::generate_sprite_animation(spec, out_root_path),
 
+        // VFX flipbook backend
+        "vfx.flipbook_v1" => texture::generate_vfx_flipbook(spec, out_root_path),
+
         // Blender static mesh backend
         "static_mesh.blender_primitives_v1" => {
             blender::generate_blender_static_mesh(spec, out_root_path)
@@ -269,6 +272,14 @@ pub fn dispatch_generate_profiled(
             }
         }
 
+        "vfx.flipbook_v1" => {
+            if profile {
+                texture::generate_vfx_flipbook_profiled(spec, out_root_path)
+            } else {
+                texture::generate_vfx_flipbook(spec, out_root_path).map(DispatchResult::new)
+            }
+        }
+
         // Blender backends (no profiling instrumentation yet)
         "static_mesh.blender_primitives_v1" => {
             blender::generate_blender_static_mesh(spec, out_root_path).map(DispatchResult::new)
@@ -334,6 +345,7 @@ pub fn is_backend_available(kind: &str) -> bool {
             | "texture.splat_set_v1"
             | "sprite.sheet_v1"
             | "sprite.animation_v1"
+            | "vfx.flipbook_v1"
             | "static_mesh.blender_primitives_v1"
             | "skeletal_mesh.blender_rigged_mesh_v1"
             | "skeletal_animation.blender_clip_v1"
@@ -355,6 +367,7 @@ pub fn get_backend_tier(kind: &str) -> Option<u8> {
         k if k.starts_with("music.") => Some(1),
         k if k.starts_with("texture.") => Some(1),
         k if k.starts_with("sprite.") => Some(1),
+        k if k.starts_with("vfx.") => Some(1),
 
         // Tier 2: Blender backends (metric validation only)
         k if k.starts_with("static_mesh.") => Some(2),
@@ -492,7 +505,10 @@ mod tests {
         assert_eq!(outputs.len(), 2);
 
         // Check PNG output
-        let png_output = outputs.iter().find(|o| o.format == OutputFormat::Png).unwrap();
+        let png_output = outputs
+            .iter()
+            .find(|o| o.format == OutputFormat::Png)
+            .unwrap();
         let png_path = tmp.path().join("atlas/trimsheet.png");
         assert!(png_path.exists());
         let png_bytes = std::fs::read(&png_path).unwrap();
@@ -500,7 +516,10 @@ mod tests {
         assert!(png_output.hash.is_some());
 
         // Check JSON metadata output
-        let json_output = outputs.iter().find(|o| o.format == OutputFormat::Json).unwrap();
+        let json_output = outputs
+            .iter()
+            .find(|o| o.format == OutputFormat::Json)
+            .unwrap();
         let json_path = tmp.path().join("atlas/trimsheet.json");
         assert!(json_path.exists());
         let json_str = std::fs::read_to_string(&json_path).unwrap();
@@ -553,9 +572,24 @@ mod tests {
             dispatch_generate(&spec2, tmp2.path().to_str().unwrap(), &spec_path2, None).unwrap();
 
         // Hashes should be identical
-        let hash1 = outputs1.iter().find(|o| o.format == OutputFormat::Png).unwrap().hash.as_ref().unwrap();
-        let hash2 = outputs2.iter().find(|o| o.format == OutputFormat::Png).unwrap().hash.as_ref().unwrap();
-        assert_eq!(hash1, hash2, "PNG hashes should be identical for same input");
+        let hash1 = outputs1
+            .iter()
+            .find(|o| o.format == OutputFormat::Png)
+            .unwrap()
+            .hash
+            .as_ref()
+            .unwrap();
+        let hash2 = outputs2
+            .iter()
+            .find(|o| o.format == OutputFormat::Png)
+            .unwrap()
+            .hash
+            .as_ref()
+            .unwrap();
+        assert_eq!(
+            hash1, hash2,
+            "PNG hashes should be identical for same input"
+        );
 
         // PNG bytes should be byte-identical
         let png1 = std::fs::read(tmp1.path().join("atlas.png")).unwrap();

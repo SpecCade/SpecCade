@@ -1449,6 +1449,8 @@
             "audio",
             "music",
             "texture",
+            "sprite",
+            "vfx",
             "static_mesh",
             "skeletal_mesh",
             "skeletal_animation"

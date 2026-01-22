@@ -1,0 +1,32 @@
+{
+  "spec_version": 1,
+  "asset_id": "smoke-effect-01",
+  "asset_type": "vfx",
+  "license": "CC0-1.0",
+  "description": "VFX flipbook smoke effect with 12 frames",
+  "seed": 67890,
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "png",
+      "path": "vfx/smoke-effect-01.png"
+    },
+    {
+      "kind": "metadata",
+      "format": "json",
+      "path": "vfx/smoke-effect-01.metadata.json"
+    }
+  ],
+  "recipe": {
+    "kind": "vfx.flipbook_v1",
+    "params": {
+      "resolution": [256, 256],
+      "padding": 2,
+      "effect": "smoke",
+      "frame_count": 12,
+      "frame_size": [48, 48],
+      "fps": 30,
+      "loop_mode": "loop"
+    }
+  }
+}

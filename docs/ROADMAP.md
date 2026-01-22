@@ -202,7 +202,8 @@ Migrated from `docs/FUTURE_GENERATORS.md` (now deprecated).
 - [x] `GEN-001` Define scope and write an RFC for deterministic spritesheets (`sprite.sheet_v1`) and animation clips (`sprite.animation_v1`). **Done: 2026-01-20**
   - Deliverable: spec types + schema + minimal generator + golden tests.
   - Implemented: RFC-0012 at docs/rfcs/RFC-0012-sprite-assets.md; SpriteSheetV1Params/SpriteAnimationV1Params in crates/speccade-spec/src/recipe/sprite/; sprite backend in crates/speccade-backend-texture/src/sprite.rs; dispatch routing; 36 tests.
-- [ ] `GEN-002` Implement a baseline flipbook/VFX generator (`vfx.flipbook_v1` or `vfx.smoke_puff_v1`) with deterministic packing.
+- [x] `GEN-002` Implement a baseline flipbook/VFX generator (`vfx.flipbook_v1` or `vfx.smoke_puff_v1`) with deterministic packing. **Done: 2026-01-22**
+  - Implemented: `vfx.flipbook_v1` recipe kind with 4 deterministic effect types (explosion, smoke, energy, dissolve); shelf-packed atlas output with metadata JSON; golden tests; docs/spec-reference/vfx.md; 18 tests.
 - [ ] `GEN-003` Implement UI generators: nine-slice panels (`ui.nine_slice_v1`) and an icon set generator (`ui.icon_set_v1`).
 - [ ] `GEN-004` Implement font generators (bitmap pixel fonts and/or MSDF with JSON metrics).
   - Candidates: `font.bitmap_v1`, `font.msdf_v1`.

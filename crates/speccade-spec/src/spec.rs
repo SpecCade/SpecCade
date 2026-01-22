@@ -21,6 +21,10 @@ pub enum AssetType {
     Music,
     /// 2D texture maps (PNG).
     Texture,
+    /// Sprite sheets and sprite animations.
+    Sprite,
+    /// VFX flipbook animations.
+    Vfx,
     /// Non-skinned 3D meshes (GLB).
     StaticMesh,
     /// Skinned meshes with skeleton (GLB).
@@ -36,6 +40,8 @@ impl AssetType {
             AssetType::Audio => "audio",
             AssetType::Music => "music",
             AssetType::Texture => "texture",
+            AssetType::Sprite => "sprite",
+            AssetType::Vfx => "vfx",
             AssetType::StaticMesh => "static_mesh",
             AssetType::SkeletalMesh => "skeletal_mesh",
             AssetType::SkeletalAnimation => "skeletal_animation",
@@ -60,6 +66,8 @@ impl AssetType {
             AssetType::Audio,
             AssetType::Music,
             AssetType::Texture,
+            AssetType::Sprite,
+            AssetType::Vfx,
             AssetType::StaticMesh,
             AssetType::SkeletalMesh,
             AssetType::SkeletalAnimation,
@@ -81,6 +89,8 @@ impl std::str::FromStr for AssetType {
             "audio" => Ok(AssetType::Audio),
             "music" => Ok(AssetType::Music),
             "texture" => Ok(AssetType::Texture),
+            "sprite" => Ok(AssetType::Sprite),
+            "vfx" => Ok(AssetType::Vfx),
             "static_mesh" => Ok(AssetType::StaticMesh),
             "skeletal_mesh" => Ok(AssetType::SkeletalMesh),
             "skeletal_animation" => Ok(AssetType::SkeletalAnimation),

@@ -172,7 +172,12 @@ fn validate_outputs(spec: &Spec, result: &mut ValidationResult) {
         .recipe
         .as_ref()
         .map(|r| r.kind.as_str())
-        .is_some_and(|k| matches!(k, "texture.trimsheet_v1"));
+        .is_some_and(|k| {
+            matches!(
+                k,
+                "texture.trimsheet_v1" | "sprite.sheet_v1" | "vfx.flipbook_v1"
+            )
+        });
 
     for (i, output) in spec.outputs.iter().enumerate() {
         // NOTE: `metadata` / `preview` are defined in the enum for forward-compat,
@@ -303,6 +308,9 @@ pub fn validate_for_generate_with_budget(spec: &Spec, budget: &BudgetProfile) ->
             "music.tracker_song_compose_v1",
             "texture.procedural_v1",
             "texture.trimsheet_v1",
+            "sprite.sheet_v1",
+            "sprite.animation_v1",
+            "vfx.flipbook_v1",
             "static_mesh.blender_primitives_v1",
             "skeletal_mesh.blender_rigged_mesh_v1",
             "skeletal_animation.blender_clip_v1",

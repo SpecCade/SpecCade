@@ -312,6 +312,22 @@ pub fn generate_outputs(
                 source: None,
             }]
         }
+        AssetType::Sprite => {
+            vec![OutputSpec {
+                kind: OutputKind::Primary,
+                format: OutputFormat::Png,
+                path: format!("sprites/{}.png", asset_id),
+                source: None,
+            }]
+        }
+        AssetType::Vfx => {
+            vec![OutputSpec {
+                kind: OutputKind::Primary,
+                format: OutputFormat::Png,
+                path: format!("vfx/{}.png", asset_id),
+                source: None,
+            }]
+        }
     };
 
     Ok(outputs)

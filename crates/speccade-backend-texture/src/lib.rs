@@ -77,6 +77,7 @@ pub mod shared;
 pub mod splat_set;
 pub mod sprite;
 pub mod trimsheet;
+pub mod vfx;
 
 // Re-export main types for convenience
 pub use color::{BlendMode, Color};
@@ -100,6 +101,7 @@ pub use rng::DeterministicRng;
 pub use splat_set::{generate_splat_set, SplatSetError, SplatSetResult};
 pub use sprite::{generate_sprite_sheet, SpriteSheetError, SpriteSheetResult};
 pub use trimsheet::{generate_trimsheet, TrimsheetError, TrimsheetResult};
+pub use vfx::{generate_vfx_flipbook, VfxFlipbookError, VfxFlipbookResult};
 
 #[cfg(test)]
 mod tests {

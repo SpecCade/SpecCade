@@ -165,6 +165,20 @@ impl DeterminismFixture {
                     "Music - use verify_determinism with custom generator".to_string(),
                 ))
             }
+            AssetType::Sprite => {
+                // Sprite backend uses texture generation with params directly
+                // For full spec-based generation, use verify_determinism with custom generator
+                Err(DeterminismError::UnsupportedAssetType(
+                    "Sprite - use verify_determinism with custom generator".to_string(),
+                ))
+            }
+            AssetType::Vfx => {
+                // VFX backend uses texture generation with params directly
+                // For full spec-based generation, use verify_determinism with custom generator
+                Err(DeterminismError::UnsupportedAssetType(
+                    "Vfx - use verify_determinism with custom generator".to_string(),
+                ))
+            }
             AssetType::StaticMesh | AssetType::SkeletalMesh | AssetType::SkeletalAnimation => {
                 // Blender-based assets require external tooling
                 Err(DeterminismError::UnsupportedAssetType(format!(

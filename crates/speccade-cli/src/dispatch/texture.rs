@@ -5,23 +5,12 @@ use speccade_spec::{OutputFormat, OutputKind, OutputResult, Spec, StageTiming};
 use std::path::{Path, PathBuf};
 use std::time::Instant;
 
-/// Generate spritesheet atlas outputs using the texture backend.
-pub(super) fn generate_sprite_sheet(
-    spec: &Spec,
-    out_root: &Path,
-) -> Result<Vec<OutputResult>, DispatchError> {
-    let recipe = spec.recipe.as_ref().ok_or(DispatchError::NoRecipe)?;
-    let params = recipe.as_sprite_sheet().map_err(|e| {
-        DispatchError::BackendError(format!("Invalid sprite sheet params: {}", e))
-    })?;
-
-    let result = speccade_backend_texture::generate_sprite_sheet(&params, spec.seed).map_err(|e| {
-        DispatchError::BackendError(format!("Sprite sheet generation failed: {}", e))
-    })?;
-
-    let mut outputs = Vec::new();
-
-    // Find primary output for the atlas PNG
+/// Helper to validate and collect primary outputs with required format.
+fn get_primary_outputs<'a>(
+    spec: &'a Spec,
+    required_format: OutputFormat,
+    recipe_kind: &str,
+) -> Result<Vec<(usize, &'a speccade_spec::OutputSpec)>, DispatchError> {
     let primary_outputs: Vec<(usize, &speccade_spec::OutputSpec)> = spec
         .outputs
         .iter()
@@ -30,30 +19,36 @@ pub(super) fn generate_sprite_sheet(
         .collect();
 
     if primary_outputs.is_empty() {
-        return Err(DispatchError::BackendError(
-            "sprite.sheet_v1 requires at least one output of kind 'primary'".to_string(),
-        ));
+        return Err(DispatchError::BackendError(format!(
+            "{} requires at least one output of kind 'primary'",
+            recipe_kind
+        )));
     }
 
+    // Validate format for all primary outputs
     for (output_index, output_spec) in &primary_outputs {
-        if output_spec.format != OutputFormat::Png {
+        if output_spec.format != required_format {
             return Err(DispatchError::BackendError(format!(
-                "sprite.sheet_v1 primary outputs must have format 'png' (outputs[{}].format)",
+                "{} primary outputs must have format '{}' (outputs[{}].format)",
+                recipe_kind,
+                match required_format {
+                    OutputFormat::Png => "png",
+                    OutputFormat::Json => "json",
+                    _ => "unknown",
+                },
                 output_index
             )));
         }
-
-        write_output_bytes(out_root, &output_spec.path, &result.png_data)?;
-
-        outputs.push(OutputResult::tier1(
-            output_spec.kind,
-            OutputFormat::Png,
-            PathBuf::from(&output_spec.path),
-            result.hash.clone(),
-        ));
     }
 
-    // Find metadata output (JSON sidecar)
+    Ok(primary_outputs)
+}
+
+/// Helper to validate and collect metadata outputs.
+fn get_metadata_outputs<'a>(
+    spec: &'a Spec,
+    recipe_kind: &str,
+) -> Result<Vec<(usize, &'a speccade_spec::OutputSpec)>, DispatchError> {
     let metadata_outputs: Vec<(usize, &speccade_spec::OutputSpec)> = spec
         .outputs
         .iter()
@@ -61,23 +56,54 @@ pub(super) fn generate_sprite_sheet(
         .filter(|(_, o)| o.kind == OutputKind::Metadata)
         .collect();
 
+    // Validate format for all metadata outputs
     for (output_index, output_spec) in &metadata_outputs {
         if output_spec.format != OutputFormat::Json {
             return Err(DispatchError::BackendError(format!(
-                "sprite.sheet_v1 metadata outputs must have format 'json' (outputs[{}].format)",
-                output_index
+                "{} metadata outputs must have format 'json' (outputs[{}].format)",
+                recipe_kind, output_index
             )));
         }
+    }
 
-        let metadata_json = serde_json::to_string_pretty(&result.metadata).map_err(|e| {
+    Ok(metadata_outputs)
+}
+
+/// Helper to write PNG data for all primary outputs.
+fn write_primary_png_outputs(
+    out_root: &Path,
+    primary_outputs: &[(usize, &speccade_spec::OutputSpec)],
+    png_data: &[u8],
+    hash: &str,
+) -> Result<Vec<OutputResult>, DispatchError> {
+    let mut outputs = Vec::new();
+    for (_, output_spec) in primary_outputs {
+        write_output_bytes(out_root, &output_spec.path, png_data)?;
+        outputs.push(OutputResult::tier1(
+            output_spec.kind,
+            OutputFormat::Png,
+            PathBuf::from(&output_spec.path),
+            hash.to_string(),
+        ));
+    }
+    Ok(outputs)
+}
+
+/// Helper to serialize and write metadata JSON for all metadata outputs.
+fn write_metadata_outputs<T: serde::Serialize>(
+    out_root: &Path,
+    metadata_outputs: &[(usize, &speccade_spec::OutputSpec)],
+    metadata: &T,
+) -> Result<Vec<OutputResult>, DispatchError> {
+    let mut outputs = Vec::new();
+    for (_, output_spec) in metadata_outputs {
+        let metadata_json = serde_json::to_string_pretty(metadata).map_err(|e| {
             DispatchError::BackendError(format!("Failed to serialize metadata: {}", e))
         })?;
 
         write_output_bytes(out_root, &output_spec.path, metadata_json.as_bytes())?;
 
-        // Calculate hash of the JSON metadata
         let metadata_hash = blake3::hash(metadata_json.as_bytes()).to_hex().to_string();
-
         outputs.push(OutputResult::tier1(
             output_spec.kind,
             OutputFormat::Json,
@@ -85,6 +111,34 @@ pub(super) fn generate_sprite_sheet(
             metadata_hash,
         ));
     }
+    Ok(outputs)
+}
+
+/// Generate spritesheet atlas outputs using the texture backend.
+pub(super) fn generate_sprite_sheet(
+    spec: &Spec,
+    out_root: &Path,
+) -> Result<Vec<OutputResult>, DispatchError> {
+    let recipe = spec.recipe.as_ref().ok_or(DispatchError::NoRecipe)?;
+    let params = recipe
+        .as_sprite_sheet()
+        .map_err(|e| DispatchError::BackendError(format!("Invalid sprite sheet params: {}", e)))?;
+
+    let result =
+        speccade_backend_texture::generate_sprite_sheet(&params, spec.seed).map_err(|e| {
+            DispatchError::BackendError(format!("Sprite sheet generation failed: {}", e))
+        })?;
+
+    let primary_outputs = get_primary_outputs(spec, OutputFormat::Png, "sprite.sheet_v1")?;
+    let metadata_outputs = get_metadata_outputs(spec, "sprite.sheet_v1")?;
+
+    let mut outputs =
+        write_primary_png_outputs(out_root, &primary_outputs, &result.png_data, &result.hash)?;
+    outputs.extend(write_metadata_outputs(
+        out_root,
+        &metadata_outputs,
+        &result.metadata,
+    )?);
 
     Ok(outputs)
 }
@@ -99,9 +153,9 @@ pub(super) fn generate_sprite_sheet_profiled(
     // Stage: parse_params
     let parse_start = Instant::now();
     let recipe = spec.recipe.as_ref().ok_or(DispatchError::NoRecipe)?;
-    let params = recipe.as_sprite_sheet().map_err(|e| {
-        DispatchError::BackendError(format!("Invalid sprite sheet params: {}", e))
-    })?;
+    let params = recipe
+        .as_sprite_sheet()
+        .map_err(|e| DispatchError::BackendError(format!("Invalid sprite sheet params: {}", e)))?;
     stages.push(StageTiming::new(
         "parse_params",
         parse_start.elapsed().as_millis() as u64,
@@ -109,9 +163,10 @@ pub(super) fn generate_sprite_sheet_profiled(
 
     // Stage: pack_and_render
     let render_start = Instant::now();
-    let result = speccade_backend_texture::generate_sprite_sheet(&params, spec.seed).map_err(|e| {
-        DispatchError::BackendError(format!("Sprite sheet generation failed: {}", e))
-    })?;
+    let result =
+        speccade_backend_texture::generate_sprite_sheet(&params, spec.seed).map_err(|e| {
+            DispatchError::BackendError(format!("Sprite sheet generation failed: {}", e))
+        })?;
     stages.push(StageTiming::new(
         "pack_and_render",
         render_start.elapsed().as_millis() as u64,
@@ -119,72 +174,16 @@ pub(super) fn generate_sprite_sheet_profiled(
 
     // Stage: write_outputs
     let write_start = Instant::now();
-    let mut outputs = Vec::new();
+    let primary_outputs = get_primary_outputs(spec, OutputFormat::Png, "sprite.sheet_v1")?;
+    let metadata_outputs = get_metadata_outputs(spec, "sprite.sheet_v1")?;
 
-    // Find primary output for the atlas PNG
-    let primary_outputs: Vec<(usize, &speccade_spec::OutputSpec)> = spec
-        .outputs
-        .iter()
-        .enumerate()
-        .filter(|(_, o)| o.kind == OutputKind::Primary)
-        .collect();
-
-    if primary_outputs.is_empty() {
-        return Err(DispatchError::BackendError(
-            "sprite.sheet_v1 requires at least one output of kind 'primary'".to_string(),
-        ));
-    }
-
-    for (output_index, output_spec) in &primary_outputs {
-        if output_spec.format != OutputFormat::Png {
-            return Err(DispatchError::BackendError(format!(
-                "sprite.sheet_v1 primary outputs must have format 'png' (outputs[{}].format)",
-                output_index
-            )));
-        }
-
-        write_output_bytes(out_root, &output_spec.path, &result.png_data)?;
-
-        outputs.push(OutputResult::tier1(
-            output_spec.kind,
-            OutputFormat::Png,
-            PathBuf::from(&output_spec.path),
-            result.hash.clone(),
-        ));
-    }
-
-    // Find metadata output (JSON sidecar)
-    let metadata_outputs: Vec<(usize, &speccade_spec::OutputSpec)> = spec
-        .outputs
-        .iter()
-        .enumerate()
-        .filter(|(_, o)| o.kind == OutputKind::Metadata)
-        .collect();
-
-    for (output_index, output_spec) in &metadata_outputs {
-        if output_spec.format != OutputFormat::Json {
-            return Err(DispatchError::BackendError(format!(
-                "sprite.sheet_v1 metadata outputs must have format 'json' (outputs[{}].format)",
-                output_index
-            )));
-        }
-
-        let metadata_json = serde_json::to_string_pretty(&result.metadata).map_err(|e| {
-            DispatchError::BackendError(format!("Failed to serialize metadata: {}", e))
-        })?;
-
-        write_output_bytes(out_root, &output_spec.path, metadata_json.as_bytes())?;
-
-        // Calculate hash of the JSON metadata
-        let metadata_hash = blake3::hash(metadata_json.as_bytes()).to_hex().to_string();
-
-        outputs.push(OutputResult::tier1(
-            output_spec.kind,
-            OutputFormat::Json,
-            PathBuf::from(&output_spec.path),
-            metadata_hash,
-        ));
-    }
+    let mut outputs =
+        write_primary_png_outputs(out_root, &primary_outputs, &result.png_data, &result.hash)?;
+    outputs.extend(write_metadata_outputs(
+        out_root,
+        &metadata_outputs,
+        &result.metadata,
+    )?);
 
     stages.push(StageTiming::new(
         "write_outputs",
@@ -207,48 +206,10 @@ pub(super) fn generate_sprite_animation(
     // Generate metadata
     let metadata = params.to_metadata();
 
-    let mut outputs = Vec::new();
+    // Sprite animations output JSON as primary (not PNG)
+    let primary_outputs = get_primary_outputs(spec, OutputFormat::Json, "sprite.animation_v1")?;
 
-    // Find primary output for the animation JSON
-    let primary_outputs: Vec<(usize, &speccade_spec::OutputSpec)> = spec
-        .outputs
-        .iter()
-        .enumerate()
-        .filter(|(_, o)| o.kind == OutputKind::Primary)
-        .collect();
-
-    if primary_outputs.is_empty() {
-        return Err(DispatchError::BackendError(
-            "sprite.animation_v1 requires at least one output of kind 'primary'".to_string(),
-        ));
-    }
-
-    for (output_index, output_spec) in &primary_outputs {
-        if output_spec.format != OutputFormat::Json {
-            return Err(DispatchError::BackendError(format!(
-                "sprite.animation_v1 primary outputs must have format 'json' (outputs[{}].format)",
-                output_index
-            )));
-        }
-
-        let metadata_json = serde_json::to_string_pretty(&metadata).map_err(|e| {
-            DispatchError::BackendError(format!("Failed to serialize animation metadata: {}", e))
-        })?;
-
-        write_output_bytes(out_root, &output_spec.path, metadata_json.as_bytes())?;
-
-        // Calculate hash of the JSON metadata
-        let metadata_hash = blake3::hash(metadata_json.as_bytes()).to_hex().to_string();
-
-        outputs.push(OutputResult::tier1(
-            output_spec.kind,
-            OutputFormat::Json,
-            PathBuf::from(&output_spec.path),
-            metadata_hash,
-        ));
-    }
-
-    Ok(outputs)
+    write_metadata_outputs(out_root, &primary_outputs, &metadata)
 }
 
 /// Generate sprite animation metadata with profiling instrumentation.
@@ -279,46 +240,8 @@ pub(super) fn generate_sprite_animation_profiled(
 
     // Stage: write_outputs
     let write_start = Instant::now();
-    let mut outputs = Vec::new();
-
-    // Find primary output for the animation JSON
-    let primary_outputs: Vec<(usize, &speccade_spec::OutputSpec)> = spec
-        .outputs
-        .iter()
-        .enumerate()
-        .filter(|(_, o)| o.kind == OutputKind::Primary)
-        .collect();
-
-    if primary_outputs.is_empty() {
-        return Err(DispatchError::BackendError(
-            "sprite.animation_v1 requires at least one output of kind 'primary'".to_string(),
-        ));
-    }
-
-    for (output_index, output_spec) in &primary_outputs {
-        if output_spec.format != OutputFormat::Json {
-            return Err(DispatchError::BackendError(format!(
-                "sprite.animation_v1 primary outputs must have format 'json' (outputs[{}].format)",
-                output_index
-            )));
-        }
-
-        let metadata_json = serde_json::to_string_pretty(&metadata).map_err(|e| {
-            DispatchError::BackendError(format!("Failed to serialize animation metadata: {}", e))
-        })?;
-
-        write_output_bytes(out_root, &output_spec.path, metadata_json.as_bytes())?;
-
-        // Calculate hash of the JSON metadata
-        let metadata_hash = blake3::hash(metadata_json.as_bytes()).to_hex().to_string();
-
-        outputs.push(OutputResult::tier1(
-            output_spec.kind,
-            OutputFormat::Json,
-            PathBuf::from(&output_spec.path),
-            metadata_hash,
-        ));
-    }
+    let primary_outputs = get_primary_outputs(spec, OutputFormat::Json, "sprite.animation_v1")?;
+    let outputs = write_metadata_outputs(out_root, &primary_outputs, &metadata)?;
 
     stages.push(StageTiming::new(
         "write_outputs",
@@ -338,76 +261,19 @@ pub(super) fn generate_texture_trimsheet(
         DispatchError::BackendError(format!("Invalid texture trimsheet params: {}", e))
     })?;
 
-    let result = speccade_backend_texture::generate_trimsheet(&params, spec.seed).map_err(|e| {
-        DispatchError::BackendError(format!("Trimsheet generation failed: {}", e))
-    })?;
+    let result = speccade_backend_texture::generate_trimsheet(&params, spec.seed)
+        .map_err(|e| DispatchError::BackendError(format!("Trimsheet generation failed: {}", e)))?;
 
-    let mut outputs = Vec::new();
+    let primary_outputs = get_primary_outputs(spec, OutputFormat::Png, "texture.trimsheet_v1")?;
+    let metadata_outputs = get_metadata_outputs(spec, "texture.trimsheet_v1")?;
 
-    // Find primary output for the atlas PNG
-    let primary_outputs: Vec<(usize, &speccade_spec::OutputSpec)> = spec
-        .outputs
-        .iter()
-        .enumerate()
-        .filter(|(_, o)| o.kind == OutputKind::Primary)
-        .collect();
-
-    if primary_outputs.is_empty() {
-        return Err(DispatchError::BackendError(
-            "texture.trimsheet_v1 requires at least one output of kind 'primary'".to_string(),
-        ));
-    }
-
-    for (output_index, output_spec) in &primary_outputs {
-        if output_spec.format != OutputFormat::Png {
-            return Err(DispatchError::BackendError(format!(
-                "texture.trimsheet_v1 primary outputs must have format 'png' (outputs[{}].format)",
-                output_index
-            )));
-        }
-
-        write_output_bytes(out_root, &output_spec.path, &result.png_data)?;
-
-        outputs.push(OutputResult::tier1(
-            output_spec.kind,
-            OutputFormat::Png,
-            PathBuf::from(&output_spec.path),
-            result.hash.clone(),
-        ));
-    }
-
-    // Find metadata output (JSON sidecar)
-    let metadata_outputs: Vec<(usize, &speccade_spec::OutputSpec)> = spec
-        .outputs
-        .iter()
-        .enumerate()
-        .filter(|(_, o)| o.kind == OutputKind::Metadata)
-        .collect();
-
-    for (output_index, output_spec) in &metadata_outputs {
-        if output_spec.format != OutputFormat::Json {
-            return Err(DispatchError::BackendError(format!(
-                "texture.trimsheet_v1 metadata outputs must have format 'json' (outputs[{}].format)",
-                output_index
-            )));
-        }
-
-        let metadata_json = serde_json::to_string_pretty(&result.metadata).map_err(|e| {
-            DispatchError::BackendError(format!("Failed to serialize metadata: {}", e))
-        })?;
-
-        write_output_bytes(out_root, &output_spec.path, metadata_json.as_bytes())?;
-
-        // Calculate hash of the JSON metadata
-        let metadata_hash = blake3::hash(metadata_json.as_bytes()).to_hex().to_string();
-
-        outputs.push(OutputResult::tier1(
-            output_spec.kind,
-            OutputFormat::Json,
-            PathBuf::from(&output_spec.path),
-            metadata_hash,
-        ));
-    }
+    let mut outputs =
+        write_primary_png_outputs(out_root, &primary_outputs, &result.png_data, &result.hash)?;
+    outputs.extend(write_metadata_outputs(
+        out_root,
+        &metadata_outputs,
+        &result.metadata,
+    )?);
 
     Ok(outputs)
 }
@@ -432,9 +298,8 @@ pub(super) fn generate_texture_trimsheet_profiled(
 
     // Stage: pack_and_render
     let render_start = Instant::now();
-    let result = speccade_backend_texture::generate_trimsheet(&params, spec.seed).map_err(|e| {
-        DispatchError::BackendError(format!("Trimsheet generation failed: {}", e))
-    })?;
+    let result = speccade_backend_texture::generate_trimsheet(&params, spec.seed)
+        .map_err(|e| DispatchError::BackendError(format!("Trimsheet generation failed: {}", e)))?;
     stages.push(StageTiming::new(
         "pack_and_render",
         render_start.elapsed().as_millis() as u64,
@@ -442,72 +307,16 @@ pub(super) fn generate_texture_trimsheet_profiled(
 
     // Stage: write_outputs
     let write_start = Instant::now();
-    let mut outputs = Vec::new();
+    let primary_outputs = get_primary_outputs(spec, OutputFormat::Png, "texture.trimsheet_v1")?;
+    let metadata_outputs = get_metadata_outputs(spec, "texture.trimsheet_v1")?;
 
-    // Find primary output for the atlas PNG
-    let primary_outputs: Vec<(usize, &speccade_spec::OutputSpec)> = spec
-        .outputs
-        .iter()
-        .enumerate()
-        .filter(|(_, o)| o.kind == OutputKind::Primary)
-        .collect();
-
-    if primary_outputs.is_empty() {
-        return Err(DispatchError::BackendError(
-            "texture.trimsheet_v1 requires at least one output of kind 'primary'".to_string(),
-        ));
-    }
-
-    for (output_index, output_spec) in &primary_outputs {
-        if output_spec.format != OutputFormat::Png {
-            return Err(DispatchError::BackendError(format!(
-                "texture.trimsheet_v1 primary outputs must have format 'png' (outputs[{}].format)",
-                output_index
-            )));
-        }
-
-        write_output_bytes(out_root, &output_spec.path, &result.png_data)?;
-
-        outputs.push(OutputResult::tier1(
-            output_spec.kind,
-            OutputFormat::Png,
-            PathBuf::from(&output_spec.path),
-            result.hash.clone(),
-        ));
-    }
-
-    // Find metadata output (JSON sidecar)
-    let metadata_outputs: Vec<(usize, &speccade_spec::OutputSpec)> = spec
-        .outputs
-        .iter()
-        .enumerate()
-        .filter(|(_, o)| o.kind == OutputKind::Metadata)
-        .collect();
-
-    for (output_index, output_spec) in &metadata_outputs {
-        if output_spec.format != OutputFormat::Json {
-            return Err(DispatchError::BackendError(format!(
-                "texture.trimsheet_v1 metadata outputs must have format 'json' (outputs[{}].format)",
-                output_index
-            )));
-        }
-
-        let metadata_json = serde_json::to_string_pretty(&result.metadata).map_err(|e| {
-            DispatchError::BackendError(format!("Failed to serialize metadata: {}", e))
-        })?;
-
-        write_output_bytes(out_root, &output_spec.path, metadata_json.as_bytes())?;
-
-        // Calculate hash of the JSON metadata
-        let metadata_hash = blake3::hash(metadata_json.as_bytes()).to_hex().to_string();
-
-        outputs.push(OutputResult::tier1(
-            output_spec.kind,
-            OutputFormat::Json,
-            PathBuf::from(&output_spec.path),
-            metadata_hash,
-        ));
-    }
+    let mut outputs =
+        write_primary_png_outputs(out_root, &primary_outputs, &result.png_data, &result.hash)?;
+    outputs.extend(write_metadata_outputs(
+        out_root,
+        &metadata_outputs,
+        &result.metadata,
+    )?);
 
     stages.push(StageTiming::new(
         "write_outputs",
@@ -683,13 +492,12 @@ pub(super) fn generate_texture_decal(
     out_root: &Path,
 ) -> Result<Vec<OutputResult>, DispatchError> {
     let recipe = spec.recipe.as_ref().ok_or(DispatchError::NoRecipe)?;
-    let params = recipe.as_texture_decal().map_err(|e| {
-        DispatchError::BackendError(format!("Invalid texture decal params: {}", e))
-    })?;
+    let params = recipe
+        .as_texture_decal()
+        .map_err(|e| DispatchError::BackendError(format!("Invalid texture decal params: {}", e)))?;
 
-    let result = speccade_backend_texture::generate_decal(&params, spec.seed).map_err(|e| {
-        DispatchError::BackendError(format!("Decal generation failed: {}", e))
-    })?;
+    let result = speccade_backend_texture::generate_decal(&params, spec.seed)
+        .map_err(|e| DispatchError::BackendError(format!("Decal generation failed: {}", e)))?;
 
     let mut outputs = Vec::new();
 
@@ -733,7 +541,10 @@ pub(super) fn generate_texture_decal(
         }
         // Use source field to identify normal/roughness outputs
         let source = output_spec.source.as_deref().unwrap_or("");
-        if source.is_empty() && !output_spec.path.contains("normal") && !output_spec.path.contains("roughness") {
+        if source.is_empty()
+            && !output_spec.path.contains("normal")
+            && !output_spec.path.contains("roughness")
+        {
             // This is the main albedo output, already handled above
             continue;
         }
@@ -814,9 +625,9 @@ pub(super) fn generate_texture_decal_profiled(
     // Stage: parse_params
     let parse_start = Instant::now();
     let recipe = spec.recipe.as_ref().ok_or(DispatchError::NoRecipe)?;
-    let params = recipe.as_texture_decal().map_err(|e| {
-        DispatchError::BackendError(format!("Invalid texture decal params: {}", e))
-    })?;
+    let params = recipe
+        .as_texture_decal()
+        .map_err(|e| DispatchError::BackendError(format!("Invalid texture decal params: {}", e)))?;
     stages.push(StageTiming::new(
         "parse_params",
         parse_start.elapsed().as_millis() as u64,
@@ -824,9 +635,8 @@ pub(super) fn generate_texture_decal_profiled(
 
     // Stage: generate_decal
     let render_start = Instant::now();
-    let result = speccade_backend_texture::generate_decal(&params, spec.seed).map_err(|e| {
-        DispatchError::BackendError(format!("Decal generation failed: {}", e))
-    })?;
+    let result = speccade_backend_texture::generate_decal(&params, spec.seed)
+        .map_err(|e| DispatchError::BackendError(format!("Decal generation failed: {}", e)))?;
     stages.push(StageTiming::new(
         "generate_decal",
         render_start.elapsed().as_millis() as u64,
@@ -874,7 +684,10 @@ pub(super) fn generate_texture_decal_profiled(
             continue;
         }
         let source = output_spec.source.as_deref().unwrap_or("");
-        if source.is_empty() && !output_spec.path.contains("normal") && !output_spec.path.contains("roughness") {
+        if source.is_empty()
+            && !output_spec.path.contains("normal")
+            && !output_spec.path.contains("roughness")
+        {
             continue;
         }
 
@@ -964,9 +777,8 @@ pub(super) fn generate_texture_splat_set(
         DispatchError::BackendError(format!("Invalid texture splat set params: {}", e))
     })?;
 
-    let result = speccade_backend_texture::generate_splat_set(&params, spec.seed).map_err(|e| {
-        DispatchError::BackendError(format!("Splat set generation failed: {}", e))
-    })?;
+    let result = speccade_backend_texture::generate_splat_set(&params, spec.seed)
+        .map_err(|e| DispatchError::BackendError(format!("Splat set generation failed: {}", e)))?;
 
     let mut outputs = Vec::new();
 
@@ -1001,7 +813,10 @@ pub(super) fn generate_texture_splat_set(
                     let (png_data, hash) = match map_type {
                         "albedo" => (&layer_output.albedo.png_data, &layer_output.albedo.hash),
                         "normal" => (&layer_output.normal.png_data, &layer_output.normal.hash),
-                        "roughness" => (&layer_output.roughness.png_data, &layer_output.roughness.hash),
+                        "roughness" => (
+                            &layer_output.roughness.png_data,
+                            &layer_output.roughness.hash,
+                        ),
                         _ => continue,
                     };
 
@@ -1077,6 +892,85 @@ pub(super) fn generate_texture_splat_set(
     Ok(outputs)
 }
 
+/// Generate VFX flipbook outputs using the texture backend.
+pub(super) fn generate_vfx_flipbook(
+    spec: &Spec,
+    out_root: &Path,
+) -> Result<Vec<OutputResult>, DispatchError> {
+    let recipe = spec.recipe.as_ref().ok_or(DispatchError::NoRecipe)?;
+    let params = recipe
+        .as_vfx_flipbook()
+        .map_err(|e| DispatchError::BackendError(format!("Invalid VFX flipbook params: {}", e)))?;
+
+    let result =
+        speccade_backend_texture::generate_vfx_flipbook(&params, spec.seed).map_err(|e| {
+            DispatchError::BackendError(format!("VFX flipbook generation failed: {}", e))
+        })?;
+
+    let primary_outputs = get_primary_outputs(spec, OutputFormat::Png, "vfx.flipbook_v1")?;
+    let metadata_outputs = get_metadata_outputs(spec, "vfx.flipbook_v1")?;
+
+    let mut outputs =
+        write_primary_png_outputs(out_root, &primary_outputs, &result.png_data, &result.hash)?;
+    outputs.extend(write_metadata_outputs(
+        out_root,
+        &metadata_outputs,
+        &result.metadata,
+    )?);
+
+    Ok(outputs)
+}
+
+/// Generate VFX flipbook outputs with profiling instrumentation.
+pub(super) fn generate_vfx_flipbook_profiled(
+    spec: &Spec,
+    out_root: &Path,
+) -> Result<DispatchResult, DispatchError> {
+    let mut stages = Vec::new();
+
+    // Stage: parse_params
+    let parse_start = Instant::now();
+    let recipe = spec.recipe.as_ref().ok_or(DispatchError::NoRecipe)?;
+    let params = recipe
+        .as_vfx_flipbook()
+        .map_err(|e| DispatchError::BackendError(format!("Invalid VFX flipbook params: {}", e)))?;
+    stages.push(StageTiming::new(
+        "parse_params",
+        parse_start.elapsed().as_millis() as u64,
+    ));
+
+    // Stage: generate_frames
+    let gen_start = Instant::now();
+    let result =
+        speccade_backend_texture::generate_vfx_flipbook(&params, spec.seed).map_err(|e| {
+            DispatchError::BackendError(format!("VFX flipbook generation failed: {}", e))
+        })?;
+    stages.push(StageTiming::new(
+        "generate_frames",
+        gen_start.elapsed().as_millis() as u64,
+    ));
+
+    // Stage: write_outputs
+    let write_start = Instant::now();
+    let primary_outputs = get_primary_outputs(spec, OutputFormat::Png, "vfx.flipbook_v1")?;
+    let metadata_outputs = get_metadata_outputs(spec, "vfx.flipbook_v1")?;
+
+    let mut outputs =
+        write_primary_png_outputs(out_root, &primary_outputs, &result.png_data, &result.hash)?;
+    outputs.extend(write_metadata_outputs(
+        out_root,
+        &metadata_outputs,
+        &result.metadata,
+    )?);
+
+    stages.push(StageTiming::new(
+        "write_outputs",
+        write_start.elapsed().as_millis() as u64,
+    ));
+
+    Ok(DispatchResult::with_stages(outputs, stages))
+}
+
 /// Generate splat set texture outputs with profiling instrumentation.
 pub(super) fn generate_texture_splat_set_profiled(
     spec: &Spec,
@@ -1097,9 +991,8 @@ pub(super) fn generate_texture_splat_set_profiled(
 
     // Stage: generate_splat_set
     let render_start = Instant::now();
-    let result = speccade_backend_texture::generate_splat_set(&params, spec.seed).map_err(|e| {
-        DispatchError::BackendError(format!("Splat set generation failed: {}", e))
-    })?;
+    let result = speccade_backend_texture::generate_splat_set(&params, spec.seed)
+        .map_err(|e| DispatchError::BackendError(format!("Splat set generation failed: {}", e)))?;
     stages.push(StageTiming::new(
         "generate_splat_set",
         render_start.elapsed().as_millis() as u64,
@@ -1137,7 +1030,10 @@ pub(super) fn generate_texture_splat_set_profiled(
                     let (png_data, hash) = match map_type {
                         "albedo" => (&layer_output.albedo.png_data, &layer_output.albedo.hash),
                         "normal" => (&layer_output.normal.png_data, &layer_output.normal.hash),
-                        "roughness" => (&layer_output.roughness.png_data, &layer_output.roughness.hash),
+                        "roughness" => (
+                            &layer_output.roughness.png_data,
+                            &layer_output.roughness.hash,
+                        ),
                         _ => continue,
                     };
 

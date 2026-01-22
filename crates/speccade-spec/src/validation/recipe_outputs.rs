@@ -37,9 +37,7 @@ pub(super) fn validate_outputs_for_recipe_with_budget(
         "texture.procedural_v1" => {
             validate_texture_procedural_outputs_with_budget(spec, recipe, budget, result)
         }
-        "texture.trimsheet_v1" => {
-            validate_texture_trimsheet_outputs(spec, recipe, result)
-        }
+        "texture.trimsheet_v1" => validate_texture_trimsheet_outputs(spec, recipe, result),
         "static_mesh.blender_primitives_v1" => {
             validate_static_mesh_blender_primitives(recipe, result);
             validate_single_primary_output_format(spec, OutputFormat::Glb, result);
@@ -343,11 +341,7 @@ fn validate_skeletal_animation_blender_rigged(recipe: &Recipe, result: &mut Vali
 /// Trimsheet specs require:
 /// - Exactly one primary output with PNG format
 /// - Optional metadata output(s) with JSON format
-fn validate_texture_trimsheet_outputs(
-    spec: &Spec,
-    recipe: &Recipe,
-    result: &mut ValidationResult,
-) {
+fn validate_texture_trimsheet_outputs(spec: &Spec, recipe: &Recipe, result: &mut ValidationResult) {
     // Validate params parse correctly
     match recipe.as_texture_trimsheet() {
         Ok(params) => {
@@ -394,8 +388,12 @@ fn validate_texture_trimsheet_outputs(
                         ErrorCode::InvalidRecipeParams,
                         format!(
                             "tile '{}' ({}x{}) with padding {} is too large for atlas ({}x{})",
-                            tile.id, tile.width, tile.height, params.padding,
-                            params.resolution[0], params.resolution[1]
+                            tile.id,
+                            tile.width,
+                            tile.height,
+                            params.padding,
+                            params.resolution[0],
+                            params.resolution[1]
                         ),
                         format!("recipe.params.tiles[{}]", i),
                     ));

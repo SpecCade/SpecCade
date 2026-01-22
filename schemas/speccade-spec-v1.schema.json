@@ -19,7 +19,7 @@
     },
     "asset_type": {
       "type": "string",
-      "enum": ["audio", "music", "texture", "static_mesh", "skeletal_mesh", "skeletal_animation"],
+      "enum": ["audio", "music", "texture", "sprite", "vfx", "static_mesh", "skeletal_mesh", "skeletal_animation"],
       "description": "Asset type (used to select compatible recipe kinds)."
     },
     "license": {
@@ -96,9 +96,16 @@
             "music.tracker_song_v1",
             "music.tracker_song_compose_v1",
             "texture.procedural_v1",
+            "texture.trimsheet_v1",
+            "texture.decal_v1",
+            "texture.splat_set_v1",
+            "sprite.sheet_v1",
+            "sprite.animation_v1",
+            "vfx.flipbook_v1",
             "static_mesh.blender_primitives_v1",
             "skeletal_mesh.blender_rigged_mesh_v1",
-            "skeletal_animation.blender_clip_v1"
+            "skeletal_animation.blender_clip_v1",
+            "skeletal_animation.blender_rigged_v1"
           ],
           "description": "Recipe kind identifier."
         },

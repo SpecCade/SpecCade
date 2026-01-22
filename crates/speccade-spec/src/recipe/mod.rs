@@ -10,6 +10,7 @@ pub mod mesh;
 pub mod music;
 pub mod sprite;
 pub mod texture;
+pub mod vfx;
 
 pub use animation::*;
 pub use audio::*;
@@ -18,6 +19,7 @@ pub use mesh::*;
 pub use music::*;
 pub use sprite::*;
 pub use texture::*;
+pub use vfx::*;
 
 use serde::{Deserialize, Serialize};
 
@@ -64,6 +66,9 @@ pub enum RecipeKind {
     /// `sprite.animation_v1` - Sprite animation clip definitions.
     #[serde(rename = "sprite.animation_v1")]
     SpriteAnimationV1,
+    /// `vfx.flipbook_v1` - VFX flipbook animation with procedural frame generation.
+    #[serde(rename = "vfx.flipbook_v1")]
+    VfxFlipbookV1,
 }
 
 impl RecipeKind {
@@ -83,6 +88,7 @@ impl RecipeKind {
             RecipeKind::SkeletalAnimationBlenderRiggedV1 => "skeletal_animation.blender_rigged_v1",
             RecipeKind::SpriteSheetV1 => "sprite.sheet_v1",
             RecipeKind::SpriteAnimationV1 => "sprite.animation_v1",
+            RecipeKind::VfxFlipbookV1 => "vfx.flipbook_v1",
         }
     }
 
@@ -102,6 +108,7 @@ impl RecipeKind {
             RecipeKind::SkeletalAnimationBlenderRiggedV1 => "skeletal_animation",
             RecipeKind::SpriteSheetV1 => "sprite",
             RecipeKind::SpriteAnimationV1 => "sprite",
+            RecipeKind::VfxFlipbookV1 => "vfx",
         }
     }
 
@@ -116,7 +123,8 @@ impl RecipeKind {
             | RecipeKind::TextureDecalV1
             | RecipeKind::TextureSplatSetV1
             | RecipeKind::SpriteSheetV1
-            | RecipeKind::SpriteAnimationV1 => true,
+            | RecipeKind::SpriteAnimationV1
+            | RecipeKind::VfxFlipbookV1 => true,
             RecipeKind::StaticMeshBlenderPrimitivesV1
             | RecipeKind::SkeletalMeshBlenderRiggedMeshV1
             | RecipeKind::SkeletalAnimationBlenderClipV1
@@ -172,6 +180,7 @@ impl Recipe {
             }
             "sprite.sheet_v1" => Some(RecipeKind::SpriteSheetV1),
             "sprite.animation_v1" => Some(RecipeKind::SpriteAnimationV1),
+            "vfx.flipbook_v1" => Some(RecipeKind::VfxFlipbookV1),
             _ => None,
         }
     }
@@ -263,6 +272,11 @@ impl Recipe {
         serde_json::from_value(self.params.clone())
     }
 
+    /// Attempts to parse params as VFX flipbook params.
+    pub fn as_vfx_flipbook(&self) -> Result<VfxFlipbookV1Params, serde_json::Error> {
+        serde_json::from_value(self.params.clone())
+    }
+
     /// Attempts to parse recipe params according to the recipe kind.
     ///
     /// This method validates that the params match the expected schema for the
@@ -282,10 +296,11 @@ impl Recipe {
                 })?;
             }
             "music.tracker_song_v1" => {
-                self.as_music_tracker_song().map_err(|e| RecipeParamsError {
-                    recipe_kind: self.kind.clone(),
-                    error_message: e.to_string(),
-                })?;
+                self.as_music_tracker_song()
+                    .map_err(|e| RecipeParamsError {
+                        recipe_kind: self.kind.clone(),
+                        error_message: e.to_string(),
+                    })?;
             }
             "music.tracker_song_compose_v1" => {
                 self.as_music_tracker_song_compose()
@@ -302,11 +317,10 @@ impl Recipe {
                     })?;
             }
             "texture.trimsheet_v1" => {
-                self.as_texture_trimsheet()
-                    .map_err(|e| RecipeParamsError {
-                        recipe_kind: self.kind.clone(),
-                        error_message: e.to_string(),
-                    })?;
+                self.as_texture_trimsheet().map_err(|e| RecipeParamsError {
+                    recipe_kind: self.kind.clone(),
+                    error_message: e.to_string(),
+                })?;
             }
             "texture.decal_v1" => {
                 self.as_texture_decal().map_err(|e| RecipeParamsError {
@@ -356,6 +370,12 @@ impl Recipe {
             }
             "sprite.animation_v1" => {
                 self.as_sprite_animation().map_err(|e| RecipeParamsError {
+                    recipe_kind: self.kind.clone(),
+                    error_message: e.to_string(),
+                })?;
+            }
+            "vfx.flipbook_v1" => {
+                self.as_vfx_flipbook().map_err(|e| RecipeParamsError {
                     recipe_kind: self.kind.clone(),
                     error_message: e.to_string(),
                 })?;
