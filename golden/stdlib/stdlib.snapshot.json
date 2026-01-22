@@ -1451,6 +1451,8 @@
             "texture",
             "sprite",
             "vfx",
+            "ui",
+            "font",
             "static_mesh",
             "skeletal_mesh",
             "skeletal_animation"
