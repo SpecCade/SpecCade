@@ -41,7 +41,9 @@
       "Bash(rustc:*)",
       "Bash(wc:*)",
       "Bash(dir:*)",
-      "Bash(Select-String -Pattern \"\\(vfx|flipbook|nine.slice|icon.set|bitmap\\)\" -Context 2,2)"
+      "Bash(Select-String -Pattern \"\\(vfx|flipbook|nine.slice|icon.set|bitmap\\)\" -Context 2,2)",
+      "Bash(do echo \"Run $i:\")",
+      "Bash(done)"
     ]
   }
 }
