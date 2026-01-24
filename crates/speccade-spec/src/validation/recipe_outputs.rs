@@ -67,6 +67,7 @@ pub(super) fn validate_outputs_for_recipe_with_budget(
         "ui.nine_slice_v1" => validate_ui_nine_slice_outputs(spec, recipe, result),
         "ui.icon_set_v1" => validate_ui_icon_set_outputs(spec, recipe, result),
         "ui.item_card_v1" => validate_ui_item_card_outputs(spec, recipe, result),
+        "ui.damage_number_v1" => validate_ui_damage_number_outputs(spec, recipe, result),
         "font.bitmap_v1" => validate_font_bitmap_outputs(spec, recipe, result),
         _ if recipe.kind.starts_with("texture.") => {
             result.add_error(ValidationError::with_path(
@@ -1385,4 +1386,139 @@ fn validate_texture_material_preset_outputs(
 
     // Suppress unused variable warning
     let _ = params;
+}
+
+/// Validates outputs for `ui.damage_number_v1` recipe.
+fn validate_ui_damage_number_outputs(spec: &Spec, recipe: &Recipe, result: &mut ValidationResult) {
+    match recipe.as_ui_damage_number() {
+        Ok(params) => {
+            // Validate glyph size bounds (min 8x8, max 128x128)
+            if params.glyph_size[0] < 8 || params.glyph_size[1] < 8 {
+                result.add_error(ValidationError::with_path(
+                    ErrorCode::InvalidRecipeParams,
+                    format!(
+                        "glyph_size must be at least 8x8, got [{}, {}]",
+                        params.glyph_size[0], params.glyph_size[1]
+                    ),
+                    "recipe.params.glyph_size",
+                ));
+            }
+
+            if params.glyph_size[0] > 128 || params.glyph_size[1] > 128 {
+                result.add_error(ValidationError::with_path(
+                    ErrorCode::InvalidRecipeParams,
+                    format!(
+                        "glyph_size must be at most 128x128, got [{}, {}]",
+                        params.glyph_size[0], params.glyph_size[1]
+                    ),
+                    "recipe.params.glyph_size",
+                ));
+            }
+
+            // Validate outline width (1-8)
+            if params.outline_width < 1 || params.outline_width > 8 {
+                result.add_error(ValidationError::with_path(
+                    ErrorCode::InvalidRecipeParams,
+                    format!(
+                        "outline_width must be between 1 and 8, got {}",
+                        params.outline_width
+                    ),
+                    "recipe.params.outline_width",
+                ));
+            }
+
+            // Validate at least one style defined
+            if params.styles.is_empty() {
+                result.add_error(ValidationError::with_path(
+                    ErrorCode::InvalidRecipeParams,
+                    "at least one style must be defined",
+                    "recipe.params.styles",
+                ));
+            }
+
+            // Validate colors and check for duplicate style types
+            let mut seen_types = std::collections::HashSet::new();
+            for (i, style) in params.styles.iter().enumerate() {
+                if !seen_types.insert(&style.style_type) {
+                    result.add_error(ValidationError::with_path(
+                        ErrorCode::InvalidRecipeParams,
+                        format!("duplicate style_type: '{}'", style.style_type),
+                        format!("recipe.params.styles[{}].style_type", i),
+                    ));
+                }
+
+                // Validate text_color
+                for (j, &c) in style.text_color.iter().enumerate() {
+                    if !(0.0..=1.0).contains(&c) {
+                        result.add_error(ValidationError::with_path(
+                            ErrorCode::InvalidRecipeParams,
+                            format!("text_color[{}] must be in [0, 1], got {}", j, c),
+                            format!("recipe.params.styles[{}].text_color[{}]", i, j),
+                        ));
+                    }
+                }
+
+                // Validate outline_color
+                for (j, &c) in style.outline_color.iter().enumerate() {
+                    if !(0.0..=1.0).contains(&c) {
+                        result.add_error(ValidationError::with_path(
+                            ErrorCode::InvalidRecipeParams,
+                            format!("outline_color[{}] must be in [0, 1], got {}", j, c),
+                            format!("recipe.params.styles[{}].outline_color[{}]", i, j),
+                        ));
+                    }
+                }
+
+                // Validate glow_color if present
+                if let Some(ref glow) = style.glow_color {
+                    for (j, &c) in glow.iter().enumerate() {
+                        if !(0.0..=1.0).contains(&c) {
+                            result.add_error(ValidationError::with_path(
+                                ErrorCode::InvalidRecipeParams,
+                                format!("glow_color[{}] must be in [0, 1], got {}", j, c),
+                                format!("recipe.params.styles[{}].glow_color[{}]", i, j),
+                            ));
+                        }
+                    }
+                }
+
+                // Validate scale if present (0.5 to 2.0)
+                if let Some(scale) = style.scale {
+                    if !(0.5..=2.0).contains(&scale) {
+                        result.add_error(ValidationError::with_path(
+                            ErrorCode::InvalidRecipeParams,
+                            format!("scale must be between 0.5 and 2.0, got {}", scale),
+                            format!("recipe.params.styles[{}].scale", i),
+                        ));
+                    }
+                }
+            }
+        }
+        Err(e) => {
+            result.add_error(ValidationError::with_path(
+                ErrorCode::InvalidRecipeParams,
+                format!("invalid params for {}: {}", recipe.kind, e),
+                "recipe.params",
+            ));
+        }
+    }
+
+    validate_primary_output_present(spec, result);
+
+    for (i, output) in spec.outputs.iter().enumerate() {
+        if output.kind == OutputKind::Primary && output.format != OutputFormat::Png {
+            result.add_error(ValidationError::with_path(
+                ErrorCode::OutputValidationFailed,
+                "ui.damage_number_v1 primary outputs must have format 'png'",
+                format!("outputs[{}].format", i),
+            ));
+        }
+        if output.kind == OutputKind::Metadata && output.format != OutputFormat::Json {
+            result.add_error(ValidationError::with_path(
+                ErrorCode::OutputValidationFailed,
+                "ui.damage_number_v1 metadata outputs must have format 'json'",
+                format!("outputs[{}].format", i),
+            ));
+        }
+    }
 }

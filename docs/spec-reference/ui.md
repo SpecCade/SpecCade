@@ -414,12 +414,162 @@ The metadata JSON contains UV coordinates and slot regions for each rarity varia
 }
 ```
 
+---
+
+### `ui.damage_number_v1`
+
+Generates damage number digit sprites with multiple style variants packed into a single atlas.
+
+**AssetType**: `ui`
+
+**Outputs**:
+- Primary (PNG): Atlas texture containing all digit glyphs for each style
+- Metadata (JSON): UV coordinates and glyph data for each style variant
+
+**Parameters**:
+
+```json
+{
+  "glyph_size": [16, 24],
+  "outline_width": 2,
+  "padding": 2,
+  "styles": [
+    {
+      "style_type": "normal",
+      "text_color": [1.0, 1.0, 1.0, 1.0],
+      "outline_color": [0.0, 0.0, 0.0, 1.0]
+    },
+    {
+      "style_type": "critical",
+      "text_color": [1.0, 0.9, 0.0, 1.0],
+      "outline_color": [1.0, 0.0, 0.0, 1.0],
+      "glow_color": [1.0, 0.5, 0.0, 0.5],
+      "scale": 1.25
+    },
+    {
+      "style_type": "healing",
+      "text_color": [0.0, 1.0, 0.0, 1.0],
+      "outline_color": [0.0, 0.3, 0.0, 1.0]
+    }
+  ]
+}
+```
+
+**Field Descriptions**:
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `glyph_size` | `[u32; 2]` | Yes | Base glyph size `[width, height]` in pixels (min 8x8, max 128x128) |
+| `outline_width` | `u32` | Yes | Outline thickness in pixels (1-8) |
+| `padding` | `u32` | No | Padding between glyphs in atlas (default: 2) |
+| `styles` | `Vec<DamageNumberStyle>` | Yes | List of style variants (at least 1 required) |
+
+**`DamageNumberStyle` Fields**:
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `style_type` | `DamageNumberStyleType` | Yes | One of: `normal`, `critical`, `healing` |
+| `text_color` | `[f64; 4]` | Yes | Text fill color (RGBA, 0.0-1.0) |
+| `outline_color` | `[f64; 4]` | Yes | Outline color (RGBA, 0.0-1.0) |
+| `glow_color` | `[f64; 4]` | No | Optional glow effect color (RGBA, 0.0-1.0) |
+| `scale` | `f64` | No | Scale multiplier (0.5-2.0, default: 1.0) |
+
+**Charset**: Digits 0-9, plus symbols +, -, .
+
+**Metadata Output**:
+
+The metadata JSON contains UV coordinates for each style and glyph:
+
+```json
+{
+  "atlas_size": [286, 90],
+  "glyph_size": [16, 24],
+  "outline_width": 2,
+  "padding": 2,
+  "styles": [
+    {
+      "style": "normal",
+      "uv_offset": [0.007, 0.022],
+      "scale": 1.0,
+      "glyphs": [
+        { "char_code": "0", "uv": [0.007, 0.022, 0.077, 0.333], "width": 20, "height": 28 },
+        { "char_code": "1", "uv": [...] }
+      ]
+    },
+    {
+      "style": "critical",
+      "uv_offset": [0.007, 0.355],
+      "scale": 1.25,
+      "glyphs": [...]
+    },
+    {
+      "style": "healing",
+      "uv_offset": [0.007, 0.688],
+      "scale": 1.0,
+      "glyphs": [...]
+    }
+  ]
+}
+```
+
+**Example Spec**:
+
+```json
+{
+  "spec_version": 1,
+  "asset_id": "ui-damage-numbers-rpg",
+  "asset_type": "ui",
+  "license": "CC0-1.0",
+  "seed": 42,
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "png",
+      "path": "ui/damage_numbers.png"
+    },
+    {
+      "kind": "metadata",
+      "format": "json",
+      "path": "ui/damage_numbers.json"
+    }
+  ],
+  "recipe": {
+    "kind": "ui.damage_number_v1",
+    "params": {
+      "glyph_size": [16, 24],
+      "outline_width": 2,
+      "padding": 2,
+      "styles": [
+        {
+          "style_type": "normal",
+          "text_color": [1.0, 1.0, 1.0, 1.0],
+          "outline_color": [0.0, 0.0, 0.0, 1.0]
+        },
+        {
+          "style_type": "critical",
+          "text_color": [1.0, 0.9, 0.0, 1.0],
+          "outline_color": [1.0, 0.0, 0.0, 1.0],
+          "glow_color": [1.0, 0.5, 0.0, 0.5],
+          "scale": 1.25
+        },
+        {
+          "style_type": "healing",
+          "text_color": [0.0, 1.0, 0.0, 1.0],
+          "outline_color": [0.0, 0.3, 0.0, 1.0]
+        }
+      ]
+    }
+  }
+}
+```
+
 ## Determinism
 
 All UI recipe kinds are Tier 1 (Rust-only, byte-identical):
 - Nine-slice generation produces identical PNG and metadata for the same spec hash/seed
 - Icon set packing uses deterministic shelf algorithm (sorted by height, width, id)
 - Item card generation uses deterministic horizontal packing (sorted by rarity tier)
+- Damage number generation uses deterministic style ordering (normal < critical < healing)
 - All outputs are byte-identical across platforms and runs
 
 ## Version History
@@ -428,4 +578,5 @@ All UI recipe kinds are Tier 1 (Rust-only, byte-identical):
   - Nine-slice panels with solid color regions
   - Icon sets with shelf packing algorithm
   - Item card templates with rarity variants
+  - Damage number sprites with style variants
   - Metadata outputs with UV coordinates

@@ -137,6 +137,9 @@ pub fn dispatch_generate(
         // UI item card backend
         "ui.item_card_v1" => texture::generate_ui_item_card(spec, out_root_path),
 
+        // UI damage number backend
+        "ui.damage_number_v1" => texture::generate_ui_damage_number(spec, out_root_path),
+
         // Bitmap font backend
         "font.bitmap_v1" => texture::generate_font_bitmap(spec, out_root_path),
 
@@ -352,6 +355,14 @@ pub fn dispatch_generate_profiled(
             }
         }
 
+        "ui.damage_number_v1" => {
+            if profile {
+                texture::generate_ui_damage_number_profiled(spec, out_root_path)
+            } else {
+                texture::generate_ui_damage_number(spec, out_root_path).map(DispatchResult::new)
+            }
+        }
+
         "font.bitmap_v1" => {
             if profile {
                 texture::generate_font_bitmap_profiled(spec, out_root_path)
@@ -431,6 +442,7 @@ pub fn is_backend_available(kind: &str) -> bool {
             | "ui.nine_slice_v1"
             | "ui.icon_set_v1"
             | "ui.item_card_v1"
+            | "ui.damage_number_v1"
             | "font.bitmap_v1"
             | "static_mesh.blender_primitives_v1"
             | "skeletal_mesh.blender_rigged_mesh_v1"

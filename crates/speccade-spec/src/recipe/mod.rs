@@ -91,6 +91,9 @@ pub enum RecipeKind {
     /// `ui.item_card_v1` - Item card templates with rarity variants and customizable slots.
     #[serde(rename = "ui.item_card_v1")]
     UiItemCardV1,
+    /// `ui.damage_number_v1` - Damage number sprites with style variants (normal, critical, healing).
+    #[serde(rename = "ui.damage_number_v1")]
+    UiDamageNumberV1,
     /// `font.bitmap_v1` - Bitmap pixel font with glyph atlas and metrics.
     #[serde(rename = "font.bitmap_v1")]
     FontBitmapV1,
@@ -120,6 +123,7 @@ impl RecipeKind {
             RecipeKind::UiNineSliceV1 => "ui.nine_slice_v1",
             RecipeKind::UiIconSetV1 => "ui.icon_set_v1",
             RecipeKind::UiItemCardV1 => "ui.item_card_v1",
+            RecipeKind::UiDamageNumberV1 => "ui.damage_number_v1",
             RecipeKind::FontBitmapV1 => "font.bitmap_v1",
         }
     }
@@ -147,6 +151,7 @@ impl RecipeKind {
             RecipeKind::UiNineSliceV1 => "ui",
             RecipeKind::UiIconSetV1 => "ui",
             RecipeKind::UiItemCardV1 => "ui",
+            RecipeKind::UiDamageNumberV1 => "ui",
             RecipeKind::FontBitmapV1 => "font",
         }
     }
@@ -170,6 +175,7 @@ impl RecipeKind {
             | RecipeKind::UiNineSliceV1
             | RecipeKind::UiIconSetV1
             | RecipeKind::UiItemCardV1
+            | RecipeKind::UiDamageNumberV1
             | RecipeKind::FontBitmapV1 => true,
             RecipeKind::StaticMeshBlenderPrimitivesV1
             | RecipeKind::SkeletalMeshBlenderRiggedMeshV1
@@ -233,6 +239,7 @@ impl Recipe {
             "ui.nine_slice_v1" => Some(RecipeKind::UiNineSliceV1),
             "ui.icon_set_v1" => Some(RecipeKind::UiIconSetV1),
             "ui.item_card_v1" => Some(RecipeKind::UiItemCardV1),
+            "ui.damage_number_v1" => Some(RecipeKind::UiDamageNumberV1),
             "font.bitmap_v1" => Some(RecipeKind::FontBitmapV1),
             _ => None,
         }
@@ -359,6 +366,11 @@ impl Recipe {
 
     /// Attempts to parse params as UI item card params.
     pub fn as_ui_item_card(&self) -> Result<UiItemCardV1Params, serde_json::Error> {
+        serde_json::from_value(self.params.clone())
+    }
+
+    /// Attempts to parse params as UI damage number params.
+    pub fn as_ui_damage_number(&self) -> Result<UiDamageNumberV1Params, serde_json::Error> {
         serde_json::from_value(self.params.clone())
     }
 
@@ -504,6 +516,12 @@ impl Recipe {
             }
             "ui.item_card_v1" => {
                 self.as_ui_item_card().map_err(|e| RecipeParamsError {
+                    recipe_kind: self.kind.clone(),
+                    error_message: e.to_string(),
+                })?;
+            }
+            "ui.damage_number_v1" => {
+                self.as_ui_damage_number().map_err(|e| RecipeParamsError {
                     recipe_kind: self.kind.clone(),
                     error_message: e.to_string(),
                 })?;

@@ -1521,3 +1521,79 @@ fn write_texture_material_preset_outputs(
 
     Ok(outputs)
 }
+
+/// Generate damage number sprite outputs using the texture backend.
+pub(super) fn generate_ui_damage_number(
+    spec: &Spec,
+    out_root: &Path,
+) -> Result<Vec<OutputResult>, DispatchError> {
+    let recipe = spec.recipe.as_ref().ok_or(DispatchError::NoRecipe)?;
+    let params = recipe.as_ui_damage_number().map_err(|e| {
+        DispatchError::BackendError(format!("Invalid UI damage number params: {}", e))
+    })?;
+
+    let result =
+        speccade_backend_texture::generate_damage_number(&params, spec.seed).map_err(|e| {
+            DispatchError::BackendError(format!("Damage number generation failed: {}", e))
+        })?;
+
+    let primary_outputs = get_primary_outputs(spec, OutputFormat::Png, "ui.damage_number_v1")?;
+    let metadata_outputs = get_metadata_outputs(spec, "ui.damage_number_v1")?;
+
+    let mut outputs =
+        write_primary_png_outputs(out_root, &primary_outputs, &result.png_data, &result.hash)?;
+    outputs.extend(write_metadata_outputs(
+        out_root,
+        &metadata_outputs,
+        &result.metadata,
+    )?);
+
+    Ok(outputs)
+}
+
+/// Generate damage number sprite outputs with profiling instrumentation.
+pub(super) fn generate_ui_damage_number_profiled(
+    spec: &Spec,
+    out_root: &Path,
+) -> Result<DispatchResult, DispatchError> {
+    let mut stages = Vec::new();
+
+    let parse_start = Instant::now();
+    let recipe = spec.recipe.as_ref().ok_or(DispatchError::NoRecipe)?;
+    let params = recipe.as_ui_damage_number().map_err(|e| {
+        DispatchError::BackendError(format!("Invalid UI damage number params: {}", e))
+    })?;
+    stages.push(StageTiming::new(
+        "parse_params",
+        parse_start.elapsed().as_millis() as u64,
+    ));
+
+    let render_start = Instant::now();
+    let result =
+        speccade_backend_texture::generate_damage_number(&params, spec.seed).map_err(|e| {
+            DispatchError::BackendError(format!("Damage number generation failed: {}", e))
+        })?;
+    stages.push(StageTiming::new(
+        "generate_damage_number",
+        render_start.elapsed().as_millis() as u64,
+    ));
+
+    let write_start = Instant::now();
+    let primary_outputs = get_primary_outputs(spec, OutputFormat::Png, "ui.damage_number_v1")?;
+    let metadata_outputs = get_metadata_outputs(spec, "ui.damage_number_v1")?;
+
+    let mut outputs =
+        write_primary_png_outputs(out_root, &primary_outputs, &result.png_data, &result.hash)?;
+    outputs.extend(write_metadata_outputs(
+        out_root,
+        &metadata_outputs,
+        &result.metadata,
+    )?);
+
+    stages.push(StageTiming::new(
+        "write_outputs",
+        write_start.elapsed().as_millis() as u64,
+    ));
+
+    Ok(DispatchResult::with_stages(outputs, stages))
+}
