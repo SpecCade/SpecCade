@@ -111,6 +111,11 @@ pub fn dispatch_generate(
         // Matcap texture backend
         "texture.matcap_v1" => texture::generate_texture_matcap(spec, out_root_path),
 
+        // Material preset texture backend
+        "texture.material_preset_v1" => {
+            texture::generate_texture_material_preset(spec, out_root_path)
+        }
+
         // Sprite sheet backend
         "sprite.sheet_v1" => texture::generate_sprite_sheet(spec, out_root_path),
 
@@ -273,6 +278,15 @@ pub fn dispatch_generate_profiled(
                 texture::generate_texture_matcap_profiled(spec, out_root_path)
             } else {
                 texture::generate_texture_matcap(spec, out_root_path).map(DispatchResult::new)
+            }
+        }
+
+        "texture.material_preset_v1" => {
+            if profile {
+                texture::generate_texture_material_preset_profiled(spec, out_root_path)
+            } else {
+                texture::generate_texture_material_preset(spec, out_root_path)
+                    .map(DispatchResult::new)
             }
         }
 

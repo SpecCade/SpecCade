@@ -55,6 +55,9 @@ pub enum RecipeKind {
     /// `texture.matcap_v1` - Matcap texture for stylized NPR shading.
     #[serde(rename = "texture.matcap_v1")]
     TextureMatcapV1,
+    /// `texture.material_preset_v1` - Material preset for PBR textures with style presets.
+    #[serde(rename = "texture.material_preset_v1")]
+    TextureMaterialPresetV1,
     /// `static_mesh.blender_primitives_v1` - Static mesh from Blender primitives.
     #[serde(rename = "static_mesh.blender_primitives_v1")]
     StaticMeshBlenderPrimitivesV1,
@@ -99,6 +102,7 @@ impl RecipeKind {
             RecipeKind::TextureDecalV1 => "texture.decal_v1",
             RecipeKind::TextureSplatSetV1 => "texture.splat_set_v1",
             RecipeKind::TextureMatcapV1 => "texture.matcap_v1",
+            RecipeKind::TextureMaterialPresetV1 => "texture.material_preset_v1",
             RecipeKind::StaticMeshBlenderPrimitivesV1 => "static_mesh.blender_primitives_v1",
             RecipeKind::SkeletalMeshBlenderRiggedMeshV1 => "skeletal_mesh.blender_rigged_mesh_v1",
             RecipeKind::SkeletalAnimationBlenderClipV1 => "skeletal_animation.blender_clip_v1",
@@ -123,6 +127,7 @@ impl RecipeKind {
             RecipeKind::TextureDecalV1 => "texture",
             RecipeKind::TextureSplatSetV1 => "texture",
             RecipeKind::TextureMatcapV1 => "texture",
+            RecipeKind::TextureMaterialPresetV1 => "texture",
             RecipeKind::StaticMeshBlenderPrimitivesV1 => "static_mesh",
             RecipeKind::SkeletalMeshBlenderRiggedMeshV1 => "skeletal_mesh",
             RecipeKind::SkeletalAnimationBlenderClipV1 => "skeletal_animation",
@@ -147,6 +152,7 @@ impl RecipeKind {
             | RecipeKind::TextureDecalV1
             | RecipeKind::TextureSplatSetV1
             | RecipeKind::TextureMatcapV1
+            | RecipeKind::TextureMaterialPresetV1
             | RecipeKind::SpriteSheetV1
             | RecipeKind::SpriteAnimationV1
             | RecipeKind::VfxFlipbookV1
@@ -197,6 +203,7 @@ impl Recipe {
             "texture.decal_v1" => Some(RecipeKind::TextureDecalV1),
             "texture.splat_set_v1" => Some(RecipeKind::TextureSplatSetV1),
             "texture.matcap_v1" => Some(RecipeKind::TextureMatcapV1),
+            "texture.material_preset_v1" => Some(RecipeKind::TextureMaterialPresetV1),
             "static_mesh.blender_primitives_v1" => Some(RecipeKind::StaticMeshBlenderPrimitivesV1),
             "skeletal_mesh.blender_rigged_mesh_v1" => {
                 Some(RecipeKind::SkeletalMeshBlenderRiggedMeshV1)
@@ -268,6 +275,13 @@ impl Recipe {
 
     /// Attempts to parse params as matcap texture params.
     pub fn as_texture_matcap(&self) -> Result<TextureMatcapV1Params, serde_json::Error> {
+        serde_json::from_value(self.params.clone())
+    }
+
+    /// Attempts to parse params as material preset texture params.
+    pub fn as_texture_material_preset(
+        &self,
+    ) -> Result<TextureMaterialPresetV1Params, serde_json::Error> {
         serde_json::from_value(self.params.clone())
     }
 
@@ -391,6 +405,13 @@ impl Recipe {
                     recipe_kind: self.kind.clone(),
                     error_message: e.to_string(),
                 })?;
+            }
+            "texture.material_preset_v1" => {
+                self.as_texture_material_preset()
+                    .map_err(|e| RecipeParamsError {
+                        recipe_kind: self.kind.clone(),
+                        error_message: e.to_string(),
+                    })?;
             }
             "static_mesh.blender_primitives_v1" => {
                 self.as_static_mesh_blender_primitives()

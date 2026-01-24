@@ -5,6 +5,7 @@
 mod decal;
 mod graph;
 mod matcap;
+mod material_preset;
 mod nodes;
 mod spec;
 mod splat_set;
@@ -43,4 +44,5 @@ pub fn register(builder: &mut GlobalsBuilder) {
     decal::register(builder);
     splat_set::register(builder);
     matcap::register(builder);
+    material_preset::register(builder);
 }

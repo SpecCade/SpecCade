@@ -13,6 +13,7 @@ Texture functions provide a node-based procedural texture graph system.
 - [Decal Functions](#decal-functions)
 - [Splat Set Functions](#splat-set-functions)
 - [Matcap Functions](#matcap-functions)
+- [Material Preset Functions](#material-preset-functions)
 
 ---
 
@@ -858,6 +859,106 @@ matcap_v1(
       "toon_steps": 4
     }
   }
+}
+```
+
+---
+
+## Material Preset Functions
+
+### material_preset_v1()
+
+Creates a complete material preset spec with texture.material_preset_v1 recipe.
+
+Material presets generate multiple PBR texture outputs (albedo, roughness, metallic, normal) from predefined style presets with optional parameter overrides. This provides a "preset + parameterization" approach for consistent art direction.
+
+**Parameters:**
+| Name | Type | Required | Default | Description |
+|------|------|----------|---------|-------------|
+| asset_id | str | Yes | - | Kebab-case asset identifier |
+| seed | int | Yes | - | Deterministic seed (0 to 2^32-1) |
+| output_prefix | str | Yes | - | Output path prefix for generated textures |
+| resolution | list | Yes | - | [width, height] in pixels |
+| preset | str | Yes | - | Material preset (see below) |
+| tileable | bool | No | True | Whether textures tile seamlessly |
+| base_color | list | No | None | RGB color override [r, g, b] (0.0-1.0) |
+| roughness_range | list | No | None | Roughness range [min, max] (0.0-1.0) |
+| metallic | f64 | No | None | Metallic value (0.0-1.0) |
+| noise_scale | f64 | No | None | Noise scale for detail patterns |
+| pattern_scale | f64 | No | None | Pattern scale for macro features |
+| description | str | No | None | Asset description |
+| tags | list | No | None | Style tags |
+| license | str | No | "CC0-1.0" | SPDX license identifier |
+
+**Valid Presets:**
+- `"toon_metal"` - Flat albedo with rim highlights, stepped roughness for stylized metal
+- `"stylized_wood"` - Wood grain pattern with warm tones, organic noise
+- `"neon_glow"` - Dark base with bright emissive-style highlights
+- `"ceramic_glaze"` - Smooth, high-gloss ceramic/porcelain look
+- `"sci_fi_panel"` - Geometric patterns with metallic panels and panel lines
+- `"clean_plastic"` - Uniform albedo with medium roughness for clean plastic
+- `"rough_stone"` - Rocky noise patterns with high roughness for stone surfaces
+- `"brushed_metal"` - Directional anisotropic streaks for brushed metal
+
+**Returns:** Complete spec dict with multiple outputs (albedo, roughness, metallic, normal, metadata).
+
+**Example:**
+```python
+# Basic toon metal preset
+material_preset_v1(
+    asset_id = "metal-panel-01",
+    seed = 42,
+    output_prefix = "materials/metal_panel",
+    resolution = [512, 512],
+    preset = "toon_metal"
+)
+
+# Stylized wood with custom color and roughness
+material_preset_v1(
+    asset_id = "wood-plank-01",
+    seed = 123,
+    output_prefix = "materials/wood_plank",
+    resolution = [1024, 1024],
+    preset = "stylized_wood",
+    tileable = True,
+    base_color = [0.7, 0.5, 0.3],
+    roughness_range = [0.5, 0.9],
+    description = "Stylized wood plank material",
+    tags = ["wood", "stylized", "pbr"]
+)
+
+# Sci-fi panel with metallic override
+material_preset_v1(
+    asset_id = "scifi-wall-01",
+    seed = 456,
+    output_prefix = "materials/scifi_wall",
+    resolution = [512, 512],
+    preset = "sci_fi_panel",
+    metallic = 0.9,
+    noise_scale = 0.05,
+    pattern_scale = 0.3
+)
+```
+
+**Generated Outputs:**
+```
+materials/metal_panel_albedo.png      # RGB albedo texture
+materials/metal_panel_roughness.png   # Grayscale roughness map
+materials/metal_panel_metallic.png    # Grayscale metallic map
+materials/metal_panel_normal.png      # RGB normal map
+materials/metal_panel.material.json   # Metadata sidecar
+```
+
+**Metadata Output Format:**
+```json
+{
+  "resolution": [512, 512],
+  "tileable": true,
+  "preset": "toon_metal",
+  "base_color": [0.85, 0.85, 0.9],
+  "roughness_range": [0.2, 0.5],
+  "metallic": 0.9,
+  "generated_maps": ["albedo", "roughness", "metallic", "normal"]
 }
 ```
 

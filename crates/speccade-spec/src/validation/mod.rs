@@ -178,6 +178,7 @@ fn validate_outputs(spec: &Spec, result: &mut ValidationResult) {
                 "texture.trimsheet_v1"
                     | "texture.decal_v1"
                     | "texture.splat_set_v1"
+                    | "texture.material_preset_v1"
                     | "sprite.sheet_v1"
                     | "vfx.flipbook_v1"
                     | "ui.nine_slice_v1"
@@ -318,6 +319,7 @@ pub fn validate_for_generate_with_budget(spec: &Spec, budget: &BudgetProfile) ->
             "texture.decal_v1",
             "texture.splat_set_v1",
             "texture.matcap_v1",
+            "texture.material_preset_v1",
             "sprite.sheet_v1",
             "sprite.animation_v1",
             "vfx.flipbook_v1",

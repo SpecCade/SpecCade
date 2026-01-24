@@ -57,7 +57,7 @@ Node-based procedural texture generation and specialized texture recipes.
 - **Graph Functions** - Texture graph assembly
 - **Recipe Functions** - Specialized texture generators (matcaps, decals, trimsheets)
 
-**Key Functions:** `noise_node()`, `gradient_node()`, `color_ramp_node()`, `texture_graph()`, `matcap_v1()`, `decal_spec()`, `trimsheet_spec()`
+**Key Functions:** `noise_node()`, `gradient_node()`, `color_ramp_node()`, `texture_graph()`, `matcap_v1()`, `material_preset_v1()`, `decal_spec()`, `trimsheet_spec()`
 
 ---
 

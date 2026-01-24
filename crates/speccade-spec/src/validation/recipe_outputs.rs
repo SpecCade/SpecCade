@@ -41,6 +41,9 @@ pub(super) fn validate_outputs_for_recipe_with_budget(
         "texture.decal_v1" => validate_texture_decal_outputs(spec, recipe, result),
         "texture.splat_set_v1" => validate_texture_splat_set_outputs(spec, recipe, result),
         "texture.matcap_v1" => validate_texture_matcap_outputs(spec, recipe, result),
+        "texture.material_preset_v1" => {
+            validate_texture_material_preset_outputs(spec, recipe, result)
+        }
         "static_mesh.blender_primitives_v1" => {
             validate_static_mesh_blender_primitives(recipe, result);
             validate_single_primary_output_format(spec, OutputFormat::Glb, result);
@@ -67,7 +70,7 @@ pub(super) fn validate_outputs_for_recipe_with_budget(
             result.add_error(ValidationError::with_path(
                 ErrorCode::UnsupportedRecipeKind,
                 format!(
-                    "unsupported texture recipe kind '{}'; use 'texture.procedural_v1', 'texture.trimsheet_v1', 'texture.decal_v1', 'texture.splat_set_v1', or 'texture.matcap_v1'",
+                    "unsupported texture recipe kind '{}'; use 'texture.procedural_v1', 'texture.trimsheet_v1', 'texture.decal_v1', 'texture.splat_set_v1', 'texture.matcap_v1', or 'texture.material_preset_v1'",
                     recipe.kind
                 ),
                 "recipe.kind",
@@ -1029,4 +1032,133 @@ fn validate_texture_matcap_outputs(spec: &Spec, recipe: &Recipe, result: &mut Va
             ));
         }
     }
+}
+
+fn validate_texture_material_preset_outputs(
+    spec: &Spec,
+    recipe: &Recipe,
+    result: &mut ValidationResult,
+) {
+    let params = match recipe.as_texture_material_preset() {
+        Ok(params) => {
+            if params.resolution[0] == 0 || params.resolution[1] == 0 {
+                result.add_error(ValidationError::with_path(
+                    ErrorCode::InvalidRecipeParams,
+                    format!(
+                        "resolution must be positive, got [{}, {}]",
+                        params.resolution[0], params.resolution[1]
+                    ),
+                    "recipe.params.resolution",
+                ));
+            }
+            // Validate base_color if provided
+            if let Some(ref color) = params.base_color {
+                for (i, &c) in color.iter().enumerate() {
+                    if !(0.0..=1.0).contains(&c) {
+                        result.add_error(ValidationError::with_path(
+                            ErrorCode::InvalidRecipeParams,
+                            format!("base_color[{}] must be in range [0, 1], got {}", i, c),
+                            format!("recipe.params.base_color[{}]", i),
+                        ));
+                    }
+                }
+            }
+            // Validate roughness_range if provided
+            if let Some(ref range) = params.roughness_range {
+                for (i, &r) in range.iter().enumerate() {
+                    if !(0.0..=1.0).contains(&r) {
+                        result.add_error(ValidationError::with_path(
+                            ErrorCode::InvalidRecipeParams,
+                            format!("roughness_range[{}] must be in range [0, 1], got {}", i, r),
+                            format!("recipe.params.roughness_range[{}]", i),
+                        ));
+                    }
+                }
+            }
+            // Validate metallic if provided
+            if let Some(m) = params.metallic {
+                if !(0.0..=1.0).contains(&m) {
+                    result.add_error(ValidationError::with_path(
+                        ErrorCode::InvalidRecipeParams,
+                        format!("metallic must be in range [0, 1], got {}", m),
+                        "recipe.params.metallic",
+                    ));
+                }
+            }
+            // Validate noise_scale if provided
+            if let Some(ns) = params.noise_scale {
+                if ns <= 0.0 {
+                    result.add_error(ValidationError::with_path(
+                        ErrorCode::InvalidRecipeParams,
+                        format!("noise_scale must be positive, got {}", ns),
+                        "recipe.params.noise_scale",
+                    ));
+                }
+            }
+            // Validate pattern_scale if provided
+            if let Some(ps) = params.pattern_scale {
+                if ps <= 0.0 {
+                    result.add_error(ValidationError::with_path(
+                        ErrorCode::InvalidRecipeParams,
+                        format!("pattern_scale must be positive, got {}", ps),
+                        "recipe.params.pattern_scale",
+                    ));
+                }
+            }
+            params
+        }
+        Err(e) => {
+            result.add_error(ValidationError::with_path(
+                ErrorCode::InvalidRecipeParams,
+                format!("invalid params for {}: {}", recipe.kind, e),
+                "recipe.params",
+            ));
+            return;
+        }
+    };
+
+    validate_primary_output_present(spec, result);
+
+    // Material presets generate 4 primary outputs (albedo, roughness, metallic, normal)
+    // and optionally a metadata output
+    let valid_sources = ["albedo", "roughness", "metallic", "normal"];
+
+    for (i, output) in spec.outputs.iter().enumerate() {
+        match output.kind {
+            OutputKind::Primary => {
+                if output.format != OutputFormat::Png {
+                    result.add_error(ValidationError::with_path(
+                        ErrorCode::OutputValidationFailed,
+                        "texture.material_preset_v1 primary outputs must have format 'png'",
+                        format!("outputs[{}].format", i),
+                    ));
+                }
+
+                let source = output.source.as_deref().unwrap_or("");
+                if !valid_sources.contains(&source) {
+                    result.add_error(ValidationError::with_path(
+                        ErrorCode::OutputValidationFailed,
+                        format!(
+                            "texture.material_preset_v1 output source '{}' is not valid; expected 'albedo', 'roughness', 'metallic', or 'normal'",
+                            source
+                        ),
+                        format!("outputs[{}].source", i),
+                    ));
+                }
+            }
+            OutputKind::Metadata => {
+                if output.format != OutputFormat::Json {
+                    result.add_error(ValidationError::with_path(
+                        ErrorCode::OutputValidationFailed,
+                        "texture.material_preset_v1 metadata outputs must have format 'json'",
+                        format!("outputs[{}].format", i),
+                    ));
+                }
+            }
+            OutputKind::Preview => {}
+        }
+    }
+
+    // Suppress unused variable warning
+    let _ = params;
 }

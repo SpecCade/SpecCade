@@ -68,6 +68,7 @@ pub mod font;
 pub mod generate;
 pub mod maps;
 pub mod matcap;
+pub mod material_preset;
 pub mod noise;
 pub mod normal_map;
 pub mod normal_map_patterns;

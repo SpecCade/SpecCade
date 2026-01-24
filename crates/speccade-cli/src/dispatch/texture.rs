@@ -1250,3 +1250,139 @@ pub(super) fn generate_font_bitmap_profiled(
 
     Ok(DispatchResult::with_stages(outputs, stages))
 }
+
+/// Generate material preset texture outputs using the texture backend.
+///
+/// Material presets output:
+/// - Albedo texture (primary PNG)
+/// - Roughness texture (primary PNG)
+/// - Metallic texture (primary PNG)
+/// - Normal map texture (primary PNG)
+/// - Metadata JSON sidecar (metadata)
+pub(super) fn generate_texture_material_preset(
+    spec: &Spec,
+    out_root: &Path,
+) -> Result<Vec<OutputResult>, DispatchError> {
+    let recipe = spec.recipe.as_ref().ok_or(DispatchError::NoRecipe)?;
+    let params = recipe.as_texture_material_preset().map_err(|e| {
+        DispatchError::BackendError(format!("Invalid texture material preset params: {}", e))
+    })?;
+
+    let result =
+        speccade_backend_texture::material_preset::generate_material_preset(&params, spec.seed)
+            .map_err(|e| {
+                DispatchError::BackendError(format!("Material preset generation failed: {}", e))
+            })?;
+
+    write_texture_material_preset_outputs(spec, out_root, &result)
+}
+
+/// Generate material preset texture outputs with profiling instrumentation.
+pub(super) fn generate_texture_material_preset_profiled(
+    spec: &Spec,
+    out_root: &Path,
+) -> Result<DispatchResult, DispatchError> {
+    let mut stages = Vec::new();
+
+    // Stage: parse_params
+    let parse_start = Instant::now();
+    let recipe = spec.recipe.as_ref().ok_or(DispatchError::NoRecipe)?;
+    let params = recipe.as_texture_material_preset().map_err(|e| {
+        DispatchError::BackendError(format!("Invalid texture material preset params: {}", e))
+    })?;
+    stages.push(StageTiming::new(
+        "parse_params",
+        parse_start.elapsed().as_millis() as u64,
+    ));
+
+    // Stage: generate_material_preset
+    let render_start = Instant::now();
+    let result =
+        speccade_backend_texture::material_preset::generate_material_preset(&params, spec.seed)
+            .map_err(|e| {
+                DispatchError::BackendError(format!("Material preset generation failed: {}", e))
+            })?;
+    stages.push(StageTiming::new(
+        "generate_material_preset",
+        render_start.elapsed().as_millis() as u64,
+    ));
+
+    // Stage: write_outputs
+    let write_start = Instant::now();
+    let outputs = write_texture_material_preset_outputs(spec, out_root, &result)?;
+
+    stages.push(StageTiming::new(
+        "write_outputs",
+        write_start.elapsed().as_millis() as u64,
+    ));
+
+    Ok(DispatchResult::with_stages(outputs, stages))
+}
+
+fn write_texture_material_preset_outputs(
+    spec: &Spec,
+    out_root: &Path,
+    result: &speccade_backend_texture::material_preset::MaterialPresetResult,
+) -> Result<Vec<OutputResult>, DispatchError> {
+    let recipe_kind = "texture.material_preset_v1";
+
+    let primary_outputs = get_primary_outputs(spec, OutputFormat::Png, recipe_kind)?;
+    let mut outputs = Vec::new();
+
+    for (output_index, output_spec) in &primary_outputs {
+        let source = output_spec.source.as_deref().unwrap_or("");
+        match source {
+            "albedo" => {
+                write_output_bytes(out_root, &output_spec.path, &result.albedo.png_data)?;
+                outputs.push(OutputResult::tier1(
+                    output_spec.kind,
+                    OutputFormat::Png,
+                    PathBuf::from(&output_spec.path),
+                    result.albedo.hash.clone(),
+                ));
+            }
+            "roughness" => {
+                write_output_bytes(out_root, &output_spec.path, &result.roughness.png_data)?;
+                outputs.push(OutputResult::tier1(
+                    output_spec.kind,
+                    OutputFormat::Png,
+                    PathBuf::from(&output_spec.path),
+                    result.roughness.hash.clone(),
+                ));
+            }
+            "metallic" => {
+                write_output_bytes(out_root, &output_spec.path, &result.metallic.png_data)?;
+                outputs.push(OutputResult::tier1(
+                    output_spec.kind,
+                    OutputFormat::Png,
+                    PathBuf::from(&output_spec.path),
+                    result.metallic.hash.clone(),
+                ));
+            }
+            "normal" => {
+                write_output_bytes(out_root, &output_spec.path, &result.normal.png_data)?;
+                outputs.push(OutputResult::tier1(
+                    output_spec.kind,
+                    OutputFormat::Png,
+                    PathBuf::from(&output_spec.path),
+                    result.normal.hash.clone(),
+                ));
+            }
+            other => {
+                return Err(DispatchError::BackendError(format!(
+                    "{} primary output has unknown source '{}' (outputs[{}].source); expected 'albedo', 'roughness', 'metallic', or 'normal'",
+                    recipe_kind, other, output_index
+                )));
+            }
+        }
+    }
+
+    let metadata_outputs = get_metadata_outputs(spec, recipe_kind)?;
+    outputs.extend(write_metadata_outputs(
+        out_root,
+        &metadata_outputs,
+        &result.metadata,
+    )?);
+
+    Ok(outputs)
+}

@@ -89,7 +89,8 @@ Resolved questions:
   - Revisit if users request more granular in-pipeline channel manipulation
 - [x] `TEX-008` ~~Define and implement matcap generation (`texture.matcap_v1`) for stylized shading presets.~~ Done: 2026-01-24
   - Tier 1 implementation with 8 presets (ToonBasic, ToonRim, Metallic, Ceramic, Clay, Skin, Plastic, Velvet), toon steps, outline, curvature/cavity masks.
-- [ ] `TEX-009` Add a material preset system for stable art direction ("preset + parameterization" at CLI-time).
+- [x] `TEX-009` ~~Add a material preset system for stable art direction ("preset + parameterization" at CLI-time).~~ Done: 2026-01-24
+  - Tier 1 implementation with 8 PBR presets (ToonMetal, StylizedWood, NeonGlow, CeramicGlaze, SciFiPanel, CleanPlastic, RoughStone, BrushedMetal). Generates 4 outputs: albedo, roughness, metallic, normal.
 
 ---
 
