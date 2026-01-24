@@ -17,6 +17,10 @@ For the legacy `.studio/specs/**.spec.py` key taxonomy used by `speccade migrate
 | `texture.matcap_v1` | `texture` | `speccade-backend-texture` | 1 | `png` | Implemented | Matcap for stylized NPR shading (toon, rim, metallic, etc.) |
 | `texture.material_preset_v1` | `texture` | `speccade-backend-texture` | 1 | `png` (x4) + `json` | Implemented | PBR material presets (albedo, roughness, metallic, normal) |
 | `vfx.particle_profile_v1` | `vfx` | `speccade-backend-texture` | 1 | `json` | Implemented | Particle rendering profile presets (metadata-only: blend modes, tint, distortion) |
+| `ui.nine_slice_v1` | `ui` | `speccade-backend-texture` | 1 | `png` + `json` | Implemented | Nine-slice panel generation with corner/edge/center regions |
+| `ui.icon_set_v1` | `ui` | `speccade-backend-texture` | 1 | `png` + `json` | Implemented | Icon pack assembly with sprite frames |
+| `ui.item_card_v1` | `ui` | `speccade-backend-texture` | 1 | `png` + `json` | Implemented | Item card templates with rarity variants and customizable slots |
+| `font.bitmap_v1` | `font` | `speccade-backend-texture` | 1 | `png` + `json` | Implemented | Bitmap pixel font with glyph atlas and metrics |
 | `static_mesh.blender_primitives_v1` | `static_mesh` | `speccade-backend-blender` | 2 | `glb` | Implemented | Blender-driven primitives |
 | `skeletal_mesh.blender_rigged_mesh_v1` | `skeletal_mesh` | `speccade-backend-blender` | 2 | `glb` | Implemented | Rigged mesh export |
 | `skeletal_animation.blender_clip_v1` | `skeletal_animation` | `speccade-backend-blender` | 2 | `glb` | Implemented | Simple keyframed clip |

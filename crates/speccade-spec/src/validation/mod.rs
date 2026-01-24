@@ -184,6 +184,7 @@ fn validate_outputs(spec: &Spec, result: &mut ValidationResult) {
                     | "vfx.particle_profile_v1"
                     | "ui.nine_slice_v1"
                     | "ui.icon_set_v1"
+                    | "ui.item_card_v1"
                     | "font.bitmap_v1"
             )
         });
@@ -327,6 +328,7 @@ pub fn validate_for_generate_with_budget(spec: &Spec, budget: &BudgetProfile) ->
             "vfx.particle_profile_v1",
             "ui.nine_slice_v1",
             "ui.icon_set_v1",
+            "ui.item_card_v1",
             "font.bitmap_v1",
             "static_mesh.blender_primitives_v1",
             "skeletal_mesh.blender_rigged_mesh_v1",

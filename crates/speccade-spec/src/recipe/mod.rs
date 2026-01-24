@@ -88,6 +88,9 @@ pub enum RecipeKind {
     /// `ui.icon_set_v1` - Icon pack assembly with sprite frames.
     #[serde(rename = "ui.icon_set_v1")]
     UiIconSetV1,
+    /// `ui.item_card_v1` - Item card templates with rarity variants and customizable slots.
+    #[serde(rename = "ui.item_card_v1")]
+    UiItemCardV1,
     /// `font.bitmap_v1` - Bitmap pixel font with glyph atlas and metrics.
     #[serde(rename = "font.bitmap_v1")]
     FontBitmapV1,
@@ -116,6 +119,7 @@ impl RecipeKind {
             RecipeKind::VfxParticleProfileV1 => "vfx.particle_profile_v1",
             RecipeKind::UiNineSliceV1 => "ui.nine_slice_v1",
             RecipeKind::UiIconSetV1 => "ui.icon_set_v1",
+            RecipeKind::UiItemCardV1 => "ui.item_card_v1",
             RecipeKind::FontBitmapV1 => "font.bitmap_v1",
         }
     }
@@ -142,6 +146,7 @@ impl RecipeKind {
             RecipeKind::VfxParticleProfileV1 => "vfx",
             RecipeKind::UiNineSliceV1 => "ui",
             RecipeKind::UiIconSetV1 => "ui",
+            RecipeKind::UiItemCardV1 => "ui",
             RecipeKind::FontBitmapV1 => "font",
         }
     }
@@ -164,6 +169,7 @@ impl RecipeKind {
             | RecipeKind::VfxParticleProfileV1
             | RecipeKind::UiNineSliceV1
             | RecipeKind::UiIconSetV1
+            | RecipeKind::UiItemCardV1
             | RecipeKind::FontBitmapV1 => true,
             RecipeKind::StaticMeshBlenderPrimitivesV1
             | RecipeKind::SkeletalMeshBlenderRiggedMeshV1
@@ -226,6 +232,7 @@ impl Recipe {
             "vfx.particle_profile_v1" => Some(RecipeKind::VfxParticleProfileV1),
             "ui.nine_slice_v1" => Some(RecipeKind::UiNineSliceV1),
             "ui.icon_set_v1" => Some(RecipeKind::UiIconSetV1),
+            "ui.item_card_v1" => Some(RecipeKind::UiItemCardV1),
             "font.bitmap_v1" => Some(RecipeKind::FontBitmapV1),
             _ => None,
         }
@@ -347,6 +354,11 @@ impl Recipe {
 
     /// Attempts to parse params as UI icon set params.
     pub fn as_ui_icon_set(&self) -> Result<UiIconSetV1Params, serde_json::Error> {
+        serde_json::from_value(self.params.clone())
+    }
+
+    /// Attempts to parse params as UI item card params.
+    pub fn as_ui_item_card(&self) -> Result<UiItemCardV1Params, serde_json::Error> {
         serde_json::from_value(self.params.clone())
     }
 
@@ -486,6 +498,12 @@ impl Recipe {
             }
             "ui.icon_set_v1" => {
                 self.as_ui_icon_set().map_err(|e| RecipeParamsError {
+                    recipe_kind: self.kind.clone(),
+                    error_message: e.to_string(),
+                })?;
+            }
+            "ui.item_card_v1" => {
+                self.as_ui_item_card().map_err(|e| RecipeParamsError {
                     recipe_kind: self.kind.clone(),
                     error_message: e.to_string(),
                 })?;

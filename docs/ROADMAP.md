@@ -98,8 +98,8 @@ Resolved questions:
 
 - [x] `GEN-005` ~~Add VFX particle "material/profile" presets (additive/soft/distort/etc.).~~ Done: 2026-01-24
   - Tier 1 metadata-only recipe with 6 profiles (Additive, Soft, Distort, Multiply, Screen, Normal). Outputs rendering hints for particle systems.
-- [ ] `GEN-006` Add UI kit presets and item card templates with slots (icon/rarity/background).
-  - Candidate: `ui.item_card_v1`.
+- [x] `GEN-006` ~~Add UI kit presets and item card templates with slots (icon/rarity/background).~~ Done: 2026-01-24
+  - Tier 1 implementation generating PNG atlas + metadata JSON. 5 rarity tiers (Common, Uncommon, Rare, Epic, Legendary) with customizable slots (icon, rarity indicator, background).
 - [ ] `GEN-007` Add deterministic damage-number sprites (font + outline + crit styles).
 
 ---

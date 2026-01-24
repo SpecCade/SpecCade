@@ -66,6 +66,7 @@ pub(super) fn validate_outputs_for_recipe_with_budget(
         "vfx.particle_profile_v1" => validate_vfx_particle_profile_outputs(spec, recipe, result),
         "ui.nine_slice_v1" => validate_ui_nine_slice_outputs(spec, recipe, result),
         "ui.icon_set_v1" => validate_ui_icon_set_outputs(spec, recipe, result),
+        "ui.item_card_v1" => validate_ui_item_card_outputs(spec, recipe, result),
         "font.bitmap_v1" => validate_font_bitmap_outputs(spec, recipe, result),
         _ if recipe.kind.starts_with("texture.") => {
             result.add_error(ValidationError::with_path(
@@ -973,6 +974,156 @@ fn validate_ui_icon_set_outputs(spec: &Spec, recipe: &Recipe, result: &mut Valid
             result.add_error(ValidationError::with_path(
                 ErrorCode::OutputValidationFailed,
                 "ui.icon_set_v1 metadata outputs must have format 'json'",
+                format!("outputs[{}].format", i),
+            ));
+        }
+    }
+}
+
+/// Validates outputs for `ui.item_card_v1` recipe.
+fn validate_ui_item_card_outputs(spec: &Spec, recipe: &Recipe, result: &mut ValidationResult) {
+    match recipe.as_ui_item_card() {
+        Ok(params) => {
+            // Validate resolution bounds (min 32x32, max 4096x4096)
+            if params.resolution[0] < 32 || params.resolution[1] < 32 {
+                result.add_error(ValidationError::with_path(
+                    ErrorCode::InvalidRecipeParams,
+                    format!(
+                        "resolution must be at least 32x32, got [{}, {}]",
+                        params.resolution[0], params.resolution[1]
+                    ),
+                    "recipe.params.resolution",
+                ));
+            }
+
+            if params.resolution[0] > 4096 || params.resolution[1] > 4096 {
+                result.add_error(ValidationError::with_path(
+                    ErrorCode::InvalidRecipeParams,
+                    format!(
+                        "resolution must be at most 4096x4096, got [{}, {}]",
+                        params.resolution[0], params.resolution[1]
+                    ),
+                    "recipe.params.resolution",
+                ));
+            }
+
+            // Validate at least one rarity preset is defined
+            if params.rarity_presets.is_empty() {
+                result.add_error(ValidationError::with_path(
+                    ErrorCode::InvalidRecipeParams,
+                    "at least one rarity_preset must be defined",
+                    "recipe.params.rarity_presets",
+                ));
+            }
+
+            // Validate colors and check for duplicate tiers
+            let mut seen_tiers = std::collections::HashSet::new();
+            for (i, preset) in params.rarity_presets.iter().enumerate() {
+                if !seen_tiers.insert(preset.tier) {
+                    result.add_error(ValidationError::with_path(
+                        ErrorCode::InvalidRecipeParams,
+                        format!("duplicate rarity tier: '{}'", preset.tier),
+                        format!("recipe.params.rarity_presets[{}].tier", i),
+                    ));
+                }
+
+                // Validate border color
+                for (j, &c) in preset.border_color.iter().enumerate() {
+                    if !(0.0..=1.0).contains(&c) {
+                        result.add_error(ValidationError::with_path(
+                            ErrorCode::InvalidRecipeParams,
+                            format!("border_color[{}] must be in [0, 1], got {}", j, c),
+                            format!("recipe.params.rarity_presets[{}].border_color[{}]", i, j),
+                        ));
+                    }
+                }
+
+                // Validate background color
+                for (j, &c) in preset.background_color.iter().enumerate() {
+                    if !(0.0..=1.0).contains(&c) {
+                        result.add_error(ValidationError::with_path(
+                            ErrorCode::InvalidRecipeParams,
+                            format!("background_color[{}] must be in [0, 1], got {}", j, c),
+                            format!(
+                                "recipe.params.rarity_presets[{}].background_color[{}]",
+                                i, j
+                            ),
+                        ));
+                    }
+                }
+
+                // Validate glow color if present
+                if let Some(ref glow) = preset.glow_color {
+                    for (j, &c) in glow.iter().enumerate() {
+                        if !(0.0..=1.0).contains(&c) {
+                            result.add_error(ValidationError::with_path(
+                                ErrorCode::InvalidRecipeParams,
+                                format!("glow_color[{}] must be in [0, 1], got {}", j, c),
+                                format!("recipe.params.rarity_presets[{}].glow_color[{}]", i, j),
+                            ));
+                        }
+                    }
+                }
+            }
+
+            // Validate slot regions are within card bounds
+            let card_w = params.resolution[0];
+            let card_h = params.resolution[1];
+
+            let mut validate_slot = |name: &str, region: &[u32; 4], path: &str| {
+                let end_x = region[0] + region[2];
+                let end_y = region[1] + region[3];
+                if end_x > card_w || end_y > card_h {
+                    result.add_error(ValidationError::with_path(
+                        ErrorCode::InvalidRecipeParams,
+                        format!(
+                            "{} slot region extends beyond card bounds: ends at ({}, {}) but card is ({}x{})",
+                            name, end_x, end_y, card_w, card_h
+                        ),
+                        path,
+                    ));
+                }
+            };
+
+            validate_slot(
+                "icon",
+                &params.slots.icon_region,
+                "recipe.params.slots.icon_region",
+            );
+            validate_slot(
+                "rarity_indicator",
+                &params.slots.rarity_indicator_region,
+                "recipe.params.slots.rarity_indicator_region",
+            );
+            validate_slot(
+                "background",
+                &params.slots.background_region,
+                "recipe.params.slots.background_region",
+            );
+        }
+        Err(e) => {
+            result.add_error(ValidationError::with_path(
+                ErrorCode::InvalidRecipeParams,
+                format!("invalid params for {}: {}", recipe.kind, e),
+                "recipe.params",
+            ));
+        }
+    }
+
+    validate_primary_output_present(spec, result);
+
+    for (i, output) in spec.outputs.iter().enumerate() {
+        if output.kind == OutputKind::Primary && output.format != OutputFormat::Png {
+            result.add_error(ValidationError::with_path(
+                ErrorCode::OutputValidationFailed,
+                "ui.item_card_v1 primary outputs must have format 'png'",
+                format!("outputs[{}].format", i),
+            ));
+        }
+        if output.kind == OutputKind::Metadata && output.format != OutputFormat::Json {
+            result.add_error(ValidationError::with_path(
+                ErrorCode::OutputValidationFailed,
+                "ui.item_card_v1 metadata outputs must have format 'json'",
                 format!("outputs[{}].format", i),
             ));
         }

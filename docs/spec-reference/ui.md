@@ -1,6 +1,6 @@
 # UI Asset Recipes
 
-This document describes the UI asset recipe kinds for generating nine-slice panels and icon sets.
+This document describes the UI asset recipe kinds for generating nine-slice panels, icon sets, and item cards.
 
 ## Recipe Kinds
 
@@ -249,11 +249,177 @@ The metadata JSON contains UV coordinates for each packed icon:
 }
 ```
 
+---
+
+### `ui.item_card_v1`
+
+Generates item card templates with multiple rarity variants packed into a single atlas.
+
+**AssetType**: `ui`
+
+**Outputs**:
+- Primary (PNG): Atlas texture containing all rarity variants
+- Metadata (JSON): UV coordinates, slot regions, and variant metadata
+
+**Parameters**:
+
+```json
+{
+  "resolution": [128, 192],
+  "padding": 2,
+  "border_width": 3,
+  "corner_radius": 8,
+  "slots": {
+    "icon_region": [16, 16, 96, 96],
+    "rarity_indicator_region": [16, 120, 96, 16],
+    "background_region": [0, 0, 128, 192]
+  },
+  "rarity_presets": [
+    {
+      "tier": "common",
+      "border_color": [0.5, 0.5, 0.5, 1.0],
+      "background_color": [0.15, 0.15, 0.15, 1.0]
+    },
+    {
+      "tier": "legendary",
+      "border_color": [1.0, 0.8, 0.2, 1.0],
+      "background_color": [0.25, 0.2, 0.1, 1.0],
+      "glow_color": [1.0, 0.9, 0.4, 0.4]
+    }
+  ]
+}
+```
+
+**Field Descriptions**:
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `resolution` | `[u32; 2]` | Yes | Card resolution `[width, height]` in pixels (min 32x32, max 4096x4096) |
+| `padding` | `u32` | No | Padding/gutter between variants in pixels (default: 2) |
+| `border_width` | `u32` | No | Border thickness in pixels (default: 2) |
+| `corner_radius` | `u32` | No | Corner radius in pixels (default: 8, visual reference only in v1) |
+| `slots` | `ItemCardSlots` | Yes | Slot layout definitions |
+| `rarity_presets` | `Vec<RarityPreset>` | Yes | List of rarity presets (at least 1 required) |
+
+**`ItemCardSlots` Fields**:
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `icon_region` | `[u32; 4]` | Yes | Icon slot `[x, y, width, height]` in pixels |
+| `rarity_indicator_region` | `[u32; 4]` | Yes | Rarity indicator `[x, y, width, height]` in pixels |
+| `background_region` | `[u32; 4]` | Yes | Background `[x, y, width, height]` in pixels |
+
+**`RarityPreset` Fields**:
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `tier` | `RarityTier` | Yes | One of: `common`, `uncommon`, `rare`, `epic`, `legendary` |
+| `border_color` | `[f64; 4]` | Yes | Border fill color (RGBA, 0.0-1.0) |
+| `background_color` | `[f64; 4]` | Yes | Background fill color (RGBA, 0.0-1.0) |
+| `glow_color` | `[f64; 4]` | No | Optional glow effect color (RGBA, 0.0-1.0) |
+
+**Metadata Output**:
+
+The metadata JSON contains UV coordinates and slot regions for each rarity variant:
+
+```json
+{
+  "atlas_width": 660,
+  "atlas_height": 196,
+  "padding": 2,
+  "card_width": 128,
+  "card_height": 192,
+  "variants": [
+    {
+      "tier": "common",
+      "uv": {
+        "u_min": 0.003,
+        "v_min": 0.010,
+        "u_max": 0.197,
+        "v_max": 0.990
+      },
+      "slots": {
+        "icon": {"x": 16, "y": 16, "width": 96, "height": 96},
+        "rarity_indicator": {"x": 16, "y": 120, "width": 96, "height": 16},
+        "background": {"x": 0, "y": 0, "width": 128, "height": 192}
+      }
+    }
+  ]
+}
+```
+
+**Example Spec**:
+
+```json
+{
+  "spec_version": 1,
+  "asset_id": "ui-item-cards-rpg",
+  "asset_type": "ui",
+  "license": "CC0-1.0",
+  "seed": 42,
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "png",
+      "path": "ui/item_cards.png"
+    },
+    {
+      "kind": "metadata",
+      "format": "json",
+      "path": "ui/item_cards.json"
+    }
+  ],
+  "recipe": {
+    "kind": "ui.item_card_v1",
+    "params": {
+      "resolution": [128, 192],
+      "padding": 2,
+      "border_width": 3,
+      "corner_radius": 8,
+      "slots": {
+        "icon_region": [16, 16, 96, 96],
+        "rarity_indicator_region": [16, 120, 96, 16],
+        "background_region": [0, 0, 128, 192]
+      },
+      "rarity_presets": [
+        {
+          "tier": "common",
+          "border_color": [0.5, 0.5, 0.5, 1.0],
+          "background_color": [0.15, 0.15, 0.15, 1.0]
+        },
+        {
+          "tier": "uncommon",
+          "border_color": [0.2, 0.8, 0.2, 1.0],
+          "background_color": [0.1, 0.2, 0.1, 1.0]
+        },
+        {
+          "tier": "rare",
+          "border_color": [0.2, 0.5, 1.0, 1.0],
+          "background_color": [0.1, 0.15, 0.25, 1.0]
+        },
+        {
+          "tier": "epic",
+          "border_color": [0.7, 0.3, 0.9, 1.0],
+          "background_color": [0.2, 0.1, 0.25, 1.0]
+        },
+        {
+          "tier": "legendary",
+          "border_color": [1.0, 0.8, 0.2, 1.0],
+          "background_color": [0.25, 0.2, 0.1, 1.0],
+          "glow_color": [1.0, 0.9, 0.4, 0.4]
+        }
+      ]
+    }
+  }
+}
+```
+
 ## Determinism
 
-Both UI recipe kinds are Tier 1 (Rust-only, byte-identical):
+All UI recipe kinds are Tier 1 (Rust-only, byte-identical):
 - Nine-slice generation produces identical PNG and metadata for the same spec hash/seed
 - Icon set packing uses deterministic shelf algorithm (sorted by height, width, id)
+- Item card generation uses deterministic horizontal packing (sorted by rarity tier)
 - All outputs are byte-identical across platforms and runs
 
 ## Version History
@@ -261,4 +427,5 @@ Both UI recipe kinds are Tier 1 (Rust-only, byte-identical):
 - **v1** (2026-01): Initial implementation
   - Nine-slice panels with solid color regions
   - Icon sets with shelf packing algorithm
+  - Item card templates with rarity variants
   - Metadata outputs with UV coordinates
