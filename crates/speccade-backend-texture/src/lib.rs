@@ -67,6 +67,7 @@ pub mod decal;
 pub mod font;
 pub mod generate;
 pub mod maps;
+pub mod matcap;
 pub mod noise;
 pub mod normal_map;
 pub mod normal_map_patterns;
@@ -90,6 +91,7 @@ pub use generate::{
     save_texture_result, GenerateError, GraphValue, MapResult, TextureResult,
 };
 pub use maps::{GrayscaleBuffer, TextureBuffer};
+pub use matcap::{generate_matcap, MatcapError, MatcapResult};
 pub use noise::{Fbm, Noise2D, PerlinNoise, SimplexNoise, WorleyNoise};
 pub use normal_map::{generate_normal_map, save_normal_map, NormalMapError, NormalMapResult};
 pub use packing::{

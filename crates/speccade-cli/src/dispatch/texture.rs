@@ -185,7 +185,11 @@ fn write_texture_decal_outputs(
     }
 
     let metadata_outputs = get_metadata_outputs(spec, recipe_kind)?;
-    outputs.extend(write_metadata_outputs(out_root, &metadata_outputs, &result.metadata)?);
+    outputs.extend(write_metadata_outputs(
+        out_root,
+        &metadata_outputs,
+        &result.metadata,
+    )?);
 
     Ok(outputs)
 }
@@ -1138,6 +1142,66 @@ pub(super) fn generate_font_bitmap(
     )?);
 
     Ok(outputs)
+}
+
+/// Generate matcap texture outputs using the texture backend.
+pub(super) fn generate_texture_matcap(
+    spec: &Spec,
+    out_root: &Path,
+) -> Result<Vec<OutputResult>, DispatchError> {
+    let recipe = spec.recipe.as_ref().ok_or(DispatchError::NoRecipe)?;
+    let params = recipe.as_texture_matcap().map_err(|e| {
+        DispatchError::BackendError(format!("Invalid texture matcap params: {}", e))
+    })?;
+
+    let result = speccade_backend_texture::generate_matcap(&params, spec.seed)
+        .map_err(|e| DispatchError::BackendError(format!("Matcap generation failed: {}", e)))?;
+
+    let primary_outputs = get_primary_outputs(spec, OutputFormat::Png, "texture.matcap_v1")?;
+
+    write_primary_png_outputs(out_root, &primary_outputs, &result.png_data, &result.hash)
+}
+
+/// Generate matcap texture outputs with profiling instrumentation.
+pub(super) fn generate_texture_matcap_profiled(
+    spec: &Spec,
+    out_root: &Path,
+) -> Result<DispatchResult, DispatchError> {
+    let mut stages = Vec::new();
+
+    // Stage: parse_params
+    let parse_start = Instant::now();
+    let recipe = spec.recipe.as_ref().ok_or(DispatchError::NoRecipe)?;
+    let params = recipe.as_texture_matcap().map_err(|e| {
+        DispatchError::BackendError(format!("Invalid texture matcap params: {}", e))
+    })?;
+    stages.push(StageTiming::new(
+        "parse_params",
+        parse_start.elapsed().as_millis() as u64,
+    ));
+
+    // Stage: generate_matcap
+    let render_start = Instant::now();
+    let result = speccade_backend_texture::generate_matcap(&params, spec.seed)
+        .map_err(|e| DispatchError::BackendError(format!("Matcap generation failed: {}", e)))?;
+    stages.push(StageTiming::new(
+        "generate_matcap",
+        render_start.elapsed().as_millis() as u64,
+    ));
+
+    // Stage: write_outputs
+    let write_start = Instant::now();
+    let primary_outputs = get_primary_outputs(spec, OutputFormat::Png, "texture.matcap_v1")?;
+
+    let outputs =
+        write_primary_png_outputs(out_root, &primary_outputs, &result.png_data, &result.hash)?;
+
+    stages.push(StageTiming::new(
+        "write_outputs",
+        write_start.elapsed().as_millis() as u64,
+    ));
+
+    Ok(DispatchResult::with_stages(outputs, stages))
 }
 
 /// Generate bitmap font outputs with profiling instrumentation.

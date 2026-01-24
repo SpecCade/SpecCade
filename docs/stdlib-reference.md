@@ -50,13 +50,14 @@ Audio synthesis, filtering, effects, modulation, and layer composition.
 ---
 
 ### [Texture Functions](stdlib-texture.md)
-Node-based procedural texture generation.
+Node-based procedural texture generation and specialized texture recipes.
 
 **Categories:**
 - **Node Functions** - Noise, gradients, patterns, operations, and color manipulation
 - **Graph Functions** - Texture graph assembly
+- **Recipe Functions** - Specialized texture generators (matcaps, decals, trimsheets)
 
-**Key Functions:** `noise_node()`, `gradient_node()`, `color_ramp_node()`, `texture_graph()`
+**Key Functions:** `noise_node()`, `gradient_node()`, `color_ramp_node()`, `texture_graph()`, `matcap_v1()`, `decal_spec()`, `trimsheet_spec()`
 
 ---
 

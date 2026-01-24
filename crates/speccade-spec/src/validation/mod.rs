@@ -317,6 +317,7 @@ pub fn validate_for_generate_with_budget(spec: &Spec, budget: &BudgetProfile) ->
             "texture.trimsheet_v1",
             "texture.decal_v1",
             "texture.splat_set_v1",
+            "texture.matcap_v1",
             "sprite.sheet_v1",
             "sprite.animation_v1",
             "vfx.flipbook_v1",

@@ -3,6 +3,7 @@
 mod common;
 mod decal;
 mod layers;
+mod matcap;
 mod materials;
 mod normal;
 mod packed;
@@ -15,6 +16,7 @@ mod trimsheet;
 pub use common::*;
 pub use decal::*;
 pub use layers::*;
+pub use matcap::*;
 pub use materials::*;
 pub use normal::*;
 pub use packed::*;

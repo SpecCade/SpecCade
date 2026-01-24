@@ -40,6 +40,7 @@ pub(super) fn validate_outputs_for_recipe_with_budget(
         "texture.trimsheet_v1" => validate_texture_trimsheet_outputs(spec, recipe, result),
         "texture.decal_v1" => validate_texture_decal_outputs(spec, recipe, result),
         "texture.splat_set_v1" => validate_texture_splat_set_outputs(spec, recipe, result),
+        "texture.matcap_v1" => validate_texture_matcap_outputs(spec, recipe, result),
         "static_mesh.blender_primitives_v1" => {
             validate_static_mesh_blender_primitives(recipe, result);
             validate_single_primary_output_format(spec, OutputFormat::Glb, result);
@@ -66,7 +67,7 @@ pub(super) fn validate_outputs_for_recipe_with_budget(
             result.add_error(ValidationError::with_path(
                 ErrorCode::UnsupportedRecipeKind,
                 format!(
-                    "unsupported texture recipe kind '{}'; use 'texture.procedural_v1', 'texture.trimsheet_v1', 'texture.decal_v1', or 'texture.splat_set_v1'",
+                    "unsupported texture recipe kind '{}'; use 'texture.procedural_v1', 'texture.trimsheet_v1', 'texture.decal_v1', 'texture.splat_set_v1', or 'texture.matcap_v1'",
                     recipe.kind
                 ),
                 "recipe.kind",
@@ -587,7 +588,7 @@ fn validate_texture_splat_set_outputs(spec: &Spec, recipe: &Recipe, result: &mut
         }
     }
 
-    let mask_count = (params.layers.len() + 3) / 4;
+    let mask_count = params.layers.len().div_ceil(4);
 
     validate_primary_output_present(spec, result);
 
@@ -602,11 +603,7 @@ fn validate_texture_splat_set_outputs(spec: &Spec, recipe: &Recipe, result: &mut
                     ));
                 }
 
-                let source = output
-                    .source
-                    .as_deref()
-                    .unwrap_or("")
-                    .trim();
+                let source = output.source.as_deref().unwrap_or("").trim();
                 if source.is_empty() {
                     result.add_error(ValidationError::with_path(
                         ErrorCode::OutputValidationFailed,
@@ -884,7 +881,7 @@ fn validate_ui_icon_set_outputs(spec: &Spec, recipe: &Recipe, result: &mut Valid
                 "recipe.params",
             ));
         }
-}
+    }
 
     validate_primary_output_present(spec, result);
 
@@ -969,6 +966,65 @@ fn validate_font_bitmap_outputs(spec: &Spec, recipe: &Recipe, result: &mut Valid
             result.add_error(ValidationError::with_path(
                 ErrorCode::OutputValidationFailed,
                 "font.bitmap_v1 metadata outputs must have format 'json'",
+                format!("outputs[{}].format", i),
+            ));
+        }
+    }
+}
+
+fn validate_texture_matcap_outputs(spec: &Spec, recipe: &Recipe, result: &mut ValidationResult) {
+    let _params = match recipe.as_texture_matcap() {
+        Ok(params) => {
+            if params.resolution[0] == 0 || params.resolution[1] == 0 {
+                result.add_error(ValidationError::with_path(
+                    ErrorCode::InvalidRecipeParams,
+                    format!(
+                        "resolution must be positive, got [{}, {}]",
+                        params.resolution[0], params.resolution[1]
+                    ),
+                    "recipe.params.resolution",
+                ));
+            }
+            if let Some(steps) = params.toon_steps {
+                if !(2..=16).contains(&steps) {
+                    result.add_error(ValidationError::with_path(
+                        ErrorCode::InvalidRecipeParams,
+                        format!("toon_steps must be between 2 and 16, got {}", steps),
+                        "recipe.params.toon_steps",
+                    ));
+                }
+            }
+            if let Some(ref outline) = params.outline {
+                if !(1..=10).contains(&outline.width) {
+                    result.add_error(ValidationError::with_path(
+                        ErrorCode::InvalidRecipeParams,
+                        format!(
+                            "outline width must be between 1 and 10, got {}",
+                            outline.width
+                        ),
+                        "recipe.params.outline.width",
+                    ));
+                }
+            }
+            params
+        }
+        Err(e) => {
+            result.add_error(ValidationError::with_path(
+                ErrorCode::InvalidRecipeParams,
+                format!("invalid params for {}: {}", recipe.kind, e),
+                "recipe.params",
+            ));
+            return;
+        }
+    };
+
+    validate_primary_output_present(spec, result);
+
+    for (i, output) in spec.outputs.iter().enumerate() {
+        if output.kind == OutputKind::Primary && output.format != OutputFormat::Png {
+            result.add_error(ValidationError::with_path(
+                ErrorCode::OutputValidationFailed,
+                "texture.matcap_v1 primary outputs must have format 'png'",
                 format!("outputs[{}].format", i),
             ));
         }

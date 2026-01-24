@@ -12,6 +12,7 @@ Texture functions provide a node-based procedural texture graph system.
 - [Trimsheet Functions](#trimsheet-functions)
 - [Decal Functions](#decal-functions)
 - [Splat Set Functions](#splat-set-functions)
+- [Matcap Functions](#matcap-functions)
 
 ---
 
@@ -747,6 +748,116 @@ terrain/basic_mask0.png          # RGBA: R=grass, G=dirt
   "mask_mode": "noise",
   "has_macro_variation": false,
   "splat_mask_count": 1
+}
+```
+
+---
+
+## Matcap Functions
+
+### matcap_v1()
+
+Creates a complete matcap texture spec with matcap_v1 recipe.
+
+Matcaps (material capture) are 2D textures that encode lighting and shading for NPR (non-photorealistic rendering). They map surface normals to colors, providing fast stylized rendering.
+
+**Parameters:**
+| Name | Type | Required | Default | Description |
+|------|------|----------|---------|-------------|
+| asset_id | str | Yes | - | Kebab-case asset identifier |
+| seed | int | Yes | - | Deterministic seed (0 to 2^32-1) |
+| output_path | str | Yes | - | Output file path for PNG |
+| resolution | list | Yes | - | [width, height] in pixels (typically square) |
+| preset | str | Yes | - | Matcap preset (see below) |
+| base_color | list | No | None | RGB color override [r, g, b] (0.0-1.0) |
+| toon_steps | int | No | None | Toon shading steps (2-16) |
+| outline_width | int | No | None | Outline width in pixels (1-10) |
+| outline_color | list | No | None | Outline color [r, g, b] (0.0-1.0) |
+| curvature_enabled | bool | No | False | Enable curvature masking |
+| curvature_strength | f64 | No | 0.5 | Curvature mask strength (0.0-1.0) |
+| cavity_enabled | bool | No | False | Enable cavity masking |
+| cavity_strength | f64 | No | 0.5 | Cavity mask strength (0.0-1.0) |
+| description | str | No | None | Asset description |
+| tags | list | No | None | Style tags |
+| license | str | No | "CC0-1.0" | SPDX license identifier |
+
+**Valid Presets:**
+- `"toon_basic"` - Basic toon shading with clear light/shadow separation
+- `"toon_rim"` - Toon shading with rim lighting highlight
+- `"metallic"` - Metallic shading with strong specular highlights
+- `"ceramic"` - Ceramic/porcelain shading with soft diffuse falloff
+- `"clay"` - Matte clay shading with no specular
+- `"skin"` - Skin/subsurface shading with soft transitions
+- `"plastic"` - Glossy plastic with sharp highlights
+- `"velvet"` - Velvet/fabric with anisotropic-like highlights
+
+**Returns:** Complete spec dict matching SpecCade spec schema.
+
+**Example:**
+```python
+# Basic toon matcap
+matcap_v1(
+    asset_id = "toon-red-01",
+    seed = 42,
+    output_path = "matcaps/toon_red.png",
+    resolution = [512, 512],
+    preset = "toon_basic",
+    base_color = [0.8, 0.2, 0.2],
+    toon_steps = 4
+)
+
+# Metallic matcap with outline
+matcap_v1(
+    asset_id = "metal-chrome",
+    seed = 123,
+    output_path = "matcaps/chrome.png",
+    resolution = [256, 256],
+    preset = "metallic",
+    outline_width = 2,
+    outline_color = [0.0, 0.0, 0.0]
+)
+
+# Clay matcap with curvature and cavity
+matcap_v1(
+    asset_id = "clay-stylized",
+    seed = 456,
+    output_path = "matcaps/clay.png",
+    resolution = [512, 512],
+    preset = "clay",
+    base_color = [0.8, 0.6, 0.5],
+    curvature_enabled = True,
+    curvature_strength = 0.6,
+    cavity_enabled = True,
+    cavity_strength = 0.4,
+    description = "Stylized clay matcap",
+    tags = ["clay", "stylized", "npr"]
+)
+```
+
+**Generated Spec Structure:**
+```json
+{
+  "spec_version": 1,
+  "asset_id": "toon-red-01",
+  "asset_type": "texture",
+  "license": "CC0-1.0",
+  "seed": 42,
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "png",
+      "path": "matcaps/toon_red.png"
+    }
+  ],
+  "recipe": {
+    "kind": "texture.matcap_v1",
+    "params": {
+      "resolution": [512, 512],
+      "preset": "toon_basic",
+      "base_color": [0.8, 0.2, 0.2],
+      "toon_steps": 4
+    }
+  }
 }
 ```
 

@@ -108,6 +108,9 @@ pub fn dispatch_generate(
         // Splat set texture backend
         "texture.splat_set_v1" => texture::generate_texture_splat_set(spec, out_root_path),
 
+        // Matcap texture backend
+        "texture.matcap_v1" => texture::generate_texture_matcap(spec, out_root_path),
+
         // Sprite sheet backend
         "sprite.sheet_v1" => texture::generate_sprite_sheet(spec, out_root_path),
 
@@ -265,6 +268,14 @@ pub fn dispatch_generate_profiled(
             }
         }
 
+        "texture.matcap_v1" => {
+            if profile {
+                texture::generate_texture_matcap_profiled(spec, out_root_path)
+            } else {
+                texture::generate_texture_matcap(spec, out_root_path).map(DispatchResult::new)
+            }
+        }
+
         "sprite.sheet_v1" => {
             if profile {
                 texture::generate_sprite_sheet_profiled(spec, out_root_path)
@@ -376,6 +387,7 @@ pub fn is_backend_available(kind: &str) -> bool {
             | "texture.trimsheet_v1"
             | "texture.decal_v1"
             | "texture.splat_set_v1"
+            | "texture.matcap_v1"
             | "sprite.sheet_v1"
             | "sprite.animation_v1"
             | "vfx.flipbook_v1"

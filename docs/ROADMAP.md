@@ -87,8 +87,8 @@ Resolved questions:
   - Current approach (combine maps to RGB channels on export) is sufficient
   - Users can create separate maps and combine them in the output stage
   - Revisit if users request more granular in-pipeline channel manipulation
-- [ ] `TEX-008` Define and implement matcap generation (`texture.matcap_v1`) for stylized shading presets.
-  - Notes: toon steps/ramps, curvature/cavity masks, outline, "preset + overrides" art direction.
+- [x] `TEX-008` ~~Define and implement matcap generation (`texture.matcap_v1`) for stylized shading presets.~~ Done: 2026-01-24
+  - Tier 1 implementation with 8 presets (ToonBasic, ToonRim, Metallic, Ceramic, Clay, Skin, Plastic, Velvet), toon steps, outline, curvature/cavity masks.
 - [ ] `TEX-009` Add a material preset system for stable art direction ("preset + parameterization" at CLI-time).
 
 ---
