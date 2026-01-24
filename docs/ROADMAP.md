@@ -138,7 +138,8 @@ Resolved questions:
 
 Reference: `docs/MIGRATION.md`
 
-- [ ] `MIGRATE-001` Implement a real params mapping layer in the migrator (legacy keys -> canonical recipe schemas).
+- [x] `MIGRATE-001` ~~Implement a real params mapping layer in the migrator (legacy keys -> canonical recipe schemas).~~ Done: 2026-01-24
+  - Implemented mapping functions for SOUND, INSTRUMENT, SONG, MESH categories. Modular structure in conversion/{audio,music,mesh,texture}.rs.
 - [ ] `MIGRATE-002` Add migration fixtures + tests that validate migrated specs against `speccade validate`.
 - [ ] `MIGRATE-003` Map legacy `ANIMATION` dict keys to canonical `skeletal_animation` params (incl. rig_setup/poses/phases/IK).
   - Deliverable: a tested conversion that produces canonical `skeletal_animation.blender_rigged_v1` params (and rejects/flags unknown keys with actionable diagnostics).
