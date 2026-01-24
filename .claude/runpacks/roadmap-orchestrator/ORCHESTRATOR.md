@@ -41,8 +41,7 @@ If a roadmap item is clearly audio-specific, you may also use the specialized `f
 
 ## Model guidance
 
-- Use **Haiku** for small doc-only edits.
-- Use **Sonnet** for code-quality refactors and most straightforward implementations.
+- Use **Sonnet** for code-quality refactors and documentation updates.
 - Use **Opus** for tricky design/architecture or when repeated failures indicate deeper reasoning is needed.
 
 ## Per-task loop (repeat until ROADMAP is complete)

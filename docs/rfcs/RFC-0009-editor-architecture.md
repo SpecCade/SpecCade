@@ -1,7 +1,8 @@
 # RFC-0009: Editor Architecture for Real-Time Asset Preview
 
-**Status:** Draft
+**Status:** Accepted
 **Created:** 2026-01-17
+**Finalized:** 2026-01-24
 **Author:** Claude
 **Related:** RFC-0008 (LLM-Native Asset Authoring)
 
@@ -35,7 +36,24 @@ This creates a slow feedback loop that impacts both human and LLM authors. An in
 
 - Replacing the CLI for production builds
 - Supporting non-Starlark input formats
-- Real-time multiplayer collaboration (v1)
+- Real-time multiplayer collaboration (explicitly deferred to v2+)
+- VSCode/IDE extension (no user demand; v1 is standalone only)
+- WebGPU support (deferred to v2+ when platform support matures)
+
+## Finalized Decisions
+
+These decisions were resolved in the roadmap review process (2026-01-24):
+
+| Decision | Resolution |
+|----------|------------|
+| Delivery shape | Tauri standalone app only (no VSCode extension) |
+| GPU acceleration | WebGL2-only for v1 (WebGPU deferred to v2+) |
+| Large mesh handling | LOD proxies with progressive refinement |
+| Collaboration | Explicitly deferred to v2+ (single-user only in v1) |
+
+**Repository Layout:**
+- `crates/speccade-editor/` - Rust backend crate
+- `editor/` - Tauri frontend (TypeScript/HTML)
 
 ## Design
 
@@ -158,9 +176,11 @@ LLM integration uses a well-defined protocol:
 }
 ```
 
-### IDE Extension Mode
+### IDE Extension Mode (Deferred)
 
-The editor can run as a VSCode/Cursor extension:
+> **Note:** IDE extension support is not planned for v1. The standalone Tauri app is the only supported delivery shape. This section documents the potential future architecture.
+
+The editor could potentially run as a VSCode/Cursor extension in v2+:
 - Monaco component replaced by native editor
 - Preview panels as webview
 - IPC via extension host

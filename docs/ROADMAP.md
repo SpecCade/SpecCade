@@ -32,13 +32,23 @@ The following major work areas are complete:
 
 Reference: `docs/rfcs/RFC-0009-editor-architecture.md`
 
-- [ ] `EDITOR-001` Decide "editor" delivery shape (Tauri app vs VSCode extension vs both).
-  - Deliverable: a committed decision + minimal repo layout plan (new crate? new top-level directory?).
+- [x] `EDITOR-001` ~~Decide "editor" delivery shape~~ **RESOLVED: Tauri standalone app only**
+  - No VSCode extension (no user demand)
+  - Tauri 2.x with Monaco editor, three.js for 3D, Web Audio for sound
+  - Single codebase, no abstraction layer needed for v1
+  - Layout: `crates/speccade-editor/` (Rust backend) + `editor/` (Tauri frontend)
 
-Open questions (track decisions here, not in the RFC):
-- [ ] `EDITOR-Q001` GPU acceleration for preview (WebGPU) vs WebGL2-only.
-- [ ] `EDITOR-Q002` Large mesh handling in preview (LOD/proxies) strategy.
-- [ ] `EDITOR-Q003` Collaboration: explicitly defer to v2 or define minimal v1 stance.
+Resolved questions:
+- [x] `EDITOR-Q001` ~~GPU acceleration for preview~~ **RESOLVED: WebGL2-only for v1**
+  - three.js with WebGL2 is sufficient for preview quality
+  - WebGPU deferred to v2+ when platform support matures
+- [x] `EDITOR-Q002` ~~Large mesh handling in preview~~ **RESOLVED: LOD proxies with progressive refinement**
+  - Generate low-poly proxy immediately (sub-100ms)
+  - Refine to full quality on user request or when idle
+  - Show visual indicator for "preview" vs "full quality" state
+- [x] `EDITOR-Q003` ~~Collaboration~~ **RESOLVED: Explicitly deferred to v2+**
+  - v1 is single-user only
+  - No collaboration infrastructure needed
 
 ---
 
@@ -46,19 +56,37 @@ Open questions (track decisions here, not in the RFC):
 
 Reference: `docs/rfcs/RFC-0010-mesh-llm-verification.md`
 
-- [ ] `MESHVER-003` Decide if/when VLM integration is supported (and how it is configured).
-  - Deliverable: explicit policy: off by default; user-provided credentials; what gets uploaded (renders only).
+- [x] `MESHVER-003` ~~VLM integration policy~~ **RESOLVED: Experimental/opt-in with minimal v1 scope**
+  - Off by default
+  - User provides API key at runtime via `--vlm-key` (not persisted)
+  - Only rendered images uploaded (never mesh data)
+  - Marked as "experimental" in docs
 
-Open questions:
-- [ ] `MESHVER-Q001` Acceptable VLM latency targets for interactive use.
-- [ ] `MESHVER-Q002` Verification caching keyed by spec hash (and what invalidates it).
-- [ ] `MESHVER-Q003` Guardrails for VLM hallucinations (ensemble prompts, thresholds, human override).
+Resolved questions:
+- [x] `MESHVER-Q001` ~~VLM latency targets~~ **RESOLVED: Batch mode only (10-30s acceptable)**
+  - VLM verification is manual trigger, not hot-reload
+  - Show progress indicator during VLM call
+  - 30s default timeout (configurable)
+- [x] `MESHVER-Q002` ~~Verification caching~~ **RESOLVED: Cache by spec_hash + render_settings_hash**
+  - Geometric metrics always cached (deterministic)
+  - VLM results cached with hash key
+  - Invalidate on: spec change, render settings change, VLM model change
+  - Cache location: `~/.cache/speccade/verification/`
+  - `--no-cache` flag to force re-verification
+- [x] `MESHVER-Q003` ~~Hallucination guardrails~~ **RESOLVED: Start simple, iterate based on experience**
+  - Single prompt, transparent output in v1
+  - Show raw VLM response alongside structured report
+  - Geometric metrics are ground truth (VLM cannot override)
+  - Add ensemble prompts if hallucination becomes a problem
 
 ---
 
 ## Textures
 
-- [ ] `TEX-003` Decide if richer channel "swizzle/component extract" ops are needed for packing workflows.
+- [x] `TEX-003` ~~Channel swizzle ops~~ **RESOLVED: Not needed now**
+  - Current approach (combine maps to RGB channels on export) is sufficient
+  - Users can create separate maps and combine them in the output stage
+  - Revisit if users request more granular in-pipeline channel manipulation
 - [ ] `TEX-008` Define and implement matcap generation (`texture.matcap_v1`) for stylized shading presets.
   - Notes: toon steps/ramps, curvature/cavity masks, outline, "preset + overrides" art direction.
 - [ ] `TEX-009` Add a material preset system for stable art direction ("preset + parameterization" at CLI-time).

@@ -1,7 +1,8 @@
 # RFC-0010: LLM Verification for Mesh and Character Assets
 
-**Status:** Draft
+**Status:** Accepted
 **Created:** 2026-01-17
+**Finalized:** 2026-01-24
 **Author:** Claude
 **Related:** RFC-0008 (LLM-Native Asset Authoring)
 
@@ -47,6 +48,47 @@ Without verification, LLM-generated 3D assets require human review for every ite
 - Replacing human artistic direction
 - Photorealistic rendering quality assessment
 - Real-time game engine integration
+
+## VLM Integration Policy (Finalized 2026-01-24)
+
+VLM (vision-language model) integration is **experimental and opt-in** with the following constraints:
+
+### Access Control
+
+- **Off by default**: VLM analysis is disabled unless explicitly requested
+- **Runtime credentials only**: User provides API key via `--vlm-key` flag (not persisted to disk)
+- **No implicit uploads**: Only rendered images are uploaded, never mesh data or specs
+
+### Latency and Caching
+
+- **Batch mode only**: VLM verification is a manual trigger, not part of hot-reload
+- **Expected latency**: 10-30 seconds per verification request
+- **Progress indicator**: Show progress during VLM call
+- **Default timeout**: 30 seconds (configurable via `--vlm-timeout`)
+- **Caching**: Results cached by `spec_hash + render_settings_hash`
+  - Cache location: `~/.cache/speccade/verification/`
+  - Invalidation: spec change, render settings change, VLM model change
+  - `--no-cache` flag to force re-verification
+
+### Hallucination Guardrails
+
+- **Transparent output**: Raw VLM response included in verification report
+- **Geometric ground truth**: VLM cannot override deterministic geometric metrics
+- **Single prompt v1**: Start simple, add ensemble prompts if hallucination becomes a problem
+- **Confidence field**: Report includes confidence field for future ensemble support
+
+### CLI Interface
+
+```bash
+# Basic VLM verification
+speccade verify --spec character.star --vlm-key $ANTHROPIC_API_KEY
+
+# With options
+speccade verify --spec character.star \
+    --vlm-key $ANTHROPIC_API_KEY \
+    --vlm-timeout 45 \
+    --no-cache
+```
 
 ## Design
 
