@@ -63,6 +63,7 @@ pub(super) fn validate_outputs_for_recipe_with_budget(
         "sprite.sheet_v1" => validate_sprite_sheet_outputs(spec, recipe, result),
         "sprite.animation_v1" => validate_sprite_animation_outputs(spec, recipe, result),
         "vfx.flipbook_v1" => validate_vfx_flipbook_outputs(spec, recipe, result),
+        "vfx.particle_profile_v1" => validate_vfx_particle_profile_outputs(spec, recipe, result),
         "ui.nine_slice_v1" => validate_ui_nine_slice_outputs(spec, recipe, result),
         "ui.icon_set_v1" => validate_ui_icon_set_outputs(spec, recipe, result),
         "font.bitmap_v1" => validate_font_bitmap_outputs(spec, recipe, result),
@@ -768,6 +769,78 @@ fn validate_sprite_animation_outputs(spec: &Spec, recipe: &Recipe, result: &mut 
             result.add_error(ValidationError::with_path(
                 ErrorCode::OutputValidationFailed,
                 "sprite.animation_v1 primary outputs must have format 'json'",
+                format!("outputs[{}].format", i),
+            ));
+        }
+    }
+}
+
+/// Validates outputs for `vfx.particle_profile_v1` recipe.
+///
+/// Particle profile specs are metadata-only:
+/// - At least one primary output with JSON format
+fn validate_vfx_particle_profile_outputs(
+    spec: &Spec,
+    recipe: &Recipe,
+    result: &mut ValidationResult,
+) {
+    match recipe.as_vfx_particle_profile() {
+        Ok(params) => {
+            // Validate intensity if provided (must be non-negative)
+            if let Some(intensity) = params.intensity {
+                if intensity < 0.0 {
+                    result.add_error(ValidationError::with_path(
+                        ErrorCode::InvalidRecipeParams,
+                        format!("intensity must be non-negative, got {}", intensity),
+                        "recipe.params.intensity",
+                    ));
+                }
+            }
+
+            // Validate distortion_strength if provided (must be in [0.0, 1.0])
+            if let Some(strength) = params.distortion_strength {
+                if !(0.0..=1.0).contains(&strength) {
+                    result.add_error(ValidationError::with_path(
+                        ErrorCode::InvalidRecipeParams,
+                        format!(
+                            "distortion_strength must be in [0.0, 1.0], got {}",
+                            strength
+                        ),
+                        "recipe.params.distortion_strength",
+                    ));
+                }
+            }
+
+            // Validate color_tint if provided (each component in [0.0, 1.0])
+            if let Some(tint) = params.color_tint {
+                for (i, &c) in tint.iter().enumerate() {
+                    if !(0.0..=1.0).contains(&c) {
+                        result.add_error(ValidationError::with_path(
+                            ErrorCode::InvalidRecipeParams,
+                            format!("color_tint[{}] must be in [0.0, 1.0], got {}", i, c),
+                            format!("recipe.params.color_tint[{}]", i),
+                        ));
+                    }
+                }
+            }
+        }
+        Err(e) => {
+            result.add_error(ValidationError::with_path(
+                ErrorCode::InvalidRecipeParams,
+                format!("invalid params for {}: {}", recipe.kind, e),
+                "recipe.params",
+            ));
+        }
+    }
+
+    validate_primary_output_present(spec, result);
+
+    // Particle profile outputs are JSON (metadata-only)
+    for (i, output) in spec.outputs.iter().enumerate() {
+        if output.kind == OutputKind::Primary && output.format != OutputFormat::Json {
+            result.add_error(ValidationError::with_path(
+                ErrorCode::OutputValidationFailed,
+                "vfx.particle_profile_v1 primary outputs must have format 'json'",
                 format!("outputs[{}].format", i),
             ));
         }

@@ -181,6 +181,7 @@ fn validate_outputs(spec: &Spec, result: &mut ValidationResult) {
                     | "texture.material_preset_v1"
                     | "sprite.sheet_v1"
                     | "vfx.flipbook_v1"
+                    | "vfx.particle_profile_v1"
                     | "ui.nine_slice_v1"
                     | "ui.icon_set_v1"
                     | "font.bitmap_v1"
@@ -323,6 +324,7 @@ pub fn validate_for_generate_with_budget(spec: &Spec, budget: &BudgetProfile) ->
             "sprite.sheet_v1",
             "sprite.animation_v1",
             "vfx.flipbook_v1",
+            "vfx.particle_profile_v1",
             "ui.nine_slice_v1",
             "ui.icon_set_v1",
             "font.bitmap_v1",

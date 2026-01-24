@@ -79,6 +79,9 @@ pub enum RecipeKind {
     /// `vfx.flipbook_v1` - VFX flipbook animation with procedural frame generation.
     #[serde(rename = "vfx.flipbook_v1")]
     VfxFlipbookV1,
+    /// `vfx.particle_profile_v1` - VFX particle rendering profile preset (metadata-only).
+    #[serde(rename = "vfx.particle_profile_v1")]
+    VfxParticleProfileV1,
     /// `ui.nine_slice_v1` - Nine-slice panel generation with corner/edge/center regions.
     #[serde(rename = "ui.nine_slice_v1")]
     UiNineSliceV1,
@@ -110,6 +113,7 @@ impl RecipeKind {
             RecipeKind::SpriteSheetV1 => "sprite.sheet_v1",
             RecipeKind::SpriteAnimationV1 => "sprite.animation_v1",
             RecipeKind::VfxFlipbookV1 => "vfx.flipbook_v1",
+            RecipeKind::VfxParticleProfileV1 => "vfx.particle_profile_v1",
             RecipeKind::UiNineSliceV1 => "ui.nine_slice_v1",
             RecipeKind::UiIconSetV1 => "ui.icon_set_v1",
             RecipeKind::FontBitmapV1 => "font.bitmap_v1",
@@ -135,6 +139,7 @@ impl RecipeKind {
             RecipeKind::SpriteSheetV1 => "sprite",
             RecipeKind::SpriteAnimationV1 => "sprite",
             RecipeKind::VfxFlipbookV1 => "vfx",
+            RecipeKind::VfxParticleProfileV1 => "vfx",
             RecipeKind::UiNineSliceV1 => "ui",
             RecipeKind::UiIconSetV1 => "ui",
             RecipeKind::FontBitmapV1 => "font",
@@ -156,6 +161,7 @@ impl RecipeKind {
             | RecipeKind::SpriteSheetV1
             | RecipeKind::SpriteAnimationV1
             | RecipeKind::VfxFlipbookV1
+            | RecipeKind::VfxParticleProfileV1
             | RecipeKind::UiNineSliceV1
             | RecipeKind::UiIconSetV1
             | RecipeKind::FontBitmapV1 => true,
@@ -217,6 +223,7 @@ impl Recipe {
             "sprite.sheet_v1" => Some(RecipeKind::SpriteSheetV1),
             "sprite.animation_v1" => Some(RecipeKind::SpriteAnimationV1),
             "vfx.flipbook_v1" => Some(RecipeKind::VfxFlipbookV1),
+            "vfx.particle_profile_v1" => Some(RecipeKind::VfxParticleProfileV1),
             "ui.nine_slice_v1" => Some(RecipeKind::UiNineSliceV1),
             "ui.icon_set_v1" => Some(RecipeKind::UiIconSetV1),
             "font.bitmap_v1" => Some(RecipeKind::FontBitmapV1),
@@ -325,6 +332,11 @@ impl Recipe {
 
     /// Attempts to parse params as VFX flipbook params.
     pub fn as_vfx_flipbook(&self) -> Result<VfxFlipbookV1Params, serde_json::Error> {
+        serde_json::from_value(self.params.clone())
+    }
+
+    /// Attempts to parse params as VFX particle profile params.
+    pub fn as_vfx_particle_profile(&self) -> Result<VfxParticleProfileV1Params, serde_json::Error> {
         serde_json::from_value(self.params.clone())
     }
 
@@ -458,6 +470,13 @@ impl Recipe {
                     recipe_kind: self.kind.clone(),
                     error_message: e.to_string(),
                 })?;
+            }
+            "vfx.particle_profile_v1" => {
+                self.as_vfx_particle_profile()
+                    .map_err(|e| RecipeParamsError {
+                        recipe_kind: self.kind.clone(),
+                        error_message: e.to_string(),
+                    })?;
             }
             "ui.nine_slice_v1" => {
                 self.as_ui_nine_slice().map_err(|e| RecipeParamsError {

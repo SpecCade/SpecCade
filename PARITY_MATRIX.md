@@ -16,6 +16,7 @@ For the legacy `.studio/specs/**.spec.py` key taxonomy used by `speccade migrate
 | `texture.procedural_v1` | `texture` | `speccade-backend-texture` | 1 | `png` | Implemented | Unified procedural DAG with named outputs |
 | `texture.matcap_v1` | `texture` | `speccade-backend-texture` | 1 | `png` | Implemented | Matcap for stylized NPR shading (toon, rim, metallic, etc.) |
 | `texture.material_preset_v1` | `texture` | `speccade-backend-texture` | 1 | `png` (x4) + `json` | Implemented | PBR material presets (albedo, roughness, metallic, normal) |
+| `vfx.particle_profile_v1` | `vfx` | `speccade-backend-texture` | 1 | `json` | Implemented | Particle rendering profile presets (metadata-only: blend modes, tint, distortion) |
 | `static_mesh.blender_primitives_v1` | `static_mesh` | `speccade-backend-blender` | 2 | `glb` | Implemented | Blender-driven primitives |
 | `skeletal_mesh.blender_rigged_mesh_v1` | `skeletal_mesh` | `speccade-backend-blender` | 2 | `glb` | Implemented | Rigged mesh export |
 | `skeletal_animation.blender_clip_v1` | `skeletal_animation` | `speccade-backend-blender` | 2 | `glb` | Implemented | Simple keyframed clip |

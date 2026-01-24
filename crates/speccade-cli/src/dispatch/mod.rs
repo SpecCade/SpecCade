@@ -125,6 +125,9 @@ pub fn dispatch_generate(
         // VFX flipbook backend
         "vfx.flipbook_v1" => texture::generate_vfx_flipbook(spec, out_root_path),
 
+        // VFX particle profile backend (metadata-only)
+        "vfx.particle_profile_v1" => texture::generate_vfx_particle_profile(spec, out_root_path),
+
         // UI nine-slice backend
         "ui.nine_slice_v1" => texture::generate_ui_nine_slice(spec, out_root_path),
 
@@ -314,6 +317,14 @@ pub fn dispatch_generate_profiled(
             }
         }
 
+        "vfx.particle_profile_v1" => {
+            if profile {
+                texture::generate_vfx_particle_profile_profiled(spec, out_root_path)
+            } else {
+                texture::generate_vfx_particle_profile(spec, out_root_path).map(DispatchResult::new)
+            }
+        }
+
         "ui.nine_slice_v1" => {
             if profile {
                 texture::generate_ui_nine_slice_profiled(spec, out_root_path)
@@ -405,6 +416,7 @@ pub fn is_backend_available(kind: &str) -> bool {
             | "sprite.sheet_v1"
             | "sprite.animation_v1"
             | "vfx.flipbook_v1"
+            | "vfx.particle_profile_v1"
             | "ui.nine_slice_v1"
             | "ui.icon_set_v1"
             | "font.bitmap_v1"

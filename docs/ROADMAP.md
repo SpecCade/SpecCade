@@ -96,8 +96,8 @@ Resolved questions:
 
 ## New Asset Types (2D VFX / UI / Fonts)
 
-- [ ] `GEN-005` Add VFX particle "material/profile" presets (additive/soft/distort/etc.).
-  - Candidate: `vfx.particle_profile_v1`.
+- [x] `GEN-005` ~~Add VFX particle "material/profile" presets (additive/soft/distort/etc.).~~ Done: 2026-01-24
+  - Tier 1 metadata-only recipe with 6 profiles (Additive, Soft, Distort, Multiply, Screen, Normal). Outputs rendering hints for particle systems.
 - [ ] `GEN-006` Add UI kit presets and item card templates with slots (icon/rarity/background).
   - Candidate: `ui.item_card_v1`.
 - [ ] `GEN-007` Add deterministic damage-number sprites (font + outline + crit styles).

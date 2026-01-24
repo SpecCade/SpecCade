@@ -1,8 +1,80 @@
 # VFX Asset Recipes
 
-VFX (Visual Effects) recipes generate flipbook-style animations for game effects like explosions, smoke, particles, and energy effects.
+VFX (Visual Effects) recipes generate flipbook-style animations and particle rendering profiles for game effects like explosions, smoke, particles, and energy effects.
 
 ## Recipe Kinds
+
+### `vfx.particle_profile_v1`
+
+Generates metadata describing particle rendering profiles for VFX systems. This is a metadata-only recipe (no texture generation) that outputs JSON with blend mode, color grading, and distortion parameters for particle effects.
+
+**Parameters:**
+
+| Field | Type | Required | Default | Description |
+|-------|------|----------|---------|-------------|
+| `profile` | `string` | Yes | - | Profile type: `additive`, `soft`, `distort`, `multiply`, `screen`, `normal` |
+| `color_tint` | `[f64, f64, f64]` | No | `[1.0, 1.0, 1.0]` | RGB tint color (each component in [0.0, 1.0]) |
+| `intensity` | `f64` | No | `1.0` | Intensity multiplier (must be non-negative) |
+| `distortion_strength` | `f64` | No | `0.0` | Distortion strength for `distort` profile (in [0.0, 1.0]) |
+
+**Profile Types:**
+
+- `additive` - Additive blending (bright, glowing effects like fire, sparks, magic)
+- `soft` - Soft/premultiplied alpha (smoke, fog, soft particles)
+- `distort` - Distortion/refraction effect (heat haze, shockwaves, underwater)
+- `multiply` - Multiply blending (shadows, darkening effects)
+- `screen` - Screen blending (bright overlay, lightning, lens flares)
+- `normal` - Normal alpha blending (standard transparent particles)
+
+**Outputs:**
+
+- **Primary (JSON)**: Particle rendering profile metadata
+
+**Metadata Structure:**
+
+```json
+{
+  "profile": "additive",
+  "blend_mode": "additive",
+  "tint": [1.0, 0.6, 0.2],
+  "intensity": 1.5,
+  "distortion_strength": 0.0,
+  "shader_hints": {
+    "depth_write": false,
+    "transparent": true,
+    "soft_particles": false,
+    "distortion_pass": false
+  }
+}
+```
+
+**Example Spec:**
+
+```json
+{
+  "spec_version": 1,
+  "asset_id": "vfx-fire-particles",
+  "asset_type": "vfx",
+  "license": "CC0-1.0",
+  "description": "Fire particle rendering profile with warm orange tint",
+  "seed": 42,
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "json",
+      "path": "vfx/fire_particles.json"
+    }
+  ],
+  "recipe": {
+    "kind": "vfx.particle_profile_v1",
+    "params": {
+      "profile": "additive",
+      "color_tint": [1.0, 0.6, 0.2],
+      "intensity": 1.5
+    }
+  }
+}
+```
 
 ### `vfx.flipbook_v1`
 
@@ -98,6 +170,16 @@ Generates a flipbook animation atlas with procedurally generated frames.
 ```
 
 ## Determinism
+
+### `vfx.particle_profile_v1`
+
+Particle profile generation is **Tier 1** (metadata-only, fully deterministic):
+
+- Same params = identical JSON output (seed-independent)
+- No randomization or non-deterministic operations
+- Pure metadata transformation
+
+### `vfx.flipbook_v1`
 
 VFX flipbook generation is **Tier 1** (fully deterministic):
 

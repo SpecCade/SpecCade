@@ -73,6 +73,7 @@ pub mod noise;
 pub mod normal_map;
 pub mod normal_map_patterns;
 pub mod packing;
+pub mod particle_profile;
 pub mod pattern;
 pub mod png;
 pub mod rng;
@@ -98,6 +99,9 @@ pub use normal_map::{generate_normal_map, save_normal_map, NormalMapError, Norma
 pub use packing::{
     extract_channel, pack_channels, resolve_channel_source, ChannelSource, ColorComponent,
     PackedChannels, PackingError,
+};
+pub use particle_profile::{
+    generate_particle_profile, ParticleProfileError, ParticleProfileResult,
 };
 pub use pattern::{
     BrickPattern, CheckerPattern, EdgeWearPattern, Pattern2D, ScratchesPattern, WoodGrainPattern,
