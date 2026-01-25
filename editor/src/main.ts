@@ -1,20 +1,31 @@
 import * as monaco from "monaco-editor";
 import { invoke } from "@tauri-apps/api/core";
-import { listen } from "@tauri-apps/api/event";
-
-interface FileChangeEvent {
-  path: string;
-  kind: string;
-}
-
-// Current watched file path
-let currentWatchedPath: string | null = null;
+import { listen, UnlistenFn } from "@tauri-apps/api/event";
 import {
   registerStarlarkLanguage,
   STARLARK_LANGUAGE_ID,
 } from "./lib/starlark";
 import { MeshPreview } from "./components/MeshPreview";
 import { AudioPreview } from "./components/AudioPreview";
+
+// Types for file watching
+interface FileChangeEvent {
+  path: string;
+  kind: "created" | "modified" | "removed";
+}
+
+// Current watched file path
+let currentWatchedPath: string | null = null;
+// Cleanup function for file change listener (for future use)
+let fileChangeUnlisten: UnlistenFn | null = null;
+
+/** Cleanup resources when the editor is disposed */
+export function cleanup(): void {
+  if (fileChangeUnlisten) {
+    fileChangeUnlisten();
+    fileChangeUnlisten = null;
+  }
+}
 
 // Configure Monaco worker paths for Vite
 self.MonacoEnvironment = {
@@ -440,14 +451,12 @@ function renderJsonPreview(result: unknown): void {
 }
 
 // Initialize the application
-function init(): void {
+async function init(): Promise<void> {
   // Listen for file change events from backend
-  listen<FileChangeEvent>("file-changed", (event) => {
-    const { path, kind } = event.payload;
+  fileChangeUnlisten = await listen<FileChangeEvent>("file-changed", (event) => {
+    const { kind } = event.payload;
     if (kind === "modified" && editor) {
-      // Reload file content - for now just trigger re-evaluation
-      // In future: prompt user or auto-reload
-      updateStatus(`External change detected: ${path}`);
+      updateStatus(`External change detected`);
       evaluateSource();
     }
   });
