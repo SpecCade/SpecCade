@@ -43,7 +43,7 @@ Core specification library. Defines JSON spec format, validation rules, and cano
 - `spec` - Main `Spec` type and builder
 - `recipe/` - Recipe types for each backend (audio, music, texture, mesh, animation)
 - `validation/` - Spec validation with error reporting
-- `validation/budgets` - Budget enforcement system (profiles: default, strict, zx-8bit)
+- `validation/budgets` - Budget enforcement system (profiles: default, strict)
 - `hash` - BLAKE3-based canonical hashing and seed derivation
 - `report` - Generation result reporting
 
@@ -135,7 +135,7 @@ SpecCade supports authoring specs in Starlark (.star files) which compile to can
 - `mesh/` - mesh_primitive(), mesh_recipe() mesh generation
 
 **Budget system** (`validation/budgets.rs`):
-- Profiles: `default`, `strict`, `zx-8bit`
+- Profiles: `default`, `strict`
 - Per-asset limits: AudioBudget, TextureBudget, MusicBudget, MeshBudget, GeneralBudget
 - Enforced at validation stage before generation
 - CLI flag: `--budget <profile>`

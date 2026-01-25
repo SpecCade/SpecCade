@@ -59,7 +59,7 @@ SpecCade supports authoring specs in Starlark (.star files) which compile to can
 - `mesh` - mesh_primitive(), mesh_recipe()
 
 **Budget system:**
-- Profiles: `default`, `strict`, `zx-8bit` (retro-style constraints; name does not imply audio bit depth)
+- Profiles: `default`, `strict`
 - Enforced at validation stage before generation
 - Use `--budget <profile>` flag with validate/generate commands
 

@@ -311,7 +311,6 @@ output("model", "mesh", smoothed, format="glb")
 |---------|------------|-------------|--------------|----------|
 | default | 16 | 8/layer | 60s | General |
 | strict | 8 | 4/layer | 30s | Production |
-| zx-8bit | 4 | 2/layer | 10s | Retro |
 
 Use: `speccade validate --budget strict`
 

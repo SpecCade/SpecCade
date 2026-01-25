@@ -78,18 +78,6 @@ let profile = BudgetProfile::strict();
 // Mesh: max 50k verts/faces
 ```
 
-### ZX-8bit Profile
-
-Optimized for retro/8-bit style games with very constrained resources.
-
-```rust
-let profile = BudgetProfile::zx_8bit();
-// Audio: max 5s, 8 layers, 22050 Hz only
-// Texture: max 256x256
-// Music: max 8 channels
-// Mesh: max 10k verts/faces
-```
-
 ### Nethercore Profile
 
 Optimized for modern sprite-based games with constrained but contemporary resources.
@@ -102,7 +90,7 @@ let profile = BudgetProfile::nethercore();
 // Mesh: max 25k verts/faces
 ```
 
-**Use case:** The Nethercore profile is designed for stylized 2D/sprite-based games targeting modern hardware but maintaining retro-inspired constraints. It uses 22050 Hz as the primary sample rate for a balance between quality and file size, while allowing more layers and longer durations than the ZX-8bit profile. Texture limits support crisp sprites and tilesets at 1024x1024, and music channel counts are doubled compared to ZX-8bit for richer compositions.
+**Use case:** The Nethercore profile is designed for stylized 2D/sprite-based games targeting modern hardware but maintaining retro-inspired constraints. It uses 22050 Hz as the primary sample rate for a balance between quality and file size, while allowing more layers and longer durations. Texture limits support crisp sprites and tilesets at 1024x1024, and music channel counts are for richer compositions.
 
 ## Using Budget Profiles
 
