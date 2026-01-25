@@ -13,6 +13,7 @@ import {
   starlarkLanguageConfiguration,
 } from "../lib/starlark-language";
 import { starlarkMonarchTokens } from "../lib/starlark-tokens";
+import { registerStarlarkCompletions } from "../lib/starlark-completions";
 
 /**
  * Diagnostic information for editor markers.
@@ -86,6 +87,9 @@ function registerStarlarkLanguage(): void {
     STARLARK_LANGUAGE_ID,
     starlarkMonarchTokens
   );
+
+  // Register stdlib completions for autocomplete
+  registerStarlarkCompletions();
 
   starlarkRegistered = true;
 }
