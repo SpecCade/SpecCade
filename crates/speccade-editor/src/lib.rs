@@ -13,6 +13,7 @@ use tauri::{
 };
 
 // Re-export the commands at crate level for Tauri's generate_handler!
+pub use commands::batch::batch_generate;
 pub use commands::eval::eval_spec;
 pub use commands::generate::{generate_full, generate_preview, refine_mesh_preview};
 pub use commands::project::{open_folder, read_file, save_file};
@@ -35,6 +36,7 @@ pub use watcher::{unwatch_file, watch_file, WatcherState};
 pub fn init<R: Runtime>() -> TauriPlugin<R> {
     Builder::new("speccade")
         .invoke_handler(tauri::generate_handler![
+            batch_generate,
             eval_spec,
             validate_spec,
             generate_preview,

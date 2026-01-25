@@ -2,6 +2,7 @@
 //!
 //! These commands are exposed to the frontend via Tauri's IPC mechanism.
 
+pub mod batch;
 pub mod eval;
 pub mod generate;
 pub mod project;
