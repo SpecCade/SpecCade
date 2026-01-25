@@ -15,6 +15,7 @@ import { AudioPreview } from "./components/AudioPreview";
 import { TexturePreview } from "./components/TexturePreview";
 import { NewAssetDialog } from "./components/NewAssetDialog";
 import { FileBrowser } from "./components/FileBrowser";
+import { GeneratePanel } from "./components/GeneratePanel";
 
 // Configure Monaco worker paths for Vite
 self.MonacoEnvironment = {
@@ -81,6 +82,7 @@ let meshPreview: MeshPreview | null = null;
 let audioPreview: AudioPreview | null = null;
 let texturePreview: TexturePreview | null = null;
 let fileBrowser: FileBrowser | null = null;
+let generatePanel: GeneratePanel | null = null;
 let currentAssetType: string | null = null;
 let currentWatchedPath: string | null = null;
 let currentFilePath: string | null = null;
@@ -229,6 +231,42 @@ function updateWindowTitle(path: string | null): void {
     document.title = `${filename} - SpecCade Editor`;
   } else {
     document.title = "SpecCade Editor";
+  }
+}
+
+/**
+ * Save the current file.
+ * If a file path exists, saves to that path. Otherwise shows Save As dialog.
+ */
+async function saveCurrentFile(): Promise<void> {
+  if (!editor) return;
+
+  const content = editor.getContent();
+
+  if (currentFilePath) {
+    // Save to existing file
+    try {
+      await invoke("plugin:speccade|save_file", { path: currentFilePath, content });
+      updateStatus("Saved");
+    } catch (error) {
+      updateStatus(`Save error: ${error}`);
+    }
+  } else {
+    // Show Save As dialog
+    try {
+      const filePath = await save({
+        filters: [{ name: "Starlark Files", extensions: ["star"] }],
+      });
+
+      if (filePath) {
+        await invoke("plugin:speccade|save_file", { path: filePath, content });
+        currentFilePath = filePath;
+        updateWindowTitle(filePath);
+        updateStatus("Saved");
+      }
+    } catch (error) {
+      updateStatus(`Save error: ${error}`);
+    }
   }
 }
 
@@ -528,8 +566,17 @@ async function init(): Promise<void> {
     });
   }
 
-  // Keyboard shortcut: Ctrl/Cmd+N for new asset
+  // Setup Save button click handler
+  const saveBtn = document.getElementById("save-btn");
+  if (saveBtn) {
+    saveBtn.addEventListener("click", () => {
+      saveCurrentFile();
+    });
+  }
+
+  // Keyboard shortcuts
   document.addEventListener("keydown", (e) => {
+    // Ctrl/Cmd+N for new asset
     if ((e.ctrlKey || e.metaKey) && e.key === "n") {
       e.preventDefault();
       const dialog = new NewAssetDialog((content) => {
@@ -542,6 +589,12 @@ async function init(): Promise<void> {
         updateWindowTitle(null);
       });
       dialog.show();
+    }
+
+    // Ctrl/Cmd+S for save
+    if ((e.ctrlKey || e.metaKey) && e.key === "s") {
+      e.preventDefault();
+      saveCurrentFile();
     }
   });
 
