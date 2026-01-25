@@ -16,6 +16,7 @@ use tauri::{
 pub use commands::batch::batch_generate;
 pub use commands::eval::eval_spec;
 pub use commands::generate::{generate_full, generate_preview, refine_mesh_preview};
+pub use commands::pack::{generate_pack_manifest, write_pack_manifest};
 pub use commands::project::{open_folder, read_file, save_file};
 pub use commands::templates::{get_template, list_templates};
 pub use commands::validate::validate_spec;
@@ -42,6 +43,8 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
             generate_preview,
             generate_full,
             refine_mesh_preview,
+            generate_pack_manifest,
+            write_pack_manifest,
             watch_file,
             unwatch_file,
             open_folder,
