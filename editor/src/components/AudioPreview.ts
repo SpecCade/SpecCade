@@ -112,7 +112,7 @@ export class AudioPreview {
       color: #999;
       text-align: center;
     `;
-    durationDiv.textContent = "0:00 / 0:00";
+    durationDiv.textContent = "0:00 / 0:00 • Preview";
     wrapper.appendChild(durationDiv);
 
     container.appendChild(wrapper);
@@ -147,6 +147,7 @@ export class AudioPreview {
       this.audioBuffer = await this.audioContext.decodeAudioData(bytes.buffer);
       this.drawWaveform();
       this.updateDuration(0, this.audioBuffer.duration);
+      this.updateSampleInfo(this.audioBuffer.sampleRate, this.audioBuffer.numberOfChannels);
     } catch (e) {
       console.error("Failed to decode audio:", e);
       throw new Error(`Failed to decode audio: ${e}`);
@@ -332,6 +333,18 @@ export class AudioPreview {
     const display = this.container.querySelector("#duration-display");
     if (display) {
       display.textContent = `${formatTime(current)} / ${formatTime(total)}`;
+    }
+  }
+
+  /**
+   * Update sample rate info display.
+   */
+  private updateSampleInfo(sampleRate: number, channels: number): void {
+    const display = this.container.querySelector("#duration-display");
+    if (display) {
+      const current = display.textContent?.split(" • ")[0] || "0:00 / 0:00";
+      const channelStr = channels === 1 ? "mono" : channels === 2 ? "stereo" : `${channels}ch`;
+      display.textContent = `${current} • ${sampleRate}Hz ${channelStr} • Preview`;
     }
   }
 
