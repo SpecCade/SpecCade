@@ -12,7 +12,7 @@ import { open } from "@tauri-apps/plugin-dialog";
  */
 interface GenerateResult {
   success: boolean;
-  files: GeneratedFile[];
+  outputs: GeneratedFile[];
   elapsed_ms: number;
   error?: string;
 }
@@ -22,7 +22,8 @@ interface GenerateResult {
  */
 interface GeneratedFile {
   path: string;
-  size: number;
+  size_bytes: number;
+  format: string;
 }
 
 /**
@@ -44,6 +45,7 @@ function formatBytes(bytes: number): string {
 export class GeneratePanel {
   private container: HTMLElement;
   private getSource: () => string;
+  private getFilename: () => string;
   private wrapper: HTMLDivElement;
   private pathDisplay: HTMLSpanElement;
   private generateButton: HTMLButtonElement;
@@ -55,10 +57,12 @@ export class GeneratePanel {
    *
    * @param container - The HTML element to render into
    * @param getSource - Callback to get the current editor source
+   * @param getFilename - Callback to get the current filename
    */
-  constructor(container: HTMLElement, getSource: () => string) {
+  constructor(container: HTMLElement, getSource: () => string, getFilename: () => string) {
     this.container = container;
     this.getSource = getSource;
+    this.getFilename = getFilename;
 
     // Create wrapper
     this.wrapper = document.createElement("div");
@@ -213,7 +217,7 @@ export class GeneratePanel {
     try {
       const result = await invoke<GenerateResult>("plugin:speccade|generate_full", {
         source,
-        filename: "editor.star",
+        filename: this.getFilename(),
         outputDir: this.outputDir,
       });
 
@@ -248,11 +252,11 @@ export class GeneratePanel {
       margin-bottom: 8px;
       color: #4ec94e;
     `;
-    header.textContent = `Generated ${result.files.length} file${result.files.length === 1 ? "" : "s"} in ${result.elapsed_ms}ms`;
+    header.textContent = `Generated ${result.outputs.length} file${result.outputs.length === 1 ? "" : "s"} in ${result.elapsed_ms}ms`;
     this.resultsDiv.appendChild(header);
 
     // File list
-    if (result.files.length > 0) {
+    if (result.outputs.length > 0) {
       const fileList = document.createElement("div");
       fileList.style.cssText = `
         display: flex;
@@ -260,7 +264,7 @@ export class GeneratePanel {
         gap: 4px;
       `;
 
-      for (const file of result.files) {
+      for (const file of result.outputs) {
         const fileItem = document.createElement("div");
         fileItem.style.cssText = `
           display: flex;
@@ -282,7 +286,7 @@ export class GeneratePanel {
         fileItem.appendChild(fileName);
 
         const fileSize = document.createElement("span");
-        fileSize.textContent = formatBytes(file.size);
+        fileSize.textContent = formatBytes(file.size_bytes);
         fileSize.style.cssText = `
           margin-left: 8px;
           color: #888;

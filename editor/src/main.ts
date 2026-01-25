@@ -13,6 +13,7 @@ import { Editor, EditorDiagnostic } from "./components/Editor";
 import { MeshPreview } from "./components/MeshPreview";
 import { AudioPreview } from "./components/AudioPreview";
 import { TexturePreview } from "./components/TexturePreview";
+import { MusicPreview } from "./components/MusicPreview";
 import { NewAssetDialog } from "./components/NewAssetDialog";
 import { FileBrowser } from "./components/FileBrowser";
 import { GeneratePanel } from "./components/GeneratePanel";
@@ -83,6 +84,7 @@ interface SpecResult {
 let editor: Editor | null = null;
 let meshPreview: MeshPreview | null = null;
 let audioPreview: AudioPreview | null = null;
+let musicPreview: MusicPreview | null = null;
 let texturePreview: TexturePreview | null = null;
 let fileBrowser: FileBrowser | null = null;
 let generatePanel: GeneratePanel | null = null;
@@ -294,6 +296,10 @@ function clearPreviewComponents(): void {
     audioPreview.dispose();
     audioPreview = null;
   }
+  if (musicPreview) {
+    musicPreview.dispose();
+    musicPreview = null;
+  }
   if (texturePreview) {
     texturePreview.dispose();
     texturePreview = null;
@@ -314,9 +320,10 @@ async function evaluateSource(content: string): Promise<void> {
   updateStatus("Evaluating...");
 
   try {
+    const filename = currentFilePath ?? "editor.star";
     const result = await invoke<EvalOutput>("plugin:speccade|eval_spec", {
       source: content,
-      filename: "editor.star",
+      filename,
     });
 
     if (result.success) {
@@ -371,12 +378,24 @@ async function updatePreview(result: unknown, source: string): Promise<void> {
   }
 
   // Handle different asset types
-  if (assetType === "mesh") {
-    await renderMeshPreview(source);
-  } else if (assetType === "audio") {
+  if (assetType === "audio") {
     await renderAudioPreview(source);
-  } else if (assetType === "texture") {
+  } else if (assetType === "music") {
+    await renderMusicPreview(source);
+  } else if (
+    assetType === "texture" ||
+    assetType === "sprite" ||
+    assetType === "ui" ||
+    assetType === "font" ||
+    assetType === "vfx"
+  ) {
     await renderTexturePreview(source);
+  } else if (
+    assetType === "static_mesh" ||
+    assetType === "skeletal_mesh" ||
+    assetType === "mesh"
+  ) {
+    await renderMeshPreview(source);
   } else {
     // Fallback to JSON preview for unknown types
     renderJsonPreview(result);
@@ -394,10 +413,11 @@ async function renderMeshPreview(source: string): Promise<void> {
   }
 
   try {
+    const filename = currentFilePath ?? "editor.star";
     updateStatus("Generating mesh preview...");
     const result = await invoke<GeneratePreviewOutput>(
       "plugin:speccade|generate_preview",
-      { source, filename: "editor.star" }
+      { source, filename }
     );
 
     if (!result.compile_success) {
@@ -428,10 +448,11 @@ async function renderAudioPreview(source: string): Promise<void> {
   }
 
   try {
+    const filename = currentFilePath ?? "editor.star";
     updateStatus("Generating audio preview...");
     const result = await invoke<GeneratePreviewOutput>(
       "plugin:speccade|generate_preview",
-      { source, filename: "editor.star" }
+      { source, filename }
     );
 
     if (!result.compile_success) {
@@ -452,6 +473,41 @@ async function renderAudioPreview(source: string): Promise<void> {
 }
 
 /**
+ * Render music preview with chiptune3.
+ */
+async function renderMusicPreview(source: string): Promise<void> {
+  const filename = currentFilePath ?? "editor.star";
+
+  if (!musicPreview) {
+    previewContent.innerHTML = "";
+    musicPreview = new MusicPreview(previewContent, async (src, reqFilename) => {
+      const result = await invoke<GeneratePreviewOutput>(
+        "plugin:speccade|generate_preview",
+        { source: src, filename: reqFilename }
+      );
+
+      if (!result.compile_success) {
+        throw new Error(result.compile_error ?? "Unknown compile error");
+      }
+
+      const preview = result.preview;
+      if (!preview?.success || !preview.data) {
+        throw new Error(preview?.error ?? "Unknown preview error");
+      }
+
+      return {
+        dataBase64: preview.data,
+        mimeType: preview.mime_type,
+        metadata: preview.metadata ?? undefined,
+      };
+    });
+  }
+
+  musicPreview.setSource(source, filename);
+  musicPreview.onSourceUpdated();
+}
+
+/**
  * Render texture preview as image.
  */
 async function renderTexturePreview(source: string): Promise<void> {
@@ -462,10 +518,11 @@ async function renderTexturePreview(source: string): Promise<void> {
   }
 
   try {
+    const filename = currentFilePath ?? "editor.star";
     updateStatus("Generating texture preview...");
     const result = await invoke<GeneratePreviewOutput>(
       "plugin:speccade|generate_preview",
-      { source, filename: "editor.star" }
+      { source, filename }
     );
 
     if (!result.compile_success) {
@@ -650,9 +707,11 @@ async function init(): Promise<void> {
   // Initialize generate panel
   const generateContent = document.getElementById("generate-content");
   if (generateContent) {
-    generatePanel = new GeneratePanel(generateContent, () => {
-      return editor?.getContent() ?? "";
-    });
+    generatePanel = new GeneratePanel(
+      generateContent,
+      () => editor?.getContent() ?? "",
+      () => currentFilePath ?? "editor.star"
+    );
   }
 
   // Setup tab switching
