@@ -9,10 +9,7 @@ use speccade_spec::Spec;
 ///
 /// This generates a low-fidelity preview suitable for quick playback in the editor.
 /// Settings: 22kHz sample rate, max 0.5s duration.
-pub fn generate_audio_preview(
-    spec: &Spec,
-    settings: &PreviewSettings,
-) -> PreviewResult {
+pub fn generate_audio_preview(spec: &Spec, settings: &PreviewSettings) -> PreviewResult {
     // Check if spec has a recipe
     let recipe = match &spec.recipe {
         Some(r) => r,
@@ -21,16 +18,18 @@ pub fn generate_audio_preview(
 
     // Only handle audio recipes
     if !recipe.kind.starts_with("audio") {
-        return PreviewResult::failure("audio", format!(
-            "Recipe kind '{}' is not an audio recipe",
-            recipe.kind
-        ));
+        return PreviewResult::failure(
+            "audio",
+            format!("Recipe kind '{}' is not an audio recipe", recipe.kind),
+        );
     }
 
     // Create a temporary directory for preview generation
     let tmp_dir = match tempfile::tempdir() {
         Ok(dir) => dir,
-        Err(e) => return PreviewResult::failure("audio", format!("Failed to create temp dir: {}", e)),
+        Err(e) => {
+            return PreviewResult::failure("audio", format!("Failed to create temp dir: {}", e))
+        }
     };
 
     let tmp_path = tmp_dir.path();
@@ -41,12 +40,17 @@ pub fn generate_audio_preview(
 
     let preview_duration = Some(settings.audio_max_duration);
 
-    match dispatch_generate(spec, tmp_path.to_str().unwrap(), &spec_path, preview_duration) {
+    match dispatch_generate(
+        spec,
+        tmp_path.to_str().unwrap(),
+        &spec_path,
+        preview_duration,
+    ) {
         Ok(outputs) => {
             // Find the primary WAV output
-            let wav_output = outputs.iter().find(|o| {
-                matches!(o.format, speccade_spec::OutputFormat::Wav)
-            });
+            let wav_output = outputs
+                .iter()
+                .find(|o| matches!(o.format, speccade_spec::OutputFormat::Wav));
 
             match wav_output {
                 Some(output) => {
@@ -67,7 +71,9 @@ pub fn generate_audio_preview(
                                 metadata,
                             )
                         }
-                        Err(e) => PreviewResult::failure("audio", format!("Failed to read WAV: {}", e)),
+                        Err(e) => {
+                            PreviewResult::failure("audio", format!("Failed to read WAV: {}", e))
+                        }
                     }
                 }
                 None => PreviewResult::failure("audio", "No WAV output generated"),

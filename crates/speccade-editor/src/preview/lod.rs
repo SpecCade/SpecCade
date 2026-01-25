@@ -3,8 +3,8 @@
 //! Implements edge-collapse decimation to generate low-poly proxy meshes
 //! for sub-100ms first-frame preview in the editor.
 
-use std::collections::{BinaryHeap, HashMap, HashSet};
 use std::cmp::Ordering;
+use std::collections::{BinaryHeap, HashMap, HashSet};
 
 /// Configuration for LOD proxy generation.
 #[derive(Debug, Clone)]
@@ -97,7 +97,10 @@ impl PartialOrd for EdgeCollapse {
 impl Ord for EdgeCollapse {
     fn cmp(&self, other: &Self) -> Ordering {
         // Reverse ordering for min-heap (lowest cost first)
-        other.cost.partial_cmp(&self.cost).unwrap_or(Ordering::Equal)
+        other
+            .cost
+            .partial_cmp(&self.cost)
+            .unwrap_or(Ordering::Equal)
     }
 }
 
@@ -197,10 +200,9 @@ impl MeshDecimator {
                 max[i] = max[i].max(v.position[i]);
             }
         }
-        let diagonal = ((max[0] - min[0]).powi(2)
-            + (max[1] - min[1]).powi(2)
-            + (max[2] - min[2]).powi(2))
-        .sqrt() as f64;
+        let diagonal =
+            ((max[0] - min[0]).powi(2) + (max[1] - min[1]).powi(2) + (max[2] - min[2]).powi(2))
+                .sqrt() as f64;
 
         let mut decimator = Self {
             vertices,
@@ -356,7 +358,8 @@ impl MeshDecimator {
         let relative_len = edge_len / self.bounding_box_diagonal;
         if relative_len > 0.1 {
             // Long edges are silhouette-important
-            cost += self.config.silhouette_weight as f64 * relative_len * self.bounding_box_diagonal;
+            cost +=
+                self.config.silhouette_weight as f64 * relative_len * self.bounding_box_diagonal;
         }
 
         Some(EdgeCollapse {
@@ -410,7 +413,10 @@ impl MeshDecimator {
             }
 
             for &neighbor_idx in &v.neighbors {
-                let edge_key = (v_idx.min(neighbor_idx as usize) as u32, v_idx.max(neighbor_idx as usize) as u32);
+                let edge_key = (
+                    v_idx.min(neighbor_idx as usize) as u32,
+                    v_idx.max(neighbor_idx as usize) as u32,
+                );
                 if !processed_edges.contains(&edge_key) {
                     processed_edges.insert(edge_key);
                     if let Some(collapse) = self.compute_edge_cost(v_idx as u32, neighbor_idx) {
@@ -437,7 +443,8 @@ impl MeshDecimator {
             }
 
             // Perform the collapse: merge v2 into v1
-            let triangles_removed = self.collapse_edge(collapse.v1, collapse.v2, collapse.target_pos);
+            let triangles_removed =
+                self.collapse_edge(collapse.v1, collapse.v2, collapse.target_pos);
             current_triangles = current_triangles.saturating_sub(triangles_removed);
 
             // Update costs for affected edges
@@ -481,8 +488,12 @@ impl MeshDecimator {
         for neighbor_idx in v2_neighbors {
             if neighbor_idx != v1_idx {
                 self.vertices[v1].neighbors.insert(neighbor_idx);
-                self.vertices[neighbor_idx as usize].neighbors.remove(&v2_idx);
-                self.vertices[neighbor_idx as usize].neighbors.insert(v1_idx);
+                self.vertices[neighbor_idx as usize]
+                    .neighbors
+                    .remove(&v2_idx);
+                self.vertices[neighbor_idx as usize]
+                    .neighbors
+                    .insert(v1_idx);
             }
         }
         self.vertices[v1].neighbors.remove(&v2_idx);
@@ -570,8 +581,8 @@ impl MeshDecimator {
 /// or the original data if no decimation is needed.
 pub fn generate_lod_proxy(glb_bytes: &[u8], config: &LodConfig) -> Result<LodProxyResult, String> {
     // Parse the GLB
-    let glb = gltf::Glb::from_slice(glb_bytes)
-        .map_err(|e| format!("Failed to parse GLB: {}", e))?;
+    let glb =
+        gltf::Glb::from_slice(glb_bytes).map_err(|e| format!("Failed to parse GLB: {}", e))?;
 
     let gltf = gltf::Gltf::from_slice(&glb.json)
         .map_err(|e| format!("Failed to parse GLTF JSON: {}", e))?;
@@ -600,7 +611,9 @@ pub fn generate_lod_proxy(glb_bytes: &[u8], config: &LodConfig) -> Result<LodPro
     }
 
     // Extract mesh data from GLB for decimation
-    let binary_data = glb.bin.as_ref()
+    let binary_data = glb
+        .bin
+        .as_ref()
         .ok_or_else(|| "GLB has no binary data".to_string())?;
 
     // For each mesh, extract and decimate
@@ -619,28 +632,31 @@ pub fn generate_lod_proxy(glb_bytes: &[u8], config: &LodConfig) -> Result<LodPro
             let positions = extract_accessor_data::<f32>(
                 &gltf,
                 binary_data,
-                primitive.get(&gltf::Semantic::Positions)
+                primitive.get(&gltf::Semantic::Positions),
             )?;
 
             // Extract normals (optional)
             let normals = extract_accessor_data::<f32>(
                 &gltf,
                 binary_data,
-                primitive.get(&gltf::Semantic::Normals)
-            ).unwrap_or_default();
+                primitive.get(&gltf::Semantic::Normals),
+            )
+            .unwrap_or_default();
 
             // Extract UVs (optional)
             let uvs = extract_accessor_data::<f32>(
                 &gltf,
                 binary_data,
-                primitive.get(&gltf::Semantic::TexCoords(0))
-            ).unwrap_or_default();
+                primitive.get(&gltf::Semantic::TexCoords(0)),
+            )
+            .unwrap_or_default();
 
             // Extract indices
             let indices = extract_index_data(&gltf, binary_data, primitive.indices())?;
 
             // Create decimator and decimate
-            let mut decimator = MeshDecimator::new(&positions, &normals, &uvs, &indices, config.clone());
+            let mut decimator =
+                MeshDecimator::new(&positions, &normals, &uvs, &indices, config.clone());
             let result = decimator.decimate(config.target_triangles);
 
             // Accumulate results (with index offset)
@@ -693,7 +709,8 @@ fn extract_accessor_data<T: Copy + Default + bytemuck::Pod>(
         None => return Ok(Vec::new()),
     };
 
-    let view = accessor.view()
+    let view = accessor
+        .view()
         .ok_or_else(|| "Accessor has no buffer view".to_string())?;
 
     let buffer = view.buffer();
@@ -702,7 +719,9 @@ fn extract_accessor_data<T: Copy + Default + bytemuck::Pod>(
     }
 
     let offset = view.offset() + accessor.offset();
-    let stride = view.stride().unwrap_or(std::mem::size_of::<T>() * accessor.dimensions().multiplicity());
+    let stride = view
+        .stride()
+        .unwrap_or(std::mem::size_of::<T>() * accessor.dimensions().multiplicity());
     let count = accessor.count();
 
     let element_size = std::mem::size_of::<T>() * accessor.dimensions().multiplicity();
@@ -735,7 +754,8 @@ fn extract_index_data(
         None => return Err("No index accessor".to_string()),
     };
 
-    let view = accessor.view()
+    let view = accessor
+        .view()
         .ok_or_else(|| "Index accessor has no buffer view".to_string())?;
 
     let buffer = view.buffer();
@@ -928,8 +948,8 @@ fn build_glb_from_mesh(
         "scene": 0
     });
 
-    let json_bytes = serde_json::to_vec(&json)
-        .map_err(|e| format!("Failed to serialize GLTF JSON: {}", e))?;
+    let json_bytes =
+        serde_json::to_vec(&json).map_err(|e| format!("Failed to serialize GLTF JSON: {}", e))?;
 
     // Pad JSON to 4-byte alignment
     let mut json_padded = json_bytes;
@@ -975,20 +995,12 @@ mod tests {
     fn test_decimator_simple_triangle() {
         // Single triangle - should not be decimated below 1
         let positions = vec![
-            0.0, 0.0, 0.0,  // v0
-            1.0, 0.0, 0.0,  // v1
-            0.5, 1.0, 0.0,  // v2
+            0.0, 0.0, 0.0, // v0
+            1.0, 0.0, 0.0, // v1
+            0.5, 1.0, 0.0, // v2
         ];
-        let normals = vec![
-            0.0, 0.0, 1.0,
-            0.0, 0.0, 1.0,
-            0.0, 0.0, 1.0,
-        ];
-        let uvs = vec![
-            0.0, 0.0,
-            1.0, 0.0,
-            0.5, 1.0,
-        ];
+        let normals = vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0];
+        let uvs = vec![0.0, 0.0, 1.0, 0.0, 0.5, 1.0];
         let indices = vec![0, 1, 2];
 
         let config = LodConfig::default();
@@ -1004,23 +1016,13 @@ mod tests {
     fn test_decimator_quad() {
         // Two triangles forming a quad
         let positions = vec![
-            0.0, 0.0, 0.0,  // v0
-            1.0, 0.0, 0.0,  // v1
-            1.0, 1.0, 0.0,  // v2
-            0.0, 1.0, 0.0,  // v3
+            0.0, 0.0, 0.0, // v0
+            1.0, 0.0, 0.0, // v1
+            1.0, 1.0, 0.0, // v2
+            0.0, 1.0, 0.0, // v3
         ];
-        let normals = vec![
-            0.0, 0.0, 1.0,
-            0.0, 0.0, 1.0,
-            0.0, 0.0, 1.0,
-            0.0, 0.0, 1.0,
-        ];
-        let uvs = vec![
-            0.0, 0.0,
-            1.0, 0.0,
-            1.0, 1.0,
-            0.0, 1.0,
-        ];
+        let normals = vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0];
+        let uvs = vec![0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0];
         let indices = vec![0, 1, 2, 0, 2, 3];
 
         let config = LodConfig::default();
@@ -1035,21 +1037,9 @@ mod tests {
     #[test]
     fn test_decimator_preserves_mesh_below_threshold() {
         // Small mesh that shouldn't be decimated
-        let positions = vec![
-            0.0, 0.0, 0.0,
-            1.0, 0.0, 0.0,
-            0.5, 1.0, 0.0,
-        ];
-        let normals = vec![
-            0.0, 0.0, 1.0,
-            0.0, 0.0, 1.0,
-            0.0, 0.0, 1.0,
-        ];
-        let uvs = vec![
-            0.0, 0.0,
-            1.0, 0.0,
-            0.5, 1.0,
-        ];
+        let positions = vec![0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.5, 1.0, 0.0];
+        let normals = vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0];
+        let uvs = vec![0.0, 0.0, 1.0, 0.0, 0.5, 1.0];
         let indices = vec![0, 1, 2];
 
         let config = LodConfig {
@@ -1065,21 +1055,9 @@ mod tests {
 
     #[test]
     fn test_build_glb_from_mesh() {
-        let positions = vec![
-            0.0, 0.0, 0.0,
-            1.0, 0.0, 0.0,
-            0.5, 1.0, 0.0,
-        ];
-        let normals = vec![
-            0.0, 0.0, 1.0,
-            0.0, 0.0, 1.0,
-            0.0, 0.0, 1.0,
-        ];
-        let uvs = vec![
-            0.0, 0.0,
-            1.0, 0.0,
-            0.5, 1.0,
-        ];
+        let positions = vec![0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.5, 1.0, 0.0];
+        let normals = vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0];
+        let uvs = vec![0.0, 0.0, 1.0, 0.0, 0.5, 1.0];
         let indices = vec![0, 1, 2];
 
         let result = build_glb_from_mesh(&positions, &normals, &uvs, &indices);
@@ -1097,21 +1075,9 @@ mod tests {
     #[test]
     fn test_boundary_detection() {
         // Triangle has all boundary edges (only one triangle)
-        let positions = vec![
-            0.0, 0.0, 0.0,
-            1.0, 0.0, 0.0,
-            0.5, 1.0, 0.0,
-        ];
-        let normals = vec![
-            0.0, 0.0, 1.0,
-            0.0, 0.0, 1.0,
-            0.0, 0.0, 1.0,
-        ];
-        let uvs = vec![
-            0.0, 0.0,
-            1.0, 0.0,
-            0.5, 1.0,
-        ];
+        let positions = vec![0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.5, 1.0, 0.0];
+        let normals = vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0];
+        let uvs = vec![0.0, 0.0, 1.0, 0.0, 0.5, 1.0];
         let indices = vec![0, 1, 2];
 
         let config = LodConfig::default();
@@ -1172,27 +1138,19 @@ mod tests {
 
         assert_eq!(result.original_triangles, 32);
         // The decimator should reduce triangle count (may not reach exact target due to topology)
-        assert!(result.result_triangles < 32, "Expected reduction from 32 triangles, got {}", result.result_triangles);
+        assert!(
+            result.result_triangles < 32,
+            "Expected reduction from 32 triangles, got {}",
+            result.result_triangles
+        );
         assert!(result.is_proxy);
     }
 
     #[test]
     fn test_lod_result_properties() {
-        let positions = vec![
-            0.0, 0.0, 0.0,
-            1.0, 0.0, 0.0,
-            0.5, 1.0, 0.0,
-        ];
-        let normals = vec![
-            0.0, 0.0, 1.0,
-            0.0, 0.0, 1.0,
-            0.0, 0.0, 1.0,
-        ];
-        let uvs = vec![
-            0.0, 0.0,
-            1.0, 0.0,
-            0.5, 1.0,
-        ];
+        let positions = vec![0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.5, 1.0, 0.0];
+        let normals = vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0];
+        let uvs = vec![0.0, 0.0, 1.0, 0.0, 0.5, 1.0];
         let indices = vec![0, 1, 2];
 
         let config = LodConfig::default();
@@ -1201,9 +1159,9 @@ mod tests {
 
         // Result should contain valid geometry
         assert_eq!(result.positions.len() % 3, 0); // Positions are 3D vectors
-        assert_eq!(result.normals.len() % 3, 0);   // Normals are 3D vectors
-        assert_eq!(result.uvs.len() % 2, 0);       // UVs are 2D vectors
-        assert_eq!(result.indices.len() % 3, 0);   // Indices are triangle triplets
+        assert_eq!(result.normals.len() % 3, 0); // Normals are 3D vectors
+        assert_eq!(result.uvs.len() % 2, 0); // UVs are 2D vectors
+        assert_eq!(result.indices.len() % 3, 0); // Indices are triangle triplets
     }
 
     #[test]

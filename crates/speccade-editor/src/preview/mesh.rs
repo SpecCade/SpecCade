@@ -14,10 +14,7 @@ use speccade_spec::Spec;
 /// Settings: ~1000 triangles maximum.
 ///
 /// Note: Mesh generation requires Blender, so this may fail if Blender is not available.
-pub fn generate_mesh_preview(
-    spec: &Spec,
-    settings: &PreviewSettings,
-) -> PreviewResult {
+pub fn generate_mesh_preview(spec: &Spec, settings: &PreviewSettings) -> PreviewResult {
     // Check if spec has a recipe
     let recipe = match &spec.recipe {
         Some(r) => r,
@@ -25,20 +22,22 @@ pub fn generate_mesh_preview(
     };
 
     // Only handle mesh-related recipes
-    let is_mesh_recipe = recipe.kind.starts_with("static_mesh.")
-        || recipe.kind.starts_with("skeletal_mesh.");
+    let is_mesh_recipe =
+        recipe.kind.starts_with("static_mesh.") || recipe.kind.starts_with("skeletal_mesh.");
 
     if !is_mesh_recipe {
-        return PreviewResult::failure("mesh", format!(
-            "Recipe kind '{}' is not a mesh recipe",
-            recipe.kind
-        ));
+        return PreviewResult::failure(
+            "mesh",
+            format!("Recipe kind '{}' is not a mesh recipe", recipe.kind),
+        );
     }
 
     // Create a temporary directory for preview generation
     let tmp_dir = match tempfile::tempdir() {
         Ok(dir) => dir,
-        Err(e) => return PreviewResult::failure("mesh", format!("Failed to create temp dir: {}", e)),
+        Err(e) => {
+            return PreviewResult::failure("mesh", format!("Failed to create temp dir: {}", e))
+        }
     };
 
     let tmp_path = tmp_dir.path();
@@ -50,9 +49,9 @@ pub fn generate_mesh_preview(
     match dispatch_generate(spec, tmp_path.to_str().unwrap(), &spec_path, None) {
         Ok(outputs) => {
             // Find the primary GLB output
-            let glb_output = outputs.iter().find(|o| {
-                matches!(o.format, speccade_spec::OutputFormat::Glb)
-            });
+            let glb_output = outputs
+                .iter()
+                .find(|o| matches!(o.format, speccade_spec::OutputFormat::Glb));
 
             match glb_output {
                 Some(output) => {
@@ -114,7 +113,9 @@ pub fn generate_mesh_preview(
                                 )
                             }
                         }
-                        Err(e) => PreviewResult::failure("mesh", format!("Failed to read GLB: {}", e)),
+                        Err(e) => {
+                            PreviewResult::failure("mesh", format!("Failed to read GLB: {}", e))
+                        }
                     }
                 }
                 None => PreviewResult::failure("mesh", "No GLB output generated"),
@@ -159,12 +160,19 @@ fn extract_mesh_metadata_with_lod(
                     for mesh in gltf.meshes() {
                         for primitive in mesh.primitives() {
                             if let Some(accessor) = primitive.get(&gltf::Semantic::Positions) {
-                                if let Some(bounds) = accessor.min().and_then(|min| {
-                                    accessor.max().map(|max| (min, max))
-                                }) {
+                                if let Some(bounds) = accessor
+                                    .min()
+                                    .and_then(|min| accessor.max().map(|max| (min, max)))
+                                {
                                     let (min, max) = bounds;
-                                    if let (serde_json::Value::Array(min_arr), serde_json::Value::Array(max_arr)) = (min, max) {
-                                        for (i, (min_val, max_val)) in min_arr.iter().zip(max_arr.iter()).enumerate() {
+                                    if let (
+                                        serde_json::Value::Array(min_arr),
+                                        serde_json::Value::Array(max_arr),
+                                    ) = (min, max)
+                                    {
+                                        for (i, (min_val, max_val)) in
+                                            min_arr.iter().zip(max_arr.iter()).enumerate()
+                                        {
                                             if i < 3 {
                                                 if let (Some(min_f), Some(max_f)) = (
                                                     min_val.as_f64().map(|v| v as f32),
@@ -233,12 +241,19 @@ fn extract_mesh_metadata(glb_bytes: &[u8], settings: &PreviewSettings) -> serde_
                                 total_vertices += accessor.count() as u64;
 
                                 // Get bounding box
-                                if let Some(bounds) = accessor.min().and_then(|min| {
-                                    accessor.max().map(|max| (min, max))
-                                }) {
+                                if let Some(bounds) = accessor
+                                    .min()
+                                    .and_then(|min| accessor.max().map(|max| (min, max)))
+                                {
                                     let (min, max) = bounds;
-                                    if let (serde_json::Value::Array(min_arr), serde_json::Value::Array(max_arr)) = (min, max) {
-                                        for (i, (min_val, max_val)) in min_arr.iter().zip(max_arr.iter()).enumerate() {
+                                    if let (
+                                        serde_json::Value::Array(min_arr),
+                                        serde_json::Value::Array(max_arr),
+                                    ) = (min, max)
+                                    {
+                                        for (i, (min_val, max_val)) in
+                                            min_arr.iter().zip(max_arr.iter()).enumerate()
+                                        {
                                             if i < 3 {
                                                 if let (Some(min_f), Some(max_f)) = (
                                                     min_val.as_f64().map(|v| v as f32),

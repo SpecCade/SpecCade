@@ -9,10 +9,7 @@ use speccade_spec::Spec;
 ///
 /// This generates a low-resolution preview suitable for quick display in the editor.
 /// Settings: 256x256 maximum dimension.
-pub fn generate_texture_preview(
-    spec: &Spec,
-    settings: &PreviewSettings,
-) -> PreviewResult {
+pub fn generate_texture_preview(spec: &Spec, settings: &PreviewSettings) -> PreviewResult {
     // Check if spec has a recipe
     let recipe = match &spec.recipe {
         Some(r) => r,
@@ -27,16 +24,18 @@ pub fn generate_texture_preview(
         || recipe.kind.starts_with("font.");
 
     if !is_texture_recipe {
-        return PreviewResult::failure("texture", format!(
-            "Recipe kind '{}' is not a texture recipe",
-            recipe.kind
-        ));
+        return PreviewResult::failure(
+            "texture",
+            format!("Recipe kind '{}' is not a texture recipe", recipe.kind),
+        );
     }
 
     // Create a temporary directory for preview generation
     let tmp_dir = match tempfile::tempdir() {
         Ok(dir) => dir,
-        Err(e) => return PreviewResult::failure("texture", format!("Failed to create temp dir: {}", e)),
+        Err(e) => {
+            return PreviewResult::failure("texture", format!("Failed to create temp dir: {}", e))
+        }
     };
 
     let tmp_path = tmp_dir.path();
@@ -52,9 +51,9 @@ pub fn generate_texture_preview(
     match dispatch_generate(&preview_spec, tmp_path.to_str().unwrap(), &spec_path, None) {
         Ok(outputs) => {
             // Find the primary PNG output
-            let png_output = outputs.iter().find(|o| {
-                matches!(o.format, speccade_spec::OutputFormat::Png)
-            });
+            let png_output = outputs
+                .iter()
+                .find(|o| matches!(o.format, speccade_spec::OutputFormat::Png));
 
             match png_output {
                 Some(output) => {
@@ -73,7 +72,9 @@ pub fn generate_texture_preview(
                                 metadata,
                             )
                         }
-                        Err(e) => PreviewResult::failure("texture", format!("Failed to read PNG: {}", e)),
+                        Err(e) => {
+                            PreviewResult::failure("texture", format!("Failed to read PNG: {}", e))
+                        }
                     }
                 }
                 None => PreviewResult::failure("texture", "No PNG output generated"),
@@ -158,11 +159,14 @@ mod tests {
 
     #[test]
     fn test_create_preview_spec_scales_resolution() {
-        let recipe = Recipe::new("texture.procedural_v1", serde_json::json!({
-            "resolution": [1024, 512],
-            "tileable": true,
-            "nodes": []
-        }));
+        let recipe = Recipe::new(
+            "texture.procedural_v1",
+            serde_json::json!({
+                "resolution": [1024, 512],
+                "tileable": true,
+                "nodes": []
+            }),
+        );
 
         let spec = Spec::builder("test-texture", AssetType::Texture)
             .license("CC0-1.0")
