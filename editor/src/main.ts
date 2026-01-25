@@ -12,6 +12,7 @@ import { Editor, EditorDiagnostic } from "./components/Editor";
 import { MeshPreview } from "./components/MeshPreview";
 import { AudioPreview } from "./components/AudioPreview";
 import { TexturePreview } from "./components/TexturePreview";
+import { NewAssetDialog } from "./components/NewAssetDialog";
 
 // Configure Monaco worker paths for Vite
 self.MonacoEnvironment = {
@@ -468,6 +469,21 @@ async function init(): Promise<void> {
   });
 
   initEditor();
+
+  // Setup New Asset button click handler
+  const newAssetBtn = document.getElementById("new-asset-btn");
+  if (newAssetBtn) {
+    newAssetBtn.addEventListener("click", () => {
+      const dialog = new NewAssetDialog((content) => {
+        if (editor) {
+          editor.setContent(content);
+          evaluateSource(content);
+        }
+      });
+      dialog.show();
+    });
+  }
+
   updateStatus("Ready");
 }
 
