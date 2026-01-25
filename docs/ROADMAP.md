@@ -109,7 +109,8 @@ Resolved questions:
 
 - [x] `MESH-008` ~~Add a render-to-sprite bridge (render `static_mesh` with lighting preset -> `sprite.sheet_v1`).~~ Done: 2026-01-25
   - Tier 2 (Blender) implementation with camera/lighting presets, multi-angle rendering, atlas packing.
-- [ ] `MESH-009` Add modular kit generators (walls/doors/pipes) built from primitives + modifiers.
+- [x] `MESH-009` ~~Add modular kit generators (walls/doors/pipes) built from primitives + modifiers.~~ Done: 2026-01-25
+  - Tier 2 (Blender) implementation with Wall (cutouts, baseboard, crown), Pipe (segments, bends, T-junctions), and Door (frame, panel, hinges) kit types.
 - [ ] `MESH-010` Add organic modeling gap-fill (metaballs -> remesh -> smooth -> displacement noise) with strict budgets.
 - [ ] `MESH-011` Add shrinkwrap workflows (armor/clothes wrapping onto body parts) with strict stability validation.
 - [ ] `MESH-012` Add boolean kitbashing (union/difference + cleanup) with determinism/validation constraints.

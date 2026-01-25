@@ -5,9 +5,10 @@
 //!
 //! # Overview
 //!
-//! The Blender backend supports four recipe kinds:
+//! The Blender backend supports six recipe kinds:
 //!
 //! - **`static_mesh.blender_primitives_v1`** - Generate static meshes from primitives
+//! - **`static_mesh.modular_kit_v1`** - Generate modular kit meshes (walls, pipes, doors)
 //! - **`skeletal_mesh.blender_rigged_mesh_v1`** - Generate rigged character meshes
 //! - **`skeletal_animation.blender_clip_v1`** - Generate animation clips (simple keyframes)
 //! - **`skeletal_animation.blender_rigged_v1`** - Generate IK/rig-aware animations
@@ -66,6 +67,7 @@
 //! # Crate Structure
 //!
 //! - [`static_mesh`] - Static mesh generation
+//! - [`modular_kit`] - Modular kit mesh generation (walls, pipes, doors)
 //! - [`skeletal_mesh`] - Skeletal mesh generation
 //! - [`animation`] - Animation clip generation (simple keyframes)
 //! - [`rigged_animation`] - IK/rig-aware animation generation
@@ -78,6 +80,7 @@ pub mod animation;
 pub mod error;
 pub mod mesh_to_sprite;
 pub mod metrics;
+pub mod modular_kit;
 pub mod orchestrator;
 pub mod rigged_animation;
 pub mod skeletal_mesh;
@@ -91,6 +94,7 @@ pub use orchestrator::{GenerationMode, Orchestrator, OrchestratorConfig};
 // Re-export result types
 pub use animation::AnimationResult;
 pub use mesh_to_sprite::MeshToSpriteResult;
+pub use modular_kit::ModularKitResult;
 pub use rigged_animation::RiggedAnimationResult;
 pub use skeletal_mesh::SkeletalMeshResult;
 pub use static_mesh::StaticMeshResult;
@@ -109,6 +113,10 @@ pub fn generate(
         "static_mesh.blender_primitives_v1" => {
             let result = static_mesh::generate(spec, out_root)?;
             Ok(GenerateResult::StaticMesh(result))
+        }
+        "static_mesh.modular_kit_v1" => {
+            let result = modular_kit::generate(spec, out_root)?;
+            Ok(GenerateResult::ModularKit(result))
         }
         "skeletal_mesh.blender_rigged_mesh_v1" => {
             let result = skeletal_mesh::generate(spec, out_root)?;
@@ -137,6 +145,8 @@ pub fn generate(
 pub enum GenerateResult {
     /// Static mesh result.
     StaticMesh(StaticMeshResult),
+    /// Modular kit mesh result (walls, pipes, doors).
+    ModularKit(ModularKitResult),
     /// Skeletal mesh result.
     SkeletalMesh(SkeletalMeshResult),
     /// Animation result (simple keyframes).
@@ -152,6 +162,7 @@ impl GenerateResult {
     pub fn output_path(&self) -> &std::path::Path {
         match self {
             GenerateResult::StaticMesh(r) => &r.output_path,
+            GenerateResult::ModularKit(r) => &r.output_path,
             GenerateResult::SkeletalMesh(r) => &r.output_path,
             GenerateResult::Animation(r) => &r.output_path,
             GenerateResult::RiggedAnimation(r) => &r.output_path,
@@ -164,6 +175,7 @@ impl GenerateResult {
     pub fn metrics(&self) -> Option<&BlenderMetrics> {
         match self {
             GenerateResult::StaticMesh(r) => Some(&r.metrics),
+            GenerateResult::ModularKit(r) => Some(&r.metrics),
             GenerateResult::SkeletalMesh(r) => Some(&r.metrics),
             GenerateResult::Animation(r) => Some(&r.metrics),
             GenerateResult::RiggedAnimation(r) => Some(&r.metrics),
@@ -183,6 +195,7 @@ impl GenerateResult {
     pub fn report(&self) -> &BlenderReport {
         match self {
             GenerateResult::StaticMesh(r) => &r.report,
+            GenerateResult::ModularKit(r) => &r.report,
             GenerateResult::SkeletalMesh(r) => &r.report,
             GenerateResult::Animation(r) => &r.report,
             GenerateResult::RiggedAnimation(r) => &r.report,
@@ -193,6 +206,11 @@ impl GenerateResult {
     /// Returns true if this is a static mesh result.
     pub fn is_static_mesh(&self) -> bool {
         matches!(self, GenerateResult::StaticMesh(_))
+    }
+
+    /// Returns true if this is a modular kit mesh result.
+    pub fn is_modular_kit(&self) -> bool {
+        matches!(self, GenerateResult::ModularKit(_))
     }
 
     /// Returns true if this is a skeletal mesh result.
@@ -223,6 +241,7 @@ mod tests {
     #[test]
     fn test_mode_dispatch() {
         assert!(orchestrator::mode_from_recipe_kind("static_mesh.blender_primitives_v1").is_ok());
+        assert!(orchestrator::mode_from_recipe_kind("static_mesh.modular_kit_v1").is_ok());
         assert!(
             orchestrator::mode_from_recipe_kind("skeletal_mesh.blender_rigged_mesh_v1").is_ok()
         );

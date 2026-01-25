@@ -334,6 +334,7 @@ pub fn validate_for_generate_with_budget(spec: &Spec, budget: &BudgetProfile) ->
             "ui.damage_number_v1",
             "font.bitmap_v1",
             "static_mesh.blender_primitives_v1",
+            "static_mesh.modular_kit_v1",
             "skeletal_mesh.blender_rigged_mesh_v1",
             "skeletal_animation.blender_clip_v1",
             "skeletal_animation.blender_rigged_v1",

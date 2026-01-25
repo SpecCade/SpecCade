@@ -48,6 +48,10 @@ pub(super) fn validate_outputs_for_recipe_with_budget(
             validate_static_mesh_blender_primitives(recipe, result);
             validate_single_primary_output_format(spec, OutputFormat::Glb, result);
         }
+        "static_mesh.modular_kit_v1" => {
+            validate_static_mesh_modular_kit(recipe, result);
+            validate_single_primary_output_format(spec, OutputFormat::Glb, result);
+        }
         "skeletal_mesh.blender_rigged_mesh_v1" => {
             validate_skeletal_mesh_blender_rigged(recipe, result);
             validate_single_primary_output_format(spec, OutputFormat::Glb, result);
@@ -157,6 +161,231 @@ fn validate_static_mesh_blender_primitives(recipe: &Recipe, result: &mut Validat
                         format!("dimensions[{}] ({}) must be positive, got {}", i, axis, dim),
                         format!("recipe.params.dimensions[{}]", i),
                     ));
+                }
+            }
+        }
+        Err(e) => {
+            result.add_error(ValidationError::with_path(
+                ErrorCode::InvalidRecipeParams,
+                format!("invalid params for {}: {}", recipe.kind, e),
+                "recipe.params",
+            ));
+        }
+    }
+}
+
+/// Validates params for `static_mesh.modular_kit_v1` recipe.
+///
+/// This validates that the params match the expected schema and rejects
+/// unknown fields. Validates kit-specific constraints (cutout counts,
+/// segment counts, dimension ranges).
+fn validate_static_mesh_modular_kit(recipe: &Recipe, result: &mut ValidationResult) {
+    use crate::recipe::{ModularKitType, MAX_PIPE_SEGMENTS, MAX_WALL_CUTOUTS};
+
+    match recipe.as_static_mesh_modular_kit() {
+        Ok(params) => {
+            match &params.kit_type {
+                ModularKitType::Wall(wall) => {
+                    // Validate positive dimensions
+                    if wall.width <= 0.0 {
+                        result.add_error(ValidationError::with_path(
+                            ErrorCode::InvalidRecipeParams,
+                            format!("wall width must be positive, got {}", wall.width),
+                            "recipe.params.kit_type.width",
+                        ));
+                    }
+                    if wall.height <= 0.0 {
+                        result.add_error(ValidationError::with_path(
+                            ErrorCode::InvalidRecipeParams,
+                            format!("wall height must be positive, got {}", wall.height),
+                            "recipe.params.kit_type.height",
+                        ));
+                    }
+                    if wall.thickness <= 0.0 {
+                        result.add_error(ValidationError::with_path(
+                            ErrorCode::InvalidRecipeParams,
+                            format!("wall thickness must be positive, got {}", wall.thickness),
+                            "recipe.params.kit_type.thickness",
+                        ));
+                    }
+
+                    // Validate cutout count
+                    if wall.cutouts.len() > MAX_WALL_CUTOUTS {
+                        result.add_error(ValidationError::with_path(
+                            ErrorCode::InvalidRecipeParams,
+                            format!(
+                                "too many cutouts: {} exceeds maximum of {}",
+                                wall.cutouts.len(),
+                                MAX_WALL_CUTOUTS
+                            ),
+                            "recipe.params.kit_type.cutouts",
+                        ));
+                    }
+
+                    // Validate each cutout
+                    for (i, cutout) in wall.cutouts.iter().enumerate() {
+                        if cutout.width <= 0.0 {
+                            result.add_error(ValidationError::with_path(
+                                ErrorCode::InvalidRecipeParams,
+                                format!(
+                                    "cutout[{}] width must be positive, got {}",
+                                    i, cutout.width
+                                ),
+                                format!("recipe.params.kit_type.cutouts[{}].width", i),
+                            ));
+                        }
+                        if cutout.height <= 0.0 {
+                            result.add_error(ValidationError::with_path(
+                                ErrorCode::InvalidRecipeParams,
+                                format!(
+                                    "cutout[{}] height must be positive, got {}",
+                                    i, cutout.height
+                                ),
+                                format!("recipe.params.kit_type.cutouts[{}].height", i),
+                            ));
+                        }
+                    }
+
+                    // Validate bevel width is non-negative
+                    if wall.bevel_width < 0.0 {
+                        result.add_error(ValidationError::with_path(
+                            ErrorCode::InvalidRecipeParams,
+                            format!("bevel_width must be non-negative, got {}", wall.bevel_width),
+                            "recipe.params.kit_type.bevel_width",
+                        ));
+                    }
+                }
+                ModularKitType::Pipe(pipe) => {
+                    // Validate positive diameter
+                    if pipe.diameter <= 0.0 {
+                        result.add_error(ValidationError::with_path(
+                            ErrorCode::InvalidRecipeParams,
+                            format!("pipe diameter must be positive, got {}", pipe.diameter),
+                            "recipe.params.kit_type.diameter",
+                        ));
+                    }
+
+                    // Validate wall thickness
+                    if pipe.wall_thickness <= 0.0 {
+                        result.add_error(ValidationError::with_path(
+                            ErrorCode::InvalidRecipeParams,
+                            format!(
+                                "pipe wall_thickness must be positive, got {}",
+                                pipe.wall_thickness
+                            ),
+                            "recipe.params.kit_type.wall_thickness",
+                        ));
+                    }
+
+                    // Validate wall thickness is less than radius
+                    if pipe.wall_thickness >= pipe.diameter / 2.0 {
+                        result.add_error(ValidationError::with_path(
+                            ErrorCode::InvalidRecipeParams,
+                            format!(
+                                "pipe wall_thickness ({}) must be less than radius ({})",
+                                pipe.wall_thickness,
+                                pipe.diameter / 2.0
+                            ),
+                            "recipe.params.kit_type.wall_thickness",
+                        ));
+                    }
+
+                    // Validate segment count
+                    if pipe.segments.len() > MAX_PIPE_SEGMENTS {
+                        result.add_error(ValidationError::with_path(
+                            ErrorCode::InvalidRecipeParams,
+                            format!(
+                                "too many pipe segments: {} exceeds maximum of {}",
+                                pipe.segments.len(),
+                                MAX_PIPE_SEGMENTS
+                            ),
+                            "recipe.params.kit_type.segments",
+                        ));
+                    }
+
+                    if pipe.segments.is_empty() {
+                        result.add_error(ValidationError::with_path(
+                            ErrorCode::InvalidRecipeParams,
+                            "pipe must have at least one segment",
+                            "recipe.params.kit_type.segments",
+                        ));
+                    }
+
+                    // Validate vertices (minimum 3)
+                    if pipe.vertices < 3 {
+                        result.add_error(ValidationError::with_path(
+                            ErrorCode::InvalidRecipeParams,
+                            format!("pipe vertices must be at least 3, got {}", pipe.vertices),
+                            "recipe.params.kit_type.vertices",
+                        ));
+                    }
+
+                    // Validate bevel width is non-negative
+                    if pipe.bevel_width < 0.0 {
+                        result.add_error(ValidationError::with_path(
+                            ErrorCode::InvalidRecipeParams,
+                            format!("bevel_width must be non-negative, got {}", pipe.bevel_width),
+                            "recipe.params.kit_type.bevel_width",
+                        ));
+                    }
+                }
+                ModularKitType::Door(door) => {
+                    // Validate positive dimensions
+                    if door.width <= 0.0 {
+                        result.add_error(ValidationError::with_path(
+                            ErrorCode::InvalidRecipeParams,
+                            format!("door width must be positive, got {}", door.width),
+                            "recipe.params.kit_type.width",
+                        ));
+                    }
+                    if door.height <= 0.0 {
+                        result.add_error(ValidationError::with_path(
+                            ErrorCode::InvalidRecipeParams,
+                            format!("door height must be positive, got {}", door.height),
+                            "recipe.params.kit_type.height",
+                        ));
+                    }
+                    if door.frame_thickness <= 0.0 {
+                        result.add_error(ValidationError::with_path(
+                            ErrorCode::InvalidRecipeParams,
+                            format!(
+                                "door frame_thickness must be positive, got {}",
+                                door.frame_thickness
+                            ),
+                            "recipe.params.kit_type.frame_thickness",
+                        ));
+                    }
+                    if door.frame_depth <= 0.0 {
+                        result.add_error(ValidationError::with_path(
+                            ErrorCode::InvalidRecipeParams,
+                            format!(
+                                "door frame_depth must be positive, got {}",
+                                door.frame_depth
+                            ),
+                            "recipe.params.kit_type.frame_depth",
+                        ));
+                    }
+
+                    // Validate open_angle is in valid range (0-90)
+                    if door.is_open && !(0.0..=90.0).contains(&door.open_angle) {
+                        result.add_error(ValidationError::with_path(
+                            ErrorCode::InvalidRecipeParams,
+                            format!(
+                                "door open_angle must be in range [0, 90], got {}",
+                                door.open_angle
+                            ),
+                            "recipe.params.kit_type.open_angle",
+                        ));
+                    }
+
+                    // Validate bevel width is non-negative
+                    if door.bevel_width < 0.0 {
+                        result.add_error(ValidationError::with_path(
+                            ErrorCode::InvalidRecipeParams,
+                            format!("bevel_width must be non-negative, got {}", door.bevel_width),
+                            "recipe.params.kit_type.bevel_width",
+                        ));
+                    }
                 }
             }
         }

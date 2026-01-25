@@ -371,6 +371,83 @@ pub(super) fn generate_blender_sprite_from_mesh(
     Ok(outputs)
 }
 
+/// Generate modular kit mesh using the Blender backend
+pub(super) fn generate_blender_modular_kit(
+    spec: &Spec,
+    out_root: &Path,
+) -> Result<Vec<OutputResult>, DispatchError> {
+    let result = speccade_backend_blender::modular_kit::generate(spec, out_root).map_err(|e| {
+        DispatchError::BackendError(format!("Modular kit generation failed: {}", e))
+    })?;
+
+    // Get primary output path
+    let primary_output = spec
+        .outputs
+        .iter()
+        .find(|o| o.kind == OutputKind::Primary)
+        .ok_or_else(|| DispatchError::BackendError("No primary output specified".to_string()))?;
+    if primary_output.format != OutputFormat::Glb {
+        return Err(DispatchError::BackendError(format!(
+            "static_mesh.modular_kit_v1 requires primary output format 'glb', got '{}'",
+            primary_output.format
+        )));
+    }
+
+    // Convert metrics to OutputMetrics
+    let metrics =
+        speccade_spec::OutputMetrics {
+            vertex_count: result.metrics.vertex_count,
+            face_count: result.metrics.face_count,
+            edge_count: result.metrics.edge_count,
+            triangle_count: result.metrics.triangle_count,
+            quad_count: result.metrics.quad_count,
+            quad_percentage: result.metrics.quad_percentage,
+            manifold: result.metrics.manifold,
+            non_manifold_edge_count: result.metrics.non_manifold_edge_count,
+            degenerate_face_count: result.metrics.degenerate_face_count,
+            zero_area_face_count: result.metrics.zero_area_face_count,
+            uv_island_count: result.metrics.uv_island_count,
+            uv_coverage: result.metrics.uv_coverage,
+            uv_overlap_percentage: result.metrics.uv_overlap_percentage,
+            has_uv_map: result.metrics.has_uv_map,
+            uv_layer_count: result.metrics.uv_layer_count,
+            texel_density: result.metrics.texel_density,
+            bounding_box: result.metrics.bounding_box.as_ref().map(|bb| {
+                speccade_spec::BoundingBox {
+                    min: [bb.min[0] as f32, bb.min[1] as f32, bb.min[2] as f32],
+                    max: [bb.max[0] as f32, bb.max[1] as f32, bb.max[2] as f32],
+                }
+            }),
+            bounds_min: result.metrics.bounds_min,
+            bounds_max: result.metrics.bounds_max,
+            lod_count: None,
+            lod_levels: None,
+            collision_mesh: None,
+            collision_mesh_path: None,
+            navmesh: None,
+            baking: None,
+            bone_count: None,
+            max_bone_influences: None,
+            unweighted_vertex_count: None,
+            weight_normalization_percentage: None,
+            max_weight_deviation: None,
+            material_slot_count: result.metrics.material_slot_count,
+            animation_frame_count: None,
+            animation_duration_seconds: None,
+            hinge_axis_violations: None,
+            range_violations: None,
+            velocity_spikes: None,
+            root_motion_delta: None,
+        };
+
+    Ok(vec![OutputResult::tier2(
+        OutputKind::Primary,
+        OutputFormat::Glb,
+        PathBuf::from(&primary_output.path),
+        metrics,
+    )])
+}
+
 /// Generate rigged animation using the Blender backend
 pub(super) fn generate_blender_rigged_animation(
     spec: &Spec,

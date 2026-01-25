@@ -24,6 +24,8 @@ pub const DEFAULT_TIMEOUT_SECS: u64 = 300;
 pub enum GenerationMode {
     /// Static mesh generation.
     StaticMesh,
+    /// Modular kit generation (walls, pipes, doors).
+    ModularKit,
     /// Skeletal mesh generation.
     SkeletalMesh,
     /// Animation generation (simple keyframes).
@@ -39,6 +41,7 @@ impl GenerationMode {
     pub fn as_str(&self) -> &'static str {
         match self {
             GenerationMode::StaticMesh => "static_mesh",
+            GenerationMode::ModularKit => "modular_kit",
             GenerationMode::SkeletalMesh => "skeletal_mesh",
             GenerationMode::Animation => "animation",
             GenerationMode::RiggedAnimation => "rigged_animation",
@@ -362,6 +365,7 @@ impl Default for Orchestrator {
 pub fn mode_from_recipe_kind(kind: &str) -> BlenderResult<GenerationMode> {
     match kind {
         "static_mesh.blender_primitives_v1" => Ok(GenerationMode::StaticMesh),
+        "static_mesh.modular_kit_v1" => Ok(GenerationMode::ModularKit),
         "skeletal_mesh.blender_rigged_mesh_v1" => Ok(GenerationMode::SkeletalMesh),
         "skeletal_animation.blender_clip_v1" => Ok(GenerationMode::Animation),
         "skeletal_animation.blender_rigged_v1" => Ok(GenerationMode::RiggedAnimation),
@@ -379,6 +383,7 @@ mod tests {
     #[test]
     fn test_generation_mode_as_str() {
         assert_eq!(GenerationMode::StaticMesh.as_str(), "static_mesh");
+        assert_eq!(GenerationMode::ModularKit.as_str(), "modular_kit");
         assert_eq!(GenerationMode::SkeletalMesh.as_str(), "skeletal_mesh");
         assert_eq!(GenerationMode::Animation.as_str(), "animation");
         assert_eq!(GenerationMode::RiggedAnimation.as_str(), "rigged_animation");
@@ -390,6 +395,10 @@ mod tests {
         assert_eq!(
             mode_from_recipe_kind("static_mesh.blender_primitives_v1").unwrap(),
             GenerationMode::StaticMesh
+        );
+        assert_eq!(
+            mode_from_recipe_kind("static_mesh.modular_kit_v1").unwrap(),
+            GenerationMode::ModularKit
         );
         assert_eq!(
             mode_from_recipe_kind("skeletal_mesh.blender_rigged_mesh_v1").unwrap(),

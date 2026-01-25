@@ -11,6 +11,7 @@ Usage:
 
 Modes:
     static_mesh     - Generate static mesh (blender_primitives_v1)
+    modular_kit     - Generate modular kit mesh (modular_kit_v1)
     skeletal_mesh   - Generate skeletal mesh (blender_rigged_mesh_v1)
     animation       - Generate animation clip (blender_clip_v1)
 """
@@ -4986,6 +4987,535 @@ def handle_static_mesh(spec: Dict, out_root: Path, report_path: Path) -> None:
         raise
 
 
+def handle_modular_kit(spec: Dict, out_root: Path, report_path: Path) -> None:
+    """Handle modular kit mesh generation (walls, pipes, doors)."""
+    start_time = time.time()
+
+    try:
+        recipe = spec.get("recipe", {})
+        params = recipe.get("params", {})
+        kit_type_spec = params.get("kit_type", {})
+        kit_type = kit_type_spec.get("type", "wall")
+
+        # Create the kit mesh based on type
+        if kit_type == "wall":
+            obj = create_wall_kit(kit_type_spec)
+        elif kit_type == "pipe":
+            obj = create_pipe_kit(kit_type_spec)
+        elif kit_type == "door":
+            obj = create_door_kit(kit_type_spec)
+        else:
+            raise ValueError(f"Unknown kit type: {kit_type}")
+
+        # Apply export settings
+        export_settings = params.get("export", {})
+        if export_settings.get("apply_modifiers", True):
+            apply_all_modifiers(obj)
+
+        # Triangulate if requested
+        if export_settings.get("triangulate", True):
+            mod = obj.modifiers.new(name="Triangulate", type='TRIANGULATE')
+            bpy.ops.object.modifier_apply(modifier=mod.name)
+
+        # Apply UV projection (box projection for modular kits)
+        apply_uv_projection(obj, {"type": "box", "scale": 1.0})
+
+        # Get output path from spec
+        outputs = spec.get("outputs", [])
+        primary_output = next((o for o in outputs if o.get("kind") == "primary"), None)
+        if not primary_output:
+            raise ValueError("No primary output specified in spec")
+
+        output_rel_path = primary_output.get("path", "output.glb")
+        output_path = out_root / output_rel_path
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+
+        # Export with tangents if requested
+        export_tangents = export_settings.get("tangents", False)
+
+        # Compute metrics and export
+        metrics = compute_mesh_metrics(obj)
+        export_glb(output_path, export_tangents=export_tangents)
+
+        duration_ms = int((time.time() - start_time) * 1000)
+        write_report(report_path, ok=True, metrics=metrics,
+                     output_path=output_rel_path, duration_ms=duration_ms)
+
+    except Exception as e:
+        write_report(report_path, ok=False, error=str(e))
+        raise
+
+
+def create_wall_kit(spec: Dict) -> 'bpy.types.Object':
+    """Create a wall kit mesh with optional cutouts and trim."""
+    width = spec.get("width", 3.0)
+    height = spec.get("height", 2.5)
+    thickness = spec.get("thickness", 0.15)
+    cutouts = spec.get("cutouts", [])
+    has_baseboard = spec.get("has_baseboard", False)
+    has_crown = spec.get("has_crown", False)
+    baseboard_height = spec.get("baseboard_height", 0.1)
+    crown_height = spec.get("crown_height", 0.08)
+    bevel_width = spec.get("bevel_width", 0.0)
+
+    # Create base wall as a cube
+    bpy.ops.mesh.primitive_cube_add(size=1, location=(width / 2, thickness / 2, height / 2))
+    obj = bpy.context.active_object
+    obj.name = "WallKit"
+    obj.scale = (width, thickness, height)
+    bpy.ops.object.transform_apply(scale=True)
+
+    # Apply cutouts using boolean operations
+    for i, cutout in enumerate(cutouts):
+        cutout_type = cutout.get("cutout_type", "window")
+        cut_x = cutout.get("x", 0.0)
+        cut_y = cutout.get("y", 0.0)
+        cut_width = cutout.get("width", 0.8)
+        cut_height = cutout.get("height", 1.0)
+
+        # Create cutter cube
+        bpy.ops.mesh.primitive_cube_add(size=1)
+        cutter = bpy.context.active_object
+        cutter.name = f"Cutter_{i}"
+
+        # Position cutter - x is horizontal, z is vertical
+        cutter.location = (cut_x, thickness / 2, cut_y + cut_height / 2)
+        cutter.scale = (cut_width, thickness * 1.5, cut_height)
+        bpy.ops.object.transform_apply(scale=True)
+
+        # Boolean difference
+        bool_mod = obj.modifiers.new(name=f"Cutout_{i}", type='BOOLEAN')
+        bool_mod.operation = 'DIFFERENCE'
+        bool_mod.object = cutter
+
+        # Apply modifier
+        bpy.context.view_layer.objects.active = obj
+        bpy.ops.object.modifier_apply(modifier=bool_mod.name)
+
+        # Delete cutter
+        bpy.data.objects.remove(cutter, do_unlink=True)
+
+        # Add frame if requested
+        if cutout.get("has_frame", False):
+            frame_thickness = cutout.get("frame_thickness", 0.05)
+            frame = create_cutout_frame(cut_x, cut_y, cut_width, cut_height,
+                                        frame_thickness, thickness)
+            # Join frame with wall
+            bpy.ops.object.select_all(action='DESELECT')
+            frame.select_set(True)
+            obj.select_set(True)
+            bpy.context.view_layer.objects.active = obj
+            bpy.ops.object.join()
+
+    # Add baseboard if requested
+    if has_baseboard:
+        bpy.ops.mesh.primitive_cube_add(size=1)
+        baseboard = bpy.context.active_object
+        baseboard.name = "Baseboard"
+        baseboard.location = (width / 2, thickness / 2 + thickness * 0.1, baseboard_height / 2)
+        baseboard.scale = (width, thickness * 1.2, baseboard_height)
+        bpy.ops.object.transform_apply(scale=True)
+
+        # Join with wall
+        bpy.ops.object.select_all(action='DESELECT')
+        baseboard.select_set(True)
+        obj.select_set(True)
+        bpy.context.view_layer.objects.active = obj
+        bpy.ops.object.join()
+
+    # Add crown molding if requested
+    if has_crown:
+        bpy.ops.mesh.primitive_cube_add(size=1)
+        crown = bpy.context.active_object
+        crown.name = "Crown"
+        crown.location = (width / 2, thickness / 2 + thickness * 0.1, height - crown_height / 2)
+        crown.scale = (width, thickness * 1.2, crown_height)
+        bpy.ops.object.transform_apply(scale=True)
+
+        # Join with wall
+        bpy.ops.object.select_all(action='DESELECT')
+        crown.select_set(True)
+        obj.select_set(True)
+        bpy.context.view_layer.objects.active = obj
+        bpy.ops.object.join()
+
+    # Apply bevel if requested
+    if bevel_width > 0:
+        bevel_mod = obj.modifiers.new(name="Bevel", type='BEVEL')
+        bevel_mod.width = bevel_width
+        bevel_mod.segments = 2
+        bpy.context.view_layer.objects.active = obj
+        bpy.ops.object.modifier_apply(modifier=bevel_mod.name)
+
+    return obj
+
+
+def create_cutout_frame(x: float, y: float, width: float, height: float,
+                        frame_thickness: float, wall_thickness: float) -> 'bpy.types.Object':
+    """Create a frame around a cutout."""
+    # Create frame using 4 cubes (top, bottom, left, right)
+    frame_parts = []
+
+    # Bottom frame
+    bpy.ops.mesh.primitive_cube_add(size=1)
+    bottom = bpy.context.active_object
+    bottom.location = (x, wall_thickness / 2 + wall_thickness * 0.1, y - frame_thickness / 2)
+    bottom.scale = (width + frame_thickness * 2, wall_thickness * 1.1, frame_thickness)
+    bpy.ops.object.transform_apply(scale=True)
+    frame_parts.append(bottom)
+
+    # Top frame
+    bpy.ops.mesh.primitive_cube_add(size=1)
+    top = bpy.context.active_object
+    top.location = (x, wall_thickness / 2 + wall_thickness * 0.1, y + height + frame_thickness / 2)
+    top.scale = (width + frame_thickness * 2, wall_thickness * 1.1, frame_thickness)
+    bpy.ops.object.transform_apply(scale=True)
+    frame_parts.append(top)
+
+    # Left frame
+    bpy.ops.mesh.primitive_cube_add(size=1)
+    left = bpy.context.active_object
+    left.location = (x - width / 2 - frame_thickness / 2, wall_thickness / 2 + wall_thickness * 0.1, y + height / 2)
+    left.scale = (frame_thickness, wall_thickness * 1.1, height)
+    bpy.ops.object.transform_apply(scale=True)
+    frame_parts.append(left)
+
+    # Right frame
+    bpy.ops.mesh.primitive_cube_add(size=1)
+    right = bpy.context.active_object
+    right.location = (x + width / 2 + frame_thickness / 2, wall_thickness / 2 + wall_thickness * 0.1, y + height / 2)
+    right.scale = (frame_thickness, wall_thickness * 1.1, height)
+    bpy.ops.object.transform_apply(scale=True)
+    frame_parts.append(right)
+
+    # Join all frame parts
+    bpy.ops.object.select_all(action='DESELECT')
+    for part in frame_parts:
+        part.select_set(True)
+    bpy.context.view_layer.objects.active = frame_parts[0]
+    bpy.ops.object.join()
+
+    return bpy.context.active_object
+
+
+def create_pipe_kit(spec: Dict) -> 'bpy.types.Object':
+    """Create a pipe kit mesh with segments."""
+    diameter = spec.get("diameter", 0.1)
+    wall_thickness = spec.get("wall_thickness", 0.02)
+    segments = spec.get("segments", [])
+    vertices = spec.get("vertices", 16)
+    bevel_width = spec.get("bevel_width", 0.0)
+
+    radius = diameter / 2
+    inner_radius = radius - wall_thickness
+
+    if not segments:
+        segments = [{"type": "straight", "length": 1.0}]
+
+    # Start position and direction
+    current_pos = Vector((0, 0, 0))
+    current_dir = Vector((0, 0, 1))  # Start pointing up
+    all_objects = []
+
+    for i, seg in enumerate(segments):
+        seg_type = seg.get("type", "straight")
+
+        if seg_type == "straight":
+            length = seg.get("length", 1.0)
+            obj = create_pipe_segment(current_pos, current_dir, length, radius, inner_radius, vertices)
+            all_objects.append(obj)
+            current_pos = current_pos + current_dir * length
+
+        elif seg_type == "bend":
+            angle = seg.get("angle", 90.0)
+            bend_radius = seg.get("radius", radius * 2)
+            obj = create_pipe_bend(current_pos, current_dir, angle, bend_radius, radius, inner_radius, vertices)
+            all_objects.append(obj)
+            # Update direction after bend
+            angle_rad = math.radians(angle)
+            # Rotate direction around X axis (assuming bend in XZ plane)
+            new_dir = Vector((
+                current_dir.x,
+                current_dir.y * math.cos(angle_rad) - current_dir.z * math.sin(angle_rad),
+                current_dir.y * math.sin(angle_rad) + current_dir.z * math.cos(angle_rad)
+            ))
+            current_dir = new_dir.normalized()
+
+        elif seg_type == "t_junction":
+            arm_length = seg.get("arm_length", radius * 3)
+            obj = create_pipe_tjunction(current_pos, current_dir, arm_length, radius, inner_radius, vertices)
+            all_objects.append(obj)
+            current_pos = current_pos + current_dir * (radius * 2)
+
+        elif seg_type == "flange":
+            outer_diameter = seg.get("outer_diameter", diameter * 1.5)
+            flange_thickness = seg.get("thickness", 0.02)
+            obj = create_pipe_flange(current_pos, current_dir, outer_diameter / 2, radius, flange_thickness, vertices)
+            all_objects.append(obj)
+            current_pos = current_pos + current_dir * flange_thickness
+
+    # Join all pipe parts
+    if len(all_objects) > 1:
+        bpy.ops.object.select_all(action='DESELECT')
+        for obj in all_objects:
+            obj.select_set(True)
+        bpy.context.view_layer.objects.active = all_objects[0]
+        bpy.ops.object.join()
+        result = bpy.context.active_object
+    else:
+        result = all_objects[0]
+
+    result.name = "PipeKit"
+
+    # Apply bevel if requested
+    if bevel_width > 0:
+        bevel_mod = result.modifiers.new(name="Bevel", type='BEVEL')
+        bevel_mod.width = bevel_width
+        bevel_mod.segments = 2
+        bpy.context.view_layer.objects.active = result
+        bpy.ops.object.modifier_apply(modifier=bevel_mod.name)
+
+    return result
+
+
+def create_pipe_segment(pos: Vector, direction: Vector, length: float,
+                        outer_radius: float, inner_radius: float, vertices: int) -> 'bpy.types.Object':
+    """Create a straight pipe segment."""
+    # Create outer cylinder
+    bpy.ops.mesh.primitive_cylinder_add(
+        radius=outer_radius,
+        depth=length,
+        vertices=vertices,
+        location=pos + direction * (length / 2)
+    )
+    outer = bpy.context.active_object
+
+    # Create inner cylinder (for boolean subtraction)
+    bpy.ops.mesh.primitive_cylinder_add(
+        radius=inner_radius,
+        depth=length * 1.1,
+        vertices=vertices,
+        location=pos + direction * (length / 2)
+    )
+    inner = bpy.context.active_object
+
+    # Boolean difference
+    bool_mod = outer.modifiers.new(name="Hollow", type='BOOLEAN')
+    bool_mod.operation = 'DIFFERENCE'
+    bool_mod.object = inner
+
+    bpy.context.view_layer.objects.active = outer
+    bpy.ops.object.modifier_apply(modifier=bool_mod.name)
+
+    # Delete inner cylinder
+    bpy.data.objects.remove(inner, do_unlink=True)
+
+    return outer
+
+
+def create_pipe_bend(pos: Vector, direction: Vector, angle: float, bend_radius: float,
+                     outer_radius: float, inner_radius: float, vertices: int) -> 'bpy.types.Object':
+    """Create a pipe bend/elbow segment (simplified as a torus section)."""
+    # For simplicity, create a cylinder that approximates the bend
+    # A proper implementation would use a torus section
+    length = bend_radius * math.radians(angle)
+
+    bpy.ops.mesh.primitive_cylinder_add(
+        radius=outer_radius,
+        depth=length,
+        vertices=vertices,
+        location=pos + direction * (length / 2)
+    )
+    outer = bpy.context.active_object
+
+    # Create inner cylinder
+    bpy.ops.mesh.primitive_cylinder_add(
+        radius=inner_radius,
+        depth=length * 1.1,
+        vertices=vertices,
+        location=pos + direction * (length / 2)
+    )
+    inner = bpy.context.active_object
+
+    # Boolean difference
+    bool_mod = outer.modifiers.new(name="Hollow", type='BOOLEAN')
+    bool_mod.operation = 'DIFFERENCE'
+    bool_mod.object = inner
+
+    bpy.context.view_layer.objects.active = outer
+    bpy.ops.object.modifier_apply(modifier=bool_mod.name)
+
+    bpy.data.objects.remove(inner, do_unlink=True)
+
+    return outer
+
+
+def create_pipe_tjunction(pos: Vector, direction: Vector, arm_length: float,
+                          outer_radius: float, inner_radius: float, vertices: int) -> 'bpy.types.Object':
+    """Create a T-junction pipe segment."""
+    # Main pipe section
+    main_length = outer_radius * 4
+    main = create_pipe_segment(pos, direction, main_length, outer_radius, inner_radius, vertices)
+
+    # Side arm (perpendicular)
+    arm_dir = Vector((1, 0, 0))  # Perpendicular to main direction
+    arm_pos = pos + direction * (main_length / 2)
+    arm = create_pipe_segment(arm_pos, arm_dir, arm_length, outer_radius, inner_radius, vertices)
+
+    # Join
+    bpy.ops.object.select_all(action='DESELECT')
+    main.select_set(True)
+    arm.select_set(True)
+    bpy.context.view_layer.objects.active = main
+    bpy.ops.object.join()
+
+    return bpy.context.active_object
+
+
+def create_pipe_flange(pos: Vector, direction: Vector, outer_radius: float,
+                       pipe_radius: float, thickness: float, vertices: int) -> 'bpy.types.Object':
+    """Create a pipe flange connector."""
+    # Create outer disc
+    bpy.ops.mesh.primitive_cylinder_add(
+        radius=outer_radius,
+        depth=thickness,
+        vertices=vertices,
+        location=pos + direction * (thickness / 2)
+    )
+    flange = bpy.context.active_object
+
+    # Create hole
+    bpy.ops.mesh.primitive_cylinder_add(
+        radius=pipe_radius,
+        depth=thickness * 1.1,
+        vertices=vertices,
+        location=pos + direction * (thickness / 2)
+    )
+    hole = bpy.context.active_object
+
+    # Boolean difference
+    bool_mod = flange.modifiers.new(name="Hole", type='BOOLEAN')
+    bool_mod.operation = 'DIFFERENCE'
+    bool_mod.object = hole
+
+    bpy.context.view_layer.objects.active = flange
+    bpy.ops.object.modifier_apply(modifier=bool_mod.name)
+
+    bpy.data.objects.remove(hole, do_unlink=True)
+
+    return flange
+
+
+def create_door_kit(spec: Dict) -> 'bpy.types.Object':
+    """Create a door kit mesh with frame and optional panel."""
+    width = spec.get("width", 0.9)
+    height = spec.get("height", 2.1)
+    frame_thickness = spec.get("frame_thickness", 0.05)
+    frame_depth = spec.get("frame_depth", 0.1)
+    has_door_panel = spec.get("has_door_panel", False)
+    hinge_side = spec.get("hinge_side", "left")
+    panel_thickness = spec.get("panel_thickness", 0.04)
+    is_open = spec.get("is_open", False)
+    open_angle = spec.get("open_angle", 0.0)
+    bevel_width = spec.get("bevel_width", 0.0)
+
+    all_parts = []
+
+    # Create door frame (4 pieces: top, bottom, left, right)
+    # Left jamb
+    bpy.ops.mesh.primitive_cube_add(size=1)
+    left_jamb = bpy.context.active_object
+    left_jamb.name = "LeftJamb"
+    left_jamb.location = (-width / 2 - frame_thickness / 2, frame_depth / 2, height / 2)
+    left_jamb.scale = (frame_thickness, frame_depth, height + frame_thickness)
+    bpy.ops.object.transform_apply(scale=True)
+    all_parts.append(left_jamb)
+
+    # Right jamb
+    bpy.ops.mesh.primitive_cube_add(size=1)
+    right_jamb = bpy.context.active_object
+    right_jamb.name = "RightJamb"
+    right_jamb.location = (width / 2 + frame_thickness / 2, frame_depth / 2, height / 2)
+    right_jamb.scale = (frame_thickness, frame_depth, height + frame_thickness)
+    bpy.ops.object.transform_apply(scale=True)
+    all_parts.append(right_jamb)
+
+    # Top header
+    bpy.ops.mesh.primitive_cube_add(size=1)
+    header = bpy.context.active_object
+    header.name = "Header"
+    header.location = (0, frame_depth / 2, height + frame_thickness / 2)
+    header.scale = (width + frame_thickness * 2, frame_depth, frame_thickness)
+    bpy.ops.object.transform_apply(scale=True)
+    all_parts.append(header)
+
+    # Optional threshold/bottom
+    bpy.ops.mesh.primitive_cube_add(size=1)
+    threshold = bpy.context.active_object
+    threshold.name = "Threshold"
+    threshold.location = (0, frame_depth / 2, -frame_thickness / 2)
+    threshold.scale = (width + frame_thickness * 2, frame_depth, frame_thickness)
+    bpy.ops.object.transform_apply(scale=True)
+    all_parts.append(threshold)
+
+    # Create door panel if requested
+    if has_door_panel:
+        bpy.ops.mesh.primitive_cube_add(size=1)
+        panel = bpy.context.active_object
+        panel.name = "DoorPanel"
+
+        # Position based on hinge side
+        if hinge_side == "left":
+            hinge_x = -width / 2 + panel_thickness / 2
+        else:
+            hinge_x = width / 2 - panel_thickness / 2
+
+        panel.location = (0, frame_depth / 2, height / 2)
+        panel.scale = (width - 0.01, panel_thickness, height - 0.01)  # Slight gap
+        bpy.ops.object.transform_apply(scale=True)
+
+        # Apply rotation if open
+        if is_open and open_angle > 0:
+            # Set origin to hinge side
+            cursor_loc = bpy.context.scene.cursor.location.copy()
+            if hinge_side == "left":
+                bpy.context.scene.cursor.location = (-width / 2, frame_depth / 2, height / 2)
+            else:
+                bpy.context.scene.cursor.location = (width / 2, frame_depth / 2, height / 2)
+
+            bpy.ops.object.origin_set(type='ORIGIN_CURSOR')
+            bpy.context.scene.cursor.location = cursor_loc
+
+            # Rotate around Z axis
+            angle_rad = math.radians(open_angle)
+            if hinge_side == "right":
+                angle_rad = -angle_rad
+            panel.rotation_euler.z = angle_rad
+            bpy.ops.object.transform_apply(rotation=True)
+
+        all_parts.append(panel)
+
+    # Join all parts
+    bpy.ops.object.select_all(action='DESELECT')
+    for part in all_parts:
+        part.select_set(True)
+    bpy.context.view_layer.objects.active = all_parts[0]
+    bpy.ops.object.join()
+
+    result = bpy.context.active_object
+    result.name = "DoorKit"
+
+    # Apply bevel if requested
+    if bevel_width > 0:
+        bevel_mod = result.modifiers.new(name="Bevel", type='BEVEL')
+        bevel_mod.width = bevel_width
+        bevel_mod.segments = 2
+        bpy.context.view_layer.objects.active = result
+        bpy.ops.object.modifier_apply(modifier=bevel_mod.name)
+
+    return result
+
+
 def handle_skeletal_mesh(spec: Dict, out_root: Path, report_path: Path) -> None:
     """Handle skeletal mesh generation."""
     start_time = time.time()
@@ -5757,7 +6287,7 @@ def main() -> int:
 
     parser = argparse.ArgumentParser(description="SpecCade Blender Entrypoint")
     parser.add_argument("--mode", required=True,
-                        choices=["static_mesh", "skeletal_mesh", "animation", "rigged_animation", "mesh_to_sprite"],
+                        choices=["static_mesh", "modular_kit", "skeletal_mesh", "animation", "rigged_animation", "mesh_to_sprite"],
                         help="Generation mode")
     parser.add_argument("--spec", required=True, type=Path,
                         help="Path to spec JSON file")
@@ -5789,6 +6319,7 @@ def main() -> int:
     # Dispatch to handler
     handlers = {
         "static_mesh": handle_static_mesh,
+        "modular_kit": handle_modular_kit,
         "skeletal_mesh": handle_skeletal_mesh,
         "animation": handle_animation,
         "rigged_animation": handle_rigged_animation,

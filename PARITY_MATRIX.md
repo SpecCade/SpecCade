@@ -23,6 +23,7 @@ For the legacy `.studio/specs/**.spec.py` key taxonomy used by `speccade migrate
 | `ui.damage_number_v1` | `ui` | `speccade-backend-texture` | 1 | `png` + `json` | Implemented | Damage number sprites with style variants (normal, critical, healing) |
 | `font.bitmap_v1` | `font` | `speccade-backend-texture` | 1 | `png` + `json` | Implemented | Bitmap pixel font with glyph atlas and metrics |
 | `static_mesh.blender_primitives_v1` | `static_mesh` | `speccade-backend-blender` | 2 | `glb` | Implemented | Blender-driven primitives |
+| `static_mesh.modular_kit_v1` | `static_mesh` | `speccade-backend-blender` | 2 | `glb` | Implemented | Modular kit generators (walls, pipes, doors) |
 | `skeletal_mesh.blender_rigged_mesh_v1` | `skeletal_mesh` | `speccade-backend-blender` | 2 | `glb` | Implemented | Rigged mesh export |
 | `skeletal_animation.blender_clip_v1` | `skeletal_animation` | `speccade-backend-blender` | 2 | `glb` | Implemented | Simple keyframed clip |
 | `skeletal_animation.blender_rigged_v1` | `skeletal_animation` | `speccade-backend-blender` | 2 | `glb` | Implemented | IK/rig-aware animation export |
