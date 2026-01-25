@@ -149,6 +149,123 @@ pub fn refine_mesh_preview(
     }
 }
 
+/// Output from full asset generation.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GenerateFullOutput {
+    /// Whether the generation succeeded.
+    pub success: bool,
+    /// List of generated output files.
+    pub outputs: Vec<GeneratedFile>,
+    /// Error message if generation failed.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub error: Option<String>,
+    /// Elapsed time in milliseconds.
+    pub elapsed_ms: u64,
+}
+
+/// A generated output file.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GeneratedFile {
+    /// Relative path to the generated file.
+    pub path: String,
+    /// Size of the file in bytes.
+    pub size_bytes: u64,
+    /// Output format (e.g., "wav", "png", "glb").
+    pub format: String,
+}
+
+/// Generate full assets from a spec.
+///
+/// This command compiles the Starlark source and generates all output files
+/// to the specified output directory.
+#[tauri::command]
+pub fn generate_full(
+    source: String,
+    filename: String,
+    output_dir: String,
+) -> GenerateFullOutput {
+    use speccade_cli::dispatch::{dispatch_generate, DispatchError};
+    use std::path::Path;
+    use std::time::Instant;
+
+    let start = Instant::now();
+
+    // Configure compiler with default timeout
+    let config = CompilerConfig::default();
+
+    // Compile the Starlark source
+    let spec = match compiler::compile(&filename, &source, &config) {
+        Ok(result) => result.spec,
+        Err(e) => {
+            let error_msg = match &e {
+                CompileError::Syntax { location, message } => {
+                    format!("Syntax error at {}: {}", location, message)
+                }
+                CompileError::Runtime { location, message } => {
+                    format!("Runtime error at {}: {}", location, message)
+                }
+                _ => e.to_string(),
+            };
+
+            return GenerateFullOutput {
+                success: false,
+                outputs: vec![],
+                error: Some(error_msg),
+                elapsed_ms: start.elapsed().as_millis() as u64,
+            };
+        }
+    };
+
+    // Create a dummy spec path for the dispatch (uses the filename as a hint)
+    let spec_path = Path::new(&filename);
+
+    // Dispatch generation to the appropriate backend
+    let output_results = match dispatch_generate(&spec, &output_dir, spec_path, None) {
+        Ok(results) => results,
+        Err(e) => {
+            let error_msg = match &e {
+                DispatchError::NoRecipe => "No recipe defined in the spec".to_string(),
+                DispatchError::BackendNotImplemented(kind) => {
+                    format!("Backend not implemented for recipe kind: {}", kind)
+                }
+                DispatchError::BackendError(msg) => format!("Backend error: {}", msg),
+            };
+
+            return GenerateFullOutput {
+                success: false,
+                outputs: vec![],
+                error: Some(error_msg),
+                elapsed_ms: start.elapsed().as_millis() as u64,
+            };
+        }
+    };
+
+    // Map OutputResults to GeneratedFiles
+    let output_path = Path::new(&output_dir);
+    let outputs: Vec<GeneratedFile> = output_results
+        .iter()
+        .filter_map(|result| {
+            let full_path = output_path.join(&result.path);
+            let size_bytes = std::fs::metadata(&full_path)
+                .map(|m| m.len())
+                .unwrap_or(0);
+
+            Some(GeneratedFile {
+                path: result.path.to_string_lossy().to_string(),
+                size_bytes,
+                format: format!("{:?}", result.format).to_lowercase(),
+            })
+        })
+        .collect();
+
+    GenerateFullOutput {
+        success: true,
+        outputs,
+        error: None,
+        elapsed_ms: start.elapsed().as_millis() as u64,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
