@@ -7,6 +7,7 @@ import {
 } from "./lib/starlark";
 import { MeshPreview } from "./components/MeshPreview";
 import { AudioPreview } from "./components/AudioPreview";
+import { TexturePreview } from "./components/TexturePreview";
 
 // Types for file watching
 interface FileChangeEvent {
@@ -85,6 +86,7 @@ let editor: monaco.editor.IStandaloneCodeEditor | null = null;
 let evalTimeout: number | null = null;
 let meshPreview: MeshPreview | null = null;
 let audioPreview: AudioPreview | null = null;
+let texturePreview: TexturePreview | null = null;
 let currentAssetType: string | null = null;
 
 // Watch a file for external changes
@@ -321,6 +323,10 @@ function clearPreviewComponents(): void {
     audioPreview.dispose();
     audioPreview = null;
   }
+  if (texturePreview) {
+    texturePreview.dispose();
+    texturePreview = null;
+  }
   previewContent.innerHTML = "";
 }
 
@@ -390,7 +396,11 @@ async function renderAudioPreview(source: string): Promise<void> {
 
 // Render texture preview as image
 async function renderTexturePreview(source: string): Promise<void> {
-  clearPreviewComponents();
+  // Create texture preview if needed
+  if (!texturePreview) {
+    previewContent.innerHTML = "";
+    texturePreview = new TexturePreview(previewContent);
+  }
 
   try {
     updateStatus("Generating texture preview...");
@@ -406,17 +416,11 @@ async function renderTexturePreview(source: string): Promise<void> {
 
     const preview = result.preview;
     if (preview?.success && preview.data) {
-      const img = document.createElement("img");
-      img.src = `data:${preview.mime_type ?? "image/png"};base64,${preview.data}`;
-      img.style.cssText = `
-        max-width: 100%;
-        max-height: 100%;
-        object-fit: contain;
-        display: block;
-        margin: auto;
-      `;
-      previewContent.innerHTML = "";
-      previewContent.appendChild(img);
+      await texturePreview.loadTexture(
+        preview.data,
+        preview.mime_type ?? "image/png",
+        preview.metadata as Record<string, unknown> | undefined
+      );
       updateStatus("Texture preview ready");
     } else {
       updateStatus(`Preview error: ${preview?.error ?? "Unknown error"}`);
