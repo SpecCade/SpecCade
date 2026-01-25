@@ -7,6 +7,14 @@ export class TexturePreview {
   private ctx: CanvasRenderingContext2D;
   private controlsDiv: HTMLDivElement;
   private infoDiv: HTMLDivElement;
+  private tileBtn: HTMLButtonElement;
+  private resizeObserver: ResizeObserver;
+
+  // Bound event handlers for cleanup
+  private boundHandleWheel: (e: WheelEvent) => void;
+  private boundHandleMouseDown: (e: MouseEvent) => void;
+  private boundHandleMouseMove: (e: MouseEvent) => void;
+  private boundHandleMouseUp: () => void;
 
   private image: HTMLImageElement | null = null;
   private zoom = 1;
@@ -68,27 +76,32 @@ export class TexturePreview {
     const zoomOutBtn = this.createButton("-", () => this.setZoom(this.zoom / 1.5));
     const zoomInBtn = this.createButton("+", () => this.setZoom(this.zoom * 1.5));
     const resetBtn = this.createButton("Reset", () => this.resetView());
-    const tileBtn = this.createButton("Tile", () => this.toggleTiling());
-    tileBtn.id = "tile-btn";
+    this.tileBtn = this.createButton("Tile", () => this.toggleTiling());
 
     this.controlsDiv.appendChild(zoomOutBtn);
     this.controlsDiv.appendChild(zoomInBtn);
     this.controlsDiv.appendChild(resetBtn);
-    this.controlsDiv.appendChild(tileBtn);
+    this.controlsDiv.appendChild(this.tileBtn);
 
     wrapper.appendChild(this.controlsDiv);
     container.appendChild(wrapper);
 
+    // Bind event handlers for proper cleanup
+    this.boundHandleWheel = (e) => this.handleWheel(e);
+    this.boundHandleMouseDown = (e) => this.handleMouseDown(e);
+    this.boundHandleMouseMove = (e) => this.handleMouseMove(e);
+    this.boundHandleMouseUp = () => this.handleMouseUp();
+
     // Set up event listeners
-    this.canvas.addEventListener("wheel", (e) => this.handleWheel(e));
-    this.canvas.addEventListener("mousedown", (e) => this.handleMouseDown(e));
-    this.canvas.addEventListener("mousemove", (e) => this.handleMouseMove(e));
-    this.canvas.addEventListener("mouseup", () => this.handleMouseUp());
-    this.canvas.addEventListener("mouseleave", () => this.handleMouseUp());
+    this.canvas.addEventListener("wheel", this.boundHandleWheel);
+    this.canvas.addEventListener("mousedown", this.boundHandleMouseDown);
+    this.canvas.addEventListener("mousemove", this.boundHandleMouseMove);
+    this.canvas.addEventListener("mouseup", this.boundHandleMouseUp);
+    this.canvas.addEventListener("mouseleave", this.boundHandleMouseUp);
 
     // Handle resize
-    const resizeObserver = new ResizeObserver(() => this.handleResize());
-    resizeObserver.observe(container);
+    this.resizeObserver = new ResizeObserver(() => this.handleResize());
+    this.resizeObserver.observe(container);
     this.handleResize();
 
     this.drawEmpty();
@@ -166,10 +179,7 @@ export class TexturePreview {
 
   private toggleTiling(): void {
     this.tiling = !this.tiling;
-    const btn = this.controlsDiv.querySelector("#tile-btn") as HTMLButtonElement;
-    if (btn) {
-      btn.style.background = this.tiling ? "#007acc" : "#444";
-    }
+    this.tileBtn.style.background = this.tiling ? "#007acc" : "#444";
     this.draw();
   }
 
@@ -279,9 +289,20 @@ export class TexturePreview {
   }
 
   /**
-   * Dispose of the preview.
+   * Dispose of the preview and release resources.
    */
   dispose(): void {
+    // Remove event listeners
+    this.canvas.removeEventListener("wheel", this.boundHandleWheel);
+    this.canvas.removeEventListener("mousedown", this.boundHandleMouseDown);
+    this.canvas.removeEventListener("mousemove", this.boundHandleMouseMove);
+    this.canvas.removeEventListener("mouseup", this.boundHandleMouseUp);
+    this.canvas.removeEventListener("mouseleave", this.boundHandleMouseUp);
+
+    // Disconnect resize observer
+    this.resizeObserver.disconnect();
+
+    // Clear DOM
     this.container.innerHTML = "";
   }
 }
