@@ -23,7 +23,8 @@
       "Bash(Get-Content:*)",
       "Bash(Measure-Object -Line)",
       "Bash(wc:*)",
-      "Bash(tasklist:*)"
+      "Bash(tasklist:*)",
+      "WebSearch"
     ]
   },
   "_comment": "Local-only Claude Code permissions. Keep machine-specific rules here and do not commit this file."

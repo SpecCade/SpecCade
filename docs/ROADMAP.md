@@ -32,13 +32,13 @@ The following major work areas are complete:
 
 Reference: `docs/rfcs/RFC-0009-editor-architecture.md`
 
+### Resolved Decisions
+
 - [x] `EDITOR-001` ~~Decide "editor" delivery shape~~ **RESOLVED: Tauri standalone app only**
   - No VSCode extension (no user demand)
   - Tauri 2.x with Monaco editor, three.js for 3D, Web Audio for sound
   - Single codebase, no abstraction layer needed for v1
   - Layout: `crates/speccade-editor/` (Rust backend) + `editor/` (Tauri frontend)
-
-Resolved questions:
 - [x] `EDITOR-Q001` ~~GPU acceleration for preview~~ **RESOLVED: WebGL2-only for v1**
   - three.js with WebGL2 is sufficient for preview quality
   - WebGPU deferred to v2+ when platform support matures
@@ -49,6 +49,27 @@ Resolved questions:
 - [x] `EDITOR-Q003` ~~Collaboration~~ **RESOLVED: Explicitly deferred to v2+**
   - v1 is single-user only
   - No collaboration infrastructure needed
+
+### Implementation Tasks
+
+- [ ] `EDITOR-002` Scaffold Tauri 2.x project structure with Rust backend + TypeScript frontend.
+  - Deliverable: `editor/` (Tauri app) + `crates/speccade-editor/` (Rust backend crate) with working build.
+  - Touch points: `Cargo.toml` workspace, `editor/package.json`, `editor/src-tauri/`.
+- [ ] `EDITOR-003` Integrate Monaco editor with Starlark syntax highlighting and basic validation.
+  - Deliverable: `.star` files editable with syntax highlighting, parse errors shown inline.
+  - Touch points: `editor/src/`, Monaco language configuration.
+- [ ] `EDITOR-004` Implement spec file watcher with debounced recompilation via `speccade-cli` commands.
+  - Deliverable: File changes trigger `eval` + `validate`, results streamed to UI.
+  - Touch points: `crates/speccade-editor/src/`, Tauri IPC commands.
+- [ ] `EDITOR-005` Add three.js 3D preview panel with mesh/texture rendering.
+  - Deliverable: Static meshes and textures render in viewport, orbit controls, grid.
+  - Touch points: `editor/src/components/`, three.js scene setup.
+- [ ] `EDITOR-006` Add Web Audio preview panel for audio/music specs.
+  - Deliverable: Play/stop controls, waveform visualization for audio outputs.
+  - Touch points: `editor/src/components/`, Web Audio API integration.
+- [ ] `EDITOR-007` Implement LOD proxy generation for large mesh preview (sub-100ms first frame).
+  - Deliverable: Low-poly proxy displayed immediately, refinement on idle/request.
+  - Touch points: `crates/speccade-editor/src/`, preview quality indicator in UI.
 
 ---
 
