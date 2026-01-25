@@ -17,6 +17,7 @@ import { NewAssetDialog } from "./components/NewAssetDialog";
 import { FileBrowser } from "./components/FileBrowser";
 import { GeneratePanel } from "./components/GeneratePanel";
 import { StdlibPalette } from "./components/StdlibPalette";
+import { HelpPanel } from "./components/HelpPanel";
 import { addRecentFile } from "./lib/recent-files";
 
 // Configure Monaco worker paths for Vite
@@ -637,6 +638,15 @@ async function init(): Promise<void> {
     });
   }
 
+  // Setup Help button click handler
+  const helpBtn = document.getElementById("help-btn");
+  if (helpBtn) {
+    helpBtn.addEventListener("click", () => {
+      const helpPanel = new HelpPanel();
+      helpPanel.show();
+    });
+  }
+
   // Initialize generate panel
   const generateContent = document.getElementById("generate-content");
   if (generateContent) {
@@ -696,6 +706,13 @@ async function init(): Promise<void> {
     if ((e.ctrlKey || e.metaKey) && e.key === "s") {
       e.preventDefault();
       saveCurrentFile();
+    }
+
+    // F1 for help panel
+    if (e.key === "F1") {
+      e.preventDefault();
+      const helpPanel = new HelpPanel();
+      helpPanel.show();
     }
   });
 
