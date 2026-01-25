@@ -8,6 +8,7 @@
  */
 import { invoke } from "@tauri-apps/api/core";
 import { listen, UnlistenFn } from "@tauri-apps/api/event";
+import { save } from "@tauri-apps/plugin-dialog";
 import { Editor, EditorDiagnostic } from "./components/Editor";
 import { MeshPreview } from "./components/MeshPreview";
 import { AudioPreview } from "./components/AudioPreview";
@@ -526,6 +527,23 @@ async function init(): Promise<void> {
       dialog.show();
     });
   }
+
+  // Keyboard shortcut: Ctrl/Cmd+N for new asset
+  document.addEventListener("keydown", (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === "n") {
+      e.preventDefault();
+      const dialog = new NewAssetDialog((content) => {
+        if (editor) {
+          editor.setContent(content);
+          evaluateSource(content);
+        }
+        // Clear current file path when creating new asset
+        currentFilePath = null;
+        updateWindowTitle(null);
+      });
+      dialog.show();
+    }
+  });
 
   updateStatus("Ready");
 }
