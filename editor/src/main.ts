@@ -160,6 +160,10 @@ export function cleanup(): void {
     fileBrowser.dispose();
     fileBrowser = null;
   }
+  if (generatePanel) {
+    generatePanel.dispose();
+    generatePanel = null;
+  }
   clearPreviewComponents();
 }
 
@@ -571,6 +575,44 @@ async function init(): Promise<void> {
   if (saveBtn) {
     saveBtn.addEventListener("click", () => {
       saveCurrentFile();
+    });
+  }
+
+  // Initialize generate panel
+  const generateContent = document.getElementById("generate-content");
+  if (generateContent) {
+    generatePanel = new GeneratePanel(generateContent, () => {
+      return editor?.getContent() ?? "";
+    });
+  }
+
+  // Setup tab switching
+  const previewTab = document.getElementById("preview-tab");
+  const generateTab = document.getElementById("generate-tab");
+  const previewContentEl = document.getElementById("preview-content");
+  const generateContentEl = document.getElementById("generate-content");
+
+  if (previewTab && generateTab && previewContentEl && generateContentEl) {
+    previewTab.addEventListener("click", () => {
+      // Show preview, hide generate
+      previewContentEl.style.display = "flex";
+      generateContentEl.style.display = "none";
+      // Update tab styles
+      previewTab.style.background = "#252525";
+      previewTab.style.color = "#fff";
+      generateTab.style.background = "#1a1a1a";
+      generateTab.style.color = "#888";
+    });
+
+    generateTab.addEventListener("click", () => {
+      // Show generate, hide preview
+      previewContentEl.style.display = "none";
+      generateContentEl.style.display = "flex";
+      // Update tab styles
+      generateTab.style.background = "#252525";
+      generateTab.style.color = "#fff";
+      previewTab.style.background = "#1a1a1a";
+      previewTab.style.color = "#888";
     });
   }
 
