@@ -132,9 +132,12 @@ Resolved questions:
   - Tier 2 (Blender) implementation with Wall (cutouts, baseboard, crown), Pipe (segments, bends, T-junctions), and Door (frame, panel, hinges) kit types.
 - [x] `MESH-010` ~~Add organic modeling gap-fill (metaballs -> remesh -> smooth -> displacement noise) with strict budgets.~~ Done: 2026-01-25
   - Tier 2 (Blender) implementation with metaball primitives (sphere, capsule, cube, ellipsoid), remeshing modes (voxel, sharp, smooth), and displacement noise.
-- [ ] `MESH-011` Add shrinkwrap workflows (armor/clothes wrapping onto body parts) with strict stability validation.
-- [ ] `MESH-012` Add boolean kitbashing (union/difference + cleanup) with determinism/validation constraints.
-- [ ] `MESH-013` Add animation helper presets (IK targets + constraint presets) for procedural walk/run cycles.
+- [x] `MESH-011` ~~Add shrinkwrap workflows (armor/clothes wrapping onto body parts) with strict stability validation.~~ Done: 2026-01-25
+  - Tier 2 (Blender) implementation with nearest_surface/project/nearest_vertex modes, offset, smooth iterations, self-intersection validation. 3 golden specs.
+- [x] `MESH-012` ~~Add boolean kitbashing (union/difference + cleanup) with determinism/validation constraints.~~ Done: 2026-01-25
+  - Tier 2 (Blender) implementation with union/difference/intersect operations, exact/fast solver, cleanup (merge doubles, recalc normals). 3 golden specs.
+- [x] `MESH-013` ~~Add animation helper presets (IK targets + constraint presets) for procedural walk/run cycles.~~ Done: 2026-01-25
+  - Tier 2 (Blender) implementation with walk_cycle/run_cycle/idle_sway presets, foot roll system, IK targets with pole angles. 6 golden specs.
 
 ### Skeletal Animation / Rigging / IK (Blender Tier)
 

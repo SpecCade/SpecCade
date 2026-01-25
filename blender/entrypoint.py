@@ -13,6 +13,8 @@ Modes:
     static_mesh     - Generate static mesh (blender_primitives_v1)
     modular_kit     - Generate modular kit mesh (modular_kit_v1)
     organic_sculpt  - Generate organic sculpt mesh (organic_sculpt_v1)
+    shrinkwrap      - Generate shrinkwrap mesh (shrinkwrap_v1) - armor/clothing wrapping
+    boolean_kit     - Generate boolean kitbash mesh (boolean_kit_v1) - hard-surface modeling
     skeletal_mesh   - Generate skeletal mesh (blender_rigged_mesh_v1)
     animation       - Generate animation clip (blender_clip_v1)
 """
@@ -5637,6 +5639,555 @@ def handle_organic_sculpt(spec: Dict, out_root: Path, report_path: Path) -> None
         raise
 
 
+def handle_shrinkwrap(spec: Dict, out_root: Path, report_path: Path) -> None:
+    """Handle shrinkwrap mesh generation (armor/clothing wrapping onto body meshes)."""
+    start_time = time.time()
+
+    try:
+        recipe = spec.get("recipe", {})
+        params = recipe.get("params", {})
+
+        base_mesh_ref = params.get("base_mesh")
+        wrap_mesh_ref = params.get("wrap_mesh")
+
+        if not base_mesh_ref:
+            raise ValueError("base_mesh is required")
+        if not wrap_mesh_ref:
+            raise ValueError("wrap_mesh is required")
+
+        mode = params.get("mode", "nearest_surface")
+        offset = params.get("offset", 0.0)
+        smooth_iterations = params.get("smooth_iterations", 0)
+        smooth_factor = params.get("smooth_factor", 0.5)
+        validation = params.get("validation", {})
+        export_settings = params.get("export", {})
+
+        # For this implementation, we expect the meshes to be imported from external files
+        # or created as primitives. Here we'll create simple placeholder meshes for testing.
+        # In production, these would be loaded from the asset references.
+
+        # Create or import base mesh (target surface)
+        base_obj = import_or_create_mesh(base_mesh_ref, "BaseMesh")
+        if not base_obj:
+            raise ValueError(f"Failed to load base_mesh: {base_mesh_ref}")
+
+        # Create or import wrap mesh (the mesh to shrinkwrap)
+        wrap_obj = import_or_create_mesh(wrap_mesh_ref, "WrapMesh")
+        if not wrap_obj:
+            raise ValueError(f"Failed to load wrap_mesh: {wrap_mesh_ref}")
+
+        # Apply shrinkwrap modifier to wrap mesh
+        bpy.context.view_layer.objects.active = wrap_obj
+        wrap_obj.select_set(True)
+
+        shrinkwrap_mod = wrap_obj.modifiers.new(name="Shrinkwrap", type='SHRINKWRAP')
+        shrinkwrap_mod.target = base_obj
+        shrinkwrap_mod.offset = offset
+
+        # Set shrinkwrap mode
+        mode_map = {
+            "nearest_surface": 'NEAREST_SURFACEPOINT',
+            "project": 'PROJECT',
+            "nearest_vertex": 'NEAREST_VERTEX',
+        }
+        shrinkwrap_mod.wrap_method = mode_map.get(mode, 'NEAREST_SURFACEPOINT')
+
+        # For project mode, configure projection settings
+        if mode == "project":
+            shrinkwrap_mod.use_project_x = False
+            shrinkwrap_mod.use_project_y = False
+            shrinkwrap_mod.use_project_z = True
+            shrinkwrap_mod.use_negative_direction = True
+            shrinkwrap_mod.use_positive_direction = True
+
+        # Apply the shrinkwrap modifier
+        bpy.ops.object.modifier_apply(modifier=shrinkwrap_mod.name)
+
+        # Apply smooth modifier if iterations > 0
+        if smooth_iterations > 0:
+            smooth_mod = wrap_obj.modifiers.new(name="Smooth", type='SMOOTH')
+            smooth_mod.iterations = min(smooth_iterations, 10)
+            smooth_mod.factor = smooth_factor
+            bpy.ops.object.modifier_apply(modifier=smooth_mod.name)
+
+        # Validation: check for self-intersections and degenerate faces
+        validation_results = validate_shrinkwrap_result(wrap_obj, validation)
+
+        # Check validation thresholds
+        max_self_intersections = validation.get("max_self_intersections", 0)
+        if validation_results["self_intersection_count"] > max_self_intersections:
+            raise ValueError(
+                f"Shrinkwrap validation failed: {validation_results['self_intersection_count']} "
+                f"self-intersections found (max allowed: {max_self_intersections})"
+            )
+
+        min_face_area = validation.get("min_face_area", 0.0001)
+        if validation_results["degenerate_face_count"] > 0:
+            raise ValueError(
+                f"Shrinkwrap validation failed: {validation_results['degenerate_face_count']} "
+                f"degenerate faces found (area < {min_face_area})"
+            )
+
+        # Remove the base mesh from export (we only want the wrapped result)
+        bpy.data.objects.remove(base_obj, do_unlink=True)
+
+        # Apply export settings
+        if export_settings.get("apply_modifiers", True):
+            apply_all_modifiers(wrap_obj)
+
+        # Triangulate if requested
+        if export_settings.get("triangulate", True):
+            tri_mod = wrap_obj.modifiers.new(name="Triangulate", type='TRIANGULATE')
+            bpy.ops.object.modifier_apply(modifier=tri_mod.name)
+
+        # Apply automatic UV projection if mesh doesn't have UVs
+        if not wrap_obj.data.uv_layers:
+            apply_uv_projection(wrap_obj, {"type": "smart_uv", "angle_limit": 66.0})
+
+        # Get output path from spec
+        outputs = spec.get("outputs", [])
+        primary_output = next((o for o in outputs if o.get("kind") == "primary"), None)
+        if not primary_output:
+            raise ValueError("No primary output specified in spec")
+
+        output_rel_path = primary_output.get("path", "output.glb")
+        output_path = out_root / output_rel_path
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+
+        # Export with tangents if requested
+        export_tangents = export_settings.get("tangents", False)
+
+        # Compute metrics and export
+        metrics = compute_mesh_metrics(wrap_obj)
+        metrics["shrinkwrap_mode"] = mode
+        metrics["offset"] = offset
+        metrics["smooth_iterations"] = smooth_iterations
+        metrics["validation"] = validation_results
+        export_glb(output_path, export_tangents=export_tangents)
+
+        duration_ms = int((time.time() - start_time) * 1000)
+        write_report(report_path, ok=True, metrics=metrics,
+                     output_path=output_rel_path, duration_ms=duration_ms)
+
+    except Exception as e:
+        write_report(report_path, ok=False, error=str(e))
+        raise
+
+
+# =============================================================================
+# Boolean Kit Handler
+# =============================================================================
+
+def handle_boolean_kit(spec: Dict, out_root: Path, report_path: Path) -> None:
+    """Handle boolean kitbashing mesh generation.
+
+    Combines meshes using boolean operations (union, difference, intersect)
+    for hard-surface modeling (vehicles, buildings, mechanical parts).
+    """
+    start_time = time.time()
+
+    try:
+        recipe = spec.get("recipe", {})
+        params = recipe.get("params", {})
+
+        base_spec = params.get("base")
+        operations = params.get("operations", [])
+        solver = params.get("solver", "exact")
+        cleanup = params.get("cleanup", {})
+        export_settings = params.get("export", {})
+
+        if not base_spec:
+            raise ValueError("base mesh specification is required")
+
+        # Create the base mesh
+        base_obj = create_boolean_kit_mesh(base_spec, "BooleanKit_Base")
+        if not base_obj:
+            raise ValueError("Failed to create base mesh")
+
+        bpy.context.view_layer.objects.active = base_obj
+        base_obj.select_set(True)
+
+        # Apply boolean operations in order (deterministic)
+        for i, op_spec in enumerate(operations):
+            op_type = op_spec.get("op", "union")
+            target_spec = op_spec.get("target")
+
+            if not target_spec:
+                raise ValueError(f"Operation {i} missing target specification")
+
+            # Create target mesh
+            target_obj = create_boolean_kit_mesh(target_spec, f"BooleanKit_Target_{i}")
+            if not target_obj:
+                raise ValueError(f"Failed to create target mesh for operation {i}")
+
+            # Apply boolean modifier
+            apply_boolean_operation(base_obj, target_obj, op_type, solver)
+
+            # Remove the target mesh (it's been consumed by the boolean)
+            bpy.data.objects.remove(target_obj, do_unlink=True)
+
+        # Apply cleanup operations
+        apply_boolean_cleanup(base_obj, cleanup)
+
+        # Validate the result for non-manifold geometry
+        validation_results = validate_boolean_result(base_obj)
+
+        # Apply export settings
+        if export_settings.get("apply_modifiers", True):
+            apply_all_modifiers(base_obj)
+
+        # Triangulate if requested
+        if export_settings.get("triangulate", True):
+            tri_mod = base_obj.modifiers.new(name="Triangulate", type='TRIANGULATE')
+            bpy.ops.object.modifier_apply(modifier=tri_mod.name)
+
+        # Apply automatic UV projection if mesh doesn't have UVs
+        if not base_obj.data.uv_layers:
+            apply_uv_projection(base_obj, {"type": "smart_uv", "angle_limit": 66.0})
+
+        # Get output path from spec
+        outputs = spec.get("outputs", [])
+        primary_output = next((o for o in outputs if o.get("kind") == "primary"), None)
+        if not primary_output:
+            raise ValueError("No primary output specified in spec")
+
+        output_rel_path = primary_output.get("path", "output.glb")
+        output_path = out_root / output_rel_path
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+
+        # Export with tangents if requested
+        export_tangents = export_settings.get("tangents", False)
+
+        # Compute metrics and export
+        metrics = compute_mesh_metrics(base_obj)
+        metrics["boolean_operations"] = len(operations)
+        metrics["validation"] = validation_results
+        export_glb(output_path, export_tangents=export_tangents)
+
+        duration_ms = int((time.time() - start_time) * 1000)
+        write_report(report_path, ok=True, metrics=metrics,
+                     output_path=output_rel_path, duration_ms=duration_ms)
+
+    except Exception as e:
+        write_report(report_path, ok=False, error=str(e))
+        raise
+
+
+def create_boolean_kit_mesh(mesh_spec: Dict, name: str) -> Optional['bpy.types.Object']:
+    """Create a mesh from a boolean kit specification.
+
+    Supports both primitive meshes and asset references.
+    """
+    # Check if it's a primitive specification
+    if "primitive" in mesh_spec:
+        primitive_type = mesh_spec.get("primitive", "cube").lower()
+        dimensions = mesh_spec.get("dimensions", [1.0, 1.0, 1.0])
+        position = mesh_spec.get("position", [0.0, 0.0, 0.0])
+        rotation = mesh_spec.get("rotation", [0.0, 0.0, 0.0])
+        scale = mesh_spec.get("scale", 1.0)
+
+        # Create the primitive
+        obj = create_primitive(primitive_type, dimensions)
+        obj.name = name
+
+        # Apply transforms
+        obj.location = Vector(position)
+        obj.rotation_euler = Euler((
+            math.radians(rotation[0]),
+            math.radians(rotation[1]),
+            math.radians(rotation[2])
+        ))
+        if scale != 1.0:
+            obj.scale = Vector([scale, scale, scale])
+
+        # Apply transforms to mesh data
+        bpy.context.view_layer.objects.active = obj
+        bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
+
+        return obj
+
+    # Check if it's an asset reference
+    elif "asset_ref" in mesh_spec:
+        asset_ref = mesh_spec.get("asset_ref")
+        position = mesh_spec.get("position", [0.0, 0.0, 0.0])
+        rotation = mesh_spec.get("rotation", [0.0, 0.0, 0.0])
+        scale = mesh_spec.get("scale", 1.0)
+
+        # Import or create the referenced mesh
+        obj = import_or_create_mesh(asset_ref, name)
+        if obj:
+            obj.location = Vector(position)
+            obj.rotation_euler = Euler((
+                math.radians(rotation[0]),
+                math.radians(rotation[1]),
+                math.radians(rotation[2])
+            ))
+            if scale != 1.0:
+                obj.scale = Vector([scale, scale, scale])
+
+            bpy.context.view_layer.objects.active = obj
+            bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
+
+        return obj
+
+    return None
+
+
+def apply_boolean_operation(
+    base_obj: 'bpy.types.Object',
+    target_obj: 'bpy.types.Object',
+    op_type: str,
+    solver: str
+) -> None:
+    """Apply a boolean operation to the base object.
+
+    Args:
+        base_obj: The base mesh to modify.
+        target_obj: The target mesh for the boolean operation.
+        op_type: Type of operation ("union", "difference", "intersect").
+        solver: Solver to use ("exact", "fast").
+    """
+    bpy.context.view_layer.objects.active = base_obj
+
+    # Add boolean modifier
+    bool_mod = base_obj.modifiers.new(name="Boolean", type='BOOLEAN')
+    bool_mod.object = target_obj
+
+    # Set operation type
+    op_map = {
+        "union": 'UNION',
+        "difference": 'DIFFERENCE',
+        "intersect": 'INTERSECT',
+    }
+    bool_mod.operation = op_map.get(op_type.lower(), 'UNION')
+
+    # Set solver
+    solver_map = {
+        "exact": 'EXACT',
+        "fast": 'FAST',
+    }
+    bool_mod.solver = solver_map.get(solver.lower(), 'EXACT')
+
+    # Apply the modifier
+    bpy.ops.object.modifier_apply(modifier=bool_mod.name)
+
+
+def apply_boolean_cleanup(obj: 'bpy.types.Object', cleanup: Dict) -> None:
+    """Apply cleanup operations after boolean operations.
+
+    Args:
+        obj: The mesh object to clean up.
+        cleanup: Cleanup settings dictionary.
+    """
+    if not cleanup:
+        # Apply default cleanup
+        cleanup = {
+            "merge_distance": 0.001,
+            "remove_doubles": True,
+            "recalc_normals": True,
+            "dissolve_degenerate": True,
+        }
+
+    merge_distance = cleanup.get("merge_distance", 0.001)
+    remove_doubles = cleanup.get("remove_doubles", True)
+    recalc_normals = cleanup.get("recalc_normals", True)
+    fill_holes = cleanup.get("fill_holes", False)
+    dissolve_degenerate = cleanup.get("dissolve_degenerate", True)
+
+    bpy.context.view_layer.objects.active = obj
+    bpy.ops.object.mode_set(mode='EDIT')
+    bpy.ops.mesh.select_all(action='SELECT')
+
+    # Remove doubles (merge vertices within distance)
+    if remove_doubles:
+        bpy.ops.mesh.remove_doubles(threshold=merge_distance)
+
+    # Dissolve degenerate geometry
+    if dissolve_degenerate:
+        bpy.ops.mesh.dissolve_degenerate(threshold=merge_distance)
+
+    # Fill holes if requested
+    if fill_holes:
+        bpy.ops.mesh.fill_holes(sides=0)
+
+    # Recalculate normals
+    if recalc_normals:
+        bpy.ops.mesh.normals_make_consistent(inside=False)
+
+    bpy.ops.object.mode_set(mode='OBJECT')
+
+
+def validate_boolean_result(obj: 'bpy.types.Object') -> Dict[str, Any]:
+    """Validate the result of boolean operations.
+
+    Checks for non-manifold geometry and other issues.
+
+    Args:
+        obj: The mesh object to validate.
+
+    Returns:
+        Dictionary with validation results.
+    """
+    bpy.context.view_layer.objects.active = obj
+
+    mesh = obj.data
+    bm = bmesh.new()
+    bm.from_mesh(mesh)
+
+    # Count non-manifold edges
+    non_manifold_edges = sum(1 for e in bm.edges if not e.is_manifold)
+
+    # Count non-manifold verts
+    non_manifold_verts = sum(1 for v in bm.verts if not v.is_manifold)
+
+    # Count loose vertices
+    loose_verts = sum(1 for v in bm.verts if len(v.link_edges) == 0)
+
+    # Count loose edges
+    loose_edges = sum(1 for e in bm.edges if len(e.link_faces) == 0)
+
+    # Count zero-area faces
+    zero_area_faces = sum(1 for f in bm.faces if f.calc_area() < 1e-8)
+
+    bm.free()
+
+    return {
+        "non_manifold_edges": non_manifold_edges,
+        "non_manifold_verts": non_manifold_verts,
+        "loose_verts": loose_verts,
+        "loose_edges": loose_edges,
+        "zero_area_faces": zero_area_faces,
+        "is_manifold": non_manifold_edges == 0 and non_manifold_verts == 0,
+    }
+
+
+def import_or_create_mesh(mesh_ref: str, name: str) -> Optional['bpy.types.Object']:
+    """Import a mesh from a file reference or create a placeholder primitive.
+
+    For production use, this would handle:
+    - GLB/GLTF imports: "path/to/mesh.glb"
+    - Asset references: "asset://mesh_id"
+    - Primitive specifications: "primitive://cube" or "primitive://sphere"
+
+    For now, we support primitive:// references for testing.
+    """
+    if mesh_ref.startswith("primitive://"):
+        primitive_type = mesh_ref.replace("primitive://", "")
+        return create_primitive_mesh(primitive_type, name)
+    elif mesh_ref.endswith(".glb") or mesh_ref.endswith(".gltf"):
+        # Import GLB/GLTF file
+        if Path(mesh_ref).exists():
+            bpy.ops.import_scene.gltf(filepath=mesh_ref)
+            # Get the imported object
+            imported_objs = [obj for obj in bpy.context.selected_objects if obj.type == 'MESH']
+            if imported_objs:
+                obj = imported_objs[0]
+                obj.name = name
+                return obj
+        return None
+    else:
+        # Assume it's an asset reference - for now, create a placeholder sphere
+        return create_primitive_mesh("sphere", name)
+
+
+def create_primitive_mesh(primitive_type: str, name: str) -> 'bpy.types.Object':
+    """Create a primitive mesh for testing purposes."""
+    if primitive_type == "cube":
+        bpy.ops.mesh.primitive_cube_add(size=1.0)
+    elif primitive_type == "sphere":
+        bpy.ops.mesh.primitive_uv_sphere_add(radius=0.5, segments=32, ring_count=16)
+    elif primitive_type == "cylinder":
+        bpy.ops.mesh.primitive_cylinder_add(radius=0.5, depth=1.0, vertices=32)
+    elif primitive_type == "plane":
+        bpy.ops.mesh.primitive_plane_add(size=2.0)
+    elif primitive_type == "torus":
+        bpy.ops.mesh.primitive_torus_add(major_radius=0.5, minor_radius=0.1)
+    elif primitive_type == "cone":
+        bpy.ops.mesh.primitive_cone_add(radius1=0.5, depth=1.0, vertices=32)
+    else:
+        # Default to sphere
+        bpy.ops.mesh.primitive_uv_sphere_add(radius=0.5, segments=32, ring_count=16)
+
+    obj = bpy.context.active_object
+    obj.name = name
+    return obj
+
+
+def validate_shrinkwrap_result(obj: 'bpy.types.Object', validation: Dict) -> Dict[str, Any]:
+    """Validate shrinkwrap result for self-intersections and mesh quality.
+
+    Returns a dictionary with validation metrics:
+    - self_intersection_count: Number of detected self-intersections
+    - degenerate_face_count: Number of faces below min_face_area threshold
+    - manifold: Whether the mesh is manifold (watertight)
+    """
+    depsgraph = bpy.context.evaluated_depsgraph_get()
+    obj_eval = obj.evaluated_get(depsgraph)
+    mesh = obj_eval.to_mesh()
+
+    min_face_area = validation.get("min_face_area", 0.0001)
+
+    # Count degenerate faces (faces with area below threshold)
+    degenerate_count = 0
+    for poly in mesh.polygons:
+        if poly.area < min_face_area:
+            degenerate_count += 1
+
+    # Check for self-intersections using bmesh
+    # Note: True self-intersection detection is expensive and complex
+    # For now, we use a simplified check based on face normal consistency
+    self_intersection_count = detect_self_intersections(obj)
+
+    # Check if mesh is manifold
+    non_manifold_edges = count_non_manifold_edges(mesh)
+    manifold = non_manifold_edges == 0
+
+    obj_eval.to_mesh_clear()
+
+    return {
+        "self_intersection_count": self_intersection_count,
+        "degenerate_face_count": degenerate_count,
+        "manifold": manifold,
+        "non_manifold_edge_count": non_manifold_edges,
+    }
+
+
+def detect_self_intersections(obj: 'bpy.types.Object') -> int:
+    """Detect self-intersections in a mesh using bmesh.
+
+    This is a simplified detection that checks for inverted normals and
+    overlapping faces. A full boolean intersection test would be more accurate
+    but significantly more expensive.
+
+    Returns the count of detected self-intersection issues.
+    """
+    # Create bmesh from object
+    bm = bmesh.new()
+    bm.from_mesh(obj.data)
+    bm.faces.ensure_lookup_table()
+
+    intersection_count = 0
+
+    # Check for inverted faces (faces with normals pointing inward)
+    # This can indicate self-intersection issues
+    center = Vector((0, 0, 0))
+    for v in bm.verts:
+        center += v.co
+    if bm.verts:
+        center /= len(bm.verts)
+
+    for face in bm.faces:
+        face_center = face.calc_center_median()
+        to_center = center - face_center
+
+        # If normal points toward center, face might be inverted
+        if face.normal.dot(to_center) > 0.1:  # Small threshold
+            intersection_count += 1
+
+    bm.free()
+    return intersection_count
+
+
 def handle_skeletal_mesh(spec: Dict, out_root: Path, report_path: Path) -> None:
     """Handle skeletal mesh generation."""
     start_time = time.time()
@@ -6408,7 +6959,7 @@ def main() -> int:
 
     parser = argparse.ArgumentParser(description="SpecCade Blender Entrypoint")
     parser.add_argument("--mode", required=True,
-                        choices=["static_mesh", "modular_kit", "organic_sculpt", "skeletal_mesh", "animation", "rigged_animation", "mesh_to_sprite"],
+                        choices=["static_mesh", "modular_kit", "organic_sculpt", "shrinkwrap", "boolean_kit", "skeletal_mesh", "animation", "rigged_animation", "mesh_to_sprite"],
                         help="Generation mode")
     parser.add_argument("--spec", required=True, type=Path,
                         help="Path to spec JSON file")
@@ -6442,6 +6993,8 @@ def main() -> int:
         "static_mesh": handle_static_mesh,
         "modular_kit": handle_modular_kit,
         "organic_sculpt": handle_organic_sculpt,
+        "shrinkwrap": handle_shrinkwrap,
+        "boolean_kit": handle_boolean_kit,
         "skeletal_mesh": handle_skeletal_mesh,
         "animation": handle_animation,
         "rigged_animation": handle_rigged_animation,

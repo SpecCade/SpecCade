@@ -67,6 +67,12 @@ pub enum RecipeKind {
     /// `static_mesh.organic_sculpt_v1` - Organic mesh from metaballs, remesh, smooth, and displacement.
     #[serde(rename = "static_mesh.organic_sculpt_v1")]
     StaticMeshOrganicSculptV1,
+    /// `static_mesh.shrinkwrap_v1` - Shrinkwrap mesh onto target (armor/clothing wrapping).
+    #[serde(rename = "static_mesh.shrinkwrap_v1")]
+    StaticMeshShrinkwrapV1,
+    /// `static_mesh.boolean_kit_v1` - Boolean kitbashing for hard-surface modeling.
+    #[serde(rename = "static_mesh.boolean_kit_v1")]
+    StaticMeshBooleanKitV1,
     /// `skeletal_mesh.blender_rigged_mesh_v1` - Rigged skeletal mesh.
     #[serde(rename = "skeletal_mesh.blender_rigged_mesh_v1")]
     SkeletalMeshBlenderRiggedMeshV1,
@@ -76,6 +82,9 @@ pub enum RecipeKind {
     /// `skeletal_animation.blender_rigged_v1` - Skeletal animation with IK rigging support.
     #[serde(rename = "skeletal_animation.blender_rigged_v1")]
     SkeletalAnimationBlenderRiggedV1,
+    /// `skeletal_skeletal_animation.helpers_v1` - Animation helper presets for procedural locomotion cycles.
+    #[serde(rename = "skeletal_skeletal_animation.helpers_v1")]
+    SkeletalAnimationHelpersV1,
     /// `sprite.sheet_v1` - Spritesheet/atlas packing with frame metadata.
     #[serde(rename = "sprite.sheet_v1")]
     SpriteSheetV1,
@@ -124,9 +133,12 @@ impl RecipeKind {
             RecipeKind::StaticMeshBlenderPrimitivesV1 => "static_mesh.blender_primitives_v1",
             RecipeKind::StaticMeshModularKitV1 => "static_mesh.modular_kit_v1",
             RecipeKind::StaticMeshOrganicSculptV1 => "static_mesh.organic_sculpt_v1",
+            RecipeKind::StaticMeshShrinkwrapV1 => "static_mesh.shrinkwrap_v1",
+            RecipeKind::StaticMeshBooleanKitV1 => "static_mesh.boolean_kit_v1",
             RecipeKind::SkeletalMeshBlenderRiggedMeshV1 => "skeletal_mesh.blender_rigged_mesh_v1",
             RecipeKind::SkeletalAnimationBlenderClipV1 => "skeletal_animation.blender_clip_v1",
             RecipeKind::SkeletalAnimationBlenderRiggedV1 => "skeletal_animation.blender_rigged_v1",
+            RecipeKind::SkeletalAnimationHelpersV1 => "skeletal_animation.helpers_v1",
             RecipeKind::SpriteSheetV1 => "sprite.sheet_v1",
             RecipeKind::SpriteAnimationV1 => "sprite.animation_v1",
             RecipeKind::SpriteRenderFromMeshV1 => "sprite.render_from_mesh_v1",
@@ -155,9 +167,12 @@ impl RecipeKind {
             RecipeKind::StaticMeshBlenderPrimitivesV1 => "static_mesh",
             RecipeKind::StaticMeshModularKitV1 => "static_mesh",
             RecipeKind::StaticMeshOrganicSculptV1 => "static_mesh",
+            RecipeKind::StaticMeshShrinkwrapV1 => "static_mesh",
+            RecipeKind::StaticMeshBooleanKitV1 => "static_mesh",
             RecipeKind::SkeletalMeshBlenderRiggedMeshV1 => "skeletal_mesh",
             RecipeKind::SkeletalAnimationBlenderClipV1 => "skeletal_animation",
             RecipeKind::SkeletalAnimationBlenderRiggedV1 => "skeletal_animation",
+            RecipeKind::SkeletalAnimationHelpersV1 => "skeletal_animation",
             RecipeKind::SpriteSheetV1 => "sprite",
             RecipeKind::SpriteAnimationV1 => "sprite",
             RecipeKind::SpriteRenderFromMeshV1 => "sprite",
@@ -195,9 +210,12 @@ impl RecipeKind {
             RecipeKind::StaticMeshBlenderPrimitivesV1
             | RecipeKind::StaticMeshModularKitV1
             | RecipeKind::StaticMeshOrganicSculptV1
+            | RecipeKind::StaticMeshShrinkwrapV1
+            | RecipeKind::StaticMeshBooleanKitV1
             | RecipeKind::SkeletalMeshBlenderRiggedMeshV1
             | RecipeKind::SkeletalAnimationBlenderClipV1
             | RecipeKind::SkeletalAnimationBlenderRiggedV1
+            | RecipeKind::SkeletalAnimationHelpersV1
             | RecipeKind::SpriteRenderFromMeshV1 => false,
         }
     }
@@ -243,6 +261,8 @@ impl Recipe {
             "static_mesh.blender_primitives_v1" => Some(RecipeKind::StaticMeshBlenderPrimitivesV1),
             "static_mesh.modular_kit_v1" => Some(RecipeKind::StaticMeshModularKitV1),
             "static_mesh.organic_sculpt_v1" => Some(RecipeKind::StaticMeshOrganicSculptV1),
+            "static_mesh.shrinkwrap_v1" => Some(RecipeKind::StaticMeshShrinkwrapV1),
+            "static_mesh.boolean_kit_v1" => Some(RecipeKind::StaticMeshBooleanKitV1),
             "skeletal_mesh.blender_rigged_mesh_v1" => {
                 Some(RecipeKind::SkeletalMeshBlenderRiggedMeshV1)
             }
@@ -252,6 +272,7 @@ impl Recipe {
             "skeletal_animation.blender_rigged_v1" => {
                 Some(RecipeKind::SkeletalAnimationBlenderRiggedV1)
             }
+            "skeletal_animation.helpers_v1" => Some(RecipeKind::SkeletalAnimationHelpersV1),
             "sprite.sheet_v1" => Some(RecipeKind::SpriteSheetV1),
             "sprite.animation_v1" => Some(RecipeKind::SpriteAnimationV1),
             "sprite.render_from_mesh_v1" => Some(RecipeKind::SpriteRenderFromMeshV1),
@@ -348,6 +369,20 @@ impl Recipe {
         serde_json::from_value(self.params.clone())
     }
 
+    /// Attempts to parse params as static mesh shrinkwrap params.
+    pub fn as_static_mesh_shrinkwrap(
+        &self,
+    ) -> Result<StaticMeshShrinkwrapV1Params, serde_json::Error> {
+        serde_json::from_value(self.params.clone())
+    }
+
+    /// Attempts to parse params as static mesh boolean kit params.
+    pub fn as_static_mesh_boolean_kit(
+        &self,
+    ) -> Result<StaticMeshBooleanKitV1Params, serde_json::Error> {
+        serde_json::from_value(self.params.clone())
+    }
+
     /// Attempts to parse params as skeletal mesh Blender rigged mesh params.
     pub fn as_skeletal_mesh_blender_rigged_mesh(
         &self,
@@ -366,6 +401,11 @@ impl Recipe {
     pub fn as_skeletal_animation_blender_rigged(
         &self,
     ) -> Result<SkeletalAnimationBlenderRiggedV1Params, serde_json::Error> {
+        serde_json::from_value(self.params.clone())
+    }
+
+    /// Attempts to parse params as skeletal animation helpers params.
+    pub fn as_skeletal_animation_helpers(&self) -> Result<AnimationHelpersV1Params, serde_json::Error> {
         serde_json::from_value(self.params.clone())
     }
 
@@ -512,6 +552,20 @@ impl Recipe {
                         error_message: e.to_string(),
                     })?;
             }
+            "static_mesh.shrinkwrap_v1" => {
+                self.as_static_mesh_shrinkwrap()
+                    .map_err(|e| RecipeParamsError {
+                        recipe_kind: self.kind.clone(),
+                        error_message: e.to_string(),
+                    })?;
+            }
+            "static_mesh.boolean_kit_v1" => {
+                self.as_static_mesh_boolean_kit()
+                    .map_err(|e| RecipeParamsError {
+                        recipe_kind: self.kind.clone(),
+                        error_message: e.to_string(),
+                    })?;
+            }
             "skeletal_mesh.blender_rigged_mesh_v1" => {
                 self.as_skeletal_mesh_blender_rigged_mesh()
                     .map_err(|e| RecipeParamsError {
@@ -528,6 +582,13 @@ impl Recipe {
             }
             "skeletal_animation.blender_rigged_v1" => {
                 self.as_skeletal_animation_blender_rigged()
+                    .map_err(|e| RecipeParamsError {
+                        recipe_kind: self.kind.clone(),
+                        error_message: e.to_string(),
+                    })?;
+            }
+            "skeletal_animation.helpers_v1" => {
+                self.as_skeletal_animation_helpers()
                     .map_err(|e| RecipeParamsError {
                         recipe_kind: self.kind.clone(),
                         error_message: e.to_string(),

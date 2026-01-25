@@ -1,0 +1,82 @@
+{
+  "spec_version": 1,
+  "asset_id": "building_cutouts_boolean",
+  "asset_type": "static_mesh",
+  "license": "CC0-1.0",
+  "seed": 8002,
+  "description": "Building section with window and door cutouts using boolean difference",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "glb",
+      "path": "building_cutouts.glb"
+    }
+  ],
+  "recipe": {
+    "kind": "static_mesh.boolean_kit_v1",
+    "params": {
+      "base": {
+        "primitive": "cube",
+        "dimensions": [4.0, 0.3, 3.0],
+        "position": [0.0, 0.0, 1.5]
+      },
+      "operations": [
+        {
+          "op": "difference",
+          "target": {
+            "primitive": "cube",
+            "dimensions": [1.0, 0.5, 2.0],
+            "position": [0.0, 0.0, 1.0]
+          }
+        },
+        {
+          "op": "difference",
+          "target": {
+            "primitive": "cube",
+            "dimensions": [0.6, 0.5, 0.8],
+            "position": [-1.2, 0.0, 2.2]
+          }
+        },
+        {
+          "op": "difference",
+          "target": {
+            "primitive": "cube",
+            "dimensions": [0.6, 0.5, 0.8],
+            "position": [1.2, 0.0, 2.2]
+          }
+        },
+        {
+          "op": "difference",
+          "target": {
+            "primitive": "cylinder",
+            "dimensions": [0.3, 0.5, 0.3],
+            "position": [-1.2, 0.0, 2.7],
+            "rotation": [90.0, 0.0, 0.0]
+          }
+        },
+        {
+          "op": "difference",
+          "target": {
+            "primitive": "cylinder",
+            "dimensions": [0.3, 0.5, 0.3],
+            "position": [1.2, 0.0, 2.7],
+            "rotation": [90.0, 0.0, 0.0]
+          }
+        }
+      ],
+      "solver": "exact",
+      "cleanup": {
+        "merge_distance": 0.001,
+        "remove_doubles": true,
+        "recalc_normals": true,
+        "dissolve_degenerate": true
+      },
+      "export": {
+        "apply_modifiers": true,
+        "triangulate": true,
+        "include_normals": true,
+        "include_uvs": true
+      }
+    }
+  }
+}

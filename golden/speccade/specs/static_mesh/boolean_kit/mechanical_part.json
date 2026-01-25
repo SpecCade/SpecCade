@@ -1,0 +1,97 @@
+{
+  "spec_version": 1,
+  "asset_id": "mechanical_part_boolean",
+  "asset_type": "static_mesh",
+  "license": "CC0-1.0",
+  "seed": 8003,
+  "description": "Mechanical part with bolt holes and intersecting geometry trim",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "glb",
+      "path": "mechanical_part.glb"
+    }
+  ],
+  "recipe": {
+    "kind": "static_mesh.boolean_kit_v1",
+    "params": {
+      "base": {
+        "primitive": "cylinder",
+        "dimensions": [1.0, 1.0, 0.3],
+        "position": [0.0, 0.0, 0.0]
+      },
+      "operations": [
+        {
+          "op": "union",
+          "target": {
+            "primitive": "cylinder",
+            "dimensions": [0.4, 0.4, 0.8],
+            "position": [0.0, 0.0, 0.4]
+          }
+        },
+        {
+          "op": "difference",
+          "target": {
+            "primitive": "cylinder",
+            "dimensions": [0.2, 0.2, 1.0],
+            "position": [0.0, 0.0, 0.4]
+          }
+        },
+        {
+          "op": "difference",
+          "target": {
+            "primitive": "cylinder",
+            "dimensions": [0.08, 0.08, 0.5],
+            "position": [0.35, 0.0, 0.0]
+          }
+        },
+        {
+          "op": "difference",
+          "target": {
+            "primitive": "cylinder",
+            "dimensions": [0.08, 0.08, 0.5],
+            "position": [-0.35, 0.0, 0.0]
+          }
+        },
+        {
+          "op": "difference",
+          "target": {
+            "primitive": "cylinder",
+            "dimensions": [0.08, 0.08, 0.5],
+            "position": [0.0, 0.35, 0.0]
+          }
+        },
+        {
+          "op": "difference",
+          "target": {
+            "primitive": "cylinder",
+            "dimensions": [0.08, 0.08, 0.5],
+            "position": [0.0, -0.35, 0.0]
+          }
+        },
+        {
+          "op": "intersect",
+          "target": {
+            "primitive": "sphere",
+            "dimensions": [2.0, 2.0, 2.0],
+            "position": [0.0, 0.0, 0.4]
+          }
+        }
+      ],
+      "solver": "exact",
+      "cleanup": {
+        "merge_distance": 0.0005,
+        "remove_doubles": true,
+        "recalc_normals": true,
+        "dissolve_degenerate": true
+      },
+      "export": {
+        "apply_modifiers": true,
+        "triangulate": true,
+        "include_normals": true,
+        "include_uvs": true,
+        "include_vertex_colors": false
+      }
+    }
+  }
+}
