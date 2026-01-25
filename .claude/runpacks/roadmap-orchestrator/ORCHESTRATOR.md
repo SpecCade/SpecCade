@@ -42,7 +42,7 @@ If a roadmap item is clearly audio-specific, you may also use the specialized `f
 ## Model guidance
 
 - Use **Sonnet** for code-quality refactors and documentation updates.
-- Use **Opus** for tricky design/architecture or when repeated failures indicate deeper reasoning is needed.
+- Use **Opus** for general development.
 
 ## Per-task loop (repeat until ROADMAP is complete)
 

@@ -1,5 +1,4 @@
 {
-  "_comment": "Local-only Claude Code permissions. Keep machine-specific rules here and do not commit this file.",
   "permissions": {
     "allow": [
       "Bash(cargo test:*)",
@@ -15,7 +14,17 @@
       "Bash(ls:*)",
       "Bash(dir:*)",
       "Bash(where:*)",
-      "Bash(test -f:*)"
+      "Bash(test -f:*)",
+      "Bash(git push)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(find:*)",
+      "Bash(findstr:*)",
+      "Bash(Get-Content:*)",
+      "Bash(Measure-Object -Line)",
+      "Bash(wc:*)",
+      "Bash(tasklist:*)"
     ]
-  }
+  },
+  "_comment": "Local-only Claude Code permissions. Keep machine-specific rules here and do not commit this file."
 }
