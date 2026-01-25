@@ -24,7 +24,11 @@
       "Bash(Measure-Object -Line)",
       "Bash(wc:*)",
       "Bash(tasklist:*)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(npm run build:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npm install)",
+      "Bash(npx vite build)"
     ]
   },
   "_comment": "Local-only Claude Code permissions. Keep machine-specific rules here and do not commit this file."
