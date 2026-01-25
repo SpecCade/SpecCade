@@ -16,6 +16,7 @@ import { TexturePreview } from "./components/TexturePreview";
 import { NewAssetDialog } from "./components/NewAssetDialog";
 import { FileBrowser } from "./components/FileBrowser";
 import { GeneratePanel } from "./components/GeneratePanel";
+import { addRecentFile } from "./lib/recent-files";
 
 // Configure Monaco worker paths for Vite
 self.MonacoEnvironment = {
@@ -545,6 +546,7 @@ async function init(): Promise<void> {
   if (sidebarElement) {
     fileBrowser = new FileBrowser(sidebarElement, (path, content) => {
       currentFilePath = path;
+      addRecentFile(path);
       if (editor) {
         editor.setContent(content);
         evaluateSource(content);
