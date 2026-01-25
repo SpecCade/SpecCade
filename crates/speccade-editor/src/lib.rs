@@ -15,6 +15,8 @@ use tauri::{
 // Re-export the commands at crate level for Tauri's generate_handler!
 pub use commands::eval::eval_spec;
 pub use commands::generate::{generate_preview, refine_mesh_preview};
+pub use commands::project::{open_folder, read_file, save_file};
+pub use commands::templates::{get_template, list_templates};
 pub use commands::validate::validate_spec;
 pub use watcher::{unwatch_file, watch_file, WatcherState};
 
@@ -39,6 +41,11 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
             refine_mesh_preview,
             watch_file,
             unwatch_file,
+            open_folder,
+            read_file,
+            save_file,
+            list_templates,
+            get_template,
         ])
         .setup(|app, _api| {
             app.manage(std::sync::Mutex::new(WatcherState::default()));

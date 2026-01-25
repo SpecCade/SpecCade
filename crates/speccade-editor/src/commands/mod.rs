@@ -4,4 +4,6 @@
 
 pub mod eval;
 pub mod generate;
+pub mod project;
+pub mod templates;
 pub mod validate;
