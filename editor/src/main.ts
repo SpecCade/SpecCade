@@ -13,6 +13,7 @@ import { MeshPreview } from "./components/MeshPreview";
 import { AudioPreview } from "./components/AudioPreview";
 import { TexturePreview } from "./components/TexturePreview";
 import { NewAssetDialog } from "./components/NewAssetDialog";
+import { FileBrowser } from "./components/FileBrowser";
 
 // Configure Monaco worker paths for Vite
 self.MonacoEnvironment = {
@@ -78,8 +79,10 @@ let editor: Editor | null = null;
 let meshPreview: MeshPreview | null = null;
 let audioPreview: AudioPreview | null = null;
 let texturePreview: TexturePreview | null = null;
+let fileBrowser: FileBrowser | null = null;
 let currentAssetType: string | null = null;
 let currentWatchedPath: string | null = null;
+let currentFilePath: string | null = null;
 let fileChangeUnlisten: UnlistenFn | null = null;
 
 // Default spec template
@@ -132,6 +135,13 @@ export async function unwatchFile(): Promise<void> {
 }
 
 /**
+ * Get the currently open file path.
+ */
+export function getCurrentFilePath(): string | null {
+  return currentFilePath;
+}
+
+/**
  * Cleanup resources when the editor is disposed.
  */
 export function cleanup(): void {
@@ -142,6 +152,10 @@ export function cleanup(): void {
   if (editor) {
     editor.dispose();
     editor = null;
+  }
+  if (fileBrowser) {
+    fileBrowser.dispose();
+    fileBrowser = null;
   }
   clearPreviewComponents();
 }
@@ -202,6 +216,19 @@ function convertToDiagnostics(
  */
 function updateStatus(message: string): void {
   statusBar.textContent = message;
+}
+
+/**
+ * Update window title with current file path.
+ */
+function updateWindowTitle(path: string | null): void {
+  if (path) {
+    // Extract just the filename from the full path
+    const filename = path.split(/[\\/]/).pop() ?? path;
+    document.title = `${filename} - SpecCade Editor`;
+  } else {
+    document.title = "SpecCade Editor";
+  }
 }
 
 /**
@@ -470,6 +497,19 @@ async function init(): Promise<void> {
 
   initEditor();
 
+  // Initialize file browser in sidebar
+  const sidebarElement = document.getElementById("sidebar");
+  if (sidebarElement) {
+    fileBrowser = new FileBrowser(sidebarElement, (path, content) => {
+      currentFilePath = path;
+      if (editor) {
+        editor.setContent(content);
+        evaluateSource(content);
+      }
+      updateWindowTitle(path);
+    });
+  }
+
   // Setup New Asset button click handler
   const newAssetBtn = document.getElementById("new-asset-btn");
   if (newAssetBtn) {
@@ -479,6 +519,9 @@ async function init(): Promise<void> {
           editor.setContent(content);
           evaluateSource(content);
         }
+        // Clear current file path when creating new asset
+        currentFilePath = null;
+        updateWindowTitle(null);
       });
       dialog.show();
     });
