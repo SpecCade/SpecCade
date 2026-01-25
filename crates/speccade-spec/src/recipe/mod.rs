@@ -76,6 +76,9 @@ pub enum RecipeKind {
     /// `sprite.animation_v1` - Sprite animation clip definitions.
     #[serde(rename = "sprite.animation_v1")]
     SpriteAnimationV1,
+    /// `sprite.render_from_mesh_v1` - Render 3D mesh to sprite atlas (Tier 2, Blender).
+    #[serde(rename = "sprite.render_from_mesh_v1")]
+    SpriteRenderFromMeshV1,
     /// `vfx.flipbook_v1` - VFX flipbook animation with procedural frame generation.
     #[serde(rename = "vfx.flipbook_v1")]
     VfxFlipbookV1,
@@ -118,6 +121,7 @@ impl RecipeKind {
             RecipeKind::SkeletalAnimationBlenderRiggedV1 => "skeletal_animation.blender_rigged_v1",
             RecipeKind::SpriteSheetV1 => "sprite.sheet_v1",
             RecipeKind::SpriteAnimationV1 => "sprite.animation_v1",
+            RecipeKind::SpriteRenderFromMeshV1 => "sprite.render_from_mesh_v1",
             RecipeKind::VfxFlipbookV1 => "vfx.flipbook_v1",
             RecipeKind::VfxParticleProfileV1 => "vfx.particle_profile_v1",
             RecipeKind::UiNineSliceV1 => "ui.nine_slice_v1",
@@ -146,6 +150,7 @@ impl RecipeKind {
             RecipeKind::SkeletalAnimationBlenderRiggedV1 => "skeletal_animation",
             RecipeKind::SpriteSheetV1 => "sprite",
             RecipeKind::SpriteAnimationV1 => "sprite",
+            RecipeKind::SpriteRenderFromMeshV1 => "sprite",
             RecipeKind::VfxFlipbookV1 => "vfx",
             RecipeKind::VfxParticleProfileV1 => "vfx",
             RecipeKind::UiNineSliceV1 => "ui",
@@ -180,7 +185,8 @@ impl RecipeKind {
             RecipeKind::StaticMeshBlenderPrimitivesV1
             | RecipeKind::SkeletalMeshBlenderRiggedMeshV1
             | RecipeKind::SkeletalAnimationBlenderClipV1
-            | RecipeKind::SkeletalAnimationBlenderRiggedV1 => false,
+            | RecipeKind::SkeletalAnimationBlenderRiggedV1
+            | RecipeKind::SpriteRenderFromMeshV1 => false,
         }
     }
 }
@@ -234,6 +240,7 @@ impl Recipe {
             }
             "sprite.sheet_v1" => Some(RecipeKind::SpriteSheetV1),
             "sprite.animation_v1" => Some(RecipeKind::SpriteAnimationV1),
+            "sprite.render_from_mesh_v1" => Some(RecipeKind::SpriteRenderFromMeshV1),
             "vfx.flipbook_v1" => Some(RecipeKind::VfxFlipbookV1),
             "vfx.particle_profile_v1" => Some(RecipeKind::VfxParticleProfileV1),
             "ui.nine_slice_v1" => Some(RecipeKind::UiNineSliceV1),
@@ -341,6 +348,13 @@ impl Recipe {
 
     /// Attempts to parse params as sprite animation params.
     pub fn as_sprite_animation(&self) -> Result<SpriteAnimationV1Params, serde_json::Error> {
+        serde_json::from_value(self.params.clone())
+    }
+
+    /// Attempts to parse params as sprite render-from-mesh params.
+    pub fn as_sprite_render_from_mesh(
+        &self,
+    ) -> Result<SpriteRenderFromMeshV1Params, serde_json::Error> {
         serde_json::from_value(self.params.clone())
     }
 
@@ -488,6 +502,13 @@ impl Recipe {
                     recipe_kind: self.kind.clone(),
                     error_message: e.to_string(),
                 })?;
+            }
+            "sprite.render_from_mesh_v1" => {
+                self.as_sprite_render_from_mesh()
+                    .map_err(|e| RecipeParamsError {
+                        recipe_kind: self.kind.clone(),
+                        error_message: e.to_string(),
+                    })?;
             }
             "vfx.flipbook_v1" => {
                 self.as_vfx_flipbook().map_err(|e| RecipeParamsError {

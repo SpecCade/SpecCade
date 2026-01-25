@@ -180,6 +180,7 @@ fn validate_outputs(spec: &Spec, result: &mut ValidationResult) {
                     | "texture.splat_set_v1"
                     | "texture.material_preset_v1"
                     | "sprite.sheet_v1"
+                    | "sprite.render_from_mesh_v1"
                     | "vfx.flipbook_v1"
                     | "vfx.particle_profile_v1"
                     | "ui.nine_slice_v1"
@@ -336,6 +337,7 @@ pub fn validate_for_generate_with_budget(spec: &Spec, budget: &BudgetProfile) ->
             "skeletal_mesh.blender_rigged_mesh_v1",
             "skeletal_animation.blender_clip_v1",
             "skeletal_animation.blender_rigged_v1",
+            "sprite.render_from_mesh_v1",
         ];
 
         if !SUPPORTED.contains(&recipe.kind.as_str()) {

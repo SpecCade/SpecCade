@@ -122,6 +122,11 @@ pub fn dispatch_generate(
         // Sprite animation backend
         "sprite.animation_v1" => texture::generate_sprite_animation(spec, out_root_path),
 
+        // Sprite render-from-mesh backend (Blender Tier 2)
+        "sprite.render_from_mesh_v1" => {
+            blender::generate_blender_sprite_from_mesh(spec, out_root_path)
+        }
+
         // VFX flipbook backend
         "vfx.flipbook_v1" => texture::generate_vfx_flipbook(spec, out_root_path),
 
@@ -315,6 +320,11 @@ pub fn dispatch_generate_profiled(
             }
         }
 
+        // Blender sprite-from-mesh backend (no profiling instrumentation yet)
+        "sprite.render_from_mesh_v1" => {
+            blender::generate_blender_sprite_from_mesh(spec, out_root_path).map(DispatchResult::new)
+        }
+
         "vfx.flipbook_v1" => {
             if profile {
                 texture::generate_vfx_flipbook_profiled(spec, out_root_path)
@@ -448,6 +458,7 @@ pub fn is_backend_available(kind: &str) -> bool {
             | "skeletal_mesh.blender_rigged_mesh_v1"
             | "skeletal_animation.blender_clip_v1"
             | "skeletal_animation.blender_rigged_v1"
+            | "sprite.render_from_mesh_v1"
     )
 }
 
@@ -464,7 +475,8 @@ pub fn get_backend_tier(kind: &str) -> Option<u8> {
         "audio_v1" => Some(1),
         k if k.starts_with("music.") => Some(1),
         k if k.starts_with("texture.") => Some(1),
-        k if k.starts_with("sprite.") => Some(1),
+        // Note: sprite.render_from_mesh_v1 is Tier 2 (Blender), handled below
+        k if k.starts_with("sprite.") && k != "sprite.render_from_mesh_v1" => Some(1),
         k if k.starts_with("vfx.") => Some(1),
         k if k.starts_with("ui.") => Some(1),
         k if k.starts_with("font.") => Some(1),
@@ -473,6 +485,7 @@ pub fn get_backend_tier(kind: &str) -> Option<u8> {
         k if k.starts_with("static_mesh.") => Some(2),
         k if k.starts_with("skeletal_mesh.") => Some(2),
         k if k.starts_with("skeletal_animation.") => Some(2),
+        "sprite.render_from_mesh_v1" => Some(2),
 
         // Unknown
         _ => None,

@@ -311,6 +311,66 @@ pub(super) fn generate_blender_animation(
     )])
 }
 
+/// Generate sprite from mesh using the Blender backend
+pub(super) fn generate_blender_sprite_from_mesh(
+    spec: &Spec,
+    out_root: &Path,
+) -> Result<Vec<OutputResult>, DispatchError> {
+    let result =
+        speccade_backend_blender::mesh_to_sprite::generate(spec, out_root).map_err(|e| {
+            DispatchError::BackendError(format!("Mesh-to-sprite generation failed: {}", e))
+        })?;
+
+    // Get primary output (atlas PNG)
+    let primary_output = spec
+        .outputs
+        .iter()
+        .find(|o| o.kind == OutputKind::Primary)
+        .ok_or_else(|| DispatchError::BackendError("No primary output specified".to_string()))?;
+    if primary_output.format != OutputFormat::Png {
+        return Err(DispatchError::BackendError(format!(
+            "sprite.render_from_mesh_v1 requires primary output format 'png', got '{}'",
+            primary_output.format
+        )));
+    }
+
+    let mut outputs = vec![];
+
+    // Primary atlas output
+    let primary_metrics = speccade_spec::OutputMetrics::default();
+    outputs.push(OutputResult::tier2(
+        OutputKind::Primary,
+        OutputFormat::Png,
+        PathBuf::from(&primary_output.path),
+        primary_metrics,
+    ));
+
+    // Metadata output if specified
+    if let Some(metadata_output) = spec.outputs.iter().find(|o| o.kind == OutputKind::Metadata) {
+        if metadata_output.format == OutputFormat::Json {
+            let metadata_metrics = speccade_spec::OutputMetrics::default();
+            outputs.push(OutputResult::tier2(
+                OutputKind::Metadata,
+                OutputFormat::Json,
+                PathBuf::from(&metadata_output.path),
+                metadata_metrics,
+            ));
+        }
+    }
+
+    // Log generation metrics for debugging
+    if let Some(atlas_dims) = result.metrics.atlas_dimensions {
+        eprintln!(
+            "[mesh_to_sprite] Generated sprite atlas: {}x{} with {} frames",
+            atlas_dims[0],
+            atlas_dims[1],
+            result.metrics.frame_count.unwrap_or(0)
+        );
+    }
+
+    Ok(outputs)
+}
+
 /// Generate rigged animation using the Blender backend
 pub(super) fn generate_blender_rigged_animation(
     spec: &Spec,

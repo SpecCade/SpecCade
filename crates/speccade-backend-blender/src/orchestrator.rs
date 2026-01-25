@@ -30,6 +30,8 @@ pub enum GenerationMode {
     Animation,
     /// Rigged animation generation (IK/rig-aware).
     RiggedAnimation,
+    /// Mesh-to-sprite rendering (renders mesh from multiple angles into sprite atlas).
+    MeshToSprite,
 }
 
 impl GenerationMode {
@@ -40,6 +42,7 @@ impl GenerationMode {
             GenerationMode::SkeletalMesh => "skeletal_mesh",
             GenerationMode::Animation => "animation",
             GenerationMode::RiggedAnimation => "rigged_animation",
+            GenerationMode::MeshToSprite => "mesh_to_sprite",
         }
     }
 }
@@ -362,6 +365,7 @@ pub fn mode_from_recipe_kind(kind: &str) -> BlenderResult<GenerationMode> {
         "skeletal_mesh.blender_rigged_mesh_v1" => Ok(GenerationMode::SkeletalMesh),
         "skeletal_animation.blender_clip_v1" => Ok(GenerationMode::Animation),
         "skeletal_animation.blender_rigged_v1" => Ok(GenerationMode::RiggedAnimation),
+        "sprite.render_from_mesh_v1" => Ok(GenerationMode::MeshToSprite),
         _ => Err(BlenderError::InvalidRecipeKind {
             kind: kind.to_string(),
         }),
@@ -378,6 +382,7 @@ mod tests {
         assert_eq!(GenerationMode::SkeletalMesh.as_str(), "skeletal_mesh");
         assert_eq!(GenerationMode::Animation.as_str(), "animation");
         assert_eq!(GenerationMode::RiggedAnimation.as_str(), "rigged_animation");
+        assert_eq!(GenerationMode::MeshToSprite.as_str(), "mesh_to_sprite");
     }
 
     #[test]
@@ -397,6 +402,10 @@ mod tests {
         assert_eq!(
             mode_from_recipe_kind("skeletal_animation.blender_rigged_v1").unwrap(),
             GenerationMode::RiggedAnimation
+        );
+        assert_eq!(
+            mode_from_recipe_kind("sprite.render_from_mesh_v1").unwrap(),
+            GenerationMode::MeshToSprite
         );
 
         assert!(mode_from_recipe_kind("invalid.kind").is_err());

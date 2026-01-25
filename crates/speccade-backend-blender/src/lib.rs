@@ -11,6 +11,7 @@
 //! - **`skeletal_mesh.blender_rigged_mesh_v1`** - Generate rigged character meshes
 //! - **`skeletal_animation.blender_clip_v1`** - Generate animation clips (simple keyframes)
 //! - **`skeletal_animation.blender_rigged_v1`** - Generate IK/rig-aware animations
+//! - **`sprite.render_from_mesh_v1`** - Render 3D mesh to sprite atlas
 //!
 //! # Architecture
 //!
@@ -68,12 +69,14 @@
 //! - [`skeletal_mesh`] - Skeletal mesh generation
 //! - [`animation`] - Animation clip generation (simple keyframes)
 //! - [`rigged_animation`] - IK/rig-aware animation generation
+//! - [`mesh_to_sprite`] - Mesh-to-sprite atlas generation
 //! - [`orchestrator`] - Blender subprocess management
 //! - [`metrics`] - Tier 2 validation metrics
 //! - [`error`] - Error types
 
 pub mod animation;
 pub mod error;
+pub mod mesh_to_sprite;
 pub mod metrics;
 pub mod orchestrator;
 pub mod rigged_animation;
@@ -87,6 +90,7 @@ pub use orchestrator::{GenerationMode, Orchestrator, OrchestratorConfig};
 
 // Re-export result types
 pub use animation::AnimationResult;
+pub use mesh_to_sprite::MeshToSpriteResult;
 pub use rigged_animation::RiggedAnimationResult;
 pub use skeletal_mesh::SkeletalMeshResult;
 pub use static_mesh::StaticMeshResult;
@@ -118,6 +122,10 @@ pub fn generate(
             let result = rigged_animation::generate(spec, out_root)?;
             Ok(GenerateResult::RiggedAnimation(result))
         }
+        "sprite.render_from_mesh_v1" => {
+            let result = mesh_to_sprite::generate(spec, out_root)?;
+            Ok(GenerateResult::MeshToSprite(result))
+        }
         _ => Err(BlenderError::InvalidRecipeKind {
             kind: recipe.kind.clone(),
         }),
@@ -135,6 +143,8 @@ pub enum GenerateResult {
     Animation(AnimationResult),
     /// Rigged animation result (IK/rig-aware).
     RiggedAnimation(RiggedAnimationResult),
+    /// Mesh-to-sprite result.
+    MeshToSprite(MeshToSpriteResult),
 }
 
 impl GenerateResult {
@@ -145,16 +155,27 @@ impl GenerateResult {
             GenerateResult::SkeletalMesh(r) => &r.output_path,
             GenerateResult::Animation(r) => &r.output_path,
             GenerateResult::RiggedAnimation(r) => &r.output_path,
+            GenerateResult::MeshToSprite(r) => &r.output_path,
         }
     }
 
     /// Returns the metrics for the generated asset.
-    pub fn metrics(&self) -> &BlenderMetrics {
+    /// Returns None for mesh-to-sprite results (use mesh_to_sprite_metrics instead).
+    pub fn metrics(&self) -> Option<&BlenderMetrics> {
         match self {
-            GenerateResult::StaticMesh(r) => &r.metrics,
-            GenerateResult::SkeletalMesh(r) => &r.metrics,
-            GenerateResult::Animation(r) => &r.metrics,
-            GenerateResult::RiggedAnimation(r) => &r.metrics,
+            GenerateResult::StaticMesh(r) => Some(&r.metrics),
+            GenerateResult::SkeletalMesh(r) => Some(&r.metrics),
+            GenerateResult::Animation(r) => Some(&r.metrics),
+            GenerateResult::RiggedAnimation(r) => Some(&r.metrics),
+            GenerateResult::MeshToSprite(_) => None,
+        }
+    }
+
+    /// Returns mesh-to-sprite metrics if this is a mesh-to-sprite result.
+    pub fn mesh_to_sprite_metrics(&self) -> Option<&mesh_to_sprite::MeshToSpriteMetrics> {
+        match self {
+            GenerateResult::MeshToSprite(r) => Some(&r.metrics),
+            _ => None,
         }
     }
 
@@ -165,6 +186,7 @@ impl GenerateResult {
             GenerateResult::SkeletalMesh(r) => &r.report,
             GenerateResult::Animation(r) => &r.report,
             GenerateResult::RiggedAnimation(r) => &r.report,
+            GenerateResult::MeshToSprite(r) => &r.report,
         }
     }
 
@@ -186,6 +208,11 @@ impl GenerateResult {
     /// Returns true if this is a rigged animation result (IK/rig-aware).
     pub fn is_rigged_animation(&self) -> bool {
         matches!(self, GenerateResult::RiggedAnimation(_))
+    }
+
+    /// Returns true if this is a mesh-to-sprite result.
+    pub fn is_mesh_to_sprite(&self) -> bool {
+        matches!(self, GenerateResult::MeshToSprite(_))
     }
 }
 
@@ -224,7 +251,17 @@ mod tests {
         assert!(result.is_static_mesh());
         assert!(!result.is_skeletal_mesh());
         assert!(!result.is_animation());
+        assert!(!result.is_mesh_to_sprite());
         assert_eq!(result.output_path(), std::path::Path::new("test.glb"));
-        assert_eq!(result.metrics().triangle_count, Some(100));
+        assert_eq!(result.metrics().unwrap().triangle_count, Some(100));
+    }
+
+    #[test]
+    fn test_mesh_to_sprite_mode() {
+        assert!(orchestrator::mode_from_recipe_kind("sprite.render_from_mesh_v1").is_ok());
+        assert_eq!(
+            orchestrator::mode_from_recipe_kind("sprite.render_from_mesh_v1").unwrap(),
+            GenerationMode::MeshToSprite
+        );
     }
 }

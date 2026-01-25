@@ -62,6 +62,9 @@ pub(super) fn validate_outputs_for_recipe_with_budget(
         }
         "sprite.sheet_v1" => validate_sprite_sheet_outputs(spec, recipe, result),
         "sprite.animation_v1" => validate_sprite_animation_outputs(spec, recipe, result),
+        "sprite.render_from_mesh_v1" => {
+            validate_sprite_render_from_mesh_outputs(spec, recipe, result)
+        }
         "vfx.flipbook_v1" => validate_vfx_flipbook_outputs(spec, recipe, result),
         "vfx.particle_profile_v1" => validate_vfx_particle_profile_outputs(spec, recipe, result),
         "ui.nine_slice_v1" => validate_ui_nine_slice_outputs(spec, recipe, result),
@@ -1517,6 +1520,142 @@ fn validate_ui_damage_number_outputs(spec: &Spec, recipe: &Recipe, result: &mut 
             result.add_error(ValidationError::with_path(
                 ErrorCode::OutputValidationFailed,
                 "ui.damage_number_v1 metadata outputs must have format 'json'",
+                format!("outputs[{}].format", i),
+            ));
+        }
+    }
+}
+
+/// Validates outputs for `sprite.render_from_mesh_v1` recipe.
+///
+/// This is a Tier 2 recipe (Blender backend) that renders a mesh from
+/// multiple rotation angles and packs the frames into a sprite atlas.
+fn validate_sprite_render_from_mesh_outputs(
+    spec: &Spec,
+    recipe: &Recipe,
+    result: &mut ValidationResult,
+) {
+    match recipe.as_sprite_render_from_mesh() {
+        Ok(params) => {
+            // Validate frame resolution (max 1024x1024 per frame)
+            if params.frame_resolution[0] > 1024 || params.frame_resolution[1] > 1024 {
+                result.add_error(ValidationError::with_path(
+                    ErrorCode::InvalidRecipeParams,
+                    format!(
+                        "frame_resolution must be at most 1024x1024, got [{}, {}]",
+                        params.frame_resolution[0], params.frame_resolution[1]
+                    ),
+                    "recipe.params.frame_resolution",
+                ));
+            }
+
+            // Validate frame resolution is positive
+            if params.frame_resolution[0] == 0 || params.frame_resolution[1] == 0 {
+                result.add_error(ValidationError::with_path(
+                    ErrorCode::InvalidRecipeParams,
+                    format!(
+                        "frame_resolution must be positive, got [{}, {}]",
+                        params.frame_resolution[0], params.frame_resolution[1]
+                    ),
+                    "recipe.params.frame_resolution",
+                ));
+            }
+
+            // Validate rotation_angles count (max 16)
+            if params.rotation_angles.len() > 16 {
+                result.add_error(ValidationError::with_path(
+                    ErrorCode::InvalidRecipeParams,
+                    format!(
+                        "rotation_angles count must be at most 16, got {}",
+                        params.rotation_angles.len()
+                    ),
+                    "recipe.params.rotation_angles",
+                ));
+            }
+
+            // Validate rotation_angles is not empty
+            if params.rotation_angles.is_empty() {
+                result.add_error(ValidationError::with_path(
+                    ErrorCode::InvalidRecipeParams,
+                    "rotation_angles must not be empty",
+                    "recipe.params.rotation_angles",
+                ));
+            }
+
+            // Validate camera distance is positive
+            if params.camera_distance <= 0.0 {
+                result.add_error(ValidationError::with_path(
+                    ErrorCode::InvalidRecipeParams,
+                    format!(
+                        "camera_distance must be positive, got {}",
+                        params.camera_distance
+                    ),
+                    "recipe.params.camera_distance",
+                ));
+            }
+
+            // Validate camera elevation is in valid range (-90 to 90)
+            if !(-90.0..=90.0).contains(&params.camera_elevation) {
+                result.add_error(ValidationError::with_path(
+                    ErrorCode::InvalidRecipeParams,
+                    format!(
+                        "camera_elevation must be in range [-90, 90] degrees, got {}",
+                        params.camera_elevation
+                    ),
+                    "recipe.params.camera_elevation",
+                ));
+            }
+
+            // Validate background color components are in [0, 1]
+            for (i, &c) in params.background_color.iter().enumerate() {
+                if !(0.0..=1.0).contains(&c) {
+                    result.add_error(ValidationError::with_path(
+                        ErrorCode::InvalidRecipeParams,
+                        format!("background_color[{}] must be in [0, 1], got {}", i, c),
+                        format!("recipe.params.background_color[{}]", i),
+                    ));
+                }
+            }
+
+            // Validate mesh params (dimensions are positive)
+            for (i, &dim) in params.mesh.dimensions.iter().enumerate() {
+                if dim <= 0.0 {
+                    let axis = ["X", "Y", "Z"][i];
+                    result.add_error(ValidationError::with_path(
+                        ErrorCode::InvalidRecipeParams,
+                        format!(
+                            "mesh.dimensions[{}] ({}) must be positive, got {}",
+                            i, axis, dim
+                        ),
+                        format!("recipe.params.mesh.dimensions[{}]", i),
+                    ));
+                }
+            }
+        }
+        Err(e) => {
+            result.add_error(ValidationError::with_path(
+                ErrorCode::InvalidRecipeParams,
+                format!("invalid params for {}: {}", recipe.kind, e),
+                "recipe.params",
+            ));
+        }
+    }
+
+    validate_primary_output_present(spec, result);
+
+    // Primary output must be PNG (the atlas)
+    for (i, output) in spec.outputs.iter().enumerate() {
+        if output.kind == OutputKind::Primary && output.format != OutputFormat::Png {
+            result.add_error(ValidationError::with_path(
+                ErrorCode::OutputValidationFailed,
+                "sprite.render_from_mesh_v1 primary outputs must have format 'png'",
+                format!("outputs[{}].format", i),
+            ));
+        }
+        if output.kind == OutputKind::Metadata && output.format != OutputFormat::Json {
+            result.add_error(ValidationError::with_path(
+                ErrorCode::OutputValidationFailed,
+                "sprite.render_from_mesh_v1 metadata outputs must have format 'json'",
                 format!("outputs[{}].format", i),
             ));
         }

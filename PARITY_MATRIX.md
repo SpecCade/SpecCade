@@ -25,6 +25,8 @@ For the legacy `.studio/specs/**.spec.py` key taxonomy used by `speccade migrate
 | `static_mesh.blender_primitives_v1` | `static_mesh` | `speccade-backend-blender` | 2 | `glb` | Implemented | Blender-driven primitives |
 | `skeletal_mesh.blender_rigged_mesh_v1` | `skeletal_mesh` | `speccade-backend-blender` | 2 | `glb` | Implemented | Rigged mesh export |
 | `skeletal_animation.blender_clip_v1` | `skeletal_animation` | `speccade-backend-blender` | 2 | `glb` | Implemented | Simple keyframed clip |
+| `skeletal_animation.blender_rigged_v1` | `skeletal_animation` | `speccade-backend-blender` | 2 | `glb` | Implemented | IK/rig-aware animation export |
+| `sprite.render_from_mesh_v1` | `sprite` | `speccade-backend-blender` | 2 | `png` + `json` | Implemented | Render 3D mesh to sprite atlas from multiple angles |
 
 ---
 
@@ -34,9 +36,8 @@ These entries are **design targets** (not yet implemented). Details may change a
 
 | Proposed recipe kind | Proposed asset type | Tier | Expected outputs | Status | Notes / keywords |
 |----------------------|---------------------|------|------------------|--------|------------------|
-| `sprite.sheet_v1` | `sprite` (new) | 1 | `png` + `json` (metadata) | Planned | Spritesheet generator, palette control, outlines, lighting ramps |
-| `sprite.animation_v1` | `sprite_animation` (new) | 1 | `png` + `json` (timeline) + optional `webp/gif` preview | Planned | Sprite-based animation clips (loops, events, directional sets) |
-| `skeletal_animation.blender_rigged_v1` | `skeletal_animation` | 2 | `glb` | Planned | Rig-aware / IK animation export (not yet implemented in `speccade-backend-blender`) |
+| `sprite.sheet_v1` | `sprite` | 1 | `png` + `json` (metadata) | Planned | Spritesheet generator, palette control, outlines, lighting ramps |
+| `sprite.animation_v1` | `sprite_animation` | 1 | `png` + `json` (timeline) + optional `webp/gif` preview | Planned | Sprite-based animation clips (loops, events, directional sets) |
 
 ---
 

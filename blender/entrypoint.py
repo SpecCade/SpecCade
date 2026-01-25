@@ -5353,6 +5353,397 @@ def handle_rigged_animation(spec: Dict, out_root: Path, report_path: Path) -> No
 
 
 # =============================================================================
+# Mesh to Sprite Handler
+# =============================================================================
+
+def handle_mesh_to_sprite(spec: Dict, out_root: Path, report_path: Path) -> None:
+    """
+    Handle mesh-to-sprite rendering.
+
+    Renders a 3D mesh from multiple rotation angles and packs the resulting
+    frames into a sprite atlas with metadata.
+    """
+    start_time = time.time()
+
+    try:
+        recipe = spec.get("recipe", {})
+        params = recipe.get("params", {})
+
+        # Extract mesh params
+        mesh_params = params.get("mesh", {})
+
+        # Camera and lighting settings
+        camera_preset = params.get("camera", "orthographic")
+        lighting_preset = params.get("lighting", "three_point")
+        frame_resolution = params.get("frame_resolution", [64, 64])
+        rotation_angles = params.get("rotation_angles", [0.0])
+        atlas_padding = params.get("atlas_padding", 2)
+        background_color = params.get("background_color", [0.0, 0.0, 0.0, 0.0])
+        camera_distance = params.get("camera_distance", 2.0)
+        camera_elevation = params.get("camera_elevation", 30.0)
+
+        # Create primitive mesh
+        primitive = mesh_params.get("base_primitive", "cube")
+        dimensions = mesh_params.get("dimensions", [1, 1, 1])
+        obj = create_primitive(primitive, dimensions)
+
+        # Apply modifiers
+        modifiers = mesh_params.get("modifiers", [])
+        for mod_spec in modifiers:
+            apply_modifier(obj, mod_spec)
+
+        # Apply modifiers to mesh
+        export_settings = mesh_params.get("export", {})
+        if export_settings.get("apply_modifiers", True):
+            apply_all_modifiers(obj)
+
+        # Apply UV projection if specified
+        uv_projection = mesh_params.get("uv_projection")
+        if uv_projection:
+            apply_uv_projection(obj, uv_projection)
+
+        # Apply materials
+        material_slots = mesh_params.get("material_slots", [])
+        apply_materials(obj, material_slots)
+
+        # Compute mesh bounding box for camera placement
+        mesh_bounds = get_mesh_bounds(obj)
+        mesh_center = [
+            (mesh_bounds[0][i] + mesh_bounds[1][i]) / 2
+            for i in range(3)
+        ]
+        mesh_size = max(
+            mesh_bounds[1][i] - mesh_bounds[0][i]
+            for i in range(3)
+        )
+
+        # Set up camera
+        camera_data = bpy.data.cameras.new(name="RenderCamera")
+        camera = bpy.data.objects.new("RenderCamera", camera_data)
+        bpy.context.collection.objects.link(camera)
+
+        if camera_preset == "orthographic":
+            camera_data.type = 'ORTHO'
+            camera_data.ortho_scale = mesh_size * camera_distance
+        elif camera_preset == "isometric":
+            camera_data.type = 'ORTHO'
+            camera_data.ortho_scale = mesh_size * camera_distance
+            camera_elevation = 35.264  # Isometric angle
+        else:  # perspective
+            camera_data.type = 'PERSP'
+            camera_data.lens = 50
+
+        # Set up lighting based on preset
+        setup_lighting(lighting_preset, mesh_center, mesh_size)
+
+        # Configure render settings
+        bpy.context.scene.render.resolution_x = frame_resolution[0]
+        bpy.context.scene.render.resolution_y = frame_resolution[1]
+        bpy.context.scene.render.film_transparent = (background_color[3] < 1.0)
+
+        if not bpy.context.scene.render.film_transparent:
+            bpy.context.scene.world = bpy.data.worlds.new("Background")
+            bpy.context.scene.world.use_nodes = False
+            bpy.context.scene.world.color = (
+                background_color[0],
+                background_color[1],
+                background_color[2]
+            )
+
+        bpy.context.scene.camera = camera
+
+        # Create temp directory for individual frames
+        temp_frames_dir = Path(tempfile.mkdtemp(prefix="speccade_frames_"))
+        frame_paths = []
+        frame_metadata = []
+
+        # Calculate camera distance from mesh center
+        cam_dist = mesh_size * camera_distance
+
+        # Render each rotation angle
+        for i, angle in enumerate(rotation_angles):
+            # Position camera around the mesh
+            angle_rad = math.radians(angle)
+            elev_rad = math.radians(camera_elevation)
+
+            cam_x = mesh_center[0] + cam_dist * math.sin(angle_rad) * math.cos(elev_rad)
+            cam_y = mesh_center[1] - cam_dist * math.cos(angle_rad) * math.cos(elev_rad)
+            cam_z = mesh_center[2] + cam_dist * math.sin(elev_rad)
+
+            camera.location = Vector((cam_x, cam_y, cam_z))
+
+            # Point camera at mesh center
+            direction = Vector(mesh_center) - camera.location
+            rot_quat = direction.to_track_quat('-Z', 'Y')
+            camera.rotation_euler = rot_quat.to_euler()
+
+            # Render frame
+            frame_path = temp_frames_dir / f"frame_{i:04d}.png"
+            bpy.context.scene.render.filepath = str(frame_path)
+            bpy.ops.render.render(write_still=True)
+            frame_paths.append(frame_path)
+
+            frame_metadata.append({
+                "id": f"angle_{int(angle)}",
+                "angle": angle,
+                "index": i
+            })
+
+        # Pack frames into atlas
+        atlas_width, atlas_height, frame_positions = pack_frames_into_atlas(
+            frame_paths,
+            frame_resolution,
+            atlas_padding
+        )
+
+        # Create atlas image
+        atlas = create_atlas_image(
+            frame_paths,
+            frame_positions,
+            atlas_width,
+            atlas_height,
+            background_color
+        )
+
+        # Get output paths from spec
+        outputs = spec.get("outputs", [])
+        primary_output = next((o for o in outputs if o.get("kind") == "primary"), None)
+        metadata_output = next((o for o in outputs if o.get("kind") == "metadata"), None)
+
+        if not primary_output:
+            raise ValueError("No primary output specified in spec")
+
+        output_rel_path = primary_output.get("path", "sprites/atlas.png")
+        output_path = out_root / output_rel_path
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+
+        # Save atlas
+        atlas.save(str(output_path))
+
+        # Generate metadata if requested
+        metadata_rel_path = None
+        if metadata_output:
+            metadata_rel_path = metadata_output.get("path", "sprites/atlas.json")
+            metadata_path = out_root / metadata_rel_path
+
+            # Build frame metadata with UV coordinates
+            frames = []
+            for i, (pos, meta) in enumerate(zip(frame_positions, frame_metadata)):
+                u_min = pos[0] / atlas_width
+                v_min = pos[1] / atlas_height
+                u_max = (pos[0] + frame_resolution[0]) / atlas_width
+                v_max = (pos[1] + frame_resolution[1]) / atlas_height
+
+                frames.append({
+                    "id": meta["id"],
+                    "angle": meta["angle"],
+                    "position": [pos[0], pos[1]],
+                    "dimensions": frame_resolution,
+                    "uv": [u_min, v_min, u_max, v_max]
+                })
+
+            metadata = {
+                "atlas_dimensions": [atlas_width, atlas_height],
+                "padding": atlas_padding,
+                "frame_resolution": frame_resolution,
+                "camera": camera_preset,
+                "lighting": lighting_preset,
+                "frames": frames
+            }
+
+            with open(metadata_path, 'w') as f:
+                json.dump(metadata, f, indent=2)
+
+        # Clean up temp frames
+        for frame_path in frame_paths:
+            if frame_path.exists():
+                frame_path.unlink()
+        temp_frames_dir.rmdir()
+
+        # Build metrics
+        metrics = {
+            "atlas_dimensions": [atlas_width, atlas_height],
+            "frame_count": len(rotation_angles),
+            "frame_resolution": frame_resolution,
+            "camera": camera_preset,
+            "lighting": lighting_preset
+        }
+
+        duration_ms = int((time.time() - start_time) * 1000)
+        write_report(report_path, ok=True, metrics=metrics,
+                     output_path=output_rel_path, duration_ms=duration_ms)
+
+    except Exception as e:
+        write_report(report_path, ok=False, error=str(e))
+        raise
+
+
+def get_mesh_bounds(obj: 'bpy.types.Object') -> Tuple[List[float], List[float]]:
+    """Get the world-space bounding box of a mesh object."""
+    bbox_corners = [obj.matrix_world @ Vector(corner) for corner in obj.bound_box]
+    min_corner = [min(c[i] for c in bbox_corners) for i in range(3)]
+    max_corner = [max(c[i] for c in bbox_corners) for i in range(3)]
+    return min_corner, max_corner
+
+
+def setup_lighting(preset: str, center: List[float], size: float) -> None:
+    """Set up lighting based on preset."""
+    # Clear existing lights
+    for obj in bpy.data.objects:
+        if obj.type == 'LIGHT':
+            bpy.data.objects.remove(obj, do_unlink=True)
+
+    center_vec = Vector(center)
+
+    if preset == "three_point":
+        # Key light (main)
+        key_data = bpy.data.lights.new(name="Key", type='SUN')
+        key_data.energy = 3.0
+        key = bpy.data.objects.new("Key", key_data)
+        key.location = center_vec + Vector((size * 2, -size * 2, size * 2))
+        bpy.context.collection.objects.link(key)
+        key.rotation_euler = Euler((math.radians(45), 0, math.radians(45)))
+
+        # Fill light (softer, opposite side)
+        fill_data = bpy.data.lights.new(name="Fill", type='SUN')
+        fill_data.energy = 1.0
+        fill = bpy.data.objects.new("Fill", fill_data)
+        fill.location = center_vec + Vector((-size * 2, -size * 1.5, size))
+        bpy.context.collection.objects.link(fill)
+        fill.rotation_euler = Euler((math.radians(30), 0, math.radians(-45)))
+
+        # Back light (rim)
+        back_data = bpy.data.lights.new(name="Back", type='SUN')
+        back_data.energy = 2.0
+        back = bpy.data.objects.new("Back", back_data)
+        back.location = center_vec + Vector((0, size * 2, size * 1.5))
+        bpy.context.collection.objects.link(back)
+        back.rotation_euler = Euler((math.radians(-45), 0, math.radians(180)))
+
+    elif preset == "rim":
+        # Strong rim lighting from behind
+        rim_data = bpy.data.lights.new(name="Rim", type='SUN')
+        rim_data.energy = 4.0
+        rim = bpy.data.objects.new("Rim", rim_data)
+        rim.location = center_vec + Vector((0, size * 2, size))
+        bpy.context.collection.objects.link(rim)
+        rim.rotation_euler = Euler((math.radians(-30), 0, math.radians(180)))
+
+        # Soft fill from front
+        fill_data = bpy.data.lights.new(name="Fill", type='SUN')
+        fill_data.energy = 0.5
+        fill = bpy.data.objects.new("Fill", fill_data)
+        fill.location = center_vec + Vector((0, -size * 2, size * 0.5))
+        bpy.context.collection.objects.link(fill)
+
+    elif preset == "flat":
+        # Single overhead light for minimal shadows
+        flat_data = bpy.data.lights.new(name="Flat", type='SUN')
+        flat_data.energy = 2.0
+        flat = bpy.data.objects.new("Flat", flat_data)
+        flat.location = center_vec + Vector((0, 0, size * 3))
+        bpy.context.collection.objects.link(flat)
+        flat.rotation_euler = Euler((0, 0, 0))
+
+    elif preset == "dramatic":
+        # Strong single light with hard shadows
+        key_data = bpy.data.lights.new(name="Dramatic", type='SPOT')
+        key_data.energy = 500
+        key_data.spot_size = math.radians(45)
+        key = bpy.data.objects.new("Dramatic", key_data)
+        key.location = center_vec + Vector((size * 1.5, -size * 1.5, size * 2))
+        bpy.context.collection.objects.link(key)
+        direction = center_vec - key.location
+        key.rotation_euler = direction.to_track_quat('-Z', 'Y').to_euler()
+
+    elif preset == "studio":
+        # Soft, balanced studio lighting
+        # Main softbox-like light
+        main_data = bpy.data.lights.new(name="Main", type='AREA')
+        main_data.energy = 100
+        main_data.size = size * 2
+        main = bpy.data.objects.new("Main", main_data)
+        main.location = center_vec + Vector((size, -size * 2, size * 1.5))
+        bpy.context.collection.objects.link(main)
+        direction = center_vec - main.location
+        main.rotation_euler = direction.to_track_quat('-Z', 'Y').to_euler()
+
+        # Side fill
+        fill_data = bpy.data.lights.new(name="Fill", type='AREA')
+        fill_data.energy = 50
+        fill_data.size = size * 1.5
+        fill = bpy.data.objects.new("Fill", fill_data)
+        fill.location = center_vec + Vector((-size * 1.5, -size, size))
+        bpy.context.collection.objects.link(fill)
+        direction = center_vec - fill.location
+        fill.rotation_euler = direction.to_track_quat('-Z', 'Y').to_euler()
+
+
+def pack_frames_into_atlas(
+    frame_paths: List[Path],
+    frame_resolution: List[int],
+    padding: int
+) -> Tuple[int, int, List[Tuple[int, int]]]:
+    """
+    Pack frames into an atlas using simple grid layout.
+
+    Returns:
+        Tuple of (atlas_width, atlas_height, frame_positions)
+    """
+    frame_count = len(frame_paths)
+    if frame_count == 0:
+        return 0, 0, []
+
+    frame_w = frame_resolution[0] + padding * 2
+    frame_h = frame_resolution[1] + padding * 2
+
+    # Calculate grid dimensions (prefer square-ish atlas)
+    cols = math.ceil(math.sqrt(frame_count))
+    rows = math.ceil(frame_count / cols)
+
+    atlas_width = cols * frame_w
+    atlas_height = rows * frame_h
+
+    # Calculate frame positions
+    positions = []
+    for i in range(frame_count):
+        col = i % cols
+        row = i // cols
+        x = col * frame_w + padding
+        y = row * frame_h + padding
+        positions.append((x, y))
+
+    return atlas_width, atlas_height, positions
+
+
+def create_atlas_image(
+    frame_paths: List[Path],
+    positions: List[Tuple[int, int]],
+    atlas_width: int,
+    atlas_height: int,
+    background_color: List[float]
+) -> 'Image':
+    """
+    Create the atlas image by compositing individual frames.
+
+    Returns:
+        PIL Image object
+    """
+    from PIL import Image as PILImage
+
+    # Create atlas with background color
+    bg_rgba = tuple(int(c * 255) for c in background_color)
+    atlas = PILImage.new('RGBA', (atlas_width, atlas_height), bg_rgba)
+
+    # Paste each frame
+    for frame_path, (x, y) in zip(frame_paths, positions):
+        frame = PILImage.open(frame_path)
+        atlas.paste(frame, (x, y))
+
+    return atlas
+
+
+# =============================================================================
 # Main Entry Point
 # =============================================================================
 
@@ -5366,7 +5757,7 @@ def main() -> int:
 
     parser = argparse.ArgumentParser(description="SpecCade Blender Entrypoint")
     parser.add_argument("--mode", required=True,
-                        choices=["static_mesh", "skeletal_mesh", "animation", "rigged_animation"],
+                        choices=["static_mesh", "skeletal_mesh", "animation", "rigged_animation", "mesh_to_sprite"],
                         help="Generation mode")
     parser.add_argument("--spec", required=True, type=Path,
                         help="Path to spec JSON file")
@@ -5401,6 +5792,7 @@ def main() -> int:
         "skeletal_mesh": handle_skeletal_mesh,
         "animation": handle_animation,
         "rigged_animation": handle_rigged_animation,
+        "mesh_to_sprite": handle_mesh_to_sprite,
     }
 
     handler = handlers.get(args.mode)
