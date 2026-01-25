@@ -156,6 +156,11 @@ pub fn dispatch_generate(
         // Blender modular kit mesh backend
         "static_mesh.modular_kit_v1" => blender::generate_blender_modular_kit(spec, out_root_path),
 
+        // Blender organic sculpt mesh backend
+        "static_mesh.organic_sculpt_v1" => {
+            blender::generate_blender_organic_sculpt(spec, out_root_path)
+        }
+
         // Blender skeletal mesh backend
         "skeletal_mesh.blender_rigged_mesh_v1" => {
             blender::generate_blender_skeletal_mesh(spec, out_root_path)
@@ -393,6 +398,10 @@ pub fn dispatch_generate_profiled(
             blender::generate_blender_modular_kit(spec, out_root_path).map(DispatchResult::new)
         }
 
+        "static_mesh.organic_sculpt_v1" => {
+            blender::generate_blender_organic_sculpt(spec, out_root_path).map(DispatchResult::new)
+        }
+
         "skeletal_mesh.blender_rigged_mesh_v1" => {
             blender::generate_blender_skeletal_mesh(spec, out_root_path).map(DispatchResult::new)
         }
@@ -463,6 +472,7 @@ pub fn is_backend_available(kind: &str) -> bool {
             | "font.bitmap_v1"
             | "static_mesh.blender_primitives_v1"
             | "static_mesh.modular_kit_v1"
+            | "static_mesh.organic_sculpt_v1"
             | "skeletal_mesh.blender_rigged_mesh_v1"
             | "skeletal_animation.blender_clip_v1"
             | "skeletal_animation.blender_rigged_v1"

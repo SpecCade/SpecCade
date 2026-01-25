@@ -24,6 +24,7 @@ For the legacy `.studio/specs/**.spec.py` key taxonomy used by `speccade migrate
 | `font.bitmap_v1` | `font` | `speccade-backend-texture` | 1 | `png` + `json` | Implemented | Bitmap pixel font with glyph atlas and metrics |
 | `static_mesh.blender_primitives_v1` | `static_mesh` | `speccade-backend-blender` | 2 | `glb` | Implemented | Blender-driven primitives |
 | `static_mesh.modular_kit_v1` | `static_mesh` | `speccade-backend-blender` | 2 | `glb` | Implemented | Modular kit generators (walls, pipes, doors) |
+| `static_mesh.organic_sculpt_v1` | `static_mesh` | `speccade-backend-blender` | 2 | `glb` | Implemented | Organic mesh via metaballs, remesh, smooth, displacement |
 | `skeletal_mesh.blender_rigged_mesh_v1` | `skeletal_mesh` | `speccade-backend-blender` | 2 | `glb` | Implemented | Rigged mesh export |
 | `skeletal_animation.blender_clip_v1` | `skeletal_animation` | `speccade-backend-blender` | 2 | `glb` | Implemented | Simple keyframed clip |
 | `skeletal_animation.blender_rigged_v1` | `skeletal_animation` | `speccade-backend-blender` | 2 | `glb` | Implemented | IK/rig-aware animation export |

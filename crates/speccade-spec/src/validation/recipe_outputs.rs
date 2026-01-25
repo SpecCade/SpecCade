@@ -52,6 +52,10 @@ pub(super) fn validate_outputs_for_recipe_with_budget(
             validate_static_mesh_modular_kit(recipe, result);
             validate_single_primary_output_format(spec, OutputFormat::Glb, result);
         }
+        "static_mesh.organic_sculpt_v1" => {
+            validate_static_mesh_organic_sculpt(recipe, result);
+            validate_single_primary_output_format(spec, OutputFormat::Glb, result);
+        }
         "skeletal_mesh.blender_rigged_mesh_v1" => {
             validate_skeletal_mesh_blender_rigged(recipe, result);
             validate_single_primary_output_format(spec, OutputFormat::Glb, result);
@@ -386,6 +390,139 @@ fn validate_static_mesh_modular_kit(recipe: &Recipe, result: &mut ValidationResu
                             "recipe.params.kit_type.bevel_width",
                         ));
                     }
+                }
+            }
+        }
+        Err(e) => {
+            result.add_error(ValidationError::with_path(
+                ErrorCode::InvalidRecipeParams,
+                format!("invalid params for {}: {}", recipe.kind, e),
+                "recipe.params",
+            ));
+        }
+    }
+}
+
+/// Validates params for `static_mesh.organic_sculpt_v1` recipe.
+///
+/// This validates that the params match the expected schema and enforces
+/// budget constraints for metaball count, remesh voxel size, and smooth iterations.
+fn validate_static_mesh_organic_sculpt(recipe: &Recipe, result: &mut ValidationResult) {
+    use crate::recipe::{
+        MAX_METABALLS, MAX_REMESH_VOXEL_SIZE, MAX_SMOOTH_ITERATIONS, MIN_REMESH_VOXEL_SIZE,
+    };
+
+    match recipe.as_static_mesh_organic_sculpt() {
+        Ok(params) => {
+            // Validate metaball count
+            if params.metaballs.is_empty() {
+                result.add_error(ValidationError::with_path(
+                    ErrorCode::InvalidRecipeParams,
+                    "metaballs array must contain at least one metaball",
+                    "recipe.params.metaballs",
+                ));
+            }
+            if params.metaballs.len() > MAX_METABALLS {
+                result.add_error(ValidationError::with_path(
+                    ErrorCode::InvalidRecipeParams,
+                    format!(
+                        "too many metaballs: {} exceeds maximum of {}",
+                        params.metaballs.len(),
+                        MAX_METABALLS
+                    ),
+                    "recipe.params.metaballs",
+                ));
+            }
+
+            // Validate each metaball
+            for (i, metaball) in params.metaballs.iter().enumerate() {
+                if metaball.radius <= 0.0 {
+                    result.add_error(ValidationError::with_path(
+                        ErrorCode::InvalidRecipeParams,
+                        format!(
+                            "metaball[{}].radius must be positive, got {}",
+                            i, metaball.radius
+                        ),
+                        format!("recipe.params.metaballs[{}].radius", i),
+                    ));
+                }
+                if metaball.stiffness <= 0.0 {
+                    result.add_error(ValidationError::with_path(
+                        ErrorCode::InvalidRecipeParams,
+                        format!(
+                            "metaball[{}].stiffness must be positive, got {}",
+                            i, metaball.stiffness
+                        ),
+                        format!("recipe.params.metaballs[{}].stiffness", i),
+                    ));
+                }
+            }
+
+            // Validate remesh voxel size
+            if params.remesh_voxel_size < MIN_REMESH_VOXEL_SIZE {
+                result.add_error(ValidationError::with_path(
+                    ErrorCode::InvalidRecipeParams,
+                    format!(
+                        "remesh_voxel_size must be at least {}, got {}",
+                        MIN_REMESH_VOXEL_SIZE, params.remesh_voxel_size
+                    ),
+                    "recipe.params.remesh_voxel_size",
+                ));
+            }
+            if params.remesh_voxel_size > MAX_REMESH_VOXEL_SIZE {
+                result.add_error(ValidationError::with_path(
+                    ErrorCode::InvalidRecipeParams,
+                    format!(
+                        "remesh_voxel_size must be at most {}, got {}",
+                        MAX_REMESH_VOXEL_SIZE, params.remesh_voxel_size
+                    ),
+                    "recipe.params.remesh_voxel_size",
+                ));
+            }
+
+            // Validate smooth iterations
+            if params.smooth_iterations > MAX_SMOOTH_ITERATIONS {
+                result.add_error(ValidationError::with_path(
+                    ErrorCode::InvalidRecipeParams,
+                    format!(
+                        "smooth_iterations must be at most {}, got {}",
+                        MAX_SMOOTH_ITERATIONS, params.smooth_iterations
+                    ),
+                    "recipe.params.smooth_iterations",
+                ));
+            }
+
+            // Validate displacement noise if present
+            if let Some(ref displacement) = params.displacement {
+                if displacement.strength <= 0.0 {
+                    result.add_error(ValidationError::with_path(
+                        ErrorCode::InvalidRecipeParams,
+                        format!(
+                            "displacement.strength must be positive, got {}",
+                            displacement.strength
+                        ),
+                        "recipe.params.displacement.strength",
+                    ));
+                }
+                if displacement.scale <= 0.0 {
+                    result.add_error(ValidationError::with_path(
+                        ErrorCode::InvalidRecipeParams,
+                        format!(
+                            "displacement.scale must be positive, got {}",
+                            displacement.scale
+                        ),
+                        "recipe.params.displacement.scale",
+                    ));
+                }
+                if displacement.octaves == 0 || displacement.octaves > 8 {
+                    result.add_error(ValidationError::with_path(
+                        ErrorCode::InvalidRecipeParams,
+                        format!(
+                            "displacement.octaves must be between 1 and 8, got {}",
+                            displacement.octaves
+                        ),
+                        "recipe.params.displacement.octaves",
+                    ));
                 }
             }
         }

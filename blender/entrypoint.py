@@ -12,6 +12,7 @@ Usage:
 Modes:
     static_mesh     - Generate static mesh (blender_primitives_v1)
     modular_kit     - Generate modular kit mesh (modular_kit_v1)
+    organic_sculpt  - Generate organic sculpt mesh (organic_sculpt_v1)
     skeletal_mesh   - Generate skeletal mesh (blender_rigged_mesh_v1)
     animation       - Generate animation clip (blender_clip_v1)
 """
@@ -5516,6 +5517,126 @@ def create_door_kit(spec: Dict) -> 'bpy.types.Object':
     return result
 
 
+def handle_organic_sculpt(spec: Dict, out_root: Path, report_path: Path) -> None:
+    """Handle organic sculpt mesh generation (metaballs, remesh, smooth, displacement)."""
+    start_time = time.time()
+
+    try:
+        recipe = spec.get("recipe", {})
+        params = recipe.get("params", {})
+
+        metaballs = params.get("metaballs", [])
+        if not metaballs:
+            raise ValueError("metaballs array must contain at least one metaball")
+
+        remesh_voxel_size = params.get("remesh_voxel_size", 0.1)
+        smooth_iterations = params.get("smooth_iterations", 0)
+        displacement = params.get("displacement")
+        export_settings = params.get("export", {})
+        seed = spec.get("seed", 0)
+
+        # Create metaball object
+        mball_data = bpy.data.metaballs.new("OrganicSculpt_Mball")
+        mball_obj = bpy.data.objects.new("OrganicSculpt_Mball", mball_data)
+        bpy.context.collection.objects.link(mball_obj)
+
+        # Configure metaball settings
+        mball_data.resolution = 0.1  # High resolution for conversion
+        mball_data.render_resolution = 0.1
+
+        # Add metaball elements
+        for mb in metaballs:
+            elem = mball_data.elements.new()
+            elem.type = 'BALL'
+            elem.co = mb.get("position", [0, 0, 0])
+            elem.radius = mb.get("radius", 1.0)
+            elem.stiffness = mb.get("stiffness", 2.0)
+
+        # Select and convert metaball to mesh
+        bpy.context.view_layer.objects.active = mball_obj
+        mball_obj.select_set(True)
+        bpy.ops.object.convert(target='MESH')
+        mesh_obj = bpy.context.active_object
+        mesh_obj.name = "OrganicSculpt"
+
+        # Apply voxel remesh modifier
+        remesh_mod = mesh_obj.modifiers.new(name="Remesh", type='REMESH')
+        remesh_mod.mode = 'VOXEL'
+        remesh_mod.voxel_size = remesh_voxel_size
+        remesh_mod.adaptivity = 0.0  # No adaptivity for consistent output
+        bpy.ops.object.modifier_apply(modifier=remesh_mod.name)
+
+        # Apply smooth modifier if iterations > 0
+        if smooth_iterations > 0:
+            smooth_mod = mesh_obj.modifiers.new(name="Smooth", type='SMOOTH')
+            smooth_mod.iterations = smooth_iterations
+            smooth_mod.factor = 0.5  # Moderate smoothing
+            bpy.ops.object.modifier_apply(modifier=smooth_mod.name)
+
+        # Apply displacement noise if configured
+        if displacement:
+            strength = displacement.get("strength", 0.1)
+            scale = displacement.get("scale", 2.0)
+            octaves = displacement.get("octaves", 4)
+            disp_seed = displacement.get("seed", seed)
+
+            # Add a displace modifier with procedural texture
+            disp_mod = mesh_obj.modifiers.new(name="Displace", type='DISPLACE')
+
+            # Create noise texture
+            noise_tex = bpy.data.textures.new(name="OrganicNoise", type='CLOUDS')
+            noise_tex.noise_scale = scale
+            noise_tex.noise_depth = min(octaves, 6)  # Blender max depth is 6
+            noise_tex.noise_type = 'SOFT_NOISE'
+
+            disp_mod.texture = noise_tex
+            disp_mod.texture_coords = 'LOCAL'
+            disp_mod.strength = strength
+            disp_mod.mid_level = 0.5
+
+            bpy.ops.object.modifier_apply(modifier=disp_mod.name)
+
+            # Clean up texture
+            bpy.data.textures.remove(noise_tex)
+
+        # Apply export settings
+        if export_settings.get("apply_modifiers", True):
+            apply_all_modifiers(mesh_obj)
+
+        # Triangulate if requested
+        if export_settings.get("triangulate", True):
+            tri_mod = mesh_obj.modifiers.new(name="Triangulate", type='TRIANGULATE')
+            bpy.ops.object.modifier_apply(modifier=tri_mod.name)
+
+        # Apply automatic UV projection
+        apply_uv_projection(mesh_obj, {"type": "smart_uv", "angle_limit": 66.0})
+
+        # Get output path from spec
+        outputs = spec.get("outputs", [])
+        primary_output = next((o for o in outputs if o.get("kind") == "primary"), None)
+        if not primary_output:
+            raise ValueError("No primary output specified in spec")
+
+        output_rel_path = primary_output.get("path", "output.glb")
+        output_path = out_root / output_rel_path
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+
+        # Export with tangents if requested
+        export_tangents = export_settings.get("tangents", False)
+
+        # Compute metrics and export
+        metrics = compute_mesh_metrics(mesh_obj)
+        export_glb(output_path, export_tangents=export_tangents)
+
+        duration_ms = int((time.time() - start_time) * 1000)
+        write_report(report_path, ok=True, metrics=metrics,
+                     output_path=output_rel_path, duration_ms=duration_ms)
+
+    except Exception as e:
+        write_report(report_path, ok=False, error=str(e))
+        raise
+
+
 def handle_skeletal_mesh(spec: Dict, out_root: Path, report_path: Path) -> None:
     """Handle skeletal mesh generation."""
     start_time = time.time()
@@ -6287,7 +6408,7 @@ def main() -> int:
 
     parser = argparse.ArgumentParser(description="SpecCade Blender Entrypoint")
     parser.add_argument("--mode", required=True,
-                        choices=["static_mesh", "modular_kit", "skeletal_mesh", "animation", "rigged_animation", "mesh_to_sprite"],
+                        choices=["static_mesh", "modular_kit", "organic_sculpt", "skeletal_mesh", "animation", "rigged_animation", "mesh_to_sprite"],
                         help="Generation mode")
     parser.add_argument("--spec", required=True, type=Path,
                         help="Path to spec JSON file")
@@ -6320,6 +6441,7 @@ def main() -> int:
     handlers = {
         "static_mesh": handle_static_mesh,
         "modular_kit": handle_modular_kit,
+        "organic_sculpt": handle_organic_sculpt,
         "skeletal_mesh": handle_skeletal_mesh,
         "animation": handle_animation,
         "rigged_animation": handle_rigged_animation,

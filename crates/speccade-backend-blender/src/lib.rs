@@ -82,6 +82,7 @@ pub mod mesh_to_sprite;
 pub mod metrics;
 pub mod modular_kit;
 pub mod orchestrator;
+pub mod organic_sculpt;
 pub mod rigged_animation;
 pub mod skeletal_mesh;
 pub mod static_mesh;
@@ -95,6 +96,7 @@ pub use orchestrator::{GenerationMode, Orchestrator, OrchestratorConfig};
 pub use animation::AnimationResult;
 pub use mesh_to_sprite::MeshToSpriteResult;
 pub use modular_kit::ModularKitResult;
+pub use organic_sculpt::OrganicSculptResult;
 pub use rigged_animation::RiggedAnimationResult;
 pub use skeletal_mesh::SkeletalMeshResult;
 pub use static_mesh::StaticMeshResult;
@@ -117,6 +119,10 @@ pub fn generate(
         "static_mesh.modular_kit_v1" => {
             let result = modular_kit::generate(spec, out_root)?;
             Ok(GenerateResult::ModularKit(result))
+        }
+        "static_mesh.organic_sculpt_v1" => {
+            let result = organic_sculpt::generate(spec, out_root)?;
+            Ok(GenerateResult::OrganicSculpt(result))
         }
         "skeletal_mesh.blender_rigged_mesh_v1" => {
             let result = skeletal_mesh::generate(spec, out_root)?;
@@ -147,6 +153,8 @@ pub enum GenerateResult {
     StaticMesh(StaticMeshResult),
     /// Modular kit mesh result (walls, pipes, doors).
     ModularKit(ModularKitResult),
+    /// Organic sculpt mesh result (metaballs, remesh, smooth, displacement).
+    OrganicSculpt(OrganicSculptResult),
     /// Skeletal mesh result.
     SkeletalMesh(SkeletalMeshResult),
     /// Animation result (simple keyframes).
@@ -163,6 +171,7 @@ impl GenerateResult {
         match self {
             GenerateResult::StaticMesh(r) => &r.output_path,
             GenerateResult::ModularKit(r) => &r.output_path,
+            GenerateResult::OrganicSculpt(r) => &r.output_path,
             GenerateResult::SkeletalMesh(r) => &r.output_path,
             GenerateResult::Animation(r) => &r.output_path,
             GenerateResult::RiggedAnimation(r) => &r.output_path,
@@ -176,6 +185,7 @@ impl GenerateResult {
         match self {
             GenerateResult::StaticMesh(r) => Some(&r.metrics),
             GenerateResult::ModularKit(r) => Some(&r.metrics),
+            GenerateResult::OrganicSculpt(r) => Some(&r.metrics),
             GenerateResult::SkeletalMesh(r) => Some(&r.metrics),
             GenerateResult::Animation(r) => Some(&r.metrics),
             GenerateResult::RiggedAnimation(r) => Some(&r.metrics),
@@ -196,6 +206,7 @@ impl GenerateResult {
         match self {
             GenerateResult::StaticMesh(r) => &r.report,
             GenerateResult::ModularKit(r) => &r.report,
+            GenerateResult::OrganicSculpt(r) => &r.report,
             GenerateResult::SkeletalMesh(r) => &r.report,
             GenerateResult::Animation(r) => &r.report,
             GenerateResult::RiggedAnimation(r) => &r.report,
@@ -211,6 +222,11 @@ impl GenerateResult {
     /// Returns true if this is a modular kit mesh result.
     pub fn is_modular_kit(&self) -> bool {
         matches!(self, GenerateResult::ModularKit(_))
+    }
+
+    /// Returns true if this is an organic sculpt mesh result.
+    pub fn is_organic_sculpt(&self) -> bool {
+        matches!(self, GenerateResult::OrganicSculpt(_))
     }
 
     /// Returns true if this is a skeletal mesh result.

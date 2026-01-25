@@ -64,6 +64,9 @@ pub enum RecipeKind {
     /// `static_mesh.modular_kit_v1` - Modular kit mesh (walls, pipes, doors) from Blender.
     #[serde(rename = "static_mesh.modular_kit_v1")]
     StaticMeshModularKitV1,
+    /// `static_mesh.organic_sculpt_v1` - Organic mesh from metaballs, remesh, smooth, and displacement.
+    #[serde(rename = "static_mesh.organic_sculpt_v1")]
+    StaticMeshOrganicSculptV1,
     /// `skeletal_mesh.blender_rigged_mesh_v1` - Rigged skeletal mesh.
     #[serde(rename = "skeletal_mesh.blender_rigged_mesh_v1")]
     SkeletalMeshBlenderRiggedMeshV1,
@@ -120,6 +123,7 @@ impl RecipeKind {
             RecipeKind::TextureMaterialPresetV1 => "texture.material_preset_v1",
             RecipeKind::StaticMeshBlenderPrimitivesV1 => "static_mesh.blender_primitives_v1",
             RecipeKind::StaticMeshModularKitV1 => "static_mesh.modular_kit_v1",
+            RecipeKind::StaticMeshOrganicSculptV1 => "static_mesh.organic_sculpt_v1",
             RecipeKind::SkeletalMeshBlenderRiggedMeshV1 => "skeletal_mesh.blender_rigged_mesh_v1",
             RecipeKind::SkeletalAnimationBlenderClipV1 => "skeletal_animation.blender_clip_v1",
             RecipeKind::SkeletalAnimationBlenderRiggedV1 => "skeletal_animation.blender_rigged_v1",
@@ -150,6 +154,7 @@ impl RecipeKind {
             RecipeKind::TextureMaterialPresetV1 => "texture",
             RecipeKind::StaticMeshBlenderPrimitivesV1 => "static_mesh",
             RecipeKind::StaticMeshModularKitV1 => "static_mesh",
+            RecipeKind::StaticMeshOrganicSculptV1 => "static_mesh",
             RecipeKind::SkeletalMeshBlenderRiggedMeshV1 => "skeletal_mesh",
             RecipeKind::SkeletalAnimationBlenderClipV1 => "skeletal_animation",
             RecipeKind::SkeletalAnimationBlenderRiggedV1 => "skeletal_animation",
@@ -189,6 +194,7 @@ impl RecipeKind {
             | RecipeKind::FontBitmapV1 => true,
             RecipeKind::StaticMeshBlenderPrimitivesV1
             | RecipeKind::StaticMeshModularKitV1
+            | RecipeKind::StaticMeshOrganicSculptV1
             | RecipeKind::SkeletalMeshBlenderRiggedMeshV1
             | RecipeKind::SkeletalAnimationBlenderClipV1
             | RecipeKind::SkeletalAnimationBlenderRiggedV1
@@ -236,6 +242,7 @@ impl Recipe {
             "texture.material_preset_v1" => Some(RecipeKind::TextureMaterialPresetV1),
             "static_mesh.blender_primitives_v1" => Some(RecipeKind::StaticMeshBlenderPrimitivesV1),
             "static_mesh.modular_kit_v1" => Some(RecipeKind::StaticMeshModularKitV1),
+            "static_mesh.organic_sculpt_v1" => Some(RecipeKind::StaticMeshOrganicSculptV1),
             "skeletal_mesh.blender_rigged_mesh_v1" => {
                 Some(RecipeKind::SkeletalMeshBlenderRiggedMeshV1)
             }
@@ -331,6 +338,13 @@ impl Recipe {
     pub fn as_static_mesh_modular_kit(
         &self,
     ) -> Result<StaticMeshModularKitV1Params, serde_json::Error> {
+        serde_json::from_value(self.params.clone())
+    }
+
+    /// Attempts to parse params as static mesh organic sculpt params.
+    pub fn as_static_mesh_organic_sculpt(
+        &self,
+    ) -> Result<StaticMeshOrganicSculptV1Params, serde_json::Error> {
         serde_json::from_value(self.params.clone())
     }
 
@@ -486,6 +500,13 @@ impl Recipe {
             }
             "static_mesh.modular_kit_v1" => {
                 self.as_static_mesh_modular_kit()
+                    .map_err(|e| RecipeParamsError {
+                        recipe_kind: self.kind.clone(),
+                        error_message: e.to_string(),
+                    })?;
+            }
+            "static_mesh.organic_sculpt_v1" => {
+                self.as_static_mesh_organic_sculpt()
                     .map_err(|e| RecipeParamsError {
                         recipe_kind: self.kind.clone(),
                         error_message: e.to_string(),

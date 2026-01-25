@@ -26,6 +26,8 @@ pub enum GenerationMode {
     StaticMesh,
     /// Modular kit generation (walls, pipes, doors).
     ModularKit,
+    /// Organic sculpt generation (metaballs, remesh, smooth, displacement).
+    OrganicSculpt,
     /// Skeletal mesh generation.
     SkeletalMesh,
     /// Animation generation (simple keyframes).
@@ -42,6 +44,7 @@ impl GenerationMode {
         match self {
             GenerationMode::StaticMesh => "static_mesh",
             GenerationMode::ModularKit => "modular_kit",
+            GenerationMode::OrganicSculpt => "organic_sculpt",
             GenerationMode::SkeletalMesh => "skeletal_mesh",
             GenerationMode::Animation => "animation",
             GenerationMode::RiggedAnimation => "rigged_animation",
@@ -366,6 +369,7 @@ pub fn mode_from_recipe_kind(kind: &str) -> BlenderResult<GenerationMode> {
     match kind {
         "static_mesh.blender_primitives_v1" => Ok(GenerationMode::StaticMesh),
         "static_mesh.modular_kit_v1" => Ok(GenerationMode::ModularKit),
+        "static_mesh.organic_sculpt_v1" => Ok(GenerationMode::OrganicSculpt),
         "skeletal_mesh.blender_rigged_mesh_v1" => Ok(GenerationMode::SkeletalMesh),
         "skeletal_animation.blender_clip_v1" => Ok(GenerationMode::Animation),
         "skeletal_animation.blender_rigged_v1" => Ok(GenerationMode::RiggedAnimation),
@@ -384,6 +388,7 @@ mod tests {
     fn test_generation_mode_as_str() {
         assert_eq!(GenerationMode::StaticMesh.as_str(), "static_mesh");
         assert_eq!(GenerationMode::ModularKit.as_str(), "modular_kit");
+        assert_eq!(GenerationMode::OrganicSculpt.as_str(), "organic_sculpt");
         assert_eq!(GenerationMode::SkeletalMesh.as_str(), "skeletal_mesh");
         assert_eq!(GenerationMode::Animation.as_str(), "animation");
         assert_eq!(GenerationMode::RiggedAnimation.as_str(), "rigged_animation");
@@ -399,6 +404,10 @@ mod tests {
         assert_eq!(
             mode_from_recipe_kind("static_mesh.modular_kit_v1").unwrap(),
             GenerationMode::ModularKit
+        );
+        assert_eq!(
+            mode_from_recipe_kind("static_mesh.organic_sculpt_v1").unwrap(),
+            GenerationMode::OrganicSculpt
         );
         assert_eq!(
             mode_from_recipe_kind("skeletal_mesh.blender_rigged_mesh_v1").unwrap(),
