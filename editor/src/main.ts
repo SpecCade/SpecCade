@@ -16,6 +16,7 @@ import { TexturePreview } from "./components/TexturePreview";
 import { NewAssetDialog } from "./components/NewAssetDialog";
 import { FileBrowser } from "./components/FileBrowser";
 import { GeneratePanel } from "./components/GeneratePanel";
+import { StdlibPalette } from "./components/StdlibPalette";
 import { addRecentFile } from "./lib/recent-files";
 
 // Configure Monaco worker paths for Vite
@@ -84,6 +85,7 @@ let audioPreview: AudioPreview | null = null;
 let texturePreview: TexturePreview | null = null;
 let fileBrowser: FileBrowser | null = null;
 let generatePanel: GeneratePanel | null = null;
+let stdlibPalette: StdlibPalette | null = null;
 let currentAssetType: string | null = null;
 let currentWatchedPath: string | null = null;
 let currentFilePath: string | null = null;
@@ -164,6 +166,10 @@ export function cleanup(): void {
   if (generatePanel) {
     generatePanel.dispose();
     generatePanel = null;
+  }
+  if (stdlibPalette) {
+    stdlibPalette.dispose();
+    stdlibPalette = null;
   }
   clearPreviewComponents();
 }
@@ -541,10 +547,10 @@ async function init(): Promise<void> {
 
   initEditor();
 
-  // Initialize file browser in sidebar
-  const sidebarElement = document.getElementById("sidebar");
-  if (sidebarElement) {
-    fileBrowser = new FileBrowser(sidebarElement, (path, content) => {
+  // Initialize file browser in files panel
+  const filesPanelElement = document.getElementById("files-panel");
+  if (filesPanelElement) {
+    fileBrowser = new FileBrowser(filesPanelElement, (path, content) => {
       currentFilePath = path;
       addRecentFile(path);
       if (editor) {
@@ -552,6 +558,57 @@ async function init(): Promise<void> {
         evaluateSource(content);
       }
       updateWindowTitle(path);
+    });
+  }
+
+  // Initialize stdlib palette in snippets panel
+  const snippetsPanelElement = document.getElementById("snippets-panel");
+  if (snippetsPanelElement) {
+    stdlibPalette = new StdlibPalette(snippetsPanelElement, (snippet: string) => {
+      if (editor) {
+        const monacoEditor = editor.getMonacoEditor();
+        const selection = monacoEditor.getSelection();
+        if (selection) {
+          monacoEditor.executeEdits("stdlib-palette", [
+            {
+              range: selection,
+              text: snippet,
+              forceMoveMarkers: true,
+            },
+          ]);
+        }
+        editor.focus();
+      }
+    });
+  }
+
+  // Setup sidebar tab switching
+  const filesTab = document.getElementById("files-tab");
+  const snippetsTab = document.getElementById("snippets-tab");
+  const filesPanel = document.getElementById("files-panel");
+  const snippetsPanel = document.getElementById("snippets-panel");
+
+  if (filesTab && snippetsTab && filesPanel && snippetsPanel) {
+    filesTab.addEventListener("click", () => {
+      // Show files panel, hide snippets panel
+      filesPanel.style.display = "block";
+      snippetsPanel.style.display = "none";
+      // Update tab styles
+      filesTab.style.background = "#252525";
+      filesTab.style.color = "#fff";
+      snippetsTab.style.background = "#1a1a1a";
+      snippetsTab.style.color = "#888";
+    });
+
+    snippetsTab.addEventListener("click", () => {
+      // Show snippets panel, hide files panel
+      filesPanel.style.display = "none";
+      snippetsPanel.style.display = "block";
+      // Update tab styles
+      snippetsTab.style.background = "#252525";
+      snippetsTab.style.color = "#fff";
+      filesTab.style.background = "#1a1a1a";
+      filesTab.style.color = "#888";
     });
   }
 

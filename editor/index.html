@@ -119,7 +119,14 @@
         </div>
       </div>
       <div class="main">
-        <div class="sidebar" id="sidebar" style="width: 200px; background: #1a1a1a; border-right: 1px solid #333;"></div>
+        <div class="sidebar" id="sidebar" style="width: 220px; background: #1a1a1a; border-right: 1px solid #333; display: flex; flex-direction: column;">
+          <div class="sidebar-tabs" style="display: flex; border-bottom: 1px solid #333;">
+            <button id="files-tab" class="sidebar-tab active" style="flex: 1; padding: 8px 0; background: #252525; border: none; color: #fff; cursor: pointer; font-size: 11px;">Files</button>
+            <button id="snippets-tab" class="sidebar-tab" style="flex: 1; padding: 8px 0; background: #1a1a1a; border: none; color: #888; cursor: pointer; font-size: 11px;">Snippets</button>
+          </div>
+          <div id="files-panel" style="flex: 1; overflow: hidden;"></div>
+          <div id="snippets-panel" style="flex: 1; overflow: hidden; display: none;"></div>
+        </div>
         <div class="editor-pane">
           <div id="editor-container"></div>
         </div>
