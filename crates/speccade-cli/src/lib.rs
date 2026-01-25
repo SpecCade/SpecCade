@@ -4,6 +4,7 @@
 //! including input loading, Starlark compilation, and asset generation commands.
 
 pub mod analysis;
+pub mod backends;
 pub mod cache;
 pub mod input;
 
@@ -11,6 +12,6 @@ pub mod input;
 pub mod compiler;
 
 pub mod commands;
-mod dispatch;
+pub mod dispatch;
 pub mod parity_data;
 pub mod parity_matrix;

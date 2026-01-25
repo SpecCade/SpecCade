@@ -455,3 +455,302 @@ fn test_map_mesh_warns_about_transforms() {
 
     assert!(warnings.iter().any(|w| w.contains("location")));
 }
+
+// ========================================================================
+// Animation Mapping Tests
+// ========================================================================
+
+#[test]
+fn test_map_animation_walk_cycle() {
+    let legacy = LegacySpec {
+        dict_name: "ANIMATION".to_string(),
+        category: "animations".to_string(),
+        data: HashMap::from([
+            ("name".to_string(), serde_json::json!("walk_cycle")),
+            ("rig".to_string(), serde_json::json!("humanoid")),
+            ("fps".to_string(), serde_json::json!(30)),
+            ("duration_frames".to_string(), serde_json::json!(60)),
+            ("loop".to_string(), serde_json::json!(true)),
+            (
+                "poses".to_string(),
+                serde_json::json!({
+                    "contact_l": {
+                        "frame": 0,
+                        "bones": {
+                            "upper_leg_l": { "pitch": 20.0 },
+                            "upper_leg_r": { "pitch": -15.0 }
+                        }
+                    },
+                    "passing_r": {
+                        "frame": 15,
+                        "bones": {
+                            "upper_leg_l": { "pitch": 0.0 },
+                            "upper_leg_r": { "pitch": 0.0 }
+                        }
+                    },
+                    "contact_r": {
+                        "frame": 30,
+                        "bones": {
+                            "upper_leg_l": { "pitch": -15.0 },
+                            "upper_leg_r": { "pitch": 20.0 }
+                        }
+                    },
+                    "passing_l": {
+                        "frame": 45,
+                        "bones": {
+                            "upper_leg_l": { "pitch": 0.0 },
+                            "upper_leg_r": { "pitch": 0.0 }
+                        }
+                    }
+                }),
+            ),
+            (
+                "phases".to_string(),
+                serde_json::json!(["contact_l", "passing_r", "contact_r", "passing_l"]),
+            ),
+        ]),
+    };
+
+    let (params, warnings) =
+        map_legacy_keys_to_params(&legacy, "skeletal_animation.blender_clip_v1").unwrap();
+
+    assert_eq!(params["clip_name"].as_str().unwrap(), "walk_cycle");
+    assert_eq!(
+        params["skeleton_preset"].as_str().unwrap(),
+        "humanoid_basic_v1"
+    );
+    assert_eq!(params["fps"].as_u64().unwrap(), 30);
+    assert!(params["loop"].as_bool().unwrap());
+    assert_eq!(params["duration_seconds"].as_f64().unwrap(), 2.0);
+
+    let keyframes = params["keyframes"].as_array().unwrap();
+    assert_eq!(keyframes.len(), 4);
+
+    // First keyframe at time 0
+    assert_eq!(keyframes[0]["time"].as_f64().unwrap(), 0.0);
+
+    assert!(
+        warnings.is_empty() || warnings.iter().all(|w| !w.contains("error")),
+        "unexpected error warnings: {:?}",
+        warnings
+    );
+}
+
+#[test]
+fn test_map_animation_with_ik_targets() {
+    let legacy = LegacySpec {
+        dict_name: "ANIMATION".to_string(),
+        category: "animations".to_string(),
+        data: HashMap::from([
+            ("name".to_string(), serde_json::json!("idle")),
+            (
+                "character".to_string(),
+                serde_json::json!("humanoid_basic_v1"),
+            ),
+            ("fps".to_string(), serde_json::json!(24)),
+            ("duration_frames".to_string(), serde_json::json!(48)),
+            ("loop".to_string(), serde_json::json!(true)),
+            (
+                "ik_targets".to_string(),
+                serde_json::json!({
+                    "foot_l": {
+                        "position": [0.1, 0.0, 0.0],
+                        "blend": 1.0
+                    },
+                    "foot_r": {
+                        "position": [-0.1, 0.0, 0.0],
+                        "blend": 1.0
+                    }
+                }),
+            ),
+        ]),
+    };
+
+    let (params, _warnings) =
+        map_legacy_keys_to_params(&legacy, "skeletal_animation.blender_clip_v1").unwrap();
+
+    assert_eq!(params["clip_name"].as_str().unwrap(), "idle");
+    assert_eq!(
+        params["skeleton_preset"].as_str().unwrap(),
+        "humanoid_basic_v1"
+    );
+
+    // Check IK keyframes
+    let ik_keyframes = params["ik_keyframes"].as_array().unwrap();
+    assert_eq!(ik_keyframes.len(), 1);
+
+    let targets = ik_keyframes[0]["targets"].as_object().unwrap();
+    assert!(targets.contains_key("ik_foot_l"));
+    assert!(targets.contains_key("ik_foot_r"));
+
+    let foot_l = &targets["ik_foot_l"];
+    assert_eq!(foot_l["position"][0].as_f64().unwrap(), 0.1);
+    assert_eq!(foot_l["ik_fk_blend"].as_f64().unwrap(), 1.0);
+}
+
+#[test]
+fn test_map_animation_jump() {
+    let legacy = LegacySpec {
+        dict_name: "ANIMATION".to_string(),
+        category: "animations".to_string(),
+        data: HashMap::from([
+            ("name".to_string(), serde_json::json!("jump")),
+            (
+                "input_armature".to_string(),
+                serde_json::json!("humanoid_basic_v1"),
+            ),
+            ("fps".to_string(), serde_json::json!(30)),
+            ("duration_frames".to_string(), serde_json::json!(45)),
+            ("loop".to_string(), serde_json::json!(false)),
+            (
+                "poses".to_string(),
+                serde_json::json!({
+                    "crouch": {
+                        "frame": 0,
+                        "bones": {
+                            "hips": { "position": [0.0, 0.0, -0.2] },
+                            "upper_leg_l": { "pitch": 60.0 }
+                        }
+                    },
+                    "apex": {
+                        "frame": 25,
+                        "bones": {
+                            "hips": { "position": [0.0, 0.0, 0.5] },
+                            "upper_leg_l": { "pitch": 0.0 }
+                        }
+                    }
+                }),
+            ),
+            ("phases".to_string(), serde_json::json!(["crouch", "apex"])),
+            ("ground_offset".to_string(), serde_json::json!(0.05)),
+            ("save_blend".to_string(), serde_json::json!(true)),
+        ]),
+    };
+
+    let (params, warnings) =
+        map_legacy_keys_to_params(&legacy, "skeletal_animation.blender_clip_v1").unwrap();
+
+    assert_eq!(params["clip_name"].as_str().unwrap(), "jump");
+    assert!(!params["loop"].as_bool().unwrap());
+    assert_eq!(
+        params["skeleton_preset"].as_str().unwrap(),
+        "humanoid_basic_v1"
+    );
+
+    // Check export settings
+    let export = params["export"].as_object().unwrap();
+    assert!(export["save_blend"].as_bool().unwrap());
+
+    // Should warn about ground_offset
+    assert!(warnings.iter().any(|w| w.contains("ground_offset")));
+
+    // Check position transforms are preserved
+    let keyframes = params["keyframes"].as_array().unwrap();
+    let first_bones = keyframes[0]["bones"].as_object().unwrap();
+    let hips = first_bones.get("hips").unwrap();
+    assert!(hips.get("position").is_some());
+}
+
+#[test]
+fn test_map_animation_attack() {
+    let legacy = LegacySpec {
+        dict_name: "ANIMATION".to_string(),
+        category: "animations".to_string(),
+        data: HashMap::from([
+            ("name".to_string(), serde_json::json!("punch")),
+            ("rig".to_string(), serde_json::json!("humanoid")),
+            ("fps".to_string(), serde_json::json!(60)),
+            ("duration_frames".to_string(), serde_json::json!(30)),
+            ("loop".to_string(), serde_json::json!(false)),
+            (
+                "poses".to_string(),
+                serde_json::json!({
+                    "windup": {
+                        "frame": 0,
+                        "bones": {
+                            "upper_arm_r": { "pitch": -30.0, "yaw": 45.0 },
+                            "chest": { "yaw": 20.0 }
+                        }
+                    },
+                    "strike": {
+                        "frame": 10,
+                        "bones": {
+                            "upper_arm_r": { "pitch": 60.0, "yaw": 0.0 },
+                            "chest": { "yaw": -10.0 }
+                        }
+                    },
+                    "recover": {
+                        "frame": 30,
+                        "bones": {
+                            "upper_arm_r": { "pitch": 0.0, "yaw": 0.0 },
+                            "chest": { "yaw": 0.0 }
+                        }
+                    }
+                }),
+            ),
+            (
+                "phases".to_string(),
+                serde_json::json!(["windup", "strike", "recover"]),
+            ),
+        ]),
+    };
+
+    let (params, _warnings) =
+        map_legacy_keys_to_params(&legacy, "skeletal_animation.blender_clip_v1").unwrap();
+
+    assert_eq!(params["clip_name"].as_str().unwrap(), "punch");
+    assert!(!params["loop"].as_bool().unwrap());
+    assert_eq!(params["fps"].as_u64().unwrap(), 60);
+
+    let keyframes = params["keyframes"].as_array().unwrap();
+    assert_eq!(keyframes.len(), 3);
+
+    // Check that rotation includes yaw
+    let windup_bones = keyframes[0]["bones"].as_object().unwrap();
+    let upper_arm = windup_bones.get("upper_arm_r").unwrap();
+    let rotation = upper_arm["rotation"].as_array().unwrap();
+    assert_eq!(rotation[0].as_f64().unwrap(), -30.0); // pitch
+    assert_eq!(rotation[1].as_f64().unwrap(), 45.0); // yaw
+}
+
+#[test]
+fn test_map_animation_unknown_keys_warning() {
+    let legacy = LegacySpec {
+        dict_name: "ANIMATION".to_string(),
+        category: "animations".to_string(),
+        data: HashMap::from([
+            ("name".to_string(), serde_json::json!("test")),
+            ("rig".to_string(), serde_json::json!("humanoid")),
+            (
+                "unknown_field".to_string(),
+                serde_json::json!("should warn"),
+            ),
+        ]),
+    };
+
+    let (_params, warnings) =
+        map_legacy_keys_to_params(&legacy, "skeletal_animation.blender_clip_v1").unwrap();
+
+    assert!(warnings.iter().any(|w| w.contains("unknown_field")));
+}
+
+#[test]
+fn test_map_animation_procedural_layers_warning() {
+    let legacy = LegacySpec {
+        dict_name: "ANIMATION".to_string(),
+        category: "animations".to_string(),
+        data: HashMap::from([
+            ("name".to_string(), serde_json::json!("test")),
+            ("rig".to_string(), serde_json::json!("humanoid")),
+            (
+                "procedural_layers".to_string(),
+                serde_json::json!([{ "type": "noise", "bone": "head" }]),
+            ),
+        ]),
+    };
+
+    let (_params, warnings) =
+        map_legacy_keys_to_params(&legacy, "skeletal_animation.blender_clip_v1").unwrap();
+
+    assert!(warnings.iter().any(|w| w.contains("procedural_layers")));
+}

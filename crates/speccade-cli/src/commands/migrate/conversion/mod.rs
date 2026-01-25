@@ -11,6 +11,7 @@ use speccade_spec::{Recipe, Spec};
 use super::audit::{classify_legacy_keys, KeyClassification};
 use super::legacy_parser::{parse_legacy_spec_exec, parse_legacy_spec_static, LegacySpec};
 
+mod animation;
 mod audio;
 mod helpers;
 mod mesh;
@@ -133,8 +134,9 @@ pub fn map_legacy_keys_to_params(
         "audio_v1" => audio::map_audio_params(&legacy.data, &legacy.dict_name),
         "music.tracker_song_v1" => music::map_music_params(&legacy.data),
         "static_mesh.blender_primitives_v1" => mesh::map_mesh_params(&legacy.data),
-        // CHARACTER and ANIMATION are handled by MIGRATE-003/004
-        "skeletal_mesh.blender_rigged_mesh_v1" | "skeletal_animation.blender_clip_v1" => {
+        "skeletal_animation.blender_clip_v1" => animation::map_animation_params(&legacy.data),
+        // CHARACTER (skeletal_mesh) is handled by MIGRATE-004
+        "skeletal_mesh.blender_rigged_mesh_v1" => {
             let warnings = vec![format!(
                 "Category '{}' migration not yet implemented. Passing through legacy data.",
                 legacy.category

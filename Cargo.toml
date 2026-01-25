@@ -6,7 +6,12 @@ members = [
     "crates/speccade-backend-music",
     "crates/speccade-backend-texture",
     "crates/speccade-backend-blender",
+    "crates/speccade-editor",
     "crates/speccade-tests",
+    "editor/src-tauri",
+]
+exclude = [
+    "examples/extensions/simple-subprocess",
 ]
 resolver = "2"
 
@@ -33,6 +38,7 @@ png = "0.17"
 tempfile = "3"
 which = "6"
 hound = "3"
+gltf = "1"
 
 # Starlark support
 starlark = "=0.12.0"
@@ -46,6 +52,11 @@ base64 = "0.22"
 # Test dependencies
 pretty_assertions = "1"
 
+# Tauri editor dependencies
+tauri = "2"
+tauri-build = "2"
+notify = "6"
+
 # Workspace crates
 speccade-spec = { path = "crates/speccade-spec" }
 speccade-cli = { path = "crates/speccade-cli" }
@@ -53,3 +64,4 @@ speccade-backend-audio = { path = "crates/speccade-backend-audio" }
 speccade-backend-music = { path = "crates/speccade-backend-music" }
 speccade-backend-texture = { path = "crates/speccade-backend-texture" }
 speccade-backend-blender = { path = "crates/speccade-backend-blender" }
+speccade-editor = { path = "crates/speccade-editor" }

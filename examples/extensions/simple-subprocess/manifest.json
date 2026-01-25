@@ -1,0 +1,62 @@
+{
+  "name": "simple-subprocess-extension",
+  "version": "1.0.0",
+  "tier": 1,
+  "determinism": "byte_identical",
+  "interface": {
+    "type": "subprocess",
+    "executable": "simple-subprocess-extension",
+    "args": [],
+    "env": {},
+    "timeout_seconds": 60
+  },
+  "recipe_kinds": [
+    "texture.simple_gradient_v1"
+  ],
+  "description": "Reference implementation of a SpecCade subprocess extension that generates simple gradient textures",
+  "author": "SpecCade Team",
+  "license": "MIT OR Apache-2.0",
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "width": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 4096,
+        "default": 256
+      },
+      "height": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 4096,
+        "default": 256
+      },
+      "start_color": {
+        "type": "array",
+        "items": { "type": "integer", "minimum": 0, "maximum": 255 },
+        "minItems": 4,
+        "maxItems": 4,
+        "default": [0, 0, 0, 255]
+      },
+      "end_color": {
+        "type": "array",
+        "items": { "type": "integer", "minimum": 0, "maximum": 255 },
+        "minItems": 4,
+        "maxItems": 4,
+        "default": [255, 255, 255, 255]
+      },
+      "direction": {
+        "type": "string",
+        "enum": ["horizontal", "vertical"],
+        "default": "horizontal"
+      },
+      "noise_amount": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
+      }
+    }
+  },
+  "output_schema": null
+}

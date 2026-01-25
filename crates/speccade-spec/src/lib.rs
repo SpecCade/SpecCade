@@ -39,14 +39,16 @@
 //! # Modules
 //!
 //! - [`error`]: Error and warning types for validation
+//! - [`extension`]: Extension system types for external backends
+//! - [`hash`]: Canonical hashing and seed derivation
 //! - [`output`]: Output specification types (kind, format, path)
 //! - [`recipe`]: Recipe types for all supported backends
 //! - [`report`]: Report types and builder for generation results
 //! - [`spec`]: Main spec type and builder
 //! - [`validation`]: Spec validation functions
-//! - [`hash`]: Canonical hashing and seed derivation
 
 pub mod error;
+pub mod extension;
 pub mod hash;
 pub mod output;
 pub mod recipe;

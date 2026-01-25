@@ -55,9 +55,8 @@ Reference: `docs/rfcs/RFC-0009-editor-architecture.md`
 - [ ] `EDITOR-002` Scaffold Tauri 2.x project structure with Rust backend + TypeScript frontend.
   - Deliverable: `editor/` (Tauri app) + `crates/speccade-editor/` (Rust backend crate) with working build.
   - Touch points: `Cargo.toml` workspace, `editor/package.json`, `editor/src-tauri/`.
-- [ ] `EDITOR-003` Integrate Monaco editor with Starlark syntax highlighting and basic validation.
-  - Deliverable: `.star` files editable with syntax highlighting, parse errors shown inline.
-  - Touch points: `editor/src/`, Monaco language configuration.
+- [x] `EDITOR-003` ~~Integrate Monaco editor with Starlark syntax highlighting and basic validation.~~ Done: 2026-01-25
+  - Monaco wrapper component with Starlark language definition, token provider for keywords/builtins/stdlib, 500ms debounced validation with inline error display.
 - [ ] `EDITOR-004` Implement spec file watcher with debounced recompilation via `speccade-cli` commands.
   - Deliverable: File changes trigger `eval` + `validate`, results streamed to UI.
   - Touch points: `crates/speccade-editor/src/`, Tauri IPC commands.
@@ -67,9 +66,8 @@ Reference: `docs/rfcs/RFC-0009-editor-architecture.md`
 - [ ] `EDITOR-006` Add Web Audio preview panel for audio/music specs.
   - Deliverable: Play/stop controls, waveform visualization for audio outputs.
   - Touch points: `editor/src/components/`, Web Audio API integration.
-- [ ] `EDITOR-007` Implement LOD proxy generation for large mesh preview (sub-100ms first frame).
-  - Deliverable: Low-poly proxy displayed immediately, refinement on idle/request.
-  - Touch points: `crates/speccade-editor/src/`, preview quality indicator in UI.
+- [x] `EDITOR-007` ~~Implement LOD proxy generation for large mesh preview (sub-100ms first frame).~~ Done: 2026-01-25
+  - QEM edge-collapse decimation with silhouette preservation, auto-proxy for >10k triangle meshes, quality badges, refine button, auto-refine on 2s idle.
 
 ---
 
@@ -154,7 +152,8 @@ Resolved questions:
 
 ## Tooling / QA
 
-- [ ] `QA-006` Define a plugin/backends extension story (subprocess or WASM) with strict I/O contracts + determinism reporting.
+- [x] `QA-006` ~~Define a plugin/backends extension story (subprocess or WASM) with strict I/O contracts + determinism reporting.~~ Done: 2026-01-25
+  - Extension types in speccade-spec (manifest, contract, determinism levels), subprocess runner with timeout/hash verification, reference implementation in examples/extensions/simple-subprocess/, architecture docs.
 
 ---
 
@@ -166,9 +165,8 @@ Reference: `docs/MIGRATION.md`
   - Implemented mapping functions for SOUND, INSTRUMENT, SONG, MESH categories. Modular structure in conversion/{audio,music,mesh,texture}.rs.
 - [x] `MIGRATE-002` ~~Add migration fixtures + tests that validate migrated specs against `speccade validate`.~~ Done: 2026-01-24
   - 28 e2e tests covering SOUND, INSTRUMENT, CHARACTER migration + seed determinism + CLI validation.
-- [ ] `MIGRATE-003` Map legacy `ANIMATION` dict keys to canonical `skeletal_animation` params (incl. rig_setup/poses/phases/IK).
-  - Deliverable: a tested conversion that produces canonical `skeletal_animation.blender_rigged_v1` params (and rejects/flags unknown keys with actionable diagnostics).
-  - Touch points: `crates/speccade-cli/src/commands/migrate/`, `docs/legacy/PARITY_MATRIX_LEGACY_SPEC_PY.md`, `crates/speccade-spec/src/recipe/animation/`.
+- [x] `MIGRATE-003` ~~Map legacy `ANIMATION` dict keys to canonical `skeletal_animation` params (incl. rig_setup/poses/phases/IK).~~ Done: 2026-01-25
+  - Animation conversion module with pose/phase/bone/IK mapping, actionable diagnostics for unknown keys, 5 test fixtures (walk/run/idle/attack/jump), parity matrix updated.
 - [ ] `MIGRATE-004` Map legacy `CHARACTER` dict keys to canonical `skeletal_mesh` params (skeleton + parts/body_parts + skinning/export).
   - Deliverable: a tested conversion that emits canonical `skeletal_mesh.blender_rigged_mesh_v1` params and preserves triangle budgets/material intent where possible.
   - Touch points: `crates/speccade-cli/src/commands/migrate/`, `docs/legacy/PARITY_MATRIX_LEGACY_SPEC_PY.md`, `crates/speccade-spec/src/recipe/character/`.
