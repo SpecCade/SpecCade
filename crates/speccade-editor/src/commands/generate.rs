@@ -60,9 +60,7 @@ pub fn generate_preview(
 
     // Determine the asset type and generate appropriate preview
     let preview = match spec.asset_type {
-        speccade_spec::AssetType::Audio => {
-            preview::audio::generate_audio_preview(&spec, &settings)
-        }
+        speccade_spec::AssetType::Audio => preview::audio::generate_audio_preview(&spec, &settings),
         speccade_spec::AssetType::Texture
         | speccade_spec::AssetType::Sprite
         | speccade_spec::AssetType::Ui
@@ -70,13 +68,11 @@ pub fn generate_preview(
         | speccade_spec::AssetType::Vfx => {
             preview::texture::generate_texture_preview(&spec, &settings)
         }
-        speccade_spec::AssetType::StaticMesh
-        | speccade_spec::AssetType::SkeletalMesh => {
+        speccade_spec::AssetType::StaticMesh | speccade_spec::AssetType::SkeletalMesh => {
             preview::mesh::generate_mesh_preview(&spec, &settings)
         }
         speccade_spec::AssetType::Music => {
-            // Music uses the audio preview for now
-            preview::audio::generate_audio_preview(&spec, &settings)
+            preview::music::generate_music_preview(&spec, std::path::Path::new(&filename))
         }
         speccade_spec::AssetType::SkeletalAnimation => {
             // Animation preview is not yet implemented
@@ -133,13 +129,10 @@ pub fn refine_mesh_preview(
 
     // Only process mesh types
     let preview = match spec.asset_type {
-        speccade_spec::AssetType::StaticMesh
-        | speccade_spec::AssetType::SkeletalMesh => {
+        speccade_spec::AssetType::StaticMesh | speccade_spec::AssetType::SkeletalMesh => {
             preview::mesh::generate_full_quality_mesh_preview(&spec, &settings)
         }
-        _ => {
-            PreviewResult::failure("mesh", "Refinement is only supported for mesh assets")
-        }
+        _ => PreviewResult::failure("mesh", "Refinement is only supported for mesh assets"),
     };
 
     GeneratePreviewOutput {
@@ -179,11 +172,7 @@ pub struct GeneratedFile {
 /// This command compiles the Starlark source and generates all output files
 /// to the specified output directory.
 #[tauri::command]
-pub fn generate_full(
-    source: String,
-    filename: String,
-    output_dir: String,
-) -> GenerateFullOutput {
+pub fn generate_full(source: String, filename: String, output_dir: String) -> GenerateFullOutput {
     use speccade_cli::dispatch::{dispatch_generate, DispatchError};
     use std::path::Path;
     use std::time::Instant;
@@ -246,9 +235,7 @@ pub fn generate_full(
         .iter()
         .filter_map(|result| {
             let full_path = output_path.join(&result.path);
-            let size_bytes = std::fs::metadata(&full_path)
-                .map(|m| m.len())
-                .unwrap_or(0);
+            let size_bytes = std::fs::metadata(&full_path).map(|m| m.len()).unwrap_or(0);
 
             Some(GeneratedFile {
                 path: result.path.to_string_lossy().to_string(),
@@ -273,11 +260,7 @@ mod tests {
     #[test]
     fn test_generate_preview_compile_error() {
         let source = "{ invalid }";
-        let result = generate_preview(
-            source.to_string(),
-            "test.star".to_string(),
-            None,
-        );
+        let result = generate_preview(source.to_string(), "test.star".to_string(), None);
 
         assert!(!result.compile_success);
         assert!(result.compile_error.is_some());
@@ -298,11 +281,7 @@ mod tests {
     ]
 }
 "#;
-        let result = generate_preview(
-            source.to_string(),
-            "test.star".to_string(),
-            None,
-        );
+        let result = generate_preview(source.to_string(), "test.star".to_string(), None);
 
         assert!(result.compile_success);
         assert!(result.compile_error.is_none());
@@ -312,5 +291,72 @@ mod tests {
         assert!(!preview.success);
         assert!(preview.error.is_some());
         assert!(preview.error.unwrap().contains("No recipe"));
+    }
+
+    #[test]
+    fn test_generate_preview_music_success() {
+        let tmp = tempfile::tempdir().unwrap();
+        let filename = tmp.path().join("test.star");
+        std::fs::write(&filename, "# test").unwrap();
+
+        let source = r#"
+{
+    "spec_version": 1,
+    "asset_id": "test-music",
+    "asset_type": "music",
+    "license": "CC0-1.0",
+    "seed": 42,
+    "outputs": [
+        {"kind": "primary", "format": "xm", "path": "songs/test.xm"}
+    ],
+    "recipe": {
+        "kind": "music.tracker_song_v1",
+        "params": {
+            "format": "xm",
+            "bpm": 120,
+            "speed": 6,
+            "channels": 4,
+            "loop": True,
+            "instruments": [
+                {
+                    "name": "Test",
+                    "synthesis": { "type": "sine" },
+                    "default_volume": 64
+                }
+            ],
+            "patterns": {
+                "intro": {
+                    "rows": 16,
+                    "data": [
+                        {"row": 0, "channel": 0, "note": "C4", "inst": 0, "vol": 64},
+                        {"row": 4, "channel": 0, "note": "OFF", "inst": 0}
+                    ]
+                }
+            },
+            "arrangement": [
+                {"pattern": "intro", "repeat": 1}
+            ]
+        }
+    }
+}
+"#;
+
+        let result = generate_preview(
+            source.to_string(),
+            filename.to_string_lossy().to_string(),
+            None,
+        );
+
+        assert!(result.compile_success, "{:?}", result.compile_error);
+        let preview = result.preview.expect("expected preview");
+        assert!(preview.success, "{:?}", preview.error);
+        assert!(
+            matches!(
+                preview.mime_type.as_deref(),
+                Some("audio/x-xm") | Some("audio/x-it")
+            ),
+            "unexpected mime_type: {:?}",
+            preview.mime_type
+        );
     }
 }

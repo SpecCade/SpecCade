@@ -6,6 +6,7 @@
 pub mod audio;
 pub mod lod;
 pub mod mesh;
+pub mod music;
 pub mod texture;
 
 use serde::{Deserialize, Serialize};
