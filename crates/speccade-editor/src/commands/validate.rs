@@ -82,12 +82,16 @@ pub fn validate_spec(source: String, filename: String, budget: Option<String>) -
         Ok(result) => result.spec,
         Err(e) => {
             let (code, message, location) = match &e {
-                CompileError::Syntax { location, message } => {
-                    (e.code().to_string(), message.clone(), Some(location.clone()))
-                }
-                CompileError::Runtime { location, message } => {
-                    (e.code().to_string(), message.clone(), Some(location.clone()))
-                }
+                CompileError::Syntax { location, message } => (
+                    e.code().to_string(),
+                    message.clone(),
+                    Some(location.clone()),
+                ),
+                CompileError::Runtime { location, message } => (
+                    e.code().to_string(),
+                    message.clone(),
+                    Some(location.clone()),
+                ),
                 _ => (e.code().to_string(), e.to_string(), None),
             };
 
@@ -132,8 +136,7 @@ pub fn validate_spec(source: String, filename: String, budget: Option<String>) -
     // Apply budget validation if specified
     if let Some(budget_name) = &budget {
         if let Some(profile) = validation::BudgetProfile::by_name(budget_name) {
-            let budget_result =
-                validation::validate_spec_with_budget(&spec, &profile);
+            let budget_result = validation::validate_spec_with_budget(&spec, &profile);
             for err in budget_result.errors {
                 errors.push(ValidateError {
                     code: err.code.code().to_string(),

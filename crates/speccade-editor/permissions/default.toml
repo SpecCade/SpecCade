@@ -1,0 +1,24 @@
+"$schema" = "schemas/schema.json"
+
+[default]
+description = "Default permissions for the speccade plugin."
+# Keep in sync with:
+# - crates/speccade-editor/src/lib.rs (generate_handler![...])
+# - crates/speccade-editor/build.rs (COMMANDS)
+permissions = [
+  "allow-batch-generate",
+  "allow-eval-spec",
+  "allow-validate-spec",
+  "allow-generate-preview",
+  "allow-generate-full",
+  "allow-refine-mesh-preview",
+  "allow-generate-pack-manifest",
+  "allow-write-pack-manifest",
+  "allow-watch-file",
+  "allow-unwatch-file",
+  "allow-open-folder",
+  "allow-read-file",
+  "allow-save-file",
+  "allow-list-templates",
+  "allow-get-template",
+]

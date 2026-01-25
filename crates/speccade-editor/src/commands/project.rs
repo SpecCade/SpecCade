@@ -104,7 +104,8 @@ pub fn open_folder(path: String) -> Result<Vec<FileEntry>, String> {
         return Err(format!("Path is not a directory: {}", path));
     }
 
-    let entries = fs::read_dir(&dir_path).map_err(|e| format!("Failed to read directory: {}", e))?;
+    let entries =
+        fs::read_dir(&dir_path).map_err(|e| format!("Failed to read directory: {}", e))?;
 
     let mut dirs: Vec<FileEntry> = Vec::new();
     let mut files: Vec<FileEntry> = Vec::new();
@@ -112,10 +113,7 @@ pub fn open_folder(path: String) -> Result<Vec<FileEntry>, String> {
     for entry in entries {
         let entry = entry.map_err(|e| format!("Failed to read entry: {}", e))?;
         let entry_path = entry.path();
-        let name = entry
-            .file_name()
-            .to_string_lossy()
-            .to_string();
+        let name = entry.file_name().to_string_lossy().to_string();
 
         // Skip hidden files/directories (starting with .)
         if name.starts_with('.') {
@@ -278,7 +276,11 @@ mod tests {
         let temp_dir = TempDir::new().unwrap();
         let file_path = temp_dir.path().join("new_file.star");
 
-        save_file(file_path.to_string_lossy().to_string(), "new content".to_string()).unwrap();
+        save_file(
+            file_path.to_string_lossy().to_string(),
+            "new content".to_string(),
+        )
+        .unwrap();
 
         let content = fs::read_to_string(&file_path).unwrap();
         assert_eq!(content, "new content");

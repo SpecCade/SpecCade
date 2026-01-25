@@ -97,12 +97,16 @@ pub fn eval_spec(source: String, filename: String) -> EvalOutput {
         }
         Err(e) => {
             let (code, message, location) = match &e {
-                CompileError::Syntax { location, message } => {
-                    (e.code().to_string(), message.clone(), Some(location.clone()))
-                }
-                CompileError::Runtime { location, message } => {
-                    (e.code().to_string(), message.clone(), Some(location.clone()))
-                }
+                CompileError::Syntax { location, message } => (
+                    e.code().to_string(),
+                    message.clone(),
+                    Some(location.clone()),
+                ),
+                CompileError::Runtime { location, message } => (
+                    e.code().to_string(),
+                    message.clone(),
+                    Some(location.clone()),
+                ),
                 CompileError::Timeout { seconds } => (
                     e.code().to_string(),
                     format!("Evaluation timed out after {}s", seconds),

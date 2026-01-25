@@ -4144,35 +4144,15 @@ dependencies = [
 ]
 
 [[package]]
-name = "speccade-editor"
-version = "0.1.0"
-dependencies = [
- "base64 0.22.1",
- "blake3",
- "bytemuck",
- "gltf",
- "notify",
- "serde",
- "serde_json",
- "speccade-cli",
- "speccade-spec",
- "tauri",
- "tauri-build",
- "tempfile",
- "thiserror 1.0.69",
- "tokio",
-]
-
-[[package]]
 name = "speccade-editor-app"
 version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "speccade-editor",
  "tauri",
  "tauri-build",
  "tauri-plugin-dialog",
+ "tauri-plugin-speccade",
 ]
 
 [[package]]
@@ -4653,6 +4633,27 @@ dependencies = [
  "thiserror 2.0.18",
  "toml 0.9.11+spec-1.1.0",
  "url",
+]
+
+[[package]]
+name = "tauri-plugin-speccade"
+version = "0.1.0"
+dependencies = [
+ "base64 0.22.1",
+ "blake3",
+ "bytemuck",
+ "gltf",
+ "notify",
+ "serde",
+ "serde_json",
+ "speccade-cli",
+ "speccade-spec",
+ "tauri",
+ "tauri-build",
+ "tauri-plugin",
+ "tempfile",
+ "thiserror 1.0.69",
+ "tokio",
 ]
 
 [[package]]

@@ -37,6 +37,9 @@ pub use watcher::{unwatch_file, watch_file, WatcherState};
 pub fn init<R: Runtime>() -> TauriPlugin<R> {
     Builder::new("speccade")
         .invoke_handler(tauri::generate_handler![
+            // Keep in sync with:
+            // - crates/speccade-editor/build.rs (COMMANDS)
+            // - crates/speccade-editor/permissions/default.toml (default permission set)
             batch_generate,
             eval_spec,
             validate_spec,

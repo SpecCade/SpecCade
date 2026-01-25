@@ -130,9 +130,7 @@ pub fn batch_generate(paths: Vec<String>, output_dir: String) -> BatchGenerateOu
             .iter()
             .filter_map(|result| {
                 let full_path = out_path.join(&result.path);
-                let size_bytes = std::fs::metadata(&full_path)
-                    .map(|m| m.len())
-                    .unwrap_or(0);
+                let size_bytes = std::fs::metadata(&full_path).map(|m| m.len()).unwrap_or(0);
 
                 Some(GeneratedFile {
                     path: result.path.to_string_lossy().to_string(),
@@ -183,6 +181,10 @@ mod tests {
         assert_eq!(result.succeeded, 0);
         assert_eq!(result.failed, 1);
         assert!(!result.results[0].success);
-        assert!(result.results[0].error.as_ref().unwrap().contains("Read error"));
+        assert!(result.results[0]
+            .error
+            .as_ref()
+            .unwrap()
+            .contains("Read error"));
     }
 }

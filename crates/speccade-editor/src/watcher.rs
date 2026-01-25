@@ -111,9 +111,7 @@ pub fn watch_file<R: Runtime>(
 
 /// Stop watching the current file.
 #[tauri::command]
-pub fn unwatch_file(
-    state: tauri::State<'_, std::sync::Mutex<WatcherState>>,
-) -> Result<(), String> {
+pub fn unwatch_file(state: tauri::State<'_, std::sync::Mutex<WatcherState>>) -> Result<(), String> {
     let mut state = state.lock().map_err(|e| e.to_string())?;
     state.watcher = None;
     state.watched_path = None;

@@ -2209,6 +2209,192 @@
           "type": "string",
           "const": "dialog:deny-save",
           "markdownDescription": "Denies the save command without any pre-configured scope."
+        },
+        {
+          "description": "Default permissions for the speccade plugin.\n#### This default permission set includes:\n\n- `allow-batch-generate`\n- `allow-eval-spec`\n- `allow-validate-spec`\n- `allow-generate-preview`\n- `allow-generate-full`\n- `allow-refine-mesh-preview`\n- `allow-generate-pack-manifest`\n- `allow-write-pack-manifest`\n- `allow-watch-file`\n- `allow-unwatch-file`\n- `allow-open-folder`\n- `allow-read-file`\n- `allow-save-file`\n- `allow-list-templates`\n- `allow-get-template`",
+          "type": "string",
+          "const": "speccade:default",
+          "markdownDescription": "Default permissions for the speccade plugin.\n#### This default permission set includes:\n\n- `allow-batch-generate`\n- `allow-eval-spec`\n- `allow-validate-spec`\n- `allow-generate-preview`\n- `allow-generate-full`\n- `allow-refine-mesh-preview`\n- `allow-generate-pack-manifest`\n- `allow-write-pack-manifest`\n- `allow-watch-file`\n- `allow-unwatch-file`\n- `allow-open-folder`\n- `allow-read-file`\n- `allow-save-file`\n- `allow-list-templates`\n- `allow-get-template`"
+        },
+        {
+          "description": "Enables the batch_generate command without any pre-configured scope.",
+          "type": "string",
+          "const": "speccade:allow-batch-generate",
+          "markdownDescription": "Enables the batch_generate command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the eval_spec command without any pre-configured scope.",
+          "type": "string",
+          "const": "speccade:allow-eval-spec",
+          "markdownDescription": "Enables the eval_spec command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the generate_full command without any pre-configured scope.",
+          "type": "string",
+          "const": "speccade:allow-generate-full",
+          "markdownDescription": "Enables the generate_full command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the generate_pack_manifest command without any pre-configured scope.",
+          "type": "string",
+          "const": "speccade:allow-generate-pack-manifest",
+          "markdownDescription": "Enables the generate_pack_manifest command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the generate_preview command without any pre-configured scope.",
+          "type": "string",
+          "const": "speccade:allow-generate-preview",
+          "markdownDescription": "Enables the generate_preview command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the get_template command without any pre-configured scope.",
+          "type": "string",
+          "const": "speccade:allow-get-template",
+          "markdownDescription": "Enables the get_template command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the list_templates command without any pre-configured scope.",
+          "type": "string",
+          "const": "speccade:allow-list-templates",
+          "markdownDescription": "Enables the list_templates command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the open_folder command without any pre-configured scope.",
+          "type": "string",
+          "const": "speccade:allow-open-folder",
+          "markdownDescription": "Enables the open_folder command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the read_file command without any pre-configured scope.",
+          "type": "string",
+          "const": "speccade:allow-read-file",
+          "markdownDescription": "Enables the read_file command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the refine_mesh_preview command without any pre-configured scope.",
+          "type": "string",
+          "const": "speccade:allow-refine-mesh-preview",
+          "markdownDescription": "Enables the refine_mesh_preview command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the save_file command without any pre-configured scope.",
+          "type": "string",
+          "const": "speccade:allow-save-file",
+          "markdownDescription": "Enables the save_file command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the unwatch_file command without any pre-configured scope.",
+          "type": "string",
+          "const": "speccade:allow-unwatch-file",
+          "markdownDescription": "Enables the unwatch_file command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the validate_spec command without any pre-configured scope.",
+          "type": "string",
+          "const": "speccade:allow-validate-spec",
+          "markdownDescription": "Enables the validate_spec command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the watch_file command without any pre-configured scope.",
+          "type": "string",
+          "const": "speccade:allow-watch-file",
+          "markdownDescription": "Enables the watch_file command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the write_pack_manifest command without any pre-configured scope.",
+          "type": "string",
+          "const": "speccade:allow-write-pack-manifest",
+          "markdownDescription": "Enables the write_pack_manifest command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the batch_generate command without any pre-configured scope.",
+          "type": "string",
+          "const": "speccade:deny-batch-generate",
+          "markdownDescription": "Denies the batch_generate command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the eval_spec command without any pre-configured scope.",
+          "type": "string",
+          "const": "speccade:deny-eval-spec",
+          "markdownDescription": "Denies the eval_spec command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the generate_full command without any pre-configured scope.",
+          "type": "string",
+          "const": "speccade:deny-generate-full",
+          "markdownDescription": "Denies the generate_full command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the generate_pack_manifest command without any pre-configured scope.",
+          "type": "string",
+          "const": "speccade:deny-generate-pack-manifest",
+          "markdownDescription": "Denies the generate_pack_manifest command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the generate_preview command without any pre-configured scope.",
+          "type": "string",
+          "const": "speccade:deny-generate-preview",
+          "markdownDescription": "Denies the generate_preview command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the get_template command without any pre-configured scope.",
+          "type": "string",
+          "const": "speccade:deny-get-template",
+          "markdownDescription": "Denies the get_template command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the list_templates command without any pre-configured scope.",
+          "type": "string",
+          "const": "speccade:deny-list-templates",
+          "markdownDescription": "Denies the list_templates command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the open_folder command without any pre-configured scope.",
+          "type": "string",
+          "const": "speccade:deny-open-folder",
+          "markdownDescription": "Denies the open_folder command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the read_file command without any pre-configured scope.",
+          "type": "string",
+          "const": "speccade:deny-read-file",
+          "markdownDescription": "Denies the read_file command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the refine_mesh_preview command without any pre-configured scope.",
+          "type": "string",
+          "const": "speccade:deny-refine-mesh-preview",
+          "markdownDescription": "Denies the refine_mesh_preview command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the save_file command without any pre-configured scope.",
+          "type": "string",
+          "const": "speccade:deny-save-file",
+          "markdownDescription": "Denies the save_file command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the unwatch_file command without any pre-configured scope.",
+          "type": "string",
+          "const": "speccade:deny-unwatch-file",
+          "markdownDescription": "Denies the unwatch_file command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the validate_spec command without any pre-configured scope.",
+          "type": "string",
+          "const": "speccade:deny-validate-spec",
+          "markdownDescription": "Denies the validate_spec command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the watch_file command without any pre-configured scope.",
+          "type": "string",
+          "const": "speccade:deny-watch-file",
+          "markdownDescription": "Denies the watch_file command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the write_pack_manifest command without any pre-configured scope.",
+          "type": "string",
+          "const": "speccade:deny-write-pack-manifest",
+          "markdownDescription": "Denies the write_pack_manifest command without any pre-configured scope."
         }
       ]
     },
