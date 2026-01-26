@@ -1,5 +1,6 @@
 //! Output result and metrics types for reports.
 
+use super::structural::StructuralMetrics;
 use crate::output::{OutputFormat, OutputKind};
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
@@ -191,6 +192,14 @@ pub struct OutputMetrics {
     /// Root motion delta [X, Y, Z] from start to end of animation.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub root_motion_delta: Option<[f32; 3]>,
+
+    // ========== Structural metrics ==========
+    /// Structural metrics for LLM-friendly 3D feedback.
+    ///
+    /// Describes geometric properties (proportions, symmetry, component
+    /// relationships, skeletal structure) without encoding aesthetic opinions.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub structural: Option<StructuralMetrics>,
 }
 
 impl OutputMetrics {
@@ -234,6 +243,7 @@ impl OutputMetrics {
             range_violations: None,
             velocity_spikes: None,
             root_motion_delta: None,
+            structural: None,
         }
     }
 
@@ -456,6 +466,12 @@ impl OutputMetrics {
     /// Sets the root motion delta.
     pub fn with_root_motion_delta(mut self, delta: [f32; 3]) -> Self {
         self.root_motion_delta = Some(delta);
+        self
+    }
+
+    /// Sets the structural metrics.
+    pub fn with_structural(mut self, structural: StructuralMetrics) -> Self {
+        self.structural = Some(structural);
         self
     }
 }

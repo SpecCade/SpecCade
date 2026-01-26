@@ -18,6 +18,7 @@ If a doc/example disagrees with validation, treat `speccade validate` + Rust typ
 - [Static Mesh Specs](mesh.md) - Blender primitive meshes with modifiers
 - [Character Specs](character.md) - Skeletal meshes with armatures
 - [Animation Specs](animation.md) - Skeletal animation clips
+- [Structural Metrics](structural-metrics.md) - LLM-friendly geometric analysis for 3D assets
 
 ## Spec Structure
 

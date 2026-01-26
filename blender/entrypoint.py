@@ -36,6 +36,15 @@ try:
 except ImportError:
     BLENDER_AVAILABLE = False
 
+# Structural metrics module (for LLM-friendly 3D feedback)
+try:
+    from structural_metrics import compute_all_structural_metrics
+    STRUCTURAL_METRICS_AVAILABLE = True
+except ImportError:
+    STRUCTURAL_METRICS_AVAILABLE = False
+    def compute_all_structural_metrics(obj, armature=None, components=None):
+        return {}
+
 
 # =============================================================================
 # Report Generation
@@ -129,7 +138,7 @@ def compute_mesh_metrics(obj: 'bpy.types.Object') -> Dict[str, Any]:
 
     obj_eval.to_mesh_clear()
 
-    return {
+    result = {
         "vertex_count": vertex_count,
         "face_count": face_count,
         "edge_count": edge_count,
@@ -154,6 +163,14 @@ def compute_mesh_metrics(obj: 'bpy.types.Object') -> Dict[str, Any]:
         "bounds_max": bbox_max,
         "material_slot_count": material_slot_count
     }
+
+    # Add structural metrics for LLM-friendly feedback
+    if STRUCTURAL_METRICS_AVAILABLE:
+        structural = compute_all_structural_metrics(obj)
+        if structural:
+            result["structural"] = structural
+
+    return result
 
 
 def count_non_manifold_edges(mesh: 'bpy.types.Mesh') -> int:
@@ -375,6 +392,12 @@ def compute_skeletal_mesh_metrics(obj: 'bpy.types.Object', armature: 'bpy.types.
     mesh_metrics["unweighted_vertex_count"] = unweighted_vertex_count
     mesh_metrics["weight_normalization_percentage"] = round(weight_normalization_percentage, 2)
     mesh_metrics["max_weight_deviation"] = round(max_weight_deviation, 6)
+
+    # Enhance structural metrics with skeletal data if available
+    if STRUCTURAL_METRICS_AVAILABLE and "structural" in mesh_metrics:
+        skeletal_structural = compute_all_structural_metrics(obj, armature=armature)
+        if skeletal_structural:
+            mesh_metrics["structural"] = skeletal_structural
 
     return mesh_metrics
 

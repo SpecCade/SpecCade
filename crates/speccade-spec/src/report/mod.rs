@@ -8,6 +8,7 @@ mod builder;
 mod error;
 mod lint;
 mod output;
+mod structural;
 mod timing;
 
 #[cfg(test)]
@@ -19,6 +20,11 @@ pub use lint::{LintIssueData, LintReportData};
 pub use output::{
     BakedMapInfo, BakingMetrics, BoundingBox, CollisionBoundingBox, CollisionMeshMetrics,
     NavmeshMetrics, OutputMetrics, OutputResult, StaticMeshLodLevelMetrics,
+};
+pub use structural::{
+    AspectRatios, BoneCoverageInfo, BonePairSymmetry, ComponentAdjacency, ComponentInfo,
+    ComponentMetrics, GeometryMetrics, ScaleReference, SkeletalStructureMetrics, StructuralMetrics,
+    SymmetryMetrics,
 };
 pub use timing::StageTiming;
 

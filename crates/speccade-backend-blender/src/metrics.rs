@@ -4,6 +4,7 @@
 //! rather than requiring byte-identical output (unlike Tier 1 backends).
 
 use serde::{Deserialize, Serialize};
+use speccade_spec::report::StructuralMetrics;
 
 /// Metrics reported by Blender for a generated mesh or animation.
 ///
@@ -167,6 +168,14 @@ pub struct BlenderMetrics {
     /// Root motion delta [X, Y, Z] from start to end of animation.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub root_motion_delta: Option<[f64; 3]>,
+
+    // ========== Structural metrics ==========
+    /// Structural metrics for LLM-friendly 3D feedback.
+    ///
+    /// Describes geometric properties (proportions, symmetry, component
+    /// relationships, skeletal structure) without encoding aesthetic opinions.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub structural: Option<StructuralMetrics>,
 }
 
 impl BlenderMetrics {
@@ -638,5 +647,80 @@ mod tests {
         let parsed: BlenderReport = serde_json::from_str(&json).unwrap();
         assert!(parsed.ok);
         assert_eq!(parsed.output_path, Some("output.glb".to_string()));
+    }
+
+    #[test]
+    fn test_structural_metrics_parsing() {
+        // JSON from Blender with structural metrics
+        let json = r#"{
+            "triangle_count": 100,
+            "structural": {
+                "geometry": {
+                    "extent": [1.0, 2.0, 0.5],
+                    "aspect_ratios": { "xy": 0.5, "xz": 2.0, "yz": 4.0 },
+                    "dominant_axis": "Y",
+                    "elongation": 4.0,
+                    "centroid": [0.5, 1.0, 0.25],
+                    "centroid_normalized": [0.5, 0.5, 0.5],
+                    "convex_hull_ratio": 0.85
+                },
+                "symmetry": {
+                    "x_axis": 0.95,
+                    "y_axis": 0.1,
+                    "z_axis": 0.5
+                },
+                "scale": {
+                    "longest_dimension_m": 2.0,
+                    "volume_m3": 1.0,
+                    "fits_in_1m_cube": false,
+                    "fits_in_10cm_cube": false
+                }
+            }
+        }"#;
+
+        let metrics: BlenderMetrics = serde_json::from_str(json).unwrap();
+
+        assert_eq!(metrics.triangle_count, Some(100));
+        assert!(metrics.structural.is_some());
+
+        let structural = metrics.structural.unwrap();
+        assert!(structural.geometry.is_some());
+        assert!(structural.symmetry.is_some());
+        assert!(structural.scale.is_some());
+
+        let geometry = structural.geometry.unwrap();
+        assert_eq!(geometry.dominant_axis, "Y");
+        assert!((geometry.elongation - 4.0).abs() < 0.001);
+
+        let symmetry = structural.symmetry.unwrap();
+        assert!((symmetry.x_axis - 0.95).abs() < 0.001);
+    }
+
+    #[test]
+    fn test_structural_metrics_missing_gracefully() {
+        // JSON from older Blender scripts without structural metrics
+        let json = r#"{
+            "triangle_count": 100,
+            "bounding_box": { "min": [-1.0, 0.0, -1.0], "max": [1.0, 2.0, 1.0] }
+        }"#;
+
+        let metrics: BlenderMetrics = serde_json::from_str(json).unwrap();
+
+        assert_eq!(metrics.triangle_count, Some(100));
+        assert!(metrics.structural.is_none());
+    }
+
+    #[test]
+    fn test_structural_metrics_null_gracefully() {
+        // JSON where structural is explicitly null
+        let json = r#"{
+            "triangle_count": 100,
+            "structural": null
+        }"#;
+
+        let metrics: BlenderMetrics = serde_json::from_str(json).unwrap();
+
+        assert_eq!(metrics.triangle_count, Some(100));
+        assert!(metrics.structural.is_none());
     }
 }

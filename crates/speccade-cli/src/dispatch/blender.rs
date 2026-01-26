@@ -149,6 +149,7 @@ pub(super) fn generate_blender_static_mesh(
             range_violations: None,
             velocity_spikes: None,
             root_motion_delta: None,
+            structural: result.metrics.structural.clone(),
         };
 
     Ok(vec![OutputResult::tier2(
@@ -227,6 +228,7 @@ pub(super) fn generate_blender_skeletal_mesh(
             range_violations: None,
             velocity_spikes: None,
             root_motion_delta: None,
+            structural: result.metrics.structural.clone(),
         };
 
     Ok(vec![OutputResult::tier2(
@@ -301,6 +303,7 @@ pub(super) fn generate_blender_animation(
             .metrics
             .root_motion_delta
             .map(|d| [d[0] as f32, d[1] as f32, d[2] as f32]),
+        structural: result.metrics.structural.clone(),
     };
 
     Ok(vec![OutputResult::tier2(
@@ -438,6 +441,7 @@ pub(super) fn generate_blender_modular_kit(
             range_violations: None,
             velocity_spikes: None,
             root_motion_delta: None,
+            structural: result.metrics.structural.clone(),
         };
 
     Ok(vec![OutputResult::tier2(
@@ -516,6 +520,7 @@ pub(super) fn generate_blender_organic_sculpt(
             range_violations: None,
             velocity_spikes: None,
             root_motion_delta: None,
+            structural: result.metrics.structural.clone(),
         };
 
     Ok(vec![OutputResult::tier2(
@@ -592,6 +597,7 @@ pub(super) fn generate_blender_rigged_animation(
             .metrics
             .root_motion_delta
             .map(|d| [d[0] as f32, d[1] as f32, d[2] as f32]),
+        structural: result.metrics.structural.clone(),
     };
 
     Ok(vec![OutputResult::tier2(
