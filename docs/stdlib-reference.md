@@ -12,6 +12,28 @@ improving the authoring experience.
 4. **Domain-prefixed** - Functions are grouped by domain (audio, texture, mesh)
 5. **Minimal** - Core functions covering the most common use cases
 
+## Coordinate System
+
+All stdlib functions use SpecCade's canonical coordinate system:
+
+| Property | Value |
+|----------|-------|
+| Handedness | Right-handed |
+| Up | +Z |
+| Forward | +Y |
+| Right | +X |
+| Units | Meters |
+| Rotation Order | XYZ (Euler) |
+| Rotation Units | Degrees |
+
+**Key conventions:**
+- `[X, Y, Z]` positions: `[right, forward, up]`
+- `[X, Y, Z]` rotations: `[pitch, roll, yaw]`
+- Character origin at feet, facing +Y
+- Positive rotation = counter-clockwise (right-hand rule)
+
+See [Coordinate System Conventions](conventions/coordinate-system.md) for full details.
+
 ## Error Codes
 
 All stdlib errors use a stable S-series format:
