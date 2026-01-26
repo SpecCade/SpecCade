@@ -9,6 +9,11 @@ Skeletal meshes are rigged 3D models with armatures for characters, creatures, a
 | Output Formats | `glb` |
 | Determinism | Tier 2 (metric validation) |
 
+> **Coordinate System:** SpecCade uses Z-up, Y-forward convention (Blender standard). See [Coordinate System Conventions](../conventions/coordinate-system.md) for details.
+> - Character origin at feet (Z=0)
+> - Character faces +Y in rest pose
+> - Left side at -X, right side at +X
+
 ## SSOT (Source Of Truth)
 
 - Rust types: `crates/speccade-spec/src/recipe/character/`
@@ -78,8 +83,8 @@ Define custom bones when a preset doesn't fit:
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `bone` | string | Yes | Unique bone name |
-| `head` | `[f64; 3]` | No | Head position [X, Y, Z] |
-| `tail` | `[f64; 3]` | No | Tail position [X, Y, Z] |
+| `head` | `[f64; 3]` | No | Head position [X (right), Y (forward), Z (up)] in meters |
+| `tail` | `[f64; 3]` | No | Tail position [X (right), Y (forward), Z (up)] in meters |
 | `parent` | string | No | Parent bone name |
 | `mirror` | string | No | Mirror from another bone (L->R reflection) |
 
@@ -118,8 +123,8 @@ Body parts attach mesh primitives to bones:
 | `primitive` | string | Yes | Primitive type: `cube`, `sphere`, `cylinder`, `cone`, `torus`, `plane`, `ico_sphere` |
 | `dimensions` | `[f64; 3]` | Yes | Size [X, Y, Z] |
 | `segments` | u8 | No | Subdivision segments |
-| `offset` | `[f64; 3]` | No | Position offset from bone |
-| `rotation` | `[f64; 3]` | No | Euler rotation [X, Y, Z] in degrees |
+| `offset` | `[f64; 3]` | No | Position offset from bone [X (right), Y (forward), Z (up)] |
+| `rotation` | `[f64; 3]` | No | Euler rotation [X (pitch), Y (roll), Z (yaw)] in degrees |
 
 ### Material Slots
 
