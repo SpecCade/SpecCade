@@ -28,7 +28,14 @@
       "Bash(npm run build:*)",
       "Bash(npx tsc:*)",
       "Bash(npm install)",
-      "Bash(npx vite build)"
+      "Bash(npx vite build)",
+      "Bash(material_preset)",
+      "Bash(particle_profile)",
+      "Bash(item_card)",
+      "Bash(damage_number \")",
+      "Bash(git log:*)",
+      "Bash(Get-ChildItem \"$env:LOCALAPPDATA\\\\Temp\\\\claude\\\\C--Development-nethercore-project-speccade\\\\tasks\\\\*.output\")",
+      "Bash(Select-Object -Last 30 })"
     ]
   },
   "_comment": "Local-only Claude Code permissions. Keep machine-specific rules here and do not commit this file."
