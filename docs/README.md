@@ -11,6 +11,10 @@
 - `DETERMINISM.md` (determinism model and expectations)
 - `rfcs/` (design proposals and rationale; action items live in `ROADMAP.md`)
 
+## Conventions
+
+- [Coordinate System](conventions/coordinate-system.md) - Axis conventions for meshes and animations
+
 ## LLM/Tool-Friendly Notes
 
 - Prefer `docs/spec-reference/*` and the `speccade-spec` Rust types as the source of truth.
