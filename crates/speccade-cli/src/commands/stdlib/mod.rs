@@ -52,6 +52,7 @@ pub fn run_dump(format: DumpFormat) -> Result<ExitCode> {
 #[derive(Debug, Serialize)]
 pub struct StdlibDump {
     pub stdlib_version: String,
+    pub coordinate_system: CoordinateSystem,
     pub functions: Vec<FunctionInfo>,
 }
 
@@ -71,6 +72,7 @@ impl StdlibDump {
         });
         Self {
             stdlib_version: STDLIB_VERSION.to_string(),
+            coordinate_system: CoordinateSystem::default(),
             functions,
         }
     }
@@ -116,6 +118,32 @@ pub struct RangeInfo {
     pub min: Option<f64>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub max: Option<f64>,
+}
+
+/// Coordinate system metadata for the stdlib.
+#[derive(Debug, Serialize)]
+pub struct CoordinateSystem {
+    pub handedness: String,
+    pub up: String,
+    pub forward: String,
+    pub right: String,
+    pub units: String,
+    pub rotation_order: String,
+    pub rotation_units: String,
+}
+
+impl Default for CoordinateSystem {
+    fn default() -> Self {
+        Self {
+            handedness: "right".into(),
+            up: "+Z".into(),
+            forward: "+Y".into(),
+            right: "+X".into(),
+            units: "meters".into(),
+            rotation_order: "XYZ".into(),
+            rotation_units: "degrees".into(),
+        }
+    }
 }
 
 // Helper macros for compact function definitions
@@ -327,5 +355,18 @@ mod tests {
         assert_eq!("json".parse::<DumpFormat>().unwrap(), DumpFormat::Json);
         assert_eq!("JSON".parse::<DumpFormat>().unwrap(), DumpFormat::Json);
         assert!("yaml".parse::<DumpFormat>().is_err());
+    }
+
+    #[test]
+    fn test_dump_includes_coordinate_system() {
+        let dump = StdlibDump::new();
+        let json = serde_json::to_string(&dump).unwrap();
+        let parsed: serde_json::Value = serde_json::from_str(&json).unwrap();
+
+        let coord = parsed.get("coordinate_system").expect("coordinate_system field missing");
+        assert_eq!(coord.get("handedness").unwrap(), "right");
+        assert_eq!(coord.get("up").unwrap(), "+Z");
+        assert_eq!(coord.get("forward").unwrap(), "+Y");
+        assert_eq!(coord.get("units").unwrap(), "meters");
     }
 }
