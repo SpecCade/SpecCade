@@ -9,6 +9,11 @@ Skeletal animations are keyframe-based animation clips for skeletal meshes.
 | Output Formats | `glb` |
 | Determinism | Tier 2 (metric validation) |
 
+> **Coordinate System:** SpecCade uses Z-up, Y-forward convention. See [Coordinate System Conventions](../conventions/coordinate-system.md).
+> - Rotation X = pitch (nod), Y = roll (tilt), Z = yaw (turn)
+> - Positive rotation = counter-clockwise (right-hand rule)
+> - Root motion along +Y = forward movement
+
 ## Recipe Kind Selection: Clip vs Rigged
 
 SpecCade provides two recipe kinds for skeletal animation, each with a distinct purpose:
@@ -101,9 +106,9 @@ Keyframes define bone transforms at specific times:
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `position` | `[f64; 3]` | No | Position offset [X, Y, Z] |
-| `rotation` | `[f64; 3]` | No | Euler rotation [X, Y, Z] in degrees |
-| `scale` | `[f64; 3]` | No | Scale [X, Y, Z] |
+| `position` | `[f64; 3]` | No | Position offset [X (right), Y (forward), Z (up)] in meters |
+| `rotation` | `[f64; 3]` | No | Euler rotation [X (pitch), Y (roll), Z (yaw)] in degrees |
+| `scale` | `[f64; 3]` | No | Scale [X (width), Y (depth), Z (height)] |
 
 At least one transform property should be set per bone.
 
