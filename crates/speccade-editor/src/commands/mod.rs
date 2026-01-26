@@ -5,6 +5,7 @@
 pub mod batch;
 pub mod eval;
 pub mod generate;
+pub mod lint;
 pub mod pack;
 pub mod project;
 pub mod templates;

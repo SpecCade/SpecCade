@@ -1,0 +1,22 @@
+[package]
+name = "speccade-lint"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "SpecCade semantic quality lint system - detects perceptual problems in generated assets"
+keywords = ["speccade", "lint", "quality", "validation"]
+categories = ["development-tools", "game-development"]
+
+[dependencies]
+speccade-spec.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+hound.workspace = true
+png.workspace = true
+gltf.workspace = true
+
+[dev-dependencies]
+pretty_assertions.workspace = true
+tempfile.workspace = true

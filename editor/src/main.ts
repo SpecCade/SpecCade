@@ -60,6 +60,26 @@ interface EvalOutput {
   source_hash?: string;
 }
 
+/** A lint issue from the backend. */
+interface LintIssue {
+  rule_id: string;
+  severity: "error" | "warning" | "info";
+  message: string;
+  suggestion: string;
+  spec_path?: string;
+  actual_value?: string;
+  expected_range?: string;
+}
+
+/** Lint output from the backend. */
+interface LintOutput {
+  ok: boolean;
+  issues: LintIssue[];
+  error_count: number;
+  warning_count: number;
+  info_count: number;
+}
+
 interface PreviewResult {
   success: boolean;
   asset_type: string;
@@ -69,6 +89,7 @@ interface PreviewResult {
   metadata?: Record<string, unknown>;
   quality?: "proxy" | "full";
   can_refine?: boolean;
+  lint?: LintOutput;
 }
 
 interface GeneratePreviewOutput {
@@ -337,6 +358,53 @@ function previewProblem(message: string): ProblemItem {
 }
 
 /**
+ * Convert lint output to Problems panel items.
+ */
+function convertLintToProblems(lint: LintOutput): ProblemItem[] {
+  const problems: ProblemItem[] = [];
+
+  for (let i = 0; i < lint.issues.length; i++) {
+    const issue = lint.issues[i];
+    // Map lint severity to problem severity (info becomes warning in the panel)
+    const severity: "error" | "warning" =
+      issue.severity === "error" ? "error" : "warning";
+
+    // Build the message: include suggestion for actionable feedback
+    let message = issue.message;
+    if (issue.actual_value && issue.expected_range) {
+      message += ` (got ${issue.actual_value}, expected ${issue.expected_range})`;
+    }
+    if (issue.suggestion) {
+      message += `. ${issue.suggestion}`;
+    }
+
+    problems.push({
+      id: `lint:${issue.severity}:${issue.rule_id}:${i}`,
+      stage: "lint",
+      severity,
+      code: issue.rule_id,
+      message,
+      // Lint issues don't have source line/column, but may have spec_path
+      location: undefined,
+    });
+  }
+
+  return problems;
+}
+
+/**
+ * Process lint results from a preview and update the Problems panel.
+ */
+function processLintResults(preview: PreviewResult | undefined): void {
+  if (preview?.lint) {
+    const lintProblems = convertLintToProblems(preview.lint);
+    replaceStage("lint", lintProblems);
+  } else {
+    replaceStage("lint", []);
+  }
+}
+
+/**
  * Update status bar text.
  */
 function updateStatus(message: string): void {
@@ -482,6 +550,7 @@ async function updatePreview(result: unknown, source: string): Promise<void> {
   if (result === null || result === undefined) {
     replaceStage("compile", []);
     replaceStage("preview", []);
+    replaceStage("lint", []);
     clearPreviewComponents();
     previewContent.innerHTML = `<span style="color: #666;">No preview available</span>`;
     return;
@@ -496,6 +565,7 @@ async function updatePreview(result: unknown, source: string): Promise<void> {
     clearPreviewComponents();
     replaceStage("compile", []);
     replaceStage("preview", []);
+    replaceStage("lint", []);
     currentAssetType = assetType ?? null;
   }
 
@@ -522,6 +592,7 @@ async function updatePreview(result: unknown, source: string): Promise<void> {
     // Fallback to JSON preview for unknown types
     replaceStage("compile", []);
     replaceStage("preview", []);
+    replaceStage("lint", []);
     renderJsonPreview(result);
   }
 }
@@ -549,6 +620,7 @@ async function renderMeshPreview(source: string): Promise<void> {
     replaceStage("ipc", [ipcProblem(String(error))]);
     replaceStage("compile", []);
     replaceStage("preview", []);
+    replaceStage("lint", []);
     updateStatus(`IPC Error: ${error}`);
     return;
   }
@@ -556,6 +628,7 @@ async function renderMeshPreview(source: string): Promise<void> {
   if (!result.compile_success) {
     replaceStage("compile", [compileProblem(result.compile_error ?? "Unknown error")]);
     replaceStage("preview", []);
+    replaceStage("lint", []);
     updateStatus(`Compile error: ${result.compile_error ?? "Unknown error"}`);
     return;
   }
@@ -565,6 +638,7 @@ async function renderMeshPreview(source: string): Promise<void> {
   const preview = result.preview;
   if (preview?.success && preview.data) {
     replaceStage("preview", []);
+    processLintResults(preview);
     try {
       await meshPreview.loadGLB(preview.data);
       updateStatus("Mesh preview ready");
@@ -574,6 +648,7 @@ async function renderMeshPreview(source: string): Promise<void> {
     }
   } else {
     replaceStage("preview", [previewProblem(preview?.error ?? "Unknown error")]);
+    replaceStage("lint", []);
     updateStatus(`Preview error: ${preview?.error ?? "Unknown error"}`);
   }
 }
@@ -601,6 +676,7 @@ async function renderAudioPreview(source: string): Promise<void> {
     replaceStage("ipc", [ipcProblem(String(error))]);
     replaceStage("compile", []);
     replaceStage("preview", []);
+    replaceStage("lint", []);
     updateStatus(`IPC Error: ${error}`);
     return;
   }
@@ -608,6 +684,7 @@ async function renderAudioPreview(source: string): Promise<void> {
   if (!result.compile_success) {
     replaceStage("compile", [compileProblem(result.compile_error ?? "Unknown error")]);
     replaceStage("preview", []);
+    replaceStage("lint", []);
     updateStatus(`Compile error: ${result.compile_error ?? "Unknown error"}`);
     return;
   }
@@ -617,6 +694,7 @@ async function renderAudioPreview(source: string): Promise<void> {
   const preview = result.preview;
   if (preview?.success && preview.data) {
     replaceStage("preview", []);
+    processLintResults(preview);
     try {
       await audioPreview.loadWAV(preview.data, filename);
       updateStatus("Audio preview ready");
@@ -626,6 +704,7 @@ async function renderAudioPreview(source: string): Promise<void> {
     }
   } else {
     replaceStage("preview", [previewProblem(preview?.error ?? "Unknown error")]);
+    replaceStage("lint", []);
     updateStatus(`Preview error: ${preview?.error ?? "Unknown error"}`);
   }
 }
@@ -663,11 +742,13 @@ async function renderMusicPreview(source: string): Promise<void> {
         const preview = result.preview;
         if (!preview?.success || !preview.data) {
           replaceStage("preview", [previewProblem(preview?.error ?? "Unknown preview error")]);
+          replaceStage("lint", []);
           throw new Error(preview?.error ?? "Unknown preview error");
         }
 
         replaceStage("preview", []);
         replaceStage("ipc", []);
+        processLintResults(preview);
 
         return {
           dataBase64: preview.data,
@@ -679,6 +760,7 @@ async function renderMusicPreview(source: string): Promise<void> {
           replaceStage("ipc", [ipcProblem(String(error))]);
           replaceStage("compile", []);
           replaceStage("preview", []);
+          replaceStage("lint", []);
         }
         throw error;
       }
@@ -712,6 +794,7 @@ async function renderTexturePreview(source: string): Promise<void> {
     replaceStage("ipc", [ipcProblem(String(error))]);
     replaceStage("compile", []);
     replaceStage("preview", []);
+    replaceStage("lint", []);
     updateStatus(`IPC Error: ${error}`);
     return;
   }
@@ -719,6 +802,7 @@ async function renderTexturePreview(source: string): Promise<void> {
   if (!result.compile_success) {
     replaceStage("compile", [compileProblem(result.compile_error ?? "Unknown error")]);
     replaceStage("preview", []);
+    replaceStage("lint", []);
     updateStatus(`Compile error: ${result.compile_error ?? "Unknown error"}`);
     return;
   }
@@ -728,6 +812,7 @@ async function renderTexturePreview(source: string): Promise<void> {
   const preview = result.preview;
   if (preview?.success && preview.data) {
     replaceStage("preview", []);
+    processLintResults(preview);
     try {
       await texturePreview.loadTexture(
         preview.data,
@@ -746,6 +831,7 @@ async function renderTexturePreview(source: string): Promise<void> {
     }
   } else {
     replaceStage("preview", [previewProblem(preview?.error ?? "Unknown error")]);
+    replaceStage("lint", []);
     updateStatus(`Preview error: ${preview?.error ?? "Unknown error"}`);
   }
 }

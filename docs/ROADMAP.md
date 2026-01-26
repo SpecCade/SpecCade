@@ -52,20 +52,16 @@ Reference: `docs/rfcs/RFC-0009-editor-architecture.md`
 
 ### Implementation Tasks
 
-- [ ] `EDITOR-002` Scaffold Tauri 2.x project structure with Rust backend + TypeScript frontend.
-  - Deliverable: `editor/` (Tauri app) + `crates/speccade-editor/` (Rust backend crate) with working build.
-  - Touch points: `Cargo.toml` workspace, `editor/package.json`, `editor/src-tauri/`.
+- [x] `EDITOR-002` ~~Scaffold Tauri 2.x project structure with Rust backend + TypeScript frontend.~~ Done: 2026-01-25
+  - Tauri 2.x app at `editor/` with full frontend (Monaco, three.js, Web Audio) + `crates/speccade-editor/` Rust backend with IPC commands.
 - [x] `EDITOR-003` ~~Integrate Monaco editor with Starlark syntax highlighting and basic validation.~~ Done: 2026-01-25
   - Monaco wrapper component with Starlark language definition, token provider for keywords/builtins/stdlib, 500ms debounced validation with inline error display.
-- [ ] `EDITOR-004` Implement spec file watcher with debounced recompilation via `speccade-cli` commands.
-  - Deliverable: File changes trigger `eval` + `validate`, results streamed to UI.
-  - Touch points: `crates/speccade-editor/src/`, Tauri IPC commands.
-- [ ] `EDITOR-005` Add three.js 3D preview panel with mesh/texture rendering.
-  - Deliverable: Static meshes and textures render in viewport, orbit controls, grid.
-  - Touch points: `editor/src/components/`, three.js scene setup.
-- [ ] `EDITOR-006` Add Web Audio preview panel for audio/music specs.
-  - Deliverable: Play/stop controls, waveform visualization for audio outputs.
-  - Touch points: `editor/src/components/`, Web Audio API integration.
+- [x] `EDITOR-004` ~~Implement spec file watcher with debounced recompilation via `speccade-cli` commands.~~ Done: 2026-01-25
+  - File watcher in `crates/speccade-editor/src/watcher.rs` with 100ms debounce, `file-changed` events to frontend, eval + validate on change.
+- [x] `EDITOR-005` ~~Add three.js 3D preview panel with mesh/texture rendering.~~ Done: 2026-01-25
+  - `editor/src/components/MeshPreview.ts` (443 lines) with WebGLRenderer, OrbitControls, GLTFLoader, lighting, grid, quality badges, auto-refine.
+- [x] `EDITOR-006` ~~Add Web Audio preview panel for audio/music specs.~~ Done: 2026-01-25
+  - `editor/src/components/AudioPreview.ts` (827 lines) + `MusicPreview.ts` with waveform visualization, spectrum analyzer, play/stop, loop regions, tracker module playback.
 - [x] `EDITOR-007` ~~Implement LOD proxy generation for large mesh preview (sub-100ms first frame).~~ Done: 2026-01-25
   - QEM edge-collapse decimation with silhouette preservation, auto-proxy for >10k triangle meshes, quality badges, refine button, auto-refine on 2s idle.
 
@@ -136,20 +132,24 @@ Resolved questions:
   - Tier 2 (Blender) implementation with nearest_surface/project/nearest_vertex modes, offset, smooth iterations, self-intersection validation. 3 golden specs.
 - [x] `MESH-012` ~~Add boolean kitbashing (union/difference + cleanup) with determinism/validation constraints.~~ Done: 2026-01-25
   - Tier 2 (Blender) implementation with union/difference/intersect operations, exact/fast solver, cleanup (merge doubles, recalc normals). 3 golden specs.
-- [x] `MESH-013` ~~Add animation helper presets (IK targets + constraint presets) for procedural walk/run cycles.~~ Done: 2026-01-25
-  - Tier 2 (Blender) implementation with walk_cycle/run_cycle/idle_sway presets, foot roll system, IK targets with pole angles. 6 golden specs.
+- [ ] `MESH-013` Add animation helper presets (IK targets + constraint presets) for procedural walk/run cycles.
+  - **Partial**: Spec schema (`skeletal_animation.helpers_v1`), Python operator, and 6 golden specs exist, but **NOT wired into backend dispatch**. Needs: add to `speccade-backend-blender/src/lib.rs` generate() match + `blender/entrypoint.py` dispatcher.
+  - Touch points: `crates/speccade-backend-blender/src/lib.rs`, `blender/entrypoint.py` (add `"animation_helpers"` mode).
 
 ### Skeletal Animation / Rigging / IK (Blender Tier)
 
-- [ ] `ANIM-004` Fill remaining rigging parity gaps and document them (IK stretch, foot roll, missing presets).
-  - Deliverable: reference docs + probe specs for IK stretch settings, foot roll systems, and any missing presets (e.g. basic spine).
-  - Touch points: `blender/entrypoint.py`, `crates/speccade-spec/src/recipe/animation/`, `golden/speccade/specs/skeletal_animation/`.
-- [ ] `ANIM-005` Validate "hard" constraint types in real assets (ball/planar + stiffness/influence semantics).
-  - Deliverable: probe specs + verification checks for ball socket constraints, planar constraints, and influence/stiffness behavior.
-  - Touch points: `blender/entrypoint.py`, `crates/speccade-spec/src/recipe/animation/constraints.rs`, `crates/speccade-spec/src/validation/constraints/`.
+- [x] `ANIM-004` ~~Fill remaining rigging parity gaps and document them (IK stretch, foot roll, missing presets).~~ Mostly done: 2026-01-27
+  - **IK stretch**: ✅ `StretchSettings` in `skeletal/settings.rs`, Blender `apply_stretch_settings()` at line 2931.
+  - **Foot roll**: ✅ `FootSystem` in `skeletal/foot.rs`, Blender `setup_foot_system()` + `create_foot_roll_bones()`.
+  - **Spine presets**: ❌ Not implemented (no SpineIK preset in `IkChainPreset` enum). Add if needed.
+- [x] `ANIM-005` ~~Validate "hard" constraint types in real assets (ball/planar + stiffness/influence semantics).~~ Mostly done: 2026-01-27
+  - **Ball socket**: ✅ `BoneConstraint::Ball` in `constraints.rs`, Blender `_setup_ball_constraint()` at line 2542.
+  - **Planar**: ✅ `BoneConstraint::Planar` in `constraints.rs`, Blender `_setup_planar_constraint()` at line 2576.
+  - **Post-generation validation**: ❌ Not in validation constraints enum. Add `MaxBallViolations`/`MaxPlanarViolations` if runtime validation needed.
 - [ ] `ANIM-006` Add root motion controls + validation (export + verify).
-  - Deliverable: explicit root motion settings (extract/lock/validate) with a report section and a `speccade verify` constraint.
-  - Touch points: `crates/speccade-spec/src/recipe/animation/`, `blender/entrypoint.py`, `crates/speccade-backend-blender/src/metrics.rs`.
+  - **Validation**: ✅ `MaxRootMotionDelta` constraint exists in `validation/constraints/mod.rs` with tests.
+  - **Controls**: ❌ No spec params for root motion extraction/lock/bake mode. Needs: add `RootMotionSettings` to animation params.
+  - Touch points: `crates/speccade-spec/src/recipe/animation/`, `blender/entrypoint.py`.
 
 ---
 

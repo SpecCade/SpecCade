@@ -24,6 +24,7 @@ serve = ["dep:tokio-tungstenite", "dep:futures-util", "dep:base64", "dep:tokio"]
 
 [dependencies]
 speccade-spec.workspace = true
+speccade-lint.workspace = true
 speccade-backend-audio.workspace = true
 speccade-backend-music.workspace = true
 speccade-backend-texture.workspace = true

@@ -306,6 +306,33 @@ enum Commands {
         #[arg(long)]
         json: bool,
     },
+
+    /// Lint a generated asset file for semantic quality issues
+    Lint {
+        /// Path to the asset file to lint (WAV, PNG, GLB, XM, etc.)
+        #[arg(short, long)]
+        input: String,
+
+        /// Path to the original spec file (for spec_path context in issues)
+        #[arg(short, long)]
+        spec: Option<String>,
+
+        /// Treat warnings as errors (fail if any warnings)
+        #[arg(long)]
+        strict: bool,
+
+        /// Disable specific lint rules (can be repeated)
+        #[arg(long = "disable-rule", value_name = "RULE_ID")]
+        disable_rules: Vec<String>,
+
+        /// Only run these rules (comma-separated list)
+        #[arg(long = "only-rules", value_name = "RULE_IDS")]
+        only_rules: Option<String>,
+
+        /// Output format (text or json)
+        #[arg(long, default_value = "text", value_parser = ["text", "json"])]
+        format: String,
+    },
 }
 
 #[derive(Subcommand)]
@@ -531,6 +558,26 @@ fn main() -> ExitCode {
             constraints,
             json,
         } => commands::verify::run(&report, &constraints, json),
+        Commands::Lint {
+            input,
+            spec,
+            strict,
+            disable_rules,
+            only_rules,
+            format,
+        } => {
+            let output_format = format
+                .parse::<commands::lint::OutputFormat>()
+                .expect("clap should have validated format");
+            commands::lint::run(
+                &input,
+                spec.as_deref(),
+                strict,
+                &disable_rules,
+                only_rules.as_deref(),
+                output_format,
+            )
+        }
     };
 
     match result {
@@ -1796,5 +1843,184 @@ mod tests {
             .err()
             .unwrap();
         assert!(err.to_string().contains("--constraints"));
+    }
+
+    #[test]
+    fn test_cli_parses_lint() {
+        let cli = Cli::try_parse_from(["speccade", "lint", "--input", "sound.wav"]).unwrap();
+        match cli.command {
+            Commands::Lint {
+                input,
+                spec,
+                strict,
+                disable_rules,
+                only_rules,
+                format,
+            } => {
+                assert_eq!(input, "sound.wav");
+                assert!(spec.is_none());
+                assert!(!strict);
+                assert!(disable_rules.is_empty());
+                assert!(only_rules.is_none());
+                assert_eq!(format, "text");
+            }
+            _ => panic!("expected lint command"),
+        }
+    }
+
+    #[test]
+    fn test_cli_parses_lint_with_spec() {
+        let cli = Cli::try_parse_from([
+            "speccade",
+            "lint",
+            "--input",
+            "sound.wav",
+            "--spec",
+            "spec.star",
+        ])
+        .unwrap();
+        match cli.command {
+            Commands::Lint {
+                input,
+                spec,
+                strict,
+                disable_rules,
+                only_rules,
+                format,
+            } => {
+                assert_eq!(input, "sound.wav");
+                assert_eq!(spec.as_deref(), Some("spec.star"));
+                assert!(!strict);
+                assert!(disable_rules.is_empty());
+                assert!(only_rules.is_none());
+                assert_eq!(format, "text");
+            }
+            _ => panic!("expected lint command"),
+        }
+    }
+
+    #[test]
+    fn test_cli_parses_lint_with_strict() {
+        let cli =
+            Cli::try_parse_from(["speccade", "lint", "--input", "sound.wav", "--strict"]).unwrap();
+        match cli.command {
+            Commands::Lint {
+                input,
+                spec,
+                strict,
+                disable_rules,
+                only_rules,
+                format,
+            } => {
+                assert_eq!(input, "sound.wav");
+                assert!(spec.is_none());
+                assert!(strict);
+                assert!(disable_rules.is_empty());
+                assert!(only_rules.is_none());
+                assert_eq!(format, "text");
+            }
+            _ => panic!("expected lint command"),
+        }
+    }
+
+    #[test]
+    fn test_cli_parses_lint_with_disable_rule() {
+        let cli = Cli::try_parse_from([
+            "speccade",
+            "lint",
+            "--input",
+            "sound.wav",
+            "--disable-rule",
+            "audio/clipping",
+            "--disable-rule",
+            "audio/silence",
+        ])
+        .unwrap();
+        match cli.command {
+            Commands::Lint {
+                input,
+                spec,
+                strict,
+                disable_rules,
+                only_rules,
+                format,
+            } => {
+                assert_eq!(input, "sound.wav");
+                assert!(spec.is_none());
+                assert!(!strict);
+                assert_eq!(disable_rules, vec!["audio/clipping", "audio/silence"]);
+                assert!(only_rules.is_none());
+                assert_eq!(format, "text");
+            }
+            _ => panic!("expected lint command"),
+        }
+    }
+
+    #[test]
+    fn test_cli_parses_lint_with_only_rules() {
+        let cli = Cli::try_parse_from([
+            "speccade",
+            "lint",
+            "--input",
+            "sound.wav",
+            "--only-rules",
+            "audio/clipping,audio/silence",
+        ])
+        .unwrap();
+        match cli.command {
+            Commands::Lint {
+                input,
+                spec,
+                strict,
+                disable_rules,
+                only_rules,
+                format,
+            } => {
+                assert_eq!(input, "sound.wav");
+                assert!(spec.is_none());
+                assert!(!strict);
+                assert!(disable_rules.is_empty());
+                assert_eq!(only_rules, Some("audio/clipping,audio/silence".to_string()));
+                assert_eq!(format, "text");
+            }
+            _ => panic!("expected lint command"),
+        }
+    }
+
+    #[test]
+    fn test_cli_parses_lint_with_json_format() {
+        let cli = Cli::try_parse_from([
+            "speccade",
+            "lint",
+            "--input",
+            "sound.wav",
+            "--format",
+            "json",
+        ])
+        .unwrap();
+        match cli.command {
+            Commands::Lint {
+                input,
+                spec,
+                strict,
+                disable_rules,
+                only_rules,
+                format,
+            } => {
+                assert_eq!(input, "sound.wav");
+                assert!(spec.is_none());
+                assert!(!strict);
+                assert!(disable_rules.is_empty());
+                assert!(only_rules.is_none());
+                assert_eq!(format, "json");
+            }
+            _ => panic!("expected lint command"),
+        }
+    }
+
+    #[test]
+    fn test_cli_requires_input_for_lint() {
+        let err = Cli::try_parse_from(["speccade", "lint"]).err().unwrap();
+        assert!(err.to_string().contains("--input"));
     }
 }

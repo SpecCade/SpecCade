@@ -11,6 +11,7 @@ mod texture;
 
 use anyhow::Result;
 use serde::Serialize;
+use speccade_lint::RuleRegistry;
 use std::process::ExitCode;
 
 #[cfg(feature = "starlark")]
@@ -54,6 +55,7 @@ pub struct StdlibDump {
     pub stdlib_version: String,
     pub coordinate_system: CoordinateSystem,
     pub functions: Vec<FunctionInfo>,
+    pub lint_rules: Vec<speccade_lint::RuleMetadata>,
 }
 
 impl StdlibDump {
@@ -70,10 +72,16 @@ impl StdlibDump {
                 .cmp(&b.category)
                 .then_with(|| a.name.cmp(&b.name))
         });
+
+        // Get lint rule metadata from the registry
+        let registry = RuleRegistry::default_rules();
+        let lint_rules = registry.rule_metadata();
+
         Self {
             stdlib_version: STDLIB_VERSION.to_string(),
             coordinate_system: CoordinateSystem::default(),
             functions,
+            lint_rules,
         }
     }
 }
@@ -368,5 +376,37 @@ mod tests {
         assert_eq!(coord.get("up").unwrap(), "+Z");
         assert_eq!(coord.get("forward").unwrap(), "+Y");
         assert_eq!(coord.get("units").unwrap(), "meters");
+    }
+
+    #[test]
+    fn test_dump_includes_lint_rules() {
+        let dump = StdlibDump::new();
+        let json = serde_json::to_string(&dump).unwrap();
+        let parsed: serde_json::Value = serde_json::from_str(&json).unwrap();
+
+        let lint_rules = parsed.get("lint_rules").expect("lint_rules field missing");
+        assert!(lint_rules.is_array());
+        // Should have 44 lint rules total (audio: 10, texture: 10, mesh: 12, music: 12)
+        assert_eq!(lint_rules.as_array().unwrap().len(), 44);
+
+        // Verify structure of first rule
+        let first_rule = &lint_rules[0];
+        assert!(first_rule.get("id").is_some());
+        assert!(first_rule.get("severity").is_some());
+        assert!(first_rule.get("description").is_some());
+        assert!(first_rule.get("applies_to").is_some());
+    }
+
+    #[test]
+    fn test_dump_lint_rules_include_audio_clipping() {
+        let dump = StdlibDump::new();
+        let clipping_rule = dump
+            .lint_rules
+            .iter()
+            .find(|r| r.id == "audio/clipping")
+            .expect("audio/clipping rule should exist");
+
+        assert!(!clipping_rule.description.is_empty());
+        assert!(clipping_rule.applies_to.contains(&speccade_lint::AssetType::Audio));
     }
 }

@@ -4134,6 +4134,7 @@ dependencies = [
  "speccade-backend-blender",
  "speccade-backend-music",
  "speccade-backend-texture",
+ "speccade-lint",
  "speccade-spec",
  "starlark",
  "tempfile",
@@ -4153,6 +4154,21 @@ dependencies = [
  "tauri-build",
  "tauri-plugin-dialog",
  "tauri-plugin-speccade",
+]
+
+[[package]]
+name = "speccade-lint"
+version = "0.1.0"
+dependencies = [
+ "gltf",
+ "hound",
+ "png 0.17.16",
+ "pretty_assertions",
+ "serde",
+ "serde_json",
+ "speccade-spec",
+ "tempfile",
+ "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -4647,6 +4663,7 @@ dependencies = [
  "serde",
  "serde_json",
  "speccade-cli",
+ "speccade-lint",
  "speccade-spec",
  "tauri",
  "tauri-build",

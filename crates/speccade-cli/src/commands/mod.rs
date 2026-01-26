@@ -13,6 +13,7 @@ pub mod generate; // Directory module: human, json, quality, variations, tests
 pub mod generate_all;
 pub mod inspect;
 pub mod json_output; // Directory module: analysis, convert, manifest, records
+pub mod lint;
 pub mod migrate;
 pub mod preview;
 #[cfg(feature = "serve")]
@@ -40,6 +41,7 @@ mod tests {
         let _ = generate::run;
         let _ = generate_all::run;
         let _ = inspect::run;
+        let _ = lint::run;
         let _ = preview::run;
         let _ = template::list;
         let _ = validate::run;

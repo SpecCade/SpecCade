@@ -9,6 +9,7 @@ pub mod mesh;
 pub mod music;
 pub mod texture;
 
+use crate::commands::lint::LintOutput;
 use serde::{Deserialize, Serialize};
 
 /// Preview generation settings.
@@ -86,6 +87,9 @@ pub struct PreviewResult {
     /// Whether full-quality version can be requested.
     #[serde(default)]
     pub can_refine: bool,
+    /// Lint results for the generated asset.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub lint: Option<LintOutput>,
 }
 
 impl PreviewResult {
@@ -101,6 +105,7 @@ impl PreviewResult {
             metadata: None,
             quality: PreviewQuality::Full,
             can_refine: false,
+            lint: None,
         }
     }
 
@@ -121,6 +126,7 @@ impl PreviewResult {
             metadata: Some(metadata),
             quality: PreviewQuality::Full,
             can_refine: false,
+            lint: None,
         }
     }
 
@@ -143,6 +149,7 @@ impl PreviewResult {
             metadata: Some(metadata),
             quality,
             can_refine,
+            lint: None,
         }
     }
 
@@ -157,6 +164,13 @@ impl PreviewResult {
             metadata: None,
             quality: PreviewQuality::Full,
             can_refine: false,
+            lint: None,
         }
+    }
+
+    /// Attaches lint results to this preview.
+    pub fn with_lint(mut self, lint: LintOutput) -> Self {
+        self.lint = Some(lint);
+        self
     }
 }

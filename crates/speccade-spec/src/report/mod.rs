@@ -6,6 +6,7 @@
 
 mod builder;
 mod error;
+mod lint;
 mod output;
 mod timing;
 
@@ -14,6 +15,7 @@ mod tests;
 
 pub use builder::ReportBuilder;
 pub use error::{ReportError, ReportWarning};
+pub use lint::{LintIssueData, LintReportData};
 pub use output::{
     BakedMapInfo, BakingMetrics, BoundingBox, CollisionBoundingBox, CollisionMeshMetrics,
     NavmeshMetrics, OutputMetrics, OutputResult, StaticMeshLodLevelMetrics,
@@ -28,7 +30,6 @@ pub const REPORT_VERSION: u32 = 1;
 
 /// A complete report for a generation or validation operation.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
 pub struct Report {
     /// Report schema version (always 1).
     pub report_version: u32,
@@ -75,6 +76,9 @@ pub struct Report {
     pub warnings: Vec<ReportWarning>,
     /// List of output artifacts produced.
     pub outputs: Vec<OutputResult>,
+    /// Semantic quality lint report for generated outputs.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub lint: Option<LintReportData>,
     /// Per-stage timing breakdown (only present when --profile is used).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub stages: Option<Vec<StageTiming>>,

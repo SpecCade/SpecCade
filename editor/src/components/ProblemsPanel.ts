@@ -4,7 +4,7 @@
  * Renders a simple, clickable list of issues surfaced by the editor pipeline.
  */
 
-export type ProblemStage = "eval" | "compile" | "preview" | "ipc";
+export type ProblemStage = "eval" | "compile" | "preview" | "ipc" | "lint";
 
 export type ProblemItem = {
   id: string;

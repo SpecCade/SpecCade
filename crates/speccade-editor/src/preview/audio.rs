@@ -3,6 +3,7 @@
 //! Generates quick audio previews at 22kHz, max 0.5s for real-time feedback.
 
 use super::{PreviewResult, PreviewSettings};
+use crate::commands::lint::lint_asset_bytes;
 use speccade_spec::Spec;
 
 /// Generate an audio preview from a spec.
@@ -58,6 +59,9 @@ pub fn generate_audio_preview(spec: &Spec, settings: &PreviewSettings) -> Previe
                     let wav_path = tmp_path.join(&output.path);
                     match std::fs::read(&wav_path) {
                         Ok(wav_bytes) => {
+                            // Run lint on the generated audio
+                            let lint_result = lint_asset_bytes(&wav_path, &wav_bytes, Some(spec));
+
                             // Include sample count and duration in metadata
                             let metadata = serde_json::json!({
                                 "sample_rate": settings.audio_sample_rate,
@@ -70,6 +74,7 @@ pub fn generate_audio_preview(spec: &Spec, settings: &PreviewSettings) -> Previe
                                 "audio/wav",
                                 metadata,
                             )
+                            .with_lint(lint_result)
                         }
                         Err(e) => {
                             PreviewResult::failure("audio", format!("Failed to read WAV: {}", e))

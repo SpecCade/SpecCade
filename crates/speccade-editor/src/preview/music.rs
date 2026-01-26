@@ -3,6 +3,7 @@
 //! Generates tracker module bytes (XM/IT) for in-editor playback.
 
 use super::PreviewResult;
+use crate::commands::lint::lint_asset_bytes;
 use speccade_spec::{OutputFormat, OutputKind, Spec};
 
 /// Generate a music preview from a spec.
@@ -69,12 +70,15 @@ pub fn generate_music_preview(spec: &Spec, spec_path: &std::path::Path) -> Previ
         }
     };
 
+    // Run lint on the generated music module
+    let lint_result = lint_asset_bytes(&module_path, &bytes, Some(spec));
+
     let metadata = serde_json::json!({
         "path": module_output.path.to_string_lossy(),
         "format": format_str,
     });
 
-    PreviewResult::success_with_metadata("music", bytes, mime, metadata)
+    PreviewResult::success_with_metadata("music", bytes, mime, metadata).with_lint(lint_result)
 }
 
 #[cfg(test)]

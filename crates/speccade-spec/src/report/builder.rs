@@ -1,6 +1,8 @@
 //! Builder pattern for creating reports.
 
-use super::{OutputResult, Report, ReportError, ReportWarning, StageTiming, REPORT_VERSION};
+use super::{
+    LintReportData, OutputResult, Report, ReportError, ReportWarning, StageTiming, REPORT_VERSION,
+};
 use crate::error::{ValidationError, ValidationWarning};
 use crate::spec::{AssetType, Spec};
 
@@ -22,6 +24,7 @@ pub struct ReportBuilder {
     errors: Vec<ReportError>,
     warnings: Vec<ReportWarning>,
     outputs: Vec<OutputResult>,
+    lint: Option<LintReportData>,
     stages: Option<Vec<StageTiming>>,
     duration_ms: u64,
     backend_version: String,
@@ -69,6 +72,7 @@ impl ReportBuilder {
             errors: Vec::new(),
             warnings: Vec::new(),
             outputs: Vec::new(),
+            lint: None,
             stages: None,
             duration_ms: 0,
             backend_version,
@@ -230,6 +234,15 @@ impl ReportBuilder {
         self
     }
 
+    /// Sets the lint report data for generated outputs.
+    ///
+    /// The lint report contains semantic quality issues detected by running
+    /// lint rules on the generated asset files.
+    pub fn lint(mut self, lint_data: LintReportData) -> Self {
+        self.lint = Some(lint_data);
+        self
+    }
+
     /// Builds the final report.
     pub fn build(self) -> Report {
         Report {
@@ -250,6 +263,7 @@ impl ReportBuilder {
             errors: self.errors,
             warnings: self.warnings,
             outputs: self.outputs,
+            lint: self.lint,
             stages: self.stages,
             duration_ms: self.duration_ms,
             backend_version: self.backend_version,

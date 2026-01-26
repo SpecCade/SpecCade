@@ -7,6 +7,7 @@ members = [
     "crates/speccade-backend-texture",
     "crates/speccade-backend-blender",
     "crates/speccade-editor",
+    "crates/speccade-lint",
     "crates/speccade-tests",
     "editor/src-tauri",
 ]
@@ -65,3 +66,4 @@ speccade-backend-music = { path = "crates/speccade-backend-music" }
 speccade-backend-texture = { path = "crates/speccade-backend-texture" }
 speccade-backend-blender = { path = "crates/speccade-backend-blender" }
 speccade-editor = { package = "tauri-plugin-speccade", path = "crates/speccade-editor" }
+speccade-lint = { path = "crates/speccade-lint" }

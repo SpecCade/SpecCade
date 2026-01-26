@@ -3,6 +3,7 @@
 //! Generates quick texture previews at 256x256 for real-time feedback.
 
 use super::{PreviewQuality, PreviewResult, PreviewSettings};
+use crate::commands::lint::lint_asset_bytes;
 use speccade_spec::Spec;
 
 /// Generate a texture preview from a spec.
@@ -61,6 +62,9 @@ pub fn generate_texture_preview(spec: &Spec, settings: &PreviewSettings) -> Prev
                     let png_path = tmp_path.join(&output.path);
                     match std::fs::read(&png_path) {
                         Ok(png_bytes) => {
+                            // Run lint on the generated texture
+                            let lint_result = lint_asset_bytes(&png_path, &png_bytes, Some(spec));
+
                             let metadata = serde_json::json!({
                                 "max_dimension": settings.texture_max_dimension,
                                 "path": output.path,
@@ -73,6 +77,7 @@ pub fn generate_texture_preview(spec: &Spec, settings: &PreviewSettings) -> Prev
                                 PreviewQuality::Proxy,
                                 false,
                             )
+                            .with_lint(lint_result)
                         }
                         Err(e) => {
                             PreviewResult::failure("texture", format!("Failed to read PNG: {}", e))

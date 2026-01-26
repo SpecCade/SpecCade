@@ -6,6 +6,7 @@
 
 use super::lod::{generate_lod_proxy, LodConfig};
 use super::{PreviewQuality, PreviewResult, PreviewSettings};
+use crate::commands::lint::lint_asset_bytes;
 use speccade_spec::Spec;
 
 /// Generate a mesh preview from a spec.
@@ -59,6 +60,9 @@ pub fn generate_mesh_preview(spec: &Spec, settings: &PreviewSettings) -> Preview
                     let glb_path = tmp_path.join(&output.path);
                     match std::fs::read(&glb_path) {
                         Ok(glb_bytes) => {
+                            // Run lint on the generated mesh
+                            let lint_result = lint_asset_bytes(&glb_path, &glb_bytes, Some(spec));
+
                             // Try to generate LOD proxy if enabled and mesh is large
                             if settings.use_lod_proxy {
                                 let lod_config = LodConfig {
@@ -90,6 +94,7 @@ pub fn generate_mesh_preview(spec: &Spec, settings: &PreviewSettings) -> Preview
                                             quality,
                                             lod_result.is_proxy, // can_refine if proxy
                                         )
+                                        .with_lint(lint_result)
                                     }
                                     Err(_) => {
                                         // LOD generation failed, use original
@@ -100,6 +105,7 @@ pub fn generate_mesh_preview(spec: &Spec, settings: &PreviewSettings) -> Preview
                                             "model/gltf-binary",
                                             metadata,
                                         )
+                                        .with_lint(lint_result)
                                     }
                                 }
                             } else {
@@ -111,6 +117,7 @@ pub fn generate_mesh_preview(spec: &Spec, settings: &PreviewSettings) -> Preview
                                     "model/gltf-binary",
                                     metadata,
                                 )
+                                .with_lint(lint_result)
                             }
                         }
                         Err(e) => {

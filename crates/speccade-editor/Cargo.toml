@@ -14,6 +14,7 @@ crate-type = ["lib", "staticlib", "cdylib"]
 [dependencies]
 speccade-cli = { workspace = true, features = ["starlark"] }
 speccade-spec.workspace = true
+speccade-lint.workspace = true
 tauri.workspace = true
 serde.workspace = true
 serde_json.workspace = true
