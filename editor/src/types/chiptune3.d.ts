@@ -33,6 +33,10 @@ declare module "chiptune3" {
     setVol(vol: number): void;
     getCurrentTime(): number | undefined;
 
+    // Extended controls (present in chiptune3@0.8.x)
+    setRepeatCount(val: number): void;
+    setOrderRow(order: number, row: number): void;
+
     // Implementation detail in chiptune3; used for cleanup.
     context: AudioContext;
     duration?: number;

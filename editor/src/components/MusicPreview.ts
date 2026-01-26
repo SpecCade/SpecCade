@@ -1,4 +1,15 @@
 import { ChiptuneJsPlayer } from "chiptune3";
+import { loadInspectSection, saveInspectSection } from "../lib/storage";
+import { clampOrderRange } from "../lib/music-loop";
+
+type LoopMode = "song" | "order" | "order_range" | "off";
+
+type MusicInspectorStateV1 = {
+  v: 1;
+  loopMode: LoopMode;
+  loopStartOrder: number;
+  loopEndOrder: number;
+};
 
 export type MusicPreviewResult = {
   dataBase64: string;
@@ -41,13 +52,24 @@ export class MusicPreview {
   private nowPlayingText: HTMLDivElement;
   private orderStrip: HTMLDivElement;
 
+  private loopModeSelect: HTMLSelectElement;
+  private loopStartSelect: HTMLSelectElement;
+  private loopEndSelect: HTMLSelectElement;
+  private totalOrders: number | null = null;
+
+  private loopMode: LoopMode = "song";
+  private loopStartOrder = 0;
+  private loopEndOrder = 0;
+  private lastLoopSeekAtMs = 0;
+  private pendingSeekOrder: number | null = null;
+
   private orderStartSecByOrder = new Map<number, number>();
   private orderPatternByOrder = new Map<number, number>();
   private orderList: number[] = [];
   private orderChipByOrder = new Map<number, HTMLButtonElement>();
   private nowPlaying = { order: null as number | null, pattern: null as number | null, row: null as number | null };
 
-  private lastHighlightedOrder: number | null = null;
+  private lastHighlightKey: string | null = null;
 
   private refreshSeq = 0;
   private isDisposed = false;
@@ -80,6 +102,9 @@ export class MusicPreview {
       padding: 12px;
       box-sizing: border-box;
     `;
+
+    this.wrapper.tabIndex = 0;
+    this.wrapper.addEventListener("keydown", (e) => this.onKeyDown(e));
 
     const controlsRow = document.createElement("div");
     controlsRow.style.cssText = `
@@ -254,6 +279,54 @@ export class MusicPreview {
     this.nowPlayingText.textContent = this.formatNowPlaying();
     inspector.appendChild(this.nowPlayingText);
 
+    const loopRow = document.createElement("div");
+    loopRow.style.cssText = `
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+      color: #bdbdbd;
+      font-size: 11px;
+      user-select: none;
+    `;
+
+    const loopLabel = document.createElement("div");
+    loopLabel.textContent = "Loop";
+    loopLabel.style.minWidth = "34px";
+    loopRow.appendChild(loopLabel);
+
+    this.loopModeSelect = this.makeSelect([
+      { label: "Song", value: "song" },
+      { label: "Order", value: "order" },
+      { label: "Range", value: "order_range" },
+      { label: "Off", value: "off" },
+    ]);
+    loopRow.appendChild(this.loopModeSelect);
+
+    this.loopStartSelect = this.makeSelect([{ label: "Start 00", value: "0" }]);
+    loopRow.appendChild(this.loopStartSelect);
+
+    this.loopEndSelect = this.makeSelect([{ label: "End 00", value: "0" }]);
+    loopRow.appendChild(this.loopEndSelect);
+
+    const setStartCurrentBtn = this.makeMiniButton("Set Start = Current");
+    setStartCurrentBtn.onclick = () => this.setLoopStartToCurrent();
+    loopRow.appendChild(setStartCurrentBtn);
+
+    const setEndCurrentBtn = this.makeMiniButton("Set End = Current");
+    setEndCurrentBtn.onclick = () => this.setLoopEndToCurrent();
+    loopRow.appendChild(setEndCurrentBtn);
+
+    const rangeCurrentBtn = this.makeMiniButton("Range = Current");
+    rangeCurrentBtn.onclick = () => this.setLoopRangeToCurrent();
+    loopRow.appendChild(rangeCurrentBtn);
+
+    const rangeFullBtn = this.makeMiniButton("Range = Full");
+    rangeFullBtn.onclick = () => this.setLoopRangeToFull();
+    loopRow.appendChild(rangeFullBtn);
+
+    inspector.appendChild(loopRow);
+
     this.orderStrip = document.createElement("div");
     this.orderStrip.style.cssText = `
       display: flex;
@@ -295,6 +368,8 @@ export class MusicPreview {
         this.totalTimeText.textContent = this.formatTime(dur);
       }
       this.updateInfoText(meta);
+
+      this.populateOrdersFromMetadata(meta);
     });
 
     this.player.onProgress((e) => {
@@ -329,6 +404,10 @@ export class MusicPreview {
         this.setNowPlaying(null, pattern, row);
       }
 
+      if (order !== null) {
+        this.enforceLoop(order);
+      }
+
       if (!this.isSeeking) {
         this.seekSlider.value = String(pos);
         this.updateTimeText(pos, this.durationSec ?? 0);
@@ -350,6 +429,54 @@ export class MusicPreview {
       this.setInfoText(`Music preview error: ${this.describeError(err)}`);
     });
 
+    this.loopModeSelect.addEventListener("change", () => {
+      const next = this.loopModeSelect.value as LoopMode;
+      if (next === "order") {
+        const ord = this.getCurrentOrderForLoop();
+        this.loopStartOrder = ord;
+        this.loopEndOrder = this.loopStartOrder;
+      }
+      this.loopMode = next;
+
+      if (
+        this.loopMode === "order_range" &&
+        this.loopStartOrder === 0 &&
+        this.loopEndOrder === 0 &&
+        typeof this.totalOrders === "number" &&
+        Number.isFinite(this.totalOrders) &&
+        this.totalOrders > 0
+      ) {
+        this.loopEndOrder = Math.max(0, this.totalOrders - 1);
+      }
+
+      this.clampLoopOrders();
+      this.updateLoopUI();
+      this.persistMusicInspectorState();
+      this.applyLoopModeToPlayer();
+      this.updateOrderChipHighlights();
+    });
+
+    this.loopStartSelect.addEventListener("change", () => {
+      const n = Number(this.loopStartSelect.value);
+      if (Number.isFinite(n)) this.loopStartOrder = Math.max(0, Math.trunc(n));
+      if (this.loopMode === "order") this.loopEndOrder = this.loopStartOrder;
+      if (this.loopEndOrder < this.loopStartOrder) this.loopEndOrder = this.loopStartOrder;
+      this.clampLoopOrders();
+      this.updateLoopUI();
+      this.persistMusicInspectorState();
+      this.updateOrderChipHighlights();
+    });
+
+    this.loopEndSelect.addEventListener("change", () => {
+      const n = Number(this.loopEndSelect.value);
+      if (Number.isFinite(n)) this.loopEndOrder = Math.max(0, Math.trunc(n));
+      if (this.loopEndOrder < this.loopStartOrder) this.loopEndOrder = this.loopStartOrder;
+      this.clampLoopOrders();
+      this.updateLoopUI();
+      this.persistMusicInspectorState();
+      this.updateOrderChipHighlights();
+    });
+
     window.addEventListener("pointerup", this.onWindowPointerUp);
     window.addEventListener("pointercancel", this.onWindowPointerUp);
   }
@@ -367,6 +494,8 @@ export class MusicPreview {
   setSource(source: string, filename: string): void {
     this.source = source;
     this.filename = filename;
+
+    this.applyMusicInspectorStateFromStorage();
     this.isDirty = this.currentBuffer !== null && this.currentBufferKey !== this.makeSourceKey(source, filename);
     this.setInfoText(this.describeReadyText());
   }
@@ -423,6 +552,47 @@ export class MusicPreview {
     return b;
   }
 
+  private makeSelect(options: Array<{ label: string; value: string }>): HTMLSelectElement {
+    const select = document.createElement("select");
+    select.style.cssText = `
+      padding: 4px 10px;
+      background: #333;
+      color: white;
+      border: 1px solid #555;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      height: 26px;
+    `;
+
+    for (const optInfo of options) {
+      const opt = document.createElement("option");
+      opt.value = optInfo.value;
+      opt.textContent = optInfo.label;
+      select.appendChild(opt);
+    }
+
+    return select;
+  }
+
+  private makeMiniButton(label: string): HTMLButtonElement {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.textContent = label;
+    b.style.cssText = `
+      padding: 4px 10px;
+      background: #2a2a2a;
+      color: #cfcfcf;
+      border: 1px solid #3a3a3a;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 11px;
+      line-height: 1;
+      height: 26px;
+    `;
+    return b;
+  }
+
   private onPlayClicked(): void {
     if (this.isPlaying) {
       if (this.isPaused) {
@@ -469,6 +639,38 @@ export class MusicPreview {
     this.orderList = [];
     this.orderChipByOrder.clear();
     while (this.orderStrip.firstChild) this.orderStrip.removeChild(this.orderStrip.firstChild);
+    this.totalOrders = null;
+    this.lastHighlightKey = null;
+  }
+
+  private populateOrdersFromMetadata(meta: Record<string, unknown>): void {
+    const song = (meta as any).song;
+    const orders = song?.orders;
+    if (!Array.isArray(orders) || orders.length === 0) return;
+
+    this.clearOrderMaps();
+
+    for (let i = 0; i < orders.length; i++) {
+      this.orderList.push(i);
+      const pat = orders[i]?.pat;
+      if (typeof pat === "number" && Number.isFinite(pat)) {
+        this.orderPatternByOrder.set(i, pat);
+      }
+      this.addOrderChip(i, { scroll: false });
+    }
+
+    this.totalOrders = orders.length;
+
+    // If no explicit range yet and we're in range mode, default to full span.
+    if (this.loopMode === "order_range" && this.loopStartOrder === 0 && this.loopEndOrder === 0) {
+      this.loopEndOrder = Math.max(0, orders.length - 1);
+    }
+
+    this.clampLoopOrders();
+    this.updateLoopUI();
+    this.persistMusicInspectorState();
+    this.applyLoopModeToPlayer();
+    this.updateOrderChipHighlights();
   }
 
   private resetNowPlaying(): void {
@@ -501,7 +703,7 @@ export class MusicPreview {
     return String(Math.max(0, Math.trunc(n))).padStart(2, "0");
   }
 
-  private addOrderChip(order: number): void {
+  private addOrderChip(order: number, opts?: { scroll?: boolean }): void {
     const chip = document.createElement("button");
     chip.type = "button";
     chip.textContent = this.getOrderChipLabel(order);
@@ -520,7 +722,9 @@ export class MusicPreview {
 
     this.orderChipByOrder.set(order, chip);
     this.orderStrip.appendChild(chip);
-    chip.scrollIntoView({ inline: "nearest", block: "nearest" });
+    if (opts?.scroll !== false) {
+      chip.scrollIntoView({ inline: "nearest", block: "nearest" });
+    }
     this.updateOrderChipHighlights();
   }
 
@@ -538,19 +742,39 @@ export class MusicPreview {
 
   private updateOrderChipHighlights(): void {
     const current = this.nowPlaying.order;
-    if (current === this.lastHighlightedOrder) return;
 
-    if (this.lastHighlightedOrder !== null) {
-      const prevChip = this.orderChipByOrder.get(this.lastHighlightedOrder);
-      if (prevChip) this.applyOrderChipActiveStyle(prevChip, false);
+    const showRange = this.loopMode === "order" || this.loopMode === "order_range";
+    let rangeStart = Math.max(0, Math.trunc(this.loopStartOrder));
+    let rangeEnd = Math.max(0, Math.trunc(this.loopEndOrder));
+    if (this.loopMode === "order") rangeEnd = rangeStart;
+
+    const total = this.totalOrders;
+    if (showRange && typeof total === "number" && Number.isFinite(total) && total > 0) {
+      const clamped = clampOrderRange({ start: rangeStart, end: rangeEnd }, total);
+      rangeStart = clamped.start;
+      rangeEnd = clamped.end;
+    } else if (showRange && rangeEnd < rangeStart) {
+      rangeEnd = rangeStart;
     }
 
-    if (current !== null) {
-      const nextChip = this.orderChipByOrder.get(current);
-      if (nextChip) this.applyOrderChipActiveStyle(nextChip, true);
-    }
+    const key = `${current ?? "null"}|${this.loopMode}|${rangeStart}|${rangeEnd}|${this.orderChipByOrder.size}`;
+    if (key === this.lastHighlightKey) return;
+    this.lastHighlightKey = key;
 
-    this.lastHighlightedOrder = current;
+    for (const [order, chip] of this.orderChipByOrder.entries()) {
+      const isActive = current !== null && order === current;
+      if (isActive) {
+        this.applyOrderChipActiveStyle(chip, true);
+        continue;
+      }
+
+      const inRange = showRange && order >= rangeStart && order <= rangeEnd;
+      if (inRange) {
+        this.applyOrderChipRangeStyle(chip);
+      } else {
+        this.applyOrderChipActiveStyle(chip, false);
+      }
+    }
   }
 
   private applyOrderChipActiveStyle(chip: HTMLButtonElement, active: boolean): void {
@@ -559,10 +783,30 @@ export class MusicPreview {
     chip.style.color = active ? "#fff" : "#cfcfcf";
   }
 
+  private applyOrderChipRangeStyle(chip: HTMLButtonElement): void {
+    chip.style.background = "#203747";
+    chip.style.borderColor = "#2e5c7a";
+    chip.style.color = "#d7e9f6";
+  }
+
   private seekToOrder(order: number): void {
     // Highlight immediately even if seek fails.
     const pat = this.orderPatternByOrder.get(order);
     this.setNowPlaying(order, typeof pat === "number" ? pat : null, null);
+
+    // If we're not playing yet, remember intent and apply on play.
+    if (!this.isPlaying) {
+      this.pendingSeekOrder = order;
+      return;
+    }
+
+    try {
+      this.player.setOrderRow(order, 0);
+      this.pendingSeekOrder = null;
+      return;
+    } catch {
+      // fallback to time seeking
+    }
 
     const knownStart = this.orderStartSecByOrder.get(order);
     let target: number | null = null;
@@ -687,6 +931,327 @@ export class MusicPreview {
     return parts.join(" | ");
   }
 
+  private applyMusicInspectorStateFromStorage(): void {
+    const filename = this.filename ?? "editor.star";
+
+    const fallback: MusicInspectorStateV1 = {
+      v: 1,
+      loopMode: "song",
+      loopStartOrder: 0,
+      loopEndOrder: 0,
+    };
+
+    const state = this.coerceMusicInspectorState(
+      loadInspectSection<MusicInspectorStateV1>(filename, "music", fallback),
+      fallback
+    );
+
+    this.loopMode = state.loopMode;
+    this.loopStartOrder = state.loopStartOrder;
+    this.loopEndOrder = state.loopEndOrder;
+    this.updateLoopUI();
+  }
+
+  private coerceMusicInspectorState(
+    input: MusicInspectorStateV1,
+    fallback: MusicInspectorStateV1
+  ): MusicInspectorStateV1 {
+    if (!input || input.v !== 1) return fallback;
+
+    const loopMode: LoopMode =
+      input.loopMode === "song" || input.loopMode === "order" || input.loopMode === "order_range" || input.loopMode === "off"
+        ? input.loopMode
+        : fallback.loopMode;
+
+    const loopStartOrder =
+      typeof input.loopStartOrder === "number" && Number.isFinite(input.loopStartOrder)
+        ? Math.max(0, Math.trunc(input.loopStartOrder))
+        : fallback.loopStartOrder;
+    const loopEndOrder =
+      typeof input.loopEndOrder === "number" && Number.isFinite(input.loopEndOrder)
+        ? Math.max(0, Math.trunc(input.loopEndOrder))
+        : fallback.loopEndOrder;
+
+    return {
+      v: 1,
+      loopMode,
+      loopStartOrder,
+      loopEndOrder,
+    };
+  }
+
+  private persistMusicInspectorState(): void {
+    const filename = this.filename ?? "editor.star";
+    const state: MusicInspectorStateV1 = {
+      v: 1,
+      loopMode: this.loopMode,
+      loopStartOrder: this.loopStartOrder,
+      loopEndOrder: this.loopEndOrder,
+    };
+    saveInspectSection(filename, "music", state);
+  }
+
+  private getCurrentOrderForLoop(): number {
+    const ord = this.nowPlaying.order;
+    const n = typeof ord === "number" && Number.isFinite(ord) ? Math.trunc(ord) : 0;
+    return Math.max(0, n);
+  }
+
+  private setLoopRange(range: { start: number; end: number }): void {
+    let start = Number.isFinite(range.start) ? Math.max(0, Math.trunc(range.start)) : 0;
+    let end = Number.isFinite(range.end) ? Math.max(0, Math.trunc(range.end)) : start;
+
+    const total = this.totalOrders;
+    if (typeof total === "number" && Number.isFinite(total) && total > 0) {
+      const clamped = clampOrderRange({ start, end }, total);
+      start = clamped.start;
+      end = clamped.end;
+    } else if (end < start) {
+      end = start;
+    }
+
+    if (this.loopMode === "order") {
+      end = start;
+    }
+
+    this.loopStartOrder = start;
+    this.loopEndOrder = end;
+    this.updateLoopUI();
+    this.persistMusicInspectorState();
+    this.updateOrderChipHighlights();
+  }
+
+  private setLoopStartToCurrent(): void {
+    const cur = this.getCurrentOrderForLoop();
+    if (this.loopMode === "order") {
+      this.setLoopRange({ start: cur, end: cur });
+      return;
+    }
+    const end = Math.max(cur, this.loopEndOrder);
+    this.setLoopRange({ start: cur, end });
+  }
+
+  private setLoopEndToCurrent(): void {
+    const cur = this.getCurrentOrderForLoop();
+    if (this.loopMode === "order") {
+      this.setLoopRange({ start: cur, end: cur });
+      return;
+    }
+    const start = Math.min(cur, this.loopStartOrder);
+    this.setLoopRange({ start, end: cur });
+  }
+
+  private setLoopRangeToCurrent(): void {
+    const cur = this.getCurrentOrderForLoop();
+    this.setLoopRange({ start: cur, end: cur });
+  }
+
+  private setLoopRangeToFull(): void {
+    const total = this.totalOrders;
+    const end = typeof total === "number" && Number.isFinite(total) && total > 0 ? Math.max(0, total - 1) : 0;
+    this.setLoopRange({ start: 0, end });
+  }
+
+  private toggleLoopModeSongRange(): void {
+    this.loopMode = this.loopMode === "order_range" ? "song" : "order_range";
+
+    if (
+      this.loopMode === "order_range" &&
+      this.loopStartOrder === 0 &&
+      this.loopEndOrder === 0 &&
+      typeof this.totalOrders === "number" &&
+      Number.isFinite(this.totalOrders) &&
+      this.totalOrders > 0
+    ) {
+      this.loopEndOrder = Math.max(0, this.totalOrders - 1);
+    }
+
+    this.clampLoopOrders();
+    this.updateLoopUI();
+    this.persistMusicInspectorState();
+    this.applyLoopModeToPlayer();
+    this.updateOrderChipHighlights();
+  }
+
+  private onKeyDown(e: KeyboardEvent): void {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+
+    const target = e.target as HTMLElement | null;
+    if (
+      target instanceof HTMLInputElement ||
+      target instanceof HTMLSelectElement ||
+      target instanceof HTMLTextAreaElement ||
+      target instanceof HTMLButtonElement ||
+      (target?.isContentEditable ?? false)
+    ) {
+      return;
+    }
+
+    if (e.key === "[") {
+      e.preventDefault();
+      e.stopPropagation();
+      this.setLoopStartToCurrent();
+      return;
+    }
+
+    if (e.key === "]") {
+      e.preventDefault();
+      e.stopPropagation();
+      this.setLoopEndToCurrent();
+      return;
+    }
+
+    if (e.key === "\\") {
+      e.preventDefault();
+      e.stopPropagation();
+      this.toggleLoopModeSongRange();
+    }
+  }
+
+  private updateLoopUI(): void {
+    this.loopModeSelect.value = this.loopMode;
+    this.updateLoopSelectVisibility();
+    this.updateLoopOrderOptions();
+  }
+
+  private updateLoopSelectVisibility(): void {
+    const showRange = this.loopMode === "order" || this.loopMode === "order_range";
+    this.loopStartSelect.style.display = showRange ? "inline-block" : "none";
+    this.loopEndSelect.style.display = this.loopMode === "order_range" ? "inline-block" : "none";
+  }
+
+  private clampLoopOrders(): void {
+    const total = this.totalOrders;
+    if (typeof total !== "number" || !Number.isFinite(total) || total <= 0) return;
+
+    const inputEnd = this.loopMode === "order" ? this.loopStartOrder : this.loopEndOrder;
+    const clamped = clampOrderRange({ start: this.loopStartOrder, end: inputEnd }, total);
+    this.loopStartOrder = clamped.start;
+    this.loopEndOrder = this.loopMode === "order" ? clamped.start : clamped.end;
+  }
+
+  private updateLoopOrderOptions(): void {
+    const total = this.totalOrders;
+    const hasTotal = typeof total === "number" && Number.isFinite(total) && total > 0;
+
+    const replaceOptions = (
+      select: HTMLSelectElement,
+      opts: Array<{ label: string; value: string }>,
+      value: number,
+      enabled: boolean
+    ) => {
+      while (select.firstChild) select.removeChild(select.firstChild);
+      for (const optInfo of opts) {
+        const opt = document.createElement("option");
+        opt.value = optInfo.value;
+        opt.textContent = optInfo.label;
+        select.appendChild(opt);
+      }
+      select.value = String(value);
+      select.disabled = !enabled;
+    };
+
+    if (!hasTotal) {
+      const placeholder = [{ label: "O--", value: "0" }];
+      replaceOptions(this.loopStartSelect, placeholder, 0, false);
+      replaceOptions(this.loopEndSelect, placeholder, 0, false);
+      return;
+    }
+
+    const maxOrder = total - 1;
+
+    let start = Math.max(0, Math.trunc(this.loopStartOrder));
+    let end = Math.max(0, Math.trunc(this.loopEndOrder));
+    if (this.loopMode === "order") end = start;
+
+    const clamped = clampOrderRange({ start, end }, total);
+    start = clamped.start;
+    end = this.loopMode === "order" ? clamped.start : clamped.end;
+
+    this.loopStartOrder = start;
+    this.loopEndOrder = end;
+
+    const options: Array<{ label: string; value: string }> = [];
+    for (let i = 0; i <= maxOrder; i++) {
+      options.push({ label: `O${this.format2(i)}`, value: String(i) });
+    }
+
+    replaceOptions(this.loopStartSelect, options, this.loopStartOrder, true);
+    replaceOptions(this.loopEndSelect, options, this.loopEndOrder, true);
+  }
+
+  private applyLoopModeToPlayer(): void {
+    try {
+      if (this.loopMode === "off") {
+        this.player.setRepeatCount(0);
+      } else {
+        this.player.setRepeatCount(-1);
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  private enforceLoop(order: number): void {
+    if (this.isSeeking) return;
+    if (this.loopMode === "song" || this.loopMode === "off") return;
+    if (this.totalOrders === null) return;
+
+    this.clampLoopOrders();
+    const start = this.loopStartOrder;
+    const end = this.loopMode === "order" ? this.loopStartOrder : this.loopEndOrder;
+    if (order >= start && order <= end) return;
+
+    const now = performance.now();
+    if (now - this.lastLoopSeekAtMs < 250) return;
+    this.lastLoopSeekAtMs = now;
+
+    try {
+      this.player.setOrderRow(start, 0);
+      return;
+    } catch {
+      // ignore
+    }
+
+    const knownStart = this.orderStartSecByOrder.get(start);
+    const target = typeof knownStart === "number" && Number.isFinite(knownStart) ? knownStart : 0;
+
+    try {
+      this.player.setPos(target);
+    } catch {
+      // ignore
+    }
+
+    this.pendingSeekOrder = null;
+
+    if (!this.isSeeking) {
+      this.seekSlider.value = String(target);
+      this.updateTimeText(target, this.durationSec ?? 0);
+    }
+  }
+
+  private applyPendingSeek(): void {
+    if (this.pendingSeekOrder === null) return;
+    const order = this.pendingSeekOrder;
+    this.pendingSeekOrder = null;
+
+    try {
+      this.player.setOrderRow(order, 0);
+      return;
+    } catch {
+      // ignore
+    }
+
+    const knownStart = this.orderStartSecByOrder.get(order);
+    if (typeof knownStart === "number" && Number.isFinite(knownStart)) {
+      try {
+        this.player.setPos(knownStart);
+      } catch {
+        // ignore
+      }
+    }
+  }
+
   private async startPlaybackFromCurrentBuffer(opts?: { keepPaused?: boolean; restart?: boolean }): Promise<void> {
     const buf = this.currentBuffer;
     if (!buf) return;
@@ -708,7 +1273,9 @@ export class MusicPreview {
       return;
     }
 
+    this.applyLoopModeToPlayer();
     this.player.play(buf);
+    this.applyPendingSeek();
     this.isPlaying = true;
     this.isPaused = false;
     this.playButton.textContent = "Pause";

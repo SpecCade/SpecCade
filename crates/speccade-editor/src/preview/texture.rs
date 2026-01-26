@@ -2,7 +2,7 @@
 //!
 //! Generates quick texture previews at 256x256 for real-time feedback.
 
-use super::{PreviewResult, PreviewSettings};
+use super::{PreviewQuality, PreviewResult, PreviewSettings};
 use speccade_spec::Spec;
 
 /// Generate a texture preview from a spec.
@@ -65,11 +65,13 @@ pub fn generate_texture_preview(spec: &Spec, settings: &PreviewSettings) -> Prev
                                 "max_dimension": settings.texture_max_dimension,
                                 "path": output.path,
                             });
-                            PreviewResult::success_with_metadata(
+                            PreviewResult::success_with_quality(
                                 "texture",
                                 png_bytes,
                                 "image/png",
                                 metadata,
+                                PreviewQuality::Proxy,
+                                false,
                             )
                         }
                         Err(e) => {

@@ -67,6 +67,8 @@ interface PreviewResult {
   mime_type?: string;
   error?: string;
   metadata?: Record<string, unknown>;
+  quality?: "proxy" | "full";
+  can_refine?: boolean;
 }
 
 interface GeneratePreviewOutput {
@@ -616,7 +618,7 @@ async function renderAudioPreview(source: string): Promise<void> {
   if (preview?.success && preview.data) {
     replaceStage("preview", []);
     try {
-      await audioPreview.loadWAV(preview.data);
+      await audioPreview.loadWAV(preview.data, filename);
       updateStatus("Audio preview ready");
     } catch (error) {
       replaceStage("preview", [previewProblem(String(error))]);
@@ -730,7 +732,12 @@ async function renderTexturePreview(source: string): Promise<void> {
       await texturePreview.loadTexture(
         preview.data,
         preview.mime_type ?? "image/png",
-        preview.metadata as Record<string, unknown> | undefined
+        preview.metadata as Record<string, unknown> | undefined,
+        {
+          filePath: filename,
+          assetType: currentAssetType ?? "texture",
+          quality: preview.quality ?? "proxy",
+        }
       );
       updateStatus("Texture preview ready");
     } catch (error) {
