@@ -35,6 +35,20 @@ export class MusicPreview {
   private livePreviewCheckbox: HTMLInputElement;
   private infoText: HTMLDivElement;
 
+  private currentTimeText: HTMLDivElement;
+  private totalTimeText: HTMLDivElement;
+
+  private nowPlayingText: HTMLDivElement;
+  private orderStrip: HTMLDivElement;
+
+  private orderStartSecByOrder = new Map<number, number>();
+  private orderPatternByOrder = new Map<number, number>();
+  private orderList: number[] = [];
+  private orderChipByOrder = new Map<number, HTMLButtonElement>();
+  private nowPlaying = { order: null as number | null, pattern: null as number | null, row: null as number | null };
+
+  private lastHighlightedOrder: number | null = null;
+
   private refreshSeq = 0;
   private isDisposed = false;
   private isPlaying = false;
@@ -139,6 +153,7 @@ export class MusicPreview {
     seekLeft.textContent = "0:00";
     seekLeft.id = "music-current";
     seekLeft.style.textAlign = "right";
+    this.currentTimeText = seekLeft;
     seekRow.appendChild(seekLeft);
 
     this.seekSlider = document.createElement("input");
@@ -153,9 +168,20 @@ export class MusicPreview {
     });
     this.seekSlider.addEventListener("input", () => {
       if (!this.isPlaying) return;
-      const sec = Number(this.seekSlider.value);
+      let sec = Number(this.seekSlider.value);
+      if (!Number.isFinite(sec)) return;
+      sec = Math.max(0, sec);
+      if (typeof this.durationSec === "number" && Number.isFinite(this.durationSec) && this.durationSec > 0) {
+        sec = Math.min(sec, this.durationSec);
+      }
+
+      this.seekSlider.value = String(sec);
       this.updateTimeText(sec, this.durationSec ?? 0);
-      this.player.setPos(sec);
+      try {
+        this.player.setPos(sec);
+      } catch {
+        // ignore
+      }
     });
     seekRow.appendChild(this.seekSlider);
 
@@ -163,6 +189,7 @@ export class MusicPreview {
     seekRight.textContent = "0:00";
     seekRight.id = "music-total";
     seekRight.style.textAlign = "left";
+    this.totalTimeText = seekRight;
     seekRow.appendChild(seekRight);
 
     sliders.appendChild(seekRow);
@@ -207,6 +234,38 @@ export class MusicPreview {
 
     this.wrapper.appendChild(sliders);
 
+    const inspector = document.createElement("div");
+    inspector.style.cssText = `
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 8px 10px;
+      background: #1e1e1e;
+      border-radius: 6px;
+    `;
+
+    this.nowPlayingText = document.createElement("div");
+    this.nowPlayingText.style.cssText = `
+      font-size: 11px;
+      color: #bdbdbd;
+      line-height: 1.3;
+      user-select: text;
+    `;
+    this.nowPlayingText.textContent = this.formatNowPlaying();
+    inspector.appendChild(this.nowPlayingText);
+
+    this.orderStrip = document.createElement("div");
+    this.orderStrip.style.cssText = `
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding: 2px 0;
+      -webkit-overflow-scrolling: touch;
+    `;
+    inspector.appendChild(this.orderStrip);
+
+    this.wrapper.appendChild(inspector);
+
     this.infoText = document.createElement("div");
     this.infoText.style.cssText = `
       font-size: 11px;
@@ -233,8 +292,7 @@ export class MusicPreview {
       if (typeof dur === "number" && Number.isFinite(dur) && dur > 0) {
         this.durationSec = dur;
         this.seekSlider.max = String(dur);
-        const total = this.wrapper.querySelector("#music-total");
-        if (total) total.textContent = this.formatTime(dur);
+        this.totalTimeText.textContent = this.formatTime(dur);
       }
       this.updateInfoText(meta);
     });
@@ -243,6 +301,34 @@ export class MusicPreview {
       if (this.isDisposed) return;
       if (!this.isPlaying) return;
       const pos = typeof e.pos === "number" ? e.pos : (this.player.getCurrentTime() ?? 0);
+
+      const order = typeof e.order === "number" && Number.isFinite(e.order) ? e.order : null;
+      const pattern = typeof e.pattern === "number" && Number.isFinite(e.pattern) ? e.pattern : null;
+      const row = typeof e.row === "number" && Number.isFinite(e.row) ? e.row : null;
+
+      if (order !== null) {
+        const isNewOrder = !this.orderChipByOrder.has(order);
+
+        if (isNewOrder) {
+          this.orderList.push(order);
+          if (Number.isFinite(pos)) this.orderStartSecByOrder.set(order, pos);
+          if (pattern !== null) this.orderPatternByOrder.set(order, pattern);
+          this.addOrderChip(order);
+        } else {
+          if (!this.orderStartSecByOrder.has(order) && Number.isFinite(pos)) {
+            this.orderStartSecByOrder.set(order, pos);
+          }
+          if (!this.orderPatternByOrder.has(order) && pattern !== null) {
+            this.orderPatternByOrder.set(order, pattern);
+            this.updateOrderChipLabel(order);
+          }
+        }
+
+        this.setNowPlaying(order, pattern, row);
+      } else {
+        this.setNowPlaying(null, pattern, row);
+      }
+
       if (!this.isSeeking) {
         this.seekSlider.value = String(pos);
         this.updateTimeText(pos, this.durationSec ?? 0);
@@ -256,6 +342,7 @@ export class MusicPreview {
       this.seekSlider.value = "0";
       this.updateTimeText(0, this.durationSec ?? 0);
       this.playButton.textContent = "Play";
+      this.resetNowPlaying();
     });
 
     this.player.onError((err) => {
@@ -295,6 +382,9 @@ export class MusicPreview {
     this.seekSlider.value = "0";
     this.updateTimeText(0, 0);
     this.setInfoText(this.describeReadyText());
+
+    this.clearOrderMaps();
+    this.resetNowPlaying();
   }
 
   dispose(): void {
@@ -318,6 +408,7 @@ export class MusicPreview {
 
   private makeButton(label: string, bg: string): HTMLButtonElement {
     const b = document.createElement("button");
+    b.type = "button";
     b.textContent = label;
     b.style.cssText = `
       padding: 6px 14px;
@@ -369,6 +460,132 @@ export class MusicPreview {
     this.seekSlider.value = "0";
     this.updateTimeText(0, this.durationSec ?? 0);
     this.playButton.textContent = "Play";
+    this.resetNowPlaying();
+  }
+
+  private clearOrderMaps(): void {
+    this.orderStartSecByOrder.clear();
+    this.orderPatternByOrder.clear();
+    this.orderList = [];
+    this.orderChipByOrder.clear();
+    while (this.orderStrip.firstChild) this.orderStrip.removeChild(this.orderStrip.firstChild);
+  }
+
+  private resetNowPlaying(): void {
+    this.nowPlaying = { order: null, pattern: null, row: null };
+    this.nowPlayingText.textContent = this.formatNowPlaying();
+    this.updateOrderChipHighlights();
+  }
+
+  private setNowPlaying(order: number | null, pattern: number | null, row: number | null): void {
+    const next = { order, pattern, row };
+    const orderChanged = next.order !== this.nowPlaying.order;
+    const changed =
+      next.order !== this.nowPlaying.order ||
+      next.pattern !== this.nowPlaying.pattern ||
+      next.row !== this.nowPlaying.row;
+    if (!changed) return;
+    this.nowPlaying = next;
+    this.nowPlayingText.textContent = this.formatNowPlaying();
+    if (orderChanged) this.updateOrderChipHighlights();
+  }
+
+  private formatNowPlaying(): string {
+    const ord = this.nowPlaying.order === null ? "--" : this.format2(this.nowPlaying.order);
+    const pat = this.nowPlaying.pattern === null ? "--" : this.format2(this.nowPlaying.pattern);
+    const row = this.nowPlaying.row === null ? "--" : this.format2(this.nowPlaying.row);
+    return `Ord ${ord} | Pat ${pat} | Row ${row}`;
+  }
+
+  private format2(n: number): string {
+    return String(Math.max(0, Math.trunc(n))).padStart(2, "0");
+  }
+
+  private addOrderChip(order: number): void {
+    const chip = document.createElement("button");
+    chip.type = "button";
+    chip.textContent = this.getOrderChipLabel(order);
+    chip.style.cssText = `
+      padding: 4px 8px;
+      background: #2a2a2a;
+      color: #cfcfcf;
+      border: 1px solid #3a3a3a;
+      border-radius: 999px;
+      cursor: pointer;
+      font-size: 11px;
+      line-height: 1;
+      white-space: nowrap;
+    `;
+    chip.onclick = () => this.seekToOrder(order);
+
+    this.orderChipByOrder.set(order, chip);
+    this.orderStrip.appendChild(chip);
+    chip.scrollIntoView({ inline: "nearest", block: "nearest" });
+    this.updateOrderChipHighlights();
+  }
+
+  private updateOrderChipLabel(order: number): void {
+    const chip = this.orderChipByOrder.get(order);
+    if (!chip) return;
+    chip.textContent = this.getOrderChipLabel(order);
+  }
+
+  private getOrderChipLabel(order: number): string {
+    const pat = this.orderPatternByOrder.get(order);
+    const patLabel = typeof pat === "number" ? this.format2(pat) : "?";
+    return `O${this.format2(order)} P${patLabel}`;
+  }
+
+  private updateOrderChipHighlights(): void {
+    const current = this.nowPlaying.order;
+    if (current === this.lastHighlightedOrder) return;
+
+    if (this.lastHighlightedOrder !== null) {
+      const prevChip = this.orderChipByOrder.get(this.lastHighlightedOrder);
+      if (prevChip) this.applyOrderChipActiveStyle(prevChip, false);
+    }
+
+    if (current !== null) {
+      const nextChip = this.orderChipByOrder.get(current);
+      if (nextChip) this.applyOrderChipActiveStyle(nextChip, true);
+    }
+
+    this.lastHighlightedOrder = current;
+  }
+
+  private applyOrderChipActiveStyle(chip: HTMLButtonElement, active: boolean): void {
+    chip.style.background = active ? "#007acc" : "#2a2a2a";
+    chip.style.borderColor = active ? "#007acc" : "#3a3a3a";
+    chip.style.color = active ? "#fff" : "#cfcfcf";
+  }
+
+  private seekToOrder(order: number): void {
+    // Highlight immediately even if seek fails.
+    const pat = this.orderPatternByOrder.get(order);
+    this.setNowPlaying(order, typeof pat === "number" ? pat : null, null);
+
+    const knownStart = this.orderStartSecByOrder.get(order);
+    let target: number | null = null;
+    if (typeof knownStart === "number" && Number.isFinite(knownStart)) {
+      target = knownStart;
+    } else if (typeof this.durationSec === "number" && Number.isFinite(this.durationSec) && this.durationSec > 0) {
+      const idx = this.orderList.indexOf(order);
+      const denom = Math.max(1, this.orderList.length - 1);
+      target = this.durationSec * (Math.max(0, idx) / denom);
+    }
+
+    if (target === null) return;
+
+    try {
+      this.player.setPos(target);
+    } catch {
+      // ignore
+    }
+
+    if (!this.isSeeking) {
+      this.seekSlider.value = String(target);
+      this.updateTimeText(target, this.durationSec ?? 0);
+    }
   }
 
   private async refresh(mode: RefreshMode): Promise<void> {
@@ -535,10 +752,8 @@ export class MusicPreview {
   }
 
   private updateTimeText(currentSec: number, totalSec: number): void {
-    const current = this.wrapper.querySelector("#music-current");
-    if (current) current.textContent = this.formatTime(currentSec);
-    const total = this.wrapper.querySelector("#music-total");
-    if (total && totalSec > 0) total.textContent = this.formatTime(totalSec);
+    this.currentTimeText.textContent = this.formatTime(currentSec);
+    if (totalSec > 0) this.totalTimeText.textContent = this.formatTime(totalSec);
   }
 
   private formatTime(sec: number): string {

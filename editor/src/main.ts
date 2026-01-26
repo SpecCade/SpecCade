@@ -19,6 +19,7 @@ import { FileBrowser } from "./components/FileBrowser";
 import { GeneratePanel } from "./components/GeneratePanel";
 import { StdlibPalette } from "./components/StdlibPalette";
 import { HelpPanel } from "./components/HelpPanel";
+import { ProblemsPanel, ProblemItem, ProblemStage } from "./components/ProblemsPanel";
 import { addRecentFile } from "./lib/recent-files";
 
 // Configure Monaco worker paths for Vite
@@ -88,11 +89,14 @@ let musicPreview: MusicPreview | null = null;
 let texturePreview: TexturePreview | null = null;
 let fileBrowser: FileBrowser | null = null;
 let generatePanel: GeneratePanel | null = null;
+let problemsPanel: ProblemsPanel | null = null;
+let currentProblems: ProblemItem[] = [];
 let stdlibPalette: StdlibPalette | null = null;
 let currentAssetType: string | null = null;
 let currentWatchedPath: string | null = null;
 let currentFilePath: string | null = null;
 let fileChangeUnlisten: UnlistenFn | null = null;
+let rightPaneTabsAbort: AbortController | null = null;
 
 // Default spec template
 const DEFAULT_SPEC = `# SpecCade Starlark Spec
@@ -158,6 +162,12 @@ export function cleanup(): void {
     fileChangeUnlisten();
     fileChangeUnlisten = null;
   }
+
+  if (rightPaneTabsAbort) {
+    rightPaneTabsAbort.abort();
+    rightPaneTabsAbort = null;
+  }
+
   if (editor) {
     editor.dispose();
     editor = null;
@@ -169,6 +179,10 @@ export function cleanup(): void {
   if (generatePanel) {
     generatePanel.dispose();
     generatePanel = null;
+  }
+  if (problemsPanel) {
+    problemsPanel.dispose();
+    problemsPanel = null;
   }
   if (stdlibPalette) {
     stdlibPalette.dispose();
@@ -226,6 +240,98 @@ function convertToDiagnostics(
   }
 
   return diagnostics;
+}
+
+/**
+ * Convert backend eval errors/warnings to Problems panel items.
+ */
+function convertToProblems(errors: EvalError[], warnings: EvalWarning[]): ProblemItem[] {
+  const problems: ProblemItem[] = [];
+
+  for (let i = 0; i < errors.length; i++) {
+    const error = errors[i];
+    const loc = error.location ? parseLocation(error.location) : null;
+    problems.push({
+      id: `eval:error:${error.code}:${i}`,
+      stage: "eval",
+      severity: "error",
+      code: error.code,
+      message: error.message,
+      location: loc ?? undefined,
+    });
+  }
+
+  for (let i = 0; i < warnings.length; i++) {
+    const warning = warnings[i];
+    const loc = warning.location ? parseLocation(warning.location) : null;
+    problems.push({
+      id: `eval:warning:${warning.code}:${i}`,
+      stage: "eval",
+      severity: "warning",
+      code: warning.code,
+      message: warning.message,
+      location: loc ?? undefined,
+    });
+  }
+
+  return problems;
+}
+
+function setProblems(items: ProblemItem[]): void {
+  currentProblems = items.slice();
+  problemsPanel?.setProblems(currentProblems);
+}
+
+function replaceStage(stage: ProblemStage, itemsForStage: ProblemItem[]): void {
+  const next: ProblemItem[] = [];
+  let inserted = false;
+
+  for (const problem of currentProblems) {
+    if (problem.stage === stage) {
+      if (!inserted) {
+        next.push(...itemsForStage);
+        inserted = true;
+      }
+      continue;
+    }
+    next.push(problem);
+  }
+
+  if (!inserted) {
+    next.push(...itemsForStage);
+  }
+
+  setProblems(next);
+}
+
+function compileProblem(message: string): ProblemItem {
+  return {
+    id: "compile:error:COMPILE_ERROR:0",
+    stage: "compile",
+    severity: "error",
+    code: "COMPILE_ERROR",
+    message,
+  };
+}
+
+function ipcProblem(message: string): ProblemItem {
+  return {
+    id: "ipc:error:IPC_ERROR:0",
+    stage: "ipc",
+    severity: "error",
+    code: "IPC_ERROR",
+    message,
+  };
+}
+
+function previewProblem(message: string): ProblemItem {
+  return {
+    id: "preview:error:PREVIEW_ERROR:0",
+    stage: "preview",
+    severity: "error",
+    code: "PREVIEW_ERROR",
+    message,
+  };
 }
 
 /**
@@ -314,6 +420,7 @@ async function evaluateSource(content: string): Promise<void> {
   if (!content.trim()) {
     updateStatus("Ready");
     if (editor) editor.clearDiagnostics();
+    setProblems([]);
     return;
   }
 
@@ -329,21 +436,28 @@ async function evaluateSource(content: string): Promise<void> {
     if (result.success) {
       const hashPreview = result.source_hash?.slice(0, 8) ?? "";
       updateStatus(`OK - ${hashPreview}...`);
-      await updatePreview(result.result, content);
       if (editor) {
         editor.setDiagnostics(convertToDiagnostics([], result.warnings));
       }
+
+      replaceStage("ipc", []);
+      replaceStage("eval", convertToProblems([], result.warnings));
+      await updatePreview(result.result, content);
     } else {
       const errorCount = result.errors.length;
       updateStatus(`${errorCount} error${errorCount === 1 ? "" : "s"}`);
-      await updatePreview(null, content);
       if (editor) {
         editor.setDiagnostics(convertToDiagnostics(result.errors, result.warnings));
       }
+
+      replaceStage("ipc", []);
+      replaceStage("compile", []);
+      replaceStage("preview", []);
+      replaceStage("eval", convertToProblems(result.errors, result.warnings));
+      await updatePreview(null, content);
     }
   } catch (error) {
     updateStatus(`IPC Error: ${error}`);
-    await updatePreview(null, content);
     if (editor) {
       editor.setDiagnostics([
         {
@@ -354,6 +468,8 @@ async function evaluateSource(content: string): Promise<void> {
         },
       ]);
     }
+
+    replaceStage("ipc", [ipcProblem(String(error))]);
   }
 }
 
@@ -362,6 +478,8 @@ async function evaluateSource(content: string): Promise<void> {
  */
 async function updatePreview(result: unknown, source: string): Promise<void> {
   if (result === null || result === undefined) {
+    replaceStage("compile", []);
+    replaceStage("preview", []);
     clearPreviewComponents();
     previewContent.innerHTML = `<span style="color: #666;">No preview available</span>`;
     return;
@@ -374,6 +492,8 @@ async function updatePreview(result: unknown, source: string): Promise<void> {
   // If asset type changed, clear old preview components
   if (assetType !== currentAssetType) {
     clearPreviewComponents();
+    replaceStage("compile", []);
+    replaceStage("preview", []);
     currentAssetType = assetType ?? null;
   }
 
@@ -398,6 +518,8 @@ async function updatePreview(result: unknown, source: string): Promise<void> {
     await renderMeshPreview(source);
   } else {
     // Fallback to JSON preview for unknown types
+    replaceStage("compile", []);
+    replaceStage("preview", []);
     renderJsonPreview(result);
   }
 }
@@ -412,28 +534,45 @@ async function renderMeshPreview(source: string): Promise<void> {
     meshPreview = new MeshPreview(previewContent);
   }
 
+  const filename = currentFilePath ?? "editor.star";
+  updateStatus("Generating mesh preview...");
+
+  let result: GeneratePreviewOutput;
   try {
-    const filename = currentFilePath ?? "editor.star";
-    updateStatus("Generating mesh preview...");
-    const result = await invoke<GeneratePreviewOutput>(
-      "plugin:speccade|generate_preview",
-      { source, filename }
-    );
+    result = await invoke<GeneratePreviewOutput>("plugin:speccade|generate_preview", {
+      source,
+      filename,
+    });
+  } catch (error) {
+    replaceStage("ipc", [ipcProblem(String(error))]);
+    replaceStage("compile", []);
+    replaceStage("preview", []);
+    updateStatus(`IPC Error: ${error}`);
+    return;
+  }
 
-    if (!result.compile_success) {
-      updateStatus(`Compile error: ${result.compile_error ?? "Unknown error"}`);
-      return;
-    }
+  if (!result.compile_success) {
+    replaceStage("compile", [compileProblem(result.compile_error ?? "Unknown error")]);
+    replaceStage("preview", []);
+    updateStatus(`Compile error: ${result.compile_error ?? "Unknown error"}`);
+    return;
+  }
 
-    const preview = result.preview;
-    if (preview?.success && preview.data) {
+  replaceStage("compile", []);
+
+  const preview = result.preview;
+  if (preview?.success && preview.data) {
+    replaceStage("preview", []);
+    try {
       await meshPreview.loadGLB(preview.data);
       updateStatus("Mesh preview ready");
-    } else {
-      updateStatus(`Preview error: ${preview?.error ?? "Unknown error"}`);
+    } catch (error) {
+      replaceStage("preview", [previewProblem(String(error))]);
+      updateStatus(`Preview error: ${error}`);
     }
-  } catch (error) {
-    updateStatus(`Preview error: ${error}`);
+  } else {
+    replaceStage("preview", [previewProblem(preview?.error ?? "Unknown error")]);
+    updateStatus(`Preview error: ${preview?.error ?? "Unknown error"}`);
   }
 }
 
@@ -447,28 +586,45 @@ async function renderAudioPreview(source: string): Promise<void> {
     audioPreview = new AudioPreview(previewContent);
   }
 
+  const filename = currentFilePath ?? "editor.star";
+  updateStatus("Generating audio preview...");
+
+  let result: GeneratePreviewOutput;
   try {
-    const filename = currentFilePath ?? "editor.star";
-    updateStatus("Generating audio preview...");
-    const result = await invoke<GeneratePreviewOutput>(
-      "plugin:speccade|generate_preview",
-      { source, filename }
-    );
+    result = await invoke<GeneratePreviewOutput>("plugin:speccade|generate_preview", {
+      source,
+      filename,
+    });
+  } catch (error) {
+    replaceStage("ipc", [ipcProblem(String(error))]);
+    replaceStage("compile", []);
+    replaceStage("preview", []);
+    updateStatus(`IPC Error: ${error}`);
+    return;
+  }
 
-    if (!result.compile_success) {
-      updateStatus(`Compile error: ${result.compile_error ?? "Unknown error"}`);
-      return;
-    }
+  if (!result.compile_success) {
+    replaceStage("compile", [compileProblem(result.compile_error ?? "Unknown error")]);
+    replaceStage("preview", []);
+    updateStatus(`Compile error: ${result.compile_error ?? "Unknown error"}`);
+    return;
+  }
 
-    const preview = result.preview;
-    if (preview?.success && preview.data) {
+  replaceStage("compile", []);
+
+  const preview = result.preview;
+  if (preview?.success && preview.data) {
+    replaceStage("preview", []);
+    try {
       await audioPreview.loadWAV(preview.data);
       updateStatus("Audio preview ready");
-    } else {
-      updateStatus(`Preview error: ${preview?.error ?? "Unknown error"}`);
+    } catch (error) {
+      replaceStage("preview", [previewProblem(String(error))]);
+      updateStatus(`Preview error: ${error}`);
     }
-  } catch (error) {
-    updateStatus(`Preview error: ${error}`);
+  } else {
+    replaceStage("preview", [previewProblem(preview?.error ?? "Unknown error")]);
+    updateStatus(`Preview error: ${preview?.error ?? "Unknown error"}`);
   }
 }
 
@@ -481,25 +637,49 @@ async function renderMusicPreview(source: string): Promise<void> {
   if (!musicPreview) {
     previewContent.innerHTML = "";
     musicPreview = new MusicPreview(previewContent, async (src, reqFilename) => {
-      const result = await invoke<GeneratePreviewOutput>(
-        "plugin:speccade|generate_preview",
-        { source: src, filename: reqFilename }
-      );
+      let didInvoke = false;
+      try {
+        const result = await invoke<GeneratePreviewOutput>(
+          "plugin:speccade|generate_preview",
+          { source: src, filename: reqFilename }
+        );
+        didInvoke = true;
 
-      if (!result.compile_success) {
-        throw new Error(result.compile_error ?? "Unknown compile error");
+        // IPC succeeded; clear any stale IPC errors.
+        replaceStage("ipc", []);
+
+        if (!result.compile_success) {
+          replaceStage("compile", [
+            compileProblem(result.compile_error ?? "Unknown compile error"),
+          ]);
+          replaceStage("preview", []);
+          throw new Error(result.compile_error ?? "Unknown compile error");
+        }
+
+        replaceStage("compile", []);
+
+        const preview = result.preview;
+        if (!preview?.success || !preview.data) {
+          replaceStage("preview", [previewProblem(preview?.error ?? "Unknown preview error")]);
+          throw new Error(preview?.error ?? "Unknown preview error");
+        }
+
+        replaceStage("preview", []);
+        replaceStage("ipc", []);
+
+        return {
+          dataBase64: preview.data,
+          mimeType: preview.mime_type,
+          metadata: preview.metadata ?? undefined,
+        };
+      } catch (error) {
+        if (!didInvoke) {
+          replaceStage("ipc", [ipcProblem(String(error))]);
+          replaceStage("compile", []);
+          replaceStage("preview", []);
+        }
+        throw error;
       }
-
-      const preview = result.preview;
-      if (!preview?.success || !preview.data) {
-        throw new Error(preview?.error ?? "Unknown preview error");
-      }
-
-      return {
-        dataBase64: preview.data,
-        mimeType: preview.mime_type,
-        metadata: preview.metadata ?? undefined,
-      };
     });
   }
 
@@ -517,32 +697,49 @@ async function renderTexturePreview(source: string): Promise<void> {
     texturePreview = new TexturePreview(previewContent);
   }
 
+  const filename = currentFilePath ?? "editor.star";
+  updateStatus("Generating texture preview...");
+
+  let result: GeneratePreviewOutput;
   try {
-    const filename = currentFilePath ?? "editor.star";
-    updateStatus("Generating texture preview...");
-    const result = await invoke<GeneratePreviewOutput>(
-      "plugin:speccade|generate_preview",
-      { source, filename }
-    );
+    result = await invoke<GeneratePreviewOutput>("plugin:speccade|generate_preview", {
+      source,
+      filename,
+    });
+  } catch (error) {
+    replaceStage("ipc", [ipcProblem(String(error))]);
+    replaceStage("compile", []);
+    replaceStage("preview", []);
+    updateStatus(`IPC Error: ${error}`);
+    return;
+  }
 
-    if (!result.compile_success) {
-      updateStatus(`Compile error: ${result.compile_error ?? "Unknown error"}`);
-      return;
-    }
+  if (!result.compile_success) {
+    replaceStage("compile", [compileProblem(result.compile_error ?? "Unknown error")]);
+    replaceStage("preview", []);
+    updateStatus(`Compile error: ${result.compile_error ?? "Unknown error"}`);
+    return;
+  }
 
-    const preview = result.preview;
-    if (preview?.success && preview.data) {
+  replaceStage("compile", []);
+
+  const preview = result.preview;
+  if (preview?.success && preview.data) {
+    replaceStage("preview", []);
+    try {
       await texturePreview.loadTexture(
         preview.data,
         preview.mime_type ?? "image/png",
         preview.metadata as Record<string, unknown> | undefined
       );
       updateStatus("Texture preview ready");
-    } else {
-      updateStatus(`Preview error: ${preview?.error ?? "Unknown error"}`);
+    } catch (error) {
+      replaceStage("preview", [previewProblem(String(error))]);
+      updateStatus(`Preview error: ${error}`);
     }
-  } catch (error) {
-    updateStatus(`Preview error: ${error}`);
+  } else {
+    replaceStage("preview", [previewProblem(preview?.error ?? "Unknown error")]);
+    updateStatus(`Preview error: ${preview?.error ?? "Unknown error"}`);
   }
 }
 
@@ -602,6 +799,16 @@ async function init(): Promise<void> {
       evaluateSource(editor.getContent());
     }
   });
+
+  // Initialize problems panel before the first evaluation runs.
+  const problemsContentEl = document.getElementById("problems-content");
+  if (problemsContentEl) {
+    problemsPanel = new ProblemsPanel(problemsContentEl, (problem) => {
+      if (!problem.location) return;
+      editor?.selectAt(problem.location.line, problem.location.column);
+      editor?.focus();
+    });
+  }
 
   initEditor();
 
@@ -717,31 +924,38 @@ async function init(): Promise<void> {
   // Setup tab switching
   const previewTab = document.getElementById("preview-tab");
   const generateTab = document.getElementById("generate-tab");
+  const problemsTab = document.getElementById("problems-tab");
   const previewContentEl = document.getElementById("preview-content");
   const generateContentEl = document.getElementById("generate-content");
 
-  if (previewTab && generateTab && previewContentEl && generateContentEl) {
-    previewTab.addEventListener("click", () => {
-      // Show preview, hide generate
-      previewContentEl.style.display = "flex";
-      generateContentEl.style.display = "none";
-      // Update tab styles
-      previewTab.style.background = "#252525";
-      previewTab.style.color = "#fff";
-      generateTab.style.background = "#1a1a1a";
-      generateTab.style.color = "#888";
-    });
+  type RightPaneTab = "preview" | "generate" | "problems";
 
-    generateTab.addEventListener("click", () => {
-      // Show generate, hide preview
-      previewContentEl.style.display = "none";
-      generateContentEl.style.display = "flex";
-      // Update tab styles
-      generateTab.style.background = "#252525";
-      generateTab.style.color = "#fff";
-      previewTab.style.background = "#1a1a1a";
-      previewTab.style.color = "#888";
-    });
+  function setTabButtonActive(el: HTMLElement, active: boolean): void {
+    el.style.background = active ? "#252525" : "#1a1a1a";
+    el.style.color = active ? "#fff" : "#888";
+  }
+
+  function setRightPaneTab(tab: RightPaneTab): void {
+    if (!previewContentEl || !generateContentEl || !problemsContentEl) return;
+
+    previewContentEl.style.display = tab === "preview" ? "flex" : "none";
+    generateContentEl.style.display = tab === "generate" ? "flex" : "none";
+    problemsContentEl.style.display = tab === "problems" ? "flex" : "none";
+
+    if (previewTab) setTabButtonActive(previewTab, tab === "preview");
+    if (generateTab) setTabButtonActive(generateTab, tab === "generate");
+    if (problemsTab) setTabButtonActive(problemsTab, tab === "problems");
+  }
+
+  if (previewTab && generateTab && problemsTab && previewContentEl && generateContentEl && problemsContentEl) {
+    rightPaneTabsAbort?.abort();
+    rightPaneTabsAbort = new AbortController();
+    const { signal } = rightPaneTabsAbort;
+
+    previewTab.addEventListener("click", () => setRightPaneTab("preview"), { signal });
+    generateTab.addEventListener("click", () => setRightPaneTab("generate"), { signal });
+    problemsTab.addEventListener("click", () => setRightPaneTab("problems"), { signal });
+    setRightPaneTab("preview");
   }
 
   // Keyboard shortcuts

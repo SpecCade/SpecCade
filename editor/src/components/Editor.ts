@@ -301,6 +301,36 @@ export class Editor {
   }
 
   /**
+   * Select and reveal a position in the editor.
+   *
+   * Clamps the requested position using Monaco model validation, then selects up to
+   * 20 characters on the same line when available (the selection may be empty at
+   * end-of-line / on empty lines).
+   */
+  selectAt(line: number, column: number): void {
+    const model = this.editor.getModel();
+    if (!model) return;
+
+    const start = model.validatePosition({ lineNumber: line, column });
+    const maxColumn = model.getLineMaxColumn(start.lineNumber);
+    const endColumn = Math.min(start.column + 20, maxColumn);
+    const range = model.validateRange(
+      new monaco.Range(start.lineNumber, start.column, start.lineNumber, endColumn)
+    );
+
+    this.editor.setPosition(start);
+    this.editor.setSelection(
+      new monaco.Selection(
+        range.startLineNumber,
+        range.startColumn,
+        range.endLineNumber,
+        range.endColumn
+      )
+    );
+    this.editor.revealRangeInCenter(range);
+  }
+
+  /**
    * Dispose of the editor and release resources.
    *
    * Call this when the editor is no longer needed.
