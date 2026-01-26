@@ -9,6 +9,11 @@ Static meshes are non-deforming 3D geometry for props, environments, and other o
 | Output Formats | `glb` |
 | Determinism | Tier 2 (metric validation) |
 
+> **Coordinate System:** SpecCade uses Z-up, Y-forward convention. See [Coordinate System Conventions](../conventions/coordinate-system.md).
+> - Mesh "front" faces +Y
+> - Mesh "top" faces +Z
+> - Dimensions are [X (width), Y (depth), Z (height)]
+
 ## SSOT (Source Of Truth)
 
 - Rust types: `crates/speccade-spec/src/recipe/mesh/`
@@ -24,7 +29,7 @@ The `static_mesh.blender_primitives_v1` recipe builds meshes from Blender primit
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `base_primitive` | string | Yes | Base mesh primitive (see primitives below) |
-| `dimensions` | `[f64; 3]` | Yes | Dimensions [X, Y, Z] in Blender units |
+| `dimensions` | `[f64; 3]` | Yes | Dimensions [X (width), Y (depth), Z (height)] in meters |
 | `modifiers` | array | No | List of modifiers to apply (see modifiers below) |
 | `uv_projection` | string/object | No | UV unwrapping method (see UV projection below) |
 | `normals` | object | No | Normals automation settings (see normals below) |
@@ -127,7 +132,7 @@ Modifiers are applied in order. Each modifier has a `type` field.
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `count` | u32 | Yes | Number of copies |
-| `offset` | `[f64; 3]` | Yes | Offset between copies |
+| `offset` | `[f64; 3]` | Yes | Offset between copies [X (right), Y (forward), Z (up)] |
 
 #### Solidify
 
