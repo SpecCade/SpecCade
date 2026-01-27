@@ -135,6 +135,9 @@ Resolved questions:
   - Tier 2 (Blender) implementation with union/difference/intersect operations, exact/fast solver, cleanup (merge doubles, recalc normals). 3 golden specs.
 - [x] `MESH-013` ~~Add animation helper presets (IK targets + constraint presets) for procedural walk/run cycles.~~ Done: 2026-01-27
   - Wired `skeletal_animation.helpers_v1` to backend dispatch: `animation_helpers.rs` backend module, Blender entrypoint handler, CLI dispatch. Walk cycle, run cycle, and idle sway presets generate end-to-end.
+- [x] `MESH-014` ~~Add `save_blend` to static mesh export for Blender validation.~~ Done: 2026-01-28
+  - Added `save_blend: bool` to `MeshExportSettings`, save `.blend` in all Tier 2 mesh handlers (static mesh, modular kit, organic sculpt, mesh-to-sprite), parse `blend_path` in Rust backend. CLI `--save-blend` flag for forcing.
+  - Plan: `docs/plans/2026-01-28-blender-export-for-meshes.md`
 
 ### Skeletal Animation / Rigging / IK (Blender Tier)
 
@@ -157,6 +160,16 @@ Resolved questions:
   - Extension types in speccade-spec (manifest, contract, determinism levels), subprocess runner with timeout/hash verification, reference implementation in examples/extensions/simple-subprocess/, architecture docs.
 - [x] `QA-010` ~~Add structural metrics for LLM-friendly 3D feedback.~~ Done: 2026-01-27
   - Non-opinionated geometry metrics in reports: aspect ratios, symmetry, component adjacency, bone coverage, scale reference. Blender computation in `structural_metrics.py`, Rust types in `report/structural.rs`, docs in `spec-reference/structural-metrics.md`.
+
+---
+
+## Music
+
+- [ ] `MUSIC-011` Add instrument pitch validation and auto-correction for XM/IT export.
+  - Pitch deviation measurement (`xm_pitch_deviation_cents`, `it_pitch_deviation_cents`) that simulates each tracker format's playback formula and reports error in cents.
+  - Fix IT `c5_speed` truncation bug (round instead of truncate).
+  - Surface `pitch_deviation_cents` in `MusicInstrumentLoopReport` for every exported instrument.
+  - Plan: `docs/plans/2026-01-28-instrument-pitch-validation.md`
 
 ---
 

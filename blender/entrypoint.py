@@ -5104,9 +5104,18 @@ def handle_static_mesh(spec: Dict, out_root: Path, report_path: Path) -> None:
         if baking_metrics:
             metrics["baking"] = baking_metrics
 
+        # Save .blend file if requested
+        blend_rel_path = None
+        export_settings = params.get("export", {})
+        if export_settings.get("save_blend", False):
+            blend_rel_path = output_rel_path.replace(".glb", ".blend")
+            blend_path = out_root / blend_rel_path
+            bpy.ops.wm.save_as_mainfile(filepath=str(blend_path))
+
         duration_ms = int((time.time() - start_time) * 1000)
         write_report(report_path, ok=True, metrics=metrics,
-                     output_path=output_rel_path, duration_ms=duration_ms)
+                     output_path=output_rel_path, blend_path=blend_rel_path,
+                     duration_ms=duration_ms)
 
     except Exception as e:
         write_report(report_path, ok=False, error=str(e))
@@ -5163,9 +5172,17 @@ def handle_modular_kit(spec: Dict, out_root: Path, report_path: Path) -> None:
         metrics = compute_mesh_metrics(obj)
         export_glb(output_path, export_tangents=export_tangents)
 
+        # Save .blend file if requested
+        blend_rel_path = None
+        if export_settings.get("save_blend", False):
+            blend_rel_path = output_rel_path.replace(".glb", ".blend")
+            blend_path = out_root / blend_rel_path
+            bpy.ops.wm.save_as_mainfile(filepath=str(blend_path))
+
         duration_ms = int((time.time() - start_time) * 1000)
         write_report(report_path, ok=True, metrics=metrics,
-                     output_path=output_rel_path, duration_ms=duration_ms)
+                     output_path=output_rel_path, blend_path=blend_rel_path,
+                     duration_ms=duration_ms)
 
     except Exception as e:
         write_report(report_path, ok=False, error=str(e))
@@ -5753,9 +5770,17 @@ def handle_organic_sculpt(spec: Dict, out_root: Path, report_path: Path) -> None
         metrics = compute_mesh_metrics(mesh_obj)
         export_glb(output_path, export_tangents=export_tangents)
 
+        # Save .blend file if requested
+        blend_rel_path = None
+        if export_settings.get("save_blend", False):
+            blend_rel_path = output_rel_path.replace(".glb", ".blend")
+            blend_path = out_root / blend_rel_path
+            bpy.ops.wm.save_as_mainfile(filepath=str(blend_path))
+
         duration_ms = int((time.time() - start_time) * 1000)
         write_report(report_path, ok=True, metrics=metrics,
-                     output_path=output_rel_path, duration_ms=duration_ms)
+                     output_path=output_rel_path, blend_path=blend_rel_path,
+                     duration_ms=duration_ms)
 
     except Exception as e:
         write_report(report_path, ok=False, error=str(e))
@@ -6989,9 +7014,17 @@ def handle_mesh_to_sprite(spec: Dict, out_root: Path, report_path: Path) -> None
             "lighting": lighting_preset
         }
 
+        # Save .blend file if requested
+        blend_rel_path = None
+        if params.get("save_blend", False):
+            blend_rel_path = output_rel_path.replace(".png", ".blend")
+            blend_path = out_root / blend_rel_path
+            bpy.ops.wm.save_as_mainfile(filepath=str(blend_path))
+
         duration_ms = int((time.time() - start_time) * 1000)
         write_report(report_path, ok=True, metrics=metrics,
-                     output_path=output_rel_path, duration_ms=duration_ms)
+                     output_path=output_rel_path, blend_path=blend_rel_path,
+                     duration_ms=duration_ms)
 
     except Exception as e:
         write_report(report_path, ok=False, error=str(e))

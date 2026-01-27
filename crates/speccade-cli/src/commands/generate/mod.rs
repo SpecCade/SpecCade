@@ -29,6 +29,7 @@ pub use quality::QualityConstraints;
 /// * `variations` - Optional number of SFX variations to generate
 /// * `max_peak_db` - Optional maximum peak level in dB for variation quality gating
 /// * `max_dc_offset` - Optional maximum DC offset for variation quality gating
+/// * `save_blend` - Force saving .blend files alongside GLB output
 ///
 /// # Returns
 /// Exit code: 0 success, 1 spec error, 2 generation error
@@ -45,6 +46,7 @@ pub fn run(
     variations: Option<u32>,
     max_peak_db: Option<f64>,
     max_dc_offset: Option<f64>,
+    save_blend: bool,
 ) -> Result<ExitCode> {
     let constraints = QualityConstraints::from_options(max_peak_db, max_dc_offset);
 
@@ -59,6 +61,7 @@ pub fn run(
             profile,
             variations,
             constraints,
+            save_blend,
         )
     } else {
         human::run_human(
@@ -71,6 +74,7 @@ pub fn run(
             profile,
             variations,
             constraints,
+            save_blend,
         )
     }
 }

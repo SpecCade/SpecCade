@@ -34,6 +34,7 @@ pub fn run_json(
     profile: bool,
     variations: Option<u32>,
     constraints: Option<QualityConstraints>,
+    save_blend: bool,
 ) -> Result<ExitCode> {
     let start = Instant::now();
     let out_root_str = out_root.unwrap_or(".");
@@ -63,7 +64,7 @@ pub fn run_json(
     // Load spec file (JSON or Starlark)
     let load_result = load_spec(Path::new(spec_path));
 
-    let (spec, source_kind, source_hash, load_warnings) = match load_result {
+    let (mut spec, source_kind, source_hash, load_warnings) = match load_result {
         Ok(LoadResult {
             spec,
             source_kind,
@@ -79,6 +80,31 @@ pub fn run_json(
             return Ok(ExitCode::from(1));
         }
     };
+
+    // Inject save_blend into recipe params if --save-blend flag is set
+    if save_blend {
+        if let Some(ref mut recipe) = spec.recipe {
+            if let Some(params) = recipe.params.as_object_mut() {
+                if let Some(export) = params.get_mut("export") {
+                    if let Some(export_obj) = export.as_object_mut() {
+                        export_obj.insert(
+                            "save_blend".to_string(),
+                            serde_json::Value::Bool(true),
+                        );
+                    }
+                } else {
+                    params.insert(
+                        "export".to_string(),
+                        serde_json::json!({"save_blend": true}),
+                    );
+                }
+                params.insert(
+                    "save_blend".to_string(),
+                    serde_json::Value::Bool(true),
+                );
+            }
+        }
+    }
 
     // Compute spec hash
     let spec_hash = canonical_spec_hash(&spec).unwrap_or_else(|_| "unknown".to_string());

@@ -171,6 +171,10 @@ enum Commands {
         /// Maximum DC offset (absolute value); reject variations exceeding this threshold
         #[arg(long)]
         max_dc_offset: Option<f64>,
+
+        /// Force saving .blend files alongside GLB output (Blender mesh pipelines only)
+        #[arg(long)]
+        save_blend: bool,
     },
 
     /// Generate all assets from a directory of spec files
@@ -479,6 +483,7 @@ fn main() -> ExitCode {
             variations,
             max_peak_db,
             max_dc_offset,
+            save_blend,
         } => commands::generate::run(
             &spec,
             out_root.as_deref(),
@@ -491,6 +496,7 @@ fn main() -> ExitCode {
             variations,
             max_peak_db,
             max_dc_offset,
+            save_blend,
         ),
         Commands::GenerateAll {
             spec_dir,
@@ -807,6 +813,7 @@ mod tests {
                 variations,
                 max_peak_db,
                 max_dc_offset,
+                save_blend: _,
             } => {
                 assert_eq!(spec, "spec.json");
                 assert_eq!(out_root.as_deref(), Some("out"));
@@ -848,6 +855,7 @@ mod tests {
                 variations,
                 max_peak_db,
                 max_dc_offset,
+                save_blend: _,
             } => {
                 assert_eq!(spec, "spec.json");
                 assert!(out_root.is_none());
@@ -882,6 +890,7 @@ mod tests {
                 variations,
                 max_peak_db,
                 max_dc_offset,
+                save_blend: _,
             } => {
                 assert_eq!(spec, "spec.json");
                 assert!(out_root.is_none());
@@ -916,6 +925,7 @@ mod tests {
                 variations,
                 max_peak_db,
                 max_dc_offset,
+                save_blend: _,
             } => {
                 assert_eq!(spec, "spec.json");
                 assert!(out_root.is_none());
@@ -957,6 +967,7 @@ mod tests {
                 variations,
                 max_peak_db,
                 max_dc_offset,
+                save_blend: _,
             } => {
                 assert_eq!(spec, "spec.json");
                 assert!(out_root.is_none());
@@ -1002,6 +1013,7 @@ mod tests {
                 variations,
                 max_peak_db,
                 max_dc_offset,
+                save_blend: _,
             } => {
                 assert_eq!(spec, "spec.json");
                 assert!(out_root.is_none());

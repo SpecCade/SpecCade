@@ -326,6 +326,7 @@ mod tests {
                 include_uvs: true,
                 include_vertex_colors: false,
                 tangents: true,
+                save_blend: false,
             }),
             constraints: None,
             lod_chain: None,
@@ -376,6 +377,7 @@ mod tests {
                 include_uvs: true,
                 include_vertex_colors: false,
                 tangents: true,
+                save_blend: false,
             }),
             constraints: Some(MeshConstraints {
                 max_triangles: Some(1000),

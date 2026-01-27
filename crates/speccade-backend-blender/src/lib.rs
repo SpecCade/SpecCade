@@ -296,6 +296,7 @@ mod tests {
 
         let result = GenerateResult::StaticMesh(StaticMeshResult {
             output_path: std::path::PathBuf::from("test.glb"),
+            blend_path: None,
             metrics: metrics.clone(),
             report: BlenderReport::success(metrics, "test.glb".to_string()),
         });

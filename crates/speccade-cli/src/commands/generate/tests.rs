@@ -38,6 +38,7 @@ fn generate_rejects_missing_recipe_and_writes_report() {
         None,
         None,
         None,
+        false,
     )
     .unwrap();
     assert_eq!(code, ExitCode::from(1));
@@ -82,6 +83,7 @@ fn generate_reports_validation_errors_for_invalid_params() {
         None,
         None,
         None,
+        false,
     )
     .unwrap();
     assert_eq!(code, ExitCode::from(1));
@@ -151,6 +153,7 @@ fn generate_audio_v1_writes_output_and_report() {
         None,
         None,
         None,
+        false,
     )
     .unwrap();
     assert_eq!(code, ExitCode::SUCCESS);
@@ -227,6 +230,7 @@ fn generate_expands_variants_into_separate_output_roots_and_reports() {
         None,
         None,
         None,
+        false,
     )
     .unwrap();
     assert_eq!(code, ExitCode::SUCCESS);
@@ -334,6 +338,7 @@ fn generate_json_output_success() {
         None,
         None,
         None,
+        false,
     )
     .unwrap();
     assert_eq!(code, ExitCode::SUCCESS);
@@ -365,6 +370,7 @@ fn generate_json_output_validation_failure() {
         None,
         None,
         None,
+        false,
     )
     .unwrap();
     assert_eq!(code, ExitCode::from(1));
@@ -385,6 +391,7 @@ fn generate_json_output_file_not_found() {
         None,
         None,
         None,
+        false,
     )
     .unwrap();
     assert_eq!(code, ExitCode::from(1));
@@ -446,6 +453,7 @@ fn generate_variations_creates_manifest_and_outputs() {
         Some(3), // Generate 3 variations
         None,
         None,
+        false,
     )
     .unwrap();
     assert_eq!(code, ExitCode::SUCCESS);
@@ -537,6 +545,7 @@ fn generate_variations_with_peak_constraint_records_constraint() {
         Some(2),
         Some(-3.0), // Generous threshold for low-volume audio
         None,
+        false,
     )
     .unwrap();
     assert_eq!(code, ExitCode::SUCCESS);

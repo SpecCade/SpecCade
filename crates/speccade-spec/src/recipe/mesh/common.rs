@@ -77,6 +77,9 @@ pub struct MeshExportSettings {
     /// Export tangents for normal mapping.
     #[serde(default)]
     pub tangents: bool,
+    /// Save .blend file alongside GLB output for validation.
+    #[serde(default)]
+    pub save_blend: bool,
 }
 
 pub(crate) fn default_true() -> bool {
@@ -157,6 +160,7 @@ impl Default for MeshExportSettings {
             include_uvs: true,
             include_vertex_colors: false,
             tangents: false,
+            save_blend: false,
         }
     }
 }
@@ -275,6 +279,7 @@ mod tests {
         assert!(settings.include_uvs);
         assert!(!settings.include_vertex_colors);
         assert!(!settings.tangents);
+        assert!(!settings.save_blend);
     }
 
     #[test]
@@ -300,6 +305,7 @@ mod tests {
             include_uvs: false,
             include_vertex_colors: true,
             tangents: true,
+            save_blend: true,
         };
 
         let json = serde_json::to_string(&settings).unwrap();
@@ -311,6 +317,38 @@ mod tests {
         assert!(!parsed.include_uvs);
         assert!(parsed.include_vertex_colors);
         assert!(parsed.tangents);
+        assert!(parsed.save_blend);
+    }
+
+    #[test]
+    fn test_export_settings_save_blend_default_false() {
+        let json = "{}";
+        let settings: MeshExportSettings = serde_json::from_str(json).unwrap();
+        assert!(!settings.save_blend);
+    }
+
+    #[test]
+    fn test_export_settings_save_blend_true() {
+        let json = r#"{"save_blend":true}"#;
+        let settings: MeshExportSettings = serde_json::from_str(json).unwrap();
+        assert!(settings.save_blend);
+    }
+
+    #[test]
+    fn test_export_settings_save_blend_roundtrip() {
+        let settings = MeshExportSettings {
+            apply_modifiers: true,
+            triangulate: true,
+            include_normals: true,
+            include_uvs: true,
+            include_vertex_colors: false,
+            tangents: false,
+            save_blend: true,
+        };
+        let json = serde_json::to_string(&settings).unwrap();
+        assert!(json.contains("\"save_blend\":true"));
+        let parsed: MeshExportSettings = serde_json::from_str(&json).unwrap();
+        assert!(parsed.save_blend);
     }
 
     // ========================================================================

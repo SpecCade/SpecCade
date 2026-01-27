@@ -79,6 +79,7 @@ impl From<SkeletalMeshExportSettings> for MeshExportSettings {
             include_uvs: settings.include_uvs,
             include_vertex_colors: false,
             tangents: false,
+            save_blend: false,
         }
     }
 }

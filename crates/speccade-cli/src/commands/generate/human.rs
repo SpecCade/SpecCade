@@ -30,6 +30,7 @@ pub fn run_human(
     profile: bool,
     variations: Option<u32>,
     constraints: Option<QualityConstraints>,
+    save_blend: bool,
 ) -> Result<ExitCode> {
     let start = Instant::now();
     let out_root = out_root.unwrap_or(".");
@@ -73,12 +74,40 @@ pub fn run_human(
 
     // Load spec file (JSON or Starlark)
     let LoadResult {
-        spec,
+        mut spec,
         source_kind,
         source_hash,
         warnings: load_warnings,
     } = load_spec(Path::new(spec_path))
         .with_context(|| format!("Failed to load spec file: {}", spec_path))?;
+
+    // Inject save_blend into recipe params if --save-blend flag is set
+    if save_blend {
+        if let Some(ref mut recipe) = spec.recipe {
+            if let Some(params) = recipe.params.as_object_mut() {
+                // For mesh pipelines, inject into nested export settings
+                if let Some(export) = params.get_mut("export") {
+                    if let Some(export_obj) = export.as_object_mut() {
+                        export_obj.insert(
+                            "save_blend".to_string(),
+                            serde_json::Value::Bool(true),
+                        );
+                    }
+                } else {
+                    // No export block yet - create one with save_blend
+                    params.insert(
+                        "export".to_string(),
+                        serde_json::json!({"save_blend": true}),
+                    );
+                }
+                // Also set top-level save_blend for handlers that read it directly
+                params.insert(
+                    "save_blend".to_string(),
+                    serde_json::Value::Bool(true),
+                );
+            }
+        }
+    }
 
     // Print any load warnings
     for warning in &load_warnings {

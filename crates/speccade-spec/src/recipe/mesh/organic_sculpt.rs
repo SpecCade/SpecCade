@@ -305,6 +305,7 @@ mod tests {
                 include_uvs: true,
                 include_vertex_colors: false,
                 tangents: false,
+                save_blend: false,
             }),
         };
 

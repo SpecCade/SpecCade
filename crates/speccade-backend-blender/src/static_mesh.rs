@@ -17,6 +17,8 @@ use crate::orchestrator::{GenerationMode, Orchestrator, OrchestratorConfig};
 pub struct StaticMeshResult {
     /// Path to the generated GLB file.
     pub output_path: std::path::PathBuf,
+    /// Path to the generated .blend file (if save_blend was enabled).
+    pub blend_path: Option<std::path::PathBuf>,
     /// Metrics from the generation.
     pub metrics: BlenderMetrics,
     /// The Blender report.
@@ -83,6 +85,9 @@ pub fn generate_with_config(
         .clone()
         .ok_or_else(|| BlenderError::generation_failed("No metrics in report"))?;
 
+    // Get blend path if present
+    let blend_path = report.blend_path.as_ref().map(|p| out_root.join(p));
+
     // Validate constraints if specified
     if let Some(ref constraints) = params.constraints {
         validate_constraints(&metrics, constraints)?;
@@ -90,6 +95,7 @@ pub fn generate_with_config(
 
     Ok(StaticMeshResult {
         output_path,
+        blend_path,
         metrics,
         report,
     })
