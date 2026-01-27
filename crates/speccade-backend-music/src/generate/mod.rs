@@ -156,6 +156,11 @@ pub struct MusicInstrumentLoopReport {
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub dc_removed_mean: Option<i64>,
+
+    /// Pitch deviation in cents after format-specific correction.
+    /// Positive = sharp, negative = flat. Ideally < 1 cent.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pitch_deviation_cents: Option<f64>,
 }
 
 /// Loop diagnostics for the generated tracker module.

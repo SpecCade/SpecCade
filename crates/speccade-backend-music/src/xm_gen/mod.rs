@@ -182,6 +182,8 @@ pub(crate) fn generate_xm_instrument(
     let (finetune, relative_note) =
         calculate_xm_pitch_correction(baked.sample_rate, baked.base_midi);
 
+    let pitch_cents = crate::note::xm_pitch_deviation_cents(baked.sample_rate, baked.base_midi, finetune, relative_note);
+
     // Create sample
     let mut sample = XmSample::new(&instr.name, baked.pcm16_mono, true);
     sample.finetune = finetune;
@@ -204,6 +206,9 @@ pub(crate) fn generate_xm_instrument(
 
     // Convert envelope to XM envelope
     xm_instr.volume_envelope = convert_envelope_to_xm(&instr.envelope);
+
+    let mut loop_report = loop_report;
+    loop_report.pitch_deviation_cents = Some(pitch_cents);
 
     Ok((xm_instr, loop_report))
 }

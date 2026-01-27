@@ -7,7 +7,7 @@ use speccade_spec::recipe::music::{TrackerFormat, TrackerInstrument};
 use crate::envelope::convert_envelope_to_it;
 use crate::generate::{bake_instrument_sample, GenerateError, MusicInstrumentLoopReport};
 use crate::it::{ItInstrument, ItSample};
-use crate::note::calculate_c5_speed_for_base_note;
+use crate::note::{calculate_c5_speed_for_base_note, it_pitch_deviation_cents};
 
 /// Generate an IT instrument and sample from spec.
 ///
@@ -24,6 +24,7 @@ pub fn generate_it_instrument(
 
     // IT samples store "C-5 speed" (playback rate for note C-5), not the sample's native rate.
     let c5_speed = calculate_c5_speed_for_base_note(baked.sample_rate, baked.base_midi);
+    let pitch_cents = it_pitch_deviation_cents(baked.sample_rate, baked.base_midi, c5_speed);
 
     let mut sample = ItSample::new(&instr.name, baked.pcm16_mono, c5_speed);
 
@@ -43,6 +44,9 @@ pub fn generate_it_instrument(
 
     // Convert envelope
     it_instr.volume_envelope = convert_envelope_to_it(&instr.envelope);
+
+    let mut loop_report = loop_report;
+    loop_report.pitch_deviation_cents = Some(pitch_cents);
 
     Ok((it_instr, sample, loop_report))
 }

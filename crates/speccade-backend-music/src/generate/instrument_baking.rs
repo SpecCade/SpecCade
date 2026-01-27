@@ -468,6 +468,7 @@ pub(crate) fn bake_instrument_sample(
         pingpong_start_slope: pingpong_start_slope_report,
         pingpong_end_slope: pingpong_end_slope_report,
         dc_removed_mean: dc_removed_mean_report,
+        pitch_deviation_cents: None,
     };
 
     Ok((
