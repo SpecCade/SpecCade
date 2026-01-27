@@ -132,9 +132,8 @@ Resolved questions:
   - Tier 2 (Blender) implementation with nearest_surface/project/nearest_vertex modes, offset, smooth iterations, self-intersection validation. 3 golden specs.
 - [x] `MESH-012` ~~Add boolean kitbashing (union/difference + cleanup) with determinism/validation constraints.~~ Done: 2026-01-25
   - Tier 2 (Blender) implementation with union/difference/intersect operations, exact/fast solver, cleanup (merge doubles, recalc normals). 3 golden specs.
-- [ ] `MESH-013` Add animation helper presets (IK targets + constraint presets) for procedural walk/run cycles.
-  - **Partial**: Spec schema (`skeletal_animation.helpers_v1`), Python operator, and 6 golden specs exist, but **NOT wired into backend dispatch**. Needs: add to `speccade-backend-blender/src/lib.rs` generate() match + `blender/entrypoint.py` dispatcher.
-  - Touch points: `crates/speccade-backend-blender/src/lib.rs`, `blender/entrypoint.py` (add `"animation_helpers"` mode).
+- [x] `MESH-013` ~~Add animation helper presets (IK targets + constraint presets) for procedural walk/run cycles.~~ Done: 2026-01-27
+  - Wired `skeletal_animation.helpers_v1` to backend dispatch: `animation_helpers.rs` backend module, Blender entrypoint handler, CLI dispatch. Walk cycle, run cycle, and idle sway presets generate end-to-end.
 
 ### Skeletal Animation / Rigging / IK (Blender Tier)
 
@@ -146,10 +145,8 @@ Resolved questions:
   - **Ball socket**: ✅ `BoneConstraint::Ball` in `constraints.rs`, Blender `_setup_ball_constraint()` at line 2542.
   - **Planar**: ✅ `BoneConstraint::Planar` in `constraints.rs`, Blender `_setup_planar_constraint()` at line 2576.
   - **Post-generation validation**: ❌ Not in validation constraints enum. Add `MaxBallViolations`/`MaxPlanarViolations` if runtime validation needed.
-- [ ] `ANIM-006` Add root motion controls + validation (export + verify).
-  - **Validation**: ✅ `MaxRootMotionDelta` constraint exists in `validation/constraints/mod.rs` with tests.
-  - **Controls**: ❌ No spec params for root motion extraction/lock/bake mode. Needs: add `RootMotionSettings` to animation params.
-  - Touch points: `crates/speccade-spec/src/recipe/animation/`, `blender/entrypoint.py`.
+- [x] `ANIM-006` ~~Add root motion controls + validation (export + verify).~~ Done: 2026-01-27
+  - `RootMotionSettings` with 4 modes (Keep, Extract, BakeToHip, Lock) and per-axis control. Added to clip and rigged animation params. Blender implementation for all modes. `root_motion_mode` in report metrics.
 
 ---
 
@@ -157,6 +154,8 @@ Resolved questions:
 
 - [x] `QA-006` ~~Define a plugin/backends extension story (subprocess or WASM) with strict I/O contracts + determinism reporting.~~ Done: 2026-01-25
   - Extension types in speccade-spec (manifest, contract, determinism levels), subprocess runner with timeout/hash verification, reference implementation in examples/extensions/simple-subprocess/, architecture docs.
+- [x] `QA-010` ~~Add structural metrics for LLM-friendly 3D feedback.~~ Done: 2026-01-27
+  - Non-opinionated geometry metrics in reports: aspect ratios, symmetry, component adjacency, bone coverage, scale reference. Blender computation in `structural_metrics.py`, Rust types in `report/structural.rs`, docs in `spec-reference/structural-metrics.md`.
 
 ---
 
