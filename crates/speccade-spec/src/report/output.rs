@@ -192,6 +192,9 @@ pub struct OutputMetrics {
     /// Root motion delta [X, Y, Z] from start to end of animation.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub root_motion_delta: Option<[f32; 3]>,
+    /// Root motion mode applied during export (keep, extract, bake_to_hip, lock).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub root_motion_mode: Option<String>,
 
     // ========== Structural metrics ==========
     /// Structural metrics for LLM-friendly 3D feedback.
@@ -243,6 +246,7 @@ impl OutputMetrics {
             range_violations: None,
             velocity_spikes: None,
             root_motion_delta: None,
+            root_motion_mode: None,
             structural: None,
         }
     }

@@ -211,6 +211,7 @@ mod tests {
             ],
             interpolation: InterpolationMode::Linear,
             export: None,
+            root_motion: None,
         }
     }
 

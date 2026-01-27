@@ -149,6 +149,7 @@ pub(super) fn generate_blender_static_mesh(
             range_violations: None,
             velocity_spikes: None,
             root_motion_delta: None,
+            root_motion_mode: None,
             structural: result.metrics.structural.clone(),
         };
 
@@ -228,6 +229,7 @@ pub(super) fn generate_blender_skeletal_mesh(
             range_violations: None,
             velocity_spikes: None,
             root_motion_delta: None,
+            root_motion_mode: None,
             structural: result.metrics.structural.clone(),
         };
 
@@ -303,6 +305,7 @@ pub(super) fn generate_blender_animation(
             .metrics
             .root_motion_delta
             .map(|d| [d[0] as f32, d[1] as f32, d[2] as f32]),
+        root_motion_mode: result.metrics.root_motion_mode.clone(),
         structural: result.metrics.structural.clone(),
     };
 
@@ -441,6 +444,7 @@ pub(super) fn generate_blender_modular_kit(
             range_violations: None,
             velocity_spikes: None,
             root_motion_delta: None,
+            root_motion_mode: None,
             structural: result.metrics.structural.clone(),
         };
 
@@ -520,8 +524,86 @@ pub(super) fn generate_blender_organic_sculpt(
             range_violations: None,
             velocity_spikes: None,
             root_motion_delta: None,
+            root_motion_mode: None,
             structural: result.metrics.structural.clone(),
         };
+
+    Ok(vec![OutputResult::tier2(
+        OutputKind::Primary,
+        OutputFormat::Glb,
+        PathBuf::from(&primary_output.path),
+        metrics,
+    )])
+}
+
+/// Generate animation using animation helpers presets via the Blender backend
+pub(super) fn generate_blender_animation_helpers(
+    spec: &Spec,
+    out_root: &Path,
+) -> Result<Vec<OutputResult>, DispatchError> {
+    let result =
+        speccade_backend_blender::animation_helpers::generate(spec, out_root).map_err(|e| {
+            DispatchError::BackendError(format!("Animation helpers generation failed: {}", e))
+        })?;
+
+    // Get primary output path
+    let primary_output = spec
+        .outputs
+        .iter()
+        .find(|o| o.kind == OutputKind::Primary)
+        .ok_or_else(|| DispatchError::BackendError("No primary output specified".to_string()))?;
+    if primary_output.format != OutputFormat::Glb {
+        return Err(DispatchError::BackendError(format!(
+            "skeletal_animation.helpers_v1 requires primary output format 'glb', got '{}'",
+            primary_output.format
+        )));
+    }
+
+    // Convert metrics to OutputMetrics
+    let metrics = speccade_spec::OutputMetrics {
+        vertex_count: None,
+        face_count: None,
+        edge_count: None,
+        triangle_count: None,
+        quad_count: None,
+        quad_percentage: None,
+        manifold: None,
+        non_manifold_edge_count: None,
+        degenerate_face_count: None,
+        zero_area_face_count: None,
+        uv_island_count: None,
+        uv_coverage: None,
+        uv_overlap_percentage: None,
+        has_uv_map: None,
+        uv_layer_count: None,
+        texel_density: None,
+        bounding_box: None,
+        bounds_min: None,
+        bounds_max: None,
+        lod_count: None,
+        lod_levels: None,
+        collision_mesh: None,
+        collision_mesh_path: None,
+        navmesh: None,
+        baking: None,
+        bone_count: result.metrics.bone_count,
+        max_bone_influences: None,
+        unweighted_vertex_count: None,
+        weight_normalization_percentage: None,
+        max_weight_deviation: None,
+        material_slot_count: None,
+        animation_frame_count: result.metrics.animation_frame_count,
+        animation_duration_seconds: result.metrics.animation_duration_seconds.map(|d| d as f32),
+        hinge_axis_violations: result.metrics.hinge_axis_violations,
+        range_violations: result.metrics.range_violations,
+        velocity_spikes: result.metrics.velocity_spikes,
+        root_motion_delta: result
+            .metrics
+            .root_motion_delta
+            .map(|d| [d[0] as f32, d[1] as f32, d[2] as f32]),
+        root_motion_mode: result.metrics.root_motion_mode.clone(),
+        structural: result.metrics.structural.clone(),
+    };
 
     Ok(vec![OutputResult::tier2(
         OutputKind::Primary,
@@ -597,6 +679,7 @@ pub(super) fn generate_blender_rigged_animation(
             .metrics
             .root_motion_delta
             .map(|d| [d[0] as f32, d[1] as f32, d[2] as f32]),
+        root_motion_mode: result.metrics.root_motion_mode.clone(),
         structural: result.metrics.structural.clone(),
     };
 

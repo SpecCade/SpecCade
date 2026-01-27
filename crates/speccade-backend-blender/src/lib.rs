@@ -77,6 +77,7 @@
 //! - [`error`] - Error types
 
 pub mod animation;
+pub mod animation_helpers;
 pub mod error;
 pub mod mesh_to_sprite;
 pub mod metrics;
@@ -94,6 +95,7 @@ pub use orchestrator::{GenerationMode, Orchestrator, OrchestratorConfig};
 
 // Re-export result types
 pub use animation::AnimationResult;
+pub use animation_helpers::AnimationHelpersResult;
 pub use mesh_to_sprite::MeshToSpriteResult;
 pub use modular_kit::ModularKitResult;
 pub use organic_sculpt::OrganicSculptResult;
@@ -136,6 +138,10 @@ pub fn generate(
             let result = rigged_animation::generate(spec, out_root)?;
             Ok(GenerateResult::RiggedAnimation(result))
         }
+        "skeletal_animation.helpers_v1" => {
+            let result = animation_helpers::generate(spec, out_root)?;
+            Ok(GenerateResult::AnimationHelpers(result))
+        }
         "sprite.render_from_mesh_v1" => {
             let result = mesh_to_sprite::generate(spec, out_root)?;
             Ok(GenerateResult::MeshToSprite(result))
@@ -161,6 +167,8 @@ pub enum GenerateResult {
     Animation(AnimationResult),
     /// Rigged animation result (IK/rig-aware).
     RiggedAnimation(RiggedAnimationResult),
+    /// Animation helpers result (preset-based locomotion).
+    AnimationHelpers(AnimationHelpersResult),
     /// Mesh-to-sprite result.
     MeshToSprite(MeshToSpriteResult),
 }
@@ -175,6 +183,7 @@ impl GenerateResult {
             GenerateResult::SkeletalMesh(r) => &r.output_path,
             GenerateResult::Animation(r) => &r.output_path,
             GenerateResult::RiggedAnimation(r) => &r.output_path,
+            GenerateResult::AnimationHelpers(r) => &r.output_path,
             GenerateResult::MeshToSprite(r) => &r.output_path,
         }
     }
@@ -189,6 +198,7 @@ impl GenerateResult {
             GenerateResult::SkeletalMesh(r) => Some(&r.metrics),
             GenerateResult::Animation(r) => Some(&r.metrics),
             GenerateResult::RiggedAnimation(r) => Some(&r.metrics),
+            GenerateResult::AnimationHelpers(r) => Some(&r.metrics),
             GenerateResult::MeshToSprite(_) => None,
         }
     }
@@ -210,6 +220,7 @@ impl GenerateResult {
             GenerateResult::SkeletalMesh(r) => &r.report,
             GenerateResult::Animation(r) => &r.report,
             GenerateResult::RiggedAnimation(r) => &r.report,
+            GenerateResult::AnimationHelpers(r) => &r.report,
             GenerateResult::MeshToSprite(r) => &r.report,
         }
     }
@@ -244,6 +255,11 @@ impl GenerateResult {
         matches!(self, GenerateResult::RiggedAnimation(_))
     }
 
+    /// Returns true if this is an animation helpers result (preset-based locomotion).
+    pub fn is_animation_helpers(&self) -> bool {
+        matches!(self, GenerateResult::AnimationHelpers(_))
+    }
+
     /// Returns true if this is a mesh-to-sprite result.
     pub fn is_mesh_to_sprite(&self) -> bool {
         matches!(self, GenerateResult::MeshToSprite(_))
@@ -265,6 +281,7 @@ mod tests {
         assert!(
             orchestrator::mode_from_recipe_kind("skeletal_animation.blender_rigged_v1").is_ok()
         );
+        assert!(orchestrator::mode_from_recipe_kind("skeletal_animation.helpers_v1").is_ok());
         assert!(orchestrator::mode_from_recipe_kind("invalid.kind").is_err());
     }
 

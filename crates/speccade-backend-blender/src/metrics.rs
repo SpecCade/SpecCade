@@ -169,6 +169,10 @@ pub struct BlenderMetrics {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub root_motion_delta: Option<[f64; 3]>,
 
+    /// Root motion mode applied during export (keep, extract, bake_to_hip, lock).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub root_motion_mode: Option<String>,
+
     // ========== Structural metrics ==========
     /// Structural metrics for LLM-friendly 3D feedback.
     ///

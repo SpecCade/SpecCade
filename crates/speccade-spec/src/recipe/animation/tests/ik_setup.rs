@@ -233,6 +233,7 @@ fn test_rigged_params_serde() {
         animator_rig: None,
         save_blend: false,
         conventions: None,
+        root_motion: None,
     };
 
     let json = serde_json::to_string(&params).unwrap();
@@ -272,6 +273,7 @@ fn test_rigged_params_with_animator_rig() {
         ),
         save_blend: false,
         conventions: None,
+        root_motion: None,
     };
 
     let json = serde_json::to_string(&params).unwrap();

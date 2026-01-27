@@ -176,6 +176,11 @@ pub fn dispatch_generate(
             blender::generate_blender_rigged_animation(spec, out_root_path)
         }
 
+        // Blender animation helpers backend (preset-based locomotion)
+        "skeletal_animation.helpers_v1" => {
+            blender::generate_blender_animation_helpers(spec, out_root_path)
+        }
+
         // Unknown recipe kind
         _ => Err(DispatchError::BackendNotImplemented(kind.clone())),
     }
@@ -415,6 +420,11 @@ pub fn dispatch_generate_profiled(
             blender::generate_blender_rigged_animation(spec, out_root_path).map(DispatchResult::new)
         }
 
+        // Blender animation helpers backend (no profiling instrumentation yet)
+        "skeletal_animation.helpers_v1" => {
+            blender::generate_blender_animation_helpers(spec, out_root_path).map(DispatchResult::new)
+        }
+
         _ => Err(DispatchError::BackendNotImplemented(kind.clone())),
     }
 }
@@ -476,6 +486,7 @@ pub fn is_backend_available(kind: &str) -> bool {
             | "skeletal_mesh.blender_rigged_mesh_v1"
             | "skeletal_animation.blender_clip_v1"
             | "skeletal_animation.blender_rigged_v1"
+            | "skeletal_animation.helpers_v1"
             | "sprite.render_from_mesh_v1"
     )
 }

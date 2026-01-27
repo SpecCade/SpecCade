@@ -9,6 +9,7 @@ mod ik_setup;
 mod pose;
 mod procedural;
 mod rig;
+mod root_motion;
 mod skeletal;
 
 // Re-export all public types
@@ -21,6 +22,7 @@ pub use ik_setup::*;
 pub use pose::*;
 pub use procedural::*;
 pub use rig::*;
+pub use root_motion::*;
 pub use skeletal::*;
 
 #[cfg(test)]

@@ -3791,6 +3791,106 @@ def apply_animator_rig_config(
 
 
 # =============================================================================
+# Root Motion
+# =============================================================================
+
+
+def apply_root_motion_settings(armature, action, settings):
+    """Apply root motion settings after animation is generated.
+
+    Args:
+        armature: The armature object.
+        action: The Blender action containing animation data.
+        settings: Dict with mode, axes, and optional ground_height.
+
+    Returns:
+        Extracted root motion delta [x, y, z] if mode is 'extract', else None.
+    """
+    mode = settings.get("mode", "keep")
+    axes = settings.get("axes", [True, True, True])
+
+    if mode == "keep":
+        return None
+
+    # Find root bone (first bone with no parent)
+    root_bone = None
+    for bone in armature.pose.bones:
+        if bone.parent is None:
+            root_bone = bone
+            break
+
+    if not root_bone:
+        print("Warning: No root bone found for root motion processing")
+        return None
+
+    if mode == "lock":
+        # Zero out root bone location keyframes on specified axes
+        for fc in action.fcurves:
+            if fc.data_path == f'pose.bones["{root_bone.name}"].location':
+                if axes[fc.array_index]:
+                    for kp in fc.keyframe_points:
+                        kp.co[1] = 0.0
+                        kp.handle_left[1] = 0.0
+                        kp.handle_right[1] = 0.0
+        return None
+
+    elif mode == "extract":
+        # Extract root motion curves - zero out root but return the delta
+        extracted = [0.0, 0.0, 0.0]
+        for fc in action.fcurves:
+            if fc.data_path == f'pose.bones["{root_bone.name}"].location':
+                idx = fc.array_index
+                if axes[idx]:
+                    # Get start and end values
+                    start_val = fc.evaluate(action.frame_range[0])
+                    end_val = fc.evaluate(action.frame_range[1])
+                    extracted[idx] = end_val - start_val
+                    # Zero the curve
+                    for kp in fc.keyframe_points:
+                        kp.co[1] = 0.0
+                        kp.handle_left[1] = 0.0
+                        kp.handle_right[1] = 0.0
+        return extracted
+
+    elif mode == "bake_to_hip":
+        # Find hip bone (first child of root)
+        hip_bone = None
+        for bone in armature.pose.bones:
+            if bone.parent == root_bone:
+                hip_bone = bone
+                break
+        if not hip_bone:
+            print("Warning: No hip bone found for bake_to_hip mode")
+            return None
+
+        ground_height = settings.get("ground_height", 0.0)
+
+        # Transfer root location to hip on specified axes
+        for fc in action.fcurves:
+            if fc.data_path == f'pose.bones["{root_bone.name}"].location':
+                idx = fc.array_index
+                if axes[idx]:
+                    # Copy keyframes to hip
+                    hip_path = f'pose.bones["{hip_bone.name}"].location'
+                    hip_fc = action.fcurves.find(hip_path, index=idx)
+                    if not hip_fc:
+                        hip_fc = action.fcurves.new(hip_path, index=idx)
+                    for kp in fc.keyframe_points:
+                        value = kp.co[1]
+                        if ground_height and idx == 2:  # Z axis adjustment
+                            value -= ground_height
+                        hip_fc.keyframe_points.insert(kp.co[0], value)
+                    # Zero root
+                    for kp in fc.keyframe_points:
+                        kp.co[1] = 0.0
+                        kp.handle_left[1] = 0.0
+                        kp.handle_right[1] = 0.0
+        return None
+
+    return None
+
+
+# =============================================================================
 # Animation Creation
 # =============================================================================
 
@@ -6359,8 +6459,21 @@ def handle_animation(spec: Dict, out_root: Path, report_path: Path) -> None:
         output_path = out_root / output_rel_path
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
+        # Apply root motion settings if specified
+        root_motion_settings = params.get("root_motion")
+        extracted_delta = None
+        if root_motion_settings:
+            extracted_delta = apply_root_motion_settings(armature, action, root_motion_settings)
+            print(f"Applied root motion mode: {root_motion_settings.get('mode', 'keep')}")
+
         # Compute metrics (motion verification only uses constraints when provided)
         metrics = compute_animation_metrics(armature, action)
+
+        # Add root motion info to metrics
+        if root_motion_settings:
+            metrics["root_motion_mode"] = root_motion_settings.get("mode", "keep")
+        if extracted_delta:
+            metrics["root_motion_delta"] = extracted_delta
 
         # Export GLB with animation and tangents if requested
         export_settings = params.get("export", {})
@@ -6544,9 +6657,22 @@ def handle_rigged_animation(spec: Dict, out_root: Path, report_path: Path) -> No
             )
             bpy.ops.object.mode_set(mode='OBJECT')
 
+        # Apply root motion settings if specified
+        root_motion_settings = params.get("root_motion")
+        extracted_delta = None
+        if root_motion_settings:
+            extracted_delta = apply_root_motion_settings(armature, action, root_motion_settings)
+            print(f"Applied root motion mode: {root_motion_settings.get('mode', 'keep')}")
+
         # Compute metrics (include motion verification using rig constraints)
         constraints_list = rig_setup.get("constraints", {}).get("constraints", [])
         metrics = compute_animation_metrics(armature, action, constraints_list=constraints_list)
+
+        # Add root motion info to metrics
+        if root_motion_settings:
+            metrics["root_motion_mode"] = root_motion_settings.get("mode", "keep")
+        if extracted_delta:
+            metrics["root_motion_delta"] = extracted_delta
 
         # Add IK-specific metrics
         metrics["ik_chain_count"] = len(rig_setup.get("presets", [])) + len(rig_setup.get("ik_chains", []))
@@ -6563,6 +6689,75 @@ def handle_rigged_animation(spec: Dict, out_root: Path, report_path: Path) -> No
         blend_rel_path = None
         save_blend = params.get("save_blend", False) or export_settings.get("save_blend", False)
         if save_blend:
+            blend_rel_path = output_rel_path.replace(".glb", ".blend")
+            blend_path = out_root / blend_rel_path
+            bpy.ops.wm.save_as_mainfile(filepath=str(blend_path))
+
+        duration_ms = int((time.time() - start_time) * 1000)
+        write_report(report_path, ok=True, metrics=metrics,
+                     output_path=output_rel_path, blend_path=blend_rel_path,
+                     duration_ms=duration_ms)
+
+    except Exception as e:
+        write_report(report_path, ok=False, error=str(e))
+        raise
+
+
+# =============================================================================
+# Animation Helpers Handler
+# =============================================================================
+
+def handle_animation_helpers(spec: Dict, out_root: Path, report_path: Path) -> None:
+    """Handle animation.helpers_v1 generation using preset-based locomotion helpers.
+
+    This handler uses the animation_helpers operator to generate procedural
+    locomotion animations (walk cycles, run cycles, idle sway) based on presets.
+    """
+    from operators.animation_helpers import handle_animation_helpers as _handle_helpers
+
+    start_time = time.time()
+
+    try:
+        recipe = spec.get("recipe", {})
+        params = recipe.get("params", {})
+
+        # Get skeleton preset and create armature
+        skeleton_type = params.get("skeleton", "humanoid")
+        preset = params.get("preset", "walk_cycle")
+
+        # Create the armature based on skeleton type
+        armature = create_armature(skeleton_type)
+
+        # Call the operator to set up IK, foot roll, and generate keyframes
+        result = _handle_helpers(spec, armature, out_root)
+
+        # Get output path from spec
+        outputs = spec.get("outputs", [])
+        primary_output = next((o for o in outputs if o.get("kind") == "primary"), None)
+        if not primary_output:
+            raise ValueError("No primary output specified in spec")
+
+        output_rel_path = primary_output.get("path", "output.glb")
+        output_path = out_root / output_rel_path
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+
+        # Export GLB with animation
+        export_glb(output_path, include_armature=True, include_animation=True)
+
+        # Compute animation metrics
+        action = armature.animation_data.action if armature.animation_data else None
+        metrics = compute_animation_metrics(armature, action)
+
+        # Add animation helpers specific metrics
+        metrics["preset"] = result.get("preset", preset)
+        metrics["skeleton_type"] = result.get("skeleton_type", skeleton_type)
+        metrics["ik_chains_created"] = result.get("ik_chains_created", 0)
+        metrics["foot_roll_enabled"] = result.get("foot_roll_enabled", False)
+        metrics["clip_name"] = result.get("clip_name", params.get("clip_name", preset))
+
+        # Save .blend file if requested
+        blend_rel_path = None
+        if params.get("save_blend", False):
             blend_rel_path = output_rel_path.replace(".glb", ".blend")
             blend_path = out_root / blend_rel_path
             bpy.ops.wm.save_as_mainfile(filepath=str(blend_path))
@@ -6982,7 +7177,7 @@ def main() -> int:
 
     parser = argparse.ArgumentParser(description="SpecCade Blender Entrypoint")
     parser.add_argument("--mode", required=True,
-                        choices=["static_mesh", "modular_kit", "organic_sculpt", "shrinkwrap", "boolean_kit", "skeletal_mesh", "animation", "rigged_animation", "mesh_to_sprite"],
+                        choices=["static_mesh", "modular_kit", "organic_sculpt", "shrinkwrap", "boolean_kit", "skeletal_mesh", "animation", "rigged_animation", "animation_helpers", "mesh_to_sprite"],
                         help="Generation mode")
     parser.add_argument("--spec", required=True, type=Path,
                         help="Path to spec JSON file")
@@ -7021,6 +7216,7 @@ def main() -> int:
         "skeletal_mesh": handle_skeletal_mesh,
         "animation": handle_animation,
         "rigged_animation": handle_rigged_animation,
+        "animation_helpers": handle_animation_helpers,
         "mesh_to_sprite": handle_mesh_to_sprite,
     }
 

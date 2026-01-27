@@ -3,6 +3,7 @@
 use serde::{Deserialize, Serialize};
 
 use super::common::{AnimationExportSettings, InterpolationMode};
+use super::root_motion::RootMotionSettings;
 use crate::recipe::character::SkeletonPreset;
 
 // =============================================================================
@@ -151,6 +152,9 @@ pub struct SkeletalAnimationBlenderClipV1Params {
     /// Export settings.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub export: Option<AnimationExportSettings>,
+    /// Root motion handling settings.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub root_motion: Option<RootMotionSettings>,
 }
 
 #[cfg(test)]

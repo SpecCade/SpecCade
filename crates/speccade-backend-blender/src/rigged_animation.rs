@@ -222,6 +222,7 @@ mod tests {
             animator_rig: None,
             save_blend: false,
             conventions: None,
+            root_motion: None,
         }
     }
 

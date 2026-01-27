@@ -110,6 +110,7 @@ fn test_skeletal_animation_blender_rigged_v1_params_complete() {
         ),
         save_blend: true,
         conventions: Some(ConventionsConfig { strict: false }),
+        root_motion: None,
     };
 
     let json = serde_json::to_string(&params).unwrap();
@@ -161,6 +162,7 @@ fn test_all_top_level_keys() {
         animator_rig: Some(AnimatorRigConfig::default()),       // animator_rig
         save_blend: true,                                       // save_blend
         conventions: Some(ConventionsConfig::default()),        // conventions
+        root_motion: None,                                      // root_motion
     };
 
     let json = serde_json::to_string(&params).unwrap();

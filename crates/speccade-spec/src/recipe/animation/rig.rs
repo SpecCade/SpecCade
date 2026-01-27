@@ -8,6 +8,7 @@ use super::clip::{AnimationKeyframe, IkKeyframe};
 use super::common::{AnimationExportSettings, ConventionsConfig, InterpolationMode};
 use super::pose::{AnimationPhase, PoseDefinition};
 use super::procedural::ProceduralLayer;
+use super::root_motion::RootMotionSettings;
 use super::skeletal::RigSetup;
 use crate::recipe::character::SkeletonPreset;
 
@@ -82,4 +83,7 @@ pub struct SkeletalAnimationBlenderRiggedV1Params {
     /// Validation conventions configuration.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub conventions: Option<ConventionsConfig>,
+    /// Root motion handling settings.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub root_motion: Option<RootMotionSettings>,
 }
