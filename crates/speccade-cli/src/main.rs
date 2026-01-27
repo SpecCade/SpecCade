@@ -190,6 +190,10 @@ enum Commands {
         /// Show verbose output
         #[arg(short, long)]
         verbose: bool,
+
+        /// Force regeneration of all specs (skip freshness check)
+        #[arg(short = 'f', long)]
+        force: bool,
     },
 
     /// Preview an asset (opens in viewer/editor)
@@ -493,11 +497,13 @@ fn main() -> ExitCode {
             out_root,
             include_blender,
             verbose,
+            force,
         } => commands::generate_all::run(
             spec_dir.as_deref(),
             out_root.as_deref(),
             include_blender,
             verbose,
+            force,
         ),
         Commands::Preview { spec, out_root } => commands::preview::run(&spec, out_root.as_deref()),
         Commands::Doctor => commands::doctor::run(),
@@ -1222,11 +1228,13 @@ mod tests {
                 out_root,
                 include_blender,
                 verbose,
+                force,
             } => {
                 assert!(spec_dir.is_none());
                 assert!(out_root.is_none());
                 assert!(!include_blender);
                 assert!(!verbose);
+                assert!(!force);
             }
             _ => panic!("expected generate-all command"),
         }
@@ -1251,11 +1259,43 @@ mod tests {
                 out_root,
                 include_blender,
                 verbose,
+                force,
             } => {
                 assert_eq!(spec_dir.as_deref(), Some("/path/to/specs"));
                 assert_eq!(out_root.as_deref(), Some("/path/to/output"));
                 assert!(include_blender);
                 assert!(verbose);
+                assert!(!force);
+            }
+            _ => panic!("expected generate-all command"),
+        }
+    }
+
+    #[test]
+    fn test_cli_parses_generate_all_with_force() {
+        let cli = Cli::try_parse_from(["speccade", "generate-all", "--force"]).unwrap();
+        match cli.command {
+            Commands::GenerateAll {
+                spec_dir,
+                out_root,
+                include_blender,
+                verbose,
+                force,
+            } => {
+                assert!(spec_dir.is_none());
+                assert!(out_root.is_none());
+                assert!(!include_blender);
+                assert!(!verbose);
+                assert!(force);
+            }
+            _ => panic!("expected generate-all command"),
+        }
+
+        // Also test short flag
+        let cli = Cli::try_parse_from(["speccade", "generate-all", "-f"]).unwrap();
+        match cli.command {
+            Commands::GenerateAll { force, .. } => {
+                assert!(force);
             }
             _ => panic!("expected generate-all command"),
         }

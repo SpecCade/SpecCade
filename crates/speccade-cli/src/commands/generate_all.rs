@@ -45,6 +45,8 @@ pub struct SpecResult {
     pub duration_ms: u64,
     /// Backend tier (1 = deterministic, 2 = metric validation)
     pub backend_tier: Option<u8>,
+    /// Whether this spec was skipped because it was already fresh
+    pub skipped_fresh: bool,
 }
 
 /// Summary report for all generations
@@ -60,6 +62,8 @@ pub struct GenerationSummary {
     pub failed: usize,
     /// Skipped specs (e.g., Blender assets when not included)
     pub skipped: usize,
+    /// Specs skipped because they were already fresh (output unchanged)
+    pub fresh_skipped: usize,
     /// Total runtime in seconds
     pub runtime_seconds: f64,
     /// Whether Blender assets were included
@@ -98,7 +102,9 @@ pub fn run(
     out_root: Option<&str>,
     include_blender: bool,
     verbose: bool,
+    force: bool,
 ) -> Result<ExitCode> {
+    let backend_version = format!("speccade-cli v{}", env!("CARGO_PKG_VERSION"));
     let start = Instant::now();
 
     // Resolve paths
@@ -180,12 +186,20 @@ pub fn run(
     let mut results: Vec<SpecResult> = Vec::new();
     let mut success_count = 0;
     let mut failure_count = 0;
+    let mut fresh_skipped_count = 0;
 
     // Process each spec
     for spec_file in &spec_files {
-        let result = process_spec(spec_file, out_path, verbose);
+        let result = process_spec(spec_file, out_path, verbose, force, &backend_version);
 
-        if result.success {
+        if result.skipped_fresh {
+            fresh_skipped_count += 1;
+            if verbose {
+                println!("  {} {} {}", "SKIPPED".yellow(), "(fresh)".dimmed(), result.asset_id);
+            } else {
+                print!("{}", "s".yellow());
+            }
+        } else if result.success {
             success_count += 1;
             if verbose {
                 println!(
@@ -259,6 +273,7 @@ pub fn run(
         successful: success_count,
         failed: failure_count,
         skipped: skipped_blender.len(),
+        fresh_skipped: fresh_skipped_count,
         runtime_seconds: elapsed,
         include_blender,
         specs: results.clone(),
@@ -279,6 +294,7 @@ pub fn run(
     println!("{} {}", "Successful:".green().bold(), summary.successful);
     println!("{} {}", "Failed:".red().bold(), summary.failed);
     println!("{} {}", "Skipped:".yellow().bold(), summary.skipped);
+    println!("{} {}", "Fresh (skipped):".yellow().bold(), fresh_skipped_count);
     println!(
         "{} {:.2}s",
         "Total runtime:".blue().bold(),
@@ -347,7 +363,7 @@ pub fn run(
 }
 
 /// Process a single spec file
-fn process_spec(spec_path: &Path, out_root: &Path, _verbose: bool) -> SpecResult {
+fn process_spec(spec_path: &Path, out_root: &Path, _verbose: bool, force: bool, backend_version: &str) -> SpecResult {
     let start = Instant::now();
 
     // Default result for errors
@@ -368,6 +384,7 @@ fn process_spec(spec_path: &Path, out_root: &Path, _verbose: bool) -> SpecResult
         output_hashes: Vec::new(),
         duration_ms: 0,
         backend_tier: None,
+        skipped_fresh: false,
     };
 
     // Read and parse spec
@@ -406,6 +423,38 @@ fn process_spec(spec_path: &Path, out_root: &Path, _verbose: bool) -> SpecResult
 
     // Compute spec hash
     result.spec_hash = canonical_spec_hash(&spec).ok();
+
+    // Freshness check: skip if report exists, matches, and outputs are present
+    if !force {
+        if let Some(ref spec_hash) = result.spec_hash {
+            let report_path = spec_path.parent().unwrap_or(Path::new("."))
+                .join(format!("{}.report.json", result.asset_id));
+
+            if report_path.exists() {
+                if let Ok(report_json) = fs::read_to_string(&report_path) {
+                    if let Ok(report) = speccade_spec::Report::from_json(&report_json) {
+                        if report.ok
+                            && report.spec_hash == *spec_hash
+                            && report.backend_version == backend_version
+                        {
+                            // Verify all output files exist (guard against empty outputs)
+                            let all_outputs_exist = !report.outputs.is_empty()
+                                && report.outputs.iter().all(|o| {
+                                    out_root.join(&o.path).exists()
+                                });
+
+                            if all_outputs_exist {
+                                result.skipped_fresh = true;
+                                result.success = true;
+                                result.duration_ms = start.elapsed().as_millis() as u64;
+                                return result;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     // Validate for generation
     let validation_result = validate_for_generate(&spec);
@@ -561,9 +610,225 @@ mod tests {
     }
 
     #[test]
+    fn test_spec_result_fresh_skip_fields() {
+        let result = SpecResult {
+            spec_path: "test.json".to_string(),
+            asset_id: "test-01".to_string(),
+            asset_type: "audio".to_string(),
+            recipe_kind: None,
+            success: true,
+            error: None,
+            spec_hash: Some("abc".to_string()),
+            output_hashes: vec![],
+            duration_ms: 0,
+            backend_tier: None,
+            skipped_fresh: true,
+        };
+        assert!(result.skipped_fresh);
+        assert!(result.success);
+    }
+
+    #[test]
     fn test_rust_asset_types() {
         assert!(RUST_ASSET_TYPES.contains(&"audio"));
         assert!(RUST_ASSET_TYPES.contains(&"texture"));
         assert!(!RUST_ASSET_TYPES.contains(&"static_mesh"));
+    }
+
+    /// Helper: create a minimal spec and write it to disk. Returns the Spec.
+    fn write_test_spec(dir: &Path, asset_id: &str) -> speccade_spec::Spec {
+        use speccade_spec::{AssetType, OutputFormat, OutputSpec, Recipe};
+
+        let spec = speccade_spec::Spec::builder(asset_id, AssetType::Audio)
+            .license("CC0-1.0")
+            .seed(42)
+            .output(OutputSpec::primary(OutputFormat::Wav, &format!("{}.wav", asset_id)))
+            .recipe(Recipe::new(
+                "audio_v1",
+                serde_json::json!({
+                    "duration_seconds": 0.5,
+                    "sample_rate": 22050,
+                    "layers": []
+                }),
+            ))
+            .build();
+
+        let spec_path = dir.join(format!("{}.json", asset_id));
+        fs::write(&spec_path, spec.to_json_pretty().unwrap()).unwrap();
+        spec
+    }
+
+    /// Helper: write a report file next to the spec.
+    fn write_test_report(
+        spec_dir: &Path,
+        asset_id: &str,
+        spec_hash: &str,
+        backend_version: &str,
+        output_paths: &[&str],
+    ) {
+        use speccade_spec::report::{OutputResult, ReportBuilder};
+        use speccade_spec::{OutputFormat, OutputKind};
+
+        let mut builder = ReportBuilder::new(spec_hash.to_string(), backend_version.to_string());
+        for p in output_paths {
+            builder = builder.output(OutputResult {
+                kind: OutputKind::Primary,
+                format: OutputFormat::Wav,
+                path: PathBuf::from(p),
+                hash: Some("fakehash".to_string()),
+                metrics: None,
+                preview: None,
+            });
+        }
+        let report = builder.ok(true).build();
+        let report_path = spec_dir.join(format!("{}.report.json", asset_id));
+        fs::write(&report_path, report.to_json_pretty().unwrap()).unwrap();
+    }
+
+    #[test]
+    fn test_freshness_skips_when_report_matches_and_outputs_exist() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let spec_dir = tmp.path().join("audio");
+        let out_root = tmp.path().join("out");
+        fs::create_dir_all(&spec_dir).unwrap();
+        fs::create_dir_all(&out_root).unwrap();
+
+        let asset_id = "fresh-test-01";
+        let spec = write_test_spec(&spec_dir, asset_id);
+        let spec_hash = speccade_spec::canonical_spec_hash(&spec).unwrap();
+        let backend_version = "test-v1.0.0";
+
+        // Write output file where freshness check expects it
+        let output_rel = format!("{}.wav", asset_id);
+        fs::write(out_root.join(&output_rel), b"audio data").unwrap();
+
+        // Write matching report
+        write_test_report(&spec_dir, asset_id, &spec_hash, backend_version, &[&output_rel]);
+
+        let spec_path = spec_dir.join(format!("{}.json", asset_id));
+        let result = process_spec(&spec_path, &out_root, false, false, backend_version);
+
+        assert!(result.skipped_fresh, "expected spec to be skipped as fresh");
+        assert!(result.success);
+    }
+
+    #[test]
+    fn test_freshness_regenerates_when_spec_hash_differs() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let spec_dir = tmp.path().join("audio");
+        let out_root = tmp.path().join("out");
+        fs::create_dir_all(&spec_dir).unwrap();
+        fs::create_dir_all(&out_root).unwrap();
+
+        let asset_id = "hash-diff-01";
+        let _spec = write_test_spec(&spec_dir, asset_id);
+        let backend_version = "test-v1.0.0";
+
+        let output_rel = format!("{}.wav", asset_id);
+        fs::write(out_root.join(&output_rel), b"audio data").unwrap();
+
+        // Write report with wrong spec hash
+        write_test_report(&spec_dir, asset_id, "wrong-hash", backend_version, &[&output_rel]);
+
+        let spec_path = spec_dir.join(format!("{}.json", asset_id));
+        let result = process_spec(&spec_path, &out_root, false, false, backend_version);
+
+        assert!(!result.skipped_fresh, "should not skip when spec hash differs");
+    }
+
+    #[test]
+    fn test_freshness_regenerates_when_output_missing() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let spec_dir = tmp.path().join("audio");
+        let out_root = tmp.path().join("out");
+        fs::create_dir_all(&spec_dir).unwrap();
+        fs::create_dir_all(&out_root).unwrap();
+
+        let asset_id = "missing-out-01";
+        let spec = write_test_spec(&spec_dir, asset_id);
+        let spec_hash = speccade_spec::canonical_spec_hash(&spec).unwrap();
+        let backend_version = "test-v1.0.0";
+
+        let output_rel = format!("{}.wav", asset_id);
+        // Do NOT create the output file
+
+        // Write matching report (hashes match, but output file is missing)
+        write_test_report(&spec_dir, asset_id, &spec_hash, backend_version, &[&output_rel]);
+
+        let spec_path = spec_dir.join(format!("{}.json", asset_id));
+        let result = process_spec(&spec_path, &out_root, false, false, backend_version);
+
+        assert!(!result.skipped_fresh, "should not skip when output file missing");
+    }
+
+    #[test]
+    fn test_freshness_regenerates_when_force_is_set() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let spec_dir = tmp.path().join("audio");
+        let out_root = tmp.path().join("out");
+        fs::create_dir_all(&spec_dir).unwrap();
+        fs::create_dir_all(&out_root).unwrap();
+
+        let asset_id = "force-test-01";
+        let spec = write_test_spec(&spec_dir, asset_id);
+        let spec_hash = speccade_spec::canonical_spec_hash(&spec).unwrap();
+        let backend_version = "test-v1.0.0";
+
+        let output_rel = format!("{}.wav", asset_id);
+        fs::write(out_root.join(&output_rel), b"audio data").unwrap();
+
+        // Write matching report — everything looks fresh
+        write_test_report(&spec_dir, asset_id, &spec_hash, backend_version, &[&output_rel]);
+
+        let spec_path = spec_dir.join(format!("{}.json", asset_id));
+        let result = process_spec(&spec_path, &out_root, false, true, backend_version);
+
+        assert!(!result.skipped_fresh, "should not skip when force=true");
+    }
+
+    #[test]
+    fn test_freshness_regenerates_when_backend_version_differs() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let spec_dir = tmp.path().join("audio");
+        let out_root = tmp.path().join("out");
+        fs::create_dir_all(&spec_dir).unwrap();
+        fs::create_dir_all(&out_root).unwrap();
+
+        let asset_id = "ver-diff-01";
+        let spec = write_test_spec(&spec_dir, asset_id);
+        let spec_hash = speccade_spec::canonical_spec_hash(&spec).unwrap();
+
+        let output_rel = format!("{}.wav", asset_id);
+        fs::write(out_root.join(&output_rel), b"audio data").unwrap();
+
+        // Report has old version
+        write_test_report(&spec_dir, asset_id, &spec_hash, "test-v0.9.0", &[&output_rel]);
+
+        let spec_path = spec_dir.join(format!("{}.json", asset_id));
+        let result = process_spec(&spec_path, &out_root, false, false, "test-v1.0.0");
+
+        assert!(!result.skipped_fresh, "should not skip when backend version differs");
+    }
+
+    #[test]
+    fn test_freshness_regenerates_when_report_has_empty_outputs() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let spec_dir = tmp.path().join("audio");
+        let out_root = tmp.path().join("out");
+        fs::create_dir_all(&spec_dir).unwrap();
+        fs::create_dir_all(&out_root).unwrap();
+
+        let asset_id = "empty-out-01";
+        let spec = write_test_spec(&spec_dir, asset_id);
+        let spec_hash = speccade_spec::canonical_spec_hash(&spec).unwrap();
+        let backend_version = "test-v1.0.0";
+
+        // Write report with no outputs (empty array)
+        write_test_report(&spec_dir, asset_id, &spec_hash, backend_version, &[]);
+
+        let spec_path = spec_dir.join(format!("{}.json", asset_id));
+        let result = process_spec(&spec_path, &out_root, false, false, backend_version);
+
+        assert!(!result.skipped_fresh, "should not skip when report has empty outputs");
     }
 }
