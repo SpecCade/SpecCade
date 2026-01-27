@@ -2,8 +2,7 @@
 
 These examples are written against the proposed `music.tracker_song_compose_v1` recipe kind from:
 
-- `docs/rfcs/RFC-0003-music-pattern-ir.md`
-- `docs/rfcs/RFC-0004-music-compose-musical-helpers.md` (optional)
+- `crates/speccade-spec/src/recipe/music/` (Rust SSOT, implements completed RFC-0003/0004)
 
 They are intended to be used as:
 

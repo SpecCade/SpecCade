@@ -2,8 +2,7 @@
 
 This quickstart describes the proposed JSON “Pattern IR” authoring layer for tracker music described in:
 
-- `docs/rfcs/RFC-0003-music-pattern-ir.md`
-- `docs/rfcs/RFC-0004-music-compose-musical-helpers.md` (optional: names/beats/harmony)
+- `crates/speccade-spec/src/recipe/music/` (Rust SSOT, implements completed RFC-0003/0004)
 
 The goal is to keep `music.tracker_song_v1` as the canonical, fully-expanded event format, while providing a compact, safe, deterministic way to author patterns.
 
@@ -22,7 +21,7 @@ The goal is to keep `music.tracker_song_v1` as the canonical, fully-expanded eve
    - `emit` + `range` (regular grids)
    - `emit` + `euclid` (polyrhythms / syncopation)
    - `emit_seq` + `range` (melodies/basslines, absolute notes)
-   - `emit_seq` + `pitch_seq` (melodies/basslines, degrees/chord tones; RFC-0004)
+   - `emit_seq` + `pitch_seq` (melodies/basslines, degrees/chord tones)
 4) Extract reusable parts into `defs` (kick pattern, hat pattern, bass ostinato, fill).
 5) Use `transform` for transposition and volume scaling instead of duplicating note lists.
 5a) (Optional) Add `harmony` so pitched parts can be authored as chord tones / degrees.
@@ -53,7 +52,7 @@ Recommended PR workflow:
 2) Work in small chunks:
    - one pattern (e.g., 2–8 bars) at a time
    - one role at a time (drums, then bass, then lead)
-3) Prefer musical helpers (RFC-0004):
+3) Prefer musical helpers:
    - `channel_ids` / `instrument_ids` to avoid index mistakes
    - `timebase` + pattern `bars` + `beat_range` to avoid row math
    - `harmony` + `pitch_seq` to avoid out-of-key note spelling
@@ -66,4 +65,4 @@ Recommended PR workflow:
   - `docs/examples/music/compose_minimal_16rows.json`
   - `docs/examples/music/compose_minimal_16rows.expanded.params.json`
 - Larger example (eurobeat-ish 4 bars): `docs/examples/music/compose_eurobeat_4bars.json`
-- Harmony + octave bass example (RFC-0004): `docs/examples/music/compose_harmony_octave_bass_4bars.json`
+- Harmony + octave bass example: `docs/examples/music/compose_harmony_octave_bass_4bars.json`

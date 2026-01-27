@@ -164,7 +164,7 @@ Same spec + seed = identical output. See [`docs/DETERMINISM.md`](docs/DETERMINIS
 - **[Migration Guide](docs/MIGRATION.md)** — Moving from legacy `.studio` system
 - **[Determinism Policy](docs/DETERMINISM.md)** — RNG, hashing, and validation rules
 - **[Contributing](docs/CONTRIBUTING.md)** — Development setup and contribution guidelines
-- **[RFC-0001](docs/rfcs/RFC-0001-canonical-spec.md)** — Canonical spec architecture
+- **[Spec Reference](docs/spec-reference/README.md)** — Per-asset spec contracts (formerly RFC-0001)
 
 ## Use Cases
 

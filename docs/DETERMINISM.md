@@ -922,7 +922,7 @@ pub fn generate_noise_layer(base_seed: u32, layer_index: u32, num_samples: usize
 - [PCG Random Number Generator](https://www.pcg-random.org/)
 - [rand_pcg Rust crate](https://docs.rs/rand_pcg/)
 - [serde_json_canonicalizer Rust crate](https://docs.rs/serde_json_canonicalizer/)
-- [RFC-0001: Canonical Spec Architecture](./rfcs/RFC-0001-canonical-spec.md)
+- [Spec Reference](./spec-reference/README.md) — Canonical spec contracts (formerly RFC-0001)
 - [PARITY_MATRIX.md](../PARITY_MATRIX.md) - Generator tiers (Tier 1 vs Tier 2)
 
 ---

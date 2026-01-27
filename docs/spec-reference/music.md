@@ -63,6 +63,5 @@ References:
 - `docs/music-pattern-ir-quickstart.md`
 - `docs/music-pattern-ir-examples.md`
 - `docs/music-chord-spec.md`
-- `docs/rfcs/RFC-0003-music-pattern-ir.md`
-- `docs/rfcs/RFC-0004-music-compose-musical-helpers.md`
-- `docs/rfcs/RFC-0011-pattern-ir-extensions.md`
+- `crates/speccade-spec/src/recipe/music/` (Rust SSOT)
+- `docs/music-pattern-ir-quickstart.md`

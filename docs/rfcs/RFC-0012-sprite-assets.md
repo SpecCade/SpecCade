@@ -271,5 +271,5 @@ speccade generate --spec player_idle.spec.json --out-root ./assets
 ## References
 
 - `texture.trimsheet_v1` - Existing atlas packing implementation
-- `docs/rfcs/RFC-0001-canonical-spec.md` - Spec format reference
+- `docs/spec-reference/README.md` - Spec format reference (formerly RFC-0001)
 - `crates/speccade-backend-texture/src/trimsheet.rs` - Shelf packing algorithm
