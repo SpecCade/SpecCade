@@ -42,17 +42,8 @@ For the legacy `.studio/specs/**.spec.py` key taxonomy used by `speccade migrate
 | `skeletal_animation.blender_rigged_v1` | `skeletal_animation` | `speccade-backend-blender` | 2 | `glb` | Implemented | IK/rig-aware animation export |
 | `skeletal_animation.helpers_v1` | `skeletal_animation` | `speccade-backend-blender` | 2 | `glb` | Implemented | Preset-based locomotion cycles (walk/run/idle) |
 | `sprite.render_from_mesh_v1` | `sprite` | `speccade-backend-blender` | 2 | `png` + `json` | Implemented | Render 3D mesh to sprite atlas from multiple angles |
-
----
-
-## Planned / Proposed Generators
-
-These entries are **design targets** (not yet implemented). Details may change as the schema evolves.
-
-| Proposed recipe kind | Proposed asset type | Tier | Expected outputs | Status | Notes / keywords |
-|----------------------|---------------------|------|------------------|--------|------------------|
-| `static_mesh.shrinkwrap_v1` | `static_mesh` | 2 | `glb` | Proposed | Shrinkwrap workflows (armor/clothing wrapping) |
-| `static_mesh.boolean_kit_v1` | `static_mesh` | 2 | `glb` | Proposed | Boolean kitbashing (union/difference/intersect + cleanup) |
+| `static_mesh.shrinkwrap_v1` | `static_mesh` | `speccade-backend-blender` | 2 | `glb` | Implemented | Shrinkwrap workflows (armor/clothing wrapping) |
+| `static_mesh.boolean_kit_v1` | `static_mesh` | `speccade-backend-blender` | 2 | `glb` | Implemented | Boolean kitbashing (union/difference/intersect + cleanup) |
 
 ---
 

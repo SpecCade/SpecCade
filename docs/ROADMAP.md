@@ -19,6 +19,7 @@ The following major work areas are complete:
 - **Textures Core** (TEX-001–002, 004–007): Procedural ops (blur/warp/morphology), templates, Wang tiles, trimsheets, decals, splat sets.
 - **New Asset Types Core** (GEN-001–004): Spritesheets/animations, VFX flipbooks, UI nine-slice/icon sets, bitmap fonts.
 - **Tooling/QA Core** (QA-001–005, 007–009): Golden corpus, inspect/compare commands, caching, perceptual diffing, profiling, stdlib drift/coverage guards, Tier-2 validation.
+- **Lint System** (QA-010, EDITOR): Integrated lint into `speccade generate` (lint-before-generate gate), structural metrics for LLM-friendly 3D feedback, editor generate panel with lint integration.
 
 ## How to Use This Doc
 
@@ -169,6 +170,3 @@ Reference: `docs/MIGRATION.md`
   - 28 e2e tests covering SOUND, INSTRUMENT, CHARACTER migration + seed determinism + CLI validation.
 - [x] `MIGRATE-003` ~~Map legacy `ANIMATION` dict keys to canonical `skeletal_animation` params (incl. rig_setup/poses/phases/IK).~~ Done: 2026-01-25
   - Animation conversion module with pose/phase/bone/IK mapping, actionable diagnostics for unknown keys, 5 test fixtures (walk/run/idle/attack/jump), parity matrix updated.
-- [ ] `MIGRATE-004` Map legacy `CHARACTER` dict keys to canonical `skeletal_mesh` params (skeleton + parts/body_parts + skinning/export).
-  - Deliverable: a tested conversion that emits canonical `skeletal_mesh.blender_rigged_mesh_v1` params and preserves triangle budgets/material intent where possible.
-  - Touch points: `crates/speccade-cli/src/commands/migrate/`, `docs/legacy/PARITY_MATRIX_LEGACY_SPEC_PY.md`, `crates/speccade-spec/src/recipe/character/`.
