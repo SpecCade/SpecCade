@@ -22,7 +22,7 @@ use crate::generate::{
     bake_instrument_sample, resolve_pattern_note_name, GenerateError, GenerateResult,
     MusicInstrumentLoopReport, MusicLoopReport,
 };
-use crate::note::calculate_xm_pitch_correction;
+use crate::note::{calculate_xm_pitch_correction, xm_pitch_deviation_cents};
 use crate::xm::{
     effect_name_to_code as xm_effect_name_to_code, XmInstrument, XmModule, XmNote, XmPattern,
     XmSample,
@@ -182,7 +182,7 @@ pub(crate) fn generate_xm_instrument(
     let (finetune, relative_note) =
         calculate_xm_pitch_correction(baked.sample_rate, baked.base_midi);
 
-    let pitch_cents = crate::note::xm_pitch_deviation_cents(baked.sample_rate, baked.base_midi, finetune, relative_note);
+    let pitch_cents = xm_pitch_deviation_cents(baked.sample_rate, baked.base_midi, finetune, relative_note);
 
     // Create sample
     let mut sample = XmSample::new(&instr.name, baked.pcm16_mono, true);
