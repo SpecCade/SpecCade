@@ -26,5 +26,5 @@ pub use frequency::{freq_to_midi, midi_to_freq};
 
 pub use pitch::{
     calculate_c5_speed, calculate_c5_speed_for_base_note, calculate_pitch_correction,
-    calculate_xm_pitch_correction, xm_pitch_deviation_cents,
+    calculate_xm_pitch_correction, it_pitch_deviation_cents, xm_pitch_deviation_cents,
 };

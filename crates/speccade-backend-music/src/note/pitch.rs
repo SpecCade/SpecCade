@@ -170,3 +170,13 @@ pub fn xm_pitch_deviation_cents(
     let playback_rate = XM_BASE_FREQ * 2.0_f64.powf(semitones / 12.0);
     1200.0 * (playback_rate / sample_rate as f64).log2()
 }
+
+/// Compute pitch deviation in cents for IT c5_speed parameter.
+///
+/// Simulates the IT playback engine's frequency calculation and compares
+/// it to the sample's native rate. Returns deviation in cents (positive = sharp).
+pub fn it_pitch_deviation_cents(sample_rate: u32, base_midi_note: u8, c5_speed: u32) -> f64 {
+    let base_it_note = base_midi_note as f64 - 12.0;
+    let playback_rate = c5_speed as f64 * 2.0_f64.powf((base_it_note - 60.0) / 12.0);
+    1200.0 * (playback_rate / sample_rate as f64).log2()
+}

@@ -516,3 +516,42 @@ fn test_xm_pitch_deviation_cents_sweep() {
         }
     }
 }
+
+#[test]
+fn test_it_pitch_deviation_cents_at_reference() {
+    // MIDI 72 at 22050 Hz → c5_speed = 22050 (no adjustment). Deviation = 0.
+    let cents = it_pitch_deviation_cents(22050, 72, 22050);
+    assert!(
+        cents.abs() < 0.001,
+        "expected ~0 cents at reference, got {:.4}",
+        cents
+    );
+}
+
+#[test]
+fn test_it_pitch_deviation_cents_22050_midi_60() {
+    let c5_speed = calculate_c5_speed_for_base_note(22050, 60);
+    let cents = it_pitch_deviation_cents(22050, 60, c5_speed);
+    assert!(
+        cents.abs() < 2.0,
+        "expected < 2 cents deviation, got {:.4}",
+        cents
+    );
+}
+
+#[test]
+fn test_it_pitch_deviation_cents_sweep() {
+    let rates = [8363u32, 11025, 16000, 22050, 44100, 48000];
+    let notes = [36u8, 48, 60, 72, 84];
+    for &sr in &rates {
+        for &midi in &notes {
+            let c5 = calculate_c5_speed_for_base_note(sr, midi);
+            let cents = it_pitch_deviation_cents(sr, midi, c5);
+            assert!(
+                cents.abs() < 1.0,
+                "IT deviation too large: sr={}, midi={}, c5_speed={}, cents={:.4}",
+                sr, midi, c5, cents
+            );
+        }
+    }
+}
