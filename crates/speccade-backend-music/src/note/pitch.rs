@@ -153,3 +153,20 @@ pub fn calculate_xm_pitch_correction(sample_rate: u32, base_midi_note: u8) -> (i
 
     (finetune, relative_note)
 }
+
+/// Compute pitch deviation in cents for XM pitch correction parameters.
+///
+/// Simulates the XM playback engine's frequency calculation and compares
+/// it to the sample's native rate. Returns deviation in cents (positive = sharp).
+pub fn xm_pitch_deviation_cents(
+    sample_rate: u32,
+    base_midi_note: u8,
+    finetune: i8,
+    relative_note: i8,
+) -> f64 {
+    let base_xm_note_0indexed = base_midi_note as f64 - 12.0;
+    let semitones = (base_xm_note_0indexed + relative_note as f64 - 48.0)
+        + (finetune as f64 / 128.0);
+    let playback_rate = XM_BASE_FREQ * 2.0_f64.powf(semitones / 12.0);
+    1200.0 * (playback_rate / sample_rate as f64).log2()
+}

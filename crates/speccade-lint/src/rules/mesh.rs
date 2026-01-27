@@ -765,6 +765,7 @@ impl HumanoidProportionsRule {
     /// Standard humanoid bone name patterns
     const BONE_PATTERNS: &'static [(&'static str, &'static str)] = &[
         ("upper_arm", "forearm"),
+        ("upper_arm", "lower_arm"),
         ("upperarm", "lowerarm"),
         ("arm_upper", "arm_lower"),
         ("thigh", "shin"),
@@ -806,27 +807,47 @@ impl LintRule for HumanoidProportionsRule {
 
         let mut issues = Vec::new();
 
-        // Check if we have standard humanoid bone names
-        for (upper_pattern, lower_pattern) in Self::BONE_PATTERNS {
+        // Group patterns by upper segment to avoid false positives when
+        // different naming conventions map to the same bone pair.
+        // E.g. ("upper_arm", "forearm") and ("upper_arm", "lower_arm") both
+        // match the upper_arm pattern — only warn if NO lower variant matches.
+        let mut checked_uppers = std::collections::HashSet::new();
+
+        for (upper_pattern, _) in Self::BONE_PATTERNS {
+            if !checked_uppers.insert(*upper_pattern) {
+                continue;
+            }
+
             let upper_bones: Vec<_> = mesh
                 .bone_names
                 .iter()
                 .filter(|n| n.contains(upper_pattern))
                 .collect();
-            let lower_bones: Vec<_> = mesh
-                .bone_names
+
+            if upper_bones.is_empty() {
+                continue;
+            }
+
+            // Collect all lower patterns that share this upper pattern
+            let lower_patterns: Vec<_> = Self::BONE_PATTERNS
                 .iter()
-                .filter(|n| n.contains(lower_pattern))
+                .filter(|(u, _)| *u == *upper_pattern)
+                .map(|(_, l)| *l)
                 .collect();
 
-            if !upper_bones.is_empty() && lower_bones.is_empty() {
+            let has_any_lower = lower_patterns.iter().any(|lp| {
+                mesh.bone_names.iter().any(|n| n.contains(lp))
+            });
+
+            if !has_any_lower {
                 issues.push(
                     LintIssue::new(
                         self.id(),
                         self.default_severity(),
                         format!(
                             "Found upper segment bones ({}) but missing lower segment ({})",
-                            upper_pattern, lower_pattern
+                            upper_pattern,
+                            lower_patterns.join(" or ")
                         ),
                         "Add missing lower segment bones to complete limb hierarchy",
                     )

@@ -6395,6 +6395,12 @@ def handle_skeletal_mesh(spec: Dict, out_root: Path, report_path: Path) -> None:
             combined_mesh = bpy.context.active_object
             combined_mesh.name = "Character"
 
+            # Recalculate normals after joining parts (rotation can flip winding)
+            bpy.ops.object.mode_set(mode='EDIT')
+            bpy.ops.mesh.select_all(action='SELECT')
+            bpy.ops.mesh.normals_make_consistent(inside=False)
+            bpy.ops.object.mode_set(mode='OBJECT')
+
             # Assign vertex groups for each original body part
             # (Simplified - in real implementation, we'd track vertex indices)
             for _, bone_name in mesh_objects:

@@ -470,3 +470,49 @@ fn test_it_c5_speed_produces_expected_playback_rate_for_base_note() {
         );
     }
 }
+
+// =========================================================================
+// Tests for pitch deviation measurement
+// =========================================================================
+
+#[test]
+fn test_xm_pitch_deviation_cents_at_reference() {
+    // At XM reference rate (8363 Hz) with MIDI 60, correction is (0, 0).
+    // Deviation should be exactly 0.
+    let cents = xm_pitch_deviation_cents(8363, 60, 0, 0);
+    assert!(
+        cents.abs() < 0.001,
+        "expected ~0 cents at reference, got {:.4}",
+        cents
+    );
+}
+
+#[test]
+fn test_xm_pitch_deviation_cents_22050_midi_60() {
+    // Standard case: 22050 Hz, MIDI 60
+    let (finetune, relative_note) = calculate_xm_pitch_correction(22050, 60);
+    let cents = xm_pitch_deviation_cents(22050, 60, finetune, relative_note);
+    assert!(
+        cents.abs() < 2.0,
+        "expected < 2 cents deviation, got {:.4}",
+        cents
+    );
+}
+
+#[test]
+fn test_xm_pitch_deviation_cents_sweep() {
+    // All standard sample rates and a range of base notes should be < 1 cent.
+    let rates = [8363u32, 11025, 16000, 22050, 44100, 48000];
+    let notes = [36u8, 48, 60, 72, 84];
+    for &sr in &rates {
+        for &midi in &notes {
+            let (ft, rn) = calculate_xm_pitch_correction(sr, midi);
+            let cents = xm_pitch_deviation_cents(sr, midi, ft, rn);
+            assert!(
+                cents.abs() < 1.0,
+                "XM deviation too large: sr={}, midi={}, cents={:.4}",
+                sr, midi, cents
+            );
+        }
+    }
+}
