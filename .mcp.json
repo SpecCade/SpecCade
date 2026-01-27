@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "speccade": {
+      "command": "cargo",
+      "args": ["run", "-p", "speccade-mcp", "--"]
+    }
+  }
+}

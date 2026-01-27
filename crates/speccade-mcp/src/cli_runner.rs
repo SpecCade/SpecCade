@@ -1,4 +1,4 @@
-use anyhow::{bail, Result};
+use anyhow::Result;
 use std::path::PathBuf;
 use tokio::process::Command;
 
@@ -25,13 +25,4 @@ pub async fn run_cli(args: &[&str]) -> Result<CliOutput> {
         stderr: String::from_utf8_lossy(&output.stderr).into_owned(),
         success: output.status.success(),
     })
-}
-
-pub async fn run_cli_json(args: &[&str]) -> Result<serde_json::Value> {
-    let output = run_cli(args).await?;
-    if !output.success {
-        bail!("speccade {} failed: {}", args.join(" "), output.stderr);
-    }
-    let val: serde_json::Value = serde_json::from_str(&output.stdout)?;
-    Ok(val)
 }
