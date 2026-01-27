@@ -9,6 +9,7 @@ members = [
     "crates/speccade-editor",
     "crates/speccade-lint",
     "crates/speccade-tests",
+    "crates/speccade-mcp",
     "editor/src-tauri",
 ]
 exclude = [

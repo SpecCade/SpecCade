@@ -1,0 +1,20 @@
+[package]
+name = "speccade-mcp"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "speccade-mcp"
+path = "src/main.rs"
+
+[dependencies]
+rmcp = { version = "0.14", features = ["server", "macros", "transport-io"] }
+serde.workspace = true
+serde_json.workspace = true
+tokio = { workspace = true, features = ["rt-multi-thread", "process", "fs"] }
+clap.workspace = true
+anyhow.workspace = true
+schemars = "0.8"
+glob = "0.3"
+which.workspace = true
