@@ -44,3 +44,4 @@ Active design proposals (completed RFCs have been removed; their work is in the 
   - `stdlib-texture.md` — node graph, trimsheets, decals, splat sets, matcaps
   - `stdlib-mesh.md` — primitives and modifiers
 - Pack inventories live under `packs/`; treat docs that enumerate pack contents as convenience views (not the source of truth).
+- LLMs should output Starlark (`.star`), not raw JSON. See `starlark-authoring.md`.

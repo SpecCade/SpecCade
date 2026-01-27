@@ -3,6 +3,12 @@
 This guide covers how to author asset specs using Starlark (`.star` files) with
 the SpecCade standard library.
 
+## LLM Convention
+
+> **Starlark is the canonical output format for LLM-generated specs.** Prefer stdlib
+> functions over raw JSON for validation, composability, and schema resilience.
+> See also the [Claude plugin skill](../claude-plugin/skills/speccade-authoring/SKILL.md).
+
 ## Overview
 
 SpecCade supports two input formats:
@@ -282,6 +288,41 @@ c = 2000
 # - Attack transient: filtered noise burst
 # - Effect: slight reverb for space
 ```
+
+## Placeholder Humanoid
+
+A common LLM task is generating a humanoid character with blank materials as a
+starting point for texturing. Use `skeletal_mesh_spec()` with a single white
+material and `skeleton_preset = "humanoid_basic_v1"`:
+
+```starlark
+skeletal_mesh_spec(
+    asset_id = "my-humanoid-01",
+    seed = 42,
+    output_path = "characters/my_humanoid.glb",
+    format = "glb",
+    skeleton_preset = "humanoid_basic_v1",
+    description = "Blank humanoid placeholder",
+    body_parts = [
+        body_part(bone = "spine",       primitive = "cylinder", dimensions = [0.25, 0.4, 0.25],  segments = 8,  offset = [0,0,0.3],  material_index = 0),
+        body_part(bone = "chest",       primitive = "cylinder", dimensions = [0.3, 0.3, 0.28],   segments = 8,  offset = [0,0,0.6],  material_index = 0),
+        body_part(bone = "head",        primitive = "sphere",   dimensions = [0.15, 0.18, 0.15], segments = 12, offset = [0,0,0.95], material_index = 0),
+        body_part(bone = "upper_arm_l", primitive = "cylinder", dimensions = [0.06, 0.25, 0.06], segments = 6,  rotation = [0,0,90],  material_index = 0),
+        body_part(bone = "upper_arm_r", primitive = "cylinder", dimensions = [0.06, 0.25, 0.06], segments = 6,  rotation = [0,0,-90], material_index = 0),
+        body_part(bone = "upper_leg_l", primitive = "cylinder", dimensions = [0.08, 0.35, 0.08], segments = 6,  rotation = [180,0,0], material_index = 0),
+        body_part(bone = "upper_leg_r", primitive = "cylinder", dimensions = [0.08, 0.35, 0.08], segments = 6,  rotation = [180,0,0], material_index = 0),
+    ],
+    material_slots = [
+        material_slot(name = "blank_white", base_color = [1.0, 1.0, 1.0, 1.0]),
+    ],
+    skinning = skinning_config(max_bone_influences = 4, auto_weights = True),
+    export = skeletal_export_settings(triangulate = True, include_skin_weights = True),
+    constraints = skeletal_constraints(max_triangles = 5000, max_bones = 64, max_materials = 4),
+    texturing = skeletal_texturing(uv_mode = "cylinder_project")
+)
+```
+
+See [golden/starlark/character_humanoid_blank.star](../golden/starlark/character_humanoid_blank.star) for the full example.
 
 ## Limitations
 

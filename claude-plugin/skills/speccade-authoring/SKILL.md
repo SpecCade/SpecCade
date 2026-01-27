@@ -1,6 +1,6 @@
 # SpecCade Authoring
 
-This skill provides knowledge for authoring SpecCade specs - the declarative JSON format that drives deterministic asset generation for audio, textures, music, and 3D meshes.
+This skill provides knowledge for authoring SpecCade specs - the declarative spec format (Starlark preferred, JSON accepted) that drives deterministic asset generation for audio, textures, music, and 3D meshes.
 
 ## When to Use
 
@@ -40,6 +40,10 @@ Every SpecCade spec is a JSON file with these required fields:
 - `outputs`: at least one with `kind: "primary"`
 - `recipe.kind`: must match asset type prefix
 
+## Preferred Format
+
+LLMs should always output Starlark (`.star`) specs using stdlib functions unless the user explicitly requests JSON. Starlark provides validation, composability, and schema resilience over raw JSON. See [`docs/starlark-authoring.md`](../../../docs/starlark-authoring.md) for full guidance.
+
 ### Asset Types
 
 | Type | Recipe Kind | Output | Backend |
@@ -56,7 +60,7 @@ Every SpecCade spec is a JSON file with these required fields:
 
 ### Workflow
 
-1. **Write spec**: Create JSON with recipe params
+1. **Write spec**: Create Starlark (`.star`) using stdlib functions
 2. **Validate**: `speccade validate --spec my_spec.json`
 3. **Generate**: `speccade generate --spec my_spec.json --out-root ./output`
 4. **Iterate**: Adjust params, regenerate
@@ -234,6 +238,31 @@ For detailed documentation:
 - `references/music-compose-ir.md` - Pattern IR operators and authoring
 - `references/mesh-blender.md` - Blender backend reference
 - `references/spec-format.md` - Full JSON schema
+
+## Character / Humanoid
+
+For humanoid characters, use `skeletal_mesh_spec()` with `skeleton_preset = "humanoid_basic_v1"`. A blank-material template (single white material, all parts `material_index = 0`) is the standard starting point:
+
+```starlark
+skeletal_mesh_spec(
+    asset_id = "my-humanoid-01",
+    seed = 42,
+    output_path = "characters/my_humanoid.glb",
+    format = "glb",
+    skeleton_preset = "humanoid_basic_v1",
+    body_parts = [
+        body_part(bone = "spine", primitive = "cylinder", dimensions = [0.25,0.4,0.25], segments = 8, offset = [0,0,0.3], material_index = 0),
+        # ... (see references/character-humanoid.md for full template)
+    ],
+    material_slots = [material_slot(name = "blank_white", base_color = [1.0,1.0,1.0,1.0])],
+    skinning = skinning_config(max_bone_influences = 4, auto_weights = True),
+    export = skeletal_export_settings(triangulate = True, include_skin_weights = True),
+    constraints = skeletal_constraints(max_triangles = 5000, max_bones = 64, max_materials = 4),
+    texturing = skeletal_texturing(uv_mode = "cylinder_project")
+)
+```
+
+Full reference: [`references/character-humanoid.md`](references/character-humanoid.md) | [`docs/starlark-authoring.md`](../../../docs/starlark-authoring.md)
 
 ## Example Specs
 
