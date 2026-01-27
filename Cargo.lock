@@ -4298,7 +4298,7 @@ dependencies = [
  "clap",
  "glob",
  "rmcp",
- "schemars 0.8.22",
+ "schemars 1.2.0",
  "serde",
  "serde_json",
  "tokio",
