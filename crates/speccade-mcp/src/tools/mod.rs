@@ -20,6 +20,13 @@ pub struct SpeccadeMcp {
     tool_router: ToolRouter<Self>,
 }
 
+impl SpeccadeMcp {
+    /// Access the tool router for testing/introspection.
+    pub fn router(&self) -> &ToolRouter<Self> {
+        &self.tool_router
+    }
+}
+
 #[tool_router]
 impl SpeccadeMcp {
     pub fn new() -> Self {
