@@ -604,7 +604,7 @@ And add to the invoke_handler:
 
 **Step 4: Run tests**
 
-Run: `cd /c/Development/nethercore-project/speccade && cargo test -p speccade-editor`
+Run: `cd /c/Development/nethercore-project/speccade && cargo test -p tauri-plugin-speccade`
 Expected: All tests pass
 
 **Step 5: Commit**
@@ -983,7 +983,7 @@ And add to invoke_handler:
 
 **Step 3: Run tests**
 
-Run: `cd /c/Development/nethercore-project/speccade && cargo test -p speccade-editor`
+Run: `cd /c/Development/nethercore-project/speccade && cargo test -p tauri-plugin-speccade`
 Expected: All tests pass
 
 **Step 4: Commit**
@@ -1568,7 +1568,7 @@ generate_full,
 
 **Step 3: Run tests**
 
-Run: `cd /c/Development/nethercore-project/speccade && cargo test -p speccade-editor`
+Run: `cd /c/Development/nethercore-project/speccade && cargo test -p tauri-plugin-speccade`
 Expected: All tests pass
 
 **Step 4: Commit**
@@ -2013,7 +2013,7 @@ batch_generate,
 
 **Step 3: Run tests**
 
-Run: `cd /c/Development/nethercore-project/speccade && cargo test -p speccade-editor`
+Run: `cd /c/Development/nethercore-project/speccade && cargo test -p tauri-plugin-speccade`
 Expected: All tests pass
 
 **Step 4: Commit**
@@ -2172,7 +2172,7 @@ write_pack_manifest,
 
 **Step 3: Run tests**
 
-Run: `cd /c/Development/nethercore-project/speccade && cargo test -p speccade-editor`
+Run: `cd /c/Development/nethercore-project/speccade && cargo test -p tauri-plugin-speccade`
 Expected: All tests pass
 
 **Step 4: Commit**
@@ -2920,7 +2920,7 @@ git commit -m "feat(editor): add help panel with keyboard shortcuts and quick re
 
 **Step 1: Build the editor**
 
-Run: `cd /c/Development/nethercore-project/speccade && cargo build -p speccade-editor`
+Run: `cd /c/Development/nethercore-project/speccade && cargo build -p tauri-plugin-speccade`
 Expected: Build succeeds
 
 Run: `cd /c/Development/nethercore-project/speccade/editor && npm run build`

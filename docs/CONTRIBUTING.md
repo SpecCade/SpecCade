@@ -26,21 +26,7 @@ speccade --version
 
 ## Repo Structure
 
-```
-speccade/
-  crates/
-    speccade-spec/            # Spec types, validation, canonical hashing
-    speccade-cli/             # CLI binary (speccade)
-    speccade-backend-audio/   # Tier 1 audio backend (Rust)
-    speccade-backend-music/   # Tier 1 music backend (Rust)
-    speccade-backend-texture/ # Tier 1 texture backend (Rust)
-    speccade-backend-blender/ # Tier 2 Blender orchestration backend
-    speccade-tests/           # Integration test harness + validators
-  docs/                       # Spec docs, RFCs, policy docs
-  golden/                     # Reference specs used in tests/examples
-  scripts/                    # Utility scripts (e.g., generate_all.sh)
-  schemas/                    # JSON schema (editor assistance; Rust is SSOT)
-```
+See [`ARCHITECTURE.md`](../ARCHITECTURE.md) for the full crate map and repo layout.
 
 ## Running Tests
 
@@ -75,7 +61,7 @@ When adding a new recipe kind or changing an existing one:
    - Parse params for the recipe kind (return `E012` on failure)
    - Enforce output constraints that match the backend behavior (formats, counts, required output kinds)
 4. Implement/extend the backend crate.
-5. Wire the backend into `crates/speccade-cli/src/dispatch.rs`.
+5. Wire the backend into `crates/speccade-cli/src/dispatch/mod.rs` (and any relevant module under `crates/speccade-cli/src/dispatch/`).
 6. Update docs in `docs/spec-reference/` and any relevant RFCs.
 
 ## Golden Specs

@@ -29,9 +29,9 @@ pub use organic_sculpt::{
 };
 pub use primitives::MeshPrimitive;
 pub use shrinkwrap::{
-    ShrinkwrapMode, ShrinkwrapValidation, StaticMeshShrinkwrapV1Params,
-    DEFAULT_OFFSET, DEFAULT_SMOOTH_ITERATIONS as SHRINKWRAP_DEFAULT_SMOOTH_ITERATIONS,
-    MAX_OFFSET, MAX_SMOOTH_ITERATIONS as SHRINKWRAP_MAX_SMOOTH_ITERATIONS, MIN_OFFSET,
+    ShrinkwrapMode, ShrinkwrapValidation, StaticMeshShrinkwrapV1Params, DEFAULT_OFFSET,
+    DEFAULT_SMOOTH_ITERATIONS as SHRINKWRAP_DEFAULT_SMOOTH_ITERATIONS, MAX_OFFSET,
+    MAX_SMOOTH_ITERATIONS as SHRINKWRAP_MAX_SMOOTH_ITERATIONS, MIN_OFFSET,
 };
 pub use static_mesh::{
     LodChainSettings, LodDecimateMethod, LodLevel, StaticMeshBlenderPrimitivesV1Params,

@@ -82,8 +82,8 @@ pub enum RecipeKind {
     /// `skeletal_animation.blender_rigged_v1` - Skeletal animation with IK rigging support.
     #[serde(rename = "skeletal_animation.blender_rigged_v1")]
     SkeletalAnimationBlenderRiggedV1,
-    /// `skeletal_skeletal_animation.helpers_v1` - Animation helper presets for procedural locomotion cycles.
-    #[serde(rename = "skeletal_skeletal_animation.helpers_v1")]
+    /// `skeletal_animation.helpers_v1` - Animation helper presets for procedural locomotion cycles.
+    #[serde(rename = "skeletal_animation.helpers_v1")]
     SkeletalAnimationHelpersV1,
     /// `sprite.sheet_v1` - Spritesheet/atlas packing with frame metadata.
     #[serde(rename = "sprite.sheet_v1")]
@@ -405,7 +405,9 @@ impl Recipe {
     }
 
     /// Attempts to parse params as skeletal animation helpers params.
-    pub fn as_skeletal_animation_helpers(&self) -> Result<AnimationHelpersV1Params, serde_json::Error> {
+    pub fn as_skeletal_animation_helpers(
+        &self,
+    ) -> Result<AnimationHelpersV1Params, serde_json::Error> {
         serde_json::from_value(self.params.clone())
     }
 

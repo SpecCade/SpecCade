@@ -55,7 +55,13 @@ Budget limits are checked during spec validation before any generation begins. I
 
 ## Budget Profiles
 
-SpecCade provides pre-defined budget profiles for different use cases:
+SpecCade provides pre-defined budget profiles for different use cases.
+
+For the authoritative list of profile names accepted by the CLI, run:
+
+```bash
+speccade validate --help
+```
 
 ### Default Profile
 
@@ -76,6 +82,18 @@ let profile = BudgetProfile::strict();
 // Audio: max 10s, 16 layers
 // Texture: max 2048x2048
 // Mesh: max 50k verts/faces
+```
+
+### ZX-8bit Profile
+
+Very small budgets optimized for retro/8-bit style targets.
+
+```rust
+let profile = BudgetProfile::zx_8bit();
+// Audio: max 5s, 8 layers, 22050 Hz only
+// Texture: max 256x256
+// Music: max 8 channels (XM/IT)
+// Mesh: max 10k verts/faces
 ```
 
 ### Nethercore Profile

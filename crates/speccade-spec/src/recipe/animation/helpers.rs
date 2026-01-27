@@ -38,9 +38,9 @@ impl AnimationHelperPreset {
     /// Returns the default cycle frames for this preset at 30 fps.
     pub fn default_cycle_frames(&self) -> u32 {
         match self {
-            AnimationHelperPreset::WalkCycle => 60,  // 2 seconds
-            AnimationHelperPreset::RunCycle => 30,   // 1 second
-            AnimationHelperPreset::IdleSway => 120,  // 4 seconds
+            AnimationHelperPreset::WalkCycle => 60, // 2 seconds
+            AnimationHelperPreset::RunCycle => 30,  // 1 second
+            AnimationHelperPreset::IdleSway => 120, // 4 seconds
         }
     }
 
@@ -470,8 +470,18 @@ impl AnimationHelpersV1Params {
                     .with_roll_limits(-30.0, 60.0),
             ],
             SkeletonType::Quadruped => vec![
-                FootSystem::new("front_paw_l", "ik_front_paw_l", "front_heel_l", "front_toe_l"),
-                FootSystem::new("front_paw_r", "ik_front_paw_r", "front_heel_r", "front_toe_r"),
+                FootSystem::new(
+                    "front_paw_l",
+                    "ik_front_paw_l",
+                    "front_heel_l",
+                    "front_toe_l",
+                ),
+                FootSystem::new(
+                    "front_paw_r",
+                    "ik_front_paw_r",
+                    "front_heel_r",
+                    "front_toe_r",
+                ),
                 FootSystem::new("back_paw_l", "ik_back_paw_l", "back_heel_l", "back_toe_l"),
                 FootSystem::new("back_paw_r", "ik_back_paw_r", "back_heel_r", "back_toe_r"),
             ],

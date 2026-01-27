@@ -27,7 +27,7 @@ notify = "6.1"
 
 **Step 2: Run cargo check to verify dependency**
 
-Run: `cd /c/Development/nethercore-project/speccade && cargo check -p speccade-editor`
+Run: `cd /c/Development/nethercore-project/speccade && cargo check -p tauri-plugin-speccade`
 Expected: Compiles successfully
 
 **Step 3: Create watcher module**
@@ -190,7 +190,7 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
 
 **Step 5: Run tests to verify compilation**
 
-Run: `cd /c/Development/nethercore-project/speccade && cargo test -p speccade-editor`
+Run: `cd /c/Development/nethercore-project/speccade && cargo test -p tauri-plugin-speccade`
 Expected: All tests pass
 
 **Step 6: Commit**

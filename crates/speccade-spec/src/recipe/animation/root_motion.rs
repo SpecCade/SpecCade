@@ -48,7 +48,9 @@ impl Default for RootMotionSettings {
 
 impl PartialEq for RootMotionSettings {
     fn eq(&self, other: &Self) -> bool {
-        self.mode == other.mode && self.axes == other.axes && self.ground_height == other.ground_height
+        self.mode == other.mode
+            && self.axes == other.axes
+            && self.ground_height == other.ground_height
     }
 }
 

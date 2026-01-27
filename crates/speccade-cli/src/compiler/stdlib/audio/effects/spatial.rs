@@ -28,14 +28,21 @@ pub fn register(builder: &mut GlobalsBuilder) {
 
 #[starlark_module]
 fn register_spatial_effects(builder: &mut GlobalsBuilder) {
-    /// Creates a pitch envelope.
+    /// Creates a stereo widener effect.
     ///
     /// # Arguments
-    /// * `attack` - Attack time in seconds
-    /// * `decay` - Decay time in seconds
-    /// * `sustain` - Sustain level 0.0-1.0
-    /// * `release` - Release time in seconds
-    /// * `depth` - Pitch depth in semitones (can be positive or negative)
+    /// * `width` - Stereo width amount (0.0-2.0)
+    /// * `mode` - Widening mode: "simple", "haas", or "mid_side" (default: "simple")
+    /// * `delay_ms` - Haas delay in milliseconds (1-30, default: 10.0)
+    ///
+    /// # Returns
+    /// A dict matching the Effect::StereoWidener IR structure.
+    ///
+    /// # Example
+    /// ```starlark
+    /// stereo_widener(width = 1.25)
+    /// stereo_widener(width = 1.5, mode = "haas", delay_ms = 12.0)
+    /// ```
     fn stereo_widener<'v>(
         #[starlark(require = named)] width: f64,
         #[starlark(require = named, default = "simple")] mode: &str,

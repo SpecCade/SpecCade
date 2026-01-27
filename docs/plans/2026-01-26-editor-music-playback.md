@@ -135,7 +135,7 @@ mod tests {
 
 **Step 2: Run the tests to confirm they fail**
 
-Run: `cargo test -p speccade-editor music_preview`
+Run: `cargo test -p tauri-plugin-speccade music_preview`
 
 Expected: FAIL (function not implemented / returns failure)
 
@@ -150,7 +150,7 @@ Implement generation by:
 
 **Step 4: Run tests to verify pass**
 
-Run: `cargo test -p speccade-editor music_preview`
+Run: `cargo test -p tauri-plugin-speccade music_preview`
 
 Expected: PASS
 
@@ -174,7 +174,7 @@ Add a new unit test in `crates/speccade-editor/src/commands/generate.rs` that ca
 
 **Step 2: Run the test to confirm it fails**
 
-Run: `cargo test -p speccade-editor generate_preview_music`
+Run: `cargo test -p tauri-plugin-speccade generate_preview_music`
 
 Expected: FAIL (until routing is fixed)
 
@@ -188,7 +188,7 @@ This ensures relative paths in music instruments (`wav`, `ref`) resolve relative
 
 **Step 4: Run Rust tests**
 
-Run: `cargo test -p speccade-editor`
+Run: `cargo test -p tauri-plugin-speccade`
 
 Expected: PASS
 
@@ -304,7 +304,7 @@ git commit -m "feat(editor): add music playback preview and correct asset routin
 
 **Step 1: Run Rust tests**
 
-Run: `cargo test -p speccade-editor`
+Run: `cargo test -p tauri-plugin-speccade`
 
 Expected: PASS
 

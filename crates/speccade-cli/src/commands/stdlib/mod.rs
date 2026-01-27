@@ -12,6 +12,7 @@ mod texture;
 use anyhow::Result;
 use serde::Serialize;
 use speccade_lint::RuleRegistry;
+use std::collections::HashMap;
 use std::process::ExitCode;
 
 #[cfg(feature = "starlark")]
@@ -60,12 +61,19 @@ pub struct StdlibDump {
 
 impl StdlibDump {
     pub fn new() -> Self {
-        let mut functions = Vec::new();
-        functions.extend(core::register_functions());
-        functions.extend(audio::register_functions());
-        functions.extend(texture::register_functions());
-        functions.extend(mesh::register_functions());
-        functions.extend(music::register_functions());
+        #[cfg(feature = "starlark")]
+        let mut functions = collect_functions_from_starlark_docs();
+
+        #[cfg(not(feature = "starlark"))]
+        let mut functions = {
+            let mut functions = Vec::new();
+            functions.extend(core::register_functions());
+            functions.extend(audio::register_functions());
+            functions.extend(texture::register_functions());
+            functions.extend(mesh::register_functions());
+            functions.extend(music::register_functions());
+            functions
+        };
 
         functions.sort_by(|a, b| {
             a.category
@@ -84,6 +92,246 @@ impl StdlibDump {
             lint_rules,
         }
     }
+}
+
+#[cfg(feature = "starlark")]
+fn collect_functions_from_starlark_docs() -> Vec<FunctionInfo> {
+    use starlark::docs::{DocMember, DocParam};
+    use starlark::environment::GlobalsBuilder;
+
+    // Manual metadata (ranges/enums/examples) for functions we already describe.
+    // We only use this for enrichment; the function list + parameter defaults come
+    // from the real stdlib registration.
+    let manual: HashMap<String, FunctionInfo> = {
+        let mut map = HashMap::new();
+        for f in core::register_functions()
+            .into_iter()
+            .chain(audio::register_functions())
+            .chain(texture::register_functions())
+            .chain(mesh::register_functions())
+            .chain(music::register_functions())
+        {
+            map.insert(f.name.clone(), f);
+        }
+        map
+    };
+
+    let globals = GlobalsBuilder::new()
+        .with(crate::compiler::stdlib::register_stdlib)
+        .build();
+    let module_docs = globals.documentation();
+
+    let mut functions = Vec::new();
+    for (name, member) in module_docs.members.iter() {
+        let DocMember::Function(f) = member else {
+            continue;
+        };
+
+        let description = f
+            .docs
+            .as_ref()
+            .map(|d| d.summary.clone())
+            .filter(|s| !s.trim().is_empty())
+            .or_else(|| manual.get(name).map(|m| m.description.clone()))
+            .unwrap_or_else(|| format!("Starlark function `{}`.", name));
+
+        let returns = f
+            .ret
+            .docs
+            .as_ref()
+            .map(|d| d.summary.clone())
+            .filter(|s| !s.trim().is_empty())
+            .or_else(|| manual.get(name).map(|m| m.returns.clone()))
+            .unwrap_or_else(|| format!("Returns {}.", f.ret.typ));
+
+        let mut params: Vec<ParamInfo> = Vec::new();
+        for p in &f.params {
+            let DocParam::Arg {
+                name: param_name,
+                typ,
+                default_value,
+                ..
+            } = p
+            else {
+                // Skip separators (`*`/`/`) and varargs/kwargs for now.
+                continue;
+            };
+
+            let mut info = ParamInfo {
+                name: param_name.clone(),
+                param_type: typ.to_string(),
+                required: default_value.is_none(),
+                default: default_value.as_deref().and_then(|d| {
+                    if d.trim() == "_" {
+                        None
+                    } else {
+                        Some(parse_starlark_default_value(d))
+                    }
+                }),
+                enum_values: None,
+                range: None,
+            };
+
+            if let Some(m) = manual.get(name) {
+                if let Some(mp) = m.params.iter().find(|mp| mp.name == info.name) {
+                    info.enum_values = mp.enum_values.clone();
+                    info.range = mp.range.clone();
+                }
+            }
+
+            params.push(info);
+        }
+
+        let mut out = FunctionInfo {
+            name: name.clone(),
+            category: manual
+                .get(name)
+                .map(|m| m.category.clone())
+                .unwrap_or_else(|| guess_category(name).to_owned()),
+            description,
+            params,
+            returns,
+            example: manual.get(name).and_then(|m| m.example.clone()),
+        };
+
+        // Ensure required fields are never empty (tests rely on this).
+        if out.category.trim().is_empty() {
+            out.category = "misc".to_owned();
+        }
+        if out.description.trim().is_empty() {
+            out.description = format!("Starlark function `{}`.", out.name);
+        }
+        if out.returns.trim().is_empty() {
+            out.returns = "Return value.".to_owned();
+        }
+
+        functions.push(out);
+    }
+
+    // Deterministic ordering.
+    functions.sort_by(|a, b| {
+        a.category
+            .cmp(&b.category)
+            .then_with(|| a.name.cmp(&b.name))
+    });
+    functions
+}
+
+#[cfg(feature = "starlark")]
+fn parse_starlark_default_value(raw: &str) -> serde_json::Value {
+    let s = raw.trim();
+
+    match s {
+        "None" => return serde_json::Value::Null,
+        "True" => return serde_json::Value::Bool(true),
+        "False" => return serde_json::Value::Bool(false),
+        _ => {}
+    }
+
+    if let Ok(i) = s.parse::<i64>() {
+        return serde_json::Value::Number(i.into());
+    }
+    if let Ok(f) = s.parse::<f64>() {
+        if let Some(n) = serde_json::Number::from_f64(f) {
+            return serde_json::Value::Number(n);
+        }
+    }
+
+    // Try to parse JSON-like values (lists, dicts, quoted strings).
+    let normalized = s
+        .replace("True", "true")
+        .replace("False", "false")
+        .replace("None", "null");
+    if let Ok(v) = serde_json::from_str::<serde_json::Value>(&normalized) {
+        return v;
+    }
+
+    serde_json::Value::String(s.to_owned())
+}
+
+#[cfg(feature = "starlark")]
+fn guess_category(name: &str) -> &'static str {
+    if matches!(name, "spec" | "output" | "envelope") {
+        return "core";
+    }
+
+    if name.ends_with("_node") {
+        return "texture.nodes";
+    }
+    if name == "texture_graph" {
+        return "texture.graph";
+    }
+    if matches!(
+        name,
+        "matcap_v1"
+            | "material_preset_v1"
+            | "decal_metadata"
+            | "decal_spec"
+            | "trimsheet_tile"
+            | "trimsheet_spec"
+            | "splat_layer"
+            | "splat_set_spec"
+    ) {
+        return "texture";
+    }
+    if name.starts_with("texture_") {
+        return "texture";
+    }
+
+    if name.ends_with("_modifier") {
+        return "mesh.modifiers";
+    }
+    if name == "baking_settings" {
+        return "mesh.baking";
+    }
+    if name.starts_with("mesh_") {
+        return "mesh";
+    }
+
+    if matches!(
+        name,
+        "body_part"
+            | "material_slot"
+            | "skinning_config"
+            | "custom_bone"
+            | "skeletal_export_settings"
+            | "skeletal_constraints"
+            | "skeletal_texturing"
+            | "skeletal_mesh_spec"
+    ) {
+        return "character";
+    }
+
+    if matches!(
+        name,
+        "bone_transform"
+            | "animation_keyframe"
+            | "animation_export_settings"
+            | "ik_target_transform"
+            | "ik_keyframe"
+            | "skeletal_animation_spec"
+    ) {
+        return "animation";
+    }
+
+    if name.contains("instrument")
+        || name.contains("pattern")
+        || name.contains("song")
+        || name.contains("tempo")
+        || name == "volume_fade"
+        || name == "it_options"
+        || name.contains("swing")
+        || name.contains("humanize")
+        || name.contains("stinger")
+        || name.contains("transition")
+        || name.contains("cue")
+        || name.starts_with("loop_")
+    {
+        return "music";
+    }
+
+    // Default to audio since most remaining helpers are audio-related.
+    "audio"
 }
 
 impl Default for StdlibDump {
@@ -120,7 +368,7 @@ pub struct ParamInfo {
 }
 
 /// Range constraint for a parameter.
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Serialize)]
 pub struct RangeInfo {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub min: Option<f64>,
@@ -371,7 +619,9 @@ mod tests {
         let json = serde_json::to_string(&dump).unwrap();
         let parsed: serde_json::Value = serde_json::from_str(&json).unwrap();
 
-        let coord = parsed.get("coordinate_system").expect("coordinate_system field missing");
+        let coord = parsed
+            .get("coordinate_system")
+            .expect("coordinate_system field missing");
         assert_eq!(coord.get("handedness").unwrap(), "right");
         assert_eq!(coord.get("up").unwrap(), "+Z");
         assert_eq!(coord.get("forward").unwrap(), "+Y");
@@ -407,6 +657,8 @@ mod tests {
             .expect("audio/clipping rule should exist");
 
         assert!(!clipping_rule.description.is_empty());
-        assert!(clipping_rule.applies_to.contains(&speccade_lint::AssetType::Audio));
+        assert!(clipping_rule
+            .applies_to
+            .contains(&speccade_lint::AssetType::Audio));
     }
 }

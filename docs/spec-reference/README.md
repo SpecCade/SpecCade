@@ -2,13 +2,9 @@
 
 This directory contains detailed reference documentation for SpecCade specs organized by asset type.
 
-## SSOT (Source Of Truth)
+## SSOT
 
-- Contract fields, output kinds/formats: `schemas/speccade-spec-v1.schema.json` + `speccade validate`
-- Recipe params (exact fields + enums): `crates/speccade-spec/src/recipe/**`
-- Generator behavior: backend crates (e.g., `crates/speccade-backend-audio`)
-
-If a doc/example disagrees with validation, treat `speccade validate` + Rust types as authoritative.
+If a doc/example disagrees with validation, treat `speccade validate` + Rust types in `crates/speccade-spec/` as authoritative. See [`AGENTS.md`](../../AGENTS.md) for the full SSOT map.
 
 ## Quick Links
 
@@ -181,10 +177,14 @@ Currently supported output kinds are:
 |------------|--------------|----------------|---------------|
 | `audio` | `audio_v1` | WAV | [audio.md](audio.md) |
 | `music` | `music.tracker_song_v1` (canonical), `music.tracker_song_compose_v1` (draft) | XM, IT | [music.md](music.md) |
-| `texture` | `texture.procedural_v1` | PNG | [texture.md](texture.md) |
-| `static_mesh` | `static_mesh.blender_primitives_v1` | GLB | [mesh.md](mesh.md) |
+| `texture` | `texture.procedural_v1`, `texture.trimsheet_v1`, `texture.decal_v1`, `texture.splat_set_v1`, `texture.matcap_v1`, `texture.material_preset_v1` | PNG / JSON | [texture.md](texture.md) |
+| `sprite` | `sprite.sheet_v1`, `sprite.animation_v1`, `sprite.render_from_mesh_v1` | PNG / JSON | [sprite.md](sprite.md) |
+| `vfx` | `vfx.flipbook_v1`, `vfx.particle_profile_v1` | PNG / JSON | [vfx.md](vfx.md) |
+| `ui` | `ui.nine_slice_v1`, `ui.icon_set_v1`, `ui.item_card_v1`, `ui.damage_number_v1` | PNG / JSON | [ui.md](ui.md) |
+| `font` | `font.bitmap_v1` | PNG / JSON | [font.md](font.md) |
+| `static_mesh` | `static_mesh.blender_primitives_v1`, `static_mesh.modular_kit_v1`, `static_mesh.organic_sculpt_v1` | GLB | [mesh.md](mesh.md) |
 | `skeletal_mesh` | `skeletal_mesh.blender_rigged_mesh_v1` | GLB | [character.md](character.md) |
-| `skeletal_animation` | `skeletal_animation.blender_clip_v1` | GLB | [animation.md](animation.md) |
+| `skeletal_animation` | `skeletal_animation.blender_clip_v1`, `skeletal_animation.blender_rigged_v1`, `skeletal_animation.helpers_v1` | GLB | [animation.md](animation.md) |
 
 ## Recipe Structure
 

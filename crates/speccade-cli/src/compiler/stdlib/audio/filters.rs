@@ -130,30 +130,20 @@ fn register_filters_functions(builder: &mut GlobalsBuilder) {
         Ok(dict)
     }
 
-    /// Creates a complete audio synthesis layer.
+    /// Creates a bandpass filter.
     ///
     /// # Arguments
-    /// * `synthesis` - Synthesis dict from oscillator(), fm_synth(), etc.
-    /// * `envelope` - Optional envelope dict (uses default if None)
-    /// * `volume` - Layer volume 0.0-1.0 (default: 0.8)
-    /// * `pan` - Stereo pan -1.0 to 1.0 (default: 0.0)
-    /// * `filter` - Optional filter dict from lowpass()/highpass()
-    /// * `lfo` - Optional LFO modulation dict
-    /// * `delay` - Optional layer start delay in seconds
+    /// * `center` - Center frequency in Hz
+    /// * `resonance` - Q factor / resonance (default: 1.0)
+    /// * `sweep_to` - Optional target center frequency for sweep
     ///
     /// # Returns
-    /// A dict matching the AudioLayer IR structure.
+    /// A filter dict.
     ///
     /// # Example
     /// ```starlark
-    /// audio_layer(oscillator(440))
-    /// audio_layer(
-    ///     synthesis = oscillator(440, "sawtooth"),
-    ///     envelope = envelope(0.01, 0.2, 0.6, 0.3),
-    ///     volume = 0.7,
-    ///     pan = -0.3,
-    ///     filter = lowpass(2000, 0.707, 500)
-    /// )
+    /// bandpass(1000)
+    /// bandpass(1000, 0.8, 2000)  # Sweep center frequency to 2000 Hz
     /// ```
     fn bandpass<'v>(
         center: f64,

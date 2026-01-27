@@ -1,73 +1,83 @@
-# speccade (Rust)
+# SpecCade (Rust) - Agent Notes
 
 Deterministic asset pipeline: takes a `Spec` (JSON or Starlark) and produces artifacts (WAV/PNG/XM/IT/GLB/...) plus a report.
 
-## Start Here (Canonical)
+## Single Source Of Truth (SSOT)
+
+- Spec contract + validation: `crates/speccade-spec/` and `speccade validate` (`schemas/` is editor assistance, keep in sync)
+- CLI commands/flags: `speccade --help` and `speccade <cmd> --help`
+- Starlark stdlib surface: `speccade stdlib dump --format json` (code: `crates/speccade-cli/src/compiler/stdlib/`)
+- Planned work + decisions: `docs/ROADMAP.md`
+
+## Start Here (Canonical Navigation)
 
 - Repo overview + how to run: `README.md`
 - Docs map (what to read first): `docs/README.md`
-- Architecture + determinism model: `ARCHITECTURE.md`
-- Determinism expectations by backend: `PARITY_MATRIX.md`
+- Crate map + determinism model: `ARCHITECTURE.md`
+- Backend coverage + tier guarantees: `PARITY_MATRIX.md`
 
 ## Repo Map (High Level)
 
-- `crates/speccade-spec/` — core spec types, validation, hashing, budgets (source of truth)
-- `crates/speccade-cli/` — `speccade` CLI (eval/validate/generate/format/migrate) + Starlark compiler
-- `crates/speccade-cli/src/compiler/` — Starlark-to-JSON compiler pipeline
-- `crates/speccade-cli/src/compiler/stdlib/` — Starlark stdlib (audio, texture, mesh, music, core)
-- `crates/speccade-backend-*/` — generation backends (Tier 1: Rust-only; Tier 2: external tools like Blender)
-- `crates/speccade-tests/` — integration + determinism validation
-- `schemas/` — JSON schemas for the spec format
-- `golden/` — golden outputs used by tests
-- `golden/starlark/` — golden Starlark specs for integration tests
-- `packs/` — example packs/inputs
-- `docs/` — documentation (`docs/README.md`, starlark authoring, stdlib reference, budgets, spec reference)
+- `crates/speccade-spec/` - spec types, validation, hashing, budgets (SSOT for the public contract)
+- `crates/speccade-cli/` - `speccade` CLI + Starlark compiler
+- `crates/speccade-backend-*/` - generators (Tier 1: Rust-only; Tier 2: external tools like Blender)
+- `crates/speccade-lint/` - semantic quality lint rules + analyzers
+- `crates/speccade-editor/` and `editor/` - Tauri editor + real-time preview
+- `crates/speccade-tests/` - integration + determinism validation
+- `schemas/` - JSON schemas (derived; keep aligned with `speccade-spec`)
+- `golden/` - golden outputs used by tests
+- `packs/` - example packs/inputs
+- `docs/` - documentation (start at `docs/README.md`)
+- `claude-plugin/` - Claude plugin (agents + references)
 
 ## Quick Commands
 
-- Tests: `cargo test`
-- Determinism/integration tests: `cargo test -p speccade-tests`
-- Starlark compiler tests: `cargo test -p speccade-cli`
-- CLI help: `cargo run -p speccade-cli -- --help`
-- Eval Starlark to JSON: `cargo run -p speccade-cli -- eval --spec file.star --pretty`
-- Validate with budget: `cargo run -p speccade-cli -- validate --spec file.star --budget strict`
-- Generate with budget: `cargo run -p speccade-cli -- generate --spec file.star --out-root ./out --budget strict`
+### Tests
+
+- Workspace: `cargo test --workspace`
+- Integration/determinism: `cargo test -p speccade-tests`
+
+### CLI
+
+- Help: `speccade --help`
+- Eval Starlark to JSON IR: `speccade eval --spec file.star --pretty`
+- Validate (budgets): `speccade validate --spec file.star --budget strict`
+- Generate (budgets): `speccade generate --spec file.star --out-root ./out --budget strict`
+
+If `speccade` is not installed, substitute:
+
+- `cargo run -p speccade-cli -- <args>`
 
 ## Determinism Guardrails (Tier 1 backends)
 
-- Given the same validated spec + seed, output must be **byte-identical** across runs.
+- Given the same validated spec + seed, output must be byte-identical across runs.
 - Avoid non-deterministic inputs: wall clock time, OS RNG, thread timing, filesystem ordering.
 - Prefer stable iteration order (`BTreeMap`/sorted keys) and explicit rounding/quantization where needed.
 
-## When Changing the Spec Format
+## When Changing The Public Contract
 
-- Update `crates/speccade-spec/` (types + validation) and `schemas/` together.
+- Update `crates/speccade-spec/` (types + validation) first.
+- Keep `schemas/` and `docs/spec-reference/` aligned with validation.
 - Update/extend golden tests in `crates/speccade-tests/` and/or `golden/`.
-- Keep `PARITY_MATRIX.md` accurate if behavior differs across backends.
+- Update `PARITY_MATRIX.md` if behavior differs across backends.
 
 ## Starlark Authoring
 
-SpecCade supports authoring specs in Starlark (.star files) which compile to canonical JSON IR:
+Pipeline: `.star file -> compiler -> JSON IR -> validation -> backend`
 
-**Pipeline:** `.star file -> compiler -> JSON IR -> validation -> backend`
+Stdlib modules (see `docs/stdlib-reference.md`):
 
-**Stdlib modules:**
 - `core` - spec(), output() scaffolding
-- `audio` - envelope(), oscillator(), fm_synth(), filter(), effect(), layer()
-- `music` - instrument(), pattern(), song()
-- `texture` - noise_node(), gradient_node(), graph()
-- `mesh` - mesh_primitive(), mesh_recipe()
+- `audio` - synthesis/effects/layers
+- `music` - tracker composition helpers
+- `texture` - node graphs + specialized recipes
+- `mesh` - mesh primitives + modifiers
+- `character` - skeletal mesh helpers
+- `animation` - skeletal animation helpers
 
-**Budget system:**
-- Profiles: `default`, `strict`
-- Enforced at validation stage before generation
-- Use `--budget <profile>` flag with validate/generate commands
+Key code touchpoints:
 
-**Key files:**
 - `crates/speccade-cli/src/input.rs` - spec loading dispatcher
 - `crates/speccade-cli/src/compiler/` - Starlark compiler
-- `crates/speccade-cli/src/compiler/stdlib/` - stdlib functions
+- `crates/speccade-cli/src/compiler/stdlib/` - stdlib implementation
 - `crates/speccade-spec/src/validation/budgets.rs` - budget profiles
-- `docs/starlark-authoring.md` - authoring guide
-- `docs/stdlib-reference.md` - stdlib function reference
-- `docs/budgets.md` - budget documentation

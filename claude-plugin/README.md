@@ -74,36 +74,15 @@ The `speccade-authoring` skill provides immediate answers.
 
 ## Asset Types
 
-| Type | Recipe | Output | Backend |
-|------|--------|--------|---------|
-| audio | `audio_v1` | WAV | Rust (Tier 1) |
-| texture | `texture.procedural_v1` | PNG | Rust (Tier 1) |
-| music | `music.tracker_song_v1` | XM/IT | Rust (Tier 1) |
-| static_mesh | `static_mesh.blender_primitives_v1` | GLB | Blender (Tier 2) |
-| skeletal_mesh | `skeletal_mesh.blender_rigged_mesh_v1` | GLB | Blender (Tier 2) |
-| skeletal_animation | `skeletal_animation.blender_clip_v1` | GLB | Blender (Tier 2) |
+Treat `PARITY_MATRIX.md` as the authoritative list of recipe kinds, tiers, outputs, and backend crates.
+
+For schema-level spec details, start with `docs/spec-reference/README.md`.
 
 ## Quick Reference
 
-### CLI Commands
-```bash
-speccade validate --spec FILE      # Validate spec
-speccade generate --spec FILE      # Generate asset
-speccade doctor                    # Check dependencies
-```
-
-### Spec Structure
-```json
-{
-  "spec_version": 1,
-  "asset_id": "my_asset",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 12345,
-  "outputs": [{"kind": "primary", "format": "wav", "path": "out.wav"}],
-  "recipe": {"kind": "audio_v1", "params": {...}}
-}
-```
+- CLI usage: `speccade --help`
+- Spec contract: [`docs/spec-reference/README.md`](../docs/spec-reference/README.md)
+- Stdlib functions: `speccade stdlib dump --format json`
 
 ## References
 

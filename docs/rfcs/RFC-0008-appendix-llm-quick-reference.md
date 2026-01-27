@@ -1,6 +1,12 @@
-# SpecCade LLM Quick Reference
+# SpecCade LLM Quick Reference (ARCHIVED)
 
-**Purpose**: Consolidated reference optimized for LLM context windows (<8000 tokens).
+> **DEPRECATED** — This file is a historical snapshot from RFC-0008 and contains **stale syntax and APIs**.
+> Do NOT use this as a reference for current SpecCade development.
+>
+> Current authoritative sources:
+> - `speccade stdlib dump --format json` (Starlark stdlib)
+> - `speccade validate` / `docs/spec-reference/` (spec contract)
+> - `docs/stdlib-reference.md` (stdlib index with domain file links)
 
 ---
 

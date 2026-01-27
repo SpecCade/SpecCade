@@ -2,6 +2,11 @@
 
 This document tracks **canonical** SpecCade generator coverage and planned generators.
 
+SSOT: keep this table aligned with:
+
+- `crates/speccade-spec/src/validation/mod.rs` (what generation-time validation will accept)
+- `crates/speccade-cli/src/dispatch/mod.rs` (what `speccade generate` can actually dispatch)
+
 For the legacy `.studio/specs/**.spec.py` key taxonomy used by `speccade migrate --audit`, see:
 `docs/legacy/PARITY_MATRIX_LEGACY_SPEC_PY.md`.
 
@@ -13,9 +18,16 @@ For the legacy `.studio/specs/**.spec.py` key taxonomy used by `speccade migrate
 |------------|------------|--------------|------|-----------------|--------|-------|
 | `audio_v1` | `audio` | `speccade-backend-audio` | 1 | `wav` | Implemented | Unified audio synthesis (SFX + instruments) |
 | `music.tracker_song_v1` | `music` | `speccade-backend-music` | 1 | `xm` / `it` | Implemented | Deterministic tracker module writer |
+| `music.tracker_song_compose_v1` | `music` | `speccade-backend-music` | 1 | `xm` / `it` | Implemented | Pattern IR; use `speccade expand` to inspect canonical params |
 | `texture.procedural_v1` | `texture` | `speccade-backend-texture` | 1 | `png` | Implemented | Unified procedural DAG with named outputs |
+| `texture.trimsheet_v1` | `texture` | `speccade-backend-texture` | 1 | `png` + `json` | Implemented | Trimsheet atlas packing with metadata output |
+| `texture.decal_v1` | `texture` | `speccade-backend-texture` | 1 | `png` + `json` | Implemented | RGBA decal outputs with optional normal/roughness + placement metadata |
+| `texture.splat_set_v1` | `texture` | `speccade-backend-texture` | 1 | `png` + `json` | Implemented | Terrain splat set (layer maps + masks + macro) |
 | `texture.matcap_v1` | `texture` | `speccade-backend-texture` | 1 | `png` | Implemented | Matcap for stylized NPR shading (toon, rim, metallic, etc.) |
 | `texture.material_preset_v1` | `texture` | `speccade-backend-texture` | 1 | `png` (x4) + `json` | Implemented | PBR material presets (albedo, roughness, metallic, normal) |
+| `sprite.sheet_v1` | `sprite` | `speccade-backend-texture` | 1 | `png` + `json` | Implemented | Spritesheet atlas packing with frame metadata |
+| `sprite.animation_v1` | `sprite` | `speccade-backend-texture` | 1 | `json` | Implemented | Sprite animation timeline (metadata-only) |
+| `vfx.flipbook_v1` | `vfx` | `speccade-backend-texture` | 1 | `png` + `json` | Implemented | Procedural flipbook animation |
 | `vfx.particle_profile_v1` | `vfx` | `speccade-backend-texture` | 1 | `json` | Implemented | Particle rendering profile presets (metadata-only: blend modes, tint, distortion) |
 | `ui.nine_slice_v1` | `ui` | `speccade-backend-texture` | 1 | `png` + `json` | Implemented | Nine-slice panel generation with corner/edge/center regions |
 | `ui.icon_set_v1` | `ui` | `speccade-backend-texture` | 1 | `png` + `json` | Implemented | Icon pack assembly with sprite frames |
@@ -28,6 +40,7 @@ For the legacy `.studio/specs/**.spec.py` key taxonomy used by `speccade migrate
 | `skeletal_mesh.blender_rigged_mesh_v1` | `skeletal_mesh` | `speccade-backend-blender` | 2 | `glb` | Implemented | Rigged mesh export |
 | `skeletal_animation.blender_clip_v1` | `skeletal_animation` | `speccade-backend-blender` | 2 | `glb` | Implemented | Simple keyframed clip |
 | `skeletal_animation.blender_rigged_v1` | `skeletal_animation` | `speccade-backend-blender` | 2 | `glb` | Implemented | IK/rig-aware animation export |
+| `skeletal_animation.helpers_v1` | `skeletal_animation` | `speccade-backend-blender` | 2 | `glb` | Implemented | Preset-based locomotion cycles (walk/run/idle) |
 | `sprite.render_from_mesh_v1` | `sprite` | `speccade-backend-blender` | 2 | `png` + `json` | Implemented | Render 3D mesh to sprite atlas from multiple angles |
 
 ---
@@ -38,8 +51,8 @@ These entries are **design targets** (not yet implemented). Details may change a
 
 | Proposed recipe kind | Proposed asset type | Tier | Expected outputs | Status | Notes / keywords |
 |----------------------|---------------------|------|------------------|--------|------------------|
-| `sprite.sheet_v1` | `sprite` | 1 | `png` + `json` (metadata) | Planned | Spritesheet generator, palette control, outlines, lighting ramps |
-| `sprite.animation_v1` | `sprite_animation` | 1 | `png` + `json` (timeline) + optional `webp/gif` preview | Planned | Sprite-based animation clips (loops, events, directional sets) |
+| `static_mesh.shrinkwrap_v1` | `static_mesh` | 2 | `glb` | Proposed | Shrinkwrap workflows (armor/clothing wrapping) |
+| `static_mesh.boolean_kit_v1` | `static_mesh` | 2 | `glb` | Proposed | Boolean kitbashing (union/difference/intersect + cleanup) |
 
 ---
 

@@ -1,4 +1,8 @@
-﻿# SpecCade Docs
+# SpecCade Docs
+
+## SSOT
+
+See [`AGENTS.md`](../AGENTS.md) for the single source of truth map.
 
 ## Start Here
 
@@ -18,6 +22,7 @@
 ## LLM/Tool-Friendly Notes
 
 - Prefer `docs/spec-reference/*` and the `speccade-spec` Rust types as the source of truth.
+- For stdlib accuracy, prefer `speccade stdlib dump --format json` over prose docs.
 - The stdlib docs are split by domain:
   - `stdlib-core.md`
   - `stdlib-audio.md`

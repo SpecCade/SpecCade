@@ -14,12 +14,12 @@ Creates a complete spec dictionary with all required fields.
 | Name | Type | Required | Default | Description |
 |------|------|----------|---------|-------------|
 | asset_id | str | Yes | - | Kebab-case identifier |
-| asset_type | str | Yes | - | "audio", "music", "texture", "static_mesh", "skeletal_mesh", "skeletal_animation" |
+| asset_type | str | Yes | - | "audio", "music", "texture", "sprite", "vfx", "ui", "font", "static_mesh", "skeletal_mesh", "skeletal_animation" |
 | seed | int | Yes | - | Deterministic seed (0 to 2^32-1) |
 | outputs | list | Yes | - | List of output specifications |
 | recipe | dict | No | None | Optional recipe specification |
 | description | str | No | None | Optional description |
-| tags | list | No | None | Optional style tags |
+| tags | list | No | None | Optional style tags (stored as `style_tags` in the output spec) |
 | license | str | No | "CC0-1.0" | SPDX license identifier |
 
 **Returns:** Dict matching the Spec IR structure with `spec_version: 1`.
@@ -44,6 +44,7 @@ Creates an output specification.
 | path | str | Yes | - | Output file path |
 | format | str | Yes | - | Output format ("wav", "png", "glb", etc.) |
 | kind | str | No | "primary" | "primary", "preview", or "metadata" |
+| source | str | No | None | Optional output source selector (recipe-specific) |
 
 **Returns:** Dict matching the Output IR structure.
 
@@ -53,6 +54,8 @@ output("sounds/laser.wav", "wav")
 output("textures/preview.png", "png", "preview")
 output("textures/laser.report.json", "json", "metadata")
 ```
+
+Validation rules for `metadata`, `preview`, and `source` are recipe-specific; use `speccade validate` for the authoritative rules.
 
 ---
 

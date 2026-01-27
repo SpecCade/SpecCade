@@ -26,7 +26,10 @@ speccade/
 │   ├── speccade-backend-music    # XM/IT tracker generation (Tier 1)
 │   ├── speccade-backend-texture  # Procedural textures (Tier 1)
 │   ├── speccade-backend-blender  # Mesh/animation via Blender (Tier 2)
+│   ├── speccade-lint             # Semantic quality lints for generated assets
+│   ├── speccade-editor           # Tauri editor backend (IPC + file watching)
 │   └── speccade-tests            # Integration + determinism validation
+├── editor/                       # Tauri editor frontend (TypeScript)
 ├── schemas/                      # JSON schemas
 ├── packs/                        # Example packs/inputs
 ├── golden/                       # Golden outputs for tests
@@ -43,7 +46,7 @@ Core specification library. Defines JSON spec format, validation rules, and cano
 - `spec` - Main `Spec` type and builder
 - `recipe/` - Recipe types for each backend (audio, music, texture, mesh, animation)
 - `validation/` - Spec validation with error reporting
-- `validation/budgets` - Budget enforcement system (profiles: default, strict)
+- `validation/budgets` - Budget enforcement system (profiles: default, strict, zx-8bit, nethercore)
 - `hash` - BLAKE3-based canonical hashing and seed derivation
 - `report` - Generation result reporting
 
@@ -52,7 +55,7 @@ Command-line tool for spec operations.
 
 **Key modules:**
 - `compiler/` - Starlark-to-JSON compiler pipeline
-- `compiler/stdlib/` - Starlark stdlib functions (audio, texture, mesh, music, core)
+- `compiler/stdlib/` - Starlark stdlib functions (core, audio, music, texture, mesh, character, animation)
 - `input` - Unified spec loading (JSON/Starlark dispatch by extension)
 - `dispatch/` - Routes specs to appropriate backends
 - `commands/` - CLI command implementations (eval, validate, generate, fmt, migrate)
@@ -110,6 +113,16 @@ Integration tests and determinism validation framework.
 - `audio_analysis/` - Audio signal analysis utilities
 - `harness` - Test harness utilities
 
+### speccade-lint
+Semantic quality lint rules and analyzers for generated assets.
+
+Used by the CLI `speccade lint` subcommand.
+
+### speccade-editor
+Editor backend crate used by the Tauri app under `editor/`.
+
+Wraps `speccade-cli` for eval/validate/generate workflows and wires filesystem watching + previews.
+
 ## Starlark Compilation Pipeline
 
 SpecCade supports authoring specs in Starlark (.star files) which compile to canonical JSON IR:
@@ -133,9 +146,11 @@ SpecCade supports authoring specs in Starlark (.star files) which compile to can
 - `music/` - instrument(), pattern(), song() tracker composition
 - `texture/` - noise_node(), gradient_node(), graph() procedural textures
 - `mesh/` - mesh_primitive(), mesh_recipe() mesh generation
+- `character/` - skeletal mesh authoring helpers
+- `animation/` - skeletal animation authoring helpers
 
 **Budget system** (`validation/budgets.rs`):
-- Profiles: `default`, `strict`
+- Profiles: `default`, `strict`, `zx-8bit`, `nethercore`
 - Per-asset limits: AudioBudget, TextureBudget, MusicBudget, MeshBudget, GeneralBudget
 - Enforced at validation stage before generation
 - CLI flag: `--budget <profile>`
@@ -149,6 +164,14 @@ speccade-cli
     ├── speccade-backend-music
     ├── speccade-backend-texture
     └── speccade-backend-blender
+
+speccade-lint
+    └── speccade-spec
+
+speccade-editor
+    ├── speccade-cli
+    ├── speccade-spec
+    └── speccade-lint
 
 speccade-backend-* (all)
     └── speccade-spec

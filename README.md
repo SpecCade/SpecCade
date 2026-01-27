@@ -151,30 +151,15 @@ See [`docs/MIGRATION.md`](docs/MIGRATION.md) for migration guide and safety note
 
 ## Asset Types
 
-| Asset Type | Output Formats | Recipe Kinds |
-|------------|----------------|--------------|
-| `audio` | WAV | `audio_v1` |
-| `music` | XM, IT | `music.tracker_song_v1` |
-| `texture` | PNG | `texture.procedural_v1` |
-| `static_mesh` | GLB | `static_mesh.blender_primitives_v1` |
-| `skeletal_mesh` | GLB | `skeletal_mesh.blender_rigged_mesh_v1` |
-| `skeletal_animation` | GLB | `skeletal_animation.blender_clip_v1` |
-
-See [`docs/spec-reference/README.md`](docs/spec-reference/README.md) for detailed schema documentation.
+Audio, music, textures, sprites, UI, fonts, static meshes, skeletal meshes, and animations. See [`docs/spec-reference/README.md`](docs/spec-reference/README.md) for the full list with recipe kinds, and [`PARITY_MATRIX.md`](PARITY_MATRIX.md) for backend coverage.
 
 ## Determinism
 
-SpecCade guarantees deterministic output within documented tolerances:
-
-- **Tier 1 (Audio, Music, Textures):** Byte-identical output per platform and backend version
-- **Tier 2 (Meshes, Characters, Animations):** Metric validation (triangle count, bounds, bone count)
-
-All Rust backends use PCG32 RNG with explicit seed derivation. Blender backends validate output metrics rather than file hashes.
-
-See [`docs/DETERMINISM.md`](docs/DETERMINISM.md) for full determinism policy.
+Same spec + seed = identical output. See [`docs/DETERMINISM.md`](docs/DETERMINISM.md) for the full determinism policy and [`PARITY_MATRIX.md`](PARITY_MATRIX.md) for per-backend tier guarantees.
 
 ## Documentation
 
+- **[Docs Map](docs/README.md)** — What to read first
 - **[Spec Reference](docs/spec-reference/README.md)** — Canonical contract + per-asset reference
 - **[Migration Guide](docs/MIGRATION.md)** — Moving from legacy `.studio` system
 - **[Determinism Policy](docs/DETERMINISM.md)** — RNG, hashing, and validation rules

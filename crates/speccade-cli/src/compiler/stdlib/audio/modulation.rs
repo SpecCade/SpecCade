@@ -102,26 +102,21 @@ fn register_modulation_functions(builder: &mut GlobalsBuilder) {
         Ok(dict)
     }
 
-    /// Creates an oscillator synthesis block.
+    /// Creates an LFO (low-frequency oscillator) configuration.
     ///
     /// # Arguments
-    /// * `frequency` - Frequency in Hz (must be positive)
-    /// * `waveform` - Waveform type: "sine", "square", "sawtooth", "triangle", "pulse"
-    /// * `sweep_to` - Optional target frequency for sweep
-    /// * `curve` - Sweep curve: "linear" or "exponential"
-    /// * `detune` - Optional detune in cents (100 cents = 1 semitone)
-    /// * `duty` - Optional duty cycle for pulse waves (0.0-1.0, default 0.5)
+    /// * `waveform` - LFO waveform: "sine", "square", "sawtooth", "triangle", "pulse"
+    /// * `rate` - LFO rate in Hz (must be positive)
+    /// * `depth` - Modulation depth (0.0-1.0)
+    /// * `phase` - Optional initial phase offset (0.0-1.0)
     ///
     /// # Returns
-    /// A dict matching the Synthesis::Oscillator IR structure.
+    /// A dict matching `LfoConfig`.
     ///
     /// # Example
     /// ```starlark
-    /// oscillator(440)  # 440 Hz sine wave
-    /// oscillator(880, "sawtooth")
-    /// oscillator(440, "sine", 220, "exponential")  # Sweep from 440 to 220 Hz
-    /// oscillator(440, "pulse", duty = 0.25)  # Pulse wave with 25% duty cycle
-    /// oscillator(440, "sine", detune = 5.0)  # Slightly detuned
+    /// lfo("sine", 5.0, 0.5)
+    /// lfo("triangle", 4.0, 0.3, phase = 0.25)
     /// ```
     fn lfo<'v>(
         waveform: &str,
@@ -222,21 +217,23 @@ fn register_modulation_functions(builder: &mut GlobalsBuilder) {
     // Additional Synthesis Types
     // ========================================================================
 
-    /// Creates an AM (Amplitude Modulation) synthesis block.
+    /// Creates a pitch envelope for modulating frequency over time.
+    ///
+    /// This matches the `PitchEnvelope` structure used by `audio_v1`.
     ///
     /// # Arguments
-    /// * `carrier` - Carrier frequency in Hz
-    /// * `modulator` - Modulator frequency in Hz
-    /// * `depth` - Modulation depth 0.0-1.0
-    /// * `sweep_to` - Optional target carrier frequency for sweep
+    /// * `attack` - Attack time in seconds
+    /// * `decay` - Decay time in seconds
+    /// * `sustain` - Sustain level 0.0-1.0
+    /// * `release` - Release time in seconds
+    /// * `depth` - Pitch depth in semitones (can be positive or negative)
     ///
     /// # Returns
-    /// A dict matching the Synthesis::AmSynth IR structure.
+    /// A dict matching `PitchEnvelope`.
     ///
     /// # Example
     /// ```starlark
-    /// am_synth(440, 110, 0.5)
-    /// am_synth(440, 110, 0.5, 220)  # Sweep carrier to 220 Hz
+    /// pitch_envelope(attack = 0.0, decay = 0.08, sustain = 0.0, release = 0.0, depth = -24)
     /// ```
     fn pitch_envelope<'v>(
         #[starlark(default = 0.01)] attack: f64,

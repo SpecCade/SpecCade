@@ -40,7 +40,7 @@ fn register_core_functions(builder: &mut GlobalsBuilder) {
     /// * `path` - Output file path (e.g., "sounds/laser.wav")
     /// * `format` - Output format (e.g., "wav", "png", "glb")
     /// * `kind` - Output kind: "primary" (default), "preview", or "metadata"
-    /// * `source` - Optional source node ID (for texture procedural graphs)
+    /// * `source` - Optional output source selector (recipe-specific; e.g. node id for texture graphs)
     ///
     /// # Returns
     /// A dict matching the Output IR structure.
@@ -104,12 +104,12 @@ fn register_core_functions(builder: &mut GlobalsBuilder) {
     ///
     /// # Arguments
     /// * `asset_id` - Kebab-case identifier for the asset
-    /// * `asset_type` - Asset type: "audio", "music", "texture", "static_mesh", "skeletal_mesh", "skeletal_animation"
+    /// * `asset_type` - Asset type: "audio", "music", "texture", "sprite", "vfx", "ui", "font", "static_mesh", "skeletal_mesh", "skeletal_animation"
     /// * `seed` - Deterministic seed (0 to 2^32-1)
     /// * `outputs` - List of output specifications from `output()`
     /// * `recipe` - Optional recipe specification dict
     /// * `description` - Optional asset description
-    /// * `tags` - Optional list of style tags
+    /// * `tags` - Optional list of style tags (stored as `style_tags` in the output spec)
     /// * `license` - Optional SPDX license identifier (default: "CC0-1.0")
     ///
     /// # Returns

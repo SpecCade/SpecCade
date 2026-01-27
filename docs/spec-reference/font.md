@@ -1,13 +1,14 @@
 # Font Spec Reference
 
-This document describes the SpecCade font recipe types for generating bitmap and MSDF fonts.
+This document describes the SpecCade font recipe types for generating bitmap fonts.
 
 ## Overview
 
-Font specs generate font atlases with glyph metrics for runtime text rendering. Two recipe kinds are supported:
+Font specs generate font atlases with glyph metrics for runtime text rendering.
+
+Supported recipe kinds:
 
 - `font.bitmap_v1` - Bitmap pixel fonts with hardcoded patterns (Tier 1, deterministic)
-- `font.msdf_v1` - Multi-channel signed distance field fonts (Tier 2, planned)
 
 ## Asset Type
 
@@ -227,8 +228,4 @@ for char in "Hello".chars() {
 
 ## Future Extensions
 
-- **`font.msdf_v1`**: Multi-channel signed distance field fonts for scalable vector rendering
-- **Variable font support**: Parameterized font weights and styles
-- **Kerning tables**: Advanced glyph pair spacing
-- **Ligatures**: Combined glyph rendering
-- **Unicode support**: Extended character sets beyond ASCII
+Planned font work lives in `docs/ROADMAP.md`.

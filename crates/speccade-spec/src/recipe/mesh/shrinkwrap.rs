@@ -99,10 +99,7 @@ pub struct StaticMeshShrinkwrapV1Params {
     pub offset: f64,
     /// Number of smooth iterations to apply after shrinkwrap (0-10).
     /// Helps blend the wrapped mesh and reduce sharp deformations.
-    #[serde(
-        default,
-        skip_serializing_if = "is_default_smooth_iterations"
-    )]
+    #[serde(default, skip_serializing_if = "is_default_smooth_iterations")]
     pub smooth_iterations: u8,
     /// Smooth factor per iteration (0.0 to 1.0).
     /// Higher values produce stronger smoothing per iteration.
