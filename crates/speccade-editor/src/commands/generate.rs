@@ -154,6 +154,9 @@ pub struct GenerateFullOutput {
     pub error: Option<String>,
     /// Elapsed time in milliseconds.
     pub elapsed_ms: u64,
+    /// Lint results for generated outputs.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub lint: Option<super::lint::LintOutput>,
 }
 
 /// A generated output file.
@@ -201,6 +204,7 @@ pub fn generate_full(source: String, filename: String, output_dir: String) -> Ge
                 outputs: vec![],
                 error: Some(error_msg),
                 elapsed_ms: start.elapsed().as_millis() as u64,
+                lint: None,
             };
         }
     };
@@ -225,6 +229,7 @@ pub fn generate_full(source: String, filename: String, output_dir: String) -> Ge
                 outputs: vec![],
                 error: Some(error_msg),
                 elapsed_ms: start.elapsed().as_millis() as u64,
+                lint: None,
             };
         }
     };
@@ -245,11 +250,33 @@ pub fn generate_full(source: String, filename: String, output_dir: String) -> Ge
         })
         .collect();
 
+    // Run lint on each generated output file
+    let mut merged_lint = super::lint::LintOutput::default();
+    for gen_file in &outputs {
+        let full_path = output_path.join(&gen_file.path);
+        if let Ok(data) = std::fs::read(&full_path) {
+            let file_lint =
+                super::lint::lint_asset_bytes(&full_path, &data, Some(&spec));
+            merged_lint.ok = merged_lint.ok && file_lint.ok;
+            merged_lint.error_count += file_lint.error_count;
+            merged_lint.warning_count += file_lint.warning_count;
+            merged_lint.info_count += file_lint.info_count;
+            merged_lint.issues.extend(file_lint.issues);
+        }
+    }
+
+    let lint = if merged_lint.issues.is_empty() {
+        None
+    } else {
+        Some(merged_lint)
+    };
+
     GenerateFullOutput {
         success: true,
         outputs,
         error: None,
         elapsed_ms: start.elapsed().as_millis() as u64,
+        lint,
     }
 }
 

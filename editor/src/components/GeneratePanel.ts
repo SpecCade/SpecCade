@@ -7,6 +7,26 @@
 import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
 
+/** A lint issue from the backend. */
+interface LintIssue {
+  rule_id: string;
+  severity: "error" | "warning" | "info";
+  message: string;
+  suggestion: string;
+  spec_path?: string;
+  actual_value?: string;
+  expected_range?: string;
+}
+
+/** Lint output from the backend. */
+interface LintOutput {
+  ok: boolean;
+  issues: LintIssue[];
+  error_count: number;
+  warning_count: number;
+  info_count: number;
+}
+
 /**
  * Result from the generate_full command.
  */
@@ -15,6 +35,7 @@ interface GenerateResult {
   outputs: GeneratedFile[];
   elapsed_ms: number;
   error?: string;
+  lint?: LintOutput;
 }
 
 /**
@@ -46,6 +67,7 @@ export class GeneratePanel {
   private container: HTMLElement;
   private getSource: () => string;
   private getFilename: () => string;
+  private onLint?: (lint: LintOutput | undefined) => void;
   private wrapper: HTMLDivElement;
   private pathDisplay: HTMLSpanElement;
   private generateButton: HTMLButtonElement;
@@ -58,11 +80,18 @@ export class GeneratePanel {
    * @param container - The HTML element to render into
    * @param getSource - Callback to get the current editor source
    * @param getFilename - Callback to get the current filename
+   * @param onLint - Optional callback invoked with lint results after generation
    */
-  constructor(container: HTMLElement, getSource: () => string, getFilename: () => string) {
+  constructor(
+    container: HTMLElement,
+    getSource: () => string,
+    getFilename: () => string,
+    onLint?: (lint: LintOutput | undefined) => void,
+  ) {
     this.container = container;
     this.getSource = getSource;
     this.getFilename = getFilename;
+    this.onLint = onLint;
 
     // Create wrapper
     this.wrapper = document.createElement("div");
@@ -223,8 +252,10 @@ export class GeneratePanel {
 
       if (result.success) {
         this.showSuccess(result);
+        this.onLint?.(result.lint);
       } else {
         this.showError(result.error ?? "Unknown error");
+        this.onLint?.(undefined);
       }
     } catch (error) {
       this.showError(String(error));
@@ -298,6 +329,52 @@ export class GeneratePanel {
       }
 
       this.resultsDiv.appendChild(fileList);
+    }
+
+    // Show lint summary if there are issues
+    if (result.lint && result.lint.issues.length > 0) {
+      const lintHeader = document.createElement("div");
+      const hasErrors = result.lint.error_count > 0;
+      lintHeader.style.cssText = `
+        padding: 8px 12px;
+        background: ${hasErrors ? "#3a2a1e" : "#3a3a1e"};
+        border-radius: 4px;
+        margin-top: 8px;
+        color: ${hasErrors ? "#f4a871" : "#e4c94e"};
+        font-size: 12px;
+      `;
+      const parts: string[] = [];
+      if (result.lint.error_count > 0) parts.push(`${result.lint.error_count} error${result.lint.error_count === 1 ? "" : "s"}`);
+      if (result.lint.warning_count > 0) parts.push(`${result.lint.warning_count} warning${result.lint.warning_count === 1 ? "" : "s"}`);
+      if (result.lint.info_count > 0) parts.push(`${result.lint.info_count} info`);
+      lintHeader.textContent = `Lint: ${parts.join(", ")}`;
+      this.resultsDiv.appendChild(lintHeader);
+
+      // Show individual issues
+      const issueList = document.createElement("div");
+      issueList.style.cssText = `
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        margin-top: 4px;
+      `;
+      for (const issue of result.lint.issues) {
+        const issueEl = document.createElement("div");
+        const color = issue.severity === "error" ? "#f48771" : issue.severity === "warning" ? "#e4c94e" : "#9cdcfe";
+        const badge = issue.severity === "error" ? "E" : issue.severity === "warning" ? "W" : "I";
+        issueEl.style.cssText = `
+          display: flex;
+          align-items: flex-start;
+          gap: 6px;
+          padding: 4px 8px;
+          font-size: 11px;
+          color: ${color};
+        `;
+        const specPath = issue.spec_path ? ` <span style="opacity:0.7">[${issue.spec_path}]</span>` : "";
+        issueEl.innerHTML = `<span style="font-weight:700;flex:0 0 auto">${badge}</span><span>${issue.rule_id}: ${issue.message}${specPath}${issue.suggestion ? ". " + issue.suggestion : ""}</span>`;
+        issueList.appendChild(issueEl);
+      }
+      this.resultsDiv.appendChild(issueList);
     }
   }
 

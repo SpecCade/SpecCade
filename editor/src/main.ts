@@ -1010,7 +1010,15 @@ async function init(): Promise<void> {
     generatePanel = new GeneratePanel(
       generateContent,
       () => editor?.getContent() ?? "",
-      () => currentFilePath ?? "editor.star"
+      () => currentFilePath ?? "editor.star",
+      (lint) => {
+        if (lint) {
+          const lintProblems = convertLintToProblems(lint);
+          replaceStage("lint", lintProblems);
+        } else {
+          replaceStage("lint", []);
+        }
+      }
     );
   }
 
