@@ -285,6 +285,13 @@ pub fn run_human(
                 report_builder = report_builder.output(output.clone());
             }
 
+            // Run lint on generated outputs
+            if let Some(lint_data) =
+                reporting::run_lint_on_outputs(&outputs, &spec, out_root, true)
+            {
+                report_builder = report_builder.lint(lint_data);
+            }
+
             let report = report_builder.ok(true).build();
             reporting::write_report(&report, &base_report_path)?;
 

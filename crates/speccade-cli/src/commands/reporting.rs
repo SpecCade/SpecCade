@@ -1,6 +1,101 @@
 use anyhow::{Context, Result};
+use colored::Colorize;
+use speccade_lint::RuleRegistry;
+use speccade_spec::report::LintReportData;
+use speccade_spec::{OutputResult, Spec};
 use std::fs;
 use std::path::Path;
+
+use crate::commands::lint::lint_report_to_data;
+
+/// Run lint on generated output files and return the combined lint report data.
+///
+/// This is non-blocking: lint failures do not cause generation to fail.
+/// Returns `None` if no lintable outputs exist or lint cannot run.
+pub(crate) fn run_lint_on_outputs(
+    outputs: &[OutputResult],
+    spec: &Spec,
+    out_root: &str,
+    print_text: bool,
+) -> Option<LintReportData> {
+    let registry = RuleRegistry::default_rules();
+    let mut combined_report: Option<speccade_lint::LintReport> = None;
+
+    for output in outputs {
+        let asset_path = Path::new(out_root).join(&output.path);
+        if !asset_path.exists() {
+            continue;
+        }
+
+        match registry.lint(&asset_path, Some(spec)) {
+            Ok(report) => {
+                if print_text && report.total_issues() > 0 {
+                    let display_path = asset_path.to_string_lossy();
+                    print_lint_issues(&display_path, &report);
+                }
+                match &mut combined_report {
+                    Some(existing) => existing.merge(report),
+                    None => combined_report = Some(report),
+                }
+            }
+            Err(e) => {
+                if print_text {
+                    eprintln!(
+                        "  {} Could not lint {}: {}",
+                        "!".yellow(),
+                        asset_path.display(),
+                        e
+                    );
+                }
+            }
+        }
+    }
+
+    if let Some(ref report) = combined_report {
+        if print_text {
+            print_lint_text_summary(report);
+        }
+    }
+
+    combined_report.map(|r| lint_report_to_data(&r))
+}
+
+/// Print lint issues for a single file (matches standalone lint command style).
+fn print_lint_issues(path: &str, report: &speccade_lint::LintReport) {
+    use crate::commands::lint::print_lint_issue;
+
+    if !report.errors.is_empty() {
+        println!("\n{} {}", "Lint errors:".red().bold(), path);
+        for issue in &report.errors {
+            print_lint_issue(issue, "x".red());
+        }
+    }
+    if !report.warnings.is_empty() {
+        println!("\n{} {}", "Lint warnings:".yellow().bold(), path);
+        for issue in &report.warnings {
+            print_lint_issue(issue, "!".yellow());
+        }
+    }
+    if !report.info.is_empty() {
+        println!("\n{} {}", "Lint info:".blue().bold(), path);
+        for issue in &report.info {
+            print_lint_issue(issue, "i".blue());
+        }
+    }
+}
+
+/// Print a lint summary line.
+fn print_lint_text_summary(report: &speccade_lint::LintReport) {
+    let summary = format!(
+        "{} error(s), {} warning(s), {} info",
+        report.summary.error_count, report.summary.warning_count, report.summary.info_count
+    );
+    if report.ok {
+        println!("\n{} {}", "Lint PASSED".green().bold(), summary.dimmed());
+    } else {
+        println!("\n{} {}", "Lint FAILED".red().bold(), summary.dimmed());
+    }
+}
 
 pub(crate) fn apply_validation_messages(
     mut builder: speccade_spec::ReportBuilder,

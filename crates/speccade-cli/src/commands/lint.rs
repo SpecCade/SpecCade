@@ -47,7 +47,7 @@ pub struct LintOutput {
 }
 
 /// Converts a speccade_lint::LintReport to LintReportData.
-pub fn lint_report_to_data(report: &LintReport) -> LintReportData {
+pub(crate) fn lint_report_to_data(report: &LintReport) -> LintReportData {
     LintReportData {
         ok: report.ok,
         error_count: report.summary.error_count,
@@ -218,7 +218,7 @@ fn print_text_output(input: &str, report: &LintReport, strict: bool) {
     if !report.errors.is_empty() {
         println!("\n{}", "Errors:".red().bold());
         for issue in &report.errors {
-            print_issue(issue, "x".red());
+            print_lint_issue(issue, "x".red());
         }
     }
 
@@ -226,7 +226,7 @@ fn print_text_output(input: &str, report: &LintReport, strict: bool) {
     if !report.warnings.is_empty() {
         println!("\n{}", "Warnings:".yellow().bold());
         for issue in &report.warnings {
-            print_issue(issue, "!".yellow());
+            print_lint_issue(issue, "!".yellow());
         }
     }
 
@@ -234,7 +234,7 @@ fn print_text_output(input: &str, report: &LintReport, strict: bool) {
     if !report.info.is_empty() {
         println!("\n{}", "Info:".blue().bold());
         for issue in &report.info {
-            print_issue(issue, "i".blue());
+            print_lint_issue(issue, "i".blue());
         }
     }
 
@@ -251,8 +251,8 @@ fn print_text_output(input: &str, report: &LintReport, strict: bool) {
     }
 }
 
-/// Print a single lint issue.
-fn print_issue(issue: &speccade_lint::LintIssue, marker: colored::ColoredString) {
+/// Print a single lint issue (public for use by generate's lint integration).
+pub(crate) fn print_lint_issue(issue: &speccade_lint::LintIssue, marker: colored::ColoredString) {
     let location = issue
         .asset_location
         .as_ref()
