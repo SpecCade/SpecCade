@@ -35,7 +35,14 @@
       "Bash(damage_number \")",
       "Bash(git log:*)",
       "Bash(Get-ChildItem \"$env:LOCALAPPDATA\\\\Temp\\\\claude\\\\C--Development-nethercore-project-speccade\\\\tasks\\\\*.output\")",
-      "Bash(Select-Object -Last 30 })"
+      "Bash(Select-Object -Last 30 })",
+      "Bash(test:*)",
+      "Bash(git -C \"D:\\\\Development\\\\nethercore-project\\\\speccade\" diff --stat -- crates/speccade-editor/src/commands/generate.rs editor/src/components/GeneratePanel.ts editor/src/main.ts)",
+      "Bash(git -C \"D:\\\\Development\\\\nethercore-project\\\\speccade\" diff -- crates/speccade-editor/src/commands/generate.rs)",
+      "Bash(git -C \"D:\\\\Development\\\\nethercore-project\\\\speccade\" log --oneline -5)",
+      "Bash(git -C \"D:\\\\Development\\\\nethercore-project\\\\speccade\" add crates/speccade-editor/src/commands/generate.rs editor/src/components/GeneratePanel.ts editor/src/main.ts)",
+      "Bash(git -C \"D:\\\\Development\\\\nethercore-project\\\\speccade\" commit -m \"$\\(cat <<''EOF''\nfeat\\(editor\\): display lint issues in UI after asset generation\n\nWire lint results from generate_full into the GeneratePanel and\nProblemsPanel so users see severity-coded issues with rule IDs,\nmessages, and suggestions after generating assets.\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(powershell -c \"\\(Get-Content docs/ROADMAP.md | Measure-Object -Line\\).Lines\")"
     ]
   },
   "_comment": "Local-only Claude Code permissions. Keep machine-specific rules here and do not commit this file."
