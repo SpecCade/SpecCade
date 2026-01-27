@@ -101,7 +101,7 @@ pub fn calculate_c5_speed_for_base_note(sample_rate: u32, base_midi_note: u8) ->
     //   semitone_diff = 60 - 48 = 12
     //   c5_speed = 22050 * 2^(12/12) = 44100
     //   This means C-5 plays at 44100 Hz, doubling our 261.6 Hz sample to 523.25 Hz ✓
-    (sample_rate as f64 * 2.0_f64.powf(semitone_diff as f64 / 12.0)) as u32
+    (sample_rate as f64 * 2.0_f64.powf(semitone_diff as f64 / 12.0)).round() as u32
 }
 
 /// Calculate XM pitch correction for a sample at a given base MIDI note.

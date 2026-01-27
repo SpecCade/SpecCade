@@ -555,3 +555,14 @@ fn test_it_pitch_deviation_cents_sweep() {
         }
     }
 }
+
+#[test]
+fn test_c5_speed_rounding_reduces_error() {
+    let c5_speed = calculate_c5_speed_for_base_note(22050, 63);
+    let cents = it_pitch_deviation_cents(22050, 63, c5_speed);
+    assert!(
+        cents.abs() < 0.05,
+        "c5_speed rounding should keep error < 0.05 cents, got {:.4}",
+        cents
+    );
+}
