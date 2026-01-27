@@ -4301,6 +4301,7 @@ dependencies = [
  "schemars 1.2.0",
  "serde",
  "serde_json",
+ "tempfile",
  "tokio",
  "which",
 ]
