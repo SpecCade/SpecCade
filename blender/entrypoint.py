@@ -23,6 +23,7 @@ import argparse
 import json
 import math
 import sys
+import tempfile
 import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
@@ -7175,31 +7176,57 @@ def pack_frames_into_atlas(
     return atlas_width, atlas_height, positions
 
 
+class _BlenderAtlasImage:
+    """Wraps a bpy.types.Image to provide a .save(path) interface for atlas compositing."""
+
+    def __init__(self, bpy_image: 'bpy.types.Image'):
+        self._img = bpy_image
+
+    def save(self, path: str) -> None:
+        scene = bpy.context.scene
+        scene.render.image_settings.file_format = 'PNG'
+        scene.render.image_settings.color_mode = 'RGBA'
+        scene.render.image_settings.color_depth = '8'
+        self._img.save_render(filepath=path, scene=scene)
+
+
 def create_atlas_image(
     frame_paths: List[Path],
     positions: List[Tuple[int, int]],
     atlas_width: int,
     atlas_height: int,
     background_color: List[float]
-) -> 'Image':
+) -> '_BlenderAtlasImage':
     """
-    Create the atlas image by compositing individual frames.
+    Create the atlas image by compositing individual frames using Blender's image API.
 
     Returns:
-        PIL Image object
+        _BlenderAtlasImage with a .save(path) method
     """
-    from PIL import Image as PILImage
+    # Create atlas image filled with background color
+    atlas = bpy.data.images.new("speccade_atlas", width=atlas_width, height=atlas_height, alpha=True)
+    bg = list(background_color[:4]) if len(background_color) >= 4 else list(background_color[:3]) + [1.0]
+    pixels = bg * (atlas_width * atlas_height)
+    atlas.pixels[:] = pixels
 
-    # Create atlas with background color
-    bg_rgba = tuple(int(c * 255) for c in background_color)
-    atlas = PILImage.new('RGBA', (atlas_width, atlas_height), bg_rgba)
-
-    # Paste each frame
+    # Load and paste each frame
     for frame_path, (x, y) in zip(frame_paths, positions):
-        frame = PILImage.open(frame_path)
-        atlas.paste(frame, (x, y))
+        frame = bpy.data.images.load(str(frame_path))
+        fw, fh = frame.size[0], frame.size[1]
+        frame_pixels = list(frame.pixels[:])
 
-    return atlas
+        atlas_pixels = list(atlas.pixels[:])
+        for row in range(fh):
+            # bpy images are bottom-up; position (x, y) is top-left in screen coords
+            atlas_row = (atlas_height - 1 - y - row)
+            src_start = row * fw * 4
+            dst_start = (atlas_row * atlas_width + x) * 4
+            atlas_pixels[dst_start:dst_start + fw * 4] = frame_pixels[src_start:src_start + fw * 4]
+        atlas.pixels[:] = atlas_pixels
+
+        bpy.data.images.remove(frame)
+
+    return _BlenderAtlasImage(atlas)
 
 
 # =============================================================================
