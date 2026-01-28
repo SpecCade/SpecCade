@@ -8,6 +8,7 @@ use gif::{Encoder, Frame as GifFrame, Repeat};
 use speccade_spec::Spec;
 use std::fs;
 use std::io::BufWriter;
+use std::path::PathBuf;
 use std::process::ExitCode;
 
 /// Assembles RGBA frames into an animated GIF file.
@@ -312,35 +313,336 @@ fn extract_mesh_sprite_frames(
 /// Exit code: 0 success, 1 error
 pub fn run(
     spec_path: &str,
-    _out_root: Option<&str>,
-    _gif: bool,
-    _out: Option<&str>,
-    _fps: Option<u32>,
-    _scale: Option<u32>,
+    out_root: Option<&str>,
+    gif: bool,
+    out: Option<&str>,
+    fps: Option<u32>,
+    scale: Option<u32>,
 ) -> Result<ExitCode> {
-    // TODO: Implement preview for generated assets (open viewers, or launch Blender for mesh/anim).
-    println!("{} {}", "Preview:".cyan().bold(), spec_path);
-
-    // Read and parse spec to get asset type
+    // Read and parse spec to get asset type / recipe kind
     let spec_content = fs::read_to_string(spec_path)
         .with_context(|| format!("Failed to read spec file: {}", spec_path))?;
 
     let spec = Spec::from_json(&spec_content)
         .with_context(|| format!("Failed to parse spec file: {}", spec_path))?;
 
-    // Preview is currently only planned for Blender-based assets
-    println!(
-        "\n{} Preview is not yet implemented for asset type '{}'",
-        "INFO".yellow().bold(),
-        spec.asset_type
-    );
-    println!(
-        "{}",
-        "Preview functionality will be available in a future release for mesh and animation assets."
-            .dimmed()
+    if !gif {
+        // TODO: Implement preview for generated assets (open viewers, or launch Blender for mesh/anim).
+        println!("{} {}", "Preview:".cyan().bold(), spec_path);
+
+        // Preview is currently only planned for Blender-based assets
+        println!(
+            "\n{} Preview is not yet implemented for asset type '{}'",
+            "INFO".yellow().bold(),
+            spec.asset_type
+        );
+        println!(
+            "{}",
+            "Preview functionality will be available in a future release for mesh and animation assets."
+                .dimmed()
+        );
+
+        // Return success since this is expected behavior for now
+        return Ok(ExitCode::SUCCESS);
+    }
+
+    let recipe = spec
+        .recipe
+        .as_ref()
+        .with_context(|| "Spec has no recipe; cannot export GIF preview")?;
+
+    // Artifact discovery
+    let spec_path_pb = PathBuf::from(spec_path);
+    let spec_dir = spec_path_pb
+        .parent()
+        .with_context(|| format!("Spec path has no parent directory: {}", spec_path))?;
+
+    let root = out_root
+        .map(PathBuf::from)
+        .unwrap_or_else(|| spec_dir.to_path_buf());
+
+    let png_output = spec
+        .outputs
+        .iter()
+        .find(|o| matches!(o.format, speccade_spec::output::OutputFormat::Png))
+        .with_context(|| "Spec has no PNG output (atlas) in outputs[]")?;
+
+    let json_output = spec
+        .outputs
+        .iter()
+        .find(|o| matches!(o.format, speccade_spec::output::OutputFormat::Json))
+        .with_context(|| "Spec has no JSON output (metadata) in outputs[]")?;
+
+    let atlas_path = root.join(&png_output.path);
+    let metadata_path = root.join(&json_output.path);
+
+    let atlas = image::open(&atlas_path)
+        .with_context(|| format!("Failed to open atlas PNG: {}", atlas_path.display()))?
+        .to_rgba8();
+
+    let metadata_str = fs::read_to_string(&metadata_path)
+        .with_context(|| format!("Failed to read metadata JSON: {}", metadata_path.display()))?;
+    let metadata_json: serde_json::Value = serde_json::from_str(&metadata_str)
+        .with_context(|| format!("Failed to parse metadata JSON: {}", metadata_path.display()))?;
+
+    let (mut frames, delays_ms, should_loop, frame_w, frame_h) = match recipe.kind.as_str() {
+        "vfx.flipbook_v1" => {
+            let meta: speccade_spec::recipe::vfx::VfxFlipbookMetadata =
+                serde_json::from_value(metadata_json).with_context(|| {
+                    format!(
+                        "Metadata JSON did not match VfxFlipbookMetadata: {}",
+                        metadata_path.display()
+                    )
+                })?;
+
+            let (frames, delays, should_loop) = extract_flipbook_frames(&atlas, &meta, fps);
+            (
+                frames,
+                delays,
+                should_loop,
+                meta.frame_size[0],
+                meta.frame_size[1],
+            )
+        }
+        "sprite.sheet_v1" => {
+            let sheet_meta: speccade_spec::recipe::sprite::SpriteSheetMetadata =
+                serde_json::from_value(metadata_json).with_context(|| {
+                    format!(
+                        "Metadata JSON did not match SpriteSheetMetadata: {}",
+                        metadata_path.display()
+                    )
+                })?;
+
+            // Optional: look for a separate JSON output in outputs[] that parses as SpriteAnimationMetadata.
+            let mut anim_meta: Option<speccade_spec::recipe::sprite::SpriteAnimationMetadata> =
+                None;
+            for extra in spec.outputs.iter().filter(|o| {
+                matches!(o.format, speccade_spec::output::OutputFormat::Json)
+                    && o.path != json_output.path
+            }) {
+                let path = root.join(&extra.path);
+                let s = fs::read_to_string(&path).with_context(|| {
+                    format!("Failed to read animation metadata JSON: {}", path.display())
+                })?;
+                match serde_json::from_str::<speccade_spec::recipe::sprite::SpriteAnimationMetadata>(
+                    &s,
+                ) {
+                    Ok(parsed) => {
+                        anim_meta = Some(parsed);
+                        break;
+                    }
+                    Err(_) => continue,
+                }
+            }
+
+            if let Some(anim_meta) = anim_meta {
+                let (w, h) = sheet_meta
+                    .frames
+                    .iter()
+                    .filter_map(|uv| {
+                        anim_meta
+                            .frames
+                            .iter()
+                            .any(|f| f.frame_id == uv.id)
+                            .then(|| (uv.width, uv.height))
+                    })
+                    .next()
+                    .with_context(|| {
+                        "SpriteAnimationMetadata referenced no frames present in SpriteSheetMetadata"
+                    })?;
+
+                let (frames, delays, should_loop) =
+                    extract_sprite_animation_frames(&atlas, &sheet_meta, &anim_meta, fps);
+
+                (frames, delays, should_loop, w, h)
+            } else {
+                // No animation metadata: animate through sheet frames in order.
+                use image::GenericImageView;
+
+                let delay_ms = match fps.unwrap_or(12) {
+                    0 => 83,
+                    f => (1000 / f).max(1),
+                };
+
+                let atlas_w = atlas.width();
+                let atlas_h = atlas.height();
+
+                let mut out_frames: Vec<Vec<u8>> = Vec::with_capacity(sheet_meta.frames.len());
+                let mut out_delays: Vec<u32> = Vec::with_capacity(sheet_meta.frames.len());
+
+                let mut expected_w: Option<u32> = None;
+                let mut expected_h: Option<u32> = None;
+
+                for uv in &sheet_meta.frames {
+                    let w = uv.width;
+                    let h = uv.height;
+                    if w == 0 || h == 0 {
+                        continue;
+                    }
+                    if w > atlas_w || h > atlas_h {
+                        continue;
+                    }
+                    if !uv.u_min.is_finite() || !uv.v_min.is_finite() {
+                        continue;
+                    }
+
+                    if let (Some(ew), Some(eh)) = (expected_w, expected_h) {
+                        anyhow::ensure!(
+                            ew == w && eh == h,
+                            "SpriteSheetMetadata has mixed frame sizes ({}x{} vs {}x{}) which cannot be encoded into a single GIF",
+                            ew,
+                            eh,
+                            w,
+                            h
+                        );
+                    } else {
+                        expected_w = Some(w);
+                        expected_h = Some(h);
+                    }
+
+                    let max_x = atlas_w - w;
+                    let max_y = atlas_h - h;
+
+                    let x = (uv.u_min * atlas_w as f64)
+                        .round()
+                        .max(0.0)
+                        .min(max_x as f64) as u32;
+                    let y = (uv.v_min * atlas_h as f64)
+                        .round()
+                        .max(0.0)
+                        .min(max_y as f64) as u32;
+
+                    let rgba = atlas.view(x, y, w, h).to_image().into_raw();
+                    out_frames.push(rgba);
+                    out_delays.push(delay_ms);
+                }
+
+                let w = expected_w.unwrap_or(0);
+                let h = expected_h.unwrap_or(0);
+                (out_frames, out_delays, true, w, h)
+            }
+        }
+        "sprite.render_from_mesh_v1" => {
+            let meta: speccade_spec::recipe::sprite::SpriteRenderFromMeshMetadata =
+                serde_json::from_value(metadata_json).with_context(|| {
+                    format!(
+                        "Metadata JSON did not match SpriteRenderFromMeshMetadata: {}",
+                        metadata_path.display()
+                    )
+                })?;
+
+            let (frames, delays, should_loop) = extract_mesh_sprite_frames(&atlas, &meta, fps);
+            (
+                frames,
+                delays,
+                should_loop,
+                meta.frame_resolution[0],
+                meta.frame_resolution[1],
+            )
+        }
+        other => {
+            anyhow::bail!(
+                "GIF preview not supported for recipe kind '{}'; supported: vfx.flipbook_v1, sprite.sheet_v1, sprite.render_from_mesh_v1",
+                other
+            );
+        }
+    };
+
+    anyhow::ensure!(!frames.is_empty(), "Frame extraction produced no frames");
+    anyhow::ensure!(
+        frame_w > 0 && frame_h > 0,
+        "Frame dimensions are invalid: {}x{}",
+        frame_w,
+        frame_h
     );
 
-    // Return success since this is expected behavior for now
+    let expected_len = (frame_w as usize)
+        .checked_mul(frame_h as usize)
+        .and_then(|px| px.checked_mul(4))
+        .with_context(|| format!("Frame dimensions overflow: {}x{}", frame_w, frame_h))?;
+
+    for (i, f) in frames.iter().enumerate() {
+        anyhow::ensure!(
+            f.len() == expected_len,
+            "Extracted frame {} has unexpected byte length {} (expected {})",
+            i,
+            f.len(),
+            expected_len
+        );
+    }
+
+    // Scaling (pixel-art safe)
+    let scale_factor = scale.unwrap_or(1);
+    let (out_frames, out_w, out_h) = if scale_factor <= 1 {
+        anyhow::ensure!(
+            frame_w <= u32::from(u16::MAX) && frame_h <= u32::from(u16::MAX),
+            "Frame dimensions too large for GIF encoder: {}x{}",
+            frame_w,
+            frame_h
+        );
+
+        (std::mem::take(&mut frames), frame_w as u16, frame_h as u16)
+    } else {
+        use image::imageops::FilterType;
+
+        let new_w = frame_w
+            .checked_mul(scale_factor)
+            .with_context(|| "Scaled width overflow")?;
+        let new_h = frame_h
+            .checked_mul(scale_factor)
+            .with_context(|| "Scaled height overflow")?;
+
+        anyhow::ensure!(
+            new_w <= u32::from(u16::MAX) && new_h <= u32::from(u16::MAX),
+            "Scaled frame dimensions too large for GIF encoder: {}x{}",
+            new_w,
+            new_h
+        );
+
+        let mut scaled_frames = Vec::with_capacity(frames.len());
+        for (i, rgba) in frames.into_iter().enumerate() {
+            let img = image::RgbaImage::from_raw(frame_w, frame_h, rgba)
+                .with_context(|| format!("Failed to construct image from frame {}", i))?;
+            let resized = image::imageops::resize(&img, new_w, new_h, FilterType::Nearest);
+            scaled_frames.push(resized.into_raw());
+        }
+
+        (scaled_frames, new_w as u16, new_h as u16)
+    };
+
+    // Output path
+    let out_path = if let Some(out) = out {
+        PathBuf::from(out)
+    } else {
+        let stem = spec_path_pb
+            .file_stem()
+            .and_then(|s| s.to_str())
+            .unwrap_or("preview");
+        let parent = spec_dir;
+        parent.join(format!("{}.preview.gif", stem))
+    };
+
+    if let Some(parent) = out_path.parent() {
+        if !parent.as_os_str().is_empty() {
+            fs::create_dir_all(parent).with_context(|| {
+                format!("Failed to create output directory: {}", parent.display())
+            })?;
+        }
+    }
+
+    let out_path_str = out_path
+        .to_str()
+        .with_context(|| format!("Output path is not valid UTF-8: {}", out_path.display()))?;
+
+    assemble_gif(
+        &out_frames,
+        out_w,
+        out_h,
+        &delays_ms,
+        should_loop,
+        out_path_str,
+    )?;
+
     Ok(ExitCode::SUCCESS)
 }
 
