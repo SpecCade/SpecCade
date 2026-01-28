@@ -1,21 +1,12 @@
-//! Stdlib coverage guard test.
+//! Stdlib coverage tests
 //!
-//! This test ensures that every stdlib function is exercised by at least one
-//! golden Starlark file. This prevents "dead" stdlib functions and encourages
-//! comprehensive golden test coverage.
+//! Policy: 100% coverage required. No allowlist. No exceptions.
+//! Every stdlib function must have at least one golden example.
 
 use regex::Regex;
 use std::collections::{BTreeSet, HashSet};
 use std::fs;
 use std::path::PathBuf;
-
-/// Functions that are intentionally not covered by golden tests.
-/// Add functions here only if there is a good reason they cannot be exercised.
-const ALLOWLIST: &[&str] = &[
-    // The mesh_primitive function is a lower-level building block; mesh_recipe
-    // is preferred in golden tests as it provides a more complete API.
-    "mesh_primitive",
-];
 
 /// Path to the golden stdlib snapshot file.
 fn snapshot_path() -> PathBuf {
@@ -115,28 +106,22 @@ fn find_called_functions(function_names: &[String]) -> HashSet<String> {
 fn all_stdlib_functions_are_covered() {
     let all_functions = load_stdlib_function_names();
     let called_functions = find_called_functions(&all_functions);
-    let allowlist: HashSet<&str> = ALLOWLIST.iter().copied().collect();
 
-    // Find uncovered functions (not called and not allowlisted)
+    // Find uncovered functions
     let uncovered: BTreeSet<&str> = all_functions
         .iter()
-        .filter(|name| !called_functions.contains(*name) && !allowlist.contains(name.as_str()))
+        .filter(|name| !called_functions.contains(*name))
         .map(String::as_str)
         .collect();
 
     // Print coverage summary
     let total = all_functions.len();
     let covered = called_functions.len();
-    let allowlisted = allowlist
-        .iter()
-        .filter(|name| all_functions.iter().any(|f| f == *name))
-        .count();
 
     println!();
     println!("=== Stdlib Coverage Summary ===");
     println!("Total functions:     {}", total);
     println!("Called in tests:     {}", covered);
-    println!("Allowlisted:         {}", allowlisted);
     println!(
         "Coverage:            {:.1}%",
         (covered as f64 / total as f64) * 100.0
@@ -150,8 +135,8 @@ fn all_stdlib_functions_are_covered() {
         }
         println!();
         println!("To fix this:");
-        println!("  1. Add golden Starlark files that use these functions, OR");
-        println!("  2. Add them to the ALLOWLIST in stdlib_coverage.rs with justification");
+        println!("  Add golden Starlark files that use these functions.");
+        println!("  Policy: 100% coverage required. No exceptions.");
         println!();
         panic!(
             "Stdlib coverage check failed: {} uncovered function(s).\n\
@@ -161,43 +146,7 @@ fn all_stdlib_functions_are_covered() {
         );
     }
 
-    // Also report which allowlisted functions are actually covered (they can be removed)
-    let unnecessarily_allowlisted: Vec<&str> = allowlist
-        .iter()
-        .filter(|name| called_functions.contains(**name))
-        .copied()
-        .collect();
-
-    if !unnecessarily_allowlisted.is_empty() {
-        println!(
-            "Note: These allowlisted functions are now covered and can be removed from ALLOWLIST:"
-        );
-        for name in &unnecessarily_allowlisted {
-            println!("  - {}", name);
-        }
-        println!();
-    }
-
-    println!("All stdlib functions are covered or allowlisted.");
-}
-
-#[test]
-fn allowlist_functions_exist() {
-    // Verify that all functions in the allowlist actually exist in stdlib
-    let all_functions: HashSet<String> = load_stdlib_function_names().into_iter().collect();
-    let missing: Vec<&str> = ALLOWLIST
-        .iter()
-        .filter(|name| !all_functions.contains(**name))
-        .copied()
-        .collect();
-
-    if !missing.is_empty() {
-        panic!(
-            "Allowlist contains functions that do not exist in stdlib: {:?}\n\
-             Please remove them from the ALLOWLIST in stdlib_coverage.rs",
-            missing
-        );
-    }
+    println!("All stdlib functions are covered.");
 }
 
 #[test]
