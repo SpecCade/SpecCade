@@ -82,8 +82,8 @@ fn extract_flipbook_frames(
 ) -> (Vec<Vec<u8>>, Vec<u32>, bool) {
     use image::GenericImageView;
 
-    let fps = fps_override.unwrap_or(metadata.fps);
-    let delay_ms = if fps > 0 { 1000 / fps } else { 83 };
+    let fps = fps_override.unwrap_or(metadata.fps).max(1);
+    let delay_ms = (1000 / fps).max(1);
 
     let atlas_w = atlas.width();
     let atlas_h = atlas.height();
@@ -92,16 +92,29 @@ fn extract_flipbook_frames(
     let mut delays = Vec::with_capacity(metadata.frames.len());
 
     for frame_uv in &metadata.frames {
-        let x = (frame_uv.u_min * atlas_w as f64).round() as u32;
-        let y = (frame_uv.v_min * atlas_h as f64).round() as u32;
         let w = frame_uv.width;
         let h = frame_uv.height;
 
-        let sub = atlas.view(x, y, w, h);
-        let mut rgba = Vec::with_capacity((w * h * 4) as usize);
-        for pixel in sub.pixels() {
-            rgba.extend_from_slice(&pixel.2 .0);
+        if w == 0 || h == 0 {
+            continue;
         }
+        if w > atlas_w || h > atlas_h {
+            continue;
+        }
+
+        let max_x = atlas_w - w;
+        let max_y = atlas_h - h;
+
+        let x = (frame_uv.u_min * atlas_w as f64)
+            .round()
+            .max(0.0)
+            .min(max_x as f64) as u32;
+        let y = (frame_uv.v_min * atlas_h as f64)
+            .round()
+            .max(0.0)
+            .min(max_y as f64) as u32;
+
+        let rgba = atlas.view(x, y, w, h).to_image().into_raw();
         frames.push(rgba);
         delays.push(delay_ms);
     }
@@ -121,12 +134,15 @@ fn extract_flipbook_frames(
         // Append reversed frames excluding the first and last so the endpoints
         // are not duplicated.
         if frames.len() > 2 {
-            let reverse_frames: Vec<_> =
-                frames[1..frames.len() - 1].iter().rev().cloned().collect();
-            let reverse_delays: Vec<_> =
-                delays[1..delays.len() - 1].iter().rev().copied().collect();
-            frames.extend(reverse_frames);
-            delays.extend(reverse_delays);
+            let base_len = frames.len();
+            let extra = base_len - 2;
+            frames.reserve(extra);
+            delays.reserve(extra);
+
+            for i in (1..base_len - 1).rev() {
+                frames.push(frames[i].clone());
+                delays.push(delays[i]);
+            }
         }
     }
 
@@ -280,5 +296,33 @@ mod tests {
         assert_eq!(&frames[0][0..4], &[255, 0, 0, 255]);
         // First pixel of frame 1 should be blue
         assert_eq!(&frames[1][0..4], &[0, 0, 255, 255]);
+    }
+
+    #[test]
+    fn test_extract_flipbook_frames_skips_out_of_bounds() {
+        let atlas = RgbaImage::new(16, 16);
+
+        let metadata_json = serde_json::json!({
+            "atlas_width": 16,
+            "atlas_height": 16,
+            "padding": 0,
+            "effect": "explosion",
+            "frame_count": 1,
+            "frame_size": [32, 32],
+            "fps": 12,
+            "loop_mode": "once",
+            "total_duration_ms": 0,
+            "frames": [
+                { "index": 0, "u_min": 0.0, "v_min": 0.0, "u_max": 2.0, "v_max": 2.0, "width": 32, "height": 32 }
+            ]
+        });
+
+        let metadata: speccade_spec::recipe::vfx::VfxFlipbookMetadata =
+            serde_json::from_value(metadata_json).unwrap();
+
+        let (frames, delays, do_loop) = extract_flipbook_frames(&atlas, &metadata, None);
+        assert!(frames.is_empty());
+        assert!(delays.is_empty());
+        assert!(!do_loop);
     }
 }
