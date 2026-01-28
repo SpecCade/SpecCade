@@ -1,0 +1,299 @@
+{
+  "spec_version": 1,
+  "asset_id": "humanoid_female",
+  "asset_type": "skeletal_mesh",
+  "license": "CC0-1.0",
+  "seed": 7003,
+  "description": "Female humanoid character in T-pose with full skeleton - narrower shoulders, wider hips than male",
+  "style_tags": ["female", "humanoid", "character", "rigged"],
+  "engine_targets": ["godot", "unity", "unreal"],
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "glb",
+      "path": "test-outputs/skeletal_mesh/humanoid_female.glb"
+    }
+  ],
+  "recipe": {
+    "kind": "skeletal_mesh.blender_rigged_mesh_v1",
+    "params": {
+      "tri_budget": 2500,
+      "skeleton": [
+        {
+          "bone": "root",
+          "head": [0, 0, 0],
+          "tail": [0, 0, 0.1]
+        },
+        {
+          "bone": "pelvis",
+          "head": [0, 0, 0.1],
+          "tail": [0, 0, 0.2],
+          "parent": "root"
+        },
+        {
+          "bone": "spine_01",
+          "head": [0, 0, 0.2],
+          "tail": [0, 0, 0.38],
+          "parent": "pelvis"
+        },
+        {
+          "bone": "spine_02",
+          "head": [0, 0, 0.38],
+          "tail": [0, 0, 0.56],
+          "parent": "spine_01"
+        },
+        {
+          "bone": "chest",
+          "head": [0, 0, 0.56],
+          "tail": [0, 0, 0.76],
+          "parent": "spine_02"
+        },
+        {
+          "bone": "neck",
+          "head": [0, 0, 0.76],
+          "tail": [0, 0, 0.84],
+          "parent": "chest"
+        },
+        {
+          "bone": "head",
+          "head": [0, 0, 0.84],
+          "tail": [0, 0, 1.06],
+          "parent": "neck"
+        },
+        {
+          "bone": "shoulder_L",
+          "head": [0.06, 0, 0.72],
+          "tail": [0.14, 0, 0.72],
+          "parent": "chest"
+        },
+        {
+          "bone": "arm_upper_L",
+          "head": [0.14, 0, 0.72],
+          "tail": [0.38, 0, 0.72],
+          "parent": "shoulder_L"
+        },
+        {
+          "bone": "arm_lower_L",
+          "head": [0.38, 0, 0.72],
+          "tail": [0.62, 0, 0.72],
+          "parent": "arm_upper_L"
+        },
+        {
+          "bone": "hand_L",
+          "head": [0.62, 0, 0.72],
+          "tail": [0.74, 0, 0.72],
+          "parent": "arm_lower_L"
+        },
+        {
+          "bone": "shoulder_R",
+          "mirror": "shoulder_L"
+        },
+        {
+          "bone": "arm_upper_R",
+          "mirror": "arm_upper_L"
+        },
+        {
+          "bone": "arm_lower_R",
+          "mirror": "arm_lower_L"
+        },
+        {
+          "bone": "hand_R",
+          "mirror": "hand_L"
+        },
+        {
+          "bone": "hip_L",
+          "head": [0.08, 0, 0.1],
+          "tail": [0.11, 0, 0.05],
+          "parent": "pelvis"
+        },
+        {
+          "bone": "leg_upper_L",
+          "head": [0.11, 0, 0.05],
+          "tail": [0.11, 0, -0.38],
+          "parent": "hip_L"
+        },
+        {
+          "bone": "leg_lower_L",
+          "head": [0.11, 0, -0.38],
+          "tail": [0.11, 0, -0.78],
+          "parent": "leg_upper_L"
+        },
+        {
+          "bone": "foot_L",
+          "head": [0.11, 0, -0.78],
+          "tail": [0.11, 0.12, -0.78],
+          "parent": "leg_lower_L"
+        },
+        {
+          "bone": "hip_R",
+          "mirror": "hip_L"
+        },
+        {
+          "bone": "leg_upper_R",
+          "mirror": "leg_upper_L"
+        },
+        {
+          "bone": "leg_lower_R",
+          "mirror": "leg_lower_L"
+        },
+        {
+          "bone": "foot_R",
+          "mirror": "foot_L"
+        }
+      ],
+      "parts": {
+        "pelvis_mesh": {
+          "bone": "pelvis",
+          "base": "hexagon(8)",
+          "base_radius": [0.13, 0.11],
+          "offset": [0, 0, 0.1],
+          "steps": [
+            {"extrude": 0.1, "scale": 1.0}
+          ],
+          "cap_start": true,
+          "cap_end": true
+        },
+        "torso_lower": {
+          "bone": "spine_01",
+          "base": "hexagon(8)",
+          "base_radius": [0.11, 0.10],
+          "offset": [0, 0, 0.2],
+          "steps": [
+            {"extrude": 0.09, "scale": 1.0},
+            {"extrude": 0.09, "scale": 1.05}
+          ],
+          "cap_start": true,
+          "cap_end": true,
+          "skinning_type": "soft"
+        },
+        "torso_upper": {
+          "bone": "spine_02",
+          "base": "hexagon(8)",
+          "base_radius": [0.12, 0.10],
+          "offset": [0, 0, 0.38],
+          "steps": [
+            {"extrude": 0.09, "scale": 1.08},
+            {"extrude": 0.09, "scale": 1.12}
+          ],
+          "cap_start": true,
+          "cap_end": true,
+          "skinning_type": "soft"
+        },
+        "chest_mesh": {
+          "bone": "chest",
+          "base": "hexagon(8)",
+          "base_radius": [0.14, 0.10],
+          "offset": [0, 0, 0.56],
+          "steps": [
+            {"extrude": 0.10, "scale": 1.08},
+            {"extrude": 0.10, "scale": 0.92}
+          ],
+          "cap_start": true,
+          "cap_end": true,
+          "skinning_type": "soft"
+        },
+        "neck_mesh": {
+          "bone": "neck",
+          "base": "hexagon(6)",
+          "base_radius": 0.05,
+          "offset": [0, 0, 0.76],
+          "steps": [
+            {"extrude": 0.08, "scale": 1.0}
+          ],
+          "cap_start": true,
+          "cap_end": true
+        },
+        "head_mesh": {
+          "bone": "head",
+          "base": "hexagon(10)",
+          "base_radius": [0.09, 0.10],
+          "offset": [0, 0, 0.84],
+          "steps": [
+            {"extrude": 0.07, "scale": 1.2},
+            {"extrude": 0.09, "scale": 1.0},
+            {"extrude": 0.06, "scale": 0.8}
+          ],
+          "cap_start": true,
+          "cap_end": true
+        },
+        "arm_L": {
+          "bone": "arm_upper_L",
+          "base": "hexagon(6)",
+          "base_radius": [0.045, 0.038],
+          "offset": [0.14, 0, 0.72],
+          "rotation": [0, 90, 0],
+          "steps": [
+            {"extrude": 0.24, "scale": 0.85},
+            {"extrude": 0.24, "scale": 0.75},
+            {"extrude": 0.12, "scale": 0.6}
+          ],
+          "skinning_type": "soft"
+        },
+        "arm_R": {
+          "mirror": "arm_L"
+        },
+        "leg_L": {
+          "bone": "leg_upper_L",
+          "base": "hexagon(6)",
+          "base_radius": [0.08, 0.065],
+          "offset": [0.11, 0, 0.05],
+          "rotation": [180, 0, 0],
+          "steps": [
+            {"extrude": 0.43, "scale": 0.78},
+            {"extrude": 0.40, "scale": 0.62},
+            {"extrude": 0.05, "scale": 0.9}
+          ],
+          "skinning_type": "soft"
+        },
+        "leg_R": {
+          "mirror": "leg_L"
+        }
+      },
+      "texturing": {
+        "uv_mode": "region_based",
+        "regions": {
+          "body": {
+            "parts": ["pelvis_mesh", "torso_lower", "torso_upper", "chest_mesh", "neck_mesh"],
+            "material_index": 0
+          },
+          "head": {
+            "parts": ["head_mesh"],
+            "material_index": 0
+          },
+          "arms": {
+            "parts": ["arm_L", "arm_R"],
+            "material_index": 0
+          },
+          "legs": {
+            "parts": ["leg_L", "leg_R"],
+            "material_index": 0
+          }
+        }
+      },
+      "material_slots": [
+        {
+          "name": "skin",
+          "base_color": [0.88, 0.72, 0.58, 1.0],
+          "metallic": 0.0,
+          "roughness": 0.55
+        }
+      ],
+      "skinning": {
+        "max_bone_influences": 4,
+        "auto_weights": true
+      },
+      "export": {
+        "include_armature": true,
+        "include_normals": true,
+        "include_uvs": true,
+        "triangulate": true,
+        "include_skin_weights": true
+      },
+      "constraints": {
+        "max_triangles": 3000,
+        "max_bones": 30,
+        "max_materials": 2
+      }
+    }
+  }
+}

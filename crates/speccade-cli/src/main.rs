@@ -233,7 +233,7 @@ enum Commands {
         #[arg(short, long)]
         spec: String,
 
-        /// Output PNG path (default: <spec_stem>.grid.png next to spec)
+        /// Output PNG path (default: test-outputs/{asset_type}/<spec_stem>.grid.png)
         #[arg(short, long)]
         out: Option<String>,
 

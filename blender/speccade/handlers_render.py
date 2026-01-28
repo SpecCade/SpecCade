@@ -36,6 +36,7 @@ from .modifiers import apply_modifier, apply_all_modifiers
 from .materials import apply_materials
 from .uv_mapping import apply_uv_projection
 from .skeleton import create_armature, apply_skeleton_overrides, create_custom_skeleton
+from .body_parts import create_body_part, create_legacy_part
 
 
 # =============================================================================
@@ -439,6 +440,27 @@ def handle_validation_grid(
             for mod_spec in modifiers:
                 apply_modifier(obj, mod_spec)
 
+            # Join attachments (extra primitives positioned relative to base)
+            attachments = params.get("attachments", [])
+            for att in attachments:
+                att_prim = att.get("primitive", "cube")
+                att_dims = att.get("dimensions", [1.0, 1.0, 1.0])
+                att_pos = att.get("position", [0.0, 0.0, 0.0])
+                att_rot = att.get("rotation", [0.0, 0.0, 0.0])
+
+                att_obj = create_primitive(att_prim, att_dims)
+                att_obj.location = Vector(att_pos)
+                att_obj.rotation_euler = Euler([math.radians(r) for r in att_rot])
+                bpy.context.view_layer.objects.active = att_obj
+                bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
+
+                # Select both and join
+                bpy.ops.object.select_all(action='DESELECT')
+                att_obj.select_set(True)
+                obj.select_set(True)
+                bpy.context.view_layer.objects.active = obj
+                bpy.ops.object.join()
+
             # Apply modifiers to mesh
             export_settings = params.get("export", {})
             if export_settings.get("apply_modifiers", True):
@@ -460,18 +482,19 @@ def handle_validation_grid(
 
             mesh_objects = []
 
-            # Create body parts (requires external function)
-            body_parts = params.get("body_parts", [])
-            if create_body_part_fn:
-                for part_spec in body_parts:
-                    mesh_obj = create_body_part_fn(armature, part_spec)
-                    mesh_objects.append((mesh_obj, part_spec.get("bone")))
+            # Create body parts (new format) - use imported function directly
+            body_parts_list = params.get("body_parts", [])
+            body_part_fn = create_body_part_fn if create_body_part_fn else create_body_part
+            for part_spec in body_parts_list:
+                mesh_obj = body_part_fn(armature, part_spec)
+                mesh_objects.append((mesh_obj, part_spec.get("bone")))
 
-            # Create legacy parts (requires external function)
+            # Create legacy parts (ai-studio-core format) - use imported function directly
             legacy_parts = params.get("parts", {})
-            if legacy_parts and create_legacy_part_fn:
+            legacy_part_fn = create_legacy_part_fn if create_legacy_part_fn else create_legacy_part
+            if legacy_parts:
                 for part_name, part_spec in legacy_parts.items():
-                    mesh_obj = create_legacy_part_fn(armature, part_name, part_spec, legacy_parts)
+                    mesh_obj = legacy_part_fn(armature, part_name, part_spec, legacy_parts)
                     if mesh_obj:
                         bone_name = part_spec.get("bone", part_name)
                         mesh_objects.append((mesh_obj, bone_name))

@@ -65,6 +65,11 @@ def handle_static_mesh(spec: Dict, out_root: Path, report_path: Path) -> None:
         dimensions = params.get("dimensions", [1, 1, 1])
         obj = create_primitive(primitive, dimensions)
 
+        # Process attachments - additional primitives joined to the main mesh
+        attachments = params.get("attachments", [])
+        if attachments:
+            obj = process_attachments(obj, attachments)
+
         # Apply modifiers
         modifiers = params.get("modifiers", [])
         for mod_spec in modifiers:
@@ -202,6 +207,76 @@ def handle_static_mesh(spec: Dict, out_root: Path, report_path: Path) -> None:
     except Exception as e:
         write_report(report_path, ok=False, error=str(e))
         raise
+
+
+# =============================================================================
+# Attachment Processing
+# =============================================================================
+
+def process_attachments(base_obj: 'bpy.types.Object', attachments: list) -> 'bpy.types.Object':
+    """Process and join attachment primitives to the base mesh.
+
+    Each attachment is a dictionary with:
+    - primitive (or primitive_type): The primitive type (cube, cylinder, sphere, cone, etc.)
+    - dimensions (or size): [x, y, z] scale dimensions
+    - position (or location): [x, y, z] position offset
+    - rotation (or rotation_euler): [x, y, z] rotation in degrees (optional)
+
+    Args:
+        base_obj: The base mesh object to attach primitives to.
+        attachments: List of attachment specifications.
+
+    Returns:
+        The combined mesh object with all attachments joined.
+    """
+    if not attachments:
+        return base_obj
+
+    attachment_objects = []
+
+    for i, attach_spec in enumerate(attachments):
+        # Get primitive type (support both 'primitive' and 'primitive_type' keys)
+        prim_type = attach_spec.get("primitive") or attach_spec.get("primitive_type", "cube")
+
+        # Get dimensions (support both 'dimensions' and 'size' keys)
+        dims = attach_spec.get("dimensions") or attach_spec.get("size", [1, 1, 1])
+
+        # Get position (support both 'position' and 'location' keys)
+        pos = attach_spec.get("position") or attach_spec.get("location", [0, 0, 0])
+
+        # Get rotation in degrees (support both 'rotation' and 'rotation_euler' keys)
+        rot_deg = attach_spec.get("rotation") or attach_spec.get("rotation_euler", [0, 0, 0])
+
+        # Create the attachment primitive
+        attach_obj = create_primitive(prim_type, dims)
+        attach_obj.name = f"Attachment_{i}"
+
+        # Apply position
+        attach_obj.location = Vector(pos)
+
+        # Apply rotation (convert degrees to radians)
+        attach_obj.rotation_euler = Euler((
+            math.radians(rot_deg[0]),
+            math.radians(rot_deg[1]),
+            math.radians(rot_deg[2])
+        ))
+
+        # Apply transforms to mesh data
+        bpy.context.view_layer.objects.active = attach_obj
+        bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
+
+        attachment_objects.append(attach_obj)
+
+    # Join all attachments with the base object
+    if attachment_objects:
+        bpy.ops.object.select_all(action='DESELECT')
+        for attach_obj in attachment_objects:
+            attach_obj.select_set(True)
+        base_obj.select_set(True)
+        bpy.context.view_layer.objects.active = base_obj
+        bpy.ops.object.join()
+
+    return base_obj
 
 
 # =============================================================================

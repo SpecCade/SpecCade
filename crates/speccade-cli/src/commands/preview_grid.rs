@@ -46,9 +46,7 @@ pub fn run(spec_path: &str, out: Option<&str>, panel_size: u32) -> Result<ExitCo
         }
     }
 
-    // Set up output path
-    let spec_dir = spec_path_pb.parent().unwrap_or_else(|| Path::new("."));
-
+    // Set up output path - default to test-outputs/{asset_type}/{stem}.grid.png
     let out_path = if let Some(out) = out {
         PathBuf::from(out)
     } else {
@@ -56,7 +54,17 @@ pub fn run(spec_path: &str, out: Option<&str>, panel_size: u32) -> Result<ExitCo
             .file_stem()
             .and_then(|s| s.to_str())
             .unwrap_or("preview");
-        spec_dir.join(format!("{}.grid.png", stem))
+
+        // Extract asset type from spec path (e.g., "static_mesh" from "golden/speccade/specs/static_mesh/foo.json")
+        let asset_type = spec_path_pb
+            .components()
+            .filter_map(|c| c.as_os_str().to_str())
+            .find(|&name| {
+                matches!(name, "static_mesh" | "skeletal_mesh" | "skeletal_animation" | "sprite")
+            })
+            .unwrap_or("mesh");
+
+        PathBuf::from("test-outputs").join(asset_type).join(format!("{}.grid.png", stem))
     };
 
     // Inject panel_size into recipe params for Blender
