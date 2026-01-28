@@ -59,5 +59,7 @@ tokio-tungstenite = { workspace = true, optional = true }
 futures-util = { workspace = true, optional = true }
 base64 = { workspace = true, optional = true }
 
+# Temp file support for preview-grid command
+tempfile.workspace = true
+
 [dev-dependencies]
-tempfile = { workspace = true }
