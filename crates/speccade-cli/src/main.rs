@@ -227,7 +227,7 @@ enum Commands {
         scale: Option<u32>,
     },
 
-    /// Generate a multi-angle validation grid PNG for 3D assets
+    /// Generate a 6-view validation grid PNG for 3D assets (FRONT, BACK, TOP, LEFT, RIGHT, ISO)
     PreviewGrid {
         /// Path to the spec file (.star or .json)
         #[arg(short, long)]
@@ -237,7 +237,7 @@ enum Commands {
         #[arg(short, long)]
         out: Option<String>,
 
-        /// Panel size in pixels (default: 256)
+        /// Panel size in pixels for each view (default: 256, grid is 3x2 panels)
         #[arg(long, default_value = "256")]
         panel_size: u32,
     },

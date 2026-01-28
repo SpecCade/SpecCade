@@ -126,6 +126,12 @@ speccade preview --spec <path> --out-root <path>
 speccade preview --spec path/to/spec.json --gif --out-root ./output
 speccade preview --spec path/to/spec.json --gif --out my-preview.gif --fps 24 --scale 2 --out-root ./output
 
+# Generate a 6-view validation grid PNG for visual LLM verification.
+# Views: FRONT, BACK, TOP, LEFT, RIGHT, ISO (isometric)
+# Useful for Claude vision to validate 3D asset correctness against spec comments.
+speccade preview-grid --spec <path>
+speccade preview-grid --spec path/to/mesh.star --out grid.png --panel-size 512
+
 # Format a spec to canonical JSON style
 speccade fmt --spec <path>
 
