@@ -16,6 +16,7 @@ pub mod json_output; // Directory module: analysis, convert, manifest, records
 pub mod lint;
 pub mod migrate;
 pub mod preview;
+pub mod preview_grid;
 #[cfg(feature = "serve")]
 pub mod serve;
 pub mod stdlib;
@@ -43,6 +44,7 @@ mod tests {
         let _ = inspect::run;
         let _ = lint::run;
         let _ = preview::run;
+        let _ = preview_grid::run;
         let _ = template::list;
         let _ = validate::run;
         let _ = verify::run;

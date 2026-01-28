@@ -227,6 +227,21 @@ enum Commands {
         scale: Option<u32>,
     },
 
+    /// Generate a multi-angle validation grid PNG for 3D assets
+    PreviewGrid {
+        /// Path to the spec file (.star or .json)
+        #[arg(short, long)]
+        spec: String,
+
+        /// Output PNG path (default: <spec_stem>.grid.png next to spec)
+        #[arg(short, long)]
+        out: Option<String>,
+
+        /// Panel size in pixels (default: 256)
+        #[arg(long, default_value = "256")]
+        panel_size: u32,
+    },
+
     /// Check system dependencies and configuration
     Doctor,
 
@@ -535,6 +550,9 @@ fn main() -> ExitCode {
             fps,
             scale,
         } => commands::preview::run(&spec, out_root.as_deref(), gif, out.as_deref(), fps, scale),
+        Commands::PreviewGrid { spec, out, panel_size } => {
+            commands::preview_grid::run(&spec, out.as_deref(), panel_size)
+        }
         Commands::Doctor => commands::doctor::run(),
         Commands::Expand {
             spec,
@@ -2156,6 +2174,48 @@ mod tests {
                 assert_eq!(scale, Some(2));
             }
             _ => panic!("expected preview command"),
+        }
+    }
+
+    #[test]
+    fn test_cli_parses_preview_grid() {
+        let cli = Cli::try_parse_from([
+            "speccade",
+            "preview-grid",
+            "--spec",
+            "mesh.star",
+        ])
+        .unwrap();
+        match cli.command {
+            Commands::PreviewGrid { spec, out, panel_size } => {
+                assert_eq!(spec, "mesh.star");
+                assert!(out.is_none());
+                assert_eq!(panel_size, 256);
+            }
+            _ => panic!("expected preview-grid command"),
+        }
+    }
+
+    #[test]
+    fn test_cli_parses_preview_grid_with_options() {
+        let cli = Cli::try_parse_from([
+            "speccade",
+            "preview-grid",
+            "--spec",
+            "mesh.star",
+            "--out",
+            "grid.png",
+            "--panel-size",
+            "128",
+        ])
+        .unwrap();
+        match cli.command {
+            Commands::PreviewGrid { spec, out, panel_size } => {
+                assert_eq!(spec, "mesh.star");
+                assert_eq!(out.as_deref(), Some("grid.png"));
+                assert_eq!(panel_size, 128);
+            }
+            _ => panic!("expected preview-grid command"),
         }
     }
 }
