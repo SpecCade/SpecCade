@@ -251,6 +251,57 @@ fn extract_sprite_animation_frames(
     (frames, delays, should_loop)
 }
 
+/// Extracts frames from a mesh-rendered sprite atlas using UV coordinates.
+///
+/// Returns (frames_rgba, delays_ms, should_loop).
+fn extract_mesh_sprite_frames(
+    atlas: &image::RgbaImage,
+    metadata: &speccade_spec::recipe::sprite::SpriteRenderFromMeshMetadata,
+    fps_override: Option<u32>,
+) -> (Vec<Vec<u8>>, Vec<u32>, bool) {
+    use image::GenericImageView;
+
+    let fps = fps_override.unwrap_or(12);
+    let delay_ms = if fps == 0 { 83 } else { (1000 / fps).max(1) };
+
+    let atlas_w = atlas.width();
+    let atlas_h = atlas.height();
+
+    let w = metadata.frame_resolution[0];
+    let h = metadata.frame_resolution[1];
+
+    if w == 0 || h == 0 {
+        return (Vec::new(), Vec::new(), true);
+    }
+    if w > atlas_w || h > atlas_h {
+        return (Vec::new(), Vec::new(), true);
+    }
+
+    let max_x = atlas_w - w;
+    let max_y = atlas_h - h;
+
+    let mut frames = Vec::with_capacity(metadata.frames.len());
+    let mut delays = Vec::with_capacity(metadata.frames.len());
+
+    for frame in &metadata.frames {
+        let u_min = frame.uv[0];
+        let v_min = frame.uv[1];
+
+        if !u_min.is_finite() || !v_min.is_finite() {
+            continue;
+        }
+
+        let x = (u_min * atlas_w as f64).round().max(0.0).min(max_x as f64) as u32;
+        let y = (v_min * atlas_h as f64).round().max(0.0).min(max_y as f64) as u32;
+
+        let rgba = atlas.view(x, y, w, h).to_image().into_raw();
+        frames.push(rgba);
+        delays.push(delay_ms);
+    }
+
+    (frames, delays, true)
+}
+
 /// Run the preview command
 ///
 /// # Arguments
@@ -749,5 +800,58 @@ mod tests {
 
         let (_frames, delays, _do_loop) = extract_flipbook_frames(&atlas, &metadata, Some(0));
         assert_eq!(delays, vec![83, 83]);
+    }
+
+    #[test]
+    fn test_extract_mesh_to_sprite_frames() {
+        // Create a 128x64 atlas with 2 frames of 64x64 (side by side, no padding)
+        let mut atlas = RgbaImage::new(128, 64);
+
+        // Frame 0: [100,0,0,255]
+        for y in 0..64 {
+            for x in 0..64 {
+                atlas.put_pixel(x, y, Rgba([100, 0, 0, 255]));
+            }
+        }
+
+        // Frame 1: [0,100,0,255]
+        for y in 0..64 {
+            for x in 64..128 {
+                atlas.put_pixel(x, y, Rgba([0, 100, 0, 255]));
+            }
+        }
+
+        let metadata_json = serde_json::json!({
+            "atlas_dimensions": [128, 64],
+            "padding": 0,
+            "frame_resolution": [64, 64],
+            "camera": "ortho",
+            "lighting": "default",
+            "frames": [
+                {
+                    "id": "angle_0",
+                    "angle": 0.0,
+                    "position": [0, 0],
+                    "dimensions": [64, 64],
+                    "uv": [0.0, 0.0, 0.5, 1.0]
+                },
+                {
+                    "id": "angle_90",
+                    "angle": 90.0,
+                    "position": [64, 0],
+                    "dimensions": [64, 64],
+                    "uv": [0.5, 0.0, 1.0, 1.0]
+                }
+            ]
+        });
+
+        let metadata: speccade_spec::recipe::sprite::SpriteRenderFromMeshMetadata =
+            serde_json::from_value(metadata_json).unwrap();
+
+        let (frames, delays, do_loop) = extract_mesh_sprite_frames(&atlas, &metadata, Some(10));
+        assert_eq!(frames.len(), 2);
+        assert_eq!(delays, vec![100, 100]);
+        assert!(do_loop);
+        assert_eq!(frames[0].len(), 64 * 64 * 4);
     }
 }
