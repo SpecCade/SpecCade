@@ -212,6 +212,7 @@ mod tests {
             interpolation: InterpolationMode::Linear,
             export: None,
             root_motion: None,
+            save_blend: false,
         }
     }
 

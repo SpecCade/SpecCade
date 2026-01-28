@@ -155,11 +155,41 @@ pub struct SkeletalAnimationBlenderClipV1Params {
     /// Root motion handling settings.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub root_motion: Option<RootMotionSettings>,
+    /// Save .blend file alongside output.
+    #[serde(default)]
+    pub save_blend: bool,
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_clip_params_save_blend() {
+        let json = r#"{
+            "skeleton_preset": "humanoid_basic_v1",
+            "clip_name": "test",
+            "duration_seconds": 1.0,
+            "fps": 30,
+            "keyframes": [],
+            "save_blend": true
+        }"#;
+        let parsed: SkeletalAnimationBlenderClipV1Params = serde_json::from_str(json).unwrap();
+        assert!(parsed.save_blend);
+    }
+
+    #[test]
+    fn test_clip_params_save_blend_default_false() {
+        let json = r#"{
+            "skeleton_preset": "humanoid_basic_v1",
+            "clip_name": "test",
+            "duration_seconds": 1.0,
+            "fps": 30,
+            "keyframes": []
+        }"#;
+        let parsed: SkeletalAnimationBlenderClipV1Params = serde_json::from_str(json).unwrap();
+        assert!(!parsed.save_blend);
+    }
 
     #[test]
     fn test_bone_transform() {
