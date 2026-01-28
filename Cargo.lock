@@ -4260,6 +4260,7 @@ dependencies = [
  "dirs 5.0.1",
  "futures-util",
  "gif",
+ "glob",
  "gltf",
  "image",
  "png 0.17.16",

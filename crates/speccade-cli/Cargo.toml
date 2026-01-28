@@ -62,4 +62,7 @@ base64 = { workspace = true, optional = true }
 # Temp file support for preview-grid command
 tempfile.workspace = true
 
+# Glob pattern matching for file scanning
+glob = "0.3"
+
 [dev-dependencies]

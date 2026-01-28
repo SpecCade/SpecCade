@@ -3,6 +3,8 @@
 //! Generates coverage reports showing which stdlib features have golden examples.
 
 use anyhow::{Context, Result};
+use glob::glob;
+use regex::Regex;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
@@ -91,6 +93,67 @@ pub fn load_feature_inventory() -> Result<FeatureInventory> {
     load_feature_inventory_from(None)
 }
 
+/// A location where a feature is used
+#[derive(Debug, Clone, Serialize)]
+pub struct UsageLocation {
+    pub file: String,
+    pub line: Option<u32>,
+}
+
+/// Scan golden/starlark/*.star files for function usages
+///
+/// # Arguments
+/// * `base_path` - Optional base path to the project root. If None, uses current directory.
+pub fn scan_starlark_usages_from(base_path: Option<&Path>) -> Result<HashMap<String, Vec<UsageLocation>>> {
+    let mut usages: HashMap<String, Vec<UsageLocation>> = HashMap::new();
+
+    let pattern = match base_path {
+        Some(base) => base.join("golden/starlark/**/*.star").to_string_lossy().to_string(),
+        None => "golden/starlark/**/*.star".to_string(),
+    };
+
+    let entries: Vec<_> = glob(&pattern)
+        .with_context(|| format!("Invalid glob pattern: {}", pattern))?
+        .filter_map(|e| e.ok())
+        .collect();
+
+    // Find function calls: word boundary + function name + optional whitespace + (
+    let call_re = Regex::new(r"\b([a-z_][a-z0-9_]*)\s*\(")
+        .expect("valid regex");
+
+    for path in entries {
+        let content = fs::read_to_string(&path)
+            .with_context(|| format!("Failed to read {}", path.display()))?;
+
+        let file_str = path.to_string_lossy().replace('\\', "/");
+
+        for (line_num, line) in content.lines().enumerate() {
+            // Skip comment lines
+            if line.trim().starts_with('#') {
+                continue;
+            }
+
+            for cap in call_re.captures_iter(line) {
+                let func_name = cap.get(1).unwrap().as_str().to_string();
+
+                let location = UsageLocation {
+                    file: file_str.clone(),
+                    line: Some((line_num + 1) as u32),
+                };
+
+                usages.entry(func_name).or_default().push(location);
+            }
+        }
+    }
+
+    Ok(usages)
+}
+
+/// Scan golden/starlark/*.star files for function usages (from current directory)
+pub fn scan_starlark_usages() -> Result<HashMap<String, Vec<UsageLocation>>> {
+    scan_starlark_usages_from(None)
+}
+
 /// Run the coverage generate subcommand
 ///
 /// # Arguments
@@ -144,5 +207,18 @@ mod tests {
             .map(|f| f.name.as_str())
             .collect();
         assert!(func_names.contains("oscillator"), "expected oscillator function");
+    }
+
+    #[test]
+    fn test_scan_starlark_usages() {
+        let usages = scan_starlark_usages_from(Some(&project_root())).unwrap();
+
+        // Should find usages in golden/starlark files
+        assert!(!usages.is_empty(), "expected some usages");
+
+        // Should find oscillator usage (common in audio tests)
+        let osc_usages = usages.get("oscillator");
+        assert!(osc_usages.is_some(), "expected oscillator usage");
+        assert!(!osc_usages.unwrap().is_empty(), "expected oscillator examples");
     }
 }
