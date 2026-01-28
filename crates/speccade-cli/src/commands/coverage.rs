@@ -3,6 +3,7 @@
 //! Generates coverage reports showing which stdlib features have golden examples.
 
 use anyhow::{Context, Result};
+use chrono::Utc;
 use glob::glob;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
@@ -261,6 +262,172 @@ fn scan_params_for_enums(
     }
 }
 
+/// Coverage report summary
+#[derive(Debug, Clone, Serialize)]
+pub struct CoverageSummary {
+    pub total_features: u32,
+    pub covered: u32,
+    pub uncovered: u32,
+    pub coverage_percent: f64,
+}
+
+/// Coverage info for a single function
+#[derive(Debug, Clone, Serialize)]
+pub struct FunctionCoverage {
+    pub name: String,
+    pub covered: bool,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub examples: Vec<String>,
+    #[serde(skip_serializing_if = "HashMap::is_empty")]
+    pub enum_coverage: HashMap<String, HashMap<String, EnumValueCoverage>>,
+}
+
+/// Coverage info for a single enum value
+#[derive(Debug, Clone, Serialize)]
+pub struct EnumValueCoverage {
+    pub covered: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub example: Option<String>,
+}
+
+/// Full coverage report
+#[derive(Debug, Clone, Serialize)]
+pub struct CoverageReport {
+    pub schema_version: u32,
+    pub generated_at: String,
+    pub summary: CoverageSummary,
+    /// Map of category -> functions
+    pub stdlib: HashMap<String, Vec<FunctionCoverage>>,
+    /// Features with no coverage
+    pub uncovered_features: Vec<String>,
+}
+
+/// Generate the full coverage report
+///
+/// # Arguments
+/// * `base_path` - Optional base path to the project root. If None, uses current directory.
+pub fn generate_coverage_report_from(base_path: Option<&Path>) -> Result<CoverageReport> {
+    // Load inventory and scan usages
+    let inventory = load_feature_inventory_from(base_path)?;
+    let starlark_usages = scan_starlark_usages_from(base_path)?;
+    let json_usages = scan_json_spec_usages_from(base_path)?;
+
+    let mut stdlib: HashMap<String, Vec<FunctionCoverage>> = HashMap::new();
+    let mut uncovered_features: Vec<String> = Vec::new();
+    let mut total_features = 0u32;
+    let mut covered = 0u32;
+
+    // Process each function
+    for func in &inventory.functions {
+        total_features += 1;
+
+        // Find examples from Starlark
+        let mut examples: Vec<String> = Vec::new();
+
+        if let Some(usages) = starlark_usages.get(&func.name) {
+            for usage in usages.iter().take(3) {
+                // Limit to 3 examples
+                let example = if let Some(line) = usage.line {
+                    format!("{}:{}", usage.file, line)
+                } else {
+                    usage.file.clone()
+                };
+                if !examples.contains(&example) {
+                    examples.push(example);
+                }
+            }
+        }
+
+        let is_covered = !examples.is_empty();
+        if is_covered {
+            covered += 1;
+        } else {
+            uncovered_features.push(format!("function:{}", func.name));
+        }
+
+        // Check enum coverage for this function's params
+        let mut enum_coverage: HashMap<String, HashMap<String, EnumValueCoverage>> = HashMap::new();
+
+        for param in &func.params {
+            if let Some(ref enum_values) = param.enum_values {
+                let mut value_coverage: HashMap<String, EnumValueCoverage> = HashMap::new();
+
+                for value in enum_values {
+                    total_features += 1;
+
+                    // Check if this enum value is used in JSON specs
+                    let example = json_usages
+                        .enum_usages
+                        .get(&param.name)
+                        .and_then(|values| values.get(value))
+                        .and_then(|locs| locs.first())
+                        .map(|loc| loc.file.clone());
+
+                    let value_is_covered = example.is_some();
+                    if value_is_covered {
+                        covered += 1;
+                    } else {
+                        uncovered_features.push(format!("enum:{}::{}", param.name, value));
+                    }
+
+                    value_coverage.insert(
+                        value.clone(),
+                        EnumValueCoverage {
+                            covered: value_is_covered,
+                            example,
+                        },
+                    );
+                }
+
+                if !value_coverage.is_empty() {
+                    enum_coverage.insert(param.name.clone(), value_coverage);
+                }
+            }
+        }
+
+        let func_coverage = FunctionCoverage {
+            name: func.name.clone(),
+            covered: is_covered,
+            examples,
+            enum_coverage,
+        };
+
+        stdlib
+            .entry(func.category.clone())
+            .or_default()
+            .push(func_coverage);
+    }
+
+    // Sort functions within each category
+    for funcs in stdlib.values_mut() {
+        funcs.sort_by(|a, b| a.name.cmp(&b.name));
+    }
+
+    let coverage_percent = if total_features > 0 {
+        (covered as f64 / total_features as f64) * 100.0
+    } else {
+        100.0
+    };
+
+    Ok(CoverageReport {
+        schema_version: 1,
+        generated_at: Utc::now().to_rfc3339(),
+        summary: CoverageSummary {
+            total_features,
+            covered,
+            uncovered: total_features - covered,
+            coverage_percent,
+        },
+        stdlib,
+        uncovered_features,
+    })
+}
+
+/// Generate the full coverage report (from current directory)
+pub fn generate_coverage_report() -> Result<CoverageReport> {
+    generate_coverage_report_from(None)
+}
+
 /// Run the coverage generate subcommand
 ///
 /// # Arguments
@@ -336,5 +503,20 @@ mod tests {
         // Should find usages in golden/speccade/specs files
         assert!(!usages.function_usages.is_empty() || !usages.recipe_usages.is_empty() || !usages.enum_usages.is_empty(),
             "expected some usages from JSON specs");
+    }
+
+    #[test]
+    fn test_generate_coverage_report() {
+        let report = generate_coverage_report_from(Some(&project_root())).unwrap();
+
+        // Should have summary
+        assert!(report.summary.total_features > 0, "expected some features");
+
+        // Should have stdlib section
+        assert!(!report.stdlib.is_empty(), "expected stdlib coverage");
+
+        // Coverage should be a valid percentage
+        assert!(report.summary.coverage_percent >= 0.0);
+        assert!(report.summary.coverage_percent <= 100.0);
     }
 }
