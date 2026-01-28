@@ -4,55 +4,72 @@
 # Covers: humanize_vol, swing, loop_cue, loop_hi, loop_low, loop_main, stinger, transition
 
 # humanize_vol adds random volume variation to patterns
-humanize = humanize_vol(
-    min_vol = 40,
-    max_vol = 64
-)
+humanize = humanize_vol(40, 64, "velocity")
 
 # swing adds groove/shuffle feel to patterns
-swing_transform = swing(
-    amount_permille = 500,  # 50% swing
-    affected_rows = 2
-)
+swing_transform = swing(500, 2, "groove")
 
 # loop_cue creates explicit loop cue with intensity level
 cue = loop_cue(
     name = "battle_main",
-    intensity = 0.7,
-    tempo_bpm = 140
+    intensity = "hi",
+    bpm = 140
 )
 
 # loop_hi creates high intensity loop cue template
 hi_cue = loop_hi(
     name = "combat_intense",
-    tempo_bpm = 160
+    bpm = 160
 )
 
 # loop_low creates low intensity loop cue template
 low_cue = loop_low(
     name = "ambient_calm",
-    tempo_bpm = 80
+    bpm = 80
 )
 
 # loop_main creates main/standard intensity loop cue template
 main_cue = loop_main(
     name = "exploration_normal",
-    tempo_bpm = 110
+    bpm = 110
 )
 
 # stinger creates one-shot musical event cue
 victory_stinger = stinger(
     name = "victory_fanfare",
-    duration_ms = 2000,
-    tempo_bpm = 120
+    stinger_type = "victory",
+    duration_beats = 8,
+    bpm = 120
 )
 
-# transition creates bridge cue between music states
-trans = transition(
-    name = "calm_to_battle",
-    from_state = "exploration",
-    to_state = "combat",
-    duration_ms = 1500
+# transition creates a transition cue template for bridging between music states
+# Parameters: name, transition_type (optional), from_intensity (optional),
+#             to_intensity (optional), measures (optional), bpm (optional),
+#             rows_per_beat (optional), channels (optional)
+battle_to_explore = transition(
+    name = "battle_to_explore",
+    transition_type = "bridge",
+    from_intensity = "hi",
+    to_intensity = "low",
+    measures = 4,
+    bpm = 120
+)
+
+# Simple transition with defaults
+simple_transition = transition(
+    name = "intensity_shift"
+)
+
+# Explore to combat transition
+explore_to_combat = transition(
+    name = "explore_to_combat",
+    transition_type = "crossfade",
+    from_intensity = "main",
+    to_intensity = "hi",
+    measures = 2,
+    bpm = 140,
+    rows_per_beat = 4,
+    channels = 8
 )
 
 # Create a music spec that uses some of these
