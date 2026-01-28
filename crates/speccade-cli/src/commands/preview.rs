@@ -602,7 +602,56 @@ mod tests {
 
         let anim_meta_json = serde_json::json!({
             "name": "test_anim",
-            "fps": 12,
+            "fps": 10,
+            "loop_mode": "loop",
+            "total_duration_ms": 0,
+            "frames": [
+                { "frame_id": "frame_a", "duration_ms": 0 }
+            ]
+        });
+
+        let anim_meta: speccade_spec::recipe::sprite::SpriteAnimationMetadata =
+            serde_json::from_value(anim_meta_json).unwrap();
+
+        let (_frames, delays, _do_loop) =
+            extract_sprite_animation_frames(&atlas, &sheet_meta, &anim_meta, None);
+
+        assert_eq!(delays, vec![100]);
+    }
+
+    #[test]
+    fn test_extract_sprite_animation_frames_duration_zero_fps_zero_uses_83ms() {
+        let mut atlas = RgbaImage::new(128, 64);
+        for y in 0..64 {
+            for x in 0..64 {
+                atlas.put_pixel(x, y, Rgba([255, 0, 0, 255]));
+            }
+        }
+
+        let sheet_meta_json = serde_json::json!({
+            "atlas_width": 128,
+            "atlas_height": 64,
+            "padding": 0,
+            "frames": [
+                {
+                    "id": "frame_a",
+                    "u_min": 0.0,
+                    "v_min": 0.0,
+                    "u_max": 0.5,
+                    "v_max": 1.0,
+                    "width": 64,
+                    "height": 64,
+                    "pivot": [0.5, 0.5]
+                }
+            ]
+        });
+
+        let sheet_meta: speccade_spec::recipe::sprite::SpriteSheetMetadata =
+            serde_json::from_value(sheet_meta_json).unwrap();
+
+        let anim_meta_json = serde_json::json!({
+            "name": "test_anim",
+            "fps": 0,
             "loop_mode": "loop",
             "total_duration_ms": 0,
             "frames": [
@@ -617,6 +666,52 @@ mod tests {
             extract_sprite_animation_frames(&atlas, &sheet_meta, &anim_meta, None);
 
         assert_eq!(delays, vec![83]);
+    }
+
+    #[test]
+    fn test_extract_sprite_animation_frames_skips_out_of_bounds() {
+        let atlas = RgbaImage::new(16, 16);
+
+        let sheet_meta_json = serde_json::json!({
+            "atlas_width": 16,
+            "atlas_height": 16,
+            "padding": 0,
+            "frames": [
+                {
+                    "id": "frame_oob",
+                    "u_min": 0.0,
+                    "v_min": 0.0,
+                    "u_max": 2.0,
+                    "v_max": 2.0,
+                    "width": 32,
+                    "height": 32,
+                    "pivot": [0.5, 0.5]
+                }
+            ]
+        });
+
+        let sheet_meta: speccade_spec::recipe::sprite::SpriteSheetMetadata =
+            serde_json::from_value(sheet_meta_json).unwrap();
+
+        let anim_meta_json = serde_json::json!({
+            "name": "test_anim",
+            "fps": 12,
+            "loop_mode": "once",
+            "total_duration_ms": 0,
+            "frames": [
+                { "frame_id": "frame_oob", "duration_ms": 83 }
+            ]
+        });
+
+        let anim_meta: speccade_spec::recipe::sprite::SpriteAnimationMetadata =
+            serde_json::from_value(anim_meta_json).unwrap();
+
+        let (frames, delays, do_loop) =
+            extract_sprite_animation_frames(&atlas, &sheet_meta, &anim_meta, None);
+
+        assert!(frames.is_empty());
+        assert!(delays.is_empty());
+        assert!(!do_loop);
     }
 
     #[test]
