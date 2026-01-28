@@ -17,6 +17,7 @@ Modes:
     boolean_kit     - Generate boolean kitbash mesh (boolean_kit_v1) - hard-surface modeling
     skeletal_mesh   - Generate skeletal mesh (blender_rigged_mesh_v1)
     animation       - Generate animation clip (blender_clip_v1)
+    validation_grid - Generate 6-view validation grid PNG for LLM verification
 """
 
 import argparse
@@ -7067,6 +7068,274 @@ def get_mesh_bounds(obj: 'bpy.types.Object') -> Tuple[List[float], List[float]]:
     return min_corner, max_corner
 
 
+# =============================================================================
+# Validation Grid Handler
+# =============================================================================
+
+VALIDATION_GRID_VIEWS = [
+    # (label, azimuth_deg, elevation_deg)
+    ("FRONT", 0.0, 30.0),
+    ("BACK", 180.0, 30.0),
+    ("TOP", 0.0, 90.0),
+    ("LEFT", 90.0, 30.0),
+    ("RIGHT", 270.0, 30.0),
+    ("ISO", 45.0, 35.264),  # Isometric angle
+]
+
+
+def handle_validation_grid(spec: Dict, out_root: Path, report_path: Path) -> None:
+    """
+    Generate a 6-view validation grid PNG for LLM-based visual verification.
+
+    Grid layout (2 rows x 3 columns):
+        FRONT | BACK  | TOP
+        LEFT  | RIGHT | ISO
+    """
+    start_time = time.time()
+
+    try:
+        recipe = spec.get("recipe", {})
+        params = recipe.get("params", {})
+
+        # Get panel size from spec (default 256)
+        panel_size = params.get("panel_size", 256)
+        grid_padding = 4
+
+        # Create the mesh based on recipe kind
+        recipe_kind = recipe.get("kind", "")
+
+        obj = None
+
+        if recipe_kind.startswith("static_mesh.") or recipe_kind == "blender_primitives_v1":
+            # Static mesh - extract mesh params
+            primitive = params.get("base_primitive", "cube")
+            dimensions = params.get("dimensions", [1, 1, 1])
+            obj = create_primitive(primitive, dimensions)
+
+            modifiers = params.get("modifiers", [])
+            for mod_spec in modifiers:
+                apply_modifier(obj, mod_spec)
+
+            # Apply modifiers to mesh
+            export_settings = params.get("export", {})
+            if export_settings.get("apply_modifiers", True):
+                apply_all_modifiers(obj)
+
+        elif recipe_kind.startswith("skeletal_mesh.") or recipe_kind == "blender_rigged_mesh_v1":
+            # Skeletal mesh - create armature and body parts
+            skeleton_spec = params.get("skeleton", [])
+            skeleton_preset = params.get("skeleton_preset")
+
+            if skeleton_preset:
+                armature = create_armature(skeleton_preset)
+                if skeleton_spec:
+                    apply_skeleton_overrides(armature, skeleton_spec)
+            elif skeleton_spec:
+                armature = create_custom_skeleton(skeleton_spec)
+            else:
+                armature = create_armature("humanoid_basic_v1")
+
+            mesh_objects = []
+
+            # Create body parts
+            body_parts = params.get("body_parts", [])
+            for part_spec in body_parts:
+                mesh_obj = create_body_part(armature, part_spec)
+                mesh_objects.append((mesh_obj, part_spec.get("bone")))
+
+            # Create legacy parts
+            legacy_parts = params.get("parts", {})
+            if legacy_parts:
+                for part_name, part_spec in legacy_parts.items():
+                    mesh_obj = create_legacy_part(armature, part_name, part_spec, legacy_parts)
+                    if mesh_obj:
+                        bone_name = part_spec.get("bone", part_name)
+                        mesh_objects.append((mesh_obj, bone_name))
+
+            # Join all meshes
+            if mesh_objects:
+                bpy.ops.object.select_all(action='DESELECT')
+                for mesh_obj, _ in mesh_objects:
+                    mesh_obj.select_set(True)
+                bpy.context.view_layer.objects.active = mesh_objects[0][0]
+                if len(mesh_objects) > 1:
+                    bpy.ops.object.join()
+                obj = bpy.context.active_object
+            else:
+                # Fallback - use armature bounds
+                obj = armature
+
+        elif recipe_kind == "organic_sculpt_v1":
+            # Organic sculpt - create metaball mesh
+            metaball_params = params.get("metaball", {})
+            mball_data = bpy.data.metaballs.new("OrganicMeta")
+            mball_obj = bpy.data.objects.new("OrganicMeta", mball_data)
+            bpy.context.collection.objects.link(mball_obj)
+
+            # Add elements
+            elements = metaball_params.get("elements", [])
+            for elem in elements:
+                el = mball_data.elements.new()
+                el.type = elem.get("type", "BALL").upper()
+                el.co = Vector(elem.get("position", [0, 0, 0]))
+                el.radius = elem.get("radius", 1.0)
+
+            # Convert to mesh
+            bpy.context.view_layer.objects.active = mball_obj
+            bpy.ops.object.convert(target='MESH')
+            obj = bpy.context.active_object
+
+        elif recipe_kind == "mesh_to_sprite_v1":
+            # Sprite mesh - extract mesh subparams
+            mesh_params = params.get("mesh", {})
+            primitive = mesh_params.get("base_primitive", "cube")
+            dimensions = mesh_params.get("dimensions", [1, 1, 1])
+            obj = create_primitive(primitive, dimensions)
+
+            modifiers = mesh_params.get("modifiers", [])
+            for mod_spec in modifiers:
+                apply_modifier(obj, mod_spec)
+
+        else:
+            # Fallback: try to extract mesh params directly
+            mesh_params = params.get("mesh", params)
+            primitive = mesh_params.get("base_primitive", "cube")
+            dimensions = mesh_params.get("dimensions", [1, 1, 1])
+            obj = create_primitive(primitive, dimensions)
+
+            modifiers = mesh_params.get("modifiers", [])
+            for mod_spec in modifiers:
+                apply_modifier(obj, mod_spec)
+
+        if obj is None:
+            raise ValueError(f"Could not create mesh for recipe kind: {recipe_kind}")
+
+        # Compute mesh bounds for camera placement
+        mesh_bounds = get_mesh_bounds(obj)
+        mesh_center = [
+            (mesh_bounds[0][i] + mesh_bounds[1][i]) / 2
+            for i in range(3)
+        ]
+        mesh_size = max(
+            mesh_bounds[1][i] - mesh_bounds[0][i]
+            for i in range(3)
+        )
+
+        # Camera distance scaled to mesh size
+        cam_dist = mesh_size * 2.5
+
+        # Set up orthographic camera
+        camera_data = bpy.data.cameras.new(name="ValidationCamera")
+        camera_data.type = 'ORTHO'
+        camera_data.ortho_scale = mesh_size * 1.5
+        camera = bpy.data.objects.new("ValidationCamera", camera_data)
+        bpy.context.collection.objects.link(camera)
+        bpy.context.scene.camera = camera
+
+        # Set up three-point lighting
+        setup_lighting("three_point", mesh_center, mesh_size)
+
+        # Configure render settings
+        bpy.context.scene.render.resolution_x = panel_size
+        bpy.context.scene.render.resolution_y = panel_size
+        bpy.context.scene.render.film_transparent = True
+
+        # Create temp directory for individual frames
+        temp_frames_dir = Path(tempfile.mkdtemp(prefix="speccade_validation_grid_"))
+        frame_paths = []
+
+        # Render each view
+        for i, (label, azimuth, elevation) in enumerate(VALIDATION_GRID_VIEWS):
+            azimuth_rad = math.radians(azimuth)
+            elev_rad = math.radians(elevation)
+
+            # Position camera
+            cam_x = mesh_center[0] + cam_dist * math.sin(azimuth_rad) * math.cos(elev_rad)
+            cam_y = mesh_center[1] - cam_dist * math.cos(azimuth_rad) * math.cos(elev_rad)
+            cam_z = mesh_center[2] + cam_dist * math.sin(elev_rad)
+
+            camera.location = Vector((cam_x, cam_y, cam_z))
+
+            # Point camera at mesh center
+            direction = Vector(mesh_center) - camera.location
+            rot_quat = direction.to_track_quat('-Z', 'Y')
+            camera.rotation_euler = rot_quat.to_euler()
+
+            # Render frame
+            frame_path = temp_frames_dir / f"view_{i}_{label}.png"
+            bpy.context.scene.render.filepath = str(frame_path)
+            bpy.ops.render.render(write_still=True)
+            frame_paths.append((frame_path, label))
+
+        # Composite into grid (3 cols x 2 rows)
+        grid_width = panel_size * 3 + grid_padding * 4
+        grid_height = panel_size * 2 + grid_padding * 3
+
+        # Get output path from spec
+        outputs = spec.get("outputs", [])
+        primary_output = next((o for o in outputs if o.get("kind") == "primary"), None)
+
+        if primary_output:
+            output_rel_path = primary_output.get("path", "validation_grid.png")
+        else:
+            output_rel_path = "validation_grid.png"
+
+        output_path = out_root / output_rel_path
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+
+        # Use PIL if available, otherwise save individual frames for Rust to composite
+        try:
+            from PIL import Image, ImageDraw, ImageFont
+
+            grid_img = Image.new('RGBA', (grid_width, grid_height), (0, 0, 0, 0))
+
+            for i, (frame_path, label) in enumerate(frame_paths):
+                col = i % 3
+                row = i // 3
+                x = grid_padding + col * (panel_size + grid_padding)
+                y = grid_padding + row * (panel_size + grid_padding)
+
+                frame_img = Image.open(frame_path)
+                grid_img.paste(frame_img, (x, y))
+
+                # Draw label
+                draw = ImageDraw.Draw(grid_img)
+                try:
+                    font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 14)
+                except Exception:
+                    font = ImageFont.load_default()
+
+                # Label background
+                text_bbox = draw.textbbox((x + 4, y + 4), label, font=font)
+                draw.rectangle([text_bbox[0] - 2, text_bbox[1] - 2, text_bbox[2] + 2, text_bbox[3] + 2], fill=(0, 0, 0, 180))
+                draw.text((x + 4, y + 4), label, fill=(255, 255, 255, 255), font=font)
+
+            grid_img.save(str(output_path))
+
+        except ImportError:
+            # Fallback: save individual frames, let Rust composite
+            frames_output_path = out_root / "validation_grid_frames"
+            frames_output_path.mkdir(parents=True, exist_ok=True)
+            import shutil
+            for frame_path, label in frame_paths:
+                shutil.copy(frame_path, frames_output_path / f"{label}.png")
+            output_path = frames_output_path
+
+        # Clean up temp files
+        import shutil
+        shutil.rmtree(temp_frames_dir)
+
+        duration_ms = int((time.time() - start_time) * 1000)
+
+        write_report(report_path, ok=True,
+                     output_path=str(output_path.relative_to(out_root) if output_path.is_relative_to(out_root) else output_rel_path),
+                     duration_ms=duration_ms)
+
+    except Exception as e:
+        write_report(report_path, ok=False, error=str(e))
+        raise
+
+
 def setup_lighting(preset: str, center: List[float], size: float) -> None:
     """Set up lighting based on preset."""
     # Clear existing lights
@@ -7264,7 +7533,7 @@ def main() -> int:
 
     parser = argparse.ArgumentParser(description="SpecCade Blender Entrypoint")
     parser.add_argument("--mode", required=True,
-                        choices=["static_mesh", "modular_kit", "organic_sculpt", "shrinkwrap", "boolean_kit", "skeletal_mesh", "animation", "rigged_animation", "animation_helpers", "mesh_to_sprite"],
+                        choices=["static_mesh", "modular_kit", "organic_sculpt", "shrinkwrap", "boolean_kit", "skeletal_mesh", "animation", "rigged_animation", "animation_helpers", "mesh_to_sprite", "validation_grid"],
                         help="Generation mode")
     parser.add_argument("--spec", required=True, type=Path,
                         help="Path to spec JSON file")
@@ -7305,6 +7574,7 @@ def main() -> int:
         "rigged_animation": handle_rigged_animation,
         "animation_helpers": handle_animation_helpers,
         "mesh_to_sprite": handle_mesh_to_sprite,
+        "validation_grid": handle_validation_grid,
     }
 
     handler = handlers.get(args.mode)
