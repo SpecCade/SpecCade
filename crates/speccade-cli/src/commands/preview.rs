@@ -4,9 +4,73 @@
 
 use anyhow::{Context, Result};
 use colored::Colorize;
+use gif::{Encoder, Frame as GifFrame, Repeat};
 use speccade_spec::Spec;
 use std::fs;
+use std::io::BufWriter;
 use std::process::ExitCode;
+
+/// Assembles RGBA frames into an animated GIF file.
+///
+/// # Arguments
+/// * `frames` - RGBA pixel data for each frame (width * height * 4 bytes each)
+/// * `width` - Frame width in pixels
+/// * `height` - Frame height in pixels
+/// * `delays_ms` - Per-frame delay in milliseconds
+/// * `loop_anim` - Whether to loop the animation
+/// * `out_path` - Output file path
+fn assemble_gif(
+    frames: &[Vec<u8>],
+    width: u16,
+    height: u16,
+    delays_ms: &[u32],
+    loop_anim: bool,
+    out_path: &str,
+) -> Result<()> {
+    anyhow::ensure!(!frames.is_empty(), "No frames to encode");
+    anyhow::ensure!(
+        frames.len() == delays_ms.len(),
+        "Frame count ({}) != delay count ({})",
+        frames.len(),
+        delays_ms.len()
+    );
+
+    let file = fs::File::create(out_path)
+        .with_context(|| format!("Failed to create GIF: {}", out_path))?;
+    let mut writer = BufWriter::new(file);
+    let mut encoder = Encoder::new(&mut writer, width, height, &[])
+        .with_context(|| "Failed to create GIF encoder")?;
+
+    if loop_anim {
+        encoder
+            .set_repeat(Repeat::Infinite)
+            .with_context(|| "Failed to set GIF repeat")?;
+    }
+
+    for (i, frame_rgba) in frames.iter().enumerate() {
+        anyhow::ensure!(
+            frame_rgba.len() == (width as usize) * (height as usize) * 4,
+            "Frame {} has unexpected byte length: {}",
+            i,
+            frame_rgba.len()
+        );
+
+        // GIF delay is in centiseconds (1/100th of a second)
+        let delay_cs_u32 = ((delays_ms[i] + 9) / 10).max(1);
+        let delay_cs = delay_cs_u32.min(u32::from(u16::MAX)) as u16;
+
+        let mut rgba = frame_rgba.clone();
+        let mut gif_frame = GifFrame::from_rgba_speed(width, height, &mut rgba, 10);
+        gif_frame.delay = delay_cs;
+        gif_frame.dispose = gif::DisposalMethod::Background;
+
+        encoder
+            .write_frame(&gif_frame)
+            .with_context(|| format!("Failed to write GIF frame {}", i))?;
+    }
+
+    Ok(())
+}
 
 /// Run the preview command
 ///
@@ -73,5 +137,34 @@ mod tests {
 
         let code = run(spec_path.to_str().unwrap(), None, false, None, None, None).unwrap();
         assert_eq!(code, ExitCode::SUCCESS);
+    }
+
+    #[test]
+    fn test_assemble_gif_creates_valid_file() {
+        let tmp = tempfile::tempdir().unwrap();
+        let out_path = tmp.path().join("test.gif");
+
+        // Create 3 simple 4x4 RGBA frames
+        let frames: Vec<Vec<u8>> = (0..3)
+            .map(|i| {
+                let val = (i as u8) * 80;
+                vec![val, val, val, 255].repeat(16) // 4x4 pixels
+            })
+            .collect();
+
+        let result = assemble_gif(
+            &frames,
+            4,
+            4,
+            &[100, 100, 100], // 100ms per frame
+            true,             // loop
+            out_path.to_str().unwrap(),
+        );
+        assert!(result.is_ok());
+        assert!(out_path.exists());
+
+        // Verify it starts with GIF magic bytes
+        let data = std::fs::read(&out_path).unwrap();
+        assert_eq!(&data[0..3], b"GIF");
     }
 }
