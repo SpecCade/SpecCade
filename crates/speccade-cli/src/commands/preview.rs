@@ -16,7 +16,14 @@ use std::process::ExitCode;
 ///
 /// # Returns
 /// Exit code: 0 success, 1 error
-pub fn run(spec_path: &str, _out_root: Option<&str>) -> Result<ExitCode> {
+pub fn run(
+    spec_path: &str,
+    _out_root: Option<&str>,
+    _gif: bool,
+    _out: Option<&str>,
+    _fps: Option<u32>,
+    _scale: Option<u32>,
+) -> Result<ExitCode> {
     // TODO: Implement preview for generated assets (open viewers, or launch Blender for mesh/anim).
     println!("{} {}", "Preview:".cyan().bold(), spec_path);
 
@@ -64,7 +71,7 @@ mod tests {
         )
         .unwrap();
 
-        let code = run(spec_path.to_str().unwrap(), None).unwrap();
+        let code = run(spec_path.to_str().unwrap(), None, false, None, None, None).unwrap();
         assert_eq!(code, ExitCode::SUCCESS);
     }
 }

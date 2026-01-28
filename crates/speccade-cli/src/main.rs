@@ -200,7 +200,7 @@ enum Commands {
         force: bool,
     },
 
-    /// Preview an asset (opens in viewer/editor)
+    /// Preview an asset (opens in viewer/editor, or exports GIF with --gif)
     Preview {
         /// Path to the spec JSON file
         #[arg(short, long)]
@@ -209,6 +209,22 @@ enum Commands {
         /// Output root directory (default: current directory)
         #[arg(short, long)]
         out_root: Option<String>,
+
+        /// Export animated GIF instead of opening viewer
+        #[arg(long)]
+        gif: bool,
+
+        /// Output file path for GIF (default: <spec_stem>.preview.gif next to spec)
+        #[arg(long)]
+        out: Option<String>,
+
+        /// Override frames per second for GIF
+        #[arg(long)]
+        fps: Option<u32>,
+
+        /// Scale factor for GIF frames (default: 1)
+        #[arg(long)]
+        scale: Option<u32>,
     },
 
     /// Check system dependencies and configuration
@@ -511,7 +527,14 @@ fn main() -> ExitCode {
             verbose,
             force,
         ),
-        Commands::Preview { spec, out_root } => commands::preview::run(&spec, out_root.as_deref()),
+        Commands::Preview {
+            spec,
+            out_root,
+            gif,
+            out,
+            fps,
+            scale,
+        } => commands::preview::run(&spec, out_root.as_deref(), gif, out.as_deref(), fps, scale),
         Commands::Doctor => commands::doctor::run(),
         Commands::Expand {
             spec,
@@ -2074,5 +2097,65 @@ mod tests {
     fn test_cli_requires_input_for_lint() {
         let err = Cli::try_parse_from(["speccade", "lint"]).err().unwrap();
         assert!(err.to_string().contains("--input"));
+    }
+
+    #[test]
+    fn test_cli_parses_preview_with_gif() {
+        let cli =
+            Cli::try_parse_from(["speccade", "preview", "--spec", "spec.json", "--gif"]).unwrap();
+        match cli.command {
+            Commands::Preview {
+                spec,
+                out_root,
+                gif,
+                out,
+                fps,
+                scale,
+            } => {
+                assert_eq!(spec, "spec.json");
+                assert!(out_root.is_none());
+                assert!(gif);
+                assert!(out.is_none());
+                assert!(fps.is_none());
+                assert!(scale.is_none());
+            }
+            _ => panic!("expected preview command"),
+        }
+    }
+
+    #[test]
+    fn test_cli_parses_preview_with_gif_options() {
+        let cli = Cli::try_parse_from([
+            "speccade",
+            "preview",
+            "--spec",
+            "spec.json",
+            "--gif",
+            "--out",
+            "preview.gif",
+            "--fps",
+            "24",
+            "--scale",
+            "2",
+        ])
+        .unwrap();
+        match cli.command {
+            Commands::Preview {
+                spec,
+                out_root,
+                gif,
+                out,
+                fps,
+                scale,
+            } => {
+                assert_eq!(spec, "spec.json");
+                assert!(out_root.is_none());
+                assert!(gif);
+                assert_eq!(out.as_deref(), Some("preview.gif"));
+                assert_eq!(fps, Some(24));
+                assert_eq!(scale, Some(2));
+            }
+            _ => panic!("expected preview command"),
+        }
     }
 }
