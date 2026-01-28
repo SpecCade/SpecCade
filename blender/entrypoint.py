@@ -7106,7 +7106,66 @@ def handle_validation_grid(spec: Dict, out_root: Path, report_path: Path) -> Non
 
         obj = None
 
-        if recipe_kind.startswith("static_mesh.") or recipe_kind == "blender_primitives_v1":
+        # Check specific recipe variants BEFORE generic handlers
+        if recipe_kind.endswith("organic_sculpt_v1"):
+            # Organic sculpt - create metaball mesh
+            # Support both "metaballs" (array) and "metaball.elements" (object with array)
+            metaballs = params.get("metaballs", [])
+            if not metaballs:
+                metaball_params = params.get("metaball", {})
+                metaballs = metaball_params.get("elements", [])
+
+            mball_data = bpy.data.metaballs.new("OrganicMeta")
+            mball_obj = bpy.data.objects.new("OrganicMeta", mball_data)
+            bpy.context.collection.objects.link(mball_obj)
+
+            # Add metaball elements
+            for elem in metaballs:
+                el = mball_data.elements.new()
+                el.type = elem.get("type", "BALL").upper()
+                el.co = Vector(elem.get("position", [0, 0, 0]))
+                el.radius = elem.get("radius", 1.0)
+                # stiffness maps to Blender's 'stiffness' property
+                if "stiffness" in elem:
+                    el.stiffness = elem.get("stiffness", 2.0)
+
+            # Set resolution for smoother result
+            mball_data.resolution = params.get("remesh_voxel_size", 0.1)
+            mball_data.threshold = 0.6
+
+            # Convert to mesh
+            bpy.context.view_layer.objects.active = mball_obj
+            bpy.ops.object.convert(target='MESH')
+            obj = bpy.context.active_object
+
+            # Apply smoothing if specified
+            smooth_iterations = params.get("smooth_iterations", 0)
+            if smooth_iterations > 0 and obj is not None:
+                try:
+                    smooth_mod = obj.modifiers.new(name="Smooth", type='SMOOTH')
+                    if smooth_mod is not None:
+                        smooth_mod.iterations = smooth_iterations
+                        apply_all_modifiers(obj)
+                except Exception as e:
+                    print(f"Warning: Could not apply smoothing: {e}")
+
+            # Apply displacement if specified (optional, may fail on some Blender versions)
+            displacement = params.get("displacement", {})
+            if displacement:
+                try:
+                    # Add displacement modifier with noise texture
+                    disp_mod = obj.modifiers.new(name="Displacement", type='DISPLACE')
+                    tex = bpy.data.textures.new("NoiseDisp", type='CLOUDS')
+                    tex.noise_scale = displacement.get("scale", 1.0)
+                    disp_mod.texture = tex
+                    disp_mod.strength = displacement.get("strength", 0.1)
+                    apply_all_modifiers(obj)
+                except Exception as e:
+                    # Displacement texture assignment may fail on some Blender versions
+                    # Continue without displacement noise
+                    print(f"Warning: Could not apply displacement texture: {e}")
+
+        elif recipe_kind.startswith("static_mesh.") or recipe_kind == "blender_primitives_v1":
             # Static mesh - extract mesh params
             primitive = params.get("base_primitive", "cube")
             dimensions = params.get("dimensions", [1, 1, 1])
@@ -7165,26 +7224,6 @@ def handle_validation_grid(spec: Dict, out_root: Path, report_path: Path) -> Non
                 # Fallback - use armature bounds
                 obj = armature
 
-        elif recipe_kind == "organic_sculpt_v1":
-            # Organic sculpt - create metaball mesh
-            metaball_params = params.get("metaball", {})
-            mball_data = bpy.data.metaballs.new("OrganicMeta")
-            mball_obj = bpy.data.objects.new("OrganicMeta", mball_data)
-            bpy.context.collection.objects.link(mball_obj)
-
-            # Add elements
-            elements = metaball_params.get("elements", [])
-            for elem in elements:
-                el = mball_data.elements.new()
-                el.type = elem.get("type", "BALL").upper()
-                el.co = Vector(elem.get("position", [0, 0, 0]))
-                el.radius = elem.get("radius", 1.0)
-
-            # Convert to mesh
-            bpy.context.view_layer.objects.active = mball_obj
-            bpy.ops.object.convert(target='MESH')
-            obj = bpy.context.active_object
-
         elif recipe_kind == "mesh_to_sprite_v1":
             # Sprite mesh - extract mesh subparams
             mesh_params = params.get("mesh", {})
@@ -7232,8 +7271,8 @@ def handle_validation_grid(spec: Dict, out_root: Path, report_path: Path) -> Non
         bpy.context.collection.objects.link(camera)
         bpy.context.scene.camera = camera
 
-        # Set up three-point lighting
-        setup_lighting("three_point", mesh_center, mesh_size)
+        # Set up validation lighting (illuminates all sides equally)
+        setup_lighting("validation", mesh_center, mesh_size)
 
         # Configure render settings
         bpy.context.scene.render.resolution_x = panel_size
@@ -7394,6 +7433,48 @@ def setup_lighting(preset: str, center: List[float], size: float) -> None:
         flat.location = center_vec + Vector((0, 0, size * 3))
         bpy.context.collection.objects.link(flat)
         flat.rotation_euler = Euler((0, 0, 0))
+
+    elif preset == "validation":
+        # Balanced lighting for validation grids - illuminates all sides
+        # Front light
+        front_data = bpy.data.lights.new(name="Front", type='SUN')
+        front_data.energy = 2.0
+        front = bpy.data.objects.new("Front", front_data)
+        front.location = center_vec + Vector((0, -size * 2, size))
+        bpy.context.collection.objects.link(front)
+        front.rotation_euler = Euler((math.radians(30), 0, 0))
+
+        # Back light
+        back_data = bpy.data.lights.new(name="Back", type='SUN')
+        back_data.energy = 2.0
+        back = bpy.data.objects.new("Back", back_data)
+        back.location = center_vec + Vector((0, size * 2, size))
+        bpy.context.collection.objects.link(back)
+        back.rotation_euler = Euler((math.radians(30), 0, math.radians(180)))
+
+        # Left light
+        left_data = bpy.data.lights.new(name="Left", type='SUN')
+        left_data.energy = 1.5
+        left = bpy.data.objects.new("Left", left_data)
+        left.location = center_vec + Vector((-size * 2, 0, size))
+        bpy.context.collection.objects.link(left)
+        left.rotation_euler = Euler((math.radians(30), 0, math.radians(-90)))
+
+        # Right light
+        right_data = bpy.data.lights.new(name="Right", type='SUN')
+        right_data.energy = 1.5
+        right = bpy.data.objects.new("Right", right_data)
+        right.location = center_vec + Vector((size * 2, 0, size))
+        bpy.context.collection.objects.link(right)
+        right.rotation_euler = Euler((math.radians(30), 0, math.radians(90)))
+
+        # Top light (softer fill)
+        top_data = bpy.data.lights.new(name="Top", type='SUN')
+        top_data.energy = 1.0
+        top = bpy.data.objects.new("Top", top_data)
+        top.location = center_vec + Vector((0, 0, size * 3))
+        bpy.context.collection.objects.link(top)
+        top.rotation_euler = Euler((0, 0, 0))
 
     elif preset == "dramatic":
         # Strong single light with hard shadows

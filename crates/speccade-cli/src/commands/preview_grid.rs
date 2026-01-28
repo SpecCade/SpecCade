@@ -4,12 +4,19 @@
 
 use anyhow::{Context, Result};
 use colored::Colorize;
+use image::{DynamicImage, ImageBuffer, Rgba, RgbaImage};
 use speccade_backend_blender::{GenerationMode, Orchestrator};
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
 use crate::input::load_spec;
+
+/// View labels in grid order (2 rows x 3 columns)
+const VIEW_LABELS: [&str; 6] = ["FRONT", "BACK", "TOP", "LEFT", "RIGHT", "ISO"];
+
+/// Grid padding between panels
+const GRID_PADDING: u32 = 4;
 
 /// Run the preview-grid command
 ///
@@ -99,10 +106,33 @@ pub fn run(spec_path: &str, out: Option<&str>, panel_size: u32) -> Result<ExitCo
         anyhow::bail!("Blender validation grid generation failed: {}", error);
     }
 
+    // Check if Blender created individual frames (PIL not available) or a composited grid
+    let frames_dir = out_root.join("validation_grid_frames");
+    let final_out_path = if frames_dir.exists() && frames_dir.is_dir() {
+        // Composite individual frames into grid on Rust side
+        composite_frames_to_grid(&frames_dir, &out_path, panel_size)?;
+        // Clean up individual frames
+        fs::remove_dir_all(&frames_dir).ok();
+        out_path.clone()
+    } else if out_path.exists() {
+        out_path.clone()
+    } else {
+        // Check if output was written elsewhere in out_root
+        let alt_path = out_root.join(out_rel);
+        if alt_path.exists() {
+            if alt_path != out_path {
+                fs::rename(&alt_path, &out_path)?;
+            }
+            out_path.clone()
+        } else {
+            anyhow::bail!("Blender completed but output not found at {} or {}", out_path.display(), frames_dir.display());
+        }
+    };
+
     println!(
         "{} Grid saved to: {}",
         "OK".green().bold(),
-        out_path.display()
+        final_out_path.display()
     );
 
     if let Some(duration_ms) = report.duration_ms {
@@ -110,6 +140,84 @@ pub fn run(spec_path: &str, out: Option<&str>, panel_size: u32) -> Result<ExitCo
     }
 
     Ok(ExitCode::SUCCESS)
+}
+
+/// Composite individual frame PNGs into a 3x2 grid
+fn composite_frames_to_grid(frames_dir: &Path, out_path: &Path, panel_size: u32) -> Result<()> {
+    // Load each view
+    let mut frames: Vec<Option<DynamicImage>> = Vec::with_capacity(6);
+
+    for label in VIEW_LABELS {
+        let frame_path = frames_dir.join(format!("{}.png", label));
+        if frame_path.exists() {
+            let img = image::open(&frame_path)
+                .with_context(|| format!("Failed to load frame: {}", frame_path.display()))?;
+            frames.push(Some(img));
+        } else {
+            frames.push(None);
+        }
+    }
+
+    // Calculate grid dimensions (3 cols x 2 rows)
+    let grid_width = panel_size * 3 + GRID_PADDING * 4;
+    let grid_height = panel_size * 2 + GRID_PADDING * 3;
+
+    // Create output image with transparent background
+    let mut grid: RgbaImage = ImageBuffer::from_pixel(grid_width, grid_height, Rgba([0, 0, 0, 0]));
+
+    // Place each frame in the grid
+    for (i, frame_opt) in frames.iter().enumerate() {
+        let col = (i % 3) as u32;
+        let row = (i / 3) as u32;
+        let x = GRID_PADDING + col * (panel_size + GRID_PADDING);
+        let y = GRID_PADDING + row * (panel_size + GRID_PADDING);
+
+        if let Some(frame) = frame_opt {
+            // Resize frame to panel_size if needed
+            let resized = frame.resize_exact(panel_size, panel_size, image::imageops::FilterType::Lanczos3);
+            let rgba = resized.to_rgba8();
+
+            // Copy pixels to grid
+            for (fx, fy, pixel) in rgba.enumerate_pixels() {
+                let gx = x + fx;
+                let gy = y + fy;
+                if gx < grid_width && gy < grid_height {
+                    grid.put_pixel(gx, gy, *pixel);
+                }
+            }
+
+            // Draw label background and text
+            draw_label(&mut grid, x + 4, y + 4, VIEW_LABELS[i]);
+        }
+    }
+
+    // Save the composited grid
+    grid.save(out_path)
+        .with_context(|| format!("Failed to save grid: {}", out_path.display()))?;
+
+    Ok(())
+}
+
+/// Draw a simple label on the image (basic implementation without font rendering)
+fn draw_label(img: &mut RgbaImage, x: u32, y: u32, label: &str) {
+    // Draw a semi-transparent black background rectangle
+    let label_width = (label.len() * 8) as u32 + 4;
+    let label_height = 16_u32;
+
+    for ly in 0..label_height {
+        for lx in 0..label_width {
+            let px = x + lx;
+            let py = y + ly;
+            if px < img.width() && py < img.height() {
+                img.put_pixel(px, py, Rgba([0, 0, 0, 180]));
+            }
+        }
+    }
+
+    // Note: Full text rendering would require a font library
+    // For now, we just have the background - Blender's PIL fallback should handle this
+    // or we could add the `imageproc` crate for text rendering in the future
+    let _ = label; // Suppress unused warning
 }
 
 /// Extracts the [VALIDATION] comment block from a Starlark source file.
