@@ -120,8 +120,11 @@ speccade generate --spec <path> --out-root <path>
 # Generate all specs in a directory
 speccade generate-all --spec-dir <dir> --out-root <dir>
 
-# Preview 3D assets (Blender-backed assets only)
+# Preview 3D assets (Blender-backed assets only). Use `--gif` to export an animated GIF preview.
+# Default GIF filename: <asset_id>.preview.gif (written next to the spec file)
 speccade preview --spec <path> --out-root <path>
+speccade preview --spec path/to/spec.json --gif --out-root ./output
+speccade preview --spec path/to/spec.json --gif --out my-preview.gif --fps 24 --scale 2 --out-root ./output
 
 # Format a spec to canonical JSON style
 speccade fmt --spec <path>
