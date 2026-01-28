@@ -72,6 +72,67 @@ fn assemble_gif(
     Ok(())
 }
 
+/// Extracts frames from a VFX flipbook atlas using metadata UV coordinates.
+///
+/// Returns (frames_rgba, delays_ms, should_loop).
+fn extract_flipbook_frames(
+    atlas: &image::RgbaImage,
+    metadata: &speccade_spec::recipe::vfx::VfxFlipbookMetadata,
+    fps_override: Option<u32>,
+) -> (Vec<Vec<u8>>, Vec<u32>, bool) {
+    use image::GenericImageView;
+
+    let fps = fps_override.unwrap_or(metadata.fps);
+    let delay_ms = if fps > 0 { 1000 / fps } else { 83 };
+
+    let atlas_w = atlas.width();
+    let atlas_h = atlas.height();
+
+    let mut frames = Vec::with_capacity(metadata.frames.len());
+    let mut delays = Vec::with_capacity(metadata.frames.len());
+
+    for frame_uv in &metadata.frames {
+        let x = (frame_uv.u_min * atlas_w as f64).round() as u32;
+        let y = (frame_uv.v_min * atlas_h as f64).round() as u32;
+        let w = frame_uv.width;
+        let h = frame_uv.height;
+
+        let sub = atlas.view(x, y, w, h);
+        let mut rgba = Vec::with_capacity((w * h * 4) as usize);
+        for pixel in sub.pixels() {
+            rgba.extend_from_slice(&pixel.2 .0);
+        }
+        frames.push(rgba);
+        delays.push(delay_ms);
+    }
+
+    let mut should_loop = matches!(
+        metadata.loop_mode,
+        speccade_spec::recipe::vfx::FlipbookLoopMode::Loop
+    );
+
+    if matches!(
+        metadata.loop_mode,
+        speccade_spec::recipe::vfx::FlipbookLoopMode::PingPong
+    ) {
+        // PingPong always loops.
+        should_loop = true;
+
+        // Append reversed frames excluding the first and last so the endpoints
+        // are not duplicated.
+        if frames.len() > 2 {
+            let reverse_frames: Vec<_> =
+                frames[1..frames.len() - 1].iter().rev().cloned().collect();
+            let reverse_delays: Vec<_> =
+                delays[1..delays.len() - 1].iter().rev().copied().collect();
+            frames.extend(reverse_frames);
+            delays.extend(reverse_delays);
+        }
+    }
+
+    (frames, delays, should_loop)
+}
+
 /// Run the preview command
 ///
 /// # Arguments
@@ -117,6 +178,7 @@ pub fn run(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use image::{Rgba, RgbaImage};
 
     #[test]
     fn test_preview_stub_returns_success() {
@@ -166,5 +228,57 @@ mod tests {
         // Verify it starts with GIF magic bytes
         let data = std::fs::read(&out_path).unwrap();
         assert_eq!(&data[0..3], b"GIF");
+    }
+
+    #[test]
+    fn test_extract_flipbook_frames() {
+        // Create a 128x64 atlas with 2 frames of 64x64 (side by side, no padding)
+        let mut atlas = RgbaImage::new(128, 64);
+
+        // Frame 0: red
+        for y in 0..64 {
+            for x in 0..64 {
+                atlas.put_pixel(x, y, Rgba([255, 0, 0, 255]));
+            }
+        }
+
+        // Frame 1: blue
+        for y in 0..64 {
+            for x in 64..128 {
+                atlas.put_pixel(x, y, Rgba([0, 0, 255, 255]));
+            }
+        }
+
+        let metadata_json = serde_json::json!({
+            "atlas_width": 128,
+            "atlas_height": 64,
+            "padding": 0,
+            "effect": "explosion",
+            "frame_count": 2,
+            "frame_size": [64, 64],
+            "fps": 12,
+            "loop_mode": "once",
+            "total_duration_ms": 166,
+            "frames": [
+                { "index": 0, "u_min": 0.0, "v_min": 0.0, "u_max": 0.5, "v_max": 1.0, "width": 64, "height": 64 },
+                { "index": 1, "u_min": 0.5, "v_min": 0.0, "u_max": 1.0, "v_max": 1.0, "width": 64, "height": 64 }
+            ]
+        });
+
+        let metadata: speccade_spec::recipe::vfx::VfxFlipbookMetadata =
+            serde_json::from_value(metadata_json).unwrap();
+
+        let (frames, delays, do_loop) = extract_flipbook_frames(&atlas, &metadata, None);
+        assert_eq!(frames.len(), 2);
+        assert_eq!(delays.len(), 2);
+        assert!(!do_loop); // Once mode
+
+        // Each frame should be 64*64*4 bytes
+        assert_eq!(frames[0].len(), 64 * 64 * 4);
+
+        // First pixel of frame 0 should be red
+        assert_eq!(&frames[0][0..4], &[255, 0, 0, 255]);
+        // First pixel of frame 1 should be blue
+        assert_eq!(&frames[1][0..4], &[0, 0, 255, 255]);
     }
 }
