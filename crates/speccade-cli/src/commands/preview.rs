@@ -5,6 +5,8 @@
 use anyhow::{Context, Result};
 use colored::Colorize;
 use gif::{Encoder, Frame as GifFrame, Repeat};
+use speccade_spec::output::{OutputFormat, OutputKind};
+use speccade_spec::validation::is_valid_asset_id;
 use speccade_spec::Spec;
 use std::fs;
 use std::io::BufWriter;
@@ -346,6 +348,10 @@ pub fn run(
         return Ok(ExitCode::SUCCESS);
     }
 
+    if let Some(0) = scale {
+        anyhow::bail!("--scale must be >= 1");
+    }
+
     let recipe = spec
         .recipe
         .as_ref()
@@ -359,18 +365,20 @@ pub fn run(
 
     let root = out_root
         .map(PathBuf::from)
-        .unwrap_or_else(|| spec_dir.to_path_buf());
+        .unwrap_or_else(|| PathBuf::from("."));
 
     let png_output = spec
         .outputs
         .iter()
-        .find(|o| matches!(o.format, speccade_spec::output::OutputFormat::Png))
+        .find(|o| o.kind == OutputKind::Primary && o.format == OutputFormat::Png)
+        .or_else(|| spec.outputs.iter().find(|o| o.format == OutputFormat::Png))
         .with_context(|| "Spec has no PNG output (atlas) in outputs[]")?;
 
     let json_output = spec
         .outputs
         .iter()
-        .find(|o| matches!(o.format, speccade_spec::output::OutputFormat::Json))
+        .find(|o| o.kind == OutputKind::Metadata && o.format == OutputFormat::Json)
+        .or_else(|| spec.outputs.iter().find(|o| o.format == OutputFormat::Json))
         .with_context(|| "Spec has no JSON output (metadata) in outputs[]")?;
 
     let atlas_path = root.join(&png_output.path);
@@ -614,12 +622,17 @@ pub fn run(
     let out_path = if let Some(out) = out {
         PathBuf::from(out)
     } else {
-        let stem = spec_path_pb
+        let stem_fallback = spec_path_pb
             .file_stem()
             .and_then(|s| s.to_str())
             .unwrap_or("preview");
+        let base = if is_valid_asset_id(&spec.asset_id) {
+            spec.asset_id.as_str()
+        } else {
+            stem_fallback
+        };
         let parent = spec_dir;
-        parent.join(format!("{}.preview.gif", stem))
+        parent.join(format!("{}.preview.gif", base))
     };
 
     if let Some(parent) = out_path.parent() {
@@ -670,6 +683,27 @@ mod tests {
 
         let code = run(spec_path.to_str().unwrap(), None, false, None, None, None).unwrap();
         assert_eq!(code, ExitCode::SUCCESS);
+    }
+
+    #[test]
+    fn test_scale_zero_is_error() {
+        let tmp = tempfile::tempdir().unwrap();
+        let spec_path = tmp.path().join("spec.json");
+        std::fs::write(
+            &spec_path,
+            r#"{
+  "spec_version": 1,
+  "asset_id": "test-asset-01",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 42,
+  "outputs": [{"kind": "primary", "format": "wav", "path": "sounds/test.wav"}]
+}"#,
+        )
+        .unwrap();
+
+        let err = run(spec_path.to_str().unwrap(), None, true, None, None, Some(0)).unwrap_err();
+        assert!(err.to_string().contains("--scale"));
     }
 
     #[test]

@@ -214,7 +214,7 @@ enum Commands {
         #[arg(long)]
         gif: bool,
 
-        /// Output file path for GIF (default: <spec_stem>.preview.gif next to spec)
+        /// Output file path for GIF (default: <asset_id>.preview.gif next to spec)
         #[arg(long)]
         out: Option<String>,
 
