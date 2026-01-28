@@ -255,8 +255,7 @@ pub fn generate_full(source: String, filename: String, output_dir: String) -> Ge
     for gen_file in &outputs {
         let full_path = output_path.join(&gen_file.path);
         if let Ok(data) = std::fs::read(&full_path) {
-            let file_lint =
-                super::lint::lint_asset_bytes(&full_path, &data, Some(&spec));
+            let file_lint = super::lint::lint_asset_bytes(&full_path, &data, Some(&spec));
             merged_lint.ok = merged_lint.ok && file_lint.ok;
             merged_lint.error_count += file_lint.error_count;
             merged_lint.warning_count += file_lint.warning_count;

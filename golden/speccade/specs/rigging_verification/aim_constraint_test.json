@@ -26,8 +26,8 @@
             "name": "head_track",
             "bone": "head",
             "target": "look_target",
-            "track_axis": "y",
-            "up_axis": "z",
+            "track_axis": "Y",
+            "up_axis": "Z",
             "influence": 0.8
           }
         ]

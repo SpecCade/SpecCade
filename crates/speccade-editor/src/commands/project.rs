@@ -487,7 +487,10 @@ mod tests {
         assert!(result[0].is_dir);
         assert_eq!(result[0].children.as_ref().unwrap().len(), 1);
         assert_eq!(result[0].children.as_ref().unwrap()[0].name, "sfx.star");
-        assert_eq!(result[0].children.as_ref().unwrap()[0].path, "audio/sfx.star");
+        assert_eq!(
+            result[0].children.as_ref().unwrap()[0].path,
+            "audio/sfx.star"
+        );
         assert_eq!(
             result[0].children.as_ref().unwrap()[0].asset_type,
             Some("audio".to_string())

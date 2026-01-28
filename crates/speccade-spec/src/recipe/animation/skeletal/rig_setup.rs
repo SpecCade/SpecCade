@@ -5,9 +5,12 @@ use serde::{Deserialize, Serialize};
 use super::super::constraints::{BoneConstraint, BoneConstraintError, ConstraintConfig};
 use super::super::ik_setup::setup_ik_preset;
 use super::bone_constraints::{AimConstraint, TwistBone};
+use super::finger_controls::FingerControls;
 use super::foot::FootSystem;
 use super::ik_chain::{IkChain, IkChainError, IkPreset};
+use super::ikfk_switch::IkFkSwitch;
 use super::settings::{BakeSettings, StretchSettings};
+use super::space_switch::SpaceSwitch;
 
 // =============================================================================
 // Rig Setup Configuration
@@ -35,6 +38,15 @@ pub struct RigSetup {
     /// Twist bone setups.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub twist_bones: Vec<TwistBone>,
+    /// IK/FK switches for limbs.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub ikfk_switches: Vec<IkFkSwitch>,
+    /// Space switches for dynamic parent changes.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub space_switches: Vec<SpaceSwitch>,
+    /// Finger control setups.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub finger_controls: Vec<FingerControls>,
     /// Stretch settings for IK chains.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub stretch: Option<StretchSettings>,
@@ -82,6 +94,24 @@ impl RigSetup {
     /// Adds a twist bone setup to the rig setup.
     pub fn with_twist_bone(mut self, twist_bone: TwistBone) -> Self {
         self.twist_bones.push(twist_bone);
+        self
+    }
+
+    /// Adds an IK/FK switch to the rig setup.
+    pub fn with_ikfk_switch(mut self, switch: IkFkSwitch) -> Self {
+        self.ikfk_switches.push(switch);
+        self
+    }
+
+    /// Adds a space switch to the rig setup.
+    pub fn with_space_switch(mut self, switch: SpaceSwitch) -> Self {
+        self.space_switches.push(switch);
+        self
+    }
+
+    /// Adds finger controls to the rig setup.
+    pub fn with_finger_controls(mut self, controls: FingerControls) -> Self {
+        self.finger_controls.push(controls);
         self
     }
 

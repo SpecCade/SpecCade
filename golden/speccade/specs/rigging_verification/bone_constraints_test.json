@@ -26,14 +26,14 @@
             {
               "type": "hinge",
               "bone": "lower_arm_l",
-              "axis": "x",
+              "axis": "X",
               "min_angle": 0.0,
               "max_angle": 145.0
             },
             {
               "type": "hinge",
               "bone": "lower_arm_r",
-              "axis": "x",
+              "axis": "X",
               "min_angle": 0.0,
               "max_angle": 145.0
             },
@@ -54,14 +54,14 @@
             {
               "type": "hinge",
               "bone": "lower_leg_l",
-              "axis": "x",
+              "axis": "X",
               "min_angle": 0.0,
               "max_angle": 160.0
             },
             {
               "type": "hinge",
               "bone": "lower_leg_r",
-              "axis": "x",
+              "axis": "X",
               "min_angle": 0.0,
               "max_angle": 160.0
             }

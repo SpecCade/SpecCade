@@ -1652,14 +1652,17 @@ def create_legacy_part(
     obj = create_base_mesh_profile(shape_type, vertex_count, bottom_radius)
     obj.name = f"part_{part_name}"
 
-    # Position at bone location if armature exists
-    if armature:
-        bone_pos = get_bone_position(armature, bone_name)
-        offset = part_spec.get('offset', [0, 0, 0])
-        obj.location = bone_pos + Vector(offset)
+    # Position the part:
+    # - If explicit 'offset' is provided, use it as world position
+    # - Otherwise, position at bone's head location
+    if 'offset' in part_spec:
+        # Explicit offset is treated as world position
+        obj.location = Vector(part_spec['offset'])
+    elif armature:
+        # No offset specified - position at bone's head
+        obj.location = get_bone_position(armature, bone_name)
     else:
-        offset = part_spec.get('offset', [0, 0, 0])
-        obj.location = Vector(offset)
+        obj.location = Vector((0, 0, 0))
 
     # Apply initial rotation
     if 'rotation' in part_spec:
@@ -2566,7 +2569,358 @@ def apply_rig_setup(armature: 'bpy.types.Object', rig_setup: Dict) -> Dict[str, 
     if stretch_settings and stretch_settings.get('enabled', False):
         apply_stretch_settings(armature, stretch_settings)
 
+    # Apply IK/FK switches
+    for ikfk_switch in rig_setup.get('ikfk_switches', []):
+        try:
+            setup_ikfk_switch(armature, ikfk_switch, result)
+        except ValueError as e:
+            print(f"Warning: Could not set up IK/FK switch: {e}")
+
+    # Apply space switches
+    for space_switch in rig_setup.get('space_switches', []):
+        try:
+            setup_space_switch(armature, space_switch)
+        except ValueError as e:
+            print(f"Warning: Could not set up space switch: {e}")
+
+    # Apply finger controls
+    for finger_controls in rig_setup.get('finger_controls', []):
+        try:
+            setup_finger_controls(armature, finger_controls)
+        except ValueError as e:
+            print(f"Warning: Could not set up finger controls: {e}")
+
     return result
+
+
+# =============================================================================
+# IK/FK Switch Setup
+# =============================================================================
+
+def setup_ikfk_switch(
+    armature: 'bpy.types.Object',
+    switch_config: Dict,
+    ik_controls: Dict[str, Dict]
+) -> None:
+    """
+    Set up IK/FK switching for a limb.
+
+    Creates a custom property on the armature to control IK influence,
+    and sets up drivers for seamless switching.
+
+    Args:
+        armature: The armature object.
+        switch_config: Dictionary with switch configuration.
+        ik_controls: Dictionary of existing IK control objects.
+    """
+    name = switch_config.get('name', 'ikfk_switch')
+    ik_chain = switch_config.get('ik_chain')
+    fk_bones = switch_config.get('fk_bones', [])
+    default_mode = switch_config.get('default_mode', 'ik')
+
+    if not ik_chain:
+        raise ValueError(f"IK/FK switch '{name}' requires 'ik_chain' field")
+
+    # Create custom property for IK/FK blend (0.0 = FK, 1.0 = IK)
+    prop_name = f"ikfk_{name}"
+    default_value = 1.0 if default_mode == 'ik' else 0.0
+
+    # Add custom property to armature
+    armature[prop_name] = default_value
+
+    # Set up property UI
+    if '_RNA_UI' not in armature:
+        armature['_RNA_UI'] = {}
+
+    armature['_RNA_UI'][prop_name] = {
+        "min": 0.0,
+        "max": 1.0,
+        "soft_min": 0.0,
+        "soft_max": 1.0,
+        "description": f"IK/FK blend for {name} (0=FK, 1=IK)"
+    }
+
+    # Find the IK constraint on the tip bone and add driver for influence
+    if ik_chain in ik_controls:
+        chain_data = ik_controls[ik_chain]
+        tip_bone_name = chain_data.get('tip_bone')
+
+        if tip_bone_name and tip_bone_name in armature.pose.bones:
+            pose_bone = armature.pose.bones[tip_bone_name]
+
+            # Find IK constraint
+            for constraint in pose_bone.constraints:
+                if constraint.type == 'IK':
+                    # Add driver to influence
+                    driver = constraint.driver_add('influence').driver
+                    driver.type = 'AVERAGE'
+
+                    var = driver.variables.new()
+                    var.name = 'ikfk'
+                    var.type = 'SINGLE_PROP'
+                    var.targets[0].id = armature
+                    var.targets[0].data_path = f'["{prop_name}"]'
+
+                    print(f"Set up IK/FK switch '{name}' on {tip_bone_name}")
+                    break
+
+    print(f"Created IK/FK switch property: {prop_name}")
+
+
+def snap_fk_to_ik(armature: 'bpy.types.Object', switch_name: str, ik_controls: Dict) -> None:
+    """
+    Snap FK bones to match current IK pose.
+
+    Called before switching from IK to FK mode to prevent popping.
+    """
+    # This would copy the current world-space rotations of the FK bones
+    # Implementation depends on the specific bone chain
+    pass
+
+
+def snap_ik_to_fk(armature: 'bpy.types.Object', switch_name: str, ik_controls: Dict) -> None:
+    """
+    Snap IK target/pole to match current FK pose.
+
+    Called before switching from FK to IK mode to prevent popping.
+    """
+    # This would move the IK target to match the FK end effector position
+    # Implementation depends on the specific bone chain
+    pass
+
+
+# =============================================================================
+# Space Switch Setup
+# =============================================================================
+
+def setup_space_switch(
+    armature: 'bpy.types.Object',
+    switch_config: Dict
+) -> None:
+    """
+    Set up space switching for a bone.
+
+    Creates constraints and custom properties to allow dynamic parent changes.
+
+    Args:
+        armature: The armature object.
+        switch_config: Dictionary with space switch configuration.
+    """
+    name = switch_config.get('name', 'space_switch')
+    bone_name = switch_config.get('bone')
+    spaces = switch_config.get('spaces', [])
+    default_space = switch_config.get('default_space', 0)
+
+    if not bone_name:
+        raise ValueError(f"Space switch '{name}' requires 'bone' field")
+
+    if bone_name not in armature.pose.bones:
+        raise ValueError(f"Bone '{bone_name}' not found in armature")
+
+    if not spaces:
+        raise ValueError(f"Space switch '{name}' requires at least one space")
+
+    pose_bone = armature.pose.bones[bone_name]
+
+    # Create custom property for space selection
+    prop_name = f"space_{name}"
+    armature[prop_name] = default_space
+
+    # Set up property UI
+    if '_RNA_UI' not in armature:
+        armature['_RNA_UI'] = {}
+
+    space_names = [s.get('name', f'Space {i}') for i, s in enumerate(spaces)]
+    armature['_RNA_UI'][prop_name] = {
+        "min": 0,
+        "max": len(spaces) - 1,
+        "soft_min": 0,
+        "soft_max": len(spaces) - 1,
+        "description": f"Parent space for {bone_name}: " + ", ".join(
+            f"{i}={n}" for i, n in enumerate(space_names)
+        )
+    }
+
+    # Create Copy Transform constraints for each space with driven influence
+    for i, space in enumerate(spaces):
+        space_name = space.get('name', f'Space_{i}')
+        space_type = space.get('type', 'world')
+
+        # Create constraint
+        constraint = pose_bone.constraints.new('COPY_TRANSFORMS')
+        constraint.name = f"Space_{space_name}"
+        constraint.mix_mode = 'REPLACE'
+        constraint.target_space = 'WORLD'
+        constraint.owner_space = 'WORLD'
+
+        # Set target based on space type
+        if space_type == 'world':
+            # No target - world space (disable constraint)
+            constraint.mute = True
+        elif space_type == 'root':
+            constraint.target = armature
+            constraint.subtarget = 'root'
+        elif space_type == 'bone':
+            target_bone = space.get('bone')
+            if target_bone:
+                constraint.target = armature
+                constraint.subtarget = target_bone
+        elif space_type == 'object':
+            target_obj = space.get('object')
+            if target_obj and target_obj in bpy.data.objects:
+                constraint.target = bpy.data.objects[target_obj]
+
+        # Add driver for influence based on space selection
+        if space_type != 'world':
+            driver = constraint.driver_add('influence').driver
+            driver.type = 'SCRIPTED'
+            driver.expression = f'1.0 if space == {i} else 0.0'
+
+            var = driver.variables.new()
+            var.name = 'space'
+            var.type = 'SINGLE_PROP'
+            var.targets[0].id = armature
+            var.targets[0].data_path = f'["{prop_name}"]'
+
+    print(f"Set up space switch '{name}' on {bone_name} with {len(spaces)} spaces")
+
+
+# =============================================================================
+# Finger Controls Setup
+# =============================================================================
+
+def setup_finger_controls(
+    armature: 'bpy.types.Object',
+    controls_config: Dict
+) -> None:
+    """
+    Set up simplified finger controls with curl and spread.
+
+    Creates custom properties that drive finger bone rotations.
+
+    Args:
+        armature: The armature object.
+        controls_config: Dictionary with finger controls configuration.
+    """
+    name = controls_config.get('name', 'finger_controls')
+    side = controls_config.get('side', 'left')
+    bone_prefix = controls_config.get('bone_prefix', 'finger')
+    fingers = controls_config.get('fingers', ['thumb', 'index', 'middle', 'ring', 'pinky'])
+    bones_per_finger = controls_config.get('bones_per_finger', 3)
+    max_curl = controls_config.get('max_curl_degrees', 90.0)
+    max_spread = controls_config.get('max_spread_degrees', 15.0)
+
+    side_suffix = '_l' if side == 'left' else '_r'
+
+    # Create custom properties for global curl and spread
+    curl_prop = f"curl_{name}"
+    spread_prop = f"spread_{name}"
+
+    armature[curl_prop] = 0.0
+    armature[spread_prop] = 0.0
+
+    # Set up property UI
+    if '_RNA_UI' not in armature:
+        armature['_RNA_UI'] = {}
+
+    armature['_RNA_UI'][curl_prop] = {
+        "min": 0.0,
+        "max": 1.0,
+        "soft_min": 0.0,
+        "soft_max": 1.0,
+        "description": f"Global finger curl (0=flat, 1=fist)"
+    }
+
+    armature['_RNA_UI'][spread_prop] = {
+        "min": 0.0,
+        "max": 1.0,
+        "soft_min": 0.0,
+        "soft_max": 1.0,
+        "description": f"Global finger spread"
+    }
+
+    # Create per-finger curl properties
+    for finger in fingers:
+        finger_curl_prop = f"curl_{name}_{finger}"
+        armature[finger_curl_prop] = -1.0  # -1 means "use global"
+
+        armature['_RNA_UI'][finger_curl_prop] = {
+            "min": -1.0,
+            "max": 1.0,
+            "soft_min": -1.0,
+            "soft_max": 1.0,
+            "description": f"{finger.title()} curl override (-1=global)"
+        }
+
+    # Add drivers to finger bones
+    for finger in fingers:
+        finger_curl_prop = f"curl_{name}_{finger}"
+        num_bones = 2 if finger == 'thumb' else bones_per_finger
+
+        # Spread angle varies by finger position (index spreads less, pinky more)
+        finger_spread_mult = {
+            'thumb': 2.0,
+            'index': 0.5,
+            'middle': 0.0,
+            'ring': -0.5,
+            'pinky': -1.0
+        }.get(finger, 0.0)
+
+        for bone_idx in range(1, num_bones + 1):
+            bone_name = f"{bone_prefix}_{finger}{bone_idx:02d}{side_suffix}"
+
+            if bone_name not in armature.pose.bones:
+                # Try alternate naming convention
+                bone_name = f"{bone_prefix}_{finger}_{bone_idx:02d}{side_suffix}"
+
+            if bone_name not in armature.pose.bones:
+                continue
+
+            pose_bone = armature.pose.bones[bone_name]
+            pose_bone.rotation_mode = 'XYZ'
+
+            # Add curl driver to X rotation (flexion axis)
+            try:
+                driver = pose_bone.driver_add('rotation_euler', 0).driver
+                driver.type = 'SCRIPTED'
+
+                # Expression: use per-finger curl if >= 0, else use global
+                # Curl amount scaled by max_curl and converted to radians
+                curl_rad = math.radians(max_curl)
+                driver.expression = f'(curl_finger if curl_finger >= 0 else curl_global) * {curl_rad}'
+
+                var1 = driver.variables.new()
+                var1.name = 'curl_global'
+                var1.type = 'SINGLE_PROP'
+                var1.targets[0].id = armature
+                var1.targets[0].data_path = f'["{curl_prop}"]'
+
+                var2 = driver.variables.new()
+                var2.name = 'curl_finger'
+                var2.type = 'SINGLE_PROP'
+                var2.targets[0].id = armature
+                var2.targets[0].data_path = f'["{finger_curl_prop}"]'
+            except Exception as e:
+                print(f"Warning: Could not add curl driver to {bone_name}: {e}")
+
+            # Add spread driver to Z rotation (only for first bone of each finger)
+            if bone_idx == 1 and finger_spread_mult != 0.0:
+                try:
+                    driver = pose_bone.driver_add('rotation_euler', 2).driver
+                    driver.type = 'SCRIPTED'
+
+                    spread_rad = math.radians(max_spread * finger_spread_mult)
+                    driver.expression = f'spread * {spread_rad}'
+
+                    var = driver.variables.new()
+                    var.name = 'spread'
+                    var.type = 'SINGLE_PROP'
+                    var.targets[0].id = armature
+                    var.targets[0].data_path = f'["{spread_prop}"]'
+                except Exception as e:
+                    print(f"Warning: Could not add spread driver to {bone_name}: {e}")
+
+    print(f"Set up finger controls '{name}' for {len(fingers)} fingers")
 
 
 # =============================================================================
@@ -4033,7 +4387,6 @@ def apply_root_motion_settings(armature, action, settings):
 def create_animation(armature: 'bpy.types.Object', params: Dict) -> 'bpy.types.Action':
     """Create an animation from params."""
     clip_name = params.get("clip_name", "animation")
-    duration = params.get("duration_seconds", 1.0)
     fps = params.get("fps", 30)
     keyframes = params.get("keyframes", [])
     interpolation = params.get("interpolation", "linear").upper()
@@ -4041,8 +4394,15 @@ def create_animation(armature: 'bpy.types.Object', params: Dict) -> 'bpy.types.A
     # Set scene FPS
     bpy.context.scene.render.fps = fps
 
-    # Calculate frame range
-    frame_count = int(duration * fps)
+    # Calculate frame range - support both duration_frames and duration_seconds
+    duration_frames = params.get("duration_frames")
+    duration_seconds = params.get("duration_seconds")
+    if duration_frames:
+        frame_count = duration_frames
+    elif duration_seconds:
+        frame_count = int(duration_seconds * fps)
+    else:
+        frame_count = 30  # Default to 1 second at 30fps
     bpy.context.scene.frame_start = 1
     bpy.context.scene.frame_end = frame_count
 
@@ -4085,6 +4445,9 @@ def create_animation(armature: 'bpy.types.Object', params: Dict) -> 'bpy.types.A
                     math.radians(rot[1]),
                     math.radians(rot[2])
                 ))
+                # Insert keyframe with the value we just set
+                # Do NOT use INSERTKEY_VISUAL - it reads the visual pose which is
+                # rest pose in Blender 5.0 background mode
                 pose_bone.keyframe_insert(data_path="rotation_euler", frame=frame)
 
             # Set interpolation
@@ -4216,11 +4579,38 @@ def _iter_action_fcurves(action: Any):
     """
     Return an iterable of fcurves for an action if available.
 
-    Blender's animation API has evolved; some versions expose fcurves directly
-    on the Action, others may not. We treat missing fcurves as "no-op" for
-    interpolation tweaking rather than hard failing generation.
+    Blender's animation API has evolved:
+    - Blender < 5.0: fcurves directly on Action
+    - Blender >= 5.0: fcurves in Channelbags within Layers/Strips
+
+    We try both old and new APIs.
     """
-    return getattr(action, "fcurves", []) or []
+    # Try direct fcurves first (Blender < 5.0 or simple actions)
+    if hasattr(action, 'fcurves') and action.fcurves:
+        return action.fcurves
+
+    # Try Blender 5.0 layered action structure
+    if hasattr(action, 'layers'):
+        fcurves = []
+        for layer in action.layers:
+            for strip in layer.strips:
+                # In Blender 5.0, strips have channelbags accessed via slots
+                # Try multiple access patterns
+                if hasattr(strip, 'channelbags'):
+                    for channelbag in strip.channelbags:
+                        if hasattr(channelbag, 'fcurves'):
+                            fcurves.extend(channelbag.fcurves)
+                elif hasattr(strip, 'channelbag') and strip.channelbag:
+                    if hasattr(strip.channelbag, 'fcurves'):
+                        fcurves.extend(strip.channelbag.fcurves)
+                # Try action_slot pattern
+                if hasattr(strip, 'action') and strip.action:
+                    if hasattr(strip.action, 'fcurves') and strip.action.fcurves:
+                        fcurves.extend(strip.action.fcurves)
+        if fcurves:
+            return fcurves
+
+    return []
 
 
 def export_glb(output_path: Path, include_armature: bool = True,
@@ -4257,7 +4647,7 @@ def export_glb(output_path: Path, include_armature: bool = True,
 def setup_preview_camera(
     armature: 'bpy.types.Object',
     camera_preset: str,
-    distance: float = 3.0
+    distance: float = 5.0
 ) -> 'bpy.types.Object':
     """
     Set up a camera for animation preview rendering.
@@ -4337,27 +4727,145 @@ def setup_preview_camera(
     return camera
 
 
-def render_animation_preview_gif(
+def create_stick_figure_material() -> 'bpy.types.Material':
+    """Create a simple diffuse material for the stick figure visualization."""
+    mat = bpy.data.materials.new("StickFigureMat")
+    mat.use_nodes = True
+    nodes = mat.node_tree.nodes
+    links = mat.node_tree.links
+    nodes.clear()
+
+    # Use diffuse BSDF for better visibility in renders
+    bsdf = nodes.new('ShaderNodeBsdfDiffuse')
+    bsdf.inputs['Color'].default_value = (0.9, 0.8, 0.6, 1.0)  # Warm beige
+
+    output = nodes.new('ShaderNodeOutputMaterial')
+    links.new(bsdf.outputs['BSDF'], output.inputs['Surface'])
+
+    return mat
+
+
+def create_stick_figure_for_frame(armature: 'bpy.types.Object', mat: 'bpy.types.Material',
+                                   bone_radius: float = 0.03) -> 'bpy.types.Object':
+    """
+    Create a stick figure mesh based on the current pose of the armature.
+
+    This creates the geometry at the exact world positions of the pose bones
+    for the current frame, ensuring the visualization matches the animation.
+
+    Args:
+        armature: The armature object.
+        mat: Material to apply to the mesh.
+        bone_radius: Radius of the bone visualizations.
+
+    Returns:
+        A single mesh object representing the stick figure.
+    """
+    import bmesh
+
+    mesh = bpy.data.meshes.new("StickFigureMesh")
+    bm = bmesh.new()
+
+    # Build a cache of posed bone matrices computed from rotation_euler values
+    # This is needed because Blender 5.0 background mode doesn't update pbone.matrix
+    # when we set rotation_euler via fcurve evaluation
+    posed_matrices = {}
+
+    def compute_posed_matrix(pbone):
+        """Compute the posed matrix for a bone from its rotation_euler."""
+        if pbone.name in posed_matrices:
+            return posed_matrices[pbone.name]
+
+        # Get the bone's rest pose matrix (in armature local space)
+        rest_matrix = pbone.bone.matrix_local.copy()
+
+        # Create the pose transform from rotation_euler
+        pose_rot = pbone.rotation_euler.to_matrix().to_4x4()
+
+        if pbone.parent:
+            # Get parent's posed matrix
+            parent_posed = compute_posed_matrix(pbone.parent)
+            # Get parent's rest matrix
+            parent_rest = pbone.parent.bone.matrix_local.copy()
+            # Compute the relative rest offset from parent to this bone
+            parent_rest_inv = parent_rest.inverted()
+            local_rest = parent_rest_inv @ rest_matrix
+            # Final posed matrix = parent_posed @ local_rest @ pose_rotation
+            posed = parent_posed @ local_rest @ pose_rot
+        else:
+            # Root bone: just apply pose rotation to rest matrix
+            posed = rest_matrix @ pose_rot
+
+        posed_matrices[pbone.name] = posed
+        return posed
+
+    # Compute all posed matrices
+    for pbone in armature.pose.bones:
+        compute_posed_matrix(pbone)
+
+    # Now create the stick figure using computed posed matrices
+    for pbone in armature.pose.bones:
+        posed_matrix = posed_matrices.get(pbone.name, pbone.matrix)
+        bone_world_matrix = armature.matrix_world @ posed_matrix
+        head = bone_world_matrix @ Vector((0, 0, 0))
+        tail = bone_world_matrix @ Vector((0, pbone.length, 0))
+        length = (tail - head).length
+
+        if length < 0.001:
+            continue
+
+        # Create cube at head position (simpler than cylinders for debugging)
+        vert_count_before = len(bm.verts)
+        bmesh.ops.create_cube(bm, size=bone_radius * 2)
+        bm.verts.ensure_lookup_table()
+        for i in range(vert_count_before, len(bm.verts)):
+            bm.verts[i].co += head
+
+        # Create cube at tail position
+        vert_count_before = len(bm.verts)
+        bmesh.ops.create_cube(bm, size=bone_radius)
+        bm.verts.ensure_lookup_table()
+        for i in range(vert_count_before, len(bm.verts)):
+            bm.verts[i].co += tail
+
+    bm.to_mesh(mesh)
+    bm.free()
+
+    obj = bpy.data.objects.new("StickFigure", mesh)
+    bpy.context.collection.objects.link(obj)
+    mesh.materials.append(mat)
+
+    return obj
+
+
+def render_animation_preview_frames(
     armature: 'bpy.types.Object',
-    output_path: Path,
+    output_dir: Path,
     preview_config: Dict[str, Any],
     frame_start: int,
     frame_end: int,
-    fps: int
+    fps: int,
+    keyframe_times: Optional[List[float]] = None
 ) -> Dict[str, Any]:
     """
-    Render animation to GIF using Blender's FFMPEG output.
+    Render animation preview as PNG frames.
+
+    Creates a stick figure visualization mesh for the armature bones since
+    armatures are not visible in production renders. Uses regular EEVEE
+    rendering which works in background mode.
 
     Args:
         armature: The armature being animated.
-        output_path: Output path for the GIF file.
+        output_dir: Output directory for PNG frames.
         preview_config: Preview configuration from spec.
         frame_start: First frame to render.
         frame_end: Last frame to render.
         fps: Frames per second.
+        keyframe_times: Optional list of keyframe times (in seconds) to render.
+                       If provided, only these frames are rendered.
 
     Returns:
-        Dictionary with preview metrics.
+        Dictionary with preview metrics and frame paths.
     """
     scene = bpy.context.scene
 
@@ -4367,55 +4875,137 @@ def render_animation_preview_gif(
     frame_step = max(1, preview_config.get("frame_step", 2))
     background = preview_config.get("background", [0.2, 0.2, 0.2, 1.0])
 
+    # Create material for stick figures
+    mat = create_stick_figure_material()
+
     # Setup camera
     camera = setup_preview_camera(armature, camera_preset)
+
+    # Add a sun lamp for lighting (needed for diffuse material)
+    light_data = bpy.data.lights.new(name="PreviewSun", type='SUN')
+    light_data.energy = 2.0
+    sun = bpy.data.objects.new("PreviewSun", light_data)
+    bpy.context.collection.objects.link(sun)
+    sun.rotation_euler = (math.radians(45), 0, math.radians(45))
 
     # Configure render settings
     scene.render.resolution_x = size[0]
     scene.render.resolution_y = size[1]
     scene.render.resolution_percentage = 100
     scene.render.film_transparent = False
-    scene.frame_start = frame_start
-    scene.frame_end = frame_end
-    scene.frame_step = frame_step
-    scene.render.fps = fps
 
-    # Set background color
+    # Set background color using world nodes
     world = bpy.data.worlds.new("PreviewWorld")
-    world.use_nodes = False
-    world.color = (background[0], background[1], background[2])
+    world.use_nodes = True
+    bg_node = world.node_tree.nodes.get("Background")
+    if bg_node:
+        bg_node.inputs['Color'].default_value = (background[0], background[1], background[2], 1.0)
     scene.world = world
 
     # Configure render engine for fast preview
-    scene.render.engine = 'BLENDER_EEVEE_NEXT' if hasattr(bpy.types, 'BLENDER_EEVEE_NEXT') else 'BLENDER_EEVEE'
-    scene.eevee.taa_render_samples = 16  # Low samples for speed
+    if hasattr(scene.render, 'engine'):
+        if 'BLENDER_EEVEE_NEXT' in dir(bpy.types):
+            scene.render.engine = 'BLENDER_EEVEE_NEXT'
+        else:
+            scene.render.engine = 'BLENDER_EEVEE'
 
-    # Set output format to FFMPEG GIF
-    scene.render.image_settings.file_format = 'FFMPEG'
-    scene.render.ffmpeg.format = 'GIF'
+    # Low samples for speed
+    if hasattr(scene, 'eevee'):
+        scene.eevee.taa_render_samples = 16
 
-    # Set output path
-    scene.render.filepath = str(output_path)
+    # Set output format to PNG
+    scene.render.image_settings.file_format = 'PNG'
+    scene.render.image_settings.color_mode = 'RGB'
 
-    # Ensure output directory exists
-    output_path.parent.mkdir(parents=True, exist_ok=True)
+    # Ensure output directory exists and resolve to absolute path
+    output_dir = output_dir.resolve()
+    output_dir.mkdir(parents=True, exist_ok=True)
 
-    # Render animation
-    print(f"Rendering preview GIF to: {output_path}")
-    bpy.ops.render.render(animation=True)
+    # Determine which frames to render
+    if keyframe_times:
+        # Convert keyframe times to frame numbers
+        frames_to_render = sorted(set(
+            max(1, int(t * fps) + 1) for t in keyframe_times
+        ))
+    else:
+        # Fall back to frame_step based rendering
+        frames_to_render = list(range(frame_start, frame_end + 1, frame_step))
+
+    # Check if animation data exists and has fcurves
+    if armature.animation_data and armature.animation_data.action:
+        action = armature.animation_data.action
+        fcurves = list(_iter_action_fcurves(action))
+        print(f"Animation has {len(fcurves)} fcurves")
+        if fcurves:
+            print(f"Sample fcurve: {fcurves[0].data_path}, keyframes: {len(fcurves[0].keyframe_points)}")
+    else:
+        print("WARNING: No animation data or action on armature!")
+
+    # Render each frame
+    # After baking, animation is in simple keyframes that should evaluate correctly
+    rendered_frames = []
+    for frame in frames_to_render:
+        scene.frame_set(frame, subframe=0.0)
+
+        # Force full depsgraph update including animation evaluation
+        depsgraph = bpy.context.evaluated_depsgraph_get()
+        depsgraph.update()
+
+        # Manually evaluate fcurves for this frame to ensure animation is applied
+        # This is a workaround for Blender 5.0's background mode evaluation issues
+        eval_errors = []
+        eval_success = 0
+        if armature.animation_data and armature.animation_data.action:
+            action = armature.animation_data.action
+            for fcurve in _iter_action_fcurves(action):
+                value = fcurve.evaluate(frame)
+                data_path = fcurve.data_path
+                array_index = fcurve.array_index
+                try:
+                    # data_path is like 'pose.bones["bone_name"].rotation_euler'
+                    armature.path_resolve(data_path)[array_index] = value
+                    eval_success += 1
+                except Exception as e:
+                    eval_errors.append(f"{data_path}[{array_index}]: {e}")
+
+
+        # Force pose bone matrix recalculation
+        # Enter and exit pose mode to trigger matrix updates
+        bpy.context.view_layer.objects.active = armature
+        if bpy.context.mode != 'POSE':
+            bpy.ops.object.mode_set(mode='POSE')
+        bpy.ops.pose.select_all(action='SELECT')
+        bpy.ops.object.mode_set(mode='OBJECT')
+        bpy.context.view_layer.update()
+
+        # Create stick figure for current pose
+        stick_figure = create_stick_figure_for_frame(armature, mat)
+
+        frame_path = output_dir / f"frame_{frame:04d}.png"
+        scene.render.filepath = str(frame_path)
+        bpy.ops.render.render(write_still=True)
+        rendered_frames.append(f"frame_{frame:04d}.png")
+        print(f"Rendered frame {frame}")
+
+        # Clean up stick figure for this frame
+        bpy.data.objects.remove(stick_figure, do_unlink=True)
 
     # Clean up
-    bpy.data.objects.remove(camera)
-    bpy.data.cameras.remove(camera.data if hasattr(camera, 'data') else bpy.data.cameras.get("PreviewCamera"))
+    bpy.data.objects.remove(camera, do_unlink=True)
+    if "PreviewCamera" in bpy.data.cameras:
+        bpy.data.cameras.remove(bpy.data.cameras["PreviewCamera"])
+    bpy.data.objects.remove(sun, do_unlink=True)
+    if "PreviewSun" in bpy.data.lights:
+        bpy.data.lights.remove(bpy.data.lights["PreviewSun"])
     bpy.data.worlds.remove(world)
-
-    frames_rendered = (frame_end - frame_start) // frame_step + 1
+    bpy.data.materials.remove(mat)
 
     return {
-        "preview_gif": str(output_path.name),
-        "frames_rendered": frames_rendered,
+        "preview_frames": rendered_frames,
+        "frames_rendered": len(rendered_frames),
         "size": size,
         "camera_preset": camera_preset,
+        "keyframes_rendered": keyframe_times is not None,
     }
 
 
@@ -6960,6 +7550,43 @@ def handle_rigged_animation(spec: Dict, out_root: Path, report_path: Path) -> No
                     ))
                     target_obj.keyframe_insert(data_path="rotation_euler", frame=frame)
 
+        # Apply finger keyframes
+        # Property names match setup_finger_controls(): curl_{name}, spread_{name}, curl_{name}_{finger}
+        finger_keyframes = params.get("finger_keyframes", [])
+        for finger_kf in finger_keyframes:
+            time_sec = finger_kf.get("time", 0)
+            frame_index = int(time_sec * fps)
+            if frame_count > 0:
+                frame_index = max(0, min(frame_index, frame_count - 1))
+            frame = 1 + frame_index
+            controls_name = finger_kf.get("controls", "")
+            pose = finger_kf.get("pose", {})
+
+            # Global curl and spread
+            curl = pose.get("curl", 0.0)
+            spread = pose.get("spread", 0.0)
+
+            # Set curl property and keyframe
+            curl_prop = f"curl_{controls_name}"
+            if curl_prop in armature:
+                armature[curl_prop] = curl
+                armature.keyframe_insert(data_path=f'["{curl_prop}"]', frame=frame)
+
+            # Set spread property and keyframe
+            spread_prop = f"spread_{controls_name}"
+            if spread_prop in armature:
+                armature[spread_prop] = spread
+                armature.keyframe_insert(data_path=f'["{spread_prop}"]', frame=frame)
+
+            # Per-finger curl overrides (e.g., index_curl, thumb_curl)
+            for finger in ["thumb", "index", "middle", "ring", "pinky"]:
+                finger_curl_key = f"{finger}_curl"
+                if finger_curl_key in pose:
+                    prop_name = f"curl_{controls_name}_{finger}"
+                    if prop_name in armature:
+                        armature[prop_name] = pose[finger_curl_key]
+                        armature.keyframe_insert(data_path=f'["{prop_name}"]', frame=frame)
+
         # Get output path
         outputs = spec.get("outputs", [])
         primary_output = next((o for o in outputs if o.get("kind") == "primary"), None)
@@ -6970,6 +7597,44 @@ def handle_rigged_animation(spec: Dict, out_root: Path, report_path: Path) -> No
         output_path = out_root / output_rel_path
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
+        # Render preview frames BEFORE baking (baking overwrites animation in Blender 5.0 bg mode)
+        preview_rel_dir = None
+        preview_config = params.get("preview")
+        if preview_config:
+            preview_rel_dir = output_rel_path.replace(".glb", "_preview")
+            preview_dir = out_root / preview_rel_dir
+
+            # Extract keyframe times from params for keyframe-only rendering
+            keyframe_times = None
+            keyframes_param = params.get("keyframes", [])
+            ik_keyframes_param = params.get("ik_keyframes", [])
+            if keyframes_param or ik_keyframes_param:
+                all_times = set()
+                for kf in keyframes_param:
+                    if "time" in kf:
+                        all_times.add(kf["time"])
+                for kf in ik_keyframes_param:
+                    if "time" in kf:
+                        all_times.add(kf["time"])
+                if all_times:
+                    keyframe_times = sorted(all_times)
+
+            try:
+                preview_result = render_animation_preview_frames(
+                    armature,
+                    preview_dir,
+                    preview_config,
+                    1,  # frame_start
+                    frame_count,  # frame_end
+                    fps,
+                    keyframe_times=keyframe_times
+                )
+                print(f"Rendered {len(preview_result.get('frames', []))} preview frames")
+            except Exception as e:
+                print(f"Warning: Failed to render preview: {e}")
+                import traceback
+                traceback.print_exc()
+
         # Apply bake settings from rig_setup or export settings
         bake_settings = rig_setup.get("bake")
         export_settings = params.get("export", {})
@@ -6979,6 +7644,8 @@ def handle_rigged_animation(spec: Dict, out_root: Path, report_path: Path) -> No
             bake_animation(armature, bake_settings, 1, frame_count)
         elif export_settings.get("bake_transforms", True):
             # Legacy bake behavior
+            # NOTE: visual_keying=False to bake the action keyframes directly,
+            # not the visual pose (which is rest pose in Blender 5.0 background mode)
             bpy.context.view_layer.objects.active = armature
             bpy.ops.object.mode_set(mode='POSE')
             bpy.ops.pose.select_all(action='SELECT')
@@ -6986,7 +7653,7 @@ def handle_rigged_animation(spec: Dict, out_root: Path, report_path: Path) -> No
                 frame_start=1,
                 frame_end=frame_count,
                 only_selected=False,
-                visual_keying=True,
+                visual_keying=False,  # Changed from True to preserve animation in bg mode
                 clear_constraints=False,
                 use_current_action=True,
                 bake_types={'POSE'}
@@ -7029,27 +7696,13 @@ def handle_rigged_animation(spec: Dict, out_root: Path, report_path: Path) -> No
             blend_path = out_root / blend_rel_path
             bpy.ops.wm.save_as_mainfile(filepath=str(blend_path))
 
-        # Render preview GIF if requested
-        preview_rel_path = None
-        preview_config = params.get("preview")
-        if preview_config:
-            preview_rel_path = output_rel_path.replace(".glb", "_preview.gif")
-            preview_path = out_root / preview_rel_path
-            preview_result = render_animation_preview_gif(
-                armature,
-                preview_path,
-                preview_config,
-                1,  # frame_start
-                frame_count,  # frame_end
-                fps
-            )
-            metrics["preview"] = preview_result
-            print(f"Preview GIF rendered: {preview_rel_path}")
+        # Preview was rendered before baking - just add metrics if available
+        # (preview_rel_dir is already set from earlier)
 
         duration_ms = int((time.time() - start_time) * 1000)
         write_report(report_path, ok=True, metrics=metrics,
                      output_path=output_rel_path, blend_path=blend_rel_path,
-                     preview_path=preview_rel_path,
+                     preview_path=preview_rel_dir,
                      duration_ms=duration_ms)
 
     except Exception as e:

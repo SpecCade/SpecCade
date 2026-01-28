@@ -27,28 +27,28 @@
             "name": "upper_arm_twist_setup_l",
             "source": "upper_arm_l",
             "target": "upper_arm_twist_l",
-            "axis": "y",
+            "axis": "Y",
             "influence": 0.5
           },
           {
             "name": "lower_arm_twist_setup_l",
             "source": "lower_arm_l",
             "target": "lower_arm_twist_l",
-            "axis": "y",
+            "axis": "Y",
             "influence": 0.5
           },
           {
             "name": "upper_arm_twist_setup_r",
             "source": "upper_arm_r",
             "target": "upper_arm_twist_r",
-            "axis": "y",
+            "axis": "Y",
             "influence": 0.5
           },
           {
             "name": "lower_arm_twist_setup_r",
             "source": "lower_arm_r",
             "target": "lower_arm_twist_r",
-            "axis": "y",
+            "axis": "Y",
             "influence": 0.5
           }
         ]

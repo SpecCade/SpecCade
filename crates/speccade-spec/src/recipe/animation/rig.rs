@@ -10,7 +10,9 @@ use super::pose::{AnimationPhase, PoseDefinition};
 use super::preview::PreviewRender;
 use super::procedural::ProceduralLayer;
 use super::root_motion::RootMotionSettings;
-use super::skeletal::RigSetup;
+use super::skeletal::{
+    FingerKeyframe, IkFkKeyframe, RigSetup, SpaceSwitchKeyframe,
+};
 use crate::recipe::character::SkeletonPreset;
 
 // =============================================================================
@@ -69,6 +71,15 @@ pub struct SkeletalAnimationBlenderRiggedV1Params {
     /// IK target keyframes (for animating IK targets).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub ik_keyframes: Vec<IkKeyframe>,
+    /// IK/FK switch keyframes.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub ikfk_keyframes: Vec<IkFkKeyframe>,
+    /// Space switch keyframes.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub space_keyframes: Vec<SpaceSwitchKeyframe>,
+    /// Finger animation keyframes.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub finger_keyframes: Vec<FingerKeyframe>,
     /// Interpolation method between keyframes.
     #[serde(default)]
     pub interpolation: InterpolationMode,
