@@ -38,6 +38,8 @@ pub enum GenerationMode {
     AnimationHelpers,
     /// Mesh-to-sprite rendering (renders mesh from multiple angles into sprite atlas).
     MeshToSprite,
+    /// Validation grid rendering (6-view PNG for LLM verification).
+    ValidationGrid,
 }
 
 impl GenerationMode {
@@ -52,6 +54,7 @@ impl GenerationMode {
             GenerationMode::RiggedAnimation => "rigged_animation",
             GenerationMode::AnimationHelpers => "animation_helpers",
             GenerationMode::MeshToSprite => "mesh_to_sprite",
+            GenerationMode::ValidationGrid => "validation_grid",
         }
     }
 }
@@ -398,6 +401,12 @@ mod tests {
         assert_eq!(GenerationMode::RiggedAnimation.as_str(), "rigged_animation");
         assert_eq!(GenerationMode::AnimationHelpers.as_str(), "animation_helpers");
         assert_eq!(GenerationMode::MeshToSprite.as_str(), "mesh_to_sprite");
+        assert_eq!(GenerationMode::ValidationGrid.as_str(), "validation_grid");
+    }
+
+    #[test]
+    fn test_validation_grid_mode() {
+        assert_eq!(GenerationMode::ValidationGrid.as_str(), "validation_grid");
     }
 
     #[test]
