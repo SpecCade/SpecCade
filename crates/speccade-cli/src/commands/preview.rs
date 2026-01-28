@@ -172,6 +172,12 @@ fn extract_sprite_animation_frames(
 
     let override_delay_ms = fps_override.map(|fps| if fps == 0 { 83 } else { (1000 / fps).max(1) });
 
+    let default_delay_ms = if anim_meta.fps > 0 {
+        (1000 / anim_meta.fps).max(1)
+    } else {
+        83
+    };
+
     let mut frames = Vec::with_capacity(anim_meta.frames.len());
     let mut delays = Vec::with_capacity(anim_meta.frames.len());
 
@@ -208,7 +214,16 @@ fn extract_sprite_animation_frames(
         let rgba = atlas.view(x, y, w, h).to_image().into_raw();
         frames.push(rgba);
 
-        let delay_ms = override_delay_ms.unwrap_or(anim_frame.duration_ms);
+        let delay_ms = match override_delay_ms {
+            Some(ms) => ms,
+            None => {
+                if anim_frame.duration_ms == 0 {
+                    default_delay_ms
+                } else {
+                    anim_frame.duration_ms
+                }
+            }
+        };
         delays.push(delay_ms);
     }
 
@@ -553,6 +568,55 @@ mod tests {
             extract_sprite_animation_frames(&atlas, &sheet_meta, &anim_meta, Some(0));
 
         assert_eq!(delays, vec![83, 83]);
+    }
+
+    #[test]
+    fn test_extract_sprite_animation_frames_duration_zero_uses_fps_fallback() {
+        let mut atlas = RgbaImage::new(128, 64);
+        for y in 0..64 {
+            for x in 0..64 {
+                atlas.put_pixel(x, y, Rgba([255, 0, 0, 255]));
+            }
+        }
+
+        let sheet_meta_json = serde_json::json!({
+            "atlas_width": 128,
+            "atlas_height": 64,
+            "padding": 0,
+            "frames": [
+                {
+                    "id": "frame_a",
+                    "u_min": 0.0,
+                    "v_min": 0.0,
+                    "u_max": 0.5,
+                    "v_max": 1.0,
+                    "width": 64,
+                    "height": 64,
+                    "pivot": [0.5, 0.5]
+                }
+            ]
+        });
+
+        let sheet_meta: speccade_spec::recipe::sprite::SpriteSheetMetadata =
+            serde_json::from_value(sheet_meta_json).unwrap();
+
+        let anim_meta_json = serde_json::json!({
+            "name": "test_anim",
+            "fps": 12,
+            "loop_mode": "loop",
+            "total_duration_ms": 0,
+            "frames": [
+                { "frame_id": "frame_a", "duration_ms": 0 }
+            ]
+        });
+
+        let anim_meta: speccade_spec::recipe::sprite::SpriteAnimationMetadata =
+            serde_json::from_value(anim_meta_json).unwrap();
+
+        let (_frames, delays, _do_loop) =
+            extract_sprite_animation_frames(&atlas, &sheet_meta, &anim_meta, None);
+
+        assert_eq!(delays, vec![83]);
     }
 
     #[test]
