@@ -2,6 +2,18 @@
 #
 # This example creates a basic walk cycle for a humanoid skeleton
 # using the animation stdlib functions for keyframes and transforms.
+#
+# [VALIDATION]
+# SHAPE: Humanoid skeleton performing walk cycle
+# MOTION: Legs swing forward/back alternately, arms counter-swing, spine subtle tilt
+# FRAME 0: Contact pose - left leg forward (25 deg), right leg back (-25 deg), left arm back, right arm forward
+# FRAME 12 (0.5s): Passing pose - legs swapped, right leg forward, left leg back
+# FRAME 24 (1.0s): Return to contact pose (loop point)
+# ORIENTATION: Character facing +Y, walking in place (no root motion)
+# FRONT VIEW (frame 0): Left leg in front, right arm in front
+# FRONT VIEW (frame 12): Right leg in front, left arm in front
+# ISO VIEW: Full body visible, leg swing angle clearly visible (~25 degrees)
+# NOTES: Linear interpolation, smooth transitions, loop=true so frame 24 matches frame 0
 
 skeletal_animation_spec(
     asset_id = "stdlib-animation-walk-cycle-01",

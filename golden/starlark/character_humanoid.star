@@ -2,6 +2,18 @@
 #
 # This example creates a basic humanoid skeletal mesh using the
 # character stdlib functions for body parts, materials, and skinning.
+#
+# [VALIDATION]
+# SHAPE: Humanoid figure with cylindrical torso, spherical head, cylindrical limbs
+# PROPORTIONS: Head ~0.15 units, torso segments ~0.3-0.4 units, arms ~0.25 units, legs ~0.35 units
+# ORIENTATION: Standing upright (+Z up), facing +Y forward, T-pose with arms extended sideways
+# FRONT VIEW: Symmetric humanoid shape - head on top, arms extended left/right, legs below
+# BACK VIEW: Mirror of front, spine area visible
+# LEFT VIEW: Profile view - head, single arm cylinder, single leg cylinder
+# RIGHT VIEW: Mirror of left view
+# TOP VIEW: Looking down at head sphere, torso below, arms extending sideways
+# ISO VIEW: Full 3D humanoid form clearly visible in T-pose
+# NOTES: Body uses skin-tone material (0.8, 0.6, 0.5), head slightly lighter (0.9, 0.7, 0.6)
 
 skeletal_mesh_spec(
     asset_id = "stdlib-character-humanoid-01",
