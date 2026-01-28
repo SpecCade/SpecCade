@@ -50,7 +50,9 @@
       "Bash(printf:*)",
       "Bash(git status:*)",
       "Bash(copy \"C:\\\\Users\\\\rdave\\\\.claude\\\\plans\\\\tranquil-wishing-candy.md\" \"D:\\\\Development\\\\nethercore-project\\\\speccade\\\\docs\\\\plans\\\\2026-01-28-instrument-pitch-validation.md\")",
-      "Bash(powershell -ExecutionPolicy Bypass -File:*)"
+      "Bash(powershell -ExecutionPolicy Bypass -File:*)",
+      "Bash(git worktree:*)",
+      "Bash(cargo metadata:*)"
     ]
   },
   "disabledMcpjsonServers": [
