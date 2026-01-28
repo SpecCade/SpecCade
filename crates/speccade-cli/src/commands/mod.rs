@@ -5,6 +5,7 @@ mod analyze_csv;
 pub mod audit;
 pub mod cache;
 pub mod compare;
+pub mod coverage;
 pub mod doctor;
 pub mod eval;
 pub mod expand;
@@ -48,6 +49,8 @@ mod tests {
         let _ = template::list;
         let _ = validate::run;
         let _ = verify::run;
+        let _ = coverage::run_generate;
+        let _ = coverage::run_report;
     }
 
     #[cfg(feature = "serve")]

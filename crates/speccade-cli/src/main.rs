@@ -630,16 +630,10 @@ fn main() -> ExitCode {
             CacheCommands::Info => commands::cache::info(),
         },
         Commands::Coverage { command } => match command {
-            CoverageCommands::Generate { strict: _, output: _ } => {
-                // TODO: Implement in Task 2
-                eprintln!("coverage generate not yet implemented");
-                Ok(ExitCode::from(1))
+            CoverageCommands::Generate { strict, output } => {
+                commands::coverage::run_generate(strict, output.as_deref())
             }
-            CoverageCommands::Report => {
-                // TODO: Implement in Task 2
-                eprintln!("coverage report not yet implemented");
-                Ok(ExitCode::from(1))
-            }
+            CoverageCommands::Report => commands::coverage::run_report(),
         },
         Commands::Verify {
             report,
