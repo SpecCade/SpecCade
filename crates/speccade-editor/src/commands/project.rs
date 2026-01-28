@@ -21,6 +21,23 @@ pub struct FileEntry {
     pub asset_type: Option<String>,
 }
 
+/// A node in the project file tree (recursive).
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FileNode {
+    /// Display name (filename without path)
+    pub name: String,
+    /// Path relative to the project root
+    pub path: String,
+    /// Whether this node is a directory
+    pub is_dir: bool,
+    /// Detected asset type for spec files
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub asset_type: Option<String>,
+    /// Child nodes (only for directories)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub children: Option<Vec<FileNode>>,
+}
+
 /// Detect the asset type from a spec file's content.
 ///
 /// Checks for patterns like:
@@ -86,6 +103,99 @@ fn detect_asset_type(path: &PathBuf) -> Option<String> {
     }
 
     None
+}
+
+/// Maximum recursion depth for project tree scanning.
+const MAX_SCAN_DEPTH: usize = 100;
+
+/// Recursively scan a project directory and return a tree of file nodes.
+///
+/// Returns only .star and .json files plus directories that contain them.
+/// Hidden files/directories (starting with .) are excluded.
+/// Symlinks are not followed to prevent loops and path traversal.
+#[tauri::command]
+pub fn scan_project_tree(path: String) -> Result<Vec<FileNode>, String> {
+    let root = PathBuf::from(&path);
+
+    if !root.exists() {
+        return Err(format!("Path does not exist: {}", path));
+    }
+    if !root.is_dir() {
+        return Err(format!("Path is not a directory: {}", path));
+    }
+
+    fn scan_dir(dir: &std::path::Path, root: &std::path::Path, depth: usize) -> Vec<FileNode> {
+        if depth >= MAX_SCAN_DEPTH {
+            return Vec::new();
+        }
+
+        let entries = match fs::read_dir(dir) {
+            Ok(e) => e,
+            Err(_) => return Vec::new(),
+        };
+
+        let mut dirs: Vec<FileNode> = Vec::new();
+        let mut files: Vec<FileNode> = Vec::new();
+
+        for entry in entries.flatten() {
+            let entry_path = entry.path();
+            let name = entry.file_name().to_string_lossy().to_string();
+
+            if name.starts_with('.') {
+                continue;
+            }
+
+            // Skip symlinks to prevent loops and path traversal
+            let metadata = match fs::symlink_metadata(&entry_path) {
+                Ok(m) => m,
+                Err(_) => continue,
+            };
+            if metadata.is_symlink() {
+                continue;
+            }
+
+            let rel_path = match entry_path.strip_prefix(root) {
+                Ok(p) => p.to_string_lossy().replace('\\', "/"),
+                Err(_) => continue, // Outside root — skip
+            };
+
+            if metadata.is_dir() {
+                let children = scan_dir(&entry_path, root, depth + 1);
+                // Only include directories that contain spec files (directly or nested)
+                if !children.is_empty() {
+                    dirs.push(FileNode {
+                        name,
+                        path: rel_path,
+                        is_dir: true,
+                        asset_type: None,
+                        children: Some(children),
+                    });
+                }
+            } else {
+                let ext = entry_path
+                    .extension()
+                    .and_then(|e| e.to_str())
+                    .unwrap_or("");
+                if ext == "star" || ext == "json" {
+                    let asset_type = detect_asset_type(&entry_path);
+                    files.push(FileNode {
+                        name,
+                        path: rel_path,
+                        is_dir: false,
+                        asset_type,
+                        children: None,
+                    });
+                }
+            }
+        }
+
+        dirs.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
+        files.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
+        dirs.extend(files);
+        dirs
+    }
+
+    Ok(scan_dir(&root, &root, 0))
 }
 
 /// Open a folder and list its contents.
@@ -349,6 +459,63 @@ mod tests {
 
         let result = detect_asset_type(&file_path);
         assert_eq!(result, None);
+    }
+
+    #[test]
+    fn test_scan_project_tree_recursive() {
+        let temp_dir = TempDir::new().unwrap();
+        let root = temp_dir.path();
+
+        // Create nested structure
+        fs::create_dir_all(root.join("audio")).unwrap();
+        fs::create_dir_all(root.join("textures/walls")).unwrap();
+        fs::write(root.join("audio/sfx.star"), "audio_spec()").unwrap();
+        fs::write(root.join("textures/walls/brick.star"), r#"texture_spec()"#).unwrap();
+        fs::write(root.join("root.star"), "spec()").unwrap();
+        // Empty dir should be excluded
+        fs::create_dir(root.join("empty")).unwrap();
+        // Hidden dir should be excluded
+        fs::create_dir(root.join(".hidden")).unwrap();
+        fs::write(root.join(".hidden/secret.star"), "").unwrap();
+
+        let result = scan_project_tree(root.to_string_lossy().to_string()).unwrap();
+
+        // Should have: audio/ (dir), textures/ (dir), root.star (file)
+        assert_eq!(result.len(), 3);
+        // Dirs first, sorted
+        assert_eq!(result[0].name, "audio");
+        assert!(result[0].is_dir);
+        assert_eq!(result[0].children.as_ref().unwrap().len(), 1);
+        assert_eq!(result[0].children.as_ref().unwrap()[0].name, "sfx.star");
+        assert_eq!(result[0].children.as_ref().unwrap()[0].path, "audio/sfx.star");
+        assert_eq!(
+            result[0].children.as_ref().unwrap()[0].asset_type,
+            Some("audio".to_string())
+        );
+
+        assert_eq!(result[1].name, "textures");
+        assert!(result[1].is_dir);
+        let walls = &result[1].children.as_ref().unwrap()[0];
+        assert_eq!(walls.name, "walls");
+        assert_eq!(walls.children.as_ref().unwrap()[0].name, "brick.star");
+
+        assert_eq!(result[2].name, "root.star");
+        assert!(!result[2].is_dir);
+        assert!(result[2].children.is_none());
+    }
+
+    #[test]
+    fn test_scan_project_tree_uses_forward_slashes() {
+        let temp_dir = TempDir::new().unwrap();
+        let root = temp_dir.path();
+
+        fs::create_dir(root.join("sub")).unwrap();
+        fs::write(root.join("sub/file.star"), "").unwrap();
+
+        let result = scan_project_tree(root.to_string_lossy().to_string()).unwrap();
+        let sub = &result[0];
+        assert_eq!(sub.path, "sub");
+        assert_eq!(sub.children.as_ref().unwrap()[0].path, "sub/file.star");
     }
 
     #[test]

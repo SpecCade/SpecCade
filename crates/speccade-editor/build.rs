@@ -15,6 +15,7 @@ const COMMANDS: &[&str] = &[
     "open_folder",
     "read_file",
     "save_file",
+    "scan_project_tree",
     "list_templates",
     "get_template",
 ];

@@ -17,7 +17,7 @@ pub use commands::batch::batch_generate;
 pub use commands::eval::eval_spec;
 pub use commands::generate::{generate_full, generate_preview, refine_mesh_preview};
 pub use commands::pack::{generate_pack_manifest, write_pack_manifest};
-pub use commands::project::{open_folder, read_file, save_file};
+pub use commands::project::{open_folder, read_file, save_file, scan_project_tree};
 pub use commands::templates::{get_template, list_templates};
 pub use commands::validate::validate_spec;
 pub use watcher::{unwatch_file, watch_file, WatcherState};
@@ -53,6 +53,7 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
             open_folder,
             read_file,
             save_file,
+            scan_project_tree,
             list_templates,
             get_template,
         ])

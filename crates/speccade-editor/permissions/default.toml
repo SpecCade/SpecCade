@@ -19,6 +19,7 @@ permissions = [
   "allow-open-folder",
   "allow-read-file",
   "allow-save-file",
+  "allow-scan-project-tree",
   "allow-list-templates",
   "allow-get-template",
 ]
