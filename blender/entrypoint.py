@@ -6844,6 +6844,27 @@ def handle_mesh_to_sprite(spec: Dict, out_root: Path, report_path: Path) -> None
         for mod_spec in modifiers:
             apply_modifier(obj, mod_spec)
 
+        # Join attachments (extra primitives positioned relative to base)
+        attachments = mesh_params.get("attachments", [])
+        for att in attachments:
+            att_prim = att.get("primitive", "cube")
+            att_dims = att.get("dimensions", [1.0, 1.0, 1.0])
+            att_pos = att.get("position", [0.0, 0.0, 0.0])
+            att_rot = att.get("rotation", [0.0, 0.0, 0.0])
+
+            att_obj = create_primitive(att_prim, att_dims)
+            att_obj.location = Vector(att_pos)
+            att_obj.rotation_euler = Euler([math.radians(r) for r in att_rot])
+            bpy.context.view_layer.objects.active = att_obj
+            bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
+
+            # Select both and join
+            bpy.ops.object.select_all(action='DESELECT')
+            att_obj.select_set(True)
+            obj.select_set(True)
+            bpy.context.view_layer.objects.active = obj
+            bpy.ops.object.join()
+
         # Apply modifiers to mesh
         export_settings = mesh_params.get("export", {})
         if export_settings.get("apply_modifiers", True):

@@ -91,6 +91,30 @@ pub struct StaticMeshBlenderPrimitivesV1Params {
     /// When specified, bakes normal/AO/curvature maps from the mesh (or a high-poly source).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub baking: Option<BakingSettings>,
+    /// Additional primitives joined to the base mesh.
+    /// Each attachment is positioned and rotated relative to the base mesh origin.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub attachments: Vec<MeshAttachment>,
+}
+
+/// A primitive attached to a base mesh at a specific position and rotation.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct MeshAttachment {
+    /// Primitive type.
+    pub primitive: MeshPrimitive,
+    /// Dimensions [X, Y, Z] in Blender units.
+    #[serde(default = "default_attachment_dimensions")]
+    pub dimensions: [f64; 3],
+    /// Position offset [X, Y, Z] relative to base mesh origin.
+    #[serde(default)]
+    pub position: [f64; 3],
+    /// Rotation [X, Y, Z] in degrees.
+    #[serde(default)]
+    pub rotation: [f64; 3],
+}
+
+fn default_attachment_dimensions() -> [f64; 3] {
+    [1.0, 1.0, 1.0]
 }
 
 #[cfg(test)]
@@ -118,6 +142,7 @@ mod tests {
             collision_mesh: None,
             navmesh: None,
             baking: None,
+            attachments: vec![],
         };
 
         let json = serde_json::to_string(&params).unwrap();
@@ -143,6 +168,7 @@ mod tests {
             collision_mesh: None,
             navmesh: None,
             baking: None,
+            attachments: vec![],
         };
 
         let json = serde_json::to_string(&params).unwrap();
@@ -174,6 +200,7 @@ mod tests {
             collision_mesh: None,
             navmesh: None,
             baking: None,
+            attachments: vec![],
         };
 
         let json = serde_json::to_string(&params).unwrap();
@@ -206,6 +233,7 @@ mod tests {
             collision_mesh: None,
             navmesh: None,
             baking: None,
+            attachments: vec![],
         };
 
         let json = serde_json::to_string(&params).unwrap();
@@ -235,6 +263,7 @@ mod tests {
             collision_mesh: None,
             navmesh: None,
             baking: None,
+            attachments: vec![],
         };
 
         let json = serde_json::to_string(&params).unwrap();
@@ -268,6 +297,7 @@ mod tests {
             collision_mesh: None,
             navmesh: None,
             baking: None,
+            attachments: vec![],
         };
 
         let json = serde_json::to_string(&params).unwrap();
@@ -299,6 +329,7 @@ mod tests {
             collision_mesh: None,
             navmesh: None,
             baking: None,
+            attachments: vec![],
         };
 
         let json = serde_json::to_string(&params).unwrap();
@@ -333,6 +364,7 @@ mod tests {
             collision_mesh: None,
             navmesh: None,
             baking: None,
+            attachments: vec![],
         };
 
         let json = serde_json::to_string(&params).unwrap();
@@ -388,6 +420,7 @@ mod tests {
             collision_mesh: None,
             navmesh: None,
             baking: None,
+            attachments: vec![],
         };
 
         let json = serde_json::to_string(&params).unwrap();
@@ -546,6 +579,7 @@ mod tests {
             collision_mesh: None,
             navmesh: None,
             baking: None,
+            attachments: vec![],
         };
 
         let json = serde_json::to_string(&params).unwrap();
@@ -622,6 +656,7 @@ mod tests {
             }),
             navmesh: None,
             baking: None,
+            attachments: vec![],
         };
 
         let json = serde_json::to_string(&params).unwrap();
@@ -659,6 +694,7 @@ mod tests {
             }),
             navmesh: None,
             baking: None,
+            attachments: vec![],
         };
 
         let json = serde_json::to_string(&params).unwrap();
@@ -694,6 +730,7 @@ mod tests {
             }),
             navmesh: None,
             baking: None,
+            attachments: vec![],
         };
 
         let json = serde_json::to_string(&params).unwrap();
@@ -742,6 +779,7 @@ mod tests {
             }),
             navmesh: None,
             baking: None,
+            attachments: vec![],
         };
 
         let json = serde_json::to_string(&params).unwrap();
@@ -772,6 +810,7 @@ mod tests {
             collision_mesh: None,
             navmesh: Some(NavmeshSettings::default()),
             baking: None,
+            attachments: vec![],
         };
 
         let json = serde_json::to_string(&params).unwrap();
@@ -804,6 +843,7 @@ mod tests {
                 stair_step_height: Some(0.25),
             }),
             baking: None,
+            attachments: vec![],
         };
 
         let json = serde_json::to_string(&params).unwrap();
@@ -842,6 +882,7 @@ mod tests {
                 stair_step_height: None,
             }),
             baking: None,
+            attachments: vec![],
         };
 
         let json = serde_json::to_string(&params).unwrap();
@@ -900,6 +941,7 @@ mod tests {
                 resolution: [1024, 1024],
                 high_poly_source: None,
             }),
+            attachments: vec![],
         };
 
         let json = serde_json::to_string(&params).unwrap();
@@ -940,6 +982,7 @@ mod tests {
                 resolution: [1024, 1024],
                 high_poly_source: None,
             }),
+            attachments: vec![],
         };
 
         let json = serde_json::to_string(&params).unwrap();
@@ -974,6 +1017,7 @@ mod tests {
                 resolution: [2048, 2048],
                 high_poly_source: Some("meshes/high_detail.glb".to_string()),
             }),
+            attachments: vec![],
         };
 
         let json = serde_json::to_string(&params).unwrap();
@@ -1044,6 +1088,7 @@ mod tests {
                 resolution: [1024, 1024],
                 high_poly_source: None,
             }),
+            attachments: vec![],
         };
 
         let json = serde_json::to_string(&params).unwrap();

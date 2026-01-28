@@ -257,6 +257,7 @@ mod tests {
             collision_mesh: None,
             navmesh: None,
             baking: None,
+            attachments: vec![],
         }
     }
 
