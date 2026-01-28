@@ -86,6 +86,11 @@ tokio-tungstenite = { workspace = true }
 futures-util = { workspace = true }
 base64 = { workspace = true }
 png = { workspace = true }
+serde_yaml = { workspace = true }
+
+[[test]]
+name = "feature_coverage"
+path = "tests/feature_coverage.rs"
 
 [dev-dependencies]
 pretty_assertions = { workspace = true }

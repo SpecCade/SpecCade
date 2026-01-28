@@ -55,6 +55,7 @@ base64 = "0.22"
 
 # Test dependencies
 pretty_assertions = "1"
+serde_yaml = "0.9"
 
 # Tauri editor dependencies
 tauri = "2"
