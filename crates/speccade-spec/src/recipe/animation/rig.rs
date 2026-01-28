@@ -7,6 +7,7 @@ use super::animator_rig::AnimatorRigConfig;
 use super::clip::{AnimationKeyframe, IkKeyframe};
 use super::common::{AnimationExportSettings, ConventionsConfig, InterpolationMode};
 use super::pose::{AnimationPhase, PoseDefinition};
+use super::preview::PreviewRender;
 use super::procedural::ProceduralLayer;
 use super::root_motion::RootMotionSettings;
 use super::skeletal::RigSetup;
@@ -86,4 +87,7 @@ pub struct SkeletalAnimationBlenderRiggedV1Params {
     /// Root motion handling settings.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub root_motion: Option<RootMotionSettings>,
+    /// Preview render configuration for generating animated GIF output.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub preview: Option<PreviewRender>,
 }

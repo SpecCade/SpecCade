@@ -54,7 +54,8 @@ except ImportError:
 
 def write_report(report_path: Path, ok: bool, error: Optional[str] = None,
                  metrics: Optional[Dict] = None, output_path: Optional[str] = None,
-                 blend_path: Optional[str] = None, duration_ms: Optional[int] = None) -> None:
+                 blend_path: Optional[str] = None, preview_path: Optional[str] = None,
+                 duration_ms: Optional[int] = None) -> None:
     """Write the generation report JSON."""
     report = {
         "ok": ok,
@@ -67,6 +68,8 @@ def write_report(report_path: Path, ok: bool, error: Optional[str] = None,
         report["output_path"] = output_path
     if blend_path:
         report["blend_path"] = blend_path
+    if preview_path:
+        report["preview_path"] = preview_path
     if duration_ms is not None:
         report["duration_ms"] = duration_ms
     if BLENDER_AVAILABLE:
@@ -1114,7 +1117,7 @@ def apply_materials(obj: 'bpy.types.Object', material_slots: List[Dict]) -> None
 # Skeleton Creation
 # =============================================================================
 
-# Humanoid basic v1 skeleton definition
+# Humanoid basic v1 skeleton definition (20 bones, no fingers)
 HUMANOID_BASIC_V1_BONES = {
     "root": {"head": (0, 0, 0), "tail": (0, 0, 0.1), "parent": None},
     "hips": {"head": (0, 0, 0.9), "tail": (0, 0, 1.0), "parent": "root"},
@@ -1138,8 +1141,133 @@ HUMANOID_BASIC_V1_BONES = {
     "foot_r": {"head": (-0.1, 0, 0.1), "tail": (-0.1, 0.15, 0), "parent": "lower_leg_r"},
 }
 
+# Humanoid detailed v1 skeleton definition (52 bones, full 3-bone fingers)
+# Roll values set so positive X rotation = flexion (anatomically correct)
+HUMANOID_DETAILED_V1_BONES = {
+    # Core
+    "root": {"head": (0, 0, 0), "tail": (0, 0, 0.1), "parent": None, "roll": 0},
+    "hips": {"head": (0, 0, 0.9), "tail": (0, 0, 1.0), "parent": "root", "roll": 0},
+    "spine": {"head": (0, 0, 1.0), "tail": (0, 0, 1.2), "parent": "hips", "roll": 0},
+    "chest": {"head": (0, 0, 1.2), "tail": (0, 0, 1.4), "parent": "spine", "roll": 0},
+    "neck": {"head": (0, 0, 1.4), "tail": (0, 0, 1.5), "parent": "chest", "roll": 0},
+    "head": {"head": (0, 0, 1.5), "tail": (0, 0, 1.7), "parent": "neck", "roll": 0},
+    # Left arm
+    "shoulder_l": {"head": (0.1, 0, 1.35), "tail": (0.2, 0, 1.35), "parent": "chest", "roll": 0},
+    "upper_arm_l": {"head": (0.2, 0, 1.35), "tail": (0.45, 0, 1.35), "parent": "shoulder_l", "roll": 0},
+    "lower_arm_l": {"head": (0.45, 0, 1.35), "tail": (0.7, 0, 1.35), "parent": "upper_arm_l", "roll": 0},
+    "hand_l": {"head": (0.7, 0, 1.35), "tail": (0.78, 0, 1.35), "parent": "lower_arm_l", "roll": 0},
+    # Left thumb (offset forward in Y, rotated)
+    "thumb_01_l": {"head": (0.72, 0.02, 1.34), "tail": (0.75, 0.04, 1.32), "parent": "hand_l", "roll": 45},
+    "thumb_02_l": {"head": (0.75, 0.04, 1.32), "tail": (0.78, 0.05, 1.30), "parent": "thumb_01_l", "roll": 45},
+    "thumb_03_l": {"head": (0.78, 0.05, 1.30), "tail": (0.80, 0.06, 1.29), "parent": "thumb_02_l", "roll": 45},
+    # Left index finger
+    "index_01_l": {"head": (0.78, 0.02, 1.36), "tail": (0.82, 0.02, 1.36), "parent": "hand_l", "roll": 0},
+    "index_02_l": {"head": (0.82, 0.02, 1.36), "tail": (0.85, 0.02, 1.36), "parent": "index_01_l", "roll": 0},
+    "index_03_l": {"head": (0.85, 0.02, 1.36), "tail": (0.87, 0.02, 1.36), "parent": "index_02_l", "roll": 0},
+    # Left middle finger
+    "middle_01_l": {"head": (0.78, 0, 1.35), "tail": (0.83, 0, 1.35), "parent": "hand_l", "roll": 0},
+    "middle_02_l": {"head": (0.83, 0, 1.35), "tail": (0.87, 0, 1.35), "parent": "middle_01_l", "roll": 0},
+    "middle_03_l": {"head": (0.87, 0, 1.35), "tail": (0.89, 0, 1.35), "parent": "middle_02_l", "roll": 0},
+    # Left ring finger
+    "ring_01_l": {"head": (0.78, -0.02, 1.34), "tail": (0.82, -0.02, 1.34), "parent": "hand_l", "roll": 0},
+    "ring_02_l": {"head": (0.82, -0.02, 1.34), "tail": (0.85, -0.02, 1.34), "parent": "ring_01_l", "roll": 0},
+    "ring_03_l": {"head": (0.85, -0.02, 1.34), "tail": (0.87, -0.02, 1.34), "parent": "ring_02_l", "roll": 0},
+    # Left pinky finger
+    "pinky_01_l": {"head": (0.78, -0.04, 1.33), "tail": (0.81, -0.04, 1.33), "parent": "hand_l", "roll": 0},
+    "pinky_02_l": {"head": (0.81, -0.04, 1.33), "tail": (0.83, -0.04, 1.33), "parent": "pinky_01_l", "roll": 0},
+    "pinky_03_l": {"head": (0.83, -0.04, 1.33), "tail": (0.85, -0.04, 1.33), "parent": "pinky_02_l", "roll": 0},
+    # Right arm
+    "shoulder_r": {"head": (-0.1, 0, 1.35), "tail": (-0.2, 0, 1.35), "parent": "chest", "roll": 0},
+    "upper_arm_r": {"head": (-0.2, 0, 1.35), "tail": (-0.45, 0, 1.35), "parent": "shoulder_r", "roll": 0},
+    "lower_arm_r": {"head": (-0.45, 0, 1.35), "tail": (-0.7, 0, 1.35), "parent": "upper_arm_r", "roll": 0},
+    "hand_r": {"head": (-0.7, 0, 1.35), "tail": (-0.78, 0, 1.35), "parent": "lower_arm_r", "roll": 0},
+    # Right thumb (mirrored)
+    "thumb_01_r": {"head": (-0.72, 0.02, 1.34), "tail": (-0.75, 0.04, 1.32), "parent": "hand_r", "roll": -45},
+    "thumb_02_r": {"head": (-0.75, 0.04, 1.32), "tail": (-0.78, 0.05, 1.30), "parent": "thumb_01_r", "roll": -45},
+    "thumb_03_r": {"head": (-0.78, 0.05, 1.30), "tail": (-0.80, 0.06, 1.29), "parent": "thumb_02_r", "roll": -45},
+    # Right index finger
+    "index_01_r": {"head": (-0.78, 0.02, 1.36), "tail": (-0.82, 0.02, 1.36), "parent": "hand_r", "roll": 180},
+    "index_02_r": {"head": (-0.82, 0.02, 1.36), "tail": (-0.85, 0.02, 1.36), "parent": "index_01_r", "roll": 180},
+    "index_03_r": {"head": (-0.85, 0.02, 1.36), "tail": (-0.87, 0.02, 1.36), "parent": "index_02_r", "roll": 180},
+    # Right middle finger
+    "middle_01_r": {"head": (-0.78, 0, 1.35), "tail": (-0.83, 0, 1.35), "parent": "hand_r", "roll": 180},
+    "middle_02_r": {"head": (-0.83, 0, 1.35), "tail": (-0.87, 0, 1.35), "parent": "middle_01_r", "roll": 180},
+    "middle_03_r": {"head": (-0.87, 0, 1.35), "tail": (-0.89, 0, 1.35), "parent": "middle_02_r", "roll": 180},
+    # Right ring finger
+    "ring_01_r": {"head": (-0.78, -0.02, 1.34), "tail": (-0.82, -0.02, 1.34), "parent": "hand_r", "roll": 180},
+    "ring_02_r": {"head": (-0.82, -0.02, 1.34), "tail": (-0.85, -0.02, 1.34), "parent": "ring_01_r", "roll": 180},
+    "ring_03_r": {"head": (-0.85, -0.02, 1.34), "tail": (-0.87, -0.02, 1.34), "parent": "ring_02_r", "roll": 180},
+    # Right pinky finger
+    "pinky_01_r": {"head": (-0.78, -0.04, 1.33), "tail": (-0.81, -0.04, 1.33), "parent": "hand_r", "roll": 180},
+    "pinky_02_r": {"head": (-0.81, -0.04, 1.33), "tail": (-0.83, -0.04, 1.33), "parent": "pinky_01_r", "roll": 180},
+    "pinky_03_r": {"head": (-0.83, -0.04, 1.33), "tail": (-0.85, -0.04, 1.33), "parent": "pinky_02_r", "roll": 180},
+    # Left leg
+    "upper_leg_l": {"head": (0.1, 0, 0.9), "tail": (0.1, 0, 0.5), "parent": "hips", "roll": 0},
+    "lower_leg_l": {"head": (0.1, 0, 0.5), "tail": (0.1, 0, 0.1), "parent": "upper_leg_l", "roll": 0},
+    "foot_l": {"head": (0.1, 0, 0.1), "tail": (0.1, 0.12, 0.02), "parent": "lower_leg_l", "roll": 0},
+    "toe_l": {"head": (0.1, 0.12, 0.02), "tail": (0.1, 0.18, 0), "parent": "foot_l", "roll": 0},
+    # Right leg
+    "upper_leg_r": {"head": (-0.1, 0, 0.9), "tail": (-0.1, 0, 0.5), "parent": "hips", "roll": 0},
+    "lower_leg_r": {"head": (-0.1, 0, 0.5), "tail": (-0.1, 0, 0.1), "parent": "upper_leg_r", "roll": 0},
+    "foot_r": {"head": (-0.1, 0, 0.1), "tail": (-0.1, 0.12, 0.02), "parent": "lower_leg_r", "roll": 0},
+    "toe_r": {"head": (-0.1, 0.12, 0.02), "tail": (-0.1, 0.18, 0), "parent": "foot_r", "roll": 0},
+}
+
+# Humanoid game v1 skeleton definition (40 bones, twist bones, simplified fingers)
+HUMANOID_GAME_V1_BONES = {
+    # Core
+    "root": {"head": (0, 0, 0), "tail": (0, 0, 0.1), "parent": None, "roll": 0},
+    "hips": {"head": (0, 0, 0.9), "tail": (0, 0, 1.0), "parent": "root", "roll": 0},
+    "spine": {"head": (0, 0, 1.0), "tail": (0, 0, 1.2), "parent": "hips", "roll": 0},
+    "chest": {"head": (0, 0, 1.2), "tail": (0, 0, 1.4), "parent": "spine", "roll": 0},
+    "neck": {"head": (0, 0, 1.4), "tail": (0, 0, 1.5), "parent": "chest", "roll": 0},
+    "head": {"head": (0, 0, 1.5), "tail": (0, 0, 1.7), "parent": "neck", "roll": 0},
+    # Left arm with twist bones
+    "shoulder_l": {"head": (0.1, 0, 1.35), "tail": (0.2, 0, 1.35), "parent": "chest", "roll": 0},
+    "upper_arm_l": {"head": (0.2, 0, 1.35), "tail": (0.45, 0, 1.35), "parent": "shoulder_l", "roll": 0},
+    "upper_arm_twist_l": {"head": (0.35, 0, 1.35), "tail": (0.45, 0, 1.35), "parent": "upper_arm_l", "roll": 0},
+    "lower_arm_l": {"head": (0.45, 0, 1.35), "tail": (0.7, 0, 1.35), "parent": "upper_arm_l", "roll": 0},
+    "lower_arm_twist_l": {"head": (0.6, 0, 1.35), "tail": (0.7, 0, 1.35), "parent": "lower_arm_l", "roll": 0},
+    "hand_l": {"head": (0.7, 0, 1.35), "tail": (0.78, 0, 1.35), "parent": "lower_arm_l", "roll": 0},
+    # Left hand (simplified 1-bone fingers)
+    "thumb_l": {"head": (0.72, 0.02, 1.34), "tail": (0.78, 0.05, 1.30), "parent": "hand_l", "roll": 45},
+    "index_l": {"head": (0.78, 0.02, 1.36), "tail": (0.86, 0.02, 1.36), "parent": "hand_l", "roll": 0},
+    "middle_l": {"head": (0.78, 0, 1.35), "tail": (0.88, 0, 1.35), "parent": "hand_l", "roll": 0},
+    "ring_l": {"head": (0.78, -0.02, 1.34), "tail": (0.86, -0.02, 1.34), "parent": "hand_l", "roll": 0},
+    "pinky_l": {"head": (0.78, -0.04, 1.33), "tail": (0.84, -0.04, 1.33), "parent": "hand_l", "roll": 0},
+    # Right arm with twist bones
+    "shoulder_r": {"head": (-0.1, 0, 1.35), "tail": (-0.2, 0, 1.35), "parent": "chest", "roll": 0},
+    "upper_arm_r": {"head": (-0.2, 0, 1.35), "tail": (-0.45, 0, 1.35), "parent": "shoulder_r", "roll": 0},
+    "upper_arm_twist_r": {"head": (-0.35, 0, 1.35), "tail": (-0.45, 0, 1.35), "parent": "upper_arm_r", "roll": 0},
+    "lower_arm_r": {"head": (-0.45, 0, 1.35), "tail": (-0.7, 0, 1.35), "parent": "upper_arm_r", "roll": 0},
+    "lower_arm_twist_r": {"head": (-0.6, 0, 1.35), "tail": (-0.7, 0, 1.35), "parent": "lower_arm_r", "roll": 0},
+    "hand_r": {"head": (-0.7, 0, 1.35), "tail": (-0.78, 0, 1.35), "parent": "lower_arm_r", "roll": 0},
+    # Right hand (simplified 1-bone fingers)
+    "thumb_r": {"head": (-0.72, 0.02, 1.34), "tail": (-0.78, 0.05, 1.30), "parent": "hand_r", "roll": -45},
+    "index_r": {"head": (-0.78, 0.02, 1.36), "tail": (-0.86, 0.02, 1.36), "parent": "hand_r", "roll": 180},
+    "middle_r": {"head": (-0.78, 0, 1.35), "tail": (-0.88, 0, 1.35), "parent": "hand_r", "roll": 180},
+    "ring_r": {"head": (-0.78, -0.02, 1.34), "tail": (-0.86, -0.02, 1.34), "parent": "hand_r", "roll": 180},
+    "pinky_r": {"head": (-0.78, -0.04, 1.33), "tail": (-0.84, -0.04, 1.33), "parent": "hand_r", "roll": 180},
+    # Left leg with twist bones
+    "upper_leg_l": {"head": (0.1, 0, 0.9), "tail": (0.1, 0, 0.5), "parent": "hips", "roll": 0},
+    "upper_leg_twist_l": {"head": (0.1, 0, 0.65), "tail": (0.1, 0, 0.5), "parent": "upper_leg_l", "roll": 0},
+    "lower_leg_l": {"head": (0.1, 0, 0.5), "tail": (0.1, 0, 0.1), "parent": "upper_leg_l", "roll": 0},
+    "lower_leg_twist_l": {"head": (0.1, 0, 0.25), "tail": (0.1, 0, 0.1), "parent": "lower_leg_l", "roll": 0},
+    "foot_l": {"head": (0.1, 0, 0.1), "tail": (0.1, 0.12, 0.02), "parent": "lower_leg_l", "roll": 0},
+    "toe_l": {"head": (0.1, 0.12, 0.02), "tail": (0.1, 0.18, 0), "parent": "foot_l", "roll": 0},
+    # Right leg with twist bones
+    "upper_leg_r": {"head": (-0.1, 0, 0.9), "tail": (-0.1, 0, 0.5), "parent": "hips", "roll": 0},
+    "upper_leg_twist_r": {"head": (-0.1, 0, 0.65), "tail": (-0.1, 0, 0.5), "parent": "upper_leg_r", "roll": 0},
+    "lower_leg_r": {"head": (-0.1, 0, 0.5), "tail": (-0.1, 0, 0.1), "parent": "upper_leg_r", "roll": 0},
+    "lower_leg_twist_r": {"head": (-0.1, 0, 0.25), "tail": (-0.1, 0, 0.1), "parent": "lower_leg_r", "roll": 0},
+    "foot_r": {"head": (-0.1, 0, 0.1), "tail": (-0.1, 0.12, 0.02), "parent": "lower_leg_r", "roll": 0},
+    "toe_r": {"head": (-0.1, 0.12, 0.02), "tail": (-0.1, 0.18, 0), "parent": "foot_r", "roll": 0},
+}
+
 SKELETON_PRESETS = {
     "humanoid_basic_v1": HUMANOID_BASIC_V1_BONES,
+    "humanoid_detailed_v1": HUMANOID_DETAILED_V1_BONES,
+    "humanoid_game_v1": HUMANOID_GAME_V1_BONES,
 }
 
 
@@ -1166,6 +1294,9 @@ def create_armature(preset_name: str) -> 'bpy.types.Object':
         bone = edit_bones.new(bone_name)
         bone.head = Vector(bone_spec["head"])
         bone.tail = Vector(bone_spec["tail"])
+        # Apply bone roll if specified (in degrees, convert to radians)
+        if "roll" in bone_spec:
+            bone.roll = math.radians(bone_spec["roll"])
         created_bones[bone_name] = bone
 
     # Set up bone hierarchy
@@ -1213,6 +1344,9 @@ def apply_skeleton_overrides(
             bone.head = Vector(tuple(bone_spec["head"]))
         if "tail" in bone_spec:
             bone.tail = Vector(tuple(bone_spec["tail"]))
+        # Apply bone roll if specified (in degrees, convert to radians)
+        if "roll" in bone_spec:
+            bone.roll = math.radians(bone_spec["roll"])
 
         created_or_updated[bone_name] = bone
 
@@ -4117,6 +4251,175 @@ def export_glb(output_path: Path, include_armature: bool = True,
 
 
 # =============================================================================
+# Animation Preview GIF Rendering
+# =============================================================================
+
+def setup_preview_camera(
+    armature: 'bpy.types.Object',
+    camera_preset: str,
+    distance: float = 3.0
+) -> 'bpy.types.Object':
+    """
+    Set up a camera for animation preview rendering.
+
+    Args:
+        armature: The armature to frame.
+        camera_preset: Camera angle preset name.
+        distance: Distance from character.
+
+    Returns:
+        The camera object.
+    """
+    # Calculate armature bounds center
+    bounds_min = Vector((float('inf'), float('inf'), float('inf')))
+    bounds_max = Vector((float('-inf'), float('-inf'), float('-inf')))
+
+    for bone in armature.data.bones:
+        head_world = armature.matrix_world @ bone.head_local
+        tail_world = armature.matrix_world @ bone.tail_local
+        for pos in [head_world, tail_world]:
+            bounds_min.x = min(bounds_min.x, pos.x)
+            bounds_min.y = min(bounds_min.y, pos.y)
+            bounds_min.z = min(bounds_min.z, pos.z)
+            bounds_max.x = max(bounds_max.x, pos.x)
+            bounds_max.y = max(bounds_max.y, pos.y)
+            bounds_max.z = max(bounds_max.z, pos.z)
+
+    center = (bounds_min + bounds_max) / 2
+    height = bounds_max.z - bounds_min.z
+
+    # Create camera
+    cam_data = bpy.data.cameras.new("PreviewCamera")
+    cam_data.lens = 50  # Standard lens
+    camera = bpy.data.objects.new("PreviewCamera", cam_data)
+    bpy.context.collection.objects.link(camera)
+
+    # Position camera based on preset
+    preset = camera_preset.lower().replace("-", "_")
+    if preset == "three_quarter":
+        angle = math.radians(45)
+        cam_x = center.x + distance * math.sin(angle)
+        cam_y = center.y - distance * math.cos(angle)
+        cam_z = center.z + height * 0.3
+    elif preset == "front":
+        cam_x = center.x
+        cam_y = center.y - distance
+        cam_z = center.z + height * 0.2
+    elif preset == "side":
+        cam_x = center.x + distance
+        cam_y = center.y
+        cam_z = center.z + height * 0.2
+    elif preset == "back":
+        cam_x = center.x
+        cam_y = center.y + distance
+        cam_z = center.z + height * 0.2
+    elif preset == "top":
+        cam_x = center.x
+        cam_y = center.y
+        cam_z = center.z + distance * 1.5
+    else:
+        # Default to three_quarter
+        angle = math.radians(45)
+        cam_x = center.x + distance * math.sin(angle)
+        cam_y = center.y - distance * math.cos(angle)
+        cam_z = center.z + height * 0.3
+
+    camera.location = Vector((cam_x, cam_y, cam_z))
+
+    # Point camera at center
+    direction = center - camera.location
+    rot_quat = direction.to_track_quat('-Z', 'Y')
+    camera.rotation_euler = rot_quat.to_euler()
+
+    # Set as active camera
+    bpy.context.scene.camera = camera
+
+    return camera
+
+
+def render_animation_preview_gif(
+    armature: 'bpy.types.Object',
+    output_path: Path,
+    preview_config: Dict[str, Any],
+    frame_start: int,
+    frame_end: int,
+    fps: int
+) -> Dict[str, Any]:
+    """
+    Render animation to GIF using Blender's FFMPEG output.
+
+    Args:
+        armature: The armature being animated.
+        output_path: Output path for the GIF file.
+        preview_config: Preview configuration from spec.
+        frame_start: First frame to render.
+        frame_end: Last frame to render.
+        fps: Frames per second.
+
+    Returns:
+        Dictionary with preview metrics.
+    """
+    scene = bpy.context.scene
+
+    # Get config values with defaults
+    camera_preset = preview_config.get("camera", "three_quarter")
+    size = preview_config.get("size", [256, 256])
+    frame_step = max(1, preview_config.get("frame_step", 2))
+    background = preview_config.get("background", [0.2, 0.2, 0.2, 1.0])
+
+    # Setup camera
+    camera = setup_preview_camera(armature, camera_preset)
+
+    # Configure render settings
+    scene.render.resolution_x = size[0]
+    scene.render.resolution_y = size[1]
+    scene.render.resolution_percentage = 100
+    scene.render.film_transparent = False
+    scene.frame_start = frame_start
+    scene.frame_end = frame_end
+    scene.frame_step = frame_step
+    scene.render.fps = fps
+
+    # Set background color
+    world = bpy.data.worlds.new("PreviewWorld")
+    world.use_nodes = False
+    world.color = (background[0], background[1], background[2])
+    scene.world = world
+
+    # Configure render engine for fast preview
+    scene.render.engine = 'BLENDER_EEVEE_NEXT' if hasattr(bpy.types, 'BLENDER_EEVEE_NEXT') else 'BLENDER_EEVEE'
+    scene.eevee.taa_render_samples = 16  # Low samples for speed
+
+    # Set output format to FFMPEG GIF
+    scene.render.image_settings.file_format = 'FFMPEG'
+    scene.render.ffmpeg.format = 'GIF'
+
+    # Set output path
+    scene.render.filepath = str(output_path)
+
+    # Ensure output directory exists
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+
+    # Render animation
+    print(f"Rendering preview GIF to: {output_path}")
+    bpy.ops.render.render(animation=True)
+
+    # Clean up
+    bpy.data.objects.remove(camera)
+    bpy.data.cameras.remove(camera.data if hasattr(camera, 'data') else bpy.data.cameras.get("PreviewCamera"))
+    bpy.data.worlds.remove(world)
+
+    frames_rendered = (frame_end - frame_start) // frame_step + 1
+
+    return {
+        "preview_gif": str(output_path.name),
+        "frames_rendered": frames_rendered,
+        "size": size,
+        "camera_preset": camera_preset,
+    }
+
+
+# =============================================================================
 # LOD Generation
 # =============================================================================
 
@@ -6726,9 +7029,27 @@ def handle_rigged_animation(spec: Dict, out_root: Path, report_path: Path) -> No
             blend_path = out_root / blend_rel_path
             bpy.ops.wm.save_as_mainfile(filepath=str(blend_path))
 
+        # Render preview GIF if requested
+        preview_rel_path = None
+        preview_config = params.get("preview")
+        if preview_config:
+            preview_rel_path = output_rel_path.replace(".glb", "_preview.gif")
+            preview_path = out_root / preview_rel_path
+            preview_result = render_animation_preview_gif(
+                armature,
+                preview_path,
+                preview_config,
+                1,  # frame_start
+                frame_count,  # frame_end
+                fps
+            )
+            metrics["preview"] = preview_result
+            print(f"Preview GIF rendered: {preview_rel_path}")
+
         duration_ms = int((time.time() - start_time) * 1000)
         write_report(report_path, ok=True, metrics=metrics,
                      output_path=output_rel_path, blend_path=blend_rel_path,
+                     preview_path=preview_rel_path,
                      duration_ms=duration_ms)
 
     except Exception as e:
