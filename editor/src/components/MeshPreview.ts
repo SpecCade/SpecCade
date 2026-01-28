@@ -5,6 +5,25 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 /** Preview quality levels from the backend. */
 export type PreviewQuality = "proxy" | "full";
 
+/** Render mode for mesh preview material layer. */
+export type RenderMode = "lit" | "unlit" | "matcap";
+
+/** Texture reference - discriminated union for texture sources. */
+export type TextureRef =
+  | null
+  | { kind: "golden"; id: string }
+  | { kind: "file"; path: string }
+  | { kind: "spec_output"; spec_path: string; output_path: string };
+
+/** Persisted preview material settings. */
+export interface PreviewMaterialSettings {
+  render_mode: RenderMode;
+  texture_ref: TextureRef;
+}
+
+/** localStorage key for preview material settings. */
+const STORAGE_KEY = "speccade:mesh_preview_material:v1";
+
 /** Metadata returned with mesh previews. */
 export interface MeshMetadata {
   triangles: number;
@@ -40,6 +59,19 @@ export class MeshPreview {
   private currentQuality: PreviewQuality = "full";
   private onRefine: RefineCallback | null = null;
   private autoRefineDelay = 2000; // 2 seconds idle before auto-refine
+
+  // Material layer state
+  private renderMode: RenderMode = "lit";
+  private textureRef: TextureRef = null;
+  private currentTexture: THREE.Texture | null = null;
+  private originalMaterials: Map<THREE.Mesh, THREE.Material | THREE.Material[]> = new Map();
+  private overrideMaterials: THREE.Material[] = [];
+
+  // Material layer UI
+  private controlsDiv: HTMLDivElement | null = null;
+  private renderModeSelect: HTMLSelectElement | null = null;
+  private textureSelect: HTMLSelectElement | null = null;
+  private goldenTextures: Array<{ id: string; label: string; kind: string }> = [];
 
   constructor(container: HTMLElement) {
     this.container = container;
@@ -110,8 +142,239 @@ export class MeshPreview {
     const resizeObserver = new ResizeObserver(() => this.handleResize());
     resizeObserver.observe(container);
 
+    // Load persisted material settings
+    this.loadSettings();
+
+    // Create material layer controls
+    this.createMaterialControls(rendererWrapper);
+
     // Start animation loop
     this.animate();
+  }
+
+  /**
+   * Create the material layer controls UI.
+   */
+  private createMaterialControls(wrapper: HTMLElement): void {
+    const selectStyle = `
+      font-size: 10px;
+      padding: 2px 4px;
+      background: #333;
+      color: #ccc;
+      border: 1px solid #555;
+      border-radius: 3px;
+      cursor: pointer;
+      pointer-events: auto;
+    `;
+
+    const labelStyle = `
+      font-size: 10px;
+      color: #888;
+    `;
+
+    // Controls container (bottom-left)
+    this.controlsDiv = document.createElement("div");
+    this.controlsDiv.style.cssText = `
+      position: absolute;
+      bottom: 8px;
+      left: 8px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      pointer-events: none;
+    `;
+
+    // Render mode control
+    const renderGroup = document.createElement("div");
+    renderGroup.style.cssText = "display: flex; align-items: center; gap: 4px;";
+    const renderLabel = document.createElement("span");
+    renderLabel.textContent = "Render:";
+    renderLabel.style.cssText = labelStyle;
+
+    this.renderModeSelect = document.createElement("select");
+    this.renderModeSelect.style.cssText = selectStyle;
+    this.renderModeSelect.innerHTML = `
+      <option value="lit">Lit</option>
+      <option value="unlit">Unlit</option>
+      <option value="matcap">Matcap</option>
+    `;
+    this.renderModeSelect.value = this.renderMode;
+    this.renderModeSelect.addEventListener("change", () => {
+      this.setRenderMode(this.renderModeSelect!.value as RenderMode);
+    });
+
+    renderGroup.appendChild(renderLabel);
+    renderGroup.appendChild(this.renderModeSelect);
+
+    // Texture control
+    const textureGroup = document.createElement("div");
+    textureGroup.style.cssText = "display: flex; align-items: center; gap: 4px;";
+    const textureLabel = document.createElement("span");
+    textureLabel.textContent = "Texture:";
+    textureLabel.style.cssText = labelStyle;
+
+    this.textureSelect = document.createElement("select");
+    this.textureSelect.style.cssText = selectStyle;
+    this.updateTextureSelectOptions();
+    this.textureSelect.addEventListener("change", () => {
+      this.handleTextureSelectChange(this.textureSelect!.value);
+    });
+
+    textureGroup.appendChild(textureLabel);
+    textureGroup.appendChild(this.textureSelect);
+
+    this.controlsDiv.appendChild(renderGroup);
+    this.controlsDiv.appendChild(textureGroup);
+    wrapper.appendChild(this.controlsDiv);
+
+    // Load golden textures list asynchronously
+    this.loadGoldenTexturesList();
+  }
+
+  /**
+   * Update the texture select dropdown options.
+   */
+  private updateTextureSelectOptions(): void {
+    if (!this.textureSelect) return;
+
+    const options: string[] = ['<option value="none">None</option>'];
+
+    // Golden textures
+    for (const tex of this.goldenTextures) {
+      options.push(`<option value="golden:${tex.id}">Golden: ${tex.label}</option>`);
+    }
+
+    // Special actions
+    options.push('<option value="__file__">From PNG file...</option>');
+    options.push('<option value="__spec__">From spec output...</option>');
+
+    this.textureSelect.innerHTML = options.join("");
+
+    // Restore selection
+    if (this.textureRef === null) {
+      this.textureSelect.value = "none";
+    } else if (this.textureRef.kind === "golden") {
+      this.textureSelect.value = `golden:${this.textureRef.id}`;
+    }
+    // file and spec_output don't have persistent select values,
+    // they trigger file pickers
+  }
+
+  /**
+   * Load the list of golden preview textures from backend.
+   */
+  private async loadGoldenTexturesList(): Promise<void> {
+    try {
+      // @ts-expect-error Tauri IPC
+      const { invoke } = window.__TAURI__.core;
+      this.goldenTextures = await invoke("plugin:speccade|list_golden_preview_textures");
+      this.updateTextureSelectOptions();
+    } catch (e) {
+      console.warn("Failed to load golden textures list:", e);
+    }
+  }
+
+  /**
+   * Handle texture select dropdown change.
+   */
+  private async handleTextureSelectChange(value: string): Promise<void> {
+    if (value === "none") {
+      await this.setTextureRef(null);
+    } else if (value.startsWith("golden:")) {
+      const id = value.slice(7);
+      await this.setTextureRef({ kind: "golden", id });
+    } else if (value === "__file__") {
+      await this.pickTextureFile();
+      // Reset select to current ref
+      this.updateTextureSelectOptions();
+    } else if (value === "__spec__") {
+      await this.pickSpecOutput();
+      // Reset select to current ref
+      this.updateTextureSelectOptions();
+    }
+  }
+
+  /**
+   * Open file picker for PNG texture.
+   */
+  private async pickTextureFile(): Promise<void> {
+    try {
+      // @ts-expect-error Tauri IPC
+      const { open } = window.__TAURI__.dialog;
+      const path = await open({
+        filters: [{ name: "PNG Images", extensions: ["png"] }],
+        multiple: false,
+      });
+      if (path && typeof path === "string") {
+        await this.setTextureRef({ kind: "file", path });
+      }
+    } catch (e) {
+      console.warn("File picker cancelled or failed:", e);
+    }
+  }
+
+  /**
+   * Open file picker for spec, then show output selection.
+   */
+  private async pickSpecOutput(): Promise<void> {
+    try {
+      // @ts-expect-error Tauri IPC
+      const { open } = window.__TAURI__.dialog;
+      // @ts-expect-error Tauri IPC
+      const { invoke } = window.__TAURI__.core;
+
+      const specPath = await open({
+        filters: [{ name: "Starlark Specs", extensions: ["star"] }],
+        multiple: false,
+      });
+      if (!specPath || typeof specPath !== "string") return;
+
+      // Read spec source
+      const source: string = await invoke("plugin:speccade|read_file", { path: specPath });
+
+      // Eval spec to get outputs
+      const evalResult = await invoke("plugin:speccade|eval_spec", {
+        source,
+        filename: specPath,
+      });
+
+      // Filter to PNG outputs
+      const pngOutputs = (evalResult.outputs || []).filter(
+        (o: { path: string; format: string }) => o.format === "png"
+      );
+
+      if (pngOutputs.length === 0) {
+        console.warn("No PNG outputs declared in spec");
+        return;
+      }
+
+      // If single output, use it directly
+      if (pngOutputs.length === 1) {
+        await this.setTextureRef({
+          kind: "spec_output",
+          spec_path: specPath,
+          output_path: pngOutputs[0].path,
+        });
+        return;
+      }
+
+      // Multiple outputs - prompt user (simple prompt for now)
+      const outputPath = prompt(
+        `Select PNG output:\n${pngOutputs.map((o: { path: string }, i: number) => `${i + 1}. ${o.path}`).join("\n")}\n\nEnter number:`
+      );
+      if (outputPath) {
+        const idx = parseInt(outputPath, 10) - 1;
+        if (idx >= 0 && idx < pngOutputs.length) {
+          await this.setTextureRef({
+            kind: "spec_output",
+            spec_path: specPath,
+            output_path: pngOutputs[idx].path,
+          });
+        }
+      }
+    } catch (e) {
+      console.warn("Spec output picker failed:", e);
+    }
   }
 
   /**
@@ -167,7 +430,11 @@ export class MeshPreview {
           this.currentModel = gltf.scene;
           this.scene.add(gltf.scene);
 
-          // Count triangles and vertices
+          // Clear and cache original materials
+          this.originalMaterials.clear();
+          this.disposeOverrideMaterials();
+
+          // Count triangles and vertices, cache original materials
           let triangles = 0;
           let vertices = 0;
           gltf.scene.traverse((child) => {
@@ -182,6 +449,8 @@ export class MeshPreview {
               if (geometry.attributes.position) {
                 vertices += geometry.attributes.position.count;
               }
+              // Cache original material
+              this.originalMaterials.set(mesh, mesh.material);
             }
           });
 
@@ -193,6 +462,9 @@ export class MeshPreview {
 
           // Auto-fit camera to model
           this.fitCameraToModel(gltf.scene);
+
+          // Apply current render mode materials
+          this.applyMaterials();
 
           // Start idle timer for auto-refine if this is a proxy
           if (canRefine && this.autoRefineDelay > 0) {
@@ -406,6 +678,10 @@ export class MeshPreview {
     this.currentQuality = "full";
     this.updateRefineButton(false);
     this.infoDiv.innerHTML = `<span>No mesh loaded</span>`;
+
+    // Clear material layer state
+    this.originalMaterials.clear();
+    this.disposeOverrideMaterials();
   }
 
   /**
@@ -419,6 +695,15 @@ export class MeshPreview {
     this.controls.dispose();
     this.renderer.dispose();
     this.updateRefineButton(false);
+
+    // Dispose material layer resources
+    this.originalMaterials.clear();
+    this.disposeOverrideMaterials();
+    if (this.currentTexture) {
+      this.currentTexture.dispose();
+      this.currentTexture = null;
+    }
+
     // Find the wrapper element (parent of both renderer and infoDiv)
     const wrapper = this.infoDiv.parentElement;
     if (wrapper && wrapper.parentElement === this.container) {
@@ -438,5 +723,228 @@ export class MeshPreview {
    */
   canRefine(): boolean {
     return this.currentQuality === "proxy" && this.onRefine !== null;
+  }
+
+  /**
+   * Set the render mode and apply materials.
+   */
+  setRenderMode(mode: RenderMode): void {
+    if (this.renderMode === mode) return;
+    this.renderMode = mode;
+    this.saveSettings();
+    this.applyMaterials();
+
+    // Update UI
+    if (this.renderModeSelect) {
+      this.renderModeSelect.value = mode;
+    }
+  }
+
+  /**
+   * Set the texture reference and load the texture.
+   */
+  async setTextureRef(ref: TextureRef): Promise<void> {
+    this.textureRef = ref;
+    this.saveSettings();
+
+    // Dispose old texture
+    if (this.currentTexture) {
+      this.currentTexture.dispose();
+      this.currentTexture = null;
+    }
+
+    // Load new texture if ref is not null
+    if (ref !== null) {
+      await this.loadTextureFromRef(ref);
+    }
+
+    // Apply materials with new texture
+    this.applyMaterials();
+
+    // Update UI
+    this.updateTextureSelectOptions();
+  }
+
+  /**
+   * Load texture data from a texture reference.
+   */
+  private async loadTextureFromRef(ref: TextureRef): Promise<void> {
+    if (ref === null) return;
+
+    try {
+      // @ts-expect-error Tauri IPC
+      const { invoke } = window.__TAURI__.core;
+      let base64: string;
+
+      if (ref.kind === "golden") {
+        // Get golden texture source, then generate PNG
+        const sourceData = await invoke("plugin:speccade|get_golden_preview_texture_source", {
+          id: ref.id,
+        });
+
+        // Get the first PNG output path from the spec
+        const outputPath = await this.getFirstPngOutput(sourceData.source, sourceData.filename);
+
+        // Generate the texture using the same pipeline as regular preview
+        const result = await invoke("plugin:speccade|generate_png_output_base64", {
+          source: sourceData.source,
+          filename: sourceData.filename,
+          outputPath,
+        });
+        base64 = result.base64;
+      } else if (ref.kind === "file") {
+        // Read binary file
+        const result = await invoke("plugin:speccade|read_binary_file_base64", {
+          path: ref.path,
+        });
+        base64 = result.base64;
+      } else if (ref.kind === "spec_output") {
+        // Read spec source and generate specific output
+        const source = await invoke("plugin:speccade|read_file", { path: ref.spec_path });
+        const result = await invoke("plugin:speccade|generate_png_output_base64", {
+          source,
+          filename: ref.spec_path,
+          outputPath: ref.output_path,
+        });
+        base64 = result.base64;
+      } else {
+        return;
+      }
+
+      // Convert base64 to texture
+      this.currentTexture = await this.base64ToTexture(base64);
+    } catch (e) {
+      console.warn("Failed to load texture:", e);
+      this.currentTexture = null;
+    }
+  }
+
+  /**
+   * Get the first PNG output path from a spec source (helper for golden textures).
+   */
+  private async getFirstPngOutput(source: string, filename: string): Promise<string> {
+    try {
+      // @ts-expect-error Tauri IPC
+      const { invoke } = window.__TAURI__.core;
+      const evalResult = await invoke("plugin:speccade|eval_spec", { source, filename });
+      const pngOutputs = (evalResult.outputs || []).filter(
+        (o: { path: string; format: string }) => o.format === "png"
+      );
+      if (pngOutputs.length > 0) {
+        return pngOutputs[0].path;
+      }
+    } catch (e) {
+      console.warn("Failed to get PNG output from spec:", e);
+    }
+    return "output.png"; // fallback
+  }
+
+  /**
+   * Convert base64 PNG data to THREE.Texture.
+   */
+  private base64ToTexture(base64: string): Promise<THREE.Texture> {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        const texture = new THREE.Texture(img);
+        texture.needsUpdate = true;
+        texture.colorSpace = THREE.SRGBColorSpace;
+        resolve(texture);
+      };
+      img.onerror = () => reject(new Error("Failed to load texture image"));
+      img.src = `data:image/png;base64,${base64}`;
+    });
+  }
+
+  /**
+   * Apply materials based on current render mode and texture.
+   */
+  private applyMaterials(): void {
+    if (!this.currentModel) return;
+
+    // Dispose old override materials
+    this.disposeOverrideMaterials();
+
+    if (this.renderMode === "lit") {
+      // Restore original materials
+      this.originalMaterials.forEach((material, mesh) => {
+        mesh.material = material;
+      });
+    } else if (this.renderMode === "unlit") {
+      // Apply MeshBasicMaterial with texture as map (UV0)
+      this.originalMaterials.forEach((_, mesh) => {
+        const mat = new THREE.MeshBasicMaterial({
+          map: this.currentTexture,
+          color: this.currentTexture ? 0xffffff : 0x888888,
+        });
+        this.overrideMaterials.push(mat);
+        mesh.material = mat;
+      });
+    } else if (this.renderMode === "matcap") {
+      // Apply MeshMatcapMaterial with texture as matcap
+      this.originalMaterials.forEach((_, mesh) => {
+        const mat = new THREE.MeshMatcapMaterial({
+          matcap: this.currentTexture,
+          color: 0xffffff,
+        });
+        this.overrideMaterials.push(mat);
+        mesh.material = mat;
+      });
+    }
+  }
+
+  /**
+   * Dispose override materials to prevent memory leaks.
+   */
+  private disposeOverrideMaterials(): void {
+    for (const mat of this.overrideMaterials) {
+      mat.dispose();
+    }
+    this.overrideMaterials = [];
+  }
+
+  /**
+   * Load persisted material settings from localStorage.
+   */
+  private loadSettings(): void {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const settings: PreviewMaterialSettings = JSON.parse(raw);
+        if (settings.render_mode) {
+          this.renderMode = settings.render_mode;
+        }
+        if (settings.texture_ref !== undefined) {
+          this.textureRef = settings.texture_ref;
+        }
+      }
+    } catch {
+      // Ignore parse errors, use defaults
+    }
+  }
+
+  /**
+   * Save current material settings to localStorage.
+   */
+  private saveSettings(): void {
+    const settings: PreviewMaterialSettings = {
+      render_mode: this.renderMode,
+      texture_ref: this.textureRef,
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+  }
+
+  /**
+   * Get the current render mode.
+   */
+  getRenderMode(): RenderMode {
+    return this.renderMode;
+  }
+
+  /**
+   * Get the current texture reference.
+   */
+  getTextureRef(): TextureRef {
+    return this.textureRef;
   }
 }

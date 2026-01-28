@@ -17,6 +17,10 @@ pub use commands::batch::batch_generate;
 pub use commands::eval::eval_spec;
 pub use commands::generate::{generate_full, generate_preview, refine_mesh_preview};
 pub use commands::pack::{generate_pack_manifest, write_pack_manifest};
+pub use commands::preview_textures::{
+    generate_png_output_base64, get_golden_preview_texture_source, list_golden_preview_textures,
+    read_binary_file_base64,
+};
 pub use commands::project::{open_folder, read_file, save_file, scan_project_tree};
 pub use commands::templates::{get_template, list_templates};
 pub use commands::validate::validate_spec;
@@ -46,6 +50,10 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
             generate_preview,
             generate_full,
             refine_mesh_preview,
+            list_golden_preview_textures,
+            get_golden_preview_texture_source,
+            read_binary_file_base64,
+            generate_png_output_base64,
             generate_pack_manifest,
             write_pack_manifest,
             watch_file,
