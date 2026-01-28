@@ -149,6 +149,99 @@ fn extract_flipbook_frames(
     (frames, delays, should_loop)
 }
 
+/// Extracts frames from a spritesheet atlas using sheet + animation metadata.
+///
+/// Returns (frames_rgba, delays_ms, should_loop).
+fn extract_sprite_animation_frames(
+    atlas: &image::RgbaImage,
+    sheet_meta: &speccade_spec::recipe::sprite::SpriteSheetMetadata,
+    anim_meta: &speccade_spec::recipe::sprite::SpriteAnimationMetadata,
+    fps_override: Option<u32>,
+) -> (Vec<Vec<u8>>, Vec<u32>, bool) {
+    use image::GenericImageView;
+    use speccade_spec::recipe::sprite::AnimationLoopMode;
+    use std::collections::HashMap;
+
+    let atlas_w = atlas.width();
+    let atlas_h = atlas.height();
+
+    let mut uv_by_id = HashMap::with_capacity(sheet_meta.frames.len());
+    for uv in &sheet_meta.frames {
+        uv_by_id.insert(uv.id.as_str(), uv);
+    }
+
+    let override_delay_ms = fps_override
+        .map(|fps| (1000 / fps.max(1)).max(1))
+        .unwrap_or(0);
+
+    let mut frames = Vec::with_capacity(anim_meta.frames.len());
+    let mut delays = Vec::with_capacity(anim_meta.frames.len());
+
+    for anim_frame in &anim_meta.frames {
+        let Some(frame_uv) = uv_by_id.get(anim_frame.frame_id.as_str()) else {
+            continue;
+        };
+
+        let w = frame_uv.width;
+        let h = frame_uv.height;
+
+        if w == 0 || h == 0 {
+            continue;
+        }
+        if w > atlas_w || h > atlas_h {
+            continue;
+        }
+        if !frame_uv.u_min.is_finite() || !frame_uv.v_min.is_finite() {
+            continue;
+        }
+
+        let max_x = atlas_w - w;
+        let max_y = atlas_h - h;
+
+        let x = (frame_uv.u_min * atlas_w as f64)
+            .round()
+            .max(0.0)
+            .min(max_x as f64) as u32;
+        let y = (frame_uv.v_min * atlas_h as f64)
+            .round()
+            .max(0.0)
+            .min(max_y as f64) as u32;
+
+        let rgba = atlas.view(x, y, w, h).to_image().into_raw();
+        frames.push(rgba);
+
+        let delay_ms = if override_delay_ms > 0 {
+            override_delay_ms
+        } else {
+            anim_frame.duration_ms.max(1)
+        };
+        delays.push(delay_ms);
+    }
+
+    let mut should_loop = matches!(anim_meta.loop_mode, AnimationLoopMode::Loop);
+
+    if matches!(anim_meta.loop_mode, AnimationLoopMode::PingPong) {
+        // PingPong always loops.
+        should_loop = true;
+
+        // Append reversed frames excluding the first and last so the endpoints
+        // are not duplicated.
+        if frames.len() > 2 {
+            let base_len = frames.len();
+            let extra = base_len - 2;
+            frames.reserve(extra);
+            delays.reserve(extra);
+
+            for i in (1..base_len - 1).rev() {
+                frames.push(frames[i].clone());
+                delays.push(delays[i]);
+            }
+        }
+    }
+
+    (frames, delays, should_loop)
+}
+
 /// Run the preview command
 ///
 /// # Arguments
@@ -324,5 +417,82 @@ mod tests {
         assert!(frames.is_empty());
         assert!(delays.is_empty());
         assert!(!do_loop);
+    }
+
+    #[test]
+    fn test_extract_sprite_animation_frames() {
+        // Create a 128x64 atlas with 2 frames of 64x64 (side by side, no padding)
+        let mut atlas = RgbaImage::new(128, 64);
+
+        // Frame A: red
+        for y in 0..64 {
+            for x in 0..64 {
+                atlas.put_pixel(x, y, Rgba([255, 0, 0, 255]));
+            }
+        }
+
+        // Frame B: green
+        for y in 0..64 {
+            for x in 64..128 {
+                atlas.put_pixel(x, y, Rgba([0, 255, 0, 255]));
+            }
+        }
+
+        let sheet_meta_json = serde_json::json!({
+            "atlas_width": 128,
+            "atlas_height": 64,
+            "padding": 0,
+            "frames": [
+                {
+                    "id": "frame_a",
+                    "u_min": 0.0,
+                    "v_min": 0.0,
+                    "u_max": 0.5,
+                    "v_max": 1.0,
+                    "width": 64,
+                    "height": 64,
+                    "pivot": [0.5, 0.5]
+                },
+                {
+                    "id": "frame_b",
+                    "u_min": 0.5,
+                    "v_min": 0.0,
+                    "u_max": 1.0,
+                    "v_max": 1.0,
+                    "width": 64,
+                    "height": 64,
+                    "pivot": [0.5, 0.5]
+                }
+            ]
+        });
+
+        let sheet_meta: speccade_spec::recipe::sprite::SpriteSheetMetadata =
+            serde_json::from_value(sheet_meta_json).unwrap();
+
+        let anim_meta_json = serde_json::json!({
+            "name": "test_anim",
+            "fps": 12,
+            "loop_mode": "loop",
+            "total_duration_ms": 166,
+            "frames": [
+                { "frame_id": "frame_a", "duration_ms": 83 },
+                { "frame_id": "frame_b", "duration_ms": 83 }
+            ]
+        });
+
+        let anim_meta: speccade_spec::recipe::sprite::SpriteAnimationMetadata =
+            serde_json::from_value(anim_meta_json).unwrap();
+
+        let (frames, delays, do_loop) =
+            extract_sprite_animation_frames(&atlas, &sheet_meta, &anim_meta, None);
+
+        assert_eq!(frames.len(), 2);
+        assert_eq!(delays, vec![83, 83]);
+        assert!(do_loop);
+
+        // First pixel of frame A should be red
+        assert_eq!(&frames[0][0..4], &[255, 0, 0, 255]);
+        // First pixel of frame B should be green
+        assert_eq!(&frames[1][0..4], &[0, 255, 0, 255]);
     }
 }
