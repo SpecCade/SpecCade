@@ -16,6 +16,7 @@ import { TexturePreview } from "./components/TexturePreview";
 import { MusicPreview } from "./components/MusicPreview";
 import { NewAssetDialog } from "./components/NewAssetDialog";
 import { FileBrowser } from "./components/FileBrowser";
+import { ProjectExplorer } from "./components/ProjectExplorer";
 import { GeneratePanel } from "./components/GeneratePanel";
 import { StdlibPalette } from "./components/StdlibPalette";
 import { HelpPanel } from "./components/HelpPanel";
@@ -111,6 +112,7 @@ let audioPreview: AudioPreview | null = null;
 let musicPreview: MusicPreview | null = null;
 let texturePreview: TexturePreview | null = null;
 let fileBrowser: FileBrowser | null = null;
+let projectExplorer: ProjectExplorer | null = null;
 let generatePanel: GeneratePanel | null = null;
 let problemsPanel: ProblemsPanel | null = null;
 let currentProblems: ProblemItem[] = [];
@@ -198,6 +200,10 @@ export function cleanup(): void {
   if (fileBrowser) {
     fileBrowser.dispose();
     fileBrowser = null;
+  }
+  if (projectExplorer) {
+    projectExplorer.dispose();
+    projectExplorer = null;
   }
   if (generatePanel) {
     generatePanel.dispose();
@@ -891,6 +897,10 @@ async function init(): Promise<void> {
       updateStatus(`External change detected`);
       evaluateSource(editor.getContent());
     }
+    // Refresh project tree on any file system change
+    if (kind === "created" || kind === "removed") {
+      projectExplorer?.refresh();
+    }
   });
 
   // Initialize problems panel before the first evaluation runs.
@@ -905,10 +915,10 @@ async function init(): Promise<void> {
 
   initEditor();
 
-  // Initialize file browser in files panel
+  // Initialize project explorer in files panel (replaces FileBrowser)
   const filesPanelElement = document.getElementById("files-panel");
   if (filesPanelElement) {
-    fileBrowser = new FileBrowser(filesPanelElement, (path, content) => {
+    projectExplorer = new ProjectExplorer(filesPanelElement, (path, content) => {
       currentFilePath = path;
       addRecentFile(path);
       if (editor) {
@@ -916,6 +926,7 @@ async function init(): Promise<void> {
         evaluateSource(content);
       }
       updateWindowTitle(path);
+      // setActiveFile is called internally by ProjectExplorer with the relative path
     });
   }
 
