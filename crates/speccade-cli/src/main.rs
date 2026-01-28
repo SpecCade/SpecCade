@@ -331,6 +331,12 @@ enum Commands {
         command: CacheCommands,
     },
 
+    /// Feature coverage tracking and enforcement
+    Coverage {
+        #[command(subcommand)]
+        command: CoverageCommands,
+    },
+
     /// Verify generated assets against constraints
     Verify {
         /// Path to the report file (*.report.json)
@@ -437,6 +443,23 @@ enum CacheCommands {
     Clear,
     /// Show cache information (entry count, total size)
     Info,
+}
+
+/// Subcommands for feature coverage tracking
+#[derive(Subcommand, Debug)]
+pub enum CoverageCommands {
+    /// Generate coverage report (writes YAML)
+    Generate {
+        /// Fail if coverage < 100% (CI mode)
+        #[arg(long)]
+        strict: bool,
+
+        /// Output YAML path (default: docs/coverage/feature-coverage.yaml)
+        #[arg(short, long)]
+        output: Option<String>,
+    },
+    /// Print coverage summary to stdout
+    Report,
 }
 
 fn main() -> ExitCode {
@@ -605,6 +628,18 @@ fn main() -> ExitCode {
         Commands::Cache { command } => match command {
             CacheCommands::Clear => commands::cache::clear(),
             CacheCommands::Info => commands::cache::info(),
+        },
+        Commands::Coverage { command } => match command {
+            CoverageCommands::Generate { strict: _, output: _ } => {
+                // TODO: Implement in Task 2
+                eprintln!("coverage generate not yet implemented");
+                Ok(ExitCode::from(1))
+            }
+            CoverageCommands::Report => {
+                // TODO: Implement in Task 2
+                eprintln!("coverage report not yet implemented");
+                Ok(ExitCode::from(1))
+            }
         },
         Commands::Verify {
             report,
@@ -2216,6 +2251,66 @@ mod tests {
                 assert_eq!(panel_size, 128);
             }
             _ => panic!("expected preview-grid command"),
+        }
+    }
+
+    #[test]
+    fn test_cli_parses_coverage_generate() {
+        let cli = Cli::try_parse_from([
+            "speccade",
+            "coverage",
+            "generate",
+        ])
+        .unwrap();
+        match cli.command {
+            Commands::Coverage { command } => match command {
+                CoverageCommands::Generate { strict, output } => {
+                    assert!(!strict);
+                    assert!(output.is_none());
+                }
+                _ => panic!("expected generate subcommand"),
+            },
+            _ => panic!("expected coverage command"),
+        }
+    }
+
+    #[test]
+    fn test_cli_parses_coverage_generate_strict() {
+        let cli = Cli::try_parse_from([
+            "speccade",
+            "coverage",
+            "generate",
+            "--strict",
+            "--output",
+            "custom.yaml",
+        ])
+        .unwrap();
+        match cli.command {
+            Commands::Coverage { command } => match command {
+                CoverageCommands::Generate { strict, output } => {
+                    assert!(strict);
+                    assert_eq!(output.as_deref(), Some("custom.yaml"));
+                }
+                _ => panic!("expected generate subcommand"),
+            },
+            _ => panic!("expected coverage command"),
+        }
+    }
+
+    #[test]
+    fn test_cli_parses_coverage_report() {
+        let cli = Cli::try_parse_from([
+            "speccade",
+            "coverage",
+            "report",
+        ])
+        .unwrap();
+        match cli.command {
+            Commands::Coverage { command } => match command {
+                CoverageCommands::Report => {}
+                _ => panic!("expected report subcommand"),
+            },
+            _ => panic!("expected coverage command"),
         }
     }
 }
