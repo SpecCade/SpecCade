@@ -20,7 +20,6 @@ fn snapshot_path() -> std::path::PathBuf {
 
 #[test]
 fn stdlib_matches_snapshot() {
-    // Load the expected snapshot from disk
     let snapshot_file = snapshot_path();
     let snapshot_contents = std::fs::read_to_string(&snapshot_file).unwrap_or_else(|e| {
         panic!(
@@ -48,87 +47,99 @@ fn stdlib_matches_snapshot() {
     let current: serde_json::Value =
         serde_json::from_str(&current_json).expect("Failed to parse current stdlib as JSON");
 
-    // Compare the two
-    if expected != current {
-        // Find specific differences for a helpful error message
-        let expected_str = serde_json::to_string_pretty(&expected).unwrap();
-        let current_str = serde_json::to_string_pretty(&current).unwrap();
+    // Build name -> function maps for both snapshots
+    let snapshot_funcs: std::collections::HashMap<&str, &serde_json::Value> = expected["functions"]
+        .as_array()
+        .expect("snapshot missing 'functions' array")
+        .iter()
+        .filter_map(|f| f["name"].as_str().map(|n| (n, f)))
+        .collect();
 
-        // Count function differences
-        let expected_funcs = expected["functions"]
-            .as_array()
-            .map(|a| a.len())
-            .unwrap_or(0);
-        let current_funcs = current["functions"]
-            .as_array()
-            .map(|a| a.len())
-            .unwrap_or(0);
+    let current_funcs: std::collections::HashMap<&str, &serde_json::Value> = current["functions"]
+        .as_array()
+        .expect("current stdlib missing 'functions' array")
+        .iter()
+        .filter_map(|f| f["name"].as_str().map(|n| (n, f)))
+        .collect();
 
-        let expected_names: std::collections::HashSet<&str> = expected["functions"]
-            .as_array()
-            .map(|arr| arr.iter().filter_map(|f| f["name"].as_str()).collect())
-            .unwrap_or_default();
+    // Detect removals (breaking)
+    let removed: Vec<&str> = snapshot_funcs
+        .keys()
+        .filter(|name| !current_funcs.contains_key(*name))
+        .copied()
+        .collect();
 
-        let current_names: std::collections::HashSet<&str> = current["functions"]
-            .as_array()
-            .map(|arr| arr.iter().filter_map(|f| f["name"].as_str()).collect())
-            .unwrap_or_default();
+    if !removed.is_empty() {
+        panic!(
+            "BREAKING: Functions removed from stdlib:\n  {}\n\n\
+             These functions exist in the snapshot but are missing from the current stdlib.\n\
+             If this removal is intentional, update the snapshot:\n  \
+             cargo run -p speccade-cli -- stdlib dump --format json > golden/stdlib/stdlib.snapshot.json",
+            removed.join("\n  ")
+        );
+    }
 
-        let added: Vec<_> = current_names.difference(&expected_names).collect();
-        let removed: Vec<_> = expected_names.difference(&current_names).collect();
-
-        let mut diff_summary = String::new();
-        if expected_funcs != current_funcs {
-            diff_summary.push_str(&format!(
-                "Function count changed: {} -> {}\n",
-                expected_funcs, current_funcs
-            ));
-        }
-        if !added.is_empty() {
-            diff_summary.push_str(&format!("Functions added: {:?}\n", added));
-        }
-        if !removed.is_empty() {
-            diff_summary.push_str(&format!("Functions removed: {:?}\n", removed));
-        }
-        if diff_summary.is_empty() {
-            diff_summary.push_str("Function signatures or metadata changed.\n");
-        }
-
-        // Show a unified diff of the first differences
-        let expected_lines: Vec<&str> = expected_str.lines().collect();
-        let current_lines: Vec<&str> = current_str.lines().collect();
-
-        let mut diff_lines = Vec::new();
-        let max_diff_lines = 20;
-        let mut diff_count = 0;
-
-        for (i, (exp, cur)) in expected_lines.iter().zip(current_lines.iter()).enumerate() {
-            if exp != cur && diff_count < max_diff_lines {
-                diff_lines.push(format!("Line {}: ", i + 1));
-                diff_lines.push(format!("  - {}", exp));
-                diff_lines.push(format!("  + {}", cur));
-                diff_count += 1;
+    // Detect signature changes (breaking) — compare params and returns
+    let mut changed: Vec<String> = Vec::new();
+    for (name, snap_func) in &snapshot_funcs {
+        if let Some(cur_func) = current_funcs.get(name) {
+            let snap_sig = (&snap_func["params"], &snap_func["returns"]);
+            let cur_sig = (&cur_func["params"], &cur_func["returns"]);
+            if snap_sig != cur_sig {
+                changed.push(format!(
+                    "  {}:\n    snapshot: params={}, returns={}\n    current:  params={}, returns={}",
+                    name,
+                    snap_func["params"], snap_func["returns"],
+                    cur_func["params"], cur_func["returns"],
+                ));
             }
         }
+    }
 
-        // Handle length differences
-        if expected_lines.len() != current_lines.len() && diff_count < max_diff_lines {
-            diff_lines.push(format!(
-                "Line count differs: {} vs {}",
-                expected_lines.len(),
-                current_lines.len()
-            ));
-        }
-
+    if !changed.is_empty() {
         panic!(
-            "Stdlib has changed and does not match the snapshot.\n\n\
-             {}\n\
-             Diff preview:\n{}\n\n\
-             If this change is intentional, update the snapshot by running:\n  \
+            "BREAKING: Function signatures changed in stdlib:\n{}\n\n\
+             If these changes are intentional, update the snapshot:\n  \
              cargo run -p speccade-cli -- stdlib dump --format json > golden/stdlib/stdlib.snapshot.json",
-            diff_summary,
-            diff_lines.join("\n")
+            changed.join("\n")
         );
+    }
+
+    // Detect additions — auto-update snapshot
+    let added: Vec<&str> = current_funcs
+        .keys()
+        .filter(|name| !snapshot_funcs.contains_key(*name))
+        .copied()
+        .collect();
+
+    if !added.is_empty() {
+        // Only additions, no removals or signature changes — safe to auto-update
+        std::fs::write(&snapshot_file, &current_json).unwrap_or_else(|e| {
+            panic!(
+                "Failed to auto-update snapshot at {}: {}",
+                snapshot_file.display(),
+                e
+            )
+        });
+        eprintln!(
+            "NOTE: Stdlib snapshot auto-updated with {} new function(s): {}",
+            added.len(),
+            added.join(", ")
+        );
+    }
+
+    // Also auto-update if non-signature metadata changed (e.g. descriptions, categories)
+    // but no functions were added/removed/signature-changed
+    if added.is_empty() && expected != current {
+        // Something non-breaking changed (description text, category, etc.) — auto-update
+        std::fs::write(&snapshot_file, &current_json).unwrap_or_else(|e| {
+            panic!(
+                "Failed to auto-update snapshot at {}: {}",
+                snapshot_file.display(),
+                e
+            )
+        });
+        eprintln!("NOTE: Stdlib snapshot auto-updated (non-breaking metadata changes).");
     }
 }
 

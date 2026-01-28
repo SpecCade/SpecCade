@@ -1,10 +1,1338 @@
 {
   "stdlib_version": "0.1.0",
+  "coordinate_system": {
+    "handedness": "right",
+    "up": "+Z",
+    "forward": "+Y",
+    "right": "+X",
+    "units": "meters",
+    "rotation_order": "XYZ",
+    "rotation_units": "degrees"
+  },
   "functions": [
+    {
+      "name": "animation_export_settings",
+      "category": "animation",
+      "description": "Creates animation export settings.",
+      "params": [
+        {
+          "name": "bake_transforms",
+          "type": "bool",
+          "required": false,
+          "default": true
+        },
+        {
+          "name": "optimize_keyframes",
+          "type": "bool",
+          "required": false,
+          "default": false
+        },
+        {
+          "name": "separate_file",
+          "type": "bool",
+          "required": false,
+          "default": false
+        },
+        {
+          "name": "save_blend",
+          "type": "bool",
+          "required": false,
+          "default": false
+        }
+      ],
+      "returns": "A dict suitable for use in skeletal_animation_spec's export parameter."
+    },
+    {
+      "name": "animation_keyframe",
+      "category": "animation",
+      "description": "Creates an animation keyframe at a specific time with bone transforms.",
+      "params": [
+        {
+          "name": "time",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "bones",
+          "type": "typing.Any",
+          "required": true
+        }
+      ],
+      "returns": "A dict suitable for use in skeletal_animation_spec's keyframes list."
+    },
+    {
+      "name": "bone_transform",
+      "category": "animation",
+      "description": "Creates a bone transform with position, rotation, and/or scale.",
+      "params": [
+        {
+          "name": "position",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "rotation",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "scale",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        }
+      ],
+      "returns": "A dict suitable for use in animation_keyframe's bones map."
+    },
+    {
+      "name": "ik_keyframe",
+      "category": "animation",
+      "description": "Creates an IK keyframe at a specific time with IK target transforms.",
+      "params": [
+        {
+          "name": "time",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "targets",
+          "type": "typing.Any",
+          "required": true
+        }
+      ],
+      "returns": "A dict for use in IK-based animation."
+    },
+    {
+      "name": "ik_target_transform",
+      "category": "animation",
+      "description": "Creates an IK target transform for IK-driven animation.",
+      "params": [
+        {
+          "name": "position",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "rotation",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "ik_fk_blend",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        }
+      ],
+      "returns": "A dict suitable for use in IK keyframe targets."
+    },
+    {
+      "name": "skeletal_animation_spec",
+      "category": "animation",
+      "description": "Creates a complete skeletal animation spec with blender_clip_v1 recipe.",
+      "params": [
+        {
+          "name": "asset_id",
+          "type": "str",
+          "required": true
+        },
+        {
+          "name": "seed",
+          "type": "int",
+          "required": true
+        },
+        {
+          "name": "output_path",
+          "type": "str",
+          "required": true
+        },
+        {
+          "name": "format",
+          "type": "str",
+          "required": true
+        },
+        {
+          "name": "skeleton_preset",
+          "type": "str",
+          "required": true
+        },
+        {
+          "name": "clip_name",
+          "type": "str",
+          "required": true
+        },
+        {
+          "name": "duration_seconds",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "fps",
+          "type": "int",
+          "required": false,
+          "default": 30
+        },
+        {
+          "name": "loop",
+          "type": "bool",
+          "required": false,
+          "default": false
+        },
+        {
+          "name": "keyframes",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "interpolation",
+          "type": "str",
+          "required": false,
+          "default": "linear"
+        },
+        {
+          "name": "export",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "description",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "tags",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "license",
+          "type": "str",
+          "required": false,
+          "default": "CC0-1.0"
+        }
+      ],
+      "returns": "A complete spec dict ready for serialization."
+    },
+    {
+      "name": "allpass",
+      "category": "audio",
+      "description": "Creates an allpass filter.",
+      "params": [
+        {
+          "name": "frequency",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "resonance",
+          "type": "float",
+          "required": false
+        },
+        {
+          "name": "sweep_to",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        }
+      ],
+      "returns": "Returns dict[typing.Any, typing.Any]."
+    },
+    {
+      "name": "audio_spec",
+      "category": "audio",
+      "description": "Creates a complete audio spec with audio_v1 recipe.",
+      "params": [
+        {
+          "name": "asset_id",
+          "type": "str",
+          "required": true
+        },
+        {
+          "name": "seed",
+          "type": "int",
+          "required": true
+        },
+        {
+          "name": "output_path",
+          "type": "str",
+          "required": true
+        },
+        {
+          "name": "format",
+          "type": "str",
+          "required": true
+        },
+        {
+          "name": "duration_seconds",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "sample_rate",
+          "type": "int",
+          "required": true
+        },
+        {
+          "name": "layers",
+          "type": "list[typing.Any]",
+          "required": true
+        },
+        {
+          "name": "effects",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "description",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "tags",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "license",
+          "type": "str",
+          "required": false,
+          "default": "CC0-1.0"
+        }
+      ],
+      "returns": "A complete spec dict ready for serialization."
+    },
+    {
+      "name": "auto_filter",
+      "category": "audio",
+      "description": "Creates an auto-filter / envelope follower effect for dynamic filter sweeps.",
+      "params": [
+        {
+          "name": "sensitivity",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "attack_ms",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "release_ms",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "depth",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "base_frequency",
+          "type": "float",
+          "required": true
+        }
+      ],
+      "returns": "A dict matching the Effect::AutoFilter IR structure."
+    },
+    {
+      "name": "cabinet_sim",
+      "category": "audio",
+      "description": "Creates a cabinet simulation effect using cascaded biquad filters.",
+      "params": [
+        {
+          "name": "cabinet_type",
+          "type": "str",
+          "required": true
+        },
+        {
+          "name": "mic_position",
+          "type": "float",
+          "required": false
+        }
+      ],
+      "returns": "A dict matching the Effect::CabinetSim IR structure."
+    },
+    {
+      "name": "comb_filter",
+      "category": "audio",
+      "description": "Creates a comb filter.",
+      "params": [
+        {
+          "name": "delay_ms",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "feedback",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "wet",
+          "type": "float",
+          "required": true
+        }
+      ],
+      "returns": "Returns dict[typing.Any, typing.Any]."
+    },
+    {
+      "name": "comb_filter_synth",
+      "category": "audio",
+      "description": "Creates a Comb Filter synthesis block.",
+      "params": [
+        {
+          "name": "frequency",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "decay",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "excitation",
+          "type": "str",
+          "required": false,
+          "default": "impulse"
+        }
+      ],
+      "returns": "Returns dict[typing.Any, typing.Any]."
+    },
+    {
+      "name": "delay_tap",
+      "category": "audio",
+      "description": "Creates a delay tap configuration for multi_tap_delay().",
+      "params": [
+        {
+          "name": "time_ms",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "feedback",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "pan",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "level",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "filter_cutoff",
+          "type": "float",
+          "required": false
+        }
+      ],
+      "returns": "A dict matching the DelayTap structure."
+    },
+    {
+      "name": "eq_band",
+      "category": "audio",
+      "description": "Creates an EQ band configuration.",
+      "params": [
+        {
+          "name": "frequency",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "gain_db",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "q",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "band_type",
+          "type": "str",
+          "required": true
+        }
+      ],
+      "returns": "Returns dict[typing.Any, typing.Any]."
+    },
+    {
+      "name": "feedback_fm",
+      "category": "audio",
+      "description": "Creates a Feedback FM synthesis block.",
+      "params": [
+        {
+          "name": "frequency",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "feedback",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "modulation_index",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "sweep_to",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        }
+      ],
+      "returns": "Returns dict[typing.Any, typing.Any]."
+    },
+    {
+      "name": "flanger",
+      "category": "audio",
+      "description": "Creates a flanger effect.",
+      "params": [
+        {
+          "name": "rate",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "depth",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "feedback",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "delay_ms",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "wet",
+          "type": "float",
+          "required": true
+        }
+      ],
+      "returns": "Returns dict[typing.Any, typing.Any]."
+    },
+    {
+      "name": "formant_config",
+      "category": "audio",
+      "description": "Creates a formant configuration.",
+      "params": [
+        {
+          "name": "frequency",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "amplitude",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "bandwidth",
+          "type": "float",
+          "required": true
+        }
+      ],
+      "returns": "Returns dict[typing.Any, typing.Any]."
+    },
+    {
+      "name": "formant_filter",
+      "category": "audio",
+      "description": "Creates a formant filter.",
+      "params": [
+        {
+          "name": "vowel",
+          "type": "str",
+          "required": true
+        },
+        {
+          "name": "intensity",
+          "type": "float",
+          "required": true
+        }
+      ],
+      "returns": "Returns dict[typing.Any, typing.Any]."
+    },
+    {
+      "name": "granular_delay",
+      "category": "audio",
+      "description": "Creates a granular delay effect for shimmer and pitchy delays.",
+      "params": [
+        {
+          "name": "time_ms",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "feedback",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "grain_size_ms",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "pitch_semitones",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "wet",
+          "type": "float",
+          "required": true
+        }
+      ],
+      "returns": "A dict matching the Effect::GranularDelay IR structure."
+    },
+    {
+      "name": "impact_builder",
+      "category": "audio",
+      "description": "Creates a layered impact sound effect from three component layers.",
+      "params": [
+        {
+          "name": "transient",
+          "type": "typing.Any",
+          "required": true
+        },
+        {
+          "name": "body",
+          "type": "typing.Any",
+          "required": true
+        },
+        {
+          "name": "tail",
+          "type": "typing.Any",
+          "required": true
+        }
+      ],
+      "returns": "A list of three audio_layer dicts ready for use in an audio spec."
+    },
+    {
+      "name": "ladder",
+      "category": "audio",
+      "description": "Creates a ladder filter (Moog-style 4-pole lowpass).",
+      "params": [
+        {
+          "name": "cutoff",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "resonance",
+          "type": "float",
+          "required": false
+        },
+        {
+          "name": "sweep_to",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        }
+      ],
+      "returns": "Returns dict[typing.Any, typing.Any]."
+    },
+    {
+      "name": "lfo_modulation",
+      "category": "audio",
+      "description": "Creates an LFO modulation with a target.",
+      "params": [
+        {
+          "name": "config",
+          "type": "typing.Any",
+          "required": true
+        },
+        {
+          "name": "target",
+          "type": "str",
+          "required": true
+        },
+        {
+          "name": "amount",
+          "type": "float",
+          "required": true
+        }
+      ],
+      "returns": "A dict matching the LfoModulation IR structure."
+    },
+    {
+      "name": "limiter",
+      "category": "audio",
+      "description": "Creates a limiter effect.",
+      "params": [
+        {
+          "name": "threshold_db",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "release_ms",
+          "type": "float",
+          "required": false
+        },
+        {
+          "name": "lookahead_ms",
+          "type": "float",
+          "required": false
+        },
+        {
+          "name": "ceiling_db",
+          "type": "float",
+          "required": false
+        }
+      ],
+      "returns": "Returns dict[typing.Any, typing.Any]."
+    },
+    {
+      "name": "multi_oscillator",
+      "category": "audio",
+      "description": "Creates a Multi-Oscillator synthesis block.",
+      "params": [
+        {
+          "name": "frequency",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "oscillators",
+          "type": "typing.Any",
+          "required": true
+        },
+        {
+          "name": "sweep_to",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        }
+      ],
+      "returns": "A dict matching the Synthesis::MultiOscillator IR structure."
+    },
+    {
+      "name": "multi_tap_delay",
+      "category": "audio",
+      "description": "Creates a multi-tap delay effect.",
+      "params": [
+        {
+          "name": "taps",
+          "type": "typing.Any",
+          "required": true
+        }
+      ],
+      "returns": "A dict matching the Effect::MultiTapDelay IR structure."
+    },
+    {
+      "name": "notch",
+      "category": "audio",
+      "description": "Creates a notch (band-reject) filter.",
+      "params": [
+        {
+          "name": "center",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "resonance",
+          "type": "float",
+          "required": false
+        },
+        {
+          "name": "sweep_to",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        }
+      ],
+      "returns": "Returns dict[typing.Any, typing.Any]."
+    },
+    {
+      "name": "oneshot_envelope",
+      "category": "audio",
+      "description": "Creates an envelope optimized for one-shot (attack transient) sounds.",
+      "params": [
+        {
+          "name": "attack_ms",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "decay_ms",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "sustain_level",
+          "type": "float",
+          "required": true
+        }
+      ],
+      "returns": "An envelope dict suitable for use with `audio_layer()`."
+    },
+    {
+      "name": "oscillator_config",
+      "category": "audio",
+      "description": "Creates an oscillator configuration for multi_oscillator().",
+      "params": [
+        {
+          "name": "waveform",
+          "type": "str",
+          "required": true
+        },
+        {
+          "name": "volume",
+          "type": "float",
+          "required": false
+        },
+        {
+          "name": "detune",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "phase",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "duty",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        }
+      ],
+      "returns": "Returns dict[typing.Any, typing.Any]."
+    },
+    {
+      "name": "parametric_eq",
+      "category": "audio",
+      "description": "Creates a parametric EQ effect.",
+      "params": [
+        {
+          "name": "bands",
+          "type": "typing.Any",
+          "required": true
+        }
+      ],
+      "returns": "Returns dict[typing.Any, typing.Any]."
+    },
+    {
+      "name": "pd_synth",
+      "category": "audio",
+      "description": "Creates a Phase Distortion synthesis block.",
+      "params": [
+        {
+          "name": "frequency",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "distortion",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "distortion_decay",
+          "type": "float",
+          "required": false
+        },
+        {
+          "name": "waveform",
+          "type": "str",
+          "required": false,
+          "default": "resonant"
+        },
+        {
+          "name": "sweep_to",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        }
+      ],
+      "returns": "Returns dict[typing.Any, typing.Any]."
+    },
+    {
+      "name": "phaser",
+      "category": "audio",
+      "description": "Creates a phaser effect.",
+      "params": [
+        {
+          "name": "rate",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "depth",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "stages",
+          "type": "int",
+          "required": true
+        },
+        {
+          "name": "wet",
+          "type": "float",
+          "required": true
+        }
+      ],
+      "returns": "Returns dict[typing.Any, typing.Any]."
+    },
+    {
+      "name": "ring_mod_synth",
+      "category": "audio",
+      "description": "Creates a Ring Modulation synthesis block.",
+      "params": [
+        {
+          "name": "carrier",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "modulator",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "mix",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "sweep_to",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        }
+      ],
+      "returns": "A dict matching the Synthesis::RingModSynth IR structure."
+    },
+    {
+      "name": "ring_modulator",
+      "category": "audio",
+      "description": "Creates a ring modulator effect that multiplies audio with a carrier oscillator.",
+      "params": [
+        {
+          "name": "frequency",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "mix",
+          "type": "float",
+          "required": true
+        }
+      ],
+      "returns": "A dict matching the Effect::RingModulator IR structure."
+    },
+    {
+      "name": "rotary_speaker",
+      "category": "audio",
+      "description": "Creates a rotary speaker (Leslie) effect with amplitude modulation and Doppler.",
+      "params": [
+        {
+          "name": "rate",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "depth",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "wet",
+          "type": "float",
+          "required": true
+        }
+      ],
+      "returns": "A dict matching the Effect::RotarySpeaker IR structure."
+    },
+    {
+      "name": "shelf_high",
+      "category": "audio",
+      "description": "Creates a high shelf filter.",
+      "params": [
+        {
+          "name": "frequency",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "gain_db",
+          "type": "float",
+          "required": true
+        }
+      ],
+      "returns": "Returns dict[typing.Any, typing.Any]."
+    },
+    {
+      "name": "shelf_low",
+      "category": "audio",
+      "description": "Creates a low shelf filter.",
+      "params": [
+        {
+          "name": "frequency",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "gain_db",
+          "type": "float",
+          "required": true
+        }
+      ],
+      "returns": "Returns dict[typing.Any, typing.Any]."
+    },
+    {
+      "name": "spectral_source",
+      "category": "audio",
+      "description": "Creates a spectral source configuration.",
+      "params": [
+        {
+          "name": "source_type",
+          "type": "str",
+          "required": true
+        },
+        {
+          "name": "param1",
+          "type": "typing.Any",
+          "required": true
+        },
+        {
+          "name": "param2",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        }
+      ],
+      "returns": "Returns dict[typing.Any, typing.Any]."
+    },
+    {
+      "name": "stereo_widener",
+      "category": "audio",
+      "description": "Creates a stereo widener effect.",
+      "params": [
+        {
+          "name": "width",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "mode",
+          "type": "str",
+          "required": false,
+          "default": "simple"
+        },
+        {
+          "name": "delay_ms",
+          "type": "float",
+          "required": false
+        }
+      ],
+      "returns": "A dict matching the Effect::StereoWidener IR structure."
+    },
+    {
+      "name": "tape_saturation",
+      "category": "audio",
+      "description": "Creates a tape saturation effect with warmth, wow/flutter, and hiss.",
+      "params": [
+        {
+          "name": "drive",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "bias",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "wow_rate",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "flutter_rate",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "hiss_level",
+          "type": "float",
+          "required": true
+        }
+      ],
+      "returns": "A dict matching the Effect::TapeSaturation IR structure."
+    },
+    {
+      "name": "transient_shaper",
+      "category": "audio",
+      "description": "Creates a transient shaper effect for controlling attack punch and sustain.",
+      "params": [
+        {
+          "name": "attack",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "sustain",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "output_gain_db",
+          "type": "float",
+          "required": true
+        }
+      ],
+      "returns": "A dict matching the Effect::TransientShaper IR structure."
+    },
+    {
+      "name": "true_peak_limiter",
+      "category": "audio",
+      "description": "Creates a true-peak limiter effect for broadcast/streaming compliance.",
+      "params": [
+        {
+          "name": "ceiling_db",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "release_ms",
+          "type": "float",
+          "required": false
+        }
+      ],
+      "returns": "A dict matching the Effect::TruePeakLimiter IR structure."
+    },
+    {
+      "name": "vector_path_point",
+      "category": "audio",
+      "description": "Creates a vector path point for animation.",
+      "params": [
+        {
+          "name": "x",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "y",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "duration",
+          "type": "float",
+          "required": true
+        }
+      ],
+      "returns": "Returns dict[typing.Any, typing.Any]."
+    },
+    {
+      "name": "vector_source",
+      "category": "audio",
+      "description": "Creates a vector source configuration.",
+      "params": [
+        {
+          "name": "source_type",
+          "type": "str",
+          "required": true
+        },
+        {
+          "name": "frequency_ratio",
+          "type": "float",
+          "required": false
+        }
+      ],
+      "returns": "Returns dict[typing.Any, typing.Any]."
+    },
+    {
+      "name": "vector_synth",
+      "category": "audio",
+      "description": "Creates a Vector synthesis block with 2D crossfading.",
+      "params": [
+        {
+          "name": "frequency",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "sources",
+          "type": "typing.Any",
+          "required": true
+        },
+        {
+          "name": "position_x",
+          "type": "float",
+          "required": false
+        },
+        {
+          "name": "position_y",
+          "type": "float",
+          "required": false
+        },
+        {
+          "name": "path",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "path_loop",
+          "type": "bool",
+          "required": false,
+          "default": false
+        },
+        {
+          "name": "path_curve",
+          "type": "str",
+          "required": false,
+          "default": "linear"
+        }
+      ],
+      "returns": "Returns dict[typing.Any, typing.Any]."
+    },
+    {
+      "name": "vocoder_band",
+      "category": "audio",
+      "description": "Creates a vocoder band configuration.",
+      "params": [
+        {
+          "name": "center_freq",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "bandwidth",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "envelope_pattern",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        }
+      ],
+      "returns": "Returns dict[typing.Any, typing.Any]."
+    },
+    {
+      "name": "waveshaper",
+      "category": "audio",
+      "description": "Creates a waveshaper distortion effect.",
+      "params": [
+        {
+          "name": "drive",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "curve",
+          "type": "str",
+          "required": false,
+          "default": "tanh"
+        },
+        {
+          "name": "wet",
+          "type": "float",
+          "required": false
+        }
+      ],
+      "returns": "Returns dict[typing.Any, typing.Any]."
+    },
+    {
+      "name": "whoosh_builder",
+      "category": "audio",
+      "description": "Creates a whoosh sound effect with a filtered noise sweep.",
+      "params": [
+        {
+          "name": "direction",
+          "type": "str",
+          "required": true
+        },
+        {
+          "name": "duration_ms",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "start_freq",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "end_freq",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "noise_type",
+          "type": "str",
+          "required": false,
+          "default": "white"
+        }
+      ],
+      "returns": "A single audio_layer dict with noise synthesis and bandpass filter sweep."
+    },
+    {
+      "name": "with_loop_config",
+      "category": "audio",
+      "description": "Adds loop configuration to an audio layer for seamless looping.",
+      "params": [
+        {
+          "name": "layer",
+          "type": "typing.Any",
+          "required": true
+        },
+        {
+          "name": "loop_start",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "loop_end",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "crossfade_samples",
+          "type": "int",
+          "required": false,
+          "default": 441
+        }
+      ],
+      "returns": "The layer dict with added `loop_config` field."
+    },
     {
       "name": "bitcrush",
       "category": "audio.effects",
-      "description": "Creates a bitcrusher effect configuration.",
+      "description": "Creates a bitcrusher effect.",
       "params": [
         {
           "name": "bits",
@@ -19,7 +1347,6 @@
           "name": "sample_rate_reduction",
           "type": "float",
           "required": false,
-          "default": 1.0,
           "range": {
             "min": 1.0
           }
@@ -31,7 +1358,7 @@
     {
       "name": "chorus",
       "category": "audio.effects",
-      "description": "Creates a chorus effect configuration.",
+      "description": "Creates a chorus effect.",
       "params": [
         {
           "name": "rate",
@@ -70,25 +1397,23 @@
           }
         }
       ],
-      "returns": "An effect dict.",
+      "returns": "A dict matching the Effect::Chorus IR structure.",
       "example": "chorus(1.5, 0.3, 0.25)"
     },
     {
       "name": "compressor",
       "category": "audio.effects",
-      "description": "Creates a compressor effect configuration.",
+      "description": "Creates a compressor effect.",
       "params": [
         {
           "name": "threshold_db",
           "type": "float",
-          "required": false,
-          "default": -12.0
+          "required": false
         },
         {
           "name": "ratio",
           "type": "float",
           "required": false,
-          "default": 4.0,
           "range": {
             "min": 0.0
           }
@@ -97,7 +1422,6 @@
           "name": "attack_ms",
           "type": "float",
           "required": false,
-          "default": 10.0,
           "range": {
             "min": 0.0
           }
@@ -106,7 +1430,6 @@
           "name": "release_ms",
           "type": "float",
           "required": false,
-          "default": 100.0,
           "range": {
             "min": 0.0
           }
@@ -114,23 +1437,21 @@
         {
           "name": "makeup_db",
           "type": "float",
-          "required": false,
-          "default": 0.0
+          "required": false
         }
       ],
-      "returns": "An effect dict.",
+      "returns": "A dict matching the Effect::Compressor IR structure.",
       "example": "compressor(-18, 6, 5, 50)"
     },
     {
       "name": "delay",
       "category": "audio.effects",
-      "description": "Creates a delay effect configuration.",
+      "description": "Creates a delay effect.",
       "params": [
         {
           "name": "time_ms",
           "type": "float",
           "required": false,
-          "default": 250.0,
           "range": {
             "min": 0.0
           }
@@ -139,7 +1460,6 @@
           "name": "feedback",
           "type": "float",
           "required": false,
-          "default": 0.4,
           "range": {
             "min": 0.0,
             "max": 1.0
@@ -149,7 +1469,6 @@
           "name": "wet",
           "type": "float",
           "required": false,
-          "default": 0.3,
           "range": {
             "min": 0.0,
             "max": 1.0
@@ -162,7 +1481,7 @@
           "default": false
         }
       ],
-      "returns": "An effect dict.",
+      "returns": "A dict matching the Effect::Delay IR structure.",
       "example": "delay(500, 0.5, 0.4)"
     },
     {
@@ -173,14 +1492,12 @@
         {
           "name": "decay",
           "type": "float",
-          "required": false,
-          "default": 0.5
+          "required": false
         },
         {
           "name": "wet",
           "type": "float",
           "required": false,
-          "default": 0.3,
           "range": {
             "min": 0.0,
             "max": 1.0
@@ -190,7 +1507,6 @@
           "name": "room_size",
           "type": "float",
           "required": false,
-          "default": 0.8,
           "range": {
             "min": 0.0,
             "max": 1.0
@@ -200,7 +1516,6 @@
           "name": "width",
           "type": "float",
           "required": false,
-          "default": 1.0,
           "range": {
             "min": 0.0,
             "max": 1.0
@@ -213,7 +1528,7 @@
     {
       "name": "bandpass",
       "category": "audio.filters",
-      "description": "Creates a bandpass filter configuration.",
+      "description": "Creates a bandpass filter.",
       "params": [
         {
           "name": "center",
@@ -224,12 +1539,15 @@
           }
         },
         {
-          "name": "bandwidth",
+          "name": "resonance",
           "type": "float",
-          "required": true,
-          "range": {
-            "min": 0.0
-          }
+          "required": false
+        },
+        {
+          "name": "sweep_to",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
         }
       ],
       "returns": "A filter dict.",
@@ -238,7 +1556,7 @@
     {
       "name": "highpass",
       "category": "audio.filters",
-      "description": "Creates a highpass filter configuration.",
+      "description": "Creates a highpass filter.",
       "params": [
         {
           "name": "cutoff",
@@ -252,13 +1570,18 @@
           "name": "resonance",
           "type": "float",
           "required": false,
-          "default": 0.707,
           "range": {
             "min": 0.0
           }
+        },
+        {
+          "name": "sweep_to",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
         }
       ],
-      "returns": "A filter dict.",
+      "returns": "A dict matching the Filter::Highpass IR structure.",
       "example": "highpass(200)"
     },
     {
@@ -278,15 +1601,15 @@
           "name": "resonance",
           "type": "float",
           "required": false,
-          "default": 0.707,
           "range": {
             "min": 0.0
           }
         },
         {
           "name": "sweep_to",
-          "type": "float",
+          "type": "typing.Any",
           "required": false,
+          "default": null,
           "range": {
             "min": 0.0
           }
@@ -302,24 +1625,19 @@
       "params": [
         {
           "name": "synthesis",
-          "type": "dict",
+          "type": "typing.Any",
           "required": true
         },
         {
           "name": "envelope",
-          "type": "dict",
-          "required": true
-        },
-        {
-          "name": "filter",
-          "type": "dict",
-          "required": false
+          "type": "typing.Any",
+          "required": false,
+          "default": null
         },
         {
           "name": "volume",
           "type": "float",
           "required": false,
-          "default": 1.0,
           "range": {
             "min": 0.0,
             "max": 1.0
@@ -329,11 +1647,28 @@
           "name": "pan",
           "type": "float",
           "required": false,
-          "default": 0.0,
           "range": {
             "min": -1.0,
             "max": 1.0
           }
+        },
+        {
+          "name": "filter",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "lfo",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "delay",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
         }
       ],
       "returns": "A layer dict.",
@@ -342,8 +1677,20 @@
     {
       "name": "lfo",
       "category": "audio.modulation",
-      "description": "Creates an LFO configuration.",
+      "description": "Creates an LFO (low-frequency oscillator) configuration.",
       "params": [
+        {
+          "name": "waveform",
+          "type": "str",
+          "required": true,
+          "enum_values": [
+            "sine",
+            "triangle",
+            "square",
+            "sawtooth",
+            "random"
+          ]
+        },
         {
           "name": "rate",
           "type": "float",
@@ -362,57 +1709,47 @@
           }
         },
         {
-          "name": "waveform",
-          "type": "string",
+          "name": "phase",
+          "type": "typing.Any",
           "required": false,
-          "default": "sine",
-          "enum_values": [
-            "sine",
-            "triangle",
-            "square",
-            "sawtooth",
-            "random"
-          ]
+          "default": null
         }
       ],
-      "returns": "An LFO dict.",
+      "returns": "A dict matching `LfoConfig`.",
       "example": "lfo(5.0, 0.3, \"sine\")"
     },
     {
       "name": "pitch_envelope",
       "category": "audio.modulation",
-      "description": "Creates a pitch envelope configuration.",
+      "description": "Creates a pitch envelope for modulating frequency over time.",
       "params": [
         {
-          "name": "start_semitones",
+          "name": "attack",
           "type": "float",
-          "required": true
+          "required": false
         },
         {
-          "name": "end_semitones",
+          "name": "decay",
           "type": "float",
-          "required": true
+          "required": false
         },
         {
-          "name": "time",
+          "name": "sustain",
           "type": "float",
-          "required": true,
-          "range": {
-            "min": 0.0
-          }
+          "required": false
         },
         {
-          "name": "curve",
-          "type": "string",
-          "required": false,
-          "default": "linear",
-          "enum_values": [
-            "linear",
-            "exponential"
-          ]
+          "name": "release",
+          "type": "float",
+          "required": false
+        },
+        {
+          "name": "depth",
+          "type": "float",
+          "required": false
         }
       ],
-      "returns": "A pitch envelope dict.",
+      "returns": "A dict matching `PitchEnvelope`.",
       "example": "pitch_envelope(12, 0, 0.1, \"exponential\")"
     },
     {
@@ -430,7 +1767,7 @@
         },
         {
           "name": "harmonics",
-          "type": "list",
+          "type": "typing.Any",
           "required": true
         }
       ],
@@ -469,8 +1806,9 @@
         },
         {
           "name": "sweep_to",
-          "type": "float",
+          "type": "typing.Any",
           "required": false,
+          "default": null,
           "range": {
             "min": 0.0
           }
@@ -553,8 +1891,9 @@
         },
         {
           "name": "sweep_to",
-          "type": "float",
+          "type": "typing.Any",
           "required": false,
+          "default": null,
           "range": {
             "min": 0.0
           }
@@ -577,9 +1916,16 @@
           }
         },
         {
-          "name": "vowel",
-          "type": "string",
+          "name": "formants",
+          "type": "typing.Any",
           "required": false,
+          "default": null
+        },
+        {
+          "name": "vowel",
+          "type": "typing.Any",
+          "required": false,
+          "default": null,
           "enum_values": [
             "a",
             "i",
@@ -590,8 +1936,9 @@
         },
         {
           "name": "vowel_morph",
-          "type": "string",
+          "type": "typing.Any",
           "required": false,
+          "default": null,
           "enum_values": [
             "a",
             "i",
@@ -604,7 +1951,6 @@
           "name": "morph_amount",
           "type": "float",
           "required": false,
-          "default": 0.0,
           "range": {
             "min": 0.0,
             "max": 1.0
@@ -614,7 +1960,6 @@
           "name": "breathiness",
           "type": "float",
           "required": false,
-          "default": 0.0,
           "range": {
             "min": 0.0,
             "max": 1.0
@@ -631,7 +1976,7 @@
       "params": [
         {
           "name": "source",
-          "type": "dict",
+          "type": "typing.Any",
           "required": true
         },
         {
@@ -655,14 +2000,12 @@
         {
           "name": "pitch_spread",
           "type": "float",
-          "required": false,
-          "default": 0.0
+          "required": false
         },
         {
           "name": "position_spread",
           "type": "float",
           "required": false,
-          "default": 0.0,
           "range": {
             "min": 0.0,
             "max": 1.0
@@ -672,7 +2015,6 @@
           "name": "pan_spread",
           "type": "float",
           "required": false,
-          "default": 0.0,
           "range": {
             "min": 0.0,
             "max": 1.0
@@ -689,7 +2031,7 @@
       "params": [
         {
           "name": "source_type",
-          "type": "string",
+          "type": "str",
           "required": true,
           "enum_values": [
             "noise",
@@ -699,13 +2041,14 @@
         },
         {
           "name": "param1",
-          "type": "string|float",
+          "type": "typing.Any",
           "required": true
         },
         {
           "name": "param2",
-          "type": "float",
-          "required": false
+          "type": "typing.Any",
+          "required": false,
+          "default": null
         }
       ],
       "returns": "A dict matching the GranularSource IR structure.",
@@ -714,7 +2057,7 @@
     {
       "name": "karplus_strong",
       "category": "audio.synthesis",
-      "description": "Creates a Karplus-Strong plucked string synthesis block.",
+      "description": "Creates a Karplus-Strong plucked string synthesis.",
       "params": [
         {
           "name": "frequency",
@@ -749,7 +2092,7 @@
     {
       "name": "membrane_drum",
       "category": "audio.synthesis",
-      "description": "Creates a Membrane Drum physical modeling synthesis block.",
+      "description": "Creates a Membrane Drum synthesis block.",
       "params": [
         {
           "name": "frequency",
@@ -838,12 +2181,12 @@
         },
         {
           "name": "modes",
-          "type": "list",
+          "type": "typing.Any",
           "required": true
         },
         {
           "name": "excitation",
-          "type": "string",
+          "type": "str",
           "required": false,
           "default": "impulse",
           "enum_values": [
@@ -851,6 +2194,12 @@
             "noise",
             "pluck"
           ]
+        },
+        {
+          "name": "sweep_to",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
         }
       ],
       "returns": "A dict matching the Synthesis::Modal IR structure.",
@@ -897,7 +2246,7 @@
       "params": [
         {
           "name": "noise_type",
-          "type": "string",
+          "type": "str",
           "required": false,
           "default": "white",
           "enum_values": [
@@ -908,8 +2257,9 @@
         },
         {
           "name": "filter",
-          "type": "dict",
-          "required": false
+          "type": "typing.Any",
+          "required": false,
+          "default": null
         }
       ],
       "returns": "A dict matching the Synthesis::NoiseBurst IR structure.",
@@ -930,7 +2280,7 @@
         },
         {
           "name": "waveform",
-          "type": "string",
+          "type": "str",
           "required": false,
           "default": "sine",
           "enum_values": [
@@ -943,15 +2293,16 @@
         },
         {
           "name": "sweep_to",
-          "type": "float",
+          "type": "typing.Any",
           "required": false,
+          "default": null,
           "range": {
             "min": 0.0
           }
         },
         {
           "name": "curve",
-          "type": "string",
+          "type": "str",
           "required": false,
           "default": "linear",
           "enum_values": [
@@ -962,13 +2313,15 @@
         },
         {
           "name": "detune",
-          "type": "float",
-          "required": false
+          "type": "typing.Any",
+          "required": false,
+          "default": null
         },
         {
           "name": "duty",
-          "type": "float",
+          "type": "typing.Any",
           "required": false,
+          "default": null,
           "range": {
             "min": 0.0,
             "max": 1.0
@@ -981,7 +2334,7 @@
     {
       "name": "pitched_body",
       "category": "audio.synthesis",
-      "description": "Creates a Pitched Body synthesis block.",
+      "description": "Creates a Pitched Body synthesis block (impact sounds with frequency sweep).",
       "params": [
         {
           "name": "start_freq",
@@ -1006,7 +2359,7 @@
     {
       "name": "pulsar",
       "category": "audio.synthesis",
-      "description": "Creates a Pulsar synthesis block.",
+      "description": "Creates a Pulsar synthesis block (synchronized grain trains).",
       "params": [
         {
           "name": "frequency",
@@ -1034,7 +2387,7 @@
         },
         {
           "name": "shape",
-          "type": "string",
+          "type": "str",
           "required": true,
           "enum_values": [
             "sine",
@@ -1050,11 +2403,11 @@
     {
       "name": "spectral_freeze",
       "category": "audio.synthesis",
-      "description": "Creates a Spectral Freeze synthesis block.",
+      "description": "Creates a Spectral Freeze synthesis block using FFT.",
       "params": [
         {
           "name": "source",
-          "type": "dict",
+          "type": "typing.Any",
           "required": true
         }
       ],
@@ -1102,7 +2455,7 @@
         },
         {
           "name": "detune_curve",
-          "type": "string",
+          "type": "str",
           "required": false,
           "default": "linear",
           "enum_values": [
@@ -1129,7 +2482,7 @@
         },
         {
           "name": "carrier_type",
-          "type": "string",
+          "type": "str",
           "required": true,
           "enum_values": [
             "sawtooth",
@@ -1148,7 +2501,7 @@
         },
         {
           "name": "band_spacing",
-          "type": "string",
+          "type": "str",
           "required": true,
           "enum_values": [
             "linear",
@@ -1175,10 +2528,15 @@
           "name": "formant_rate",
           "type": "float",
           "required": false,
-          "default": 2.0,
           "range": {
             "min": 0.0
           }
+        },
+        {
+          "name": "bands",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
         }
       ],
       "returns": "A dict matching the Synthesis::Vocoder IR structure."
@@ -1217,7 +2575,6 @@
           "name": "breathiness",
           "type": "float",
           "required": false,
-          "default": 0.0,
           "range": {
             "min": 0.0,
             "max": 1.0
@@ -1285,7 +2642,7 @@
       "params": [
         {
           "name": "table",
-          "type": "string",
+          "type": "str",
           "required": true,
           "enum_values": [
             "basic",
@@ -1308,7 +2665,6 @@
           "name": "position",
           "type": "float",
           "required": false,
-          "default": 0.0,
           "range": {
             "min": 0.0,
             "max": 1.0
@@ -1316,8 +2672,9 @@
         },
         {
           "name": "position_end",
-          "type": "float",
+          "type": "typing.Any",
           "required": false,
+          "default": null,
           "range": {
             "min": 0.0,
             "max": 1.0
@@ -1325,8 +2682,9 @@
         },
         {
           "name": "voices",
-          "type": "int",
+          "type": "typing.Any",
           "required": false,
+          "default": null,
           "range": {
             "min": 1.0,
             "max": 8.0
@@ -1334,12 +2692,332 @@
         },
         {
           "name": "detune",
-          "type": "float",
-          "required": false
+          "type": "typing.Any",
+          "required": false,
+          "default": null
         }
       ],
       "returns": "A dict matching the Synthesis::Wavetable IR structure.",
       "example": "wavetable(\"analog\", 440, 0.5)"
+    },
+    {
+      "name": "body_part",
+      "category": "character",
+      "description": "Creates a body part definition attached to a bone.",
+      "params": [
+        {
+          "name": "bone",
+          "type": "str",
+          "required": true
+        },
+        {
+          "name": "primitive",
+          "type": "str",
+          "required": true
+        },
+        {
+          "name": "dimensions",
+          "type": "list[float]",
+          "required": true
+        },
+        {
+          "name": "segments",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "offset",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "rotation",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "material_index",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        }
+      ],
+      "returns": "Returns dict[typing.Any, typing.Any]."
+    },
+    {
+      "name": "custom_bone",
+      "category": "character",
+      "description": "Creates a custom bone definition for custom skeletons.",
+      "params": [
+        {
+          "name": "bone",
+          "type": "str",
+          "required": true
+        },
+        {
+          "name": "head",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "tail",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "parent",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "mirror",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        }
+      ],
+      "returns": "Returns dict[typing.Any, typing.Any]."
+    },
+    {
+      "name": "material_slot",
+      "category": "character",
+      "description": "Creates a material slot definition.",
+      "params": [
+        {
+          "name": "name",
+          "type": "str",
+          "required": true
+        },
+        {
+          "name": "base_color",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "metallic",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "roughness",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "emissive",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        }
+      ],
+      "returns": "Returns dict[typing.Any, typing.Any]."
+    },
+    {
+      "name": "skeletal_constraints",
+      "category": "character",
+      "description": "Creates skeletal mesh constraints for validation.",
+      "params": [
+        {
+          "name": "max_triangles",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "max_bones",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "max_materials",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        }
+      ],
+      "returns": "Returns dict[typing.Any, typing.Any]."
+    },
+    {
+      "name": "skeletal_export_settings",
+      "category": "character",
+      "description": "Creates skeletal mesh export settings.",
+      "params": [
+        {
+          "name": "include_armature",
+          "type": "bool",
+          "required": false,
+          "default": true
+        },
+        {
+          "name": "include_normals",
+          "type": "bool",
+          "required": false,
+          "default": true
+        },
+        {
+          "name": "include_uvs",
+          "type": "bool",
+          "required": false,
+          "default": true
+        },
+        {
+          "name": "triangulate",
+          "type": "bool",
+          "required": false,
+          "default": true
+        },
+        {
+          "name": "include_skin_weights",
+          "type": "bool",
+          "required": false,
+          "default": true
+        },
+        {
+          "name": "save_blend",
+          "type": "bool",
+          "required": false,
+          "default": false
+        }
+      ],
+      "returns": "Returns dict[typing.Any, typing.Any]."
+    },
+    {
+      "name": "skeletal_mesh_spec",
+      "category": "character",
+      "description": "Creates a complete skeletal mesh spec with blender_rigged_mesh_v1 recipe.",
+      "params": [
+        {
+          "name": "asset_id",
+          "type": "str",
+          "required": true
+        },
+        {
+          "name": "seed",
+          "type": "int",
+          "required": true
+        },
+        {
+          "name": "output_path",
+          "type": "str",
+          "required": true
+        },
+        {
+          "name": "format",
+          "type": "str",
+          "required": true
+        },
+        {
+          "name": "skeleton_preset",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "body_parts",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "skeleton",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "material_slots",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "skinning",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "export",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "constraints",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "texturing",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "description",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "tags",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "license",
+          "type": "str",
+          "required": false,
+          "default": "CC0-1.0"
+        }
+      ],
+      "returns": "A complete spec dict ready for serialization."
+    },
+    {
+      "name": "skeletal_texturing",
+      "category": "character",
+      "description": "Creates texturing configuration for skeletal meshes.",
+      "params": [
+        {
+          "name": "uv_mode",
+          "type": "str",
+          "required": false,
+          "default": "cylinder_project"
+        }
+      ],
+      "returns": "Returns dict[typing.Any, typing.Any]."
+    },
+    {
+      "name": "skinning_config",
+      "category": "character",
+      "description": "Creates skinning configuration.",
+      "params": [
+        {
+          "name": "max_bone_influences",
+          "type": "int",
+          "required": false,
+          "default": 4
+        },
+        {
+          "name": "auto_weights",
+          "type": "bool",
+          "required": false,
+          "default": true
+        }
+      ],
+      "returns": "Returns dict[typing.Any, typing.Any]."
     },
     {
       "name": "envelope",
@@ -1350,7 +3028,6 @@
           "name": "attack",
           "type": "float",
           "required": false,
-          "default": 0.01,
           "range": {
             "min": 0.0
           }
@@ -1359,7 +3036,6 @@
           "name": "decay",
           "type": "float",
           "required": false,
-          "default": 0.1,
           "range": {
             "min": 0.0
           }
@@ -1368,7 +3044,6 @@
           "name": "sustain",
           "type": "float",
           "required": false,
-          "default": 0.7,
           "range": {
             "min": 0.0,
             "max": 1.0
@@ -1378,7 +3053,6 @@
           "name": "release",
           "type": "float",
           "required": false,
-          "default": 0.2,
           "range": {
             "min": 0.0
           }
@@ -1390,16 +3064,16 @@
     {
       "name": "output",
       "category": "core",
-      "description": "Creates an output specification for an asset.",
+      "description": "Creates an output specification.",
       "params": [
         {
           "name": "path",
-          "type": "string",
+          "type": "str",
           "required": true
         },
         {
           "name": "format",
-          "type": "string",
+          "type": "str",
           "required": true,
           "enum_values": [
             "wav",
@@ -1413,7 +3087,7 @@
         },
         {
           "name": "kind",
-          "type": "string",
+          "type": "str",
           "required": false,
           "default": "primary",
           "enum_values": [
@@ -1424,26 +3098,27 @@
         },
         {
           "name": "source",
-          "type": "string",
-          "required": false
+          "type": "typing.Any",
+          "required": false,
+          "default": null
         }
       ],
-      "returns": "An output dict for the spec outputs list.",
+      "returns": "A dict matching the Output IR structure.",
       "example": "output(\"sounds/laser.wav\", \"wav\")"
     },
     {
       "name": "spec",
       "category": "core",
-      "description": "Creates a complete spec dictionary with all required fields.",
+      "description": "Creates a complete spec dictionary.",
       "params": [
         {
           "name": "asset_id",
-          "type": "string",
+          "type": "str",
           "required": true
         },
         {
           "name": "asset_type",
-          "type": "string",
+          "type": "str",
           "required": true,
           "enum_values": [
             "audio",
@@ -1469,112 +3144,206 @@
         },
         {
           "name": "outputs",
-          "type": "list",
+          "type": "list[typing.Any]",
           "required": true
         },
         {
           "name": "recipe",
-          "type": "dict",
-          "required": false
-        },
-        {
-          "name": "license",
-          "type": "string",
+          "type": "typing.Any",
           "required": false,
-          "default": "CC0-1.0"
+          "default": null
         },
         {
           "name": "description",
-          "type": "string",
-          "required": false
+          "type": "typing.Any",
+          "required": false,
+          "default": null
         },
         {
-          "name": "style_tags",
-          "type": "list",
-          "required": false
+          "name": "tags",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "license",
+          "type": "str",
+          "required": false,
+          "default": "CC0-1.0"
         }
       ],
-      "returns": "A complete spec dict ready for serialization.",
+      "returns": "A dict matching the Spec IR structure with spec_version: 1.",
       "example": "spec(asset_id=\"laser-01\", asset_type=\"audio\", seed=42, outputs=[...], recipe={...})"
     },
     {
       "name": "mesh_primitive",
       "category": "mesh",
-      "description": "Creates a base mesh primitive.",
+      "description": "Creates a base mesh primitive specification.",
       "params": [
         {
-          "name": "primitive_type",
-          "type": "string",
-          "required": true,
-          "enum_values": [
-            "cube",
-            "sphere",
-            "cylinder",
-            "cone",
-            "torus",
-            "plane"
-          ]
+          "name": "primitive",
+          "type": "str",
+          "required": true
         },
         {
-          "name": "size",
-          "type": "list",
-          "required": false,
-          "default": [
-            1.0,
-            1.0,
-            1.0
-          ]
+          "name": "dimensions",
+          "type": "list[float]",
+          "required": true
         }
       ],
-      "returns": "A primitive dict.",
+      "returns": "A dict with base_primitive and dimensions.",
       "example": "mesh_primitive(\"cube\", [2.0, 2.0, 2.0])"
     },
     {
       "name": "mesh_recipe",
       "category": "mesh",
-      "description": "Creates a complete mesh recipe.",
+      "description": "Creates a complete static mesh recipe params.",
       "params": [
         {
-          "name": "primitive_type",
-          "type": "string",
-          "required": true,
-          "enum_values": [
-            "cube",
-            "sphere",
-            "cylinder",
-            "cone",
-            "torus",
-            "plane"
-          ]
+          "name": "primitive",
+          "type": "str",
+          "required": true
         },
         {
-          "name": "size",
-          "type": "list",
-          "required": false,
-          "default": [
-            1.0,
-            1.0,
-            1.0
-          ]
+          "name": "dimensions",
+          "type": "list[float]",
+          "required": true
         },
         {
           "name": "modifiers",
-          "type": "list",
-          "required": false
+          "type": "typing.Any",
+          "required": false,
+          "default": null
         }
       ],
-      "returns": "A mesh recipe dict.",
+      "returns": "A dict matching the StaticMeshBlenderPrimitivesV1Params structure.",
       "example": "mesh_recipe(\"cube\", [2.0, 2.0, 2.0], [bevel_modifier(0.1, 3)])"
+    },
+    {
+      "name": "mesh_spec",
+      "category": "mesh",
+      "description": "Creates a complete mesh spec with blender_primitives_v1 recipe.",
+      "params": [
+        {
+          "name": "asset_id",
+          "type": "str",
+          "required": true
+        },
+        {
+          "name": "seed",
+          "type": "int",
+          "required": true
+        },
+        {
+          "name": "output_path",
+          "type": "str",
+          "required": true
+        },
+        {
+          "name": "format",
+          "type": "str",
+          "required": true
+        },
+        {
+          "name": "primitive",
+          "type": "str",
+          "required": true
+        },
+        {
+          "name": "dimensions",
+          "type": "list[float]",
+          "required": true
+        },
+        {
+          "name": "modifiers",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "description",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "tags",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "license",
+          "type": "str",
+          "required": false,
+          "default": "CC0-1.0"
+        }
+      ],
+      "returns": "A complete spec dict ready for serialization."
+    },
+    {
+      "name": "baking_settings",
+      "category": "mesh.baking",
+      "description": "Creates baking settings for texture map generation.",
+      "params": [
+        {
+          "name": "bake_types",
+          "type": "list[str]",
+          "required": true
+        },
+        {
+          "name": "ray_distance",
+          "type": "float",
+          "required": false
+        },
+        {
+          "name": "margin",
+          "type": "int",
+          "required": false,
+          "default": 16
+        },
+        {
+          "name": "resolution",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "high_poly_source",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        }
+      ],
+      "returns": "A dict matching the BakingSettings structure."
+    },
+    {
+      "name": "array_modifier",
+      "category": "mesh.modifiers",
+      "description": "Creates an array modifier.",
+      "params": [
+        {
+          "name": "count",
+          "type": "int",
+          "required": true
+        },
+        {
+          "name": "offset",
+          "type": "list[float]",
+          "required": true
+        }
+      ],
+      "returns": "A dict matching the MeshModifier::Array IR structure."
     },
     {
       "name": "bevel_modifier",
       "category": "mesh.modifiers",
-      "description": "Creates a bevel modifier configuration.",
+      "description": "Creates a bevel modifier.",
       "params": [
         {
           "name": "width",
           "type": "float",
-          "required": true,
+          "required": false,
           "range": {
             "min": 0.0
           }
@@ -1583,14 +3352,90 @@
           "name": "segments",
           "type": "int",
           "required": false,
-          "default": 1,
+          "default": 2,
           "range": {
             "min": 1.0
           }
+        },
+        {
+          "name": "angle_limit",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
         }
       ],
-      "returns": "A modifier dict.",
+      "returns": "A dict matching the MeshModifier::Bevel IR structure.",
       "example": "bevel_modifier(0.1, 3)"
+    },
+    {
+      "name": "decimate_modifier",
+      "category": "mesh.modifiers",
+      "description": "Creates a decimate modifier.",
+      "params": [
+        {
+          "name": "ratio",
+          "type": "float",
+          "required": false
+        }
+      ],
+      "returns": "A dict matching the MeshModifier::Decimate IR structure."
+    },
+    {
+      "name": "edge_split_modifier",
+      "category": "mesh.modifiers",
+      "description": "Creates an edge split modifier.",
+      "params": [
+        {
+          "name": "angle",
+          "type": "float",
+          "required": true
+        }
+      ],
+      "returns": "A dict matching the MeshModifier::EdgeSplit IR structure."
+    },
+    {
+      "name": "mirror_modifier",
+      "category": "mesh.modifiers",
+      "description": "Creates a mirror modifier.",
+      "params": [
+        {
+          "name": "axis_x",
+          "type": "bool",
+          "required": false,
+          "default": true
+        },
+        {
+          "name": "axis_y",
+          "type": "bool",
+          "required": false,
+          "default": false
+        },
+        {
+          "name": "axis_z",
+          "type": "bool",
+          "required": false,
+          "default": false
+        }
+      ],
+      "returns": "A dict matching the MeshModifier::Mirror IR structure."
+    },
+    {
+      "name": "solidify_modifier",
+      "category": "mesh.modifiers",
+      "description": "Creates a solidify modifier.",
+      "params": [
+        {
+          "name": "thickness",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "offset",
+          "type": "float",
+          "required": false
+        }
+      ],
+      "returns": "A dict matching the MeshModifier::Solidify IR structure."
     },
     {
       "name": "subdivision_modifier",
@@ -1601,15 +3446,490 @@
           "name": "levels",
           "type": "int",
           "required": false,
-          "default": 1,
+          "default": 2,
           "range": {
             "min": 1.0,
             "max": 6.0
           }
+        },
+        {
+          "name": "render_levels",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
         }
       ],
-      "returns": "A modifier dict.",
+      "returns": "A dict matching the MeshModifier::Subdivision IR structure.",
       "example": "subdivision_modifier(2)"
+    },
+    {
+      "name": "triangulate_modifier",
+      "category": "mesh.modifiers",
+      "description": "Creates a triangulate modifier.",
+      "params": [
+        {
+          "name": "ngon_method",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "quad_method",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        }
+      ],
+      "returns": "A dict matching the MeshModifier::Triangulate IR structure."
+    },
+    {
+      "name": "humanize_vol",
+      "category": "music",
+      "description": "Creates a humanize_vol transform operation.",
+      "params": [
+        {
+          "name": "min_vol",
+          "type": "int",
+          "required": true
+        },
+        {
+          "name": "max_vol",
+          "type": "int",
+          "required": true
+        },
+        {
+          "name": "seed_salt",
+          "type": "str",
+          "required": true
+        }
+      ],
+      "returns": "A dict matching the TransformOp::HumanizeVol IR structure."
+    },
+    {
+      "name": "it_options",
+      "category": "music",
+      "description": "Creates IT-specific module options.",
+      "params": [
+        {
+          "name": "stereo",
+          "type": "bool",
+          "required": false,
+          "default": true
+        },
+        {
+          "name": "global_volume",
+          "type": "int",
+          "required": false,
+          "default": 128
+        },
+        {
+          "name": "mix_volume",
+          "type": "int",
+          "required": false,
+          "default": 48
+        }
+      ],
+      "returns": "A dict matching the ItOptions IR structure."
+    },
+    {
+      "name": "loop_cue",
+      "category": "music",
+      "description": "Creates a loop cue with explicit intensity level.",
+      "params": [
+        {
+          "name": "name",
+          "type": "str",
+          "required": true
+        },
+        {
+          "name": "intensity",
+          "type": "str",
+          "required": true
+        },
+        {
+          "name": "bpm",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "measures",
+          "type": "int",
+          "required": false,
+          "default": 8
+        },
+        {
+          "name": "rows_per_beat",
+          "type": "int",
+          "required": false,
+          "default": 4
+        },
+        {
+          "name": "channels",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "format",
+          "type": "str",
+          "required": false,
+          "default": "xm"
+        }
+      ],
+      "returns": "A dict with cue metadata and suggested tracker_song parameters."
+    },
+    {
+      "name": "loop_envelope",
+      "category": "music",
+      "description": "Creates an envelope optimized for loopable (sustained) sounds.",
+      "params": [
+        {
+          "name": "attack_ms",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "sustain_level",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "release_ms",
+          "type": "float",
+          "required": true
+        }
+      ],
+      "returns": "An envelope dict suitable for use with `audio_layer()`."
+    },
+    {
+      "name": "loop_hi",
+      "category": "music",
+      "description": "Creates a loop cue template with high intensity settings.",
+      "params": [
+        {
+          "name": "name",
+          "type": "str",
+          "required": true
+        },
+        {
+          "name": "bpm",
+          "type": "int",
+          "required": false,
+          "default": 140
+        },
+        {
+          "name": "measures",
+          "type": "int",
+          "required": false,
+          "default": 8
+        },
+        {
+          "name": "rows_per_beat",
+          "type": "int",
+          "required": false,
+          "default": 4
+        },
+        {
+          "name": "channels",
+          "type": "int",
+          "required": false,
+          "default": 12
+        },
+        {
+          "name": "format",
+          "type": "str",
+          "required": false,
+          "default": "xm"
+        }
+      ],
+      "returns": "A dict with cue metadata and suggested tracker_song parameters."
+    },
+    {
+      "name": "loop_low",
+      "category": "music",
+      "description": "Creates a loop cue template with low intensity settings.",
+      "params": [
+        {
+          "name": "name",
+          "type": "str",
+          "required": true
+        },
+        {
+          "name": "bpm",
+          "type": "int",
+          "required": false,
+          "default": 90
+        },
+        {
+          "name": "measures",
+          "type": "int",
+          "required": false,
+          "default": 8
+        },
+        {
+          "name": "rows_per_beat",
+          "type": "int",
+          "required": false,
+          "default": 4
+        },
+        {
+          "name": "channels",
+          "type": "int",
+          "required": false,
+          "default": 4
+        },
+        {
+          "name": "format",
+          "type": "str",
+          "required": false,
+          "default": "xm"
+        }
+      ],
+      "returns": "A dict with cue metadata and suggested tracker_song parameters."
+    },
+    {
+      "name": "loop_main",
+      "category": "music",
+      "description": "Creates a loop cue template with main/standard intensity settings.",
+      "params": [
+        {
+          "name": "name",
+          "type": "str",
+          "required": true
+        },
+        {
+          "name": "bpm",
+          "type": "int",
+          "required": false,
+          "default": 120
+        },
+        {
+          "name": "measures",
+          "type": "int",
+          "required": false,
+          "default": 8
+        },
+        {
+          "name": "rows_per_beat",
+          "type": "int",
+          "required": false,
+          "default": 4
+        },
+        {
+          "name": "channels",
+          "type": "int",
+          "required": false,
+          "default": 8
+        },
+        {
+          "name": "format",
+          "type": "str",
+          "required": false,
+          "default": "xm"
+        }
+      ],
+      "returns": "A dict with cue metadata and suggested tracker_song parameters."
+    },
+    {
+      "name": "stinger",
+      "category": "music",
+      "description": "Creates a stinger cue template for one-shot musical events.",
+      "params": [
+        {
+          "name": "name",
+          "type": "str",
+          "required": true
+        },
+        {
+          "name": "stinger_type",
+          "type": "str",
+          "required": false,
+          "default": "custom"
+        },
+        {
+          "name": "duration_beats",
+          "type": "int",
+          "required": false,
+          "default": 4
+        },
+        {
+          "name": "bpm",
+          "type": "int",
+          "required": false,
+          "default": 120
+        },
+        {
+          "name": "rows_per_beat",
+          "type": "int",
+          "required": false,
+          "default": 4
+        },
+        {
+          "name": "channels",
+          "type": "int",
+          "required": false,
+          "default": 4
+        },
+        {
+          "name": "format",
+          "type": "str",
+          "required": false,
+          "default": "xm"
+        },
+        {
+          "name": "tail_beats",
+          "type": "int",
+          "required": false,
+          "default": 0
+        }
+      ],
+      "returns": "A dict with cue metadata and suggested tracker_song parameters."
+    },
+    {
+      "name": "swing",
+      "category": "music",
+      "description": "Creates a swing transform operation.",
+      "params": [
+        {
+          "name": "amount_permille",
+          "type": "int",
+          "required": true
+        },
+        {
+          "name": "stride",
+          "type": "int",
+          "required": true
+        },
+        {
+          "name": "seed_salt",
+          "type": "str",
+          "required": true
+        }
+      ],
+      "returns": "A dict matching the TransformOp::Swing IR structure."
+    },
+    {
+      "name": "tempo_change",
+      "category": "music",
+      "description": "Creates a tempo change automation entry.",
+      "params": [
+        {
+          "name": "pattern",
+          "type": "str",
+          "required": true
+        },
+        {
+          "name": "row",
+          "type": "int",
+          "required": true
+        },
+        {
+          "name": "bpm",
+          "type": "int",
+          "required": true
+        }
+      ],
+      "returns": "A dict matching the AutomationEntry::TempoChange IR structure."
+    },
+    {
+      "name": "transition",
+      "category": "music",
+      "description": "Creates a transition cue template for bridging between music states.",
+      "params": [
+        {
+          "name": "name",
+          "type": "str",
+          "required": true
+        },
+        {
+          "name": "transition_type",
+          "type": "str",
+          "required": false,
+          "default": "bridge"
+        },
+        {
+          "name": "from_intensity",
+          "type": "str",
+          "required": false,
+          "default": "main"
+        },
+        {
+          "name": "to_intensity",
+          "type": "str",
+          "required": false,
+          "default": "main"
+        },
+        {
+          "name": "measures",
+          "type": "int",
+          "required": false,
+          "default": 2
+        },
+        {
+          "name": "bpm",
+          "type": "int",
+          "required": false,
+          "default": 120
+        },
+        {
+          "name": "rows_per_beat",
+          "type": "int",
+          "required": false,
+          "default": 4
+        },
+        {
+          "name": "channels",
+          "type": "int",
+          "required": false,
+          "default": 8
+        },
+        {
+          "name": "format",
+          "type": "str",
+          "required": false,
+          "default": "xm"
+        }
+      ],
+      "returns": "A dict with cue metadata and suggested tracker_song parameters."
+    },
+    {
+      "name": "volume_fade",
+      "category": "music",
+      "description": "Creates a volume fade automation entry.",
+      "params": [
+        {
+          "name": "pattern",
+          "type": "str",
+          "required": true
+        },
+        {
+          "name": "channel",
+          "type": "int",
+          "required": true
+        },
+        {
+          "name": "start_row",
+          "type": "int",
+          "required": true
+        },
+        {
+          "name": "end_row",
+          "type": "int",
+          "required": true
+        },
+        {
+          "name": "start_vol",
+          "type": "int",
+          "required": true
+        },
+        {
+          "name": "end_vol",
+          "type": "int",
+          "required": true
+        }
+      ],
+      "returns": "A dict matching the AutomationEntry::VolumeFade IR structure."
     },
     {
       "name": "instrument_synthesis",
@@ -1618,7 +3938,7 @@
       "params": [
         {
           "name": "synth_type",
-          "type": "string",
+          "type": "str",
           "required": true,
           "enum_values": [
             "pulse",
@@ -1633,7 +3953,6 @@
           "name": "duty_cycle",
           "type": "float",
           "required": false,
-          "default": 0.5,
           "range": {
             "min": 0.0,
             "max": 1.0
@@ -1646,7 +3965,7 @@
           "default": false
         }
       ],
-      "returns": "An instrument synthesis dict.",
+      "returns": "A dict matching the InstrumentSynthesis IR structure.",
       "example": "instrument_synthesis(\"pulse\", 0.25)"
     },
     {
@@ -1656,37 +3975,71 @@
       "params": [
         {
           "name": "name",
-          "type": "string",
+          "type": "str",
           "required": true
         },
         {
           "name": "synthesis",
-          "type": "dict",
-          "required": false
+          "type": "typing.Any",
+          "required": false,
+          "default": null
         },
         {
           "name": "wav",
-          "type": "string",
-          "required": false
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "ref",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "base_note",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "sample_rate",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
         },
         {
           "name": "envelope",
-          "type": "dict",
-          "required": false
+          "type": "typing.Any",
+          "required": false,
+          "default": null
         },
         {
           "name": "loop_mode",
-          "type": "string",
+          "type": "typing.Any",
           "required": false,
+          "default": null,
           "enum_values": [
             "auto",
             "none",
             "forward",
             "pingpong"
           ]
+        },
+        {
+          "name": "default_volume",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "comment",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
         }
       ],
-      "returns": "An instrument dict.",
+      "returns": "A dict matching the TrackerInstrument IR structure.",
       "example": "tracker_instrument(name=\"bass\", synthesis=instrument_synthesis(\"sawtooth\"))"
     },
     {
@@ -1696,7 +4049,7 @@
       "params": [
         {
           "name": "pattern",
-          "type": "string",
+          "type": "str",
           "required": true
         },
         {
@@ -1709,7 +4062,7 @@
           }
         }
       ],
-      "returns": "An arrangement entry dict.",
+      "returns": "A dict matching the ArrangementEntry IR structure.",
       "example": "arrangement_entry(\"intro\", 4)"
     },
     {
@@ -1727,7 +4080,7 @@
         },
         {
           "name": "note",
-          "type": "string",
+          "type": "str",
           "required": true
         },
         {
@@ -1739,16 +4092,47 @@
           }
         },
         {
-          "name": "vol",
-          "type": "int",
+          "name": "channel",
+          "type": "typing.Any",
           "required": false,
+          "default": null
+        },
+        {
+          "name": "vol",
+          "type": "typing.Any",
+          "required": false,
+          "default": null,
           "range": {
             "min": 0.0,
             "max": 64.0
           }
+        },
+        {
+          "name": "effect",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "param",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "effect_name",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "effect_xy",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
         }
       ],
-      "returns": "A pattern note dict.",
+      "returns": "A dict matching the PatternNote IR structure.",
       "example": "pattern_note(0, \"C4\", 0)"
     },
     {
@@ -1766,16 +4150,18 @@
         },
         {
           "name": "notes",
-          "type": "dict",
-          "required": false
+          "type": "typing.Any",
+          "required": false,
+          "default": null
         },
         {
           "name": "data",
-          "type": "list",
-          "required": false
+          "type": "typing.Any",
+          "required": false,
+          "default": null
         }
       ],
-      "returns": "A pattern dict.",
+      "returns": "A dict matching the TrackerPattern IR structure.",
       "example": "tracker_pattern(64, notes={\"0\": [pattern_note(0, \"C4\", 0)]})"
     },
     {
@@ -1785,7 +4171,7 @@
       "params": [
         {
           "name": "asset_id",
-          "type": "string",
+          "type": "str",
           "required": true
         },
         {
@@ -1799,12 +4185,12 @@
         },
         {
           "name": "output_path",
-          "type": "string",
+          "type": "str",
           "required": true
         },
         {
           "name": "format",
-          "type": "string",
+          "type": "str",
           "required": true,
           "enum_values": [
             "xm",
@@ -1840,21 +4226,57 @@
         },
         {
           "name": "instruments",
-          "type": "list",
+          "type": "list[typing.Any]",
           "required": true
         },
         {
           "name": "patterns",
-          "type": "dict",
+          "type": "typing.Any",
           "required": true
         },
         {
           "name": "arrangement",
-          "type": "list",
+          "type": "list[typing.Any]",
           "required": true
+        },
+        {
+          "name": "name",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "title",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "loop",
+          "type": "bool",
+          "required": false,
+          "default": false
+        },
+        {
+          "name": "description",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "tags",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "license",
+          "type": "str",
+          "required": false,
+          "default": "CC0-1.0"
         }
       ],
-      "returns": "A complete music spec dict."
+      "returns": "A complete spec dict ready for serialization."
     },
     {
       "name": "tracker_song",
@@ -1863,7 +4285,7 @@
       "params": [
         {
           "name": "format",
-          "type": "string",
+          "type": "str",
           "required": true,
           "enum_values": [
             "xm",
@@ -1899,27 +4321,648 @@
         },
         {
           "name": "instruments",
-          "type": "list",
+          "type": "list[typing.Any]",
           "required": true
         },
         {
           "name": "patterns",
-          "type": "dict",
+          "type": "typing.Any",
           "required": true
         },
         {
           "name": "arrangement",
-          "type": "list",
+          "type": "list[typing.Any]",
           "required": true
+        },
+        {
+          "name": "name",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "title",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
         },
         {
           "name": "loop",
           "type": "bool",
           "required": false,
           "default": false
+        },
+        {
+          "name": "restart_position",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "automation",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "it_options",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
         }
       ],
-      "returns": "A tracker song recipe dict."
+      "returns": "A dict matching the recipe structure for `music.tracker_song_v1`."
+    },
+    {
+      "name": "decal_metadata",
+      "category": "texture",
+      "description": "Creates decal placement metadata.",
+      "params": [
+        {
+          "name": "aspect_ratio",
+          "type": "float",
+          "required": false
+        },
+        {
+          "name": "anchor",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "fade_distance",
+          "type": "float",
+          "required": false
+        },
+        {
+          "name": "projection_size",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "depth_range",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        }
+      ],
+      "returns": "A dict matching DecalMetadata."
+    },
+    {
+      "name": "decal_spec",
+      "category": "texture",
+      "description": "Creates a complete decal spec with decal_v1 recipe.",
+      "params": [
+        {
+          "name": "asset_id",
+          "type": "str",
+          "required": true
+        },
+        {
+          "name": "seed",
+          "type": "int",
+          "required": true
+        },
+        {
+          "name": "output_path",
+          "type": "str",
+          "required": true
+        },
+        {
+          "name": "resolution",
+          "type": "list[int]",
+          "required": true
+        },
+        {
+          "name": "nodes",
+          "type": "list[typing.Any]",
+          "required": true
+        },
+        {
+          "name": "albedo_output",
+          "type": "str",
+          "required": true
+        },
+        {
+          "name": "alpha_output",
+          "type": "str",
+          "required": true
+        },
+        {
+          "name": "metadata",
+          "type": "typing.Any",
+          "required": true
+        },
+        {
+          "name": "normal_output",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "roughness_output",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "normal_path",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "roughness_path",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "metadata_path",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "description",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "tags",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "license",
+          "type": "str",
+          "required": false,
+          "default": "CC0-1.0"
+        }
+      ],
+      "returns": "A complete spec dict ready for serialization."
+    },
+    {
+      "name": "matcap_v1",
+      "category": "texture",
+      "description": "Creates a matcap texture spec with matcap_v1 recipe.",
+      "params": [
+        {
+          "name": "asset_id",
+          "type": "str",
+          "required": true
+        },
+        {
+          "name": "seed",
+          "type": "int",
+          "required": true
+        },
+        {
+          "name": "output_path",
+          "type": "str",
+          "required": true
+        },
+        {
+          "name": "resolution",
+          "type": "list[int]",
+          "required": true
+        },
+        {
+          "name": "preset",
+          "type": "str",
+          "required": true
+        },
+        {
+          "name": "base_color",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "toon_steps",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "outline_width",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "outline_color",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "curvature_enabled",
+          "type": "bool",
+          "required": false,
+          "default": false
+        },
+        {
+          "name": "curvature_strength",
+          "type": "float",
+          "required": false
+        },
+        {
+          "name": "cavity_enabled",
+          "type": "bool",
+          "required": false,
+          "default": false
+        },
+        {
+          "name": "cavity_strength",
+          "type": "float",
+          "required": false
+        },
+        {
+          "name": "description",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "tags",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "license",
+          "type": "str",
+          "required": false,
+          "default": "CC0-1.0"
+        }
+      ],
+      "returns": "A complete spec dict ready for serialization."
+    },
+    {
+      "name": "material_preset_v1",
+      "category": "texture",
+      "description": "Creates a complete material preset spec with texture.material_preset_v1 recipe.",
+      "params": [
+        {
+          "name": "asset_id",
+          "type": "str",
+          "required": true
+        },
+        {
+          "name": "seed",
+          "type": "int",
+          "required": true
+        },
+        {
+          "name": "output_prefix",
+          "type": "str",
+          "required": true
+        },
+        {
+          "name": "resolution",
+          "type": "list[int]",
+          "required": true
+        },
+        {
+          "name": "preset",
+          "type": "str",
+          "required": true
+        },
+        {
+          "name": "tileable",
+          "type": "bool",
+          "required": false,
+          "default": true
+        },
+        {
+          "name": "base_color",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "roughness_range",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "metallic",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "noise_scale",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "pattern_scale",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "description",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "style_tags",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "license",
+          "type": "str",
+          "required": false,
+          "default": "CC0-1.0"
+        }
+      ],
+      "returns": "Complete spec dict with multiple outputs (albedo, roughness, metallic, normal)."
+    },
+    {
+      "name": "splat_layer",
+      "category": "texture",
+      "description": "Creates a terrain splat layer definition.",
+      "params": [
+        {
+          "name": "id",
+          "type": "str",
+          "required": true
+        },
+        {
+          "name": "albedo_color",
+          "type": "list[float]",
+          "required": true
+        },
+        {
+          "name": "normal_strength",
+          "type": "float",
+          "required": false
+        },
+        {
+          "name": "roughness",
+          "type": "float",
+          "required": false
+        },
+        {
+          "name": "detail_scale",
+          "type": "float",
+          "required": false
+        },
+        {
+          "name": "detail_intensity",
+          "type": "float",
+          "required": false
+        }
+      ],
+      "returns": "A dict matching SplatLayer."
+    },
+    {
+      "name": "splat_set_spec",
+      "category": "texture",
+      "description": "Creates a complete splat set spec with splat_set_v1 recipe.",
+      "params": [
+        {
+          "name": "asset_id",
+          "type": "str",
+          "required": true
+        },
+        {
+          "name": "seed",
+          "type": "int",
+          "required": true
+        },
+        {
+          "name": "resolution",
+          "type": "list[int]",
+          "required": true
+        },
+        {
+          "name": "layers",
+          "type": "list[typing.Any]",
+          "required": true
+        },
+        {
+          "name": "output_prefix",
+          "type": "str",
+          "required": true
+        },
+        {
+          "name": "mask_mode",
+          "type": "str",
+          "required": false,
+          "default": "noise"
+        },
+        {
+          "name": "noise_scale",
+          "type": "float",
+          "required": false
+        },
+        {
+          "name": "macro_variation",
+          "type": "bool",
+          "required": false,
+          "default": false
+        },
+        {
+          "name": "macro_scale",
+          "type": "float",
+          "required": false
+        },
+        {
+          "name": "macro_intensity",
+          "type": "float",
+          "required": false
+        },
+        {
+          "name": "metadata_path",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "description",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "tags",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "license",
+          "type": "str",
+          "required": false,
+          "default": "CC0-1.0"
+        }
+      ],
+      "returns": "A complete spec dict ready for serialization."
+    },
+    {
+      "name": "texture_spec",
+      "category": "texture",
+      "description": "Creates a complete texture spec with procedural_v1 recipe.",
+      "params": [
+        {
+          "name": "asset_id",
+          "type": "str",
+          "required": true
+        },
+        {
+          "name": "seed",
+          "type": "int",
+          "required": true
+        },
+        {
+          "name": "output_path",
+          "type": "str",
+          "required": true
+        },
+        {
+          "name": "format",
+          "type": "str",
+          "required": true
+        },
+        {
+          "name": "resolution",
+          "type": "list[int]",
+          "required": true
+        },
+        {
+          "name": "nodes",
+          "type": "list[typing.Any]",
+          "required": true
+        },
+        {
+          "name": "tileable",
+          "type": "bool",
+          "required": false,
+          "default": true
+        },
+        {
+          "name": "description",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "tags",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "license",
+          "type": "str",
+          "required": false,
+          "default": "CC0-1.0"
+        }
+      ],
+      "returns": "A complete spec dict ready for serialization."
+    },
+    {
+      "name": "trimsheet_spec",
+      "category": "texture",
+      "description": "Creates a complete trimsheet spec with trimsheet_v1 recipe.",
+      "params": [
+        {
+          "name": "asset_id",
+          "type": "str",
+          "required": true
+        },
+        {
+          "name": "seed",
+          "type": "int",
+          "required": true
+        },
+        {
+          "name": "output_path",
+          "type": "str",
+          "required": true
+        },
+        {
+          "name": "resolution",
+          "type": "list[int]",
+          "required": true
+        },
+        {
+          "name": "tiles",
+          "type": "list[typing.Any]",
+          "required": true
+        },
+        {
+          "name": "metadata_path",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "padding",
+          "type": "int",
+          "required": false,
+          "default": 2
+        },
+        {
+          "name": "description",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "tags",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "license",
+          "type": "str",
+          "required": false,
+          "default": "CC0-1.0"
+        }
+      ],
+      "returns": "A complete spec dict ready for serialization."
+    },
+    {
+      "name": "trimsheet_tile",
+      "category": "texture",
+      "description": "Creates a trimsheet tile definition with a solid color.",
+      "params": [
+        {
+          "name": "id",
+          "type": "str",
+          "required": true
+        },
+        {
+          "name": "width",
+          "type": "int",
+          "required": true
+        },
+        {
+          "name": "height",
+          "type": "int",
+          "required": true
+        },
+        {
+          "name": "color",
+          "type": "list[float]",
+          "required": true
+        }
+      ],
+      "returns": "A dict matching TrimsheetTile with color source."
     },
     {
       "name": "texture_graph",
@@ -1928,12 +4971,12 @@
       "params": [
         {
           "name": "resolution",
-          "type": "list",
+          "type": "list[int]",
           "required": true
         },
         {
           "name": "nodes",
-          "type": "list",
+          "type": "list[typing.Any]",
           "required": true
         },
         {
@@ -1943,8 +4986,87 @@
           "default": true
         }
       ],
-      "returns": "A texture graph params dict.",
+      "returns": "A dict matching the TextureProceduralV1Params structure.",
       "example": "texture_graph([64, 64], [noise_node(\"base\", \"perlin\")])"
+    },
+    {
+      "name": "add_node",
+      "category": "texture.nodes",
+      "description": "Creates an add blend node (a + b).",
+      "params": [
+        {
+          "name": "id",
+          "type": "str",
+          "required": true
+        },
+        {
+          "name": "a",
+          "type": "str",
+          "required": true
+        },
+        {
+          "name": "b",
+          "type": "str",
+          "required": true
+        }
+      ],
+      "returns": "A dict matching the TextureProceduralNode with Add op."
+    },
+    {
+      "name": "checkerboard_node",
+      "category": "texture.nodes",
+      "description": "Creates a checkerboard pattern node.",
+      "params": [
+        {
+          "name": "id",
+          "type": "str",
+          "required": true
+        },
+        {
+          "name": "tile_size",
+          "type": "int",
+          "required": true
+        },
+        {
+          "name": "color1",
+          "type": "float",
+          "required": false
+        },
+        {
+          "name": "color2",
+          "type": "float",
+          "required": false
+        }
+      ],
+      "returns": "A dict matching the TextureProceduralNode with Checkerboard op."
+    },
+    {
+      "name": "clamp_node",
+      "category": "texture.nodes",
+      "description": "Creates a clamp node.",
+      "params": [
+        {
+          "name": "id",
+          "type": "str",
+          "required": true
+        },
+        {
+          "name": "input",
+          "type": "str",
+          "required": true
+        },
+        {
+          "name": "min",
+          "type": "float",
+          "required": false
+        },
+        {
+          "name": "max",
+          "type": "float",
+          "required": false
+        }
+      ],
+      "returns": "A dict matching the TextureProceduralNode with Clamp op."
     },
     {
       "name": "color_ramp_node",
@@ -1953,22 +5075,74 @@
       "params": [
         {
           "name": "id",
-          "type": "string",
+          "type": "str",
           "required": true
         },
         {
           "name": "input",
-          "type": "string",
+          "type": "str",
           "required": true
         },
         {
           "name": "ramp",
-          "type": "list",
+          "type": "list[str]",
           "required": true
         }
       ],
-      "returns": "A texture node dict.",
+      "returns": "A dict matching the TextureProceduralNode with ColorRamp op.",
       "example": "color_ramp_node(\"colored\", \"noise\", [\"#000000\", \"#ffffff\"])"
+    },
+    {
+      "name": "compose_rgba_node",
+      "category": "texture.nodes",
+      "description": "Creates an RGBA composition node.",
+      "params": [
+        {
+          "name": "id",
+          "type": "str",
+          "required": true
+        },
+        {
+          "name": "r",
+          "type": "str",
+          "required": true
+        },
+        {
+          "name": "g",
+          "type": "str",
+          "required": true
+        },
+        {
+          "name": "b",
+          "type": "str",
+          "required": true
+        },
+        {
+          "name": "a",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        }
+      ],
+      "returns": "A dict matching the TextureProceduralNode with ComposeRgba op."
+    },
+    {
+      "name": "constant_node",
+      "category": "texture.nodes",
+      "description": "Creates a constant value texture node.",
+      "params": [
+        {
+          "name": "id",
+          "type": "str",
+          "required": true
+        },
+        {
+          "name": "value",
+          "type": "float",
+          "required": true
+        }
+      ],
+      "returns": "A dict matching the TextureProceduralNode with Constant op."
     },
     {
       "name": "gradient_node",
@@ -1977,12 +5151,12 @@
       "params": [
         {
           "name": "id",
-          "type": "string",
+          "type": "str",
           "required": true
         },
         {
           "name": "direction",
-          "type": "string",
+          "type": "str",
           "required": false,
           "default": "horizontal",
           "enum_values": [
@@ -1994,18 +5168,121 @@
         {
           "name": "start",
           "type": "float",
-          "required": false,
-          "default": 0.0
+          "required": false
         },
         {
           "name": "end",
           "type": "float",
+          "required": false
+        },
+        {
+          "name": "center",
+          "type": "typing.Any",
           "required": false,
-          "default": 1.0
+          "default": null
+        },
+        {
+          "name": "inner",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "outer",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
         }
       ],
-      "returns": "A texture node dict.",
+      "returns": "A dict matching the TextureProceduralNode with Gradient op.",
       "example": "gradient_node(\"grad\", \"horizontal\")"
+    },
+    {
+      "name": "grayscale_node",
+      "category": "texture.nodes",
+      "description": "Creates a grayscale conversion node.",
+      "params": [
+        {
+          "name": "id",
+          "type": "str",
+          "required": true
+        },
+        {
+          "name": "input",
+          "type": "str",
+          "required": true
+        }
+      ],
+      "returns": "A dict matching the TextureProceduralNode with ToGrayscale op."
+    },
+    {
+      "name": "invert_node",
+      "category": "texture.nodes",
+      "description": "Creates an invert operation node (1 - x).",
+      "params": [
+        {
+          "name": "id",
+          "type": "str",
+          "required": true
+        },
+        {
+          "name": "input",
+          "type": "str",
+          "required": true
+        }
+      ],
+      "returns": "A dict matching the TextureProceduralNode with Invert op."
+    },
+    {
+      "name": "lerp_node",
+      "category": "texture.nodes",
+      "description": "Creates a lerp (linear interpolation) node.",
+      "params": [
+        {
+          "name": "id",
+          "type": "str",
+          "required": true
+        },
+        {
+          "name": "a",
+          "type": "str",
+          "required": true
+        },
+        {
+          "name": "b",
+          "type": "str",
+          "required": true
+        },
+        {
+          "name": "t",
+          "type": "str",
+          "required": true
+        }
+      ],
+      "returns": "A dict matching the TextureProceduralNode with Lerp op."
+    },
+    {
+      "name": "multiply_node",
+      "category": "texture.nodes",
+      "description": "Creates a multiply blend node (a * b).",
+      "params": [
+        {
+          "name": "id",
+          "type": "str",
+          "required": true
+        },
+        {
+          "name": "a",
+          "type": "str",
+          "required": true
+        },
+        {
+          "name": "b",
+          "type": "str",
+          "required": true
+        }
+      ],
+      "returns": "A dict matching the TextureProceduralNode with Multiply op."
     },
     {
       "name": "noise_node",
@@ -2014,12 +5291,12 @@
       "params": [
         {
           "name": "id",
-          "type": "string",
+          "type": "str",
           "required": true
         },
         {
           "name": "algorithm",
-          "type": "string",
+          "type": "str",
           "required": false,
           "default": "perlin",
           "enum_values": [
@@ -2034,7 +5311,6 @@
           "name": "scale",
           "type": "float",
           "required": false,
-          "default": 0.1,
           "range": {
             "min": 0.0
           }
@@ -2051,18 +5327,139 @@
         {
           "name": "persistence",
           "type": "float",
-          "required": false,
-          "default": 0.5
+          "required": false
         },
         {
           "name": "lacunarity",
           "type": "float",
-          "required": false,
-          "default": 2.0
+          "required": false
         }
       ],
-      "returns": "A texture node dict.",
+      "returns": "A dict matching the TextureProceduralNode with Noise op.",
       "example": "noise_node(\"height\", \"perlin\", 0.1, 4)"
+    },
+    {
+      "name": "normal_from_height_node",
+      "category": "texture.nodes",
+      "description": "Creates a normal map from height field node.",
+      "params": [
+        {
+          "name": "id",
+          "type": "str",
+          "required": true
+        },
+        {
+          "name": "input",
+          "type": "str",
+          "required": true
+        },
+        {
+          "name": "strength",
+          "type": "float",
+          "required": false
+        }
+      ],
+      "returns": "A dict matching the TextureProceduralNode with NormalFromHeight op."
+    },
+    {
+      "name": "palette_node",
+      "category": "texture.nodes",
+      "description": "Creates a palette quantization node.",
+      "params": [
+        {
+          "name": "id",
+          "type": "str",
+          "required": true
+        },
+        {
+          "name": "input",
+          "type": "str",
+          "required": true
+        },
+        {
+          "name": "palette",
+          "type": "list[str]",
+          "required": true
+        }
+      ],
+      "returns": "A dict matching the TextureProceduralNode with Palette op."
+    },
+    {
+      "name": "stripes_node",
+      "category": "texture.nodes",
+      "description": "Creates a stripes pattern node.",
+      "params": [
+        {
+          "name": "id",
+          "type": "str",
+          "required": true
+        },
+        {
+          "name": "direction",
+          "type": "str",
+          "required": true
+        },
+        {
+          "name": "stripe_width",
+          "type": "int",
+          "required": true
+        },
+        {
+          "name": "color1",
+          "type": "float",
+          "required": false
+        },
+        {
+          "name": "color2",
+          "type": "float",
+          "required": false
+        }
+      ],
+      "returns": "A dict matching the TextureProceduralNode with Stripes op."
+    },
+    {
+      "name": "texture_bomb_node",
+      "category": "texture.nodes",
+      "description": "Creates a texture bombing (random splat) node.",
+      "params": [
+        {
+          "name": "id",
+          "type": "str",
+          "required": true
+        },
+        {
+          "name": "input",
+          "type": "str",
+          "required": true
+        },
+        {
+          "name": "density",
+          "type": "float",
+          "required": false
+        },
+        {
+          "name": "scale_min",
+          "type": "float",
+          "required": false
+        },
+        {
+          "name": "scale_max",
+          "type": "float",
+          "required": false
+        },
+        {
+          "name": "rotation_variation",
+          "type": "float",
+          "required": false
+        },
+        {
+          "name": "blend_mode",
+          "type": "str",
+          "required": false,
+          "default": "max"
+        }
+      ],
+      "returns": "A dict matching the TextureProceduralNode with TextureBomb op."
     },
     {
       "name": "threshold_node",
@@ -2071,23 +5468,411 @@
       "params": [
         {
           "name": "id",
-          "type": "string",
+          "type": "str",
           "required": true
         },
         {
           "name": "input",
-          "type": "string",
+          "type": "str",
           "required": true
         },
         {
           "name": "threshold",
           "type": "float",
-          "required": false,
-          "default": 0.5
+          "required": false
         }
       ],
-      "returns": "A texture node dict.",
+      "returns": "A dict matching the TextureProceduralNode with Threshold op.",
       "example": "threshold_node(\"mask\", \"noise\", 0.5)"
+    },
+    {
+      "name": "wang_tiles_node",
+      "category": "texture.nodes",
+      "description": "Creates a Wang tiles stochastic tiling node.",
+      "params": [
+        {
+          "name": "id",
+          "type": "str",
+          "required": true
+        },
+        {
+          "name": "input",
+          "type": "str",
+          "required": true
+        },
+        {
+          "name": "tile_count_x",
+          "type": "int",
+          "required": false,
+          "default": 4
+        },
+        {
+          "name": "tile_count_y",
+          "type": "int",
+          "required": false,
+          "default": 4
+        },
+        {
+          "name": "blend_width",
+          "type": "float",
+          "required": false
+        }
+      ],
+      "returns": "A dict matching the TextureProceduralNode with WangTiles op."
+    }
+  ],
+  "lint_rules": [
+    {
+      "id": "audio/clipping",
+      "description": "Sample values exceed +/-1.0, causing digital distortion",
+      "severity": "error",
+      "applies_to": [
+        "audio"
+      ]
+    },
+    {
+      "id": "audio/dc-offset",
+      "description": "Non-zero average sample value causes headroom loss and speaker stress",
+      "severity": "error",
+      "applies_to": [
+        "audio"
+      ]
+    },
+    {
+      "id": "audio/silence",
+      "description": "Asset is entirely silent (RMS < -60dB)",
+      "severity": "error",
+      "applies_to": [
+        "audio"
+      ]
+    },
+    {
+      "id": "audio/too-quiet",
+      "description": "Audio loudness is very low",
+      "severity": "warning",
+      "applies_to": [
+        "audio"
+      ]
+    },
+    {
+      "id": "audio/too-loud",
+      "description": "Audio is near clipping levels",
+      "severity": "warning",
+      "applies_to": [
+        "audio"
+      ]
+    },
+    {
+      "id": "audio/harsh-highs",
+      "description": "Excessive high-frequency energy above 8kHz",
+      "severity": "warning",
+      "applies_to": [
+        "audio"
+      ]
+    },
+    {
+      "id": "audio/muddy-lows",
+      "description": "Excessive low-mid frequency energy (200-500Hz)",
+      "severity": "warning",
+      "applies_to": [
+        "audio"
+      ]
+    },
+    {
+      "id": "audio/abrupt-end",
+      "description": "Audio ends abruptly without fade-out",
+      "severity": "warning",
+      "applies_to": [
+        "audio"
+      ]
+    },
+    {
+      "id": "audio/no-effects",
+      "description": "Audio has no spatial effects (reverb, delay)",
+      "severity": "info",
+      "applies_to": [
+        "audio"
+      ]
+    },
+    {
+      "id": "audio/mono-recommended",
+      "description": "Short sound effect uses stereo when mono would suffice",
+      "severity": "info",
+      "applies_to": [
+        "audio"
+      ]
+    },
+    {
+      "id": "texture/all-black",
+      "description": "Image is entirely black",
+      "severity": "error",
+      "applies_to": [
+        "texture"
+      ]
+    },
+    {
+      "id": "texture/all-white",
+      "description": "Image is entirely white",
+      "severity": "error",
+      "applies_to": [
+        "texture"
+      ]
+    },
+    {
+      "id": "texture/corrupt-alpha",
+      "description": "Alpha channel is uniform (all 0 or all 255)",
+      "severity": "error",
+      "applies_to": [
+        "texture"
+      ]
+    },
+    {
+      "id": "texture/low-contrast",
+      "description": "Image has low contrast (narrow value range)",
+      "severity": "warning",
+      "applies_to": [
+        "texture"
+      ]
+    },
+    {
+      "id": "texture/banding",
+      "description": "Image shows color banding (too few unique values)",
+      "severity": "warning",
+      "applies_to": [
+        "texture"
+      ]
+    },
+    {
+      "id": "texture/tile-seam",
+      "description": "Image has visible seams at tile edges",
+      "severity": "warning",
+      "applies_to": [
+        "texture"
+      ]
+    },
+    {
+      "id": "texture/noisy",
+      "description": "Image has excessive high-frequency noise",
+      "severity": "warning",
+      "applies_to": [
+        "texture"
+      ]
+    },
+    {
+      "id": "texture/color-cast",
+      "description": "Image has a strong color cast (one channel dominates)",
+      "severity": "warning",
+      "applies_to": [
+        "texture"
+      ]
+    },
+    {
+      "id": "texture/power-of-two",
+      "description": "Image dimensions are not power-of-two",
+      "severity": "info",
+      "applies_to": [
+        "texture"
+      ]
+    },
+    {
+      "id": "texture/large-solid-regions",
+      "description": "Image has large solid regions (>25% identical pixels)",
+      "severity": "info",
+      "applies_to": [
+        "texture"
+      ]
+    },
+    {
+      "id": "mesh/non-manifold",
+      "description": "Detects non-manifold edges (edges shared by more than 2 faces)",
+      "severity": "error",
+      "applies_to": [
+        "mesh"
+      ]
+    },
+    {
+      "id": "mesh/degenerate-faces",
+      "description": "Detects zero-area triangles (degenerate faces)",
+      "severity": "error",
+      "applies_to": [
+        "mesh"
+      ]
+    },
+    {
+      "id": "mesh/unweighted-verts",
+      "description": "Detects vertices with no bone weights in skinned meshes",
+      "severity": "error",
+      "applies_to": [
+        "mesh"
+      ]
+    },
+    {
+      "id": "mesh/inverted-normals",
+      "description": "Detects normals pointing inward (inverted face orientation)",
+      "severity": "error",
+      "applies_to": [
+        "mesh"
+      ]
+    },
+    {
+      "id": "mesh/humanoid-proportions",
+      "description": "Checks humanoid armature limb proportions against anatomical ranges",
+      "severity": "warning",
+      "applies_to": [
+        "mesh"
+      ]
+    },
+    {
+      "id": "mesh/uv-overlap",
+      "description": "Detects overlapping UV islands",
+      "severity": "warning",
+      "applies_to": [
+        "mesh"
+      ]
+    },
+    {
+      "id": "mesh/uv-stretch",
+      "description": "Detects high UV distortion (stretch)",
+      "severity": "warning",
+      "applies_to": [
+        "mesh"
+      ]
+    },
+    {
+      "id": "mesh/missing-material",
+      "description": "Detects faces with no material assigned",
+      "severity": "warning",
+      "applies_to": [
+        "mesh"
+      ]
+    },
+    {
+      "id": "mesh/excessive-ngons",
+      "description": "Detects excessive use of n-gons (faces with more than 4 vertices)",
+      "severity": "warning",
+      "applies_to": [
+        "mesh"
+      ]
+    },
+    {
+      "id": "mesh/isolated-verts",
+      "description": "Detects vertices not used by any face",
+      "severity": "warning",
+      "applies_to": [
+        "mesh"
+      ]
+    },
+    {
+      "id": "mesh/high-poly",
+      "description": "Warns about high polygon count meshes",
+      "severity": "info",
+      "applies_to": [
+        "mesh"
+      ]
+    },
+    {
+      "id": "mesh/no-uvs",
+      "description": "Detects meshes without UV coordinates",
+      "severity": "info",
+      "applies_to": [
+        "mesh"
+      ]
+    },
+    {
+      "id": "music/empty-pattern",
+      "description": "Pattern has no notes",
+      "severity": "error",
+      "applies_to": [
+        "music"
+      ]
+    },
+    {
+      "id": "music/invalid-note",
+      "description": "Note outside MIDI range (0-127)",
+      "severity": "error",
+      "applies_to": [
+        "music"
+      ]
+    },
+    {
+      "id": "music/empty-arrangement",
+      "description": "No patterns in arrangement",
+      "severity": "error",
+      "applies_to": [
+        "music"
+      ]
+    },
+    {
+      "id": "music/parallel-octaves",
+      "description": "Consecutive parallel octaves between voices",
+      "severity": "warning",
+      "applies_to": [
+        "music"
+      ]
+    },
+    {
+      "id": "music/parallel-fifths",
+      "description": "Consecutive parallel fifths between voices",
+      "severity": "warning",
+      "applies_to": [
+        "music"
+      ]
+    },
+    {
+      "id": "music/voice-crossing",
+      "description": "Lower voice above higher voice",
+      "severity": "warning",
+      "applies_to": [
+        "music"
+      ]
+    },
+    {
+      "id": "music/dense-pattern",
+      "description": "More than 8 simultaneous notes in a row",
+      "severity": "warning",
+      "applies_to": [
+        "music"
+      ]
+    },
+    {
+      "id": "music/sparse-pattern",
+      "description": "Pattern has less than 5% cell occupancy",
+      "severity": "warning",
+      "applies_to": [
+        "music"
+      ]
+    },
+    {
+      "id": "music/extreme-tempo",
+      "description": "BPM outside reasonable range (40-300)",
+      "severity": "warning",
+      "applies_to": [
+        "music"
+      ]
+    },
+    {
+      "id": "music/unused-channel",
+      "description": "Channel has no notes across all patterns",
+      "severity": "info",
+      "applies_to": [
+        "music"
+      ]
+    },
+    {
+      "id": "music/no-variation",
+      "description": "Same pattern repeats more than 4 times consecutively",
+      "severity": "info",
+      "applies_to": [
+        "music"
+      ]
+    },
+    {
+      "id": "music/unresolved-tension",
+      "description": "Song ends on dissonant interval",
+      "severity": "info",
+      "applies_to": [
+        "music"
+      ]
     }
   ]
 }
