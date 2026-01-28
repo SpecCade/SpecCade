@@ -7255,10 +7255,21 @@ def handle_validation_grid(spec: Dict, out_root: Path, report_path: Path) -> Non
             (mesh_bounds[0][i] + mesh_bounds[1][i]) / 2
             for i in range(3)
         ]
-        mesh_size = max(
-            mesh_bounds[1][i] - mesh_bounds[0][i]
-            for i in range(3)
-        )
+
+        # Calculate dimensions on each axis
+        dims = [mesh_bounds[1][i] - mesh_bounds[0][i] for i in range(3)]
+        mesh_size = max(dims)
+
+        # Clamp to minimum size to handle very small or degenerate meshes
+        MIN_MESH_SIZE = 0.1  # Minimum 0.1 units for camera framing
+        if mesh_size < MIN_MESH_SIZE:
+            print(f"Warning: Mesh is very small ({mesh_size:.4f}), clamping to {MIN_MESH_SIZE}")
+            mesh_size = MIN_MESH_SIZE
+
+        # Warn about very flat meshes that may be hard to see from some angles
+        min_dim = min(dims)
+        if min_dim < mesh_size * 0.01:  # If one dimension is <1% of the largest
+            print(f"Warning: Mesh is very flat (dims: {dims}), some views may show little detail")
 
         # Camera distance scaled to mesh size
         cam_dist = mesh_size * 2.5
