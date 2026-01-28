@@ -37,6 +37,8 @@ regex = "1"
 walkdir = "2"
 byteorder = "1"
 png = "0.17"
+image = { version = "0.25", default-features = false, features = ["png"] }
+gif = "0.13"
 tempfile = "3"
 which = "6"
 hound = "3"
