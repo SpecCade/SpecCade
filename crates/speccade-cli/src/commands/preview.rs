@@ -82,8 +82,8 @@ fn extract_flipbook_frames(
 ) -> (Vec<Vec<u8>>, Vec<u32>, bool) {
     use image::GenericImageView;
 
-    let fps = fps_override.unwrap_or(metadata.fps).max(1);
-    let delay_ms = (1000 / fps).max(1);
+    let fps = fps_override.unwrap_or(metadata.fps);
+    let delay_ms = if fps == 0 { 83 } else { (1000 / fps).max(1) };
 
     let atlas_w = atlas.width();
     let atlas_h = atlas.height();
@@ -170,9 +170,7 @@ fn extract_sprite_animation_frames(
         uv_by_id.insert(uv.id.as_str(), uv);
     }
 
-    let override_delay_ms = fps_override
-        .map(|fps| (1000 / fps.max(1)).max(1))
-        .unwrap_or(0);
+    let override_delay_ms = fps_override.map(|fps| if fps == 0 { 83 } else { (1000 / fps).max(1) });
 
     let mut frames = Vec::with_capacity(anim_meta.frames.len());
     let mut delays = Vec::with_capacity(anim_meta.frames.len());
@@ -210,11 +208,7 @@ fn extract_sprite_animation_frames(
         let rgba = atlas.view(x, y, w, h).to_image().into_raw();
         frames.push(rgba);
 
-        let delay_ms = if override_delay_ms > 0 {
-            override_delay_ms
-        } else {
-            anim_frame.duration_ms.max(1)
-        };
+        let delay_ms = override_delay_ms.unwrap_or(anim_frame.duration_ms);
         delays.push(delay_ms);
     }
 
@@ -494,5 +488,107 @@ mod tests {
         assert_eq!(&frames[0][0..4], &[255, 0, 0, 255]);
         // First pixel of frame B should be green
         assert_eq!(&frames[1][0..4], &[0, 255, 0, 255]);
+    }
+
+    #[test]
+    fn test_extract_sprite_animation_frames_fps_override_zero_uses_83ms() {
+        let mut atlas = RgbaImage::new(128, 64);
+        for y in 0..64 {
+            for x in 0..64 {
+                atlas.put_pixel(x, y, Rgba([255, 0, 0, 255]));
+            }
+        }
+        for y in 0..64 {
+            for x in 64..128 {
+                atlas.put_pixel(x, y, Rgba([0, 255, 0, 255]));
+            }
+        }
+
+        let sheet_meta_json = serde_json::json!({
+            "atlas_width": 128,
+            "atlas_height": 64,
+            "padding": 0,
+            "frames": [
+                {
+                    "id": "frame_a",
+                    "u_min": 0.0,
+                    "v_min": 0.0,
+                    "u_max": 0.5,
+                    "v_max": 1.0,
+                    "width": 64,
+                    "height": 64,
+                    "pivot": [0.5, 0.5]
+                },
+                {
+                    "id": "frame_b",
+                    "u_min": 0.5,
+                    "v_min": 0.0,
+                    "u_max": 1.0,
+                    "v_max": 1.0,
+                    "width": 64,
+                    "height": 64,
+                    "pivot": [0.5, 0.5]
+                }
+            ]
+        });
+
+        let sheet_meta: speccade_spec::recipe::sprite::SpriteSheetMetadata =
+            serde_json::from_value(sheet_meta_json).unwrap();
+
+        let anim_meta_json = serde_json::json!({
+            "name": "test_anim",
+            "fps": 12,
+            "loop_mode": "loop",
+            "total_duration_ms": 166,
+            "frames": [
+                { "frame_id": "frame_a", "duration_ms": 1 },
+                { "frame_id": "frame_b", "duration_ms": 1 }
+            ]
+        });
+
+        let anim_meta: speccade_spec::recipe::sprite::SpriteAnimationMetadata =
+            serde_json::from_value(anim_meta_json).unwrap();
+
+        let (_frames, delays, _do_loop) =
+            extract_sprite_animation_frames(&atlas, &sheet_meta, &anim_meta, Some(0));
+
+        assert_eq!(delays, vec![83, 83]);
+    }
+
+    #[test]
+    fn test_extract_flipbook_frames_fps_override_zero_uses_83ms() {
+        let mut atlas = RgbaImage::new(128, 64);
+        for y in 0..64 {
+            for x in 0..64 {
+                atlas.put_pixel(x, y, Rgba([255, 0, 0, 255]));
+            }
+        }
+        for y in 0..64 {
+            for x in 64..128 {
+                atlas.put_pixel(x, y, Rgba([0, 0, 255, 255]));
+            }
+        }
+
+        let metadata_json = serde_json::json!({
+            "atlas_width": 128,
+            "atlas_height": 64,
+            "padding": 0,
+            "effect": "explosion",
+            "frame_count": 2,
+            "frame_size": [64, 64],
+            "fps": 12,
+            "loop_mode": "once",
+            "total_duration_ms": 166,
+            "frames": [
+                { "index": 0, "u_min": 0.0, "v_min": 0.0, "u_max": 0.5, "v_max": 1.0, "width": 64, "height": 64 },
+                { "index": 1, "u_min": 0.5, "v_min": 0.0, "u_max": 1.0, "v_max": 1.0, "width": 64, "height": 64 }
+            ]
+        });
+
+        let metadata: speccade_spec::recipe::vfx::VfxFlipbookMetadata =
+            serde_json::from_value(metadata_json).unwrap();
+
+        let (_frames, delays, _do_loop) = extract_flipbook_frames(&atlas, &metadata, Some(0));
+        assert_eq!(delays, vec![83, 83]);
     }
 }
