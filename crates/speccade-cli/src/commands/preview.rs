@@ -853,5 +853,85 @@ mod tests {
         assert_eq!(delays, vec![100, 100]);
         assert!(do_loop);
         assert_eq!(frames[0].len(), 64 * 64 * 4);
+
+        // Pixel correctness: first pixel in each extracted frame.
+        assert_eq!(&frames[0][0..4], &[100, 0, 0, 255]);
+        assert_eq!(&frames[1][0..4], &[0, 100, 0, 255]);
+    }
+
+    #[test]
+    fn test_extract_mesh_to_sprite_frames_skips_out_of_bounds() {
+        let atlas = RgbaImage::new(16, 16);
+
+        let metadata_json = serde_json::json!({
+            "atlas_dimensions": [16, 16],
+            "padding": 0,
+            "frame_resolution": [32, 32],
+            "camera": "ortho",
+            "lighting": "default",
+            "frames": [
+                {
+                    "id": "angle_0",
+                    "angle": 0.0,
+                    "position": [0, 0],
+                    "dimensions": [32, 32],
+                    "uv": [0.0, 0.0, 1.0, 1.0]
+                }
+            ]
+        });
+
+        let metadata: speccade_spec::recipe::sprite::SpriteRenderFromMeshMetadata =
+            serde_json::from_value(metadata_json).unwrap();
+
+        let (frames, delays, do_loop) = extract_mesh_sprite_frames(&atlas, &metadata, None);
+        assert!(frames.is_empty());
+        assert!(delays.is_empty());
+        assert!(do_loop);
+    }
+
+    #[test]
+    fn test_extract_mesh_to_sprite_frames_fps_override_zero_uses_83ms() {
+        let mut atlas = RgbaImage::new(128, 64);
+
+        for y in 0..64 {
+            for x in 0..64 {
+                atlas.put_pixel(x, y, Rgba([100, 0, 0, 255]));
+            }
+        }
+        for y in 0..64 {
+            for x in 64..128 {
+                atlas.put_pixel(x, y, Rgba([0, 100, 0, 255]));
+            }
+        }
+
+        let metadata_json = serde_json::json!({
+            "atlas_dimensions": [128, 64],
+            "padding": 0,
+            "frame_resolution": [64, 64],
+            "camera": "ortho",
+            "lighting": "default",
+            "frames": [
+                {
+                    "id": "angle_0",
+                    "angle": 0.0,
+                    "position": [0, 0],
+                    "dimensions": [64, 64],
+                    "uv": [0.0, 0.0, 0.5, 1.0]
+                },
+                {
+                    "id": "angle_90",
+                    "angle": 90.0,
+                    "position": [64, 0],
+                    "dimensions": [64, 64],
+                    "uv": [0.5, 0.0, 1.0, 1.0]
+                }
+            ]
+        });
+
+        let metadata: speccade_spec::recipe::sprite::SpriteRenderFromMeshMetadata =
+            serde_json::from_value(metadata_json).unwrap();
+
+        let (_frames, delays, _do_loop) = extract_mesh_sprite_frames(&atlas, &metadata, Some(0));
+        assert_eq!(delays, vec![83, 83]);
     }
 }
