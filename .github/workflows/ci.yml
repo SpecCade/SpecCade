@@ -45,6 +45,12 @@ jobs:
       - name: Run clippy
         run: cargo clippy --workspace --all-features -- -D warnings
 
+      - name: Generate coverage report
+        run: cargo run -p speccade-cli -- coverage generate
+
+      - name: Feature coverage check
+        run: cargo test -p speccade-tests --test feature_coverage -- --nocapture
+
   golden-gates:
     name: Golden Gates Validation
     runs-on: ubuntu-latest
