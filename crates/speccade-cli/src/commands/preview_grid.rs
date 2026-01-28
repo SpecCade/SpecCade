@@ -198,26 +198,75 @@ fn composite_frames_to_grid(frames_dir: &Path, out_path: &Path, panel_size: u32)
     Ok(())
 }
 
-/// Draw a simple label on the image (basic implementation without font rendering)
+/// Draw a label with text on the image using a simple bitmap font
 fn draw_label(img: &mut RgbaImage, x: u32, y: u32, label: &str) {
-    // Draw a semi-transparent black background rectangle
-    let label_width = (label.len() * 8) as u32 + 4;
-    let label_height = 16_u32;
+    let char_width = 6_u32;
+    let char_height = 9_u32;
+    let padding = 2_u32;
 
+    let label_width = (label.len() as u32) * char_width + padding * 2;
+    let label_height = char_height + padding * 2;
+
+    // Draw semi-transparent black background
     for ly in 0..label_height {
         for lx in 0..label_width {
             let px = x + lx;
             let py = y + ly;
             if px < img.width() && py < img.height() {
-                img.put_pixel(px, py, Rgba([0, 0, 0, 180]));
+                img.put_pixel(px, py, Rgba([0, 0, 0, 200]));
             }
         }
     }
 
-    // Note: Full text rendering would require a font library
-    // For now, we just have the background - Blender's PIL fallback should handle this
-    // or we could add the `imageproc` crate for text rendering in the future
-    let _ = label; // Suppress unused warning
+    // Draw each character
+    for (i, ch) in label.chars().enumerate() {
+        let cx = x + padding + (i as u32) * char_width;
+        let cy = y + padding;
+        draw_char(img, cx, cy, ch);
+    }
+}
+
+/// Simple 5x7 bitmap font patterns for A-Z and space
+fn get_char_bitmap(ch: char) -> Option<[u8; 7]> {
+    match ch.to_ascii_uppercase() {
+        'A' => Some([0b01110, 0b10001, 0b10001, 0b11111, 0b10001, 0b10001, 0b10001]),
+        'B' => Some([0b11110, 0b10001, 0b11110, 0b10001, 0b10001, 0b10001, 0b11110]),
+        'C' => Some([0b01110, 0b10001, 0b10000, 0b10000, 0b10000, 0b10001, 0b01110]),
+        'D' => Some([0b11110, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b11110]),
+        'E' => Some([0b11111, 0b10000, 0b11110, 0b10000, 0b10000, 0b10000, 0b11111]),
+        'F' => Some([0b11111, 0b10000, 0b11110, 0b10000, 0b10000, 0b10000, 0b10000]),
+        'G' => Some([0b01110, 0b10001, 0b10000, 0b10111, 0b10001, 0b10001, 0b01110]),
+        'H' => Some([0b10001, 0b10001, 0b11111, 0b10001, 0b10001, 0b10001, 0b10001]),
+        'I' => Some([0b01110, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100, 0b01110]),
+        'K' => Some([0b10001, 0b10010, 0b11100, 0b10010, 0b10001, 0b10001, 0b10001]),
+        'L' => Some([0b10000, 0b10000, 0b10000, 0b10000, 0b10000, 0b10000, 0b11111]),
+        'N' => Some([0b10001, 0b11001, 0b10101, 0b10011, 0b10001, 0b10001, 0b10001]),
+        'O' => Some([0b01110, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b01110]),
+        'P' => Some([0b11110, 0b10001, 0b10001, 0b11110, 0b10000, 0b10000, 0b10000]),
+        'R' => Some([0b11110, 0b10001, 0b10001, 0b11110, 0b10010, 0b10001, 0b10001]),
+        'S' => Some([0b01110, 0b10001, 0b10000, 0b01110, 0b00001, 0b10001, 0b01110]),
+        'T' => Some([0b11111, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100]),
+        'U' => Some([0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b01110]),
+        ' ' => Some([0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000]),
+        _ => None,
+    }
+}
+
+/// Draw a single character at the given position
+fn draw_char(img: &mut RgbaImage, x: u32, y: u32, ch: char) {
+    if let Some(bitmap) = get_char_bitmap(ch) {
+        for (row, &bits) in bitmap.iter().enumerate() {
+            for col in 0..5 {
+                if (bits >> (4 - col)) & 1 == 1 {
+                    let px = x + col;
+                    let py = y + row as u32;
+                    if px < img.width() && py < img.height() {
+                        img.put_pixel(px, py, Rgba([255, 255, 255, 255]));
+                    }
+                }
+            }
+        }
+    }
 }
 
 /// Extracts the [VALIDATION] comment block from a Starlark source file.
