@@ -662,7 +662,9 @@ pub fn run(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use gif::{ColorOutput, DecodeOptions};
     use image::{Rgba, RgbaImage};
+    use std::io::Cursor;
 
     #[test]
     fn test_preview_stub_returns_success() {
@@ -732,7 +734,7 @@ mod tests {
 
         // Verify it starts with GIF magic bytes
         let data = std::fs::read(&out_path).unwrap();
-        assert_eq!(&data[0..3], b"GIF");
+        assert!(data.starts_with(b"GIF"));
     }
 
     #[test]
@@ -1350,22 +1352,70 @@ mod tests {
         let spec_path = tmp.path().join("test.spec.json");
         std::fs::write(&spec_path, serde_json::to_string_pretty(&spec).unwrap()).unwrap();
 
-        let gif_path = tmp.path().join("test.preview.gif");
+        let gif_path1 = tmp.path().join("test.preview1.gif");
         let code = run(
             spec_path.to_str().unwrap(),
             Some(tmp.path().to_str().unwrap()),
             true,
-            Some(gif_path.to_str().unwrap()),
+            Some(gif_path1.to_str().unwrap()),
             None,
             None,
         )
         .unwrap();
 
         assert_eq!(code, ExitCode::SUCCESS);
-        assert!(gif_path.exists());
+        assert!(gif_path1.exists());
 
-        let data = std::fs::read(&gif_path).unwrap();
-        assert_eq!(&data[0..3], b"GIF");
-        assert!(data.len() > 100);
+        let gif_path2 = tmp.path().join("test.preview2.gif");
+        let code2 = run(
+            spec_path.to_str().unwrap(),
+            Some(tmp.path().to_str().unwrap()),
+            true,
+            Some(gif_path2.to_str().unwrap()),
+            None,
+            None,
+        )
+        .unwrap();
+        assert_eq!(code2, ExitCode::SUCCESS);
+        assert!(gif_path2.exists());
+
+        // Determinism check: same inputs => byte-identical GIF output.
+        let data1 = std::fs::read(&gif_path1).unwrap();
+        let data2 = std::fs::read(&gif_path2).unwrap();
+        assert_eq!(data1, data2);
+
+        // Header sanity check (non-panicking).
+        assert!(data1.starts_with(b"GIF"));
+        assert!(data1.len() > 100);
+
+        // Decode + validate: 4 frames, 10cs delay @ fps=10, solid colors.
+        let mut opts = DecodeOptions::new();
+        opts.set_color_output(ColorOutput::RGBA);
+        let mut decoder = opts.read_info(Cursor::new(&data1)).unwrap();
+
+        let mut frame_count = 0usize;
+        while let Some(frame) = decoder.read_next_frame().unwrap() {
+            assert!(frame_count < colors.len());
+            assert_eq!(frame.delay, 10);
+
+            let w = frame.width as usize;
+            let h = frame.height as usize;
+            assert!(w > 0 && h > 0);
+            assert_eq!(frame.buffer.len(), w * h * 4);
+
+            let rgba0 = &frame.buffer[0..4];
+            assert_eq!(
+                rgba0,
+                &colors[frame_count][..],
+                "Frame {} pixel mismatch: got {:?}, expected {:?}",
+                frame_count,
+                rgba0,
+                colors[frame_count]
+            );
+
+            frame_count += 1;
+        }
+
+        assert_eq!(frame_count, 4);
     }
 }
