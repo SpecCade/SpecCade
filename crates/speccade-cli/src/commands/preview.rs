@@ -1270,4 +1270,102 @@ mod tests {
         let (_frames, delays, _do_loop) = extract_mesh_sprite_frames(&atlas, &metadata, Some(0));
         assert_eq!(delays, vec![83, 83]);
     }
+
+    #[test]
+    fn test_gif_preview_end_to_end_flipbook() {
+        let tmp = tempfile::tempdir().unwrap();
+
+        // Create a minimal 4-frame flipbook atlas (2x2 grid, 32x32 frames => 64x64 atlas)
+        let mut atlas = RgbaImage::new(64, 64);
+        let colors = [
+            [255, 0, 0, 255],
+            [0, 255, 0, 255],
+            [0, 0, 255, 255],
+            [255, 255, 0, 255],
+        ];
+
+        for (idx, color) in colors.iter().enumerate() {
+            let bx = (idx % 2) as u32 * 32;
+            let by = (idx / 2) as u32 * 32;
+            for y in 0..32u32 {
+                for x in 0..32u32 {
+                    atlas.put_pixel(bx + x, by + y, Rgba(*color));
+                }
+            }
+        }
+
+        let atlas_path = tmp.path().join("atlas.png");
+        atlas.save(&atlas_path).unwrap();
+
+        // Metadata JSON compatible with speccade_spec::recipe::vfx::VfxFlipbookMetadata
+        let metadata = serde_json::json!({
+            "atlas_width": 64,
+            "atlas_height": 64,
+            "padding": 0,
+            "effect": "explosion",
+            "frame_count": 4,
+            "frame_size": [32, 32],
+            "fps": 10,
+            "loop_mode": "loop",
+            "total_duration_ms": 400,
+            "frames": [
+                { "index": 0, "u_min": 0.0, "v_min": 0.0, "u_max": 0.5, "v_max": 0.5, "width": 32, "height": 32 },
+                { "index": 1, "u_min": 0.5, "v_min": 0.0, "u_max": 1.0, "v_max": 0.5, "width": 32, "height": 32 },
+                { "index": 2, "u_min": 0.0, "v_min": 0.5, "u_max": 0.5, "v_max": 1.0, "width": 32, "height": 32 },
+                { "index": 3, "u_min": 0.5, "v_min": 0.5, "u_max": 1.0, "v_max": 1.0, "width": 32, "height": 32 }
+            ]
+        });
+
+        let metadata_path = tmp.path().join("atlas.json");
+        std::fs::write(
+            &metadata_path,
+            serde_json::to_string_pretty(&metadata).unwrap(),
+        )
+        .unwrap();
+
+        // Minimal spec referencing the atlas + metadata.
+        let spec = serde_json::json!({
+            "spec_version": 1,
+            "asset_id": "test-flipbook",
+            "asset_type": "vfx",
+            "license": "CC0-1.0",
+            "seed": 42,
+            "outputs": [
+                { "kind": "primary", "format": "png", "path": "atlas.png" },
+                { "kind": "metadata", "format": "json", "path": "atlas.json" }
+            ],
+            "recipe": {
+                "kind": "vfx.flipbook_v1",
+                "params": {
+                    "resolution": [64, 64],
+                    "effect": "explosion",
+                    "frame_count": 4,
+                    "frame_size": [32, 32],
+                    "fps": 10,
+                    "loop_mode": "loop"
+                }
+            }
+        });
+
+        let spec_path = tmp.path().join("test.spec.json");
+        std::fs::write(&spec_path, serde_json::to_string_pretty(&spec).unwrap()).unwrap();
+
+        let gif_path = tmp.path().join("test.preview.gif");
+        let code = run(
+            spec_path.to_str().unwrap(),
+            Some(tmp.path().to_str().unwrap()),
+            true,
+            Some(gif_path.to_str().unwrap()),
+            None,
+            None,
+        )
+        .unwrap();
+
+        assert_eq!(code, ExitCode::SUCCESS);
+        assert!(gif_path.exists());
+
+        let data = std::fs::read(&gif_path).unwrap();
+        assert_eq!(&data[0..3], b"GIF");
+        assert!(data.len() > 100);
+    }
 }
