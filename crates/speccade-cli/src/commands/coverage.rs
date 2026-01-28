@@ -434,16 +434,122 @@ pub fn generate_coverage_report() -> Result<CoverageReport> {
 /// * `strict` - If true, exit with code 1 when coverage < 100%
 /// * `output` - Optional output path (default: docs/coverage/feature-coverage.yaml)
 pub fn run_generate(strict: bool, output: Option<&str>) -> Result<ExitCode> {
+    use colored::Colorize;
+
     let output_path = output.unwrap_or("docs/coverage/feature-coverage.yaml");
-    println!("coverage generate: output={}, strict={}", output_path, strict);
-    println!("Not yet implemented");
+
+    println!("{}", "Generating feature coverage report...".cyan().bold());
+
+    let report = generate_coverage_report()?;
+
+    // Create output directory if needed
+    if let Some(parent) = Path::new(output_path).parent() {
+        if !parent.as_os_str().is_empty() {
+            fs::create_dir_all(parent)?;
+        }
+    }
+
+    // Write YAML
+    let yaml = serde_yaml::to_string(&report)?;
+    fs::write(output_path, &yaml)?;
+
+    println!(
+        "{} Coverage report written to: {}",
+        "OK".green().bold(),
+        output_path
+    );
+    println!();
+    print_summary(&report.summary);
+
+    if !report.uncovered_features.is_empty() {
+        println!();
+        println!("{}", "Uncovered features:".red().bold());
+        for feature in report.uncovered_features.iter().take(20) {
+            println!("  - {}", feature);
+        }
+        if report.uncovered_features.len() > 20 {
+            println!("  ... and {} more", report.uncovered_features.len() - 20);
+        }
+    }
+
+    if strict && report.summary.uncovered > 0 {
+        println!();
+        println!(
+            "{} {} features have no golden examples.",
+            "BLOCKING:".red().bold(),
+            report.summary.uncovered
+        );
+        println!("Create examples in golden/starlark/ or golden/speccade/specs/.");
+        return Ok(ExitCode::FAILURE);
+    }
+
     Ok(ExitCode::SUCCESS)
+}
+
+fn print_summary(summary: &CoverageSummary) {
+    use colored::Colorize;
+
+    println!("{}", "Coverage Summary".bold());
+    println!("  Total features: {}", summary.total_features);
+    println!(
+        "  Covered: {} ({:.1}%)",
+        summary.covered, summary.coverage_percent
+    );
+    println!("  Uncovered: {}", summary.uncovered);
 }
 
 /// Run the coverage report subcommand
 pub fn run_report() -> Result<ExitCode> {
-    println!("coverage report");
-    println!("Not yet implemented");
+    use colored::Colorize;
+
+    println!("{}", "Feature Coverage Report".cyan().bold());
+    println!("{}", "=======================".cyan());
+    println!();
+
+    let report = generate_coverage_report()?;
+
+    print_summary(&report.summary);
+    println!();
+
+    // Print by category
+    println!("{}", "By Category:".bold());
+
+    let mut categories: Vec<_> = report.stdlib.keys().collect();
+    categories.sort();
+
+    for category in categories {
+        let funcs = &report.stdlib[category];
+        let cat_covered = funcs.iter().filter(|f| f.covered).count();
+        let cat_total = funcs.len();
+        let cat_percent = if cat_total > 0 {
+            (cat_covered as f64 / cat_total as f64) * 100.0
+        } else {
+            100.0
+        };
+
+        let status = if cat_covered == cat_total {
+            "OK".green()
+        } else {
+            "MISSING".red()
+        };
+
+        println!(
+            "  {}: {}/{} ({:.0}%) {}",
+            category, cat_covered, cat_total, cat_percent, status
+        );
+    }
+
+    if !report.uncovered_features.is_empty() {
+        println!();
+        println!("{}", "Uncovered Features:".red().bold());
+        for feature in report.uncovered_features.iter().take(20) {
+            println!("  - {}", feature);
+        }
+        if report.uncovered_features.len() > 20 {
+            println!("  ... and {} more", report.uncovered_features.len() - 20);
+        }
+    }
+
     Ok(ExitCode::SUCCESS)
 }
 
