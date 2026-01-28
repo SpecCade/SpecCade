@@ -24,6 +24,7 @@ Deterministic asset pipeline: takes a `Spec` (JSON or Starlark) and produces art
 - `crates/speccade-lint/` - semantic quality lint rules + analyzers
 - `crates/speccade-editor/` and `editor/` - Tauri editor + real-time preview
 - `crates/speccade-tests/` - integration + determinism validation
+- `blender/` - Python scripts for Blender subprocess (see `blender/speccade/README.md`)
 - `schemas/` - JSON schemas (derived; keep aligned with `speccade-spec`)
 - `golden/` - golden outputs used by tests
 - `packs/` - example packs/inputs

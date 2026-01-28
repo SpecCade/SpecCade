@@ -29,6 +29,10 @@ speccade/
 │   ├── speccade-lint             # Semantic quality lints for generated assets
 │   ├── speccade-editor           # Tauri editor backend (IPC + file watching)
 │   └── speccade-tests            # Integration + determinism validation
+├── blender/
+│   ├── entrypoint.py             # Thin shim (imports speccade.main)
+│   ├── structural_metrics.py     # LLM-friendly 3D feedback
+│   └── speccade/                 # Modular Python package (21 modules)
 ├── editor/                       # Tauri editor frontend (TypeScript)
 ├── schemas/                      # JSON schemas
 ├── packs/                        # Example packs/inputs
@@ -103,6 +107,32 @@ Generates meshes and animations via Blender subprocess (Tier 2).
 - `static_mesh` - Static mesh generation
 - `skeletal_mesh` - Rigged character meshes
 - `animation` - Skeletal animation clips
+
+### blender/ (Python)
+Python scripts executed by Blender subprocess. Entry point is `blender/entrypoint.py` which delegates to the `blender/speccade/` package.
+
+**Package structure (`blender/speccade/`):**
+- `main.py` - CLI parsing and handler dispatch
+- `report.py` - Report generation
+- `scene.py` - Scene setup and primitives
+- `metrics.py` - Mesh/skeletal/animation metrics
+- `modifiers.py` - Blender modifier application
+- `uv_mapping.py` - UV projection and texel density
+- `normals.py` - Normal/shading settings
+- `materials.py` - Material creation
+- `skeleton_presets.py` - Humanoid bone preset constants
+- `skeleton.py` - Armature creation
+- `body_parts.py` - Mesh part creation and skinning
+- `ik_fk.py` - IK chains and IK/FK switching
+- `constraints.py` - Bone constraints
+- `controls.py` - Space switch, fingers, foot system
+- `animation.py` - Animation creation and baking
+- `rig_config.py` - Widgets, bone collections, colors
+- `export.py` - GLB export, LOD, collision
+- `rendering.py` - Camera, preview, atlas
+- `handlers_mesh.py` - Static mesh handlers
+- `handlers_skeletal.py` - Skeletal mesh handlers
+- `handlers_render.py` - Render/validation handlers
 
 ### speccade-tests
 Integration tests and determinism validation framework.

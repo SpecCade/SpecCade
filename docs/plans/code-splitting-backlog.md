@@ -2,6 +2,12 @@
 
 Files to split in future work, identified by line count.
 
+## Completed
+
+| File | Original Lines | Result | Date |
+|------|---------------:|--------|------|
+| `blender/entrypoint.py` | 8,708 | Split into `blender/speccade/` package (21 modules) | 2026-01-29 |
+
 ## Rust (>1,500 lines)
 
 | File | Lines | Split Strategy |
