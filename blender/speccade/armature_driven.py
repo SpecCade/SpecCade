@@ -7,6 +7,7 @@ This module is the dedicated home for the Blender implementation of the
 from __future__ import annotations
 
 import copy
+import math
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -67,6 +68,60 @@ def _resolve_mirrors(defs: dict) -> dict:
             raise TypeError("defs keys must be str")
         resolved[key] = copy.deepcopy(resolve_base(key))
     return resolved
+
+
+def _resolve_bone_relative_length(value, *, bone_length: float):
+    """Decode BoneRelativeLength values.
+
+    Supported forms:
+    - number: relative length, scaled by bone_length
+    - [x, y]: relative2 length, scaled by bone_length
+    - {"absolute": a}: absolute length
+    """
+
+    if isinstance(bone_length, bool) or not isinstance(bone_length, (int, float)):
+        raise TypeError("bone_length must be a float")
+    bone_length_f = float(bone_length)
+    if not math.isfinite(bone_length_f) or bone_length_f <= 0.0:
+        raise ValueError("bone_length must be a finite, positive number")
+
+    if isinstance(value, bool):
+        raise TypeError("value must not be a bool")
+
+    if isinstance(value, (int, float)):
+        out = float(value) * bone_length_f
+        if not math.isfinite(out) or out <= 0.0:
+            raise ValueError("resolved length must be a finite, positive number")
+        return out
+
+    if isinstance(value, (list, tuple)):
+        if len(value) != 2:
+            raise TypeError("relative2 value must be a list/tuple of length 2")
+        x, y = value
+        if isinstance(x, bool) or not isinstance(x, (int, float)):
+            raise TypeError("relative2[0] must be a number")
+        if isinstance(y, bool) or not isinstance(y, (int, float)):
+            raise TypeError("relative2[1] must be a number")
+        out_x = float(x) * bone_length_f
+        out_y = float(y) * bone_length_f
+        if not math.isfinite(out_x) or out_x <= 0.0:
+            raise ValueError("resolved length must be a finite, positive number")
+        if not math.isfinite(out_y) or out_y <= 0.0:
+            raise ValueError("resolved length must be a finite, positive number")
+        return (out_x, out_y)
+
+    if isinstance(value, dict):
+        if set(value.keys()) != {"absolute"}:
+            raise TypeError("absolute form must be exactly {'absolute': ...}")
+        a = value.get("absolute")
+        if isinstance(a, bool) or not isinstance(a, (int, float)):
+            raise TypeError("absolute value must be a number")
+        out = float(a)
+        if not math.isfinite(out) or out <= 0.0:
+            raise ValueError("resolved length must be a finite, positive number")
+        return out
+
+    raise TypeError("unsupported BoneRelativeLength form")
 
 
 def build_armature_driven_character_mesh(*, armature, params: dict, out_root) -> object:
