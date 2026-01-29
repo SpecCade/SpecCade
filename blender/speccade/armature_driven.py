@@ -8,10 +8,49 @@ from __future__ import annotations
 
 import copy
 import math
+import re
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:  # pragma: no cover
     import bpy  # type: ignore
+
+
+_PROFILE_RE = re.compile(r"^(circle|hexagon)\((\d+)\)$")
+
+
+def _parse_profile(profile: str | None) -> tuple[str, int]:
+    """Parse a profile string used by armature-driven recipes.
+
+    Supported forms:
+    - None -> ("circle", 12)
+    - "circle(N)" -> ("circle", N)
+    - "hexagon(N)" -> ("circle", N)
+    - "square" -> ("square", 4)
+    - "rectangle" -> ("rectangle", 4)
+    """
+
+    if profile is None:
+        return ("circle", 12)
+
+    if not isinstance(profile, str):
+        raise TypeError(f"profile must be a str or None, got {type(profile).__name__}: {profile!r}")
+
+    s = profile.strip()
+    if s == "square":
+        return ("square", 4)
+    if s == "rectangle":
+        return ("rectangle", 4)
+
+    m = _PROFILE_RE.match(s)
+    if m is not None:
+        kind, n_s = m.group(1), m.group(2)
+        n = int(n_s)
+        if n < 3:
+            raise ValueError(f"profile segments must be >= 3, got {n}")
+        if kind in ("circle", "hexagon"):
+            return ("circle", n)
+
+    raise ValueError(f"unknown profile string: {profile!r}")
 
 
 def _resolve_mirrors(defs: dict) -> dict:
