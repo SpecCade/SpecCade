@@ -198,4 +198,155 @@ def build_armature_driven_character_mesh(*, armature, params: dict, out_root) ->
         The generated mesh object.
     """
 
-    raise NotImplementedError
+    try:
+        import bpy  # type: ignore
+    except Exception as e:  # pragma: no cover
+        raise RuntimeError("Blender Python (bpy) is required") from e
+
+    def _select_only(objs, *, active=None) -> None:
+        bpy.ops.object.select_all(action='DESELECT')
+        for obj in objs:
+            obj.select_set(True)
+        if active is not None:
+            bpy.context.view_layer.objects.active = active
+
+    def _ensure_object_mode() -> None:
+        try:
+            if bpy.context.mode != 'OBJECT':
+                bpy.ops.object.mode_set(mode='OBJECT')
+        except Exception:
+            # In background mode, mode switching can fail if no active object.
+            pass
+
+    def _apply_rotation_scale(obj) -> None:
+        _ensure_object_mode()
+        _select_only([obj], active=obj)
+        bpy.ops.object.transform_apply(location=False, rotation=True, scale=True)
+
+    def _recalculate_normals(obj) -> None:
+        _ensure_object_mode()
+        _select_only([obj], active=obj)
+        bpy.ops.object.mode_set(mode='EDIT')
+        bpy.ops.mesh.select_all(action='SELECT')
+        bpy.ops.mesh.normals_make_consistent(inside=False)
+        bpy.ops.object.mode_set(mode='OBJECT')
+
+    def _ensure_armature_modifier(mesh_obj, armature_obj) -> None:
+        for mod in mesh_obj.modifiers:
+            if mod.type == 'ARMATURE':
+                mod.object = armature_obj
+                return
+        mod = mesh_obj.modifiers.new(name='Armature', type='ARMATURE')
+        mod.object = armature_obj
+
+    def _parent_mesh_to_armature(mesh_obj, armature_obj) -> None:
+        _ensure_object_mode()
+        _select_only([mesh_obj, armature_obj], active=armature_obj)
+        bpy.ops.object.parent_set(type='ARMATURE')
+        _ensure_armature_modifier(mesh_obj, armature_obj)
+
+    def _ensure_uvs(mesh_obj) -> None:
+        if len(mesh_obj.data.uv_layers) == 0:
+            mesh_obj.data.uv_layers.new(name='UVMap')
+
+        _ensure_object_mode()
+        _select_only([mesh_obj], active=mesh_obj)
+        bpy.ops.object.mode_set(mode='EDIT')
+        bpy.ops.mesh.select_all(action='SELECT')
+        try:
+            bpy.ops.uv.smart_project(island_margin=0.02)
+        except Exception:
+            pass
+        bpy.ops.object.mode_set(mode='OBJECT')
+
+    if not isinstance(params, dict):
+        raise TypeError("params must be a dict")
+
+    bone_meshes = _resolve_mirrors(params.get('bone_meshes', {}) or {})
+    if not bone_meshes:
+        raise ValueError("params.bone_meshes is required")
+
+    _ensure_object_mode()
+
+    segment_objs = []
+
+    for bone_name, mesh_spec in sorted(bone_meshes.items(), key=lambda kv: kv[0]):
+        if not isinstance(bone_name, str) or not bone_name:
+            raise TypeError(f"bone_meshes keys must be non-empty str, got {bone_name!r}")
+        if not isinstance(mesh_spec, dict):
+            raise TypeError(f"bone_meshes['{bone_name}'] must be a dict")
+
+        bone = armature.data.bones.get(bone_name)
+        if bone is None:
+            raise ValueError(f"bone '{bone_name}' not found in armature")
+
+        head_w = armature.matrix_world @ bone.head_local
+        tail_w = armature.matrix_world @ bone.tail_local
+        axis = tail_w - head_w
+        length = float(axis.length)
+        if not math.isfinite(length) or length < 1e-6:
+            raise ValueError(f"bone '{bone_name}' has near-zero length: {length!r}")
+        axis_n = axis.normalized()
+        mid = (head_w + tail_w) * 0.5
+
+        kind, segments = _parse_profile(mesh_spec.get('profile'))
+
+        radius_val = _resolve_bone_relative_length(
+            mesh_spec.get('profile_radius', 0.15),
+            bone_length=length,
+        )
+        if isinstance(radius_val, tuple):
+            rx, ry = radius_val
+        else:
+            rx, ry = (radius_val, radius_val)
+        rx = float(rx)
+        ry = float(ry)
+
+        if not math.isfinite(rx) or rx <= 0.0:
+            raise ValueError(f"profile_radius.x must be > 0 for '{bone_name}', got {rx!r}")
+        if not math.isfinite(ry) or ry <= 0.0:
+            raise ValueError(f"profile_radius.y must be > 0 for '{bone_name}', got {ry!r}")
+
+        if kind == 'circle':
+            bpy.ops.mesh.primitive_cylinder_add(
+                vertices=int(segments),
+                radius=1.0,
+                depth=1.0,
+                location=mid,
+            )
+            obj = bpy.context.active_object
+            obj.scale = (rx, ry, length)
+        elif kind in ('square', 'rectangle'):
+            bpy.ops.mesh.primitive_cube_add(size=1.0, location=mid)
+            obj = bpy.context.active_object
+            obj.scale = (rx * 2.0, ry * 2.0, length)
+        else:
+            raise ValueError(f"unsupported profile kind: {kind!r}")
+
+        obj.rotation_mode = 'QUATERNION'
+        obj.rotation_quaternion = axis_n.to_track_quat('Z', 'Y')
+        _apply_rotation_scale(obj)
+
+        vg = obj.vertex_groups.get(bone_name)
+        if vg is None:
+            vg = obj.vertex_groups.new(name=bone_name)
+        indices = [v.index for v in obj.data.vertices]
+        if indices:
+            vg.add(indices, 1.0, 'REPLACE')
+
+        segment_objs.append(obj)
+
+    if not segment_objs:
+        raise ValueError("No segments generated")
+
+    _ensure_object_mode()
+    _select_only(segment_objs, active=segment_objs[0])
+    bpy.ops.object.join()
+    combined = bpy.context.active_object
+    combined.name = 'Character'
+
+    _parent_mesh_to_armature(combined, armature)
+    _ensure_uvs(combined)
+    _recalculate_normals(combined)
+
+    return combined

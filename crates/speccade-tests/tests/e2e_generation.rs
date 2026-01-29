@@ -962,6 +962,18 @@ fn test_generate_skeletal_mesh_armature_driven_full_features_smoke() {
         gen_result.metrics.uv_layer_count.is_some(),
         "Expected uv_layer_count metric"
     );
+
+    let uv_layers = gen_result.metrics.uv_layer_count.unwrap_or(0);
+    assert!(uv_layers > 0, "Expected uv_layer_count > 0");
+
+    let unweighted = gen_result
+        .metrics
+        .unweighted_vertex_count
+        .unwrap_or(u32::MAX);
+    assert_eq!(unweighted, 0, "Expected unweighted_vertex_count == 0");
+
+    let max_influences = gen_result.metrics.max_bone_influences.unwrap_or(0);
+    assert_eq!(max_influences, 1, "Expected max_bone_influences == 1");
 }
 
 /// Test animation generation with Blender.
