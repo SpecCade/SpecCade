@@ -1,0 +1,30 @@
+# Organ instrument - additive synthesis with drawbar-style partials
+
+spec(
+    asset_id = "organ_additive",
+    asset_type = "audio",
+    license = "CC0-1.0",
+    seed = 2004,
+    description = "Organ instrument - additive synthesis with drawbar-style partials",
+    outputs = [output("organ_additive.wav", "wav")],
+    recipe = {
+        "kind": "audio_v1",
+        "params": {
+            "base_note": "C4",
+            "duration_seconds": 1.0,
+            "sample_rate": 44100,
+            "layers": [
+                audio_layer(
+                    synthesis = {
+                        "type": "additive",
+                        "base_freq": 261.63,
+                        "harmonics": [0.8, 1.0, 0.9, 0.7, 0.5, 0.3, 0.2]
+                    },
+                    envelope = envelope(0.01, 0.05, 0.9, 0.1),
+                    volume = 1.0,
+                    pan = 0.0
+                )
+            ]
+        }
+    }
+)

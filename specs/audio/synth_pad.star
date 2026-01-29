@@ -1,0 +1,39 @@
+# Detuned sawtooth synth pad - multi-oscillator with detune and phase
+
+spec(
+    asset_id = "synth_pad",
+    asset_type = "audio",
+    license = "CC0-1.0",
+    seed = 1011,
+    description = "Detuned sawtooth synth pad - multi-oscillator with detune and phase",
+    outputs = [output("synth_pad.wav", "wav")],
+    recipe = {
+        "kind": "audio_v1",
+        "params": {
+            "duration_seconds": 1.0,
+            "sample_rate": 44100,
+            "layers": [
+                audio_layer(
+                    synthesis = {
+                        "type": "multi_oscillator",
+                        "frequency": 220.0,
+                        "oscillators": [
+                            {"waveform": "sawtooth", "volume": 0.5, "detune": 0.0, "phase": 0.0},
+                            {"waveform": "sawtooth", "volume": 0.5, "detune": 7.0, "phase": 1.57},
+                            {"waveform": "sawtooth", "volume": 0.5, "detune": -7.0, "phase": 3.14}
+                        ]
+                    },
+                    envelope = envelope(0.15, 0.2, 0.7, 0.3),
+                    volume = 0.7,
+                    pan = 0.0
+                )
+            ],
+            "master_filter": {
+                "type": "lowpass",
+                "cutoff": 3000.0,
+                "resonance": 0.8,
+                "cutoff_end": 800.0
+            }
+        }
+    }
+)

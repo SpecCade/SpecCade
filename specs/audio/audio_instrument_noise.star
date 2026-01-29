@@ -1,0 +1,35 @@
+# Golden test for noise burst synthesis - exercises noise_type (white, pink, brown) and filter (lowpass, highpass, bandpass)
+
+spec(
+    asset_id = "audio-instrument-noise-golden",
+    asset_type = "audio",
+    license = "CC0-1.0",
+    seed = 999017,
+    description = "Golden test for noise burst synthesis - exercises noise_type (white, pink, brown) and filter (lowpass, highpass, bandpass)",
+    outputs = [output("audio_instrument_noise.wav", "wav")],
+    recipe = {
+        "kind": "audio_v1",
+        "params": {
+            "base_note": "C4",
+            "duration_seconds": 0.3,
+            "sample_rate": 44100,
+            "layers": [
+                audio_layer(
+                    synthesis = {
+                        "type": "noise_burst",
+                        "noise_type": "pink",
+                        "filter": {
+                            "type": "bandpass",
+                            "center": 2000.0,
+                            "resonance": 0.707,
+                            "center_end": 500.0
+                        }
+                    },
+                    envelope = envelope(0.001, 0.05, 0.1, 0.2),
+                    volume = 1.0,
+                    pan = 0.0
+                )
+            ]
+        }
+    }
+)
