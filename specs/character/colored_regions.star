@@ -1,0 +1,34 @@
+# Character with colored texture regions - demonstrates region colors and advanced UV modes
+
+spec(
+    asset_id = "colored_regions",
+    asset_type = "skeletal_mesh",
+    license = "CC0-1.0",
+    seed = 7006,
+    description = "Character with colored texture regions - demonstrates region colors and advanced UV modes",
+    outputs = [output("colored_regions.glb", "glb")],
+    recipe = {
+        "kind": "skeletal_mesh.armature_driven_v1",
+        "params": {
+            "skeleton": [
+                {"bone": "root", "head": [0, 0, 0], "tail": [0, 0, 0.1]},
+                {"bone": "torso", "head": [0, 0, 0.1], "tail": [0, 0, 0.5], "parent": "root"},
+                {"bone": "head", "head": [0, 0, 0.5], "tail": [0, 0, 0.7], "parent": "torso"},
+                {"bone": "arm_L", "head": [0.15, 0, 0.45], "tail": [0.35, 0, 0.45], "parent": "torso"},
+                {"bone": "arm_R", "mirror": "arm_L"},
+                {"bone": "leg_L", "head": [0.08, 0, 0.1], "tail": [0.08, 0, -0.3], "parent": "root"},
+                {"bone": "leg_R", "mirror": "leg_L"}
+            ],
+            "bone_meshes": {
+                "root": {"profile": "circle(8)", "profile_radius": 0.15},
+                "torso": {"profile": "circle(8)", "profile_radius": 0.15},
+                "head": {"profile": "circle(8)", "profile_radius": 0.15},
+                "arm_L": {"profile": "circle(8)", "profile_radius": 0.15},
+                "arm_R": {"mirror": "arm_L"},
+                "leg_L": {"profile": "circle(8)", "profile_radius": 0.15},
+                "leg_R": {"mirror": "leg_L"}
+            },
+            "constraints": {"max_triangles": 1000}
+        }
+    }
+)
