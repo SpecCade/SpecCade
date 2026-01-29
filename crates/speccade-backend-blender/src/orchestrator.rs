@@ -203,6 +203,17 @@ impl Orchestrator {
             });
         }
 
+        // Prefer a stable, on-disk entrypoint in the source tree.
+        // This avoids breaking __file__-relative imports when tests run from a different CWD.
+        let source_tree_entrypoint =
+            PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../blender/entrypoint.py");
+        if source_tree_entrypoint.exists() {
+            return Ok(ResolvedEntrypoint {
+                path: source_tree_entrypoint,
+                _tempfile: None,
+            });
+        }
+
         // Environment override (fallback).
         if let Ok(path) = std::env::var("SPECCADE_BLENDER_ENTRYPOINT") {
             let path = PathBuf::from(path);
@@ -488,10 +499,10 @@ mod tests {
     }
 
     #[test]
-    fn test_resolve_entrypoint_falls_back_to_embedded() {
+    fn test_resolve_entrypoint_uses_source_tree_entrypoint_when_config_missing() {
         // If the user has configured an environment override, don't stomp it.
         if std::env::var_os("SPECCADE_BLENDER_ENTRYPOINT").is_some() {
-            eprintln!("SPECCADE_BLENDER_ENTRYPOINT is set; skipping embedded entrypoint test");
+            eprintln!("SPECCADE_BLENDER_ENTRYPOINT is set; skipping entrypoint resolution test");
             return;
         }
 
@@ -499,9 +510,52 @@ mod tests {
         let orchestrator = Orchestrator::with_config(config);
 
         let entrypoint = orchestrator.resolve_entrypoint().unwrap();
-        assert!(entrypoint.path.exists());
 
+        let expected =
+            PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../blender/entrypoint.py");
+        if expected.exists() {
+            assert_eq!(entrypoint.path, expected);
+            return;
+        }
+
+        // In environments where the on-disk entrypoint is unavailable (e.g. published crate
+        // artifacts), ensure we still fall back to a working embedded copy.
+        assert!(entrypoint.path.exists());
         let content = std::fs::read_to_string(&entrypoint.path).unwrap();
         assert!(content.contains("SpecCade Blender Entrypoint"));
+    }
+
+    #[test]
+    fn test_resolve_entrypoint_prefers_repo_entrypoint_even_when_cwd_is_elsewhere() {
+        // If the user has configured an environment override, don't stomp it.
+        if std::env::var_os("SPECCADE_BLENDER_ENTRYPOINT").is_some() {
+            eprintln!("SPECCADE_BLENDER_ENTRYPOINT is set; skipping entrypoint resolution test");
+            return;
+        }
+
+        struct DirGuard {
+            old: PathBuf,
+        }
+
+        impl Drop for DirGuard {
+            fn drop(&mut self) {
+                let _ = std::env::set_current_dir(&self.old);
+            }
+        }
+
+        let old_dir = std::env::current_dir().unwrap();
+        let _guard = DirGuard { old: old_dir };
+
+        let temp_dir = tempfile::tempdir().unwrap();
+        std::env::set_current_dir(temp_dir.path()).unwrap();
+
+        let orchestrator = Orchestrator::new();
+        let entrypoint = orchestrator.resolve_entrypoint().unwrap();
+
+        let expected =
+            PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../blender/entrypoint.py");
+        assert!(expected.is_absolute());
+        assert!(expected.exists());
+        assert_eq!(entrypoint.path, expected);
     }
 }
