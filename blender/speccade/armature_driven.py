@@ -70,28 +70,36 @@ def _resolve_mirrors(defs: dict) -> dict:
     return resolved
 
 
-def _resolve_bone_relative_length(value, *, bone_length: float):
+def _resolve_bone_relative_length(
+    value, *, bone_length: float
+) -> float | tuple[float, float]:
     """Decode BoneRelativeLength values.
 
     Supported forms:
-    - number: relative length, scaled by bone_length
-    - [x, y]: relative2 length, scaled by bone_length
-    - {"absolute": a}: absolute length
+    - number: relative length, scaled by bone_length -> float
+    - [x, y] / (x, y): relative2 length, scaled by bone_length -> (float, float)
+    - {"absolute": a}: absolute length -> float
     """
 
     if isinstance(bone_length, bool) or not isinstance(bone_length, (int, float)):
-        raise TypeError("bone_length must be a float")
+        raise TypeError(
+            f"bone_length must be a number, got {type(bone_length).__name__}: {bone_length!r}"
+        )
     bone_length_f = float(bone_length)
     if not math.isfinite(bone_length_f) or bone_length_f <= 0.0:
-        raise ValueError("bone_length must be a finite, positive number")
+        raise ValueError(
+            f"bone_length must be a finite, positive number, got {bone_length_f!r}"
+        )
 
     if isinstance(value, bool):
-        raise TypeError("value must not be a bool")
+        raise TypeError(f"value must be a number/dict/list/tuple, got bool: {value!r}")
 
     if isinstance(value, (int, float)):
         out = float(value) * bone_length_f
         if not math.isfinite(out) or out <= 0.0:
-            raise ValueError("resolved length must be a finite, positive number")
+            raise ValueError(
+                f"resolved length must be a finite, positive number, got {out!r}"
+            )
         return out
 
     if isinstance(value, (list, tuple)):
@@ -105,23 +113,36 @@ def _resolve_bone_relative_length(value, *, bone_length: float):
         out_x = float(x) * bone_length_f
         out_y = float(y) * bone_length_f
         if not math.isfinite(out_x) or out_x <= 0.0:
-            raise ValueError("resolved length must be a finite, positive number")
+            raise ValueError(
+                f"resolved relative2[0] length must be a finite, positive number, got {out_x!r}"
+            )
         if not math.isfinite(out_y) or out_y <= 0.0:
-            raise ValueError("resolved length must be a finite, positive number")
+            raise ValueError(
+                f"resolved relative2[1] length must be a finite, positive number, got {out_y!r}"
+            )
         return (out_x, out_y)
 
     if isinstance(value, dict):
         if set(value.keys()) != {"absolute"}:
-            raise TypeError("absolute form must be exactly {'absolute': ...}")
+            keys = sorted(value.keys())
+            raise ValueError(
+                f"absolute form dict must have exactly {{'absolute'}}, got keys {keys!r}"
+            )
         a = value.get("absolute")
         if isinstance(a, bool) or not isinstance(a, (int, float)):
-            raise TypeError("absolute value must be a number")
+            raise TypeError(
+                f"absolute value must be a number, got {type(a).__name__}: {a!r}"
+            )
         out = float(a)
         if not math.isfinite(out) or out <= 0.0:
-            raise ValueError("resolved length must be a finite, positive number")
+            raise ValueError(
+                f"resolved length must be a finite, positive number, got {out!r}"
+            )
         return out
 
-    raise TypeError("unsupported BoneRelativeLength form")
+    raise TypeError(
+        f"unsupported BoneRelativeLength form: {type(value).__name__}: {value!r}"
+    )
 
 
 def build_armature_driven_character_mesh(*, armature, params: dict, out_root) -> object:
