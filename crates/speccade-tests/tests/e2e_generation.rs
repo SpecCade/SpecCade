@@ -976,6 +976,133 @@ fn test_generate_skeletal_mesh_armature_driven_full_features_smoke() {
     assert_eq!(max_influences, 1, "Expected max_bone_influences == 1");
 }
 
+/// `material_index` on bone meshes and attachments should produce multiple materials.
+///
+/// This is intentionally ignored by default because it requires Blender.
+#[test]
+#[ignore] // Run with SPECCADE_RUN_BLENDER_TESTS=1
+fn test_generate_skeletal_mesh_armature_driven_material_index_face_assignment() {
+    if !should_run_blender_tests() {
+        println!("Blender tests not enabled, skipping");
+        return;
+    }
+
+    if !is_blender_available() {
+        println!("Blender not available, skipping");
+        return;
+    }
+
+    let harness = TestHarness::new();
+
+    let spec = Spec::builder(
+        "test-armature-driven-material-index-01",
+        AssetType::SkeletalMesh,
+    )
+    .license("CC0-1.0")
+    .seed(1)
+    .output(OutputSpec::primary(
+        OutputFormat::Glb,
+        "characters/armature_driven_material_index.glb",
+    ))
+    .recipe(Recipe::new(
+        "skeletal_mesh.armature_driven_v1",
+        serde_json::json!({
+            "skeleton_preset": "humanoid_basic_v1",
+            "material_slots": [
+                { "name": "mat0", "base_color": [0.8, 0.8, 0.8, 1.0], "metallic": 0.0, "roughness": 0.5 },
+                { "name": "mat1", "base_color": [0.2, 0.2, 0.2, 1.0], "metallic": 0.0, "roughness": 0.9 }
+            ],
+            "export": {
+                "include_armature": true,
+                "include_normals": true,
+                "include_uvs": true,
+                "triangulate": true,
+                "include_skin_weights": true,
+                "save_blend": false
+            },
+            "bone_meshes": {
+                "spine": {
+                    "profile": "rectangle",
+                    "profile_radius": [0.14, 0.06],
+                    "cap_start": true,
+                    "cap_end": true,
+                    "material_index": 0,
+                    "attachments": [
+                        {
+                            "primitive": "cube",
+                            "dimensions": [0.12, 0.08, 0.06],
+                            "offset": [0.0, 0.0, 0.5],
+                            "material_index": 1
+                        }
+                    ]
+                }
+            }
+        }),
+    ))
+    .build();
+
+    let result = speccade_backend_blender::skeletal_mesh::generate(&spec, harness.path());
+    assert!(
+        result.is_ok(),
+        "Armature-driven skeletal mesh generation failed: {:?}",
+        result.err()
+    );
+
+    let gen_result = result.unwrap();
+    assert_eq!(gen_result.metrics.material_slot_count, Some(2));
+
+    let expected_out = harness
+        .path()
+        .join("characters")
+        .join("armature_driven_material_index.glb");
+    assert!(
+        expected_out.exists(),
+        "Primary GLB missing: {}",
+        expected_out.display()
+    );
+
+    // Proxy assertion for face assignment: Blender's glTF exporter splits mesh
+    // primitives by material usage. If our faces are assigned to both
+    // material indices, we should see both materials referenced in primitives.
+    let glb = fs::read(&expected_out).expect("Failed to read output GLB");
+    assert!(glb.len() >= 20, "GLB too small: {} bytes", glb.len());
+
+    let json_chunk_len = u32::from_le_bytes([glb[12], glb[13], glb[14], glb[15]]) as usize;
+    let json_start = 12 + 8;
+    let json_end = json_start + json_chunk_len;
+    assert!(
+        json_end <= glb.len(),
+        "GLB JSON chunk out of bounds: end={} len={}",
+        json_end,
+        glb.len()
+    );
+
+    let json_text =
+        std::str::from_utf8(&glb[json_start..json_end]).expect("GLB JSON chunk is not valid UTF-8");
+    let gltf: serde_json::Value =
+        serde_json::from_str(json_text).expect("Failed to parse GLB JSON chunk");
+
+    let mut used_materials = std::collections::BTreeSet::<u32>::new();
+    if let Some(meshes) = gltf.get("meshes").and_then(|v| v.as_array()) {
+        for mesh in meshes {
+            let Some(prims) = mesh.get("primitives").and_then(|v| v.as_array()) else {
+                continue;
+            };
+            for prim in prims {
+                if let Some(mi) = prim.get("material").and_then(|v| v.as_u64()) {
+                    used_materials.insert(mi as u32);
+                }
+            }
+        }
+    }
+
+    assert!(
+        used_materials.contains(&0) && used_materials.contains(&1),
+        "Expected materials 0 and 1 to be used, got {:?}",
+        used_materials
+    );
+}
+
 /// `translate` / `rotate` on armature-driven bone meshes should affect output bounds.
 ///
 /// This is intentionally ignored by default because it requires Blender.

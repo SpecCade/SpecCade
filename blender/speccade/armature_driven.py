@@ -611,6 +611,87 @@ def build_armature_driven_character_mesh(*, armature, params: dict, out_root) ->
     if not isinstance(params, dict):
         raise TypeError("params must be a dict")
 
+    material_slots = None
+    material_slot_count = None
+    if 'material_slots' in params:
+        material_slots = params.get('material_slots')
+        if material_slots is None:
+            material_slots = []
+        if not isinstance(material_slots, list):
+            raise TypeError("params.material_slots must be a list")
+        material_slot_count = len(material_slots)
+
+    def _parse_material_index(value, *, default: int, name: str) -> int:
+        if value is None:
+            idx = int(default)
+        else:
+            if isinstance(value, bool) or not isinstance(value, int):
+                raise TypeError(f"{name} must be an int")
+            idx = int(value)
+
+        if idx < 0:
+            raise ValueError(f"{name} must be >= 0, got {idx!r}")
+
+        if material_slot_count is not None:
+            # If explicit slots are provided, enforce index bounds.
+            if material_slot_count == 0:
+                if idx != 0:
+                    raise ValueError(
+                        f"{name}={idx} out of range for material_slots length {material_slot_count}"
+                    )
+            else:
+                if idx >= material_slot_count:
+                    raise ValueError(
+                        f"{name}={idx} out of range for material_slots length {material_slot_count}"
+                    )
+
+        return idx
+
+    def _set_all_poly_material_index(mesh_obj, *, material_index: int) -> None:
+        if getattr(mesh_obj, 'type', None) != 'MESH':
+            return
+        mesh = mesh_obj.data
+        try:
+            polys = mesh.polygons
+        except Exception:
+            return
+        for p in polys:
+            p.material_index = int(material_index)
+
+    shared_materials = None
+    if material_slot_count is not None and material_slot_count > 0:
+        # Ensure material slots exist before setting polygon material indices.
+        # We apply the recipe materials here (shared across all objects) and
+        # clear params.material_slots so the outer handler doesn't append
+        # duplicates later.
+        from .materials import create_material
+
+        shared_materials = []
+        for i, slot_spec in enumerate(material_slots):
+            if not isinstance(slot_spec, dict):
+                raise TypeError(f"params.material_slots[{i}] must be a dict")
+            name = slot_spec.get('name', f"Material_{i}")
+            if not isinstance(name, str) or not name:
+                name = f"Material_{i}"
+            shared_materials.append(create_material(name, slot_spec))
+
+        params['material_slots'] = []
+
+    def _ensure_shared_material_slots(mesh_obj) -> None:
+        if shared_materials is None:
+            return
+        if getattr(mesh_obj, 'type', None) != 'MESH':
+            return
+        mats = mesh_obj.data.materials
+        try:
+            mats.clear()
+        except Exception:
+            # Fall back to manual removal (older Blender APIs).
+            while len(mats) > 0:
+                mats.pop()
+        for m in shared_materials:
+            mats.append(m)
+
     bool_shapes = _resolve_mirrors(params.get('bool_shapes', {}) or {})
     bone_meshes = _resolve_mirrors(params.get('bone_meshes', {}) or {})
     if not bone_meshes:
@@ -778,6 +859,8 @@ def build_armature_driven_character_mesh(*, armature, params: dict, out_root) ->
         # Apply scale early so taper/bulge/twist operates on real dimensions.
         _apply_scale_only(obj)
 
+        _ensure_shared_material_slots(obj)
+
         cap_start = mesh_spec.get('cap_start', True)
         cap_end = mesh_spec.get('cap_end', True)
         if not isinstance(cap_start, bool):
@@ -792,6 +875,12 @@ def build_armature_driven_character_mesh(*, armature, params: dict, out_root) ->
         _remove_segment_caps(obj, cap_start=cap_start, cap_end=cap_end)
 
         obj.name = f"Segment_{bone_name}"
+
+        bone_material_index = _parse_material_index(
+            mesh_spec.get('material_index'),
+            default=0,
+            name=f"bone_meshes['{bone_name}'].material_index",
+        )
 
         taper = _parse_finite_number(
             mesh_spec.get('taper'),
@@ -844,6 +933,8 @@ def build_armature_driven_character_mesh(*, armature, params: dict, out_root) ->
 
         _apply_rotation_only(obj)
 
+        _set_all_poly_material_index(obj, material_index=bone_material_index)
+
         segment_origin_w = obj.location.copy()
 
         def _bone_local_head_to_segment_world(v_rel_head) -> Vector:
@@ -869,6 +960,12 @@ def build_armature_driven_character_mesh(*, armature, params: dict, out_root) ->
 
                 # Primitive attachment (untagged form).
                 if 'primitive' in att:
+                    att_material_index = _parse_material_index(
+                        att.get('material_index'),
+                        default=bone_material_index,
+                        name=f"bone_meshes['{bone_name}'].attachments[{ai}].material_index",
+                    )
+
                     primitive = att.get('primitive')
                     if not isinstance(primitive, str) or not primitive:
                         raise TypeError(
@@ -892,6 +989,8 @@ def build_armature_driven_character_mesh(*, armature, params: dict, out_root) ->
                     attach_obj = _create_primitive_mesh(primitive=primitive, location_w=location_w)
                     attach_obj.name = f"Attachment_{bone_name}_{ai}"
 
+                    _ensure_shared_material_slots(attach_obj)
+
                     # Bone-relative dimensions -> absolute scale.
                     attach_obj.scale = (dx * length, dy * length, dz * length)
                     _apply_scale_only(attach_obj)
@@ -909,11 +1008,19 @@ def build_armature_driven_character_mesh(*, armature, params: dict, out_root) ->
                         attach_obj.rotation_quaternion = base_q
                     _apply_rotation_only(attach_obj)
 
+                    _set_all_poly_material_index(attach_obj, material_index=att_material_index)
+
                     obj = _join_into(obj, attach_obj)
                     continue
 
                 # Extrude attachment (tagged as {"extrude": {...}}).
                 if 'extrude' in att:
+                    att_material_index = _parse_material_index(
+                        att.get('material_index'),
+                        default=bone_material_index,
+                        name=f"bone_meshes['{bone_name}'].attachments[{ai}].material_index",
+                    )
+
                     extr = att.get('extrude')
                     if not isinstance(extr, dict):
                         raise TypeError(
@@ -979,6 +1086,8 @@ def build_armature_driven_character_mesh(*, armature, params: dict, out_root) ->
                     attach_obj.name = f"AttachmentExtrude_{bone_name}_{ai}"
                     _apply_scale_only(attach_obj)
 
+                    _ensure_shared_material_slots(attach_obj)
+
                     taper_e = _parse_finite_number(
                         extr.get('taper'),
                         name=f"bone_meshes['{bone_name}'].attachments[{ai}].extrude.taper",
@@ -994,11 +1103,19 @@ def build_armature_driven_character_mesh(*, armature, params: dict, out_root) ->
                     attach_obj.rotation_quaternion = axis_n.to_track_quat('Z', 'Y')
                     _apply_rotation_only(attach_obj)
 
+                    _set_all_poly_material_index(attach_obj, material_index=att_material_index)
+
                     obj = _join_into(obj, attach_obj)
                     continue
 
                 # Asset attachment (untagged form; key is 'asset').
                 if 'asset' in att:
+                    att_material_index = _parse_material_index(
+                        att.get('material_index'),
+                        default=bone_material_index,
+                        name=f"bone_meshes['{bone_name}'].attachments[{ai}].material_index",
+                    )
+
                     from pathlib import Path
 
                     asset = att.get('asset')
@@ -1048,6 +1165,8 @@ def build_armature_driven_character_mesh(*, armature, params: dict, out_root) ->
 
                     attach_obj.name = f"AttachmentAsset_{bone_name}_{ai}"
 
+                    _ensure_shared_material_slots(attach_obj)
+
                     offset = att.get('offset', [0.0, 0.0, 0.0])
                     attach_obj.location = _bone_local_head_to_segment_world(offset)
 
@@ -1076,6 +1195,8 @@ def build_armature_driven_character_mesh(*, armature, params: dict, out_root) ->
                     else:
                         attach_obj.rotation_quaternion = base_q
                     _apply_rotation_only(attach_obj)
+
+                    _set_all_poly_material_index(attach_obj, material_index=att_material_index)
 
                     obj = _join_into(obj, attach_obj)
                     continue
