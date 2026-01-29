@@ -621,6 +621,8 @@ def build_armature_driven_character_mesh(*, armature, params: dict, out_root) ->
             raise TypeError("params.material_slots must be a list")
         material_slot_count = len(material_slots)
 
+    placeholder_materials = None
+
     def _parse_material_index(value, *, default: int, name: str) -> int:
         if value is None:
             idx = int(default)
@@ -650,6 +652,7 @@ def build_armature_driven_character_mesh(*, armature, params: dict, out_root) ->
     def _set_all_poly_material_index(mesh_obj, *, material_index: int) -> None:
         if getattr(mesh_obj, 'type', None) != 'MESH':
             return
+        _ensure_material_slot_placeholders(mesh_obj)
         mesh = mesh_obj.data
         try:
             polys = mesh.polygons
@@ -658,39 +661,54 @@ def build_armature_driven_character_mesh(*, armature, params: dict, out_root) ->
         for p in polys:
             p.material_index = int(material_index)
 
-    shared_materials = None
-    if material_slot_count is not None and material_slot_count > 0:
-        # Ensure material slots exist before setting polygon material indices.
-        # We apply the recipe materials here (shared across all objects) and
-        # clear params.material_slots so the outer handler doesn't append
-        # duplicates later.
-        from .materials import create_material
+    def _ensure_material_slot_placeholders(mesh_obj) -> None:
+        """Ensure stable material slots for polygon material_index and joins.
 
-        shared_materials = []
-        for i, slot_spec in enumerate(material_slots):
-            if not isinstance(slot_spec, dict):
-                raise TypeError(f"params.material_slots[{i}] must be a dict")
-            name = slot_spec.get('name', f"Material_{i}")
-            if not isinstance(name, str) or not name:
-                name = f"Material_{i}"
-            shared_materials.append(create_material(name, slot_spec))
+        Blender's join operation can collapse empty/None material slots.
+        To keep per-face material_index stable across joins, assign lightweight
+        placeholder Material objects per slot index.
 
-        params['material_slots'] = []
+        The outer handler later calls apply_materials() to replace these slots
+        with recipe materials.
+        """
 
-    def _ensure_shared_material_slots(mesh_obj) -> None:
-        if shared_materials is None:
+        if material_slot_count is None:
             return
         if getattr(mesh_obj, 'type', None) != 'MESH':
             return
+
+        nonlocal placeholder_materials
+
+        desired = int(material_slot_count)
         mats = mesh_obj.data.materials
-        try:
-            mats.clear()
-        except Exception:
-            # Fall back to manual removal (older Blender APIs).
+
+        if desired <= 0:
             while len(mats) > 0:
                 mats.pop()
-        for m in shared_materials:
-            mats.append(m)
+            return
+
+        if placeholder_materials is None:
+            placeholder_materials = []
+
+        while len(placeholder_materials) < desired:
+            idx = len(placeholder_materials)
+            name = f"__speccade_material_slot_{idx}"
+            mat = bpy.data.materials.get(name)
+            if mat is None:
+                mat = bpy.data.materials.new(name=name)
+                try:
+                    mat.use_nodes = False
+                except Exception:
+                    pass
+            placeholder_materials.append(mat)
+
+        while len(mats) > desired:
+            mats.pop()
+        while len(mats) < desired:
+            mats.append(None)
+
+        for i in range(desired):
+            mats[i] = placeholder_materials[i]
 
     bool_shapes = _resolve_mirrors(params.get('bool_shapes', {}) or {})
     bone_meshes = _resolve_mirrors(params.get('bone_meshes', {}) or {})
@@ -859,7 +877,7 @@ def build_armature_driven_character_mesh(*, armature, params: dict, out_root) ->
         # Apply scale early so taper/bulge/twist operates on real dimensions.
         _apply_scale_only(obj)
 
-        _ensure_shared_material_slots(obj)
+        _ensure_material_slot_placeholders(obj)
 
         cap_start = mesh_spec.get('cap_start', True)
         cap_end = mesh_spec.get('cap_end', True)
@@ -989,7 +1007,7 @@ def build_armature_driven_character_mesh(*, armature, params: dict, out_root) ->
                     attach_obj = _create_primitive_mesh(primitive=primitive, location_w=location_w)
                     attach_obj.name = f"Attachment_{bone_name}_{ai}"
 
-                    _ensure_shared_material_slots(attach_obj)
+                    _ensure_material_slot_placeholders(attach_obj)
 
                     # Bone-relative dimensions -> absolute scale.
                     attach_obj.scale = (dx * length, dy * length, dz * length)
@@ -1086,7 +1104,7 @@ def build_armature_driven_character_mesh(*, armature, params: dict, out_root) ->
                     attach_obj.name = f"AttachmentExtrude_{bone_name}_{ai}"
                     _apply_scale_only(attach_obj)
 
-                    _ensure_shared_material_slots(attach_obj)
+                    _ensure_material_slot_placeholders(attach_obj)
 
                     taper_e = _parse_finite_number(
                         extr.get('taper'),
@@ -1165,7 +1183,7 @@ def build_armature_driven_character_mesh(*, armature, params: dict, out_root) ->
 
                     attach_obj.name = f"AttachmentAsset_{bone_name}_{ai}"
 
-                    _ensure_shared_material_slots(attach_obj)
+                    _ensure_material_slot_placeholders(attach_obj)
 
                     offset = att.get('offset', [0.0, 0.0, 0.0])
                     attach_obj.location = _bone_local_head_to_segment_world(offset)
@@ -1352,6 +1370,8 @@ def build_armature_driven_character_mesh(*, armature, params: dict, out_root) ->
             f"object.join: expected a MESH active object, got {getattr(combined, 'type', None)!r}"
         )
     combined.name = 'Character'
+
+    _ensure_material_slot_placeholders(combined)
 
     _parent_mesh_to_armature(combined, armature)
     _ensure_uvs(combined)
