@@ -1,15 +1,15 @@
 {
   "spec_version": 1,
-  "asset_id": "enum-coverage-synth-type",
+  "asset_id": "synth-instruments",
   "asset_type": "music",
   "license": "CC0-1.0",
   "seed": 42,
-  "description": "Music spec covering all synth_type enum values: pulse, square, triangle, sawtooth, sine, noise",
+  "description": "Music spec covering all synth_type enum values for coverage tracking",
   "outputs": [
     {
       "kind": "primary",
       "format": "xm",
-      "path": "enum_coverage_synth_type.xm"
+      "path": "synth_instruments.xm"
     }
   ],
   "recipe": {
@@ -20,6 +20,7 @@
       "speed": 6,
       "channels": 6,
       "loop": false,
+      "synth_type_coverage": ["pulse", "square", "triangle", "sawtooth", "sine", "noise"],
       "instruments": [
         {
           "name": "pulse_synth",
