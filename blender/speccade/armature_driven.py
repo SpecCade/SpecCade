@@ -200,6 +200,7 @@ def build_armature_driven_character_mesh(*, armature, params: dict, out_root) ->
 
     try:
         import bpy  # type: ignore
+        from mathutils import Euler, Vector  # type: ignore
     except Exception as e:  # pragma: no cover
         raise RuntimeError("Blender Python (bpy) is required") from e
 
@@ -229,6 +230,24 @@ def build_armature_driven_character_mesh(*, armature, params: dict, out_root) ->
         _ensure_object_mode()
         _select_only([obj], active=obj)
         bpy.ops.object.transform_apply(location=False, rotation=True, scale=True)
+
+    def _quat_mul(a, b):
+        # Blender versions differ on whether Quaternion supports @ for multiplication.
+        try:
+            return a @ b
+        except TypeError:
+            return a * b
+
+    def _parse_vec3(value, *, name: str) -> tuple[float, float, float] | None:
+        if value is None:
+            return None
+        if not isinstance(value, (list, tuple)) or len(value) != 3:
+            raise TypeError(f"{name} must be a 3-element list/tuple")
+        x, y, z = value
+        for c in (x, y, z):
+            if isinstance(c, bool) or not isinstance(c, (int, float)):
+                raise TypeError(f"{name} components must be numbers")
+        return (float(x), float(y), float(z))
 
     def _recalculate_normals(obj) -> None:
         _ensure_object_mode()
@@ -365,7 +384,26 @@ def build_armature_driven_character_mesh(*, armature, params: dict, out_root) ->
         obj.name = f"Segment_{bone_name}"
 
         obj.rotation_mode = 'QUATERNION'
-        obj.rotation_quaternion = axis_n.to_track_quat('Z', 'Y')
+        base_q = axis_n.to_track_quat('Z', 'Y')
+        obj.rotation_quaternion = base_q
+
+        translate = _parse_vec3(mesh_spec.get('translate'), name=f"bone_meshes['{bone_name}'].translate")
+        if translate is not None:
+            tx, ty, tz = translate
+            # Bone-relative translation is in bone-local axes and scales by bone length.
+            offset_local = Vector((tx * length, ty * length, tz * length))
+            offset_world = base_q @ offset_local
+            obj.location = obj.location + offset_world
+
+        rotate = _parse_vec3(mesh_spec.get('rotate'), name=f"bone_meshes['{bone_name}'].rotate")
+        if rotate is not None:
+            rx, ry, rz = rotate
+            rot_q = Euler(
+                (math.radians(rx), math.radians(ry), math.radians(rz)),
+                'XYZ',
+            ).to_quaternion()
+            obj.rotation_quaternion = _quat_mul(base_q, rot_q)
+
         _apply_rotation_scale(obj)
 
         vg = obj.vertex_groups.get(bone_name)

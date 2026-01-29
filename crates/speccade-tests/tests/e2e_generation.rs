@@ -976,6 +976,144 @@ fn test_generate_skeletal_mesh_armature_driven_full_features_smoke() {
     assert_eq!(max_influences, 1, "Expected max_bone_influences == 1");
 }
 
+/// `translate` / `rotate` on armature-driven bone meshes should affect output bounds.
+///
+/// This is intentionally ignored by default because it requires Blender.
+#[test]
+#[ignore] // Run with SPECCADE_RUN_BLENDER_TESTS=1
+fn test_generate_skeletal_mesh_armature_driven_translate_rotate_affects_bounds() {
+    if !should_run_blender_tests() {
+        println!("Blender tests not enabled, skipping");
+        return;
+    }
+
+    if !is_blender_available() {
+        println!("Blender not available, skipping");
+        return;
+    }
+
+    let base_harness = TestHarness::new();
+    let base_spec = Spec::builder(
+        "test-armature-driven-bounds-baseline-01",
+        AssetType::SkeletalMesh,
+    )
+    .license("CC0-1.0")
+    .seed(1)
+    .output(OutputSpec::primary(
+        OutputFormat::Glb,
+        "characters/armature_driven_bounds_baseline.glb",
+    ))
+    .recipe(Recipe::new(
+        "skeletal_mesh.armature_driven_v1",
+        serde_json::json!({
+            "skeleton_preset": "humanoid_basic_v1",
+            "export": {
+                "include_armature": true,
+                "include_normals": true,
+                "include_uvs": true,
+                "triangulate": true,
+                "include_skin_weights": true,
+                "save_blend": false
+            },
+            "bone_meshes": {
+                "spine": {
+                    "profile": "rectangle",
+                    "profile_radius": [0.14, 0.06],
+                    "cap_start": true,
+                    "cap_end": true
+                }
+            }
+        }),
+    ))
+    .build();
+
+    let base_result =
+        speccade_backend_blender::skeletal_mesh::generate(&base_spec, base_harness.path());
+    assert!(
+        base_result.is_ok(),
+        "Armature-driven skeletal mesh generation failed: {:?}",
+        base_result.err()
+    );
+    let base_result = base_result.unwrap();
+
+    assert!(
+        base_result.metrics.bounds_min.is_some(),
+        "Expected bounds_min metric"
+    );
+    assert!(
+        base_result.metrics.bounds_max.is_some(),
+        "Expected bounds_max metric"
+    );
+    let base_bounds_min = base_result.metrics.bounds_min.unwrap();
+    let base_bounds_max = base_result.metrics.bounds_max.unwrap();
+
+    let moved_harness = TestHarness::new();
+    let moved_spec = Spec::builder(
+        "test-armature-driven-bounds-moved-01",
+        AssetType::SkeletalMesh,
+    )
+    .license("CC0-1.0")
+    .seed(1)
+    .output(OutputSpec::primary(
+        OutputFormat::Glb,
+        "characters/armature_driven_bounds_moved.glb",
+    ))
+    .recipe(Recipe::new(
+        "skeletal_mesh.armature_driven_v1",
+        serde_json::json!({
+            "skeleton_preset": "humanoid_basic_v1",
+            "export": {
+                "include_armature": true,
+                "include_normals": true,
+                "include_uvs": true,
+                "triangulate": true,
+                "include_skin_weights": true,
+                "save_blend": false
+            },
+            "bone_meshes": {
+                "spine": {
+                    "profile": "rectangle",
+                    "profile_radius": [0.14, 0.06],
+                    "cap_start": true,
+                    "cap_end": true,
+                    "translate": [0.75, 0.0, 0.0],
+                    "rotate": [10.0, 0.0, 35.0]
+                }
+            }
+        }),
+    ))
+    .build();
+
+    let moved_result =
+        speccade_backend_blender::skeletal_mesh::generate(&moved_spec, moved_harness.path());
+    assert!(
+        moved_result.is_ok(),
+        "Armature-driven skeletal mesh generation failed: {:?}",
+        moved_result.err()
+    );
+    let moved_result = moved_result.unwrap();
+
+    assert!(
+        moved_result.metrics.bounds_min.is_some(),
+        "Expected bounds_min metric"
+    );
+    assert!(
+        moved_result.metrics.bounds_max.is_some(),
+        "Expected bounds_max metric"
+    );
+    let moved_bounds_min = moved_result.metrics.bounds_min.unwrap();
+    let moved_bounds_max = moved_result.metrics.bounds_max.unwrap();
+
+    assert_ne!(
+        base_bounds_min, moved_bounds_min,
+        "Expected bounds_min to differ between baseline and translated/rotated specs"
+    );
+    assert_ne!(
+        base_bounds_max, moved_bounds_max,
+        "Expected bounds_max to differ between baseline and translated/rotated specs"
+    );
+}
+
 /// Test animation generation with Blender.
 #[test]
 #[ignore] // Run with SPECCADE_RUN_BLENDER_TESTS=1
