@@ -37,6 +37,7 @@ from .materials import apply_materials
 from .uv_mapping import apply_uv_projection
 from .skeleton import create_armature, apply_skeleton_overrides, create_custom_skeleton
 from .body_parts import create_body_part, create_legacy_part
+from .armature_driven import build_armature_driven_character_mesh
 
 
 # =============================================================================
@@ -482,61 +483,13 @@ def handle_validation_grid(
                 armature = create_armature("humanoid_basic_v1")
 
             if recipe_kind == "skeletal_mesh.armature_driven_v1":
-                bone_meshes = params.get("bone_meshes", {}) or {}
-                mesh_objs = []
-                if isinstance(bone_meshes, dict):
-                    for bone_name in sorted(bone_meshes.keys()):
-                        bone = armature.data.bones.get(bone_name)
-                        if bone is None:
-                            continue
-                        head_w = armature.matrix_world @ bone.head_local
-                        tail_w = armature.matrix_world @ bone.tail_local
-                        axis = (tail_w - head_w)
-                        length = float(axis.length)
-                        if length <= 1e-6:
-                            continue
-
-                        mesh_spec = bone_meshes.get(bone_name) or {}
-                        radius_spec = mesh_spec.get("profile_radius", 0.15)
-                        if isinstance(radius_spec, dict) and "absolute" in radius_spec:
-                            radius = float(radius_spec["absolute"])
-                        else:
-                            try:
-                                radius = float(radius_spec) * length
-                            except Exception:
-                                radius = 0.15 * length
-
-                        vertices = 12
-                        profile = mesh_spec.get("profile")
-                        if isinstance(profile, str) and "(" in profile and profile.endswith(")"):
-                            try:
-                                vertices = int(profile.split("(", 1)[1][:-1])
-                            except Exception:
-                                vertices = 12
-
-                        bpy.ops.mesh.primitive_cylinder_add(
-                            radius=radius,
-                            depth=length,
-                            vertices=max(3, vertices),
-                            location=(head_w + tail_w) * 0.5,
-                        )
-                        seg_obj = bpy.context.active_object
-                        axis_n = axis.normalized()
-                        seg_obj.rotation_euler = axis_n.to_track_quat('Z', 'Y').to_euler()
-                        bpy.context.view_layer.objects.active = seg_obj
-                        bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
-                        mesh_objs.append(seg_obj)
-
-                if mesh_objs:
-                    bpy.ops.object.select_all(action='DESELECT')
-                    for m in mesh_objs:
-                        m.select_set(True)
-                    bpy.context.view_layer.objects.active = mesh_objs[0]
-                    if len(mesh_objs) > 1:
-                        bpy.ops.object.join()
-                    obj = bpy.context.active_object
-                else:
-                    obj = armature
+                # Reuse the shared builder so previews match generation behavior.
+                # Note: asset attachments may not exist; the builder already warns/skips.
+                obj = build_armature_driven_character_mesh(
+                    armature=armature,
+                    params=params,
+                    out_root=out_root,
+                )
 
             elif recipe_kind == "skeletal_mesh.skinned_mesh_v1":
                 mesh_file = params.get("mesh_file")
