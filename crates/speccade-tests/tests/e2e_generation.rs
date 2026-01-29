@@ -27,8 +27,8 @@ use speccade_spec::recipe::texture::{
 use speccade_spec::{AssetType, OutputFormat, OutputKind, OutputSpec, Recipe, Spec};
 use speccade_tests::fixtures::GoldenFixtures;
 use speccade_tests::harness::{
-    is_blender_available, parse_spec_file, should_run_blender_tests, validate_png_file,
-    validate_wav_file, validate_xm_file, TestHarness,
+    is_blender_available, parse_spec_file, should_run_blender_tests, validate_glb_file,
+    validate_png_file, validate_wav_file, validate_xm_file, TestHarness,
 };
 
 // ============================================================================
@@ -750,6 +750,218 @@ fn test_generate_skeletal_mesh() {
 
     let gen_result = result.unwrap();
     assert!(gen_result.metrics.bone_count.is_some());
+}
+
+/// Full-features smoke test for `skeletal_mesh.armature_driven_v1`.
+///
+/// This is intentionally ignored by default because it requires Blender.
+#[test]
+#[ignore] // Run with SPECCADE_RUN_BLENDER_TESTS=1
+fn test_generate_skeletal_mesh_armature_driven_full_features_smoke() {
+    if !should_run_blender_tests() {
+        println!("Blender tests not enabled, skipping");
+        return;
+    }
+
+    if !is_blender_available() {
+        println!("Blender not available, skipping");
+        return;
+    }
+
+    let harness = TestHarness::new();
+
+    let spec = Spec::builder(
+        "test-armature-driven-full-features-01",
+        AssetType::SkeletalMesh,
+    )
+    .license("CC0-1.0")
+    .seed(42)
+    .output(OutputSpec::primary(
+        OutputFormat::Glb,
+        "characters/armature_driven_full_features.glb",
+    ))
+    .recipe(Recipe::new(
+        "skeletal_mesh.armature_driven_v1",
+        serde_json::json!({
+            "skeleton_preset": "humanoid_basic_v1",
+            "material_slots": [
+                {
+                    "name": "skin",
+                    "base_color": [0.80, 0.60, 0.50, 1.0],
+                    "metallic": 0.0,
+                    "roughness": 0.75
+                },
+                {
+                    "name": "metal",
+                    "base_color": [0.65, 0.66, 0.70, 1.0],
+                    "metallic": 1.0,
+                    "roughness": 0.25,
+                    "emissive": [0.05, 0.05, 0.05],
+                    "emissive_strength": 1.5
+                }
+            ],
+            "export": {
+                "include_armature": true,
+                "include_normals": true,
+                "include_uvs": true,
+                "triangulate": true,
+                "include_skin_weights": true,
+                "save_blend": false
+            },
+            "constraints": {
+                "max_triangles": 20000,
+                "max_bones": 64,
+                "max_materials": 8
+            },
+            "bool_shapes": {
+                "chest_cutout": {
+                    "primitive": "cube",
+                    "dimensions": [0.18, 0.12, 0.10],
+                    "position": [0.0, 0.20, 0.35],
+                    "bone": "chest"
+                },
+                "arm_socket_l": {
+                    "primitive": "sphere",
+                    "dimensions": [0.12, 0.12, 0.12],
+                    "position": [0.10, 0.08, 0.12],
+                    "bone": "shoulder_l"
+                },
+                "arm_socket_r": { "mirror": "arm_socket_l" }
+            },
+            "bone_meshes": {
+                "spine": {
+                    "profile": "circle(8)",
+                    "profile_radius": 0.06,
+                    "taper": 0.90,
+                    "translate": [0.0, 0.0, 0.0],
+                    "rotate": [0.0, 0.0, 0.0],
+                    "bulge": [
+                        { "at": 0.0, "scale": 1.20 },
+                        { "at": 0.5, "scale": 1.00 },
+                        { "at": 1.0, "scale": 0.95 }
+                    ],
+                    "twist": 10.0,
+                    "cap_start": true,
+                    "cap_end": true,
+                    "modifiers": [
+                        { "bevel": { "width": 0.01, "segments": 2 } },
+                        { "subdivide": { "cuts": 1 } }
+                    ],
+                    "material_index": 0,
+                    "attachments": [
+                        {
+                            "primitive": "cube",
+                            "dimensions": [0.14, 0.10, 0.06],
+                            "offset": [0.0, 0.03, 0.02],
+                            "rotation": [0.0, 30.0, 0.0],
+                            "material_index": 1
+                        }
+                    ]
+                },
+                "chest": {
+                    "profile": "circle(10)",
+                    "profile_radius": [0.07, 0.09],
+                    "taper": 0.85,
+                    "bulge": [
+                        { "at": 0.0, "scale": 1.15 },
+                        { "at": 0.7, "scale": 1.00 },
+                        { "at": 1.0, "scale": 0.92 }
+                    ],
+                    "modifiers": [
+                        { "bool": { "operation": "difference", "target": "chest_cutout" } },
+                        { "bevel": { "width": 0.008, "segments": 1 } }
+                    ],
+                    "material_index": 0,
+                    "attachments": [
+                        {
+                            "extrude": {
+                                "profile": "circle(6)",
+                                "start": [0.0, 0.0, 0.0],
+                                "end": [0.0, 0.0, 0.25],
+                                "profile_radius": { "absolute": 0.015 },
+                                "taper": 0.4
+                            }
+                        }
+                    ]
+                },
+                "upper_arm_l": {
+                    "profile": "hexagon(6)",
+                    "profile_radius": 0.05,
+                    "taper": 0.80,
+                    "twist": -15.0,
+                    "cap_start": true,
+                    "cap_end": true,
+                    "modifiers": [
+                        { "subdivide": { "cuts": 1 } }
+                    ],
+                    "material_index": 0
+                },
+                "upper_arm_r": { "mirror": "upper_arm_l" },
+                "lower_arm_l": {
+                    "profile": "circle(8)",
+                    "profile_radius": 0.045,
+                    "taper": 0.75,
+                    "rotate": [0.0, 0.0, 20.0],
+                    "modifiers": [
+                        { "bevel": { "width": 0.006, "segments": 1 } }
+                    ],
+                    "material_index": 0
+                },
+                "lower_arm_r": { "mirror": "lower_arm_l" },
+                "upper_leg_l": {
+                    "profile": "circle(10)",
+                    "profile_radius": 0.07,
+                    "taper": 0.78,
+                    "bulge": [
+                        { "at": 0.2, "scale": 1.10 },
+                        { "at": 0.8, "scale": 0.95 }
+                    ],
+                    "material_index": 0
+                },
+                "upper_leg_r": { "mirror": "upper_leg_l" }
+            }
+        }),
+    ))
+    .build();
+
+    let result = speccade_backend_blender::skeletal_mesh::generate(&spec, harness.path());
+    assert!(
+        result.is_ok(),
+        "Armature-driven skeletal mesh generation failed: {:?}",
+        result.err()
+    );
+
+    let gen_result = result.unwrap();
+
+    let expected_out = harness
+        .path()
+        .join("characters")
+        .join("armature_driven_full_features.glb");
+    assert!(
+        expected_out.exists(),
+        "Primary GLB missing: {}",
+        expected_out.display()
+    );
+
+    let validation = validate_glb_file(&expected_out);
+    assert!(
+        validation.is_ok(),
+        "GLB validation failed: {:?}",
+        validation.err()
+    );
+
+    assert!(
+        gen_result.metrics.bone_count.is_some(),
+        "Expected bone_count metric"
+    );
+    assert!(
+        gen_result.metrics.material_slot_count.is_some(),
+        "Expected material_slot_count metric"
+    );
+    assert!(
+        gen_result.metrics.uv_layer_count.is_some(),
+        "Expected uv_layer_count metric"
+    );
 }
 
 /// Test animation generation with Blender.
