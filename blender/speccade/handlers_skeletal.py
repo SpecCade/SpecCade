@@ -268,81 +268,16 @@ def handle_skeletal_mesh(spec: Dict, out_root: Path, report_path: Path) -> None:
             bone_meshes = params.get("bone_meshes", {})
             if not bone_meshes:
                 raise ValueError("armature_driven_v1 requires params.bone_meshes")
-
-            bone_entries = []
-            if isinstance(bone_meshes, dict):
-                for bone_name, mesh_spec in bone_meshes.items():
-                    bone_entries.append((bone_name, mesh_spec or {}))
-            elif isinstance(bone_meshes, list):
-                for entry in bone_meshes:
-                    if isinstance(entry, dict) and entry.get("bone"):
-                        bone_entries.append((entry.get("bone"), entry))
-            else:
+            if not isinstance(bone_meshes, (dict, list)):
                 raise ValueError("params.bone_meshes must be an object or array")
 
-            bone_entries.sort(key=lambda t: t[0])
+            from .armature_driven import build_armature_driven_character_mesh
 
-            mesh_objs = []
-            for bone_name, mesh_spec in bone_entries:
-                bone = armature.data.bones.get(bone_name)
-                if bone is None:
-                    print(f"Warning: bone_meshes refers to missing bone: {bone_name}")
-                    continue
-
-                head_w = armature.matrix_world @ bone.head_local
-                tail_w = armature.matrix_world @ bone.tail_local
-                axis = (tail_w - head_w)
-                length = float(axis.length)
-                if length <= 1e-6:
-                    print(f"Warning: bone has near-zero length: {bone_name}")
-                    continue
-
-                radius_spec = mesh_spec.get("profile_radius", 0.15)
-                if isinstance(radius_spec, dict) and "absolute" in radius_spec:
-                    radius = float(radius_spec["absolute"])
-                elif isinstance(radius_spec, (list, tuple)) and len(radius_spec) >= 2:
-                    radius = float(radius_spec[0] + radius_spec[1]) * 0.5 * length
-                else:
-                    radius = float(radius_spec) * length
-
-                vertices = 12
-                profile = mesh_spec.get("profile")
-                if isinstance(profile, str) and "(" in profile and profile.endswith(")"):
-                    try:
-                        vertices = int(profile.split("(", 1)[1][:-1])
-                    except Exception:
-                        vertices = 12
-
-                bpy.ops.mesh.primitive_cylinder_add(
-                    radius=radius,
-                    depth=length,
-                    vertices=max(3, vertices),
-                    location=(head_w + tail_w) * 0.5,
-                )
-                seg_obj = bpy.context.active_object
-                seg_obj.name = f"BoneMesh_{bone_name}"
-
-                axis_n = axis.normalized()
-                seg_obj.rotation_euler = axis_n.to_track_quat('Z', 'Y').to_euler()
-                bpy.context.view_layer.objects.active = seg_obj
-                bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
-
-                _assign_all_vertices_to_group(seg_obj, bone_name, weight=1.0)
-                mesh_objs.append(seg_obj)
-
-            if not mesh_objs:
-                raise ValueError("armature_driven_v1 produced no meshes (check bone_meshes)")
-
-            if len(mesh_objs) > 1:
-                _select_only(mesh_objs, active=mesh_objs[0])
-                bpy.ops.object.join()
-                combined_mesh = bpy.context.active_object
-            else:
-                combined_mesh = mesh_objs[0]
-            combined_mesh.name = "Character"
-
-            _recalculate_normals(combined_mesh)
-            _parent_mesh_to_armature(combined_mesh, armature, auto_weights=False)
+            combined_mesh = build_armature_driven_character_mesh(
+                armature=armature,
+                params=params,
+                out_root=out_root,
+            )
 
         elif kind == "skeletal_mesh.skinned_mesh_v1":
             mesh_file = params.get("mesh_file")
