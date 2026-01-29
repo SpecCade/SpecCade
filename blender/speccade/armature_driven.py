@@ -237,6 +237,13 @@ def build_armature_driven_character_mesh(*, armature, params: dict, out_root) ->
         _select_only([obj], active=obj)
         bpy.ops.object.transform_apply(location=False, rotation=True, scale=False)
 
+    def _apply_modifier(obj, *, modifier_name: str) -> None:
+        if not isinstance(modifier_name, str) or not modifier_name:
+            raise TypeError("modifier_name must be a non-empty str")
+        _ensure_object_mode()
+        _select_only([obj], active=obj)
+        bpy.ops.object.modifier_apply(modifier=modifier_name)
+
     def _remove_segment_caps(obj, *, cap_start: bool, cap_end: bool) -> None:
         if cap_start and cap_end:
             return
@@ -504,11 +511,109 @@ def build_armature_driven_character_mesh(*, armature, params: dict, out_root) ->
     if not isinstance(params, dict):
         raise TypeError("params must be a dict")
 
+    bool_shapes = _resolve_mirrors(params.get('bool_shapes', {}) or {})
     bone_meshes = _resolve_mirrors(params.get('bone_meshes', {}) or {})
     if not bone_meshes:
         raise ValueError("params.bone_meshes is required")
 
     _ensure_object_mode()
+
+    bool_shape_objs = {}
+
+    # Create boolean target shapes up-front so they can be referenced by modifiers.
+    for shape_key, shape_spec in sorted(bool_shapes.items(), key=lambda kv: kv[0]):
+        if not isinstance(shape_key, str) or not shape_key:
+            raise TypeError(f"bool_shapes keys must be non-empty str, got {shape_key!r}")
+        if not isinstance(shape_spec, dict):
+            raise TypeError(f"bool_shapes['{shape_key}'] must be a dict")
+
+        primitive = shape_spec.get('primitive')
+        if not isinstance(primitive, str) or not primitive:
+            raise TypeError(f"bool_shapes['{shape_key}'].primitive must be a non-empty str")
+        primitive_lc = primitive.strip().lower()
+
+        position = _parse_vec3(shape_spec.get('position'), name=f"bool_shapes['{shape_key}'].position")
+        if position is None:
+            raise TypeError(f"bool_shapes['{shape_key}'].position is required")
+        dimensions = _parse_vec3(shape_spec.get('dimensions'), name=f"bool_shapes['{shape_key}'].dimensions")
+        if dimensions is None:
+            raise TypeError(f"bool_shapes['{shape_key}'].dimensions is required")
+
+        px, py, pz = position
+        dx, dy, dz = dimensions
+        if dx <= 0.0 or dy <= 0.0 or dz <= 0.0:
+            raise ValueError(
+                f"bool_shapes['{shape_key}'].dimensions must be > 0, got ({dx!r}, {dy!r}, {dz!r})"
+            )
+
+        # Determine placement frame.
+        bone_name = shape_spec.get('bone')
+        if bone_name is not None and (not isinstance(bone_name, str) or not bone_name):
+            raise TypeError(f"bool_shapes['{shape_key}'].bone must be a non-empty str")
+
+        if bone_name is not None:
+            bone = armature.data.bones.get(bone_name)
+            if bone is None:
+                raise ValueError(f"bool_shapes['{shape_key}'].bone '{bone_name}' not found in armature")
+
+            head_w = armature.matrix_world @ bone.head_local
+            tail_w = armature.matrix_world @ bone.tail_local
+            axis = tail_w - head_w
+            length = float(axis.length)
+            if not math.isfinite(length) or length < 1e-6:
+                raise ValueError(f"bone '{bone_name}' has near-zero length: {length!r}")
+            axis_n = axis.normalized()
+            base_q = axis_n.to_track_quat('Z', 'Y')
+
+            offset_local = Vector((px * length, py * length, pz * length))
+            location_w = head_w + _quat_rotate_vec(base_q, offset_local)
+            scale = (dx * length, dy * length, dz * length)
+            rotation_q = base_q
+        else:
+            location_w = armature.matrix_world @ Vector((px, py, pz))
+            scale = (dx, dy, dz)
+            try:
+                rotation_q = armature.matrix_world.to_quaternion()
+            except Exception:
+                rotation_q = None
+
+        # Create primitive in world space with deterministic sizing.
+        if primitive_lc == 'cube':
+            bpy.ops.mesh.primitive_cube_add(size=1.0, location=location_w)
+            obj = _require_active_mesh(context='primitive_cube_add(bool_shape)')
+        elif primitive_lc in ('sphere', 'uv_sphere'):
+            bpy.ops.mesh.primitive_uv_sphere_add(radius=0.5, location=location_w)
+            obj = _require_active_mesh(context='primitive_uv_sphere_add(bool_shape)')
+        elif primitive_lc == 'cylinder':
+            bpy.ops.mesh.primitive_cylinder_add(radius=0.5, depth=1.0, location=location_w)
+            obj = _require_active_mesh(context='primitive_cylinder_add(bool_shape)')
+        else:
+            raise ValueError(
+                f"bool_shapes['{shape_key}'].primitive unsupported: {primitive!r}; expected 'cube'|'sphere'|'cylinder'"
+            )
+
+        obj.name = f"BoolShape_{shape_key}"
+        obj.scale = scale
+        _apply_scale_only(obj)
+
+        if rotation_q is not None:
+            obj.rotation_mode = 'QUATERNION'
+            obj.rotation_quaternion = rotation_q
+            _apply_rotation_only(obj)
+
+        try:
+            obj.hide_set(True)
+        except Exception:
+            try:
+                obj.hide = True
+            except Exception:
+                pass
+        try:
+            obj.hide_render = True
+        except Exception:
+            pass
+
+        bool_shape_objs[shape_key] = obj
 
     segment_objs = []
 
@@ -639,6 +744,61 @@ def build_armature_driven_character_mesh(*, armature, params: dict, out_root) ->
 
         _apply_rotation_only(obj)
 
+        # Apply per-segment modifiers (in-order).
+        modifiers_spec = mesh_spec.get('modifiers', []) or []
+        if not isinstance(modifiers_spec, list):
+            raise TypeError(f"bone_meshes['{bone_name}'].modifiers must be a list")
+
+        for mi, entry in enumerate(modifiers_spec):
+            if not isinstance(entry, dict):
+                raise TypeError(f"bone_meshes['{bone_name}'].modifiers[{mi}] must be a dict")
+            if 'bool' not in entry:
+                # Other modifiers are handled elsewhere / not implemented in this module.
+                continue
+
+            bool_spec = entry.get('bool')
+            if not isinstance(bool_spec, dict):
+                raise TypeError(
+                    f"bone_meshes['{bone_name}'].modifiers[{mi}].bool must be a dict"
+                )
+
+            operation = bool_spec.get('operation', 'difference')
+            if not isinstance(operation, str) or not operation:
+                raise TypeError(
+                    f"bone_meshes['{bone_name}'].modifiers[{mi}].bool.operation must be a non-empty str"
+                )
+            op_lc = operation.strip().lower()
+            if op_lc in ('subtract', 'difference'):
+                blender_op = 'DIFFERENCE'
+            elif op_lc == 'union':
+                blender_op = 'UNION'
+            elif op_lc in ('intersect', 'intersection'):
+                blender_op = 'INTERSECT'
+            else:
+                raise ValueError(
+                    f"bone_meshes['{bone_name}'].modifiers[{mi}].bool.operation unsupported: {operation!r}"
+                )
+
+            target = bool_spec.get('target')
+            if not isinstance(target, str) or not target:
+                raise TypeError(
+                    f"bone_meshes['{bone_name}'].modifiers[{mi}].bool.target must be a non-empty str"
+                )
+            target_obj = bool_shape_objs.get(target)
+            if target_obj is None:
+                raise ValueError(
+                    f"bone_meshes['{bone_name}'].modifiers[{mi}].bool.target '{target}' not found in bool_shapes"
+                )
+
+            mod = obj.modifiers.new(name=f"Bool_{mi}_{target}", type='BOOLEAN')
+            mod.operation = blender_op
+            mod.object = target_obj
+            try:
+                mod.solver = 'EXACT'
+            except Exception:
+                pass
+            _apply_modifier(obj, modifier_name=mod.name)
+
         vg = obj.vertex_groups.get(bone_name)
         if vg is None:
             vg = obj.vertex_groups.new(name=bone_name)
@@ -650,6 +810,16 @@ def build_armature_driven_character_mesh(*, armature, params: dict, out_root) ->
 
     if not segment_objs:
         raise ValueError("No segments generated")
+
+    # Boolean target shapes should not be exported.
+    for shape_key in sorted(bool_shape_objs.keys()):
+        obj = bool_shape_objs.get(shape_key)
+        if obj is None:
+            continue
+        try:
+            bpy.data.objects.remove(obj, do_unlink=True)
+        except Exception:
+            pass
 
     _ensure_object_mode()
     # Deterministic join order: preserve the segment creation order.
