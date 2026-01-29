@@ -1125,6 +1125,183 @@ fn test_generate_skeletal_mesh_armature_driven_translate_rotate_affects_bounds()
     );
 }
 
+/// `taper` / `bulge` / `twist` on armature-driven bone meshes should affect output bounds.
+///
+/// This is intentionally ignored by default because it requires Blender.
+#[test]
+#[ignore] // Run with SPECCADE_RUN_BLENDER_TESTS=1
+fn test_generate_skeletal_mesh_armature_driven_deformation_affects_bounds() {
+    if !should_run_blender_tests() {
+        println!("Blender tests not enabled, skipping");
+        return;
+    }
+
+    if !is_blender_available() {
+        println!("Blender not available, skipping");
+        return;
+    }
+
+    let base_harness = TestHarness::new();
+    let base_spec = Spec::builder(
+        "test-armature-driven-deform-baseline-01",
+        AssetType::SkeletalMesh,
+    )
+    .license("CC0-1.0")
+    .seed(1)
+    .output(OutputSpec::primary(
+        OutputFormat::Glb,
+        "characters/armature_driven_deform_baseline.glb",
+    ))
+    .recipe(Recipe::new(
+        "skeletal_mesh.armature_driven_v1",
+        serde_json::json!({
+            "skeleton_preset": "humanoid_basic_v1",
+            "export": {
+                "include_armature": true,
+                "include_normals": true,
+                "include_uvs": true,
+                "triangulate": true,
+                "include_skin_weights": true,
+                "save_blend": false
+            },
+            "bone_meshes": {
+                "spine": {
+                    "profile": "rectangle",
+                    "profile_radius": [0.14, 0.06],
+                    "cap_start": true,
+                    "cap_end": true
+                }
+            }
+        }),
+    ))
+    .build();
+
+    let base_result =
+        speccade_backend_blender::skeletal_mesh::generate(&base_spec, base_harness.path());
+    assert!(
+        base_result.is_ok(),
+        "Armature-driven skeletal mesh generation failed: {:?}",
+        base_result.err()
+    );
+    let base_result = base_result.unwrap();
+
+    let base_vertex_count = base_result
+        .metrics
+        .vertex_count
+        .expect("Expected vertex_count metric for baseline");
+    let base_triangle_count = base_result
+        .metrics
+        .triangle_count
+        .expect("Expected triangle_count metric for baseline");
+    let base_bounds_min = base_result
+        .metrics
+        .bounds_min
+        .expect("Expected bounds_min metric for baseline");
+    let base_bounds_max = base_result
+        .metrics
+        .bounds_max
+        .expect("Expected bounds_max metric for baseline");
+
+    let deformed_harness = TestHarness::new();
+    let deformed_spec = Spec::builder(
+        "test-armature-driven-deform-variant-01",
+        AssetType::SkeletalMesh,
+    )
+    .license("CC0-1.0")
+    .seed(1)
+    .output(OutputSpec::primary(
+        OutputFormat::Glb,
+        "characters/armature_driven_deform_variant.glb",
+    ))
+    .recipe(Recipe::new(
+        "skeletal_mesh.armature_driven_v1",
+        serde_json::json!({
+            "skeleton_preset": "humanoid_basic_v1",
+            "export": {
+                "include_armature": true,
+                "include_normals": true,
+                "include_uvs": true,
+                "triangulate": true,
+                "include_skin_weights": true,
+                "save_blend": false
+            },
+            "bone_meshes": {
+                "spine": {
+                    "profile": "rectangle",
+                    "profile_radius": [0.14, 0.06],
+                    "cap_start": true,
+                    "cap_end": true,
+                    "taper": 1.35,
+                    "bulge": [
+                        { "at": 0.0, "scale": 1.00 },
+                        { "at": 0.5, "scale": 1.20 },
+                        { "at": 1.0, "scale": 1.00 }
+                    ],
+                    "twist": 35.0
+                }
+            }
+        }),
+    ))
+    .build();
+
+    let deformed_result =
+        speccade_backend_blender::skeletal_mesh::generate(&deformed_spec, deformed_harness.path());
+    assert!(
+        deformed_result.is_ok(),
+        "Armature-driven skeletal mesh generation failed: {:?}",
+        deformed_result.err()
+    );
+    let deformed_result = deformed_result.unwrap();
+
+    let deformed_vertex_count = deformed_result
+        .metrics
+        .vertex_count
+        .expect("Expected vertex_count metric for deformed");
+    let deformed_triangle_count = deformed_result
+        .metrics
+        .triangle_count
+        .expect("Expected triangle_count metric for deformed");
+    let deformed_bounds_min = deformed_result
+        .metrics
+        .bounds_min
+        .expect("Expected bounds_min metric for deformed");
+    let deformed_bounds_max = deformed_result
+        .metrics
+        .bounds_max
+        .expect("Expected bounds_max metric for deformed");
+
+    assert_eq!(
+        base_vertex_count, deformed_vertex_count,
+        "Expected vertex_count to match between baseline and deformed; baseline={} deformed={}",
+        base_vertex_count, deformed_vertex_count
+    );
+    assert_eq!(
+        base_triangle_count, deformed_triangle_count,
+        "Expected triangle_count to match between baseline and deformed; baseline={} deformed={}",
+        base_triangle_count, deformed_triangle_count
+    );
+
+    let min_dx = (base_bounds_min[0] - deformed_bounds_min[0]).abs();
+    let min_dy = (base_bounds_min[1] - deformed_bounds_min[1]).abs();
+    let min_dz = (base_bounds_min[2] - deformed_bounds_min[2]).abs();
+    assert!(
+        min_dx > 1e-3 || min_dy > 1e-3 || min_dz > 1e-3,
+        "Expected bounds_min to differ (epsilon) between baseline and deformed specs; base={:?} deformed={:?}",
+        base_bounds_min,
+        deformed_bounds_min
+    );
+
+    let max_dx = (base_bounds_max[0] - deformed_bounds_max[0]).abs();
+    let max_dy = (base_bounds_max[1] - deformed_bounds_max[1]).abs();
+    let max_dz = (base_bounds_max[2] - deformed_bounds_max[2]).abs();
+    assert!(
+        max_dx > 1e-3 || max_dy > 1e-3 || max_dz > 1e-3,
+        "Expected bounds_max to differ (epsilon) between baseline and deformed specs; base={:?} deformed={:?}",
+        base_bounds_max,
+        deformed_bounds_max
+    );
+}
+
 /// `cap_start` / `cap_end` on armature-driven bone meshes should affect triangle count.
 ///
 /// This is intentionally ignored by default because it requires Blender.

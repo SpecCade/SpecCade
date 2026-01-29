@@ -227,10 +227,15 @@ def build_armature_driven_character_mesh(*, armature, params: dict, out_root) ->
             # In background mode, mode switching can fail if no active object.
             pass
 
-    def _apply_rotation_scale(obj) -> None:
+    def _apply_scale_only(obj) -> None:
         _ensure_object_mode()
         _select_only([obj], active=obj)
-        bpy.ops.object.transform_apply(location=False, rotation=True, scale=True)
+        bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
+
+    def _apply_rotation_only(obj) -> None:
+        _ensure_object_mode()
+        _select_only([obj], active=obj)
+        bpy.ops.object.transform_apply(location=False, rotation=True, scale=False)
 
     def _remove_segment_caps(obj, *, cap_start: bool, cap_end: bool) -> None:
         if cap_start and cap_end:
@@ -275,6 +280,101 @@ def build_armature_driven_character_mesh(*, armature, params: dict, out_root) ->
             except Exception:
                 pass
 
+    def _deform_taper_bulge_twist(
+        obj,
+        *,
+        taper: float = 1.0,
+        bulge_points: list[tuple[float, float]] | None = None,
+        twist_deg: float = 0.0,
+    ) -> None:
+        if getattr(obj, 'type', None) != 'MESH':
+            return
+
+        taper_f = float(taper)
+        if not math.isfinite(taper_f) or taper_f <= 0.0:
+            raise ValueError(f"taper must be a finite, positive number, got {taper!r}")
+
+        twist_f = float(twist_deg)
+        if not math.isfinite(twist_f):
+            raise ValueError(f"twist must be a finite number, got {twist_deg!r}")
+
+        pts: list[tuple[float, float]] = []
+        if bulge_points:
+            for at, scale in bulge_points:
+                at_f = float(at)
+                scale_f = float(scale)
+                if not math.isfinite(at_f):
+                    raise ValueError(f"bulge.at must be finite, got {at!r}")
+                if not math.isfinite(scale_f) or scale_f <= 0.0:
+                    raise ValueError(f"bulge.scale must be a finite, positive number, got {scale!r}")
+                # Spec says clamp and linearly interpolate.
+                if at_f < 0.0:
+                    at_f = 0.0
+                if at_f > 1.0:
+                    at_f = 1.0
+                pts.append((at_f, scale_f))
+
+        pts.sort(key=lambda p: p[0])
+
+        def bulge_scale(t: float) -> float:
+            if not pts:
+                return 1.0
+            if t <= pts[0][0]:
+                return pts[0][1]
+            for i in range(1, len(pts)):
+                at1, s1 = pts[i]
+                at0, s0 = pts[i - 1]
+                if t <= at1:
+                    denom = at1 - at0
+                    if abs(denom) < 1e-12:
+                        return s1
+                    u = (t - at0) / denom
+                    return s0 + (s1 - s0) * u
+            return pts[-1][1]
+
+        mesh = obj.data
+        bm = bmesh.new()
+        try:
+            bm.from_mesh(mesh)
+            bm.verts.ensure_lookup_table()
+            if not bm.verts:
+                return
+
+            z_min = min(v.co.z for v in bm.verts)
+            z_max = max(v.co.z for v in bm.verts)
+            dz = float(z_max - z_min)
+            if not math.isfinite(dz) or abs(dz) < 1e-12:
+                return
+
+            for v in bm.verts:
+                t = (float(v.co.z) - float(z_min)) / dz
+                if t < 0.0:
+                    t = 0.0
+                if t > 1.0:
+                    t = 1.0
+
+                s = (1.0 + (taper_f - 1.0) * t) * bulge_scale(t)
+
+                x = float(v.co.x) * s
+                y = float(v.co.y) * s
+
+                if twist_f != 0.0:
+                    a = math.radians(twist_f * t)
+                    ca = math.cos(a)
+                    sa = math.sin(a)
+                    x, y = (x * ca - y * sa, x * sa + y * ca)
+
+                v.co.x = x
+                v.co.y = y
+
+            bm.to_mesh(mesh)
+        finally:
+            bm.free()
+            try:
+                mesh.update()
+            except Exception:
+                pass
+
     def _quat_mul(a, b):
         # Blender versions differ on whether Quaternion supports @ for multiplication.
         try:
@@ -306,6 +406,37 @@ def build_armature_driven_character_mesh(*, armature, params: dict, out_root) ->
             )
 
         return (xf, yf, zf)
+
+    def _parse_finite_number(value, *, name: str, default: float | None = None) -> float:
+        if value is None:
+            if default is None:
+                raise TypeError(f"{name} is required")
+            return float(default)
+        if isinstance(value, bool) or not isinstance(value, (int, float)):
+            raise TypeError(f"{name} must be a number")
+        out = float(value)
+        if not math.isfinite(out):
+            raise ValueError(f"{name} must be a finite number, got {out!r}")
+        return out
+
+    def _parse_bulge_points(value, *, name: str) -> list[tuple[float, float]]:
+        if value is None:
+            return []
+        if not isinstance(value, list):
+            raise TypeError(f"{name} must be a list")
+        out: list[tuple[float, float]] = []
+        for i, item in enumerate(value):
+            if not isinstance(item, dict):
+                raise TypeError(f"{name}[{i}] must be a dict")
+            if set(item.keys()) != {"at", "scale"}:
+                keys = sorted(item.keys())
+                raise ValueError(f"{name}[{i}] must have exactly keys ['at', 'scale'], got {keys!r}")
+            at = _parse_finite_number(item.get("at"), name=f"{name}[{i}].at")
+            scale = _parse_finite_number(item.get("scale"), name=f"{name}[{i}].scale")
+            if scale <= 0.0:
+                raise ValueError(f"{name}[{i}].scale must be > 0, got {scale!r}")
+            out.append((at, scale))
+        return out
 
     def _recalculate_normals(obj) -> None:
         _ensure_object_mode()
@@ -439,6 +570,9 @@ def build_armature_driven_character_mesh(*, armature, params: dict, out_root) ->
         else:
             raise ValueError(f"unsupported profile kind: {kind!r}")
 
+        # Apply scale early so taper/bulge/twist operates on real dimensions.
+        _apply_scale_only(obj)
+
         cap_start = mesh_spec.get('cap_start', True)
         cap_end = mesh_spec.get('cap_end', True)
         if not isinstance(cap_start, bool):
@@ -453,6 +587,34 @@ def build_armature_driven_character_mesh(*, armature, params: dict, out_root) ->
         _remove_segment_caps(obj, cap_start=cap_start, cap_end=cap_end)
 
         obj.name = f"Segment_{bone_name}"
+
+        taper = _parse_finite_number(
+            mesh_spec.get('taper'),
+            name=f"bone_meshes['{bone_name}'].taper",
+            default=1.0,
+        )
+        if taper <= 0.0:
+            raise ValueError(
+                f"bone_meshes['{bone_name}'].taper must be > 0, got {taper!r}"
+            )
+
+        bulge_points = _parse_bulge_points(
+            mesh_spec.get('bulge'),
+            name=f"bone_meshes['{bone_name}'].bulge",
+        )
+
+        twist = _parse_finite_number(
+            mesh_spec.get('twist'),
+            name=f"bone_meshes['{bone_name}'].twist",
+            default=0.0,
+        )
+
+        _deform_taper_bulge_twist(
+            obj,
+            taper=taper,
+            bulge_points=bulge_points,
+            twist_deg=twist,
+        )
 
         obj.rotation_mode = 'QUATERNION'
         base_q = axis_n.to_track_quat('Z', 'Y')
@@ -475,7 +637,7 @@ def build_armature_driven_character_mesh(*, armature, params: dict, out_root) ->
             ).to_quaternion()
             obj.rotation_quaternion = _quat_mul(base_q, rot_q)
 
-        _apply_rotation_scale(obj)
+        _apply_rotation_only(obj)
 
         vg = obj.vertex_groups.get(bone_name)
         if vg is None:
