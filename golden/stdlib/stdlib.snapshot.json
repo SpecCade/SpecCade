@@ -1008,6 +1008,100 @@
       "returns": "Returns dict[typing.Any, typing.Any]."
     },
     {
+      "name": "skeletal_mesh_skinned_spec",
+      "category": "audio",
+      "description": "Creates a complete skeletal mesh spec with the `skeletal_mesh.skinned_mesh_v1` recipe.",
+      "params": [
+        {
+          "name": "asset_id",
+          "type": "str",
+          "required": true
+        },
+        {
+          "name": "seed",
+          "type": "int",
+          "required": true
+        },
+        {
+          "name": "output_path",
+          "type": "str",
+          "required": true
+        },
+        {
+          "name": "format",
+          "type": "str",
+          "required": true
+        },
+        {
+          "name": "mesh_file",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "mesh_asset",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "skeleton_preset",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "skeleton",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "binding",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "material_slots",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "export",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "constraints",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "description",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "tags",
+          "type": "typing.Any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "license",
+          "type": "str",
+          "required": false,
+          "default": "CC0-1.0"
+        }
+      ],
+      "returns": "Returns dict[typing.Any, typing.Any]."
+    },
+    {
       "name": "spectral_source",
       "category": "audio",
       "description": "Creates a spectral source configuration.",
@@ -1688,7 +1782,7 @@
             "triangle",
             "square",
             "sawtooth",
-            "random"
+            "pulse"
           ]
         },
         {
@@ -2894,7 +2988,7 @@
     {
       "name": "skeletal_mesh_spec",
       "category": "character",
-      "description": "Creates a complete skeletal mesh spec with blender_rigged_mesh_v1 recipe.",
+      "description": "Creates a complete skeletal mesh spec with the `skeletal_mesh.armature_driven_v1` recipe.",
       "params": [
         {
           "name": "asset_id",
@@ -2923,7 +3017,7 @@
           "default": null
         },
         {
-          "name": "body_parts",
+          "name": "bone_meshes",
           "type": "typing.Any",
           "required": false,
           "default": null
@@ -2935,13 +3029,13 @@
           "default": null
         },
         {
-          "name": "material_slots",
+          "name": "bool_shapes",
           "type": "typing.Any",
           "required": false,
           "default": null
         },
         {
-          "name": "skinning",
+          "name": "material_slots",
           "type": "typing.Any",
           "required": false,
           "default": null
@@ -2954,12 +3048,6 @@
         },
         {
           "name": "constraints",
-          "type": "typing.Any",
-          "required": false,
-          "default": null
-        },
-        {
-          "name": "texturing",
           "type": "typing.Any",
           "required": false,
           "default": null

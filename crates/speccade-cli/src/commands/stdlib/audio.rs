@@ -397,7 +397,7 @@ pub(super) fn register_functions() -> Vec<FunctionInfo> {
             vec![
                 param!("rate", "float", req, range: Some(0.0), None),
                 param!("depth", "float", req, range: Some(0.0), Some(1.0)),
-                param!("waveform", "string", opt, "sine", enum: &["sine", "triangle", "square", "sawtooth", "random"]),
+                param!("waveform", "string", opt, "sine", enum: &["sine", "triangle", "square", "sawtooth", "pulse"]),
             ],
             "An LFO dict.",
             r#"lfo(5.0, 0.3, "sine")"#
