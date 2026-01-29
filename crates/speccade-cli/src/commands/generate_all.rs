@@ -90,7 +90,7 @@ pub struct AssetTypeSummary {
 /// Run the generate-all command
 ///
 /// # Arguments
-/// * `spec_dir` - Directory containing spec files (default: ./golden/speccade/specs)
+/// * `spec_dir` - Directory containing spec files (default: ./specs)
 /// * `out_root` - Output root directory (default: ./test-outputs)
 /// * `include_blender` - Whether to include Blender-based assets
 /// * `verbose` - Whether to show verbose output
@@ -108,7 +108,7 @@ pub fn run(
     let start = Instant::now();
 
     // Resolve paths
-    let spec_dir = spec_dir.unwrap_or("./golden/speccade/specs");
+    let spec_dir = spec_dir.unwrap_or("./specs");
     let out_root = out_root.unwrap_or("./test-outputs");
 
     let spec_path = Path::new(spec_dir);
@@ -570,18 +570,18 @@ mod tests {
     #[test]
     fn test_extract_asset_type() {
         assert_eq!(
-            extract_asset_type(Path::new("golden/specs/audio/beep.json")),
+            extract_asset_type(Path::new("specs/audio/beep.star")),
             Some("audio".to_string())
         );
         assert_eq!(
-            extract_asset_type(Path::new("specs/texture/brick.json")),
+            extract_asset_type(Path::new("specs/texture/brick.star")),
             Some("texture".to_string())
         );
         assert_eq!(
-            extract_asset_type(Path::new("specs/static_mesh/cube.json")),
-            Some("static_mesh".to_string())
+            extract_asset_type(Path::new("specs/mesh/cube.star")),
+            Some("mesh".to_string())
         );
-        assert_eq!(extract_asset_type(Path::new("random/path/file.json")), None);
+        assert_eq!(extract_asset_type(Path::new("random/path/file.star")), None);
     }
 
     #[test]

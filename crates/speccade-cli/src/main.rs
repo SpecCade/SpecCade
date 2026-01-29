@@ -179,7 +179,7 @@ enum Commands {
 
     /// Generate all assets from a directory of spec files
     GenerateAll {
-        /// Directory containing spec files (default: ./golden/speccade/specs)
+        /// Directory containing spec files (default: ./specs)
         #[arg(short, long)]
         spec_dir: Option<String>,
 

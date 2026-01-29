@@ -192,7 +192,7 @@ fn test_bake_instrument_sample_rejects_multiple_sources() {
 
 #[test]
 fn test_bake_instrument_sample_from_ref_supports_advanced_audio_v1() {
-    let spec_dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../golden/speccade/specs/music");
+    let spec_dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../specs/music");
 
     let instr = TrackerInstrument {
         name: "FM Ref".to_string(),

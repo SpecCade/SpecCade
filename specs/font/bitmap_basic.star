@@ -6,7 +6,7 @@ spec(
     license = "CC0-1.0",
     seed = 42,
     description = "Basic 5x7 monospace bitmap font with ASCII printable characters",
-    style_tags = ["retro", "pixel", "monospace"],
+    tags = ["retro", "pixel", "monospace"],
     outputs = [
         output("fonts/bitmap_basic_atlas.png", "png"),
         output("fonts/bitmap_basic_metrics.json", "json", kind = "metadata")

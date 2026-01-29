@@ -35,7 +35,7 @@ fn coverage_is_complete() {
         panic!(
             "Coverage check failed!\n\nstdout:\n{}\n\nstderr:\n{}\n\n\
              Run `cargo run -p speccade-cli -- coverage report` to see uncovered features.\n\
-             Create examples in golden/starlark/ or golden/speccade/specs/.",
+             Create examples in specs/.",
             output.stdout, output.stderr
         );
     }

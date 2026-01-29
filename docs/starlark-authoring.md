@@ -322,7 +322,7 @@ skeletal_mesh_spec(
 )
 ```
 
-See [golden/starlark/character_humanoid_blank.star](../golden/starlark/character_humanoid_blank.star) for the full example.
+See [specs/character/character_humanoid_blank.star](../specs/character/character_humanoid_blank.star) for the full example.
 
 ## Limitations
 
@@ -334,4 +334,4 @@ See [golden/starlark/character_humanoid_blank.star](../golden/starlark/character
 ## See Also
 
 - [stdlib-reference.md](./stdlib-reference.md) - Complete function reference
-- [golden/starlark/](../golden/starlark/) - Example specs
+- [specs/](../specs/) - Example specs (organized by type)

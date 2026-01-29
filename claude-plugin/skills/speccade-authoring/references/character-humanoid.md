@@ -64,4 +64,4 @@ skeletal_mesh_spec(
 
 - [Starlark Authoring Guide](../../../../docs/starlark-authoring.md)
 - [Character Spec Reference](../../../../docs/spec-reference/character.md)
-- [Golden example](../../../../golden/starlark/character_humanoid_blank.star)
+- [Example spec](../../../../specs/character/character_humanoid_blank.star)

@@ -64,12 +64,12 @@ When adding a new recipe kind or changing an existing one:
 5. Wire the backend into `crates/speccade-cli/src/dispatch/mod.rs` (and any relevant module under `crates/speccade-cli/src/dispatch/`).
 6. Update docs in `docs/spec-reference/` and any relevant RFCs.
 
-## Golden Specs
+## Specs
 
 Reference specs live under:
 
 ```
-golden/speccade/specs/
+specs/
 ```
 
-These are useful for manual testing and as examples when updating docs.
+Organized by type (audio, texture, mesh, animation, etc.). These are useful for manual testing and as examples when updating docs.

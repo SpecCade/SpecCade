@@ -8,27 +8,25 @@ use std::collections::{BTreeSet, HashSet};
 use std::fs;
 use std::path::PathBuf;
 
-/// Path to the golden stdlib snapshot file.
+/// Path to the stdlib snapshot file.
 fn snapshot_path() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .parent()
         .unwrap()
         .parent()
         .unwrap()
-        .join("golden")
         .join("stdlib")
         .join("stdlib.snapshot.json")
 }
 
-/// Path to the golden Starlark test fixtures directory.
-fn golden_starlark_dir() -> PathBuf {
+/// Path to the Starlark specs directory.
+fn specs_dir() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .parent()
         .unwrap()
         .parent()
         .unwrap()
-        .join("golden")
-        .join("starlark")
+        .join("specs")
 }
 
 /// Load all function names from the stdlib snapshot.
@@ -37,7 +35,7 @@ fn load_stdlib_function_names() -> Vec<String> {
     let contents = fs::read_to_string(&path).unwrap_or_else(|e| {
         panic!(
             "Failed to read stdlib snapshot at {}: {}\n\n\
-             Run: cargo run -p speccade-cli -- stdlib dump --format json > golden/stdlib/stdlib.snapshot.json",
+             Run: cargo run -p speccade-cli -- stdlib dump --format json > stdlib/stdlib.snapshot.json",
             path.display(),
             e
         )
@@ -54,10 +52,10 @@ fn load_stdlib_function_names() -> Vec<String> {
         .collect()
 }
 
-/// Scan all golden Starlark files and return the set of stdlib function names
+/// Scan all Starlark spec files and return the set of stdlib function names
 /// that appear to be called (matched via regex).
 fn find_called_functions(function_names: &[String]) -> HashSet<String> {
-    let dir = golden_starlark_dir();
+    let dir = specs_dir();
     let mut called = HashSet::new();
 
     // Build regex patterns for each function name
@@ -70,35 +68,44 @@ fn find_called_functions(function_names: &[String]) -> HashSet<String> {
         })
         .collect();
 
-    // Read all .star files in the golden/starlark directory
-    let entries = fs::read_dir(&dir).unwrap_or_else(|e| {
-        panic!(
-            "Failed to read golden starlark directory {}: {}",
-            dir.display(),
-            e
-        )
-    });
+    // Read all .star files recursively in the specs directory
+    fn scan_dir_recursive(
+        dir: &std::path::Path,
+        patterns: &[(String, Regex)],
+        called: &mut HashSet<String>,
+    ) {
+        let entries = match fs::read_dir(dir) {
+            Ok(e) => e,
+            Err(e) => {
+                eprintln!("Warning: could not read directory {}: {}", dir.display(), e);
+                return;
+            }
+        };
 
-    for entry in entries.flatten() {
-        let path = entry.path();
-        if path.extension().map_or(false, |ext| ext == "star") {
-            let contents = match fs::read_to_string(&path) {
-                Ok(c) => c,
-                Err(e) => {
-                    eprintln!("Warning: could not read {}: {}", path.display(), e);
-                    continue;
-                }
-            };
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.is_dir() {
+                scan_dir_recursive(&path, patterns, called);
+            } else if path.extension().map_or(false, |ext| ext == "star") {
+                let contents = match fs::read_to_string(&path) {
+                    Ok(c) => c,
+                    Err(e) => {
+                        eprintln!("Warning: could not read {}: {}", path.display(), e);
+                        continue;
+                    }
+                };
 
-            // Check each function pattern against the file contents
-            for (name, pattern) in &patterns {
-                if pattern.is_match(&contents) {
-                    called.insert(name.clone());
+                // Check each function pattern against the file contents
+                for (name, pattern) in patterns {
+                    if pattern.is_match(&contents) {
+                        called.insert(name.clone());
+                    }
                 }
             }
         }
     }
 
+    scan_dir_recursive(&dir, &patterns, &mut called);
     called
 }
 

@@ -13,8 +13,8 @@ This document covers tracker module generation in SpecCade.
 
 - Rust types: `crates/speccade-spec/src/recipe/music/`
 - Output validation rules: `crates/speccade-spec/src/validation/recipe_outputs.rs`
-- Golden specs: `golden/speccade/specs/music/`
-- Golden Starlark fixtures: `golden/starlark/music_tracker.star`
+- Starlark specs: `specs/music/`
+- Example: `specs/music/music_tracker.star`
 
 ## Outputs
 

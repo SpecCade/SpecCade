@@ -6,7 +6,7 @@ spec(
     license = "CC0-1.0",
     seed = 2021,
     description = "Snare drum - Pitched body with white noise for snare rattle",
-    style_tags = ["drums", "percussion", "snare"],
+    tags = ["drums", "percussion", "snare"],
     outputs = [output("drum_snare.wav", "wav")],
     recipe = {
         "kind": "audio_v1",

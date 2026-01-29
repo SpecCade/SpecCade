@@ -55,8 +55,8 @@ struct StdlibSnapshot {
 /// * `base_path` - Optional base path to the project root. If None, uses current directory.
 pub fn load_feature_inventory_from(base_path: Option<&Path>) -> Result<FeatureInventory> {
     let snapshot_path = match base_path {
-        Some(base) => base.join("golden/stdlib/stdlib.snapshot.json"),
-        None => PathBuf::from("golden/stdlib/stdlib.snapshot.json"),
+        Some(base) => base.join("stdlib/stdlib.snapshot.json"),
+        None => PathBuf::from("stdlib/stdlib.snapshot.json"),
     };
 
     let content = fs::read_to_string(&snapshot_path)
@@ -101,7 +101,7 @@ pub struct UsageLocation {
     pub line: Option<u32>,
 }
 
-/// Scan golden/starlark/*.star files for function usages
+/// Scan specs/**/*.star files for function usages
 ///
 /// # Arguments
 /// * `base_path` - Optional base path to the project root. If None, uses current directory.
@@ -109,8 +109,8 @@ pub fn scan_starlark_usages_from(base_path: Option<&Path>) -> Result<HashMap<Str
     let mut usages: HashMap<String, Vec<UsageLocation>> = HashMap::new();
 
     let pattern = match base_path {
-        Some(base) => base.join("golden/starlark/**/*.star").to_string_lossy().to_string(),
-        None => "golden/starlark/**/*.star".to_string(),
+        Some(base) => base.join("specs/**/*.star").to_string_lossy().to_string(),
+        None => "specs/**/*.star".to_string(),
     };
 
     let entries: Vec<_> = glob(&pattern)
@@ -150,7 +150,7 @@ pub fn scan_starlark_usages_from(base_path: Option<&Path>) -> Result<HashMap<Str
     Ok(usages)
 }
 
-/// Scan golden/starlark/*.star files for function usages (from current directory)
+/// Scan specs/**/*.star files for function usages (from current directory)
 pub fn scan_starlark_usages() -> Result<HashMap<String, Vec<UsageLocation>>> {
     scan_starlark_usages_from(None)
 }
@@ -166,132 +166,19 @@ pub struct JsonSpecUsages {
     pub enum_usages: HashMap<String, HashMap<String, Vec<UsageLocation>>>,
 }
 
-/// Scan golden/speccade/specs/**/*.json for recipe features
+/// Scan specs/**/*.star for recipe features (legacy JSON support removed)
 ///
 /// # Arguments
 /// * `base_path` - Optional base path to the project root. If None, uses current directory.
-pub fn scan_json_spec_usages_from(base_path: Option<&Path>) -> Result<JsonSpecUsages> {
-    let mut result = JsonSpecUsages::default();
-
-    let pattern = match base_path {
-        Some(base) => base.join("golden/speccade/specs/**/*.json").to_string_lossy().to_string(),
-        None => "golden/speccade/specs/**/*.json".to_string(),
-    };
-
-    let entries: Vec<_> = glob(&pattern)
-        .with_context(|| format!("Invalid glob pattern: {}", pattern))?
-        .filter_map(|e| e.ok())
-        .collect();
-
-    for path in entries {
-        // Skip report files and non-spec files
-        let filename = path.file_name().and_then(|n| n.to_str()).unwrap_or("");
-        if filename.contains("report") || filename.contains("hash") {
-            continue;
-        }
-
-        let content = fs::read_to_string(&path)
-            .with_context(|| format!("Failed to read {}", path.display()))?;
-
-        let file_str = path.to_string_lossy().replace('\\', "/");
-
-        // Parse as JSON
-        let spec: serde_json::Value = match serde_json::from_str(&content) {
-            Ok(v) => v,
-            Err(_) => continue, // Skip invalid JSON
-        };
-
-        let location = UsageLocation {
-            file: file_str.clone(),
-            line: None,
-        };
-
-        // Extract top-level asset_type
-        if let Some(asset_type) = spec.get("asset_type").and_then(|v| v.as_str()) {
-            result.enum_usages
-                .entry("asset_type".to_string())
-                .or_default()
-                .entry(asset_type.to_string())
-                .or_default()
-                .push(location.clone());
-        }
-
-        // Extract outputs[].format and outputs[].kind
-        if let Some(outputs) = spec.get("outputs").and_then(|v| v.as_array()) {
-            for output in outputs {
-                if let Some(format) = output.get("format").and_then(|v| v.as_str()) {
-                    result.enum_usages
-                        .entry("format".to_string())
-                        .or_default()
-                        .entry(format.to_string())
-                        .or_default()
-                        .push(location.clone());
-                }
-                if let Some(kind) = output.get("kind").and_then(|v| v.as_str()) {
-                    result.enum_usages
-                        .entry("kind".to_string())
-                        .or_default()
-                        .entry(kind.to_string())
-                        .or_default()
-                        .push(location.clone());
-                }
-            }
-        }
-
-        // Extract recipe.kind if present
-        if let Some(recipe) = spec.get("recipe") {
-            if let Some(kind) = recipe.get("kind").and_then(|k| k.as_str()) {
-                result.recipe_usages
-                    .entry(kind.to_string())
-                    .or_default()
-                    .push(location.clone());
-
-                // Scan recipe.params for enum values
-                if let Some(params) = recipe.get("params").and_then(|p| p.as_object()) {
-                    scan_params_for_enums(params, &location, &mut result.enum_usages);
-                }
-            }
-        }
-    }
-
-    Ok(result)
+pub fn scan_json_spec_usages_from(_base_path: Option<&Path>) -> Result<JsonSpecUsages> {
+    // JSON specs are no longer used - all specs are now Starlark
+    // This function returns empty usages for backwards compatibility
+    Ok(JsonSpecUsages::default())
 }
 
-/// Scan golden/speccade/specs/**/*.json for recipe features (from current directory)
+/// Scan for legacy JSON spec usages (no longer used - all specs are Starlark)
 pub fn scan_json_spec_usages() -> Result<JsonSpecUsages> {
     scan_json_spec_usages_from(None)
-}
-
-/// Recursively scan params object for string values that might be enum values
-fn scan_params_for_enums(
-    params: &serde_json::Map<String, serde_json::Value>,
-    location: &UsageLocation,
-    enum_usages: &mut HashMap<String, HashMap<String, Vec<UsageLocation>>>,
-) {
-    for (key, value) in params {
-        match value {
-            serde_json::Value::String(s) => {
-                // Record string values keyed by parameter name
-                enum_usages
-                    .entry(key.clone())
-                    .or_default()
-                    .entry(s.clone())
-                    .or_default()
-                    .push(location.clone());
-            }
-            serde_json::Value::Object(nested) => {
-                scan_params_for_enums(nested, location, enum_usages);
-            }
-            serde_json::Value::Array(arr) => {
-                for item in arr {
-                    if let serde_json::Value::Object(nested) = item {
-                        scan_params_for_enums(nested, location, enum_usages);
-                    }
-                }
-            }
-            _ => {}
-        }
-    }
 }
 
 /// Coverage report summary
@@ -511,7 +398,7 @@ pub fn run_generate(strict: bool, output: Option<&str>) -> Result<ExitCode> {
             "BLOCKING:".red().bold(),
             report.summary.uncovered
         );
-        println!("Create examples in golden/starlark/ or golden/speccade/specs/.");
+        println!("Create examples in specs/.");
         return Ok(ExitCode::FAILURE);
     }
 
@@ -625,7 +512,7 @@ mod tests {
     fn test_scan_starlark_usages() {
         let usages = scan_starlark_usages_from(Some(&project_root())).unwrap();
 
-        // Should find usages in golden/starlark files
+        // Should find usages in specs/**/*.star files
         assert!(!usages.is_empty(), "expected some usages");
 
         // Should find oscillator usage (common in audio tests)
@@ -636,11 +523,13 @@ mod tests {
 
     #[test]
     fn test_scan_json_spec_usages() {
+        // JSON specs are no longer used - all specs are now Starlark
         let usages = scan_json_spec_usages_from(Some(&project_root())).unwrap();
 
-        // Should find usages in golden/speccade/specs files
-        assert!(!usages.function_usages.is_empty() || !usages.recipe_usages.is_empty() || !usages.enum_usages.is_empty(),
-            "expected some usages from JSON specs");
+        // Returns empty (legacy function kept for compatibility)
+        assert!(usages.function_usages.is_empty());
+        assert!(usages.recipe_usages.is_empty());
+        assert!(usages.enum_usages.is_empty());
     }
 
     #[test]

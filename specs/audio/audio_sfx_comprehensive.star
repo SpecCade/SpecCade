@@ -1,18 +1,25 @@
 # Golden comprehensive test - exercises audio_v1 synthesis types: oscillator, fm_synth, karplus_strong,
 # noise_burst, pitched_body, metallic, additive, and multi_oscillator
 
-spec(
-    asset_id = "audio-sfx-comprehensive-golden",
-    asset_type = "audio",
-    license = "CC0-1.0",
-    seed = 999001,
-    description = "Golden comprehensive test - exercises audio_v1 synthesis types: oscillator, fm_synth, karplus_strong, noise_burst, pitched_body, metallic, additive, and multi_oscillator",
-    outputs = [output("audio_sfx_comprehensive.wav", "wav")],
-    variants = [
-        variant("loud", 100),
-        variant("quiet", 200)
+{
+    "spec_version": 1,
+    "asset_id": "audio-sfx-comprehensive-golden",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 999001,
+    "description": "Golden comprehensive test - exercises audio_v1 synthesis types: oscillator, fm_synth, karplus_strong, noise_burst, pitched_body, metallic, additive, and multi_oscillator",
+    "outputs": [
+        {
+            "kind": "primary",
+            "format": "wav",
+            "path": "audio_sfx_comprehensive.wav"
+        }
     ],
-    recipe = {
+    "variants": [
+        {"variant_id": "loud", "seed_offset": 100},
+        {"variant_id": "quiet", "seed_offset": 200}
+    ],
+    "recipe": {
         "kind": "audio_v1",
         "params": {
             "base_note": "C4",
@@ -80,9 +87,9 @@ spec(
                     pan = 0.1,
                     delay = 0.0
                 ),
-                # Karplus-Strong
+                # Karplus-Strong (using raw dict due to stdlib damping/decay field mismatch)
                 audio_layer(
-                    synthesis = karplus_strong(196.0, 0.996, 0.7),
+                    synthesis = {"type": "karplus_strong", "frequency": 196.0, "decay": 0.996, "blend": 0.7},
                     envelope = envelope(0.001, 0.5, 0.3, 0.8),
                     volume = 0.5,
                     pan = -0.2,
@@ -139,7 +146,7 @@ spec(
                 ),
                 # Pitched body
                 audio_layer(
-                    synthesis = pitched_body(200.0, 50.0),
+                    synthesis = pitched_body(start_freq = 200.0, end_freq = 50.0),
                     envelope = envelope(0.01, 0.4, 0.1, 0.5),
                     volume = 0.7,
                     pan = 0.0,
@@ -147,7 +154,7 @@ spec(
                 ),
                 # Metallic
                 audio_layer(
-                    synthesis = metallic_synth(800.0, 6, 1.414),
+                    synthesis = metallic(800.0, 6, 1.414),
                     envelope = envelope(0.001, 0.6, 0.1, 1.0),
                     volume = 0.35,
                     pan = -0.1,
@@ -155,7 +162,7 @@ spec(
                 ),
                 # Additive
                 audio_layer(
-                    synthesis = additive_synth(220.0, [1.0, 0.5, 0.33, 0.25, 0.2]),
+                    synthesis = additive(220.0, [1.0, 0.5, 0.33, 0.25, 0.2]),
                     envelope = envelope(0.02, 0.3, 0.5, 0.4),
                     volume = 0.4,
                     pan = 0.2,
@@ -177,4 +184,4 @@ spec(
             }
         }
     }
-)
+}

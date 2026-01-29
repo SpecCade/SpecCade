@@ -1,19 +1,26 @@
 # Golden comprehensive test - exercises multiple synthesis types: fm_synth, multi_oscillator, additive,
 # karplus_strong, and pitch_envelope with all ADSR
 
-spec(
-    asset_id = "audio-instrument-comprehensive-golden",
-    asset_type = "audio",
-    license = "CC0-1.0",
-    seed = 999002,
-    description = "Golden comprehensive test - exercises multiple synthesis types: fm_synth, multi_oscillator, additive, karplus_strong, and pitch_envelope with all ADSR",
-    outputs = [output("audio_instrument_comprehensive.wav", "wav")],
-    variants = [
-        variant("c3", 0),
-        variant("c4", 12),
-        variant("c5", 24)
+{
+    "spec_version": 1,
+    "asset_id": "audio-instrument-comprehensive-golden",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 999002,
+    "description": "Golden comprehensive test - exercises multiple synthesis types: fm_synth, multi_oscillator, additive, karplus_strong, and pitch_envelope with all ADSR",
+    "outputs": [
+        {
+            "kind": "primary",
+            "format": "wav",
+            "path": "audio_instrument_comprehensive.wav"
+        }
     ],
-    recipe = {
+    "variants": [
+        {"variant_id": "c3", "seed_offset": 0},
+        {"variant_id": "c4", "seed_offset": 12},
+        {"variant_id": "c5", "seed_offset": 24}
+    ],
+    "recipe": {
         "kind": "audio_v1",
         "params": {
             "base_note": "C4",
@@ -74,14 +81,14 @@ spec(
                 ),
                 # Layer 3: Additive synthesis
                 audio_layer(
-                    synthesis = additive_synth(440.0, [1.0, 0.5, 0.33, 0.25, 0.2, 0.167, 0.143, 0.125]),
+                    synthesis = additive(440.0, [1.0, 0.5, 0.33, 0.25, 0.2, 0.167, 0.143, 0.125]),
                     envelope = envelope(0.02, 0.3, 0.5, 0.4),
                     volume = 0.4,
                     pan = 0.2
                 ),
-                # Layer 4: Karplus-Strong
+                # Layer 4: Karplus-Strong (using raw dict due to stdlib damping/decay field mismatch)
                 audio_layer(
-                    synthesis = karplus_strong(220.0, 0.995, 0.8),
+                    synthesis = {"type": "karplus_strong", "frequency": 220.0, "decay": 0.995, "blend": 0.8},
                     envelope = envelope(0.001, 0.5, 0.3, 0.6),
                     volume = 0.5,
                     pan = 0.0
@@ -102,4 +109,4 @@ spec(
             }
         }
     }
-)
+}

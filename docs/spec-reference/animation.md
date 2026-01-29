@@ -40,7 +40,7 @@ SpecCade provides two recipe kinds for skeletal animation, each with a distinct 
 ## SSOT (Source Of Truth)
 
 - Rust types: `crates/speccade-spec/src/recipe/animation/`
-- Golden specs: `golden/speccade/specs/skeletal_animation/`
+- Starlark specs: `specs/animation/`
 - CLI validation: `speccade validate --spec file.json`
 
 ---

@@ -26,7 +26,8 @@ Deterministic asset pipeline: takes a `Spec` (JSON or Starlark) and produces art
 - `crates/speccade-tests/` - integration + determinism validation
 - `blender/` - Python scripts for Blender subprocess (see `blender/speccade/README.md`)
 - `schemas/` - JSON schemas (derived; keep aligned with `speccade-spec`)
-- `golden/` - golden outputs used by tests
+- `specs/` - Starlark spec files (audio, texture, mesh, animation, etc.)
+- `stdlib/` - stdlib snapshot for drift detection
 - `packs/` - example packs/inputs
 - `docs/` - documentation (start at `docs/README.md`)
 - `claude-plugin/` - Claude plugin (agents + references)
@@ -59,7 +60,7 @@ If `speccade` is not installed, substitute:
 
 - Update `crates/speccade-spec/` (types + validation) first.
 - Keep `schemas/` and `docs/spec-reference/` aligned with validation.
-- Update/extend golden tests in `crates/speccade-tests/` and/or `golden/`.
+- Update/extend tests in `crates/speccade-tests/` and add specs to `specs/`.
 - Update `PARITY_MATRIX.md` if behavior differs across backends.
 
 ## Starlark Authoring

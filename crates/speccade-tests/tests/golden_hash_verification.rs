@@ -19,9 +19,9 @@
 //! SPECCADE_UPDATE_GOLDEN_HASHES=1 cargo test -p speccade-tests --test golden_hash_verification
 //! ```
 //!
-//! ## Adding New Golden Specs
+//! ## Adding New Specs
 //!
-//! 1. Add the spec JSON file to `golden/speccade/specs/<type>/`
+//! 1. Add the spec Starlark file to `specs/<type>/`
 //! 2. Run with `SPECCADE_UPDATE_GOLDEN_HASHES=1` to generate the hash file
 //! 3. Commit both the spec and the hash file
 

@@ -36,7 +36,8 @@ speccade/
 ├── editor/                       # Tauri editor frontend (TypeScript)
 ├── schemas/                      # JSON schemas
 ├── packs/                        # Example packs/inputs
-├── golden/                       # Golden outputs for tests
+├── specs/                        # Starlark spec files (organized by type)
+├── stdlib/                       # Stdlib snapshot for drift detection
 ├── scripts/                      # Helper scripts (generate_all.sh/ps1)
 └── docs/                         # Additional docs
 ```

@@ -205,18 +205,22 @@ Every recipe has a `kind` and `params`. Most recipe kinds are `asset_type.recipe
 
 Recipe kinds must be compatible with the spec's `asset_type`. See type-specific documentation for available recipes and their parameters.
 
-## Golden Corpus
+## Spec Corpus
 
-Reference specs are available in the golden corpus:
+Reference specs (all Starlark) are organized by type:
 
 ```
-golden/speccade/specs/
+specs/
   audio/            # Audio specs (SFX and instrument samples)
   music/            # Tracker song specs
   texture/          # Texture specs (procedural graphs)
-  static_mesh/      # Static mesh specs
-  skeletal_mesh/    # Character mesh specs
-  skeletal_animation/ # Animation clip specs
+  mesh/             # Static mesh specs
+  character/        # Character (skeletal) mesh specs
+  animation/        # Animation clip specs
+  sprite/           # Sprite sheet specs
+  font/             # Bitmap font specs
+  ui/               # UI component specs
+  vfx/              # VFX/particle specs
 ```
 
-See `golden/speccade/specs/` for the current golden corpus layout.
+See `specs/` for the current spec corpus layout.

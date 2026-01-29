@@ -6,7 +6,7 @@ spec(
     license = "CC0-1.0",
     seed = 2020,
     description = "Kick drum - Low frequency pitched body with noise transient",
-    style_tags = ["drums", "percussion", "kick", "808"],
+    tags = ["drums", "percussion", "kick", "808"],
     outputs = [output("drum_kick.wav", "wav")],
     recipe = {
         "kind": "audio_v1",

@@ -1,17 +1,24 @@
 # Demo spec for CLI variant expansion (base + variants)
 
-spec(
-    asset_id = "audio_variants_demo",
-    asset_type = "audio",
-    license = "CC0-1.0",
-    seed = 424242,
-    description = "Demo spec for CLI variant expansion (base + variants).",
-    outputs = [output("demo.wav", "wav")],
-    variants = [
-        variant("soft", 0),
-        variant("hard", 1)
+{
+    "spec_version": 1,
+    "asset_id": "audio_variants_demo",
+    "asset_type": "audio",
+    "license": "CC0-1.0",
+    "seed": 424242,
+    "description": "Demo spec for CLI variant expansion (base + variants).",
+    "outputs": [
+        {
+            "kind": "primary",
+            "format": "wav",
+            "path": "demo.wav"
+        }
     ],
-    recipe = {
+    "variants": [
+        {"variant_id": "soft", "seed_offset": 0},
+        {"variant_id": "hard", "seed_offset": 1}
+    ],
+    "recipe": {
         "kind": "audio_v1",
         "params": {
             "duration_seconds": 0.15,
@@ -26,4 +33,4 @@ spec(
             ]
         }
     }
-)
+}

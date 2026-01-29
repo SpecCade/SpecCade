@@ -6,7 +6,7 @@ spec(
     license = "CC0-1.0",
     seed = 2013,
     description = "Brass section - FM synthesis with bright harmonics and punchy attack",
-    style_tags = ["orchestral", "brass", "big-band", "jazz"],
+    tags = ["orchestral", "brass", "big-band", "jazz"],
     outputs = [output("brass_section.wav", "wav")],
     recipe = {
         "kind": "audio_v1",

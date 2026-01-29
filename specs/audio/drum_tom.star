@@ -6,7 +6,7 @@ spec(
     license = "CC0-1.0",
     seed = 2023,
     description = "Tom drum - Mid-range pitched body with warm decay",
-    style_tags = ["drums", "percussion", "tom"],
+    tags = ["drums", "percussion", "tom"],
     outputs = [output("drum_tom.wav", "wav")],
     recipe = {
         "kind": "audio_v1",

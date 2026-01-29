@@ -17,7 +17,7 @@ Skeletal meshes are rigged 3D models (armature + mesh) exported as GLB.
 ## SSOT (Source Of Truth)
 
 - Rust types: `crates/speccade-spec/src/recipe/character/`
-- Golden specs: `golden/speccade/specs/skeletal_mesh/`
+- Starlark specs: `specs/character/`
 - CLI validation: `speccade validate --spec file.json`
 
 ## Recipe: `skeletal_mesh.armature_driven_v1`

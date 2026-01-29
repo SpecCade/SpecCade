@@ -6,7 +6,7 @@ spec(
     license = "CC0-1.0",
     seed = 2012,
     description = "String ensemble - Rich additive synthesis with vibrato-like modulation",
-    style_tags = ["orchestral", "strings", "classical", "ambient"],
+    tags = ["orchestral", "strings", "classical", "ambient"],
     outputs = [output("strings_ensemble.wav", "wav")],
     recipe = {
         "kind": "audio_v1",

@@ -1,1091 +1,1100 @@
 schema_version: 1
-generated_at: 2026-01-29T11:48:49.283457200+00:00
+generated_at: 2026-01-29T16:39:04.426943100+00:00
 summary:
   total_features: 244
-  covered: 244
-  uncovered: 0
-  coverage_percent: 100.0
+  covered: 152
+  uncovered: 92
+  coverage_percent: 62.295081967213115
 stdlib:
-  audio:
-  - name: allpass
-    covered: true
-    examples:
-    - golden/starlark/audio_filter_misc.star:29
-  - name: audio_spec
-    covered: true
-    examples:
-    - golden/starlark/audio_fx_extra.star:35
-  - name: auto_filter
-    covered: true
-    examples:
-    - golden/starlark/audio_modulation_misc.star:113
-  - name: cabinet_sim
-    covered: true
-    examples:
-    - golden/starlark/audio_fx_spatial.star:30
-  - name: comb_filter
-    covered: true
-    examples:
-    - golden/starlark/audio_filter_misc.star:50
-  - name: comb_filter_synth
-    covered: true
-    examples:
-    - golden/starlark/audio_synth_physical.star:47
-    - golden/starlark/audio_synth_physical.star:53
-    - golden/starlark/audio_synth_physical.star:59
-  - name: delay_tap
-    covered: true
-    examples:
-    - golden/starlark/audio_fx_spatial.star:26
-    - golden/starlark/audio_fx_spatial.star:27
-  - name: eq_band
-    covered: true
-    examples:
-    - golden/starlark/audio_fx_dynamics.star:29
-    - golden/starlark/audio_fx_dynamics.star:30
-    - golden/starlark/audio_fx_dynamics.star:31
-  - name: feedback_fm
-    covered: true
-    examples:
-    - golden/starlark/audio_synth_physical.star:5
-    - golden/starlark/audio_synth_physical.star:11
-  - name: flanger
-    covered: true
-    examples:
-    - golden/starlark/audio_fx_extra.star:20
-    - golden/starlark/audio_fx_extra.star:49
-  - name: formant_config
-    covered: true
-    examples:
-    - golden/starlark/audio_synth_exotic_advanced.star:90
-    - golden/starlark/audio_synth_exotic_advanced.star:91
-    - golden/starlark/audio_synth_exotic_advanced.star:92
-  - name: formant_filter
-    covered: true
-    examples:
-    - golden/starlark/audio_filter_misc.star:57
-    - golden/starlark/audio_formant_coverage.star:17
-    - golden/starlark/audio_formant_coverage.star:24
-  - name: granular_delay
-    covered: true
-    examples:
-    - golden/starlark/audio_fx_spatial.star:31
-  - name: impact_builder
-    covered: true
-    examples:
-    - golden/starlark/audio_fx_extra.star:84
-  - name: ladder
-    covered: true
-    examples:
-    - golden/starlark/audio_filter_ladder.star:23
-  - name: lfo_modulation
-    covered: true
-    examples:
-    - golden/starlark/audio_lfo_modulation.star:23
-    - golden/starlark/audio_lfo_modulation.star:34
-  - name: limiter
-    covered: true
-    examples:
-    - golden/starlark/audio_fx_dynamics.star:34
-  - name: multi_oscillator
-    covered: true
-    examples:
-    - golden/starlark/audio_synth_complex_misc.star:17
-    - golden/starlark/audio_synth_complex_misc.star:30
-    - golden/starlark/audio_synth_complex_misc.star:43
-  - name: multi_tap_delay
-    covered: true
-    examples:
-    - golden/starlark/audio_fx_spatial.star:25
-  - name: notch
-    covered: true
-    examples:
-    - golden/starlark/audio_filter_misc.star:22
-  - name: oneshot_envelope
-    covered: true
-    examples:
-    - golden/starlark/audio_fx_extra.star:9
-    - golden/starlark/audio_fx_extra.star:43
-    - golden/starlark/audio_fx_extra.star:65
-  - name: oscillator_config
-    covered: true
-    examples:
-    - golden/starlark/audio_synth_complex_misc.star:20
-    - golden/starlark/audio_synth_complex_misc.star:21
-    - golden/starlark/audio_synth_complex_misc.star:22
-  - name: parametric_eq
-    covered: true
-    examples:
-    - golden/starlark/audio_fx_dynamics.star:28
-    - golden/starlark/audio_fx_eq.star:25
-  - name: pd_synth
-    covered: true
-    examples:
-    - golden/starlark/audio_synth_physical.star:17
-    - golden/starlark/audio_synth_physical.star:23
-    - golden/starlark/audio_synth_physical.star:29
-  - name: phaser
-    covered: true
-    examples:
-    - golden/starlark/audio_fx_phaser.star:25
-  - name: ring_mod_synth
-    covered: true
-    examples:
-    - golden/starlark/audio_synth_complex_misc.star:5
-    - golden/starlark/audio_synth_complex_misc.star:11
-  - name: ring_modulator
-    covered: true
-    examples:
-    - golden/starlark/audio_fx_extra.star:23
-    - golden/starlark/audio_fx_extra.star:50
-  - name: rotary_speaker
-    covered: true
-    examples:
-    - golden/starlark/audio_modulation_misc.star:120
-  - name: shelf_high
-    covered: true
-    examples:
-    - golden/starlark/audio_filter_misc.star:43
-  - name: shelf_low
-    covered: true
-    examples:
-    - golden/starlark/audio_filter_misc.star:36
-  - name: skeletal_mesh_skinned_spec
-    covered: true
-    examples:
-    - golden/starlark/character_skinned.star:62
-  - name: spectral_source
-    covered: true
-    examples:
-    - golden/starlark/audio_synth_exotic.star:138
-    - golden/starlark/audio_synth_exotic_advanced.star:78
-  - name: stereo_widener
-    covered: true
-    examples:
-    - golden/starlark/audio_fx_spatial.star:24
-  - name: tape_saturation
-    covered: true
-    examples:
-    - golden/starlark/audio_fx_spatial.star:29
-  - name: transient_shaper
-    covered: true
-    examples:
-    - golden/starlark/audio_fx_dynamics.star:27
-  - name: true_peak_limiter
-    covered: true
-    examples:
-    - golden/starlark/audio_fx_extra.star:29
-    - golden/starlark/audio_fx_extra.star:51
-  - name: vector_path_point
-    covered: true
-    examples:
-    - golden/starlark/audio_synth_exotic_advanced.star:62
-    - golden/starlark/audio_synth_exotic_advanced.star:63
-    - golden/starlark/audio_synth_exotic_advanced.star:64
-  - name: vector_source
-    covered: true
-    examples:
-    - golden/starlark/audio_synth_exotic.star:69
-    - golden/starlark/audio_synth_exotic.star:70
-    - golden/starlark/audio_synth_exotic.star:71
-  - name: vector_synth
-    covered: true
-    examples:
-    - golden/starlark/audio_synth_exotic.star:66
-    - golden/starlark/audio_synth_exotic_advanced.star:51
-  - name: vocoder_band
-    covered: true
-    examples:
-    - golden/starlark/audio_synth_exotic.star:29
-    - golden/starlark/audio_synth_exotic.star:30
-  - name: waveshaper
-    covered: true
-    examples:
-    - golden/starlark/audio_modulation_misc.star:112
-  - name: whoosh_builder
-    covered: true
-    examples:
-    - golden/starlark/audio_fx_extra.star:96
-    - golden/starlark/audio_fx_extra.star:105
-  - name: with_loop_config
-    covered: true
-    examples:
-    - golden/starlark/audio_fx_extra.star:125
-    - golden/starlark/audio_fx_extra.star:133
-  mesh.baking:
-  - name: baking_settings
-    covered: true
-    examples:
-    - golden/starlark/mesh_primitives.star:11
-  mesh:
-  - name: mesh_primitive
-    covered: true
-    examples:
-    - golden/starlark/mesh_primitives.star:8
-  - name: mesh_recipe
-    covered: true
-    examples:
-    - golden/starlark/mesh_array.star:14
-    - golden/starlark/mesh_cube.star:24
-    - golden/starlark/mesh_decimate.star:14
-  - name: mesh_spec
-    covered: true
-    examples:
-    - golden/starlark/mesh_primitives.star:24
-  music:
-  - name: humanize_vol
-    covered: true
-    examples:
-    - golden/starlark/music_functions.star:7
-  - name: it_options
-    covered: true
-    examples:
-    - golden/starlark/music_automation.star:37
-  - name: loop_cue
-    covered: true
-    examples:
-    - golden/starlark/music_functions.star:13
-  - name: loop_envelope
-    covered: true
-    examples:
-    - golden/starlark/audio_fx_extra.star:12
-    - golden/starlark/audio_fx_extra.star:120
-  - name: loop_hi
-    covered: true
-    examples:
-    - golden/starlark/music_functions.star:20
-  - name: loop_low
-    covered: true
-    examples:
-    - golden/starlark/music_functions.star:26
-  - name: loop_main
-    covered: true
-    examples:
-    - golden/starlark/music_functions.star:32
-  - name: stinger
-    covered: true
-    examples:
-    - golden/starlark/music_functions.star:38
-  - name: swing
-    covered: true
-    examples:
-    - golden/starlark/music_functions.star:10
-  - name: tempo_change
-    covered: true
-    examples:
-    - golden/starlark/music_automation.star:35
-  - name: transition
-    covered: true
-    examples:
-    - golden/starlark/music_functions.star:49
-    - golden/starlark/music_functions.star:59
-    - golden/starlark/music_functions.star:64
-  - name: volume_fade
-    covered: true
-    examples:
-    - golden/starlark/music_automation.star:34
-  audio.filters:
-  - name: bandpass
-    covered: true
-    examples:
-    - golden/starlark/audio_filter_bandpass.star:23
-  - name: highpass
-    covered: true
-    examples:
-    - golden/starlark/audio_filter_misc.star:64
-    - golden/starlark/audio_fx_extra.star:67
-  - name: lowpass
-    covered: true
-    examples:
-    - golden/starlark/audio_fx_chorus.star:22
-    - golden/starlark/audio_fx_extra.star:45
-    - golden/starlark/audio_fx_extra.star:80
-  music.instruments:
-  - name: instrument_synthesis
-    covered: true
-    examples:
-    - golden/starlark/music_automation.star:6
-    - golden/starlark/music_functions.star:78
-    - golden/starlark/music_tracker.star:7
-    enum_coverage:
-      synth_type:
-        square:
-          covered: true
-          example: golden/speccade/specs/music/enum_coverage_synth_type.json
-        triangle:
-          covered: true
-          example: golden/speccade/specs/music/enum_coverage_synth_type.json
-        sawtooth:
-          covered: true
-          example: golden/speccade/specs/music/enum_coverage_synth_type.json
-        sine:
-          covered: true
-          example: golden/speccade/specs/music/enum_coverage_synth_type.json
-        pulse:
-          covered: true
-          example: golden/speccade/specs/music/enum_coverage_synth_type.json
-        noise:
-          covered: true
-          example: golden/speccade/specs/music/enum_coverage_synth_type.json
-  - name: tracker_instrument
-    covered: true
-    examples:
-    - golden/starlark/music_automation.star:4
-    - golden/starlark/music_functions.star:76
-    - golden/starlark/music_tracker.star:5
-    enum_coverage:
-      loop_mode:
-        forward:
-          covered: true
-          example: golden/speccade/specs/music/enum_coverage_loop_mode.json
-        auto:
-          covered: true
-          example: golden/speccade/specs/music/enum_coverage_loop_mode.json
-        none:
-          covered: true
-          example: golden/speccade/specs/music/enum_coverage_loop_mode.json
-        pingpong:
-          covered: true
-          example: golden/speccade/specs/music/enum_coverage_loop_mode.json
   audio.modulation:
   - name: lfo
     covered: true
     examples:
-    - golden/starlark/audio_lfo_modulation.star:24
-    - golden/starlark/audio_lfo_modulation.star:35
+    - specs/audio/audio_lfo_modulation.star:24
+    - specs/audio/audio_lfo_modulation.star:35
     enum_coverage:
       waveform:
         triangle:
-          covered: true
-          example: golden/speccade/specs/audio/audio_instrument_comprehensive.spec.json
+          covered: false
         pulse:
-          covered: true
-          example: golden/speccade/specs/audio/audio_instrument_oscillator.spec.json
+          covered: false
         sawtooth:
-          covered: true
-          example: golden/speccade/specs/audio/audio_instrument_comprehensive.spec.json
+          covered: false
         sine:
-          covered: true
-          example: golden/speccade/specs/audio/audio_formant_coverage.spec.json
+          covered: false
         square:
-          covered: true
-          example: golden/speccade/specs/audio/audio_instrument_comprehensive.spec.json
+          covered: false
   - name: pitch_envelope
     covered: true
     examples:
-    - golden/starlark/audio_modulation_misc.star:10
-    - golden/starlark/audio_modulation_misc.star:17
-    - golden/starlark/audio_modulation_misc.star:24
-  texture.graph:
-  - name: texture_graph
-    covered: true
-    examples:
-    - golden/starlark/spec_enum_coverage.star:97
-    - golden/starlark/texture_blend.star:14
-    - golden/starlark/texture_colored.star:15
-  audio.synthesis:
-  - name: additive
-    covered: true
-    examples:
-    - golden/starlark/audio_synth_additive.star:20
-  - name: am_synth
-    covered: true
-    examples:
-    - golden/starlark/audio_synth_am.star:19
-  - name: bowed_string
-    covered: true
-    examples:
-    - golden/starlark/audio_synth_exotic.star:98
-  - name: fm_synth
-    covered: true
-    examples:
-    - golden/starlark/audio_synth_fm.star:18
-  - name: formant_synth
-    covered: true
-    examples:
-    - golden/starlark/audio_formant_coverage.star:53
-    - golden/starlark/audio_formant_coverage.star:59
-    - golden/starlark/audio_formant_coverage.star:65
-    enum_coverage:
-      vowel:
-        a:
-          covered: true
-          example: golden/speccade/specs/audio/audio_formant_coverage.spec.json
-        o:
-          covered: true
-          example: golden/speccade/specs/audio/audio_formant_coverage.spec.json
-        e:
-          covered: true
-          example: golden/speccade/specs/audio/audio_formant_coverage.spec.json
-        u:
-          covered: true
-          example: golden/speccade/specs/audio/audio_formant_coverage.spec.json
-        i:
-          covered: true
-          example: golden/speccade/specs/audio/audio_formant_coverage.spec.json
-      vowel_morph:
-        i:
-          covered: true
-          example: golden/speccade/specs/audio/audio_formant_coverage.spec.json
-        o:
-          covered: true
-          example: golden/speccade/specs/audio/audio_formant_coverage.spec.json
-        a:
-          covered: true
-          example: golden/speccade/specs/audio/audio_formant_coverage.spec.json
-        u:
-          covered: true
-          example: golden/speccade/specs/audio/audio_formant_coverage.spec.json
-        e:
-          covered: true
-          example: golden/speccade/specs/audio/audio_formant_coverage.spec.json
-  - name: granular
-    covered: true
-    examples:
-    - golden/starlark/audio_formant_coverage.star:121
-    - golden/starlark/audio_formant_coverage.star:131
-    - golden/starlark/audio_formant_coverage.star:142
-  - name: granular_source
-    covered: true
-    examples:
-    - golden/starlark/audio_formant_coverage.star:122
-    - golden/starlark/audio_formant_coverage.star:132
-    - golden/starlark/audio_formant_coverage.star:143
-    enum_coverage:
-      source_type:
-        noise:
-          covered: true
-          example: golden/speccade/specs/audio/enum_coverage_vector_source.json
-        formant:
-          covered: true
-          example: golden/speccade/specs/audio/enum_coverage_source_type.json
-        tone:
-          covered: true
-          example: golden/speccade/specs/audio/enum_coverage_source_type.json
-  - name: karplus_strong
-    covered: true
-    examples:
-    - golden/starlark/audio_synth_karplus.star:20
-  - name: membrane_drum
-    covered: true
-    examples:
-    - golden/starlark/audio_synth_membrane.star:20
-  - name: metallic
-    covered: true
-    examples:
-    - golden/starlark/audio_synth_physical.star:35
-    - golden/starlark/audio_synth_physical.star:41
-  - name: modal
-    covered: true
-    examples:
-    - golden/starlark/audio_formant_coverage.star:156
-    - golden/starlark/audio_formant_coverage.star:170
-    - golden/starlark/audio_formant_coverage.star:184
-    enum_coverage:
-      excitation:
-        impulse:
-          covered: true
-          example: golden/speccade/specs/audio/audio_formant_coverage.spec.json
-        noise:
-          covered: true
-          example: golden/speccade/specs/audio/audio_formant_coverage.spec.json
-        pluck:
-          covered: true
-          example: golden/speccade/specs/audio/audio_formant_coverage.spec.json
-  - name: modal_mode
-    covered: true
-    examples:
-    - golden/starlark/audio_formant_coverage.star:159
-    - golden/starlark/audio_formant_coverage.star:160
-    - golden/starlark/audio_formant_coverage.star:161
-  - name: noise_burst
-    covered: true
-    examples:
-    - golden/starlark/audio_filter_bandpass.star:20
-    - golden/starlark/audio_filter_misc.star:19
-    - golden/starlark/audio_fx_eq.star:19
-    enum_coverage:
-      noise_type:
-        white:
-          covered: true
-          example: golden/speccade/specs/audio/audio_formant_coverage.spec.json
-        brown:
-          covered: true
-          example: golden/speccade/specs/audio/audio_sfx_comprehensive.spec.json
-        pink:
-          covered: true
-          example: golden/speccade/specs/audio/audio_instrument_noise.spec.json
-  - name: oscillator
-    covered: true
-    examples:
-    - golden/starlark/audio_filter_ladder.star:20
-    - golden/starlark/audio_filter_misc.star:26
-    - golden/starlark/audio_filter_misc.star:33
-    enum_coverage:
-      curve:
-        logarithmic:
-          covered: true
-          example: golden/speccade/specs/audio/triangle_arp.json
-        exponential:
-          covered: true
-          example: golden/speccade/specs/audio/audio_instrument_fm_advanced.spec.json
-        linear:
-          covered: true
-          example: golden/speccade/specs/audio/audio_instrument_oscillator.spec.json
-      waveform:
-        triangle:
-          covered: true
-          example: golden/speccade/specs/audio/audio_instrument_comprehensive.spec.json
-        square:
-          covered: true
-          example: golden/speccade/specs/audio/audio_instrument_comprehensive.spec.json
-        sawtooth:
-          covered: true
-          example: golden/speccade/specs/audio/audio_instrument_comprehensive.spec.json
-        pulse:
-          covered: true
-          example: golden/speccade/specs/audio/audio_instrument_oscillator.spec.json
-        sine:
-          covered: true
-          example: golden/speccade/specs/audio/audio_formant_coverage.spec.json
-  - name: pitched_body
-    covered: true
-    examples:
-    - golden/starlark/audio_synth_exotic.star:147
-  - name: pulsar
-    covered: true
-    examples:
-    - golden/starlark/audio_synth_exotic.star:111
-    enum_coverage:
-      shape:
-        square:
-          covered: true
-          example: golden/speccade/specs/audio/enum_coverage_pulsar.json
-        sawtooth:
-          covered: true
-          example: golden/speccade/specs/audio/enum_coverage_pulsar.json
-        sine:
-          covered: true
-          example: golden/speccade/specs/audio/enum_coverage_pulsar.json
-        triangle:
-          covered: true
-          example: golden/speccade/specs/audio/enum_coverage_pulsar.json
-        pulse:
-          covered: true
-          example: golden/speccade/specs/audio/enum_coverage_pulsar.json
-  - name: spectral_freeze
-    covered: true
-    examples:
-    - golden/starlark/audio_synth_exotic.star:137
-    - golden/starlark/audio_synth_exotic_advanced.star:77
-  - name: supersaw_unison
-    covered: true
-    examples:
-    - golden/starlark/audio_synth_supersaw.star:19
-    enum_coverage:
-      detune_curve:
-        linear:
-          covered: true
-          example: golden/speccade/specs/audio/enum_coverage_supersaw.json
-        exp2:
-          covered: true
-          example: golden/speccade/specs/audio/enum_coverage_supersaw.json
-  - name: vocoder
-    covered: true
-    examples:
-    - golden/starlark/audio_formant_coverage.star:202
-    - golden/starlark/audio_formant_coverage.star:215
-    - golden/starlark/audio_synth_exotic.star:20
-    enum_coverage:
-      band_spacing:
-        linear:
-          covered: true
-          example: golden/speccade/specs/audio/audio_formant_coverage.spec.json
-        logarithmic:
-          covered: true
-          example: golden/speccade/specs/audio/audio_formant_coverage.spec.json
-      carrier_type:
-        noise:
-          covered: true
-          example: golden/speccade/specs/audio/audio_formant_coverage.spec.json
-        pulse:
-          covered: true
-          example: golden/speccade/specs/audio/audio_formant_coverage.spec.json
-        sawtooth:
-          covered: true
-          example: golden/speccade/specs/audio/audio_formant_coverage.spec.json
-  - name: vosim
-    covered: true
-    examples:
-    - golden/starlark/audio_synth_exotic.star:124
-  - name: waveguide
-    covered: true
-    examples:
-    - golden/starlark/audio_synth_exotic.star:84
-  - name: wavetable
-    covered: true
-    examples:
-    - golden/starlark/audio_synth_wavetable.star:20
-    enum_coverage:
-      table:
-        pwm:
-          covered: true
-          example: golden/speccade/specs/audio/enum_coverage_wavetable.json
-        organ:
-          covered: true
-          example: golden/speccade/specs/audio/enum_coverage_wavetable.json
-        basic:
-          covered: true
-          example: golden/speccade/specs/audio/enum_coverage_wavetable.json
-        formant:
-          covered: true
-          example: golden/speccade/specs/audio/enum_coverage_wavetable.json
-        digital:
-          covered: true
-          example: golden/speccade/specs/audio/enum_coverage_wavetable.json
-        analog:
-          covered: true
-          example: golden/speccade/specs/audio/enum_coverage_wavetable.json
-  texture.nodes:
-  - name: add_node
-    covered: true
-    examples:
-    - golden/starlark/texture_blend.star:25
-    - golden/starlark/texture_nodes_misc.star:18
-    - golden/starlark/texture_normalmap.star:24
-  - name: checkerboard_node
-    covered: true
-    examples:
-    - golden/starlark/texture_patterns.star:24
-  - name: clamp_node
-    covered: true
-    examples:
-    - golden/starlark/texture_nodes_misc.star:20
-    - golden/starlark/texture_normalmap.star:27
-  - name: color_ramp_node
-    covered: true
-    examples:
-    - golden/starlark/texture_advanced.star:39
-    - golden/starlark/texture_blend.star:34
-    - golden/starlark/texture_colored.star:20
-  - name: compose_rgba_node
-    covered: true
-    examples:
-    - golden/starlark/texture_advanced.star:14
-    - golden/starlark/texture_advanced.star:38
-  - name: constant_node
-    covered: true
-    examples:
-    - golden/starlark/texture_advanced.star:37
-    - golden/starlark/texture_normalmap.star:22
-  - name: gradient_node
-    covered: true
-    examples:
-    - golden/starlark/texture_blend.star:22
-    - golden/starlark/texture_colored.star:19
-    enum_coverage:
-      direction:
-        radial:
-          covered: true
-          example: golden/speccade/specs/texture/procedural_ops_coverage.json
-        horizontal:
-          covered: true
-          example: golden/speccade/specs/texture/procedural_ops_coverage.json
-        vertical:
-          covered: true
-          example: golden/speccade/specs/texture/procedural_ops_coverage.json
-  - name: grayscale_node
-    covered: true
-    examples:
-    - golden/starlark/texture_advanced.star:8
-    - golden/starlark/texture_advanced.star:35
-  - name: invert_node
-    covered: true
-    examples:
-    - golden/starlark/texture_nodes_misc.star:16
-  - name: lerp_node
-    covered: true
-    examples:
-    - golden/starlark/texture_blend.star:31
-  - name: multiply_node
-    covered: true
-    examples:
-    - golden/starlark/texture_blend.star:28
-    - golden/starlark/texture_nodes_misc.star:19
-    - golden/starlark/texture_normalmap.star:23
-  - name: noise_node
-    covered: true
-    examples:
-    - golden/starlark/spec_enum_coverage.star:99
-    - golden/starlark/texture_advanced.star:33
-    - golden/starlark/texture_advanced.star:34
-    enum_coverage:
-      algorithm:
-        value:
-          covered: true
-          example: golden/speccade/specs/texture/noise_value.json
-        simplex:
-          covered: true
-          example: golden/speccade/specs/texture/noise_simplex.json
-        worley:
-          covered: true
-          example: golden/speccade/specs/texture/noise_worley.json
-        perlin:
-          covered: true
-          example: golden/speccade/specs/texture/brick_normal.json
-        fbm:
-          covered: true
-          example: golden/speccade/specs/texture/noise_fbm.json
-  - name: normal_from_height_node
-    covered: true
-    examples:
-    - golden/starlark/texture_normalmap.star:30
-  - name: palette_node
-    covered: true
-    examples:
-    - golden/starlark/texture_advanced.star:11
-    - golden/starlark/texture_advanced.star:36
-  - name: stripes_node
-    covered: true
-    examples:
-    - golden/starlark/texture_patterns.star:18
-    - golden/starlark/texture_patterns.star:21
-  - name: texture_bomb_node
-    covered: true
-    examples:
-    - golden/starlark/texture_stochastic.star:16
-  - name: threshold_node
-    covered: true
-    examples:
-    - golden/starlark/texture_advanced.star:57
-    - golden/starlark/texture_nodes_misc.star:17
-    - golden/starlark/texture_noise.star:17
-  - name: wang_tiles_node
-    covered: true
-    examples:
-    - golden/starlark/texture_stochastic.star:10
-  audio.effects:
-  - name: bitcrush
-    covered: true
-    examples:
-    - golden/starlark/audio_fx_bitcrush.star:25
-  - name: chorus
-    covered: true
-    examples:
-    - golden/starlark/audio_fx_chorus.star:26
-  - name: compressor
-    covered: true
-    examples:
-    - golden/starlark/audio_fx_dynamics.star:25
-  - name: delay
-    covered: true
-    examples:
-    - golden/starlark/audio_fx_dynamics.star:26
-  - name: reverb
-    covered: true
-    examples:
-    - golden/starlark/audio_fx_dynamics.star:24
-    - golden/starlark/audio_synth_granular.star:32
-    - golden/starlark/audio_synth_layered.star:34
-  music.patterns:
-  - name: arrangement_entry
-    covered: true
-    examples:
-    - golden/starlark/music_automation.star:31
-    - golden/starlark/music_functions.star:105
-    - golden/starlark/music_tracker.star:68
-  - name: pattern_note
-    covered: true
-    examples:
-    - golden/starlark/music_automation.star:14
-    - golden/starlark/music_automation.star:15
-    - golden/starlark/music_automation.star:16
-  - name: tracker_pattern
-    covered: true
-    examples:
-    - golden/starlark/music_automation.star:10
-    - golden/starlark/music_functions.star:83
-    - golden/starlark/music_tracker.star:19
-  mesh.modifiers:
-  - name: array_modifier
-    covered: true
-    examples:
-    - golden/starlark/mesh_array.star:20
-  - name: bevel_modifier
-    covered: true
-    examples:
-    - golden/starlark/mesh_array.star:18
-    - golden/starlark/mesh_cube.star:28
-    - golden/starlark/mesh_edge_split.star:18
-  - name: decimate_modifier
-    covered: true
-    examples:
-    - golden/starlark/mesh_decimate.star:21
-    - golden/starlark/mesh_sphere.star:15
-  - name: edge_split_modifier
-    covered: true
-    examples:
-    - golden/starlark/mesh_edge_split.star:17
-    - golden/starlark/mesh_modifiers.star:25
-  - name: mirror_modifier
-    covered: true
-    examples:
-    - golden/starlark/mesh_mirror.star:19
-  - name: solidify_modifier
-    covered: true
-    examples:
-    - golden/starlark/mesh_solidify.star:19
-  - name: subdivision_modifier
-    covered: true
-    examples:
-    - golden/starlark/mesh_cube.star:29
-    - golden/starlark/mesh_decimate.star:19
-    - golden/starlark/mesh_modifiers.star:22
-  - name: triangulate_modifier
-    covered: true
-    examples:
-    - golden/starlark/mesh_primitives.star:18
-    - golden/starlark/mesh_primitives.star:31
-  music.song:
-  - name: music_spec
-    covered: true
-    examples:
-    - golden/starlark/music_functions.star:92
-    - golden/starlark/music_tracker.star:54
-    - golden/starlark/spec_enum_coverage.star:40
-    enum_coverage:
-      format:
-        it:
-          covered: true
-          example: golden/speccade/specs/music/advanced_features.json
-        xm:
-          covered: true
-          example: golden/speccade/specs/music/audio_inline_metallic.json
-  - name: tracker_song
-    covered: true
-    examples:
-    - golden/starlark/music_automation.star:23
-    enum_coverage:
-      format:
-        xm:
-          covered: true
-          example: golden/speccade/specs/music/audio_inline_metallic.json
-        it:
-          covered: true
-          example: golden/speccade/specs/music/advanced_features.json
-  audio.layers:
-  - name: audio_layer
-    covered: true
-    examples:
-    - golden/starlark/audio_filter_bandpass.star:19
-    - golden/starlark/audio_filter_ladder.star:19
-    - golden/starlark/audio_filter_misc.star:18
+    - specs/audio/audio_modulation_misc.star:10
+    - specs/audio/audio_modulation_misc.star:17
+    - specs/audio/audio_modulation_misc.star:24
   core:
   - name: envelope
     covered: true
     examples:
-    - golden/starlark/audio_filter_bandpass.star:21
-    - golden/starlark/audio_filter_ladder.star:21
-    - golden/starlark/audio_filter_misc.star:20
+    - specs/audio/audio_filter_bandpass.star:21
+    - specs/audio/audio_filter_ladder.star:21
+    - specs/audio/audio_filter_misc.star:20
   - name: output
     covered: true
     examples:
-    - golden/starlark/audio_filter_bandpass.star:11
-    - golden/starlark/audio_filter_ladder.star:11
-    - golden/starlark/audio_filter_misc.star:10
+    - specs/animation/aim_constraint_test.star:9
+    - specs/animation/bone_constraints_test.star:9
+    - specs/animation/finger_controls_test.star:9
     enum_coverage:
-      kind:
-        primary:
-          covered: true
-          example: golden/speccade/specs/animation/helpers/idle_sway_basic.json
-        metadata:
-          covered: true
-          example: golden/speccade/specs/font/bitmap_basic.json
-        preview:
-          covered: true
-          example: golden/speccade/specs/sprite/enum_coverage_sprite.json
       format:
-        wav:
-          covered: true
-          example: golden/speccade/specs/audio/audio_formant_coverage.spec.json
-        xm:
-          covered: true
-          example: golden/speccade/specs/music/audio_inline_metallic.json
-        it:
-          covered: true
-          example: golden/speccade/specs/music/advanced_features.json
-        glb:
-          covered: true
-          example: golden/speccade/specs/animation/helpers/idle_sway_basic.json
         png:
-          covered: true
-          example: golden/speccade/specs/font/bitmap_basic.json
+          covered: false
+        xm:
+          covered: false
+        glb:
+          covered: false
         gltf:
-          covered: true
-          example: golden/speccade/specs/static_mesh/enum_coverage_gltf.json
+          covered: false
         json:
-          covered: true
-          example: golden/speccade/specs/font/bitmap_basic.json
+          covered: false
+        it:
+          covered: false
+        wav:
+          covered: false
+      kind:
+        metadata:
+          covered: false
+        preview:
+          covered: false
+        primary:
+          covered: false
   - name: spec
     covered: true
     examples:
-    - golden/starlark/audio_filter_bandpass.star:7
-    - golden/starlark/audio_filter_ladder.star:7
-    - golden/starlark/audio_filter_misc.star:6
+    - specs/animation/aim_constraint_test.star:3
+    - specs/animation/bone_constraints_test.star:3
+    - specs/animation/finger_controls_test.star:3
     enum_coverage:
       asset_type:
-        skeletal_mesh:
-          covered: true
-          example: golden/speccade/specs/skeletal_mesh/character_comprehensive.spec.json
-        sprite:
-          covered: true
-          example: golden/speccade/specs/sprite/enum_coverage_sprite.json
-        ui:
-          covered: true
-          example: golden/speccade/specs/ui/icon_set_basic.json
-        music:
-          covered: true
-          example: golden/speccade/specs/music/advanced_features.json
-        font:
-          covered: true
-          example: golden/speccade/specs/font/bitmap_basic.json
-        skeletal_animation:
-          covered: true
-          example: golden/speccade/specs/animation/helpers/idle_sway_basic.json
-        vfx:
-          covered: true
-          example: golden/speccade/specs/vfx/explosion-flipbook.json
-        audio:
-          covered: true
-          example: golden/speccade/specs/audio/audio_formant_coverage.spec.json
-        static_mesh:
-          covered: true
-          example: golden/speccade/specs/mesh/shrinkwrap/armor_plate.json
         texture:
-          covered: true
-          example: golden/speccade/specs/texture/brick_normal.json
-  animation:
-  - name: animation_export_settings
+          covered: false
+        skeletal_mesh:
+          covered: false
+        sprite:
+          covered: false
+        music:
+          covered: false
+        skeletal_animation:
+          covered: false
+        static_mesh:
+          covered: false
+        vfx:
+          covered: false
+        ui:
+          covered: false
+        audio:
+          covered: false
+        font:
+          covered: false
+  music.instruments:
+  - name: instrument_synthesis
     covered: true
     examples:
-    - golden/starlark/animation_walk_cycle.star:71
-  - name: animation_keyframe
+    - specs/audio/spec_enum_coverage.star:51
+    - specs/audio/spec_enum_coverage.star:57
+    - specs/audio/spec_enum_coverage.star:63
+    enum_coverage:
+      synth_type:
+        noise:
+          covered: false
+        sine:
+          covered: false
+        triangle:
+          covered: false
+        square:
+          covered: false
+        pulse:
+          covered: false
+        sawtooth:
+          covered: false
+  - name: tracker_instrument
     covered: true
     examples:
-    - golden/starlark/animation_ik.star:67
-    - golden/starlark/animation_ik.star:74
-    - golden/starlark/animation_walk_cycle.star:31
-  - name: bone_transform
+    - specs/audio/spec_enum_coverage.star:49
+    - specs/audio/spec_enum_coverage.star:55
+    - specs/audio/spec_enum_coverage.star:61
+    enum_coverage:
+      loop_mode:
+        pingpong:
+          covered: false
+        none:
+          covered: false
+        forward:
+          covered: false
+        auto:
+          covered: false
+  music.patterns:
+  - name: arrangement_entry
     covered: true
     examples:
-    - golden/starlark/animation_ik.star:70
-    - golden/starlark/animation_ik.star:71
-    - golden/starlark/animation_ik.star:77
-  - name: ik_keyframe
+    - specs/audio/spec_enum_coverage.star:82
+    - specs/music/advanced_features.star:103
+    - specs/music/advanced_features.star:104
+  - name: pattern_note
     covered: true
     examples:
-    - golden/starlark/animation_ik.star:34
-    - golden/starlark/animation_ik.star:44
-  - name: ik_target_transform
+    - specs/audio/spec_enum_coverage.star:76
+    - specs/audio/spec_enum_coverage.star:77
+    - specs/audio/spec_enum_coverage.star:78
+  - name: tracker_pattern
     covered: true
     examples:
-    - golden/starlark/animation_ik.star:23
-    - golden/starlark/animation_ik.star:28
-    - golden/starlark/animation_ik.star:37
-  - name: skeletal_animation_spec
+    - specs/audio/spec_enum_coverage.star:75
+    - specs/music/advanced_features.star:23
+    - specs/music/advanced_features.star:37
+  mesh.baking:
+  - name: baking_settings
     covered: true
     examples:
-    - golden/starlark/animation_ik.star:55
-    - golden/starlark/animation_walk_cycle.star:18
-    - golden/starlark/spec_enum_coverage.star:217
-  texture:
-  - name: decal_metadata
+    - specs/mesh/mesh_primitives.star:11
+  audio.effects:
+  - name: bitcrush
     covered: true
     examples:
-    - golden/starlark/texture_advanced.star:23
-    - golden/starlark/texture_advanced.star:61
-  - name: decal_spec
+    - specs/audio/audio_fx_bitcrush.star:25
+  - name: chorus
     covered: true
     examples:
-    - golden/starlark/texture_advanced.star:50
-  - name: matcap_v1
+    - specs/audio/audio_fx_chorus.star:26
+  - name: compressor
     covered: true
     examples:
-    - golden/starlark/texture_matcap.star:5
-  - name: material_preset_v1
+    - specs/audio/audio_fx_dynamics.star:25
+  - name: delay
     covered: true
     examples:
-    - golden/starlark/texture_material_preset.star:6
-  - name: splat_layer
+    - specs/audio/audio_fx_dynamics.star:26
+  - name: reverb
     covered: true
     examples:
-    - golden/starlark/texture_advanced.star:69
-    - golden/starlark/texture_advanced.star:78
-    - golden/starlark/texture_advanced.star:85
-  - name: splat_set_spec
+    - specs/audio/audio_fx_dynamics.star:24
+    - specs/audio/audio_synth_granular.star:32
+    - specs/audio/audio_synth_layered.star:34
+  music:
+  - name: humanize_vol
     covered: true
     examples:
-    - golden/starlark/texture_advanced.star:93
-  - name: texture_spec
+    - specs/music/music_functions.star:7
+  - name: it_options
     covered: true
     examples:
-    - golden/starlark/texture_advanced.star:28
-  - name: trimsheet_spec
+    - specs/music/music_automation.star:37
+  - name: loop_cue
     covered: true
     examples:
-    - golden/starlark/texture_advanced.star:132
-  - name: trimsheet_tile
+    - specs/music/music_functions.star:13
+  - name: loop_envelope
     covered: true
     examples:
-    - golden/starlark/texture_advanced.star:110
-    - golden/starlark/texture_advanced.star:117
-    - golden/starlark/texture_advanced.star:124
+    - specs/audio/audio_fx_extra.star:12
+    - specs/audio/audio_fx_extra.star:120
+  - name: loop_hi
+    covered: true
+    examples:
+    - specs/music/music_functions.star:20
+  - name: loop_low
+    covered: true
+    examples:
+    - specs/music/music_functions.star:26
+  - name: loop_main
+    covered: true
+    examples:
+    - specs/music/music_functions.star:32
+  - name: stinger
+    covered: true
+    examples:
+    - specs/music/music_functions.star:38
+  - name: swing
+    covered: true
+    examples:
+    - specs/music/music_functions.star:10
+  - name: tempo_change
+    covered: true
+    examples:
+    - specs/music/music_automation.star:35
+  - name: transition
+    covered: true
+    examples:
+    - specs/music/music_functions.star:49
+    - specs/music/music_functions.star:59
+    - specs/music/music_functions.star:64
+  - name: volume_fade
+    covered: true
+    examples:
+    - specs/music/music_automation.star:34
+  mesh:
+  - name: mesh_primitive
+    covered: true
+    examples:
+    - specs/mesh/mesh_primitives.star:8
+  - name: mesh_recipe
+    covered: true
+    examples:
+    - specs/audio/spec_enum_coverage.star:114
+    - specs/audio/spec_enum_coverage.star:126
+    - specs/mesh/mesh_array.star:14
+  - name: mesh_spec
+    covered: true
+    examples:
+    - specs/mesh/mesh_primitives.star:24
+  mesh.modifiers:
+  - name: array_modifier
+    covered: true
+    examples:
+    - specs/mesh/mesh_array.star:20
+  - name: bevel_modifier
+    covered: true
+    examples:
+    - specs/mesh/mesh_array.star:18
+    - specs/mesh/mesh_cube.star:28
+    - specs/mesh/mesh_edge_split.star:18
+  - name: decimate_modifier
+    covered: true
+    examples:
+    - specs/mesh/mesh_decimate.star:21
+    - specs/mesh/mesh_sphere.star:15
+  - name: edge_split_modifier
+    covered: true
+    examples:
+    - specs/mesh/mesh_edge_split.star:17
+    - specs/mesh/mesh_modifiers.star:25
+  - name: mirror_modifier
+    covered: true
+    examples:
+    - specs/mesh/mesh_mirror.star:19
+  - name: solidify_modifier
+    covered: true
+    examples:
+    - specs/mesh/mesh_solidify.star:19
+  - name: subdivision_modifier
+    covered: true
+    examples:
+    - specs/mesh/mesh_cube.star:29
+    - specs/mesh/mesh_decimate.star:19
+    - specs/mesh/mesh_modifiers.star:22
+  - name: triangulate_modifier
+    covered: true
+    examples:
+    - specs/mesh/mesh_primitives.star:18
+    - specs/mesh/mesh_primitives.star:31
+  texture.nodes:
+  - name: add_node
+    covered: true
+    examples:
+    - specs/texture/texture_blend.star:25
+    - specs/texture/texture_nodes_misc.star:18
+    - specs/texture/texture_normalmap.star:24
+  - name: checkerboard_node
+    covered: true
+    examples:
+    - specs/texture/texture_patterns.star:24
+  - name: clamp_node
+    covered: true
+    examples:
+    - specs/texture/texture_nodes_misc.star:20
+    - specs/texture/texture_normalmap.star:27
+  - name: color_ramp_node
+    covered: true
+    examples:
+    - specs/texture/texture_advanced.star:39
+    - specs/texture/texture_blend.star:34
+    - specs/texture/texture_colored.star:20
+  - name: compose_rgba_node
+    covered: true
+    examples:
+    - specs/texture/texture_advanced.star:14
+    - specs/texture/texture_advanced.star:38
+  - name: constant_node
+    covered: true
+    examples:
+    - specs/texture/texture_advanced.star:37
+    - specs/texture/texture_normalmap.star:22
+  - name: gradient_node
+    covered: true
+    examples:
+    - specs/texture/texture_blend.star:22
+    - specs/texture/texture_colored.star:19
+    enum_coverage:
+      direction:
+        radial:
+          covered: false
+        horizontal:
+          covered: false
+        vertical:
+          covered: false
+  - name: grayscale_node
+    covered: true
+    examples:
+    - specs/texture/texture_advanced.star:8
+    - specs/texture/texture_advanced.star:35
+  - name: invert_node
+    covered: true
+    examples:
+    - specs/texture/texture_nodes_misc.star:16
+  - name: lerp_node
+    covered: true
+    examples:
+    - specs/texture/texture_blend.star:31
+  - name: multiply_node
+    covered: true
+    examples:
+    - specs/texture/texture_blend.star:28
+    - specs/texture/texture_nodes_misc.star:19
+    - specs/texture/texture_normalmap.star:23
+  - name: noise_node
+    covered: true
+    examples:
+    - specs/audio/spec_enum_coverage.star:99
+    - specs/texture/texture_advanced.star:33
+    - specs/texture/texture_advanced.star:34
+    enum_coverage:
+      algorithm:
+        simplex:
+          covered: false
+        value:
+          covered: false
+        worley:
+          covered: false
+        perlin:
+          covered: false
+        fbm:
+          covered: false
+  - name: normal_from_height_node
+    covered: true
+    examples:
+    - specs/texture/texture_normalmap.star:30
+  - name: palette_node
+    covered: true
+    examples:
+    - specs/texture/texture_advanced.star:11
+    - specs/texture/texture_advanced.star:36
+  - name: stripes_node
+    covered: true
+    examples:
+    - specs/texture/texture_patterns.star:18
+    - specs/texture/texture_patterns.star:21
+  - name: texture_bomb_node
+    covered: true
+    examples:
+    - specs/texture/texture_stochastic.star:16
+  - name: threshold_node
+    covered: true
+    examples:
+    - specs/texture/texture_advanced.star:57
+    - specs/texture/texture_nodes_misc.star:17
+    - specs/texture/texture_noise.star:17
+  - name: wang_tiles_node
+    covered: true
+    examples:
+    - specs/texture/texture_stochastic.star:10
+  audio:
+  - name: allpass
+    covered: true
+    examples:
+    - specs/audio/audio_filter_misc.star:29
+  - name: audio_spec
+    covered: true
+    examples:
+    - specs/audio/audio_fx_extra.star:35
+  - name: auto_filter
+    covered: true
+    examples:
+    - specs/audio/audio_modulation_misc.star:113
+  - name: cabinet_sim
+    covered: true
+    examples:
+    - specs/audio/audio_fx_spatial.star:30
+  - name: comb_filter
+    covered: true
+    examples:
+    - specs/audio/audio_filter_misc.star:50
+  - name: comb_filter_synth
+    covered: true
+    examples:
+    - specs/audio/audio_synth_physical.star:47
+    - specs/audio/audio_synth_physical.star:53
+    - specs/audio/audio_synth_physical.star:59
+  - name: delay_tap
+    covered: true
+    examples:
+    - specs/audio/audio_fx_spatial.star:26
+    - specs/audio/audio_fx_spatial.star:27
+  - name: eq_band
+    covered: true
+    examples:
+    - specs/audio/audio_fx_dynamics.star:29
+    - specs/audio/audio_fx_dynamics.star:30
+    - specs/audio/audio_fx_dynamics.star:31
+  - name: feedback_fm
+    covered: true
+    examples:
+    - specs/audio/audio_synth_physical.star:5
+    - specs/audio/audio_synth_physical.star:11
+  - name: flanger
+    covered: true
+    examples:
+    - specs/audio/audio_fx_extra.star:20
+    - specs/audio/audio_fx_extra.star:49
+  - name: formant_config
+    covered: true
+    examples:
+    - specs/audio/audio_synth_exotic_advanced.star:90
+    - specs/audio/audio_synth_exotic_advanced.star:91
+    - specs/audio/audio_synth_exotic_advanced.star:92
+  - name: formant_filter
+    covered: true
+    examples:
+    - specs/audio/audio_filter_misc.star:57
+    - specs/audio/audio_formant_coverage.star:17
+    - specs/audio/audio_formant_coverage.star:24
+  - name: granular_delay
+    covered: true
+    examples:
+    - specs/audio/audio_fx_spatial.star:31
+  - name: impact_builder
+    covered: true
+    examples:
+    - specs/audio/audio_fx_extra.star:84
+  - name: ladder
+    covered: true
+    examples:
+    - specs/audio/audio_filter_ladder.star:23
+  - name: lfo_modulation
+    covered: true
+    examples:
+    - specs/audio/audio_lfo_modulation.star:23
+    - specs/audio/audio_lfo_modulation.star:34
+  - name: limiter
+    covered: true
+    examples:
+    - specs/audio/audio_fx_dynamics.star:34
+  - name: multi_oscillator
+    covered: true
+    examples:
+    - specs/audio/audio_synth_complex_misc.star:17
+    - specs/audio/audio_synth_complex_misc.star:30
+    - specs/audio/audio_synth_complex_misc.star:43
+  - name: multi_tap_delay
+    covered: true
+    examples:
+    - specs/audio/audio_fx_spatial.star:25
+  - name: notch
+    covered: true
+    examples:
+    - specs/audio/audio_filter_misc.star:22
+  - name: oneshot_envelope
+    covered: true
+    examples:
+    - specs/audio/audio_fx_extra.star:9
+    - specs/audio/audio_fx_extra.star:43
+    - specs/audio/audio_fx_extra.star:65
+  - name: oscillator_config
+    covered: true
+    examples:
+    - specs/audio/audio_synth_complex_misc.star:20
+    - specs/audio/audio_synth_complex_misc.star:21
+    - specs/audio/audio_synth_complex_misc.star:22
+  - name: parametric_eq
+    covered: true
+    examples:
+    - specs/audio/audio_fx_dynamics.star:28
+    - specs/audio/audio_fx_eq.star:25
+  - name: pd_synth
+    covered: true
+    examples:
+    - specs/audio/audio_synth_physical.star:17
+    - specs/audio/audio_synth_physical.star:23
+    - specs/audio/audio_synth_physical.star:29
+  - name: phaser
+    covered: true
+    examples:
+    - specs/audio/audio_fx_phaser.star:25
+  - name: ring_mod_synth
+    covered: true
+    examples:
+    - specs/audio/audio_synth_complex_misc.star:5
+    - specs/audio/audio_synth_complex_misc.star:11
+  - name: ring_modulator
+    covered: true
+    examples:
+    - specs/audio/audio_fx_extra.star:23
+    - specs/audio/audio_fx_extra.star:50
+  - name: rotary_speaker
+    covered: true
+    examples:
+    - specs/audio/audio_modulation_misc.star:120
+  - name: shelf_high
+    covered: true
+    examples:
+    - specs/audio/audio_filter_misc.star:43
+  - name: shelf_low
+    covered: true
+    examples:
+    - specs/audio/audio_filter_misc.star:36
+  - name: skeletal_mesh_skinned_spec
+    covered: true
+    examples:
+    - specs/character/character_skinned.star:62
+  - name: spectral_source
+    covered: true
+    examples:
+    - specs/audio/audio_synth_exotic.star:138
+    - specs/audio/audio_synth_exotic_advanced.star:78
+  - name: stereo_widener
+    covered: true
+    examples:
+    - specs/audio/audio_fx_spatial.star:24
+  - name: tape_saturation
+    covered: true
+    examples:
+    - specs/audio/audio_fx_spatial.star:29
+  - name: transient_shaper
+    covered: true
+    examples:
+    - specs/audio/audio_fx_dynamics.star:27
+  - name: true_peak_limiter
+    covered: true
+    examples:
+    - specs/audio/audio_fx_extra.star:29
+    - specs/audio/audio_fx_extra.star:51
+  - name: vector_path_point
+    covered: true
+    examples:
+    - specs/audio/audio_synth_exotic_advanced.star:62
+    - specs/audio/audio_synth_exotic_advanced.star:63
+    - specs/audio/audio_synth_exotic_advanced.star:64
+  - name: vector_source
+    covered: true
+    examples:
+    - specs/audio/audio_synth_exotic.star:69
+    - specs/audio/audio_synth_exotic.star:70
+    - specs/audio/audio_synth_exotic.star:71
+  - name: vector_synth
+    covered: true
+    examples:
+    - specs/audio/audio_synth_exotic.star:66
+    - specs/audio/audio_synth_exotic_advanced.star:51
+  - name: vocoder_band
+    covered: true
+    examples:
+    - specs/audio/audio_synth_exotic.star:29
+    - specs/audio/audio_synth_exotic.star:30
+  - name: waveshaper
+    covered: true
+    examples:
+    - specs/audio/audio_modulation_misc.star:112
+  - name: whoosh_builder
+    covered: true
+    examples:
+    - specs/audio/audio_fx_extra.star:96
+    - specs/audio/audio_fx_extra.star:105
+  - name: with_loop_config
+    covered: true
+    examples:
+    - specs/audio/audio_fx_extra.star:125
+    - specs/audio/audio_fx_extra.star:133
   character:
   - name: body_part
     covered: true
     examples:
-    - golden/starlark/character_skinned.star:14
-    - golden/starlark/character_skinned.star:23
-    - golden/starlark/character_skinned.star:33
+    - specs/character/character_skinned.star:14
+    - specs/character/character_skinned.star:23
+    - specs/character/character_skinned.star:33
   - name: custom_bone
     covered: true
     examples:
-    - golden/starlark/animation_ik.star:8
-    - golden/starlark/animation_ik.star:15
+    - specs/animation/animation_ik.star:8
+    - specs/animation/animation_ik.star:15
   - name: material_slot
     covered: true
     examples:
-    - golden/starlark/character_humanoid.star:85
-    - golden/starlark/character_humanoid.star:89
-    - golden/starlark/character_humanoid_blank.star:70
+    - specs/audio/spec_enum_coverage.star:212
+    - specs/character/character_humanoid.star:85
+    - specs/character/character_humanoid.star:89
   - name: skeletal_constraints
     covered: true
     examples:
-    - golden/starlark/character_humanoid.star:98
-    - golden/starlark/character_humanoid_blank.star:79
-    - golden/starlark/character_skinned.star:90
+    - specs/character/character_humanoid.star:98
+    - specs/character/character_humanoid_blank.star:79
+    - specs/character/character_skinned.star:90
   - name: skeletal_export_settings
     covered: true
     examples:
-    - golden/starlark/character_humanoid.star:94
-    - golden/starlark/character_humanoid_blank.star:75
-    - golden/starlark/character_skinned.star:86
+    - specs/character/character_humanoid.star:94
+    - specs/character/character_humanoid_blank.star:75
+    - specs/character/character_skinned.star:86
   - name: skeletal_mesh_spec
     covered: true
     examples:
-    - golden/starlark/character_humanoid.star:18
-    - golden/starlark/character_humanoid_blank.star:7
-    - golden/starlark/spec_enum_coverage.star:197
+    - specs/audio/spec_enum_coverage.star:197
+    - specs/character/character_humanoid.star:18
+    - specs/character/character_humanoid_blank.star:7
   - name: skeletal_texturing
     covered: true
     examples:
-    - golden/starlark/character_skinned.star:51
-    - golden/starlark/character_skinned.star:52
-    - golden/starlark/character_skinned.star:53
+    - specs/character/character_skinned.star:51
+    - specs/character/character_skinned.star:52
+    - specs/character/character_skinned.star:53
   - name: skinning_config
     covered: true
     examples:
-    - golden/starlark/character_skinned.star:56
-    - golden/starlark/character_skinned.star:57
-    - golden/starlark/character_skinned.star:58
-uncovered_features: []
+    - specs/character/character_skinned.star:56
+    - specs/character/character_skinned.star:57
+    - specs/character/character_skinned.star:58
+  music.song:
+  - name: music_spec
+    covered: true
+    examples:
+    - specs/audio/spec_enum_coverage.star:40
+    - specs/music/advanced_features.star:87
+    - specs/music/ambient_slow.star:30
+    enum_coverage:
+      format:
+        xm:
+          covered: false
+        it:
+          covered: false
+  - name: tracker_song
+    covered: true
+    examples:
+    - specs/music/music_automation.star:23
+    enum_coverage:
+      format:
+        xm:
+          covered: false
+        it:
+          covered: false
+  texture.graph:
+  - name: texture_graph
+    covered: true
+    examples:
+    - specs/audio/spec_enum_coverage.star:97
+    - specs/texture/texture_blend.star:14
+    - specs/texture/texture_colored.star:15
+  audio.filters:
+  - name: bandpass
+    covered: true
+    examples:
+    - specs/audio/audio_filter_bandpass.star:23
+  - name: highpass
+    covered: true
+    examples:
+    - specs/audio/audio_filter_misc.star:64
+    - specs/audio/audio_fx_extra.star:67
+  - name: lowpass
+    covered: true
+    examples:
+    - specs/audio/audio_fx_chorus.star:22
+    - specs/audio/audio_fx_extra.star:45
+    - specs/audio/audio_fx_extra.star:80
+  audio.layers:
+  - name: audio_layer
+    covered: true
+    examples:
+    - specs/audio/audio_filter_bandpass.star:19
+    - specs/audio/audio_filter_ladder.star:19
+    - specs/audio/audio_filter_misc.star:18
+  audio.synthesis:
+  - name: additive
+    covered: true
+    examples:
+    - specs/audio/audio_instrument_additive.star:18
+    - specs/audio/audio_instrument_comprehensive.star:84
+    - specs/audio/audio_sfx_comprehensive.star:165
+  - name: am_synth
+    covered: true
+    examples:
+    - specs/audio/audio_synth_am.star:19
+  - name: bowed_string
+    covered: true
+    examples:
+    - specs/audio/audio_synth_exotic.star:98
+  - name: fm_synth
+    covered: true
+    examples:
+    - specs/audio/audio_instrument_comprehensive.star:32
+    - specs/audio/audio_instrument_fm_advanced.star:20
+    - specs/audio/audio_instrument_fm_advanced.star:43
+  - name: formant_synth
+    covered: true
+    examples:
+    - specs/audio/audio_formant_coverage.star:53
+    - specs/audio/audio_formant_coverage.star:59
+    - specs/audio/audio_formant_coverage.star:65
+    enum_coverage:
+      vowel_morph:
+        i:
+          covered: false
+        u:
+          covered: false
+        a:
+          covered: false
+        e:
+          covered: false
+        o:
+          covered: false
+      vowel:
+        u:
+          covered: false
+        e:
+          covered: false
+        o:
+          covered: false
+        a:
+          covered: false
+        i:
+          covered: false
+  - name: granular
+    covered: true
+    examples:
+    - specs/audio/audio_formant_coverage.star:121
+    - specs/audio/audio_formant_coverage.star:131
+    - specs/audio/audio_formant_coverage.star:142
+  - name: granular_source
+    covered: true
+    examples:
+    - specs/audio/audio_formant_coverage.star:122
+    - specs/audio/audio_formant_coverage.star:132
+    - specs/audio/audio_formant_coverage.star:143
+    enum_coverage:
+      source_type:
+        noise:
+          covered: false
+        formant:
+          covered: false
+        tone:
+          covered: false
+  - name: karplus_strong
+    covered: true
+    examples:
+    - specs/audio/audio_instrument_karplus.star:18
+    - specs/audio/audio_synth_karplus.star:20
+    - specs/audio/bass_pluck.star:18
+  - name: membrane_drum
+    covered: true
+    examples:
+    - specs/audio/audio_synth_membrane.star:20
+  - name: metallic
+    covered: true
+    examples:
+    - specs/audio/audio_instrument_metallic.star:18
+    - specs/audio/audio_sfx_comprehensive.star:157
+    - specs/audio/audio_synth_physical.star:35
+  - name: modal
+    covered: true
+    examples:
+    - specs/audio/audio_formant_coverage.star:156
+    - specs/audio/audio_formant_coverage.star:170
+    - specs/audio/audio_formant_coverage.star:184
+    enum_coverage:
+      excitation:
+        impulse:
+          covered: false
+        noise:
+          covered: false
+        pluck:
+          covered: false
+  - name: modal_mode
+    covered: true
+    examples:
+    - specs/audio/audio_formant_coverage.star:159
+    - specs/audio/audio_formant_coverage.star:160
+    - specs/audio/audio_formant_coverage.star:161
+  - name: noise_burst
+    covered: true
+    examples:
+    - specs/audio/audio_filter_bandpass.star:20
+    - specs/audio/audio_filter_misc.star:19
+    - specs/audio/audio_fx_eq.star:19
+    enum_coverage:
+      noise_type:
+        white:
+          covered: false
+        brown:
+          covered: false
+        pink:
+          covered: false
+  - name: oscillator
+    covered: true
+    examples:
+    - specs/audio/audio_filter_ladder.star:20
+    - specs/audio/audio_filter_misc.star:26
+    - specs/audio/audio_filter_misc.star:33
+    enum_coverage:
+      curve:
+        linear:
+          covered: false
+        exponential:
+          covered: false
+        logarithmic:
+          covered: false
+      waveform:
+        sawtooth:
+          covered: false
+        square:
+          covered: false
+        sine:
+          covered: false
+        pulse:
+          covered: false
+        triangle:
+          covered: false
+  - name: pitched_body
+    covered: true
+    examples:
+    - specs/audio/audio_instrument_pitched_body.star:18
+    - specs/audio/audio_sfx_comprehensive.star:149
+    - specs/audio/audio_synth_exotic.star:147
+  - name: pulsar
+    covered: true
+    examples:
+    - specs/audio/audio_synth_exotic.star:111
+    enum_coverage:
+      shape:
+        sawtooth:
+          covered: false
+        pulse:
+          covered: false
+        triangle:
+          covered: false
+        sine:
+          covered: false
+        square:
+          covered: false
+  - name: spectral_freeze
+    covered: true
+    examples:
+    - specs/audio/audio_synth_exotic.star:137
+    - specs/audio/audio_synth_exotic_advanced.star:77
+  - name: supersaw_unison
+    covered: true
+    examples:
+    - specs/audio/audio_synth_supersaw.star:19
+    enum_coverage:
+      detune_curve:
+        exp2:
+          covered: false
+        linear:
+          covered: false
+  - name: vocoder
+    covered: true
+    examples:
+    - specs/audio/audio_formant_coverage.star:202
+    - specs/audio/audio_formant_coverage.star:215
+    - specs/audio/audio_synth_exotic.star:20
+    enum_coverage:
+      band_spacing:
+        logarithmic:
+          covered: false
+        linear:
+          covered: false
+      carrier_type:
+        noise:
+          covered: false
+        sawtooth:
+          covered: false
+        pulse:
+          covered: false
+  - name: vosim
+    covered: true
+    examples:
+    - specs/audio/audio_synth_exotic.star:124
+  - name: waveguide
+    covered: true
+    examples:
+    - specs/audio/audio_synth_exotic.star:84
+  - name: wavetable
+    covered: true
+    examples:
+    - specs/audio/audio_synth_wavetable.star:20
+    enum_coverage:
+      table:
+        digital:
+          covered: false
+        pwm:
+          covered: false
+        basic:
+          covered: false
+        analog:
+          covered: false
+        formant:
+          covered: false
+        organ:
+          covered: false
+  animation:
+  - name: animation_export_settings
+    covered: true
+    examples:
+    - specs/animation/animation_walk_cycle.star:71
+  - name: animation_keyframe
+    covered: true
+    examples:
+    - specs/animation/animation_ik.star:67
+    - specs/animation/animation_ik.star:74
+    - specs/animation/animation_walk_cycle.star:31
+  - name: bone_transform
+    covered: true
+    examples:
+    - specs/animation/animation_ik.star:70
+    - specs/animation/animation_ik.star:71
+    - specs/animation/animation_ik.star:77
+  - name: ik_keyframe
+    covered: true
+    examples:
+    - specs/animation/animation_ik.star:34
+    - specs/animation/animation_ik.star:44
+  - name: ik_target_transform
+    covered: true
+    examples:
+    - specs/animation/animation_ik.star:23
+    - specs/animation/animation_ik.star:28
+    - specs/animation/animation_ik.star:37
+  - name: skeletal_animation_spec
+    covered: true
+    examples:
+    - specs/animation/animation_ik.star:55
+    - specs/animation/animation_walk_cycle.star:18
+    - specs/animation/attack_swing.star:3
+  texture:
+  - name: decal_metadata
+    covered: true
+    examples:
+    - specs/texture/texture_advanced.star:23
+    - specs/texture/texture_advanced.star:61
+  - name: decal_spec
+    covered: true
+    examples:
+    - specs/texture/texture_advanced.star:50
+  - name: matcap_v1
+    covered: true
+    examples:
+    - specs/texture/texture_matcap.star:5
+  - name: material_preset_v1
+    covered: true
+    examples:
+    - specs/texture/texture_material_preset.star:6
+  - name: splat_layer
+    covered: true
+    examples:
+    - specs/texture/texture_advanced.star:69
+    - specs/texture/texture_advanced.star:78
+    - specs/texture/texture_advanced.star:85
+  - name: splat_set_spec
+    covered: true
+    examples:
+    - specs/texture/texture_advanced.star:93
+  - name: texture_spec
+    covered: true
+    examples:
+    - specs/texture/texture_advanced.star:28
+  - name: trimsheet_spec
+    covered: true
+    examples:
+    - specs/texture/texture_advanced.star:132
+  - name: trimsheet_tile
+    covered: true
+    examples:
+    - specs/texture/texture_advanced.star:110
+    - specs/texture/texture_advanced.star:117
+    - specs/texture/texture_advanced.star:124
+uncovered_features:
+- enum:waveform::sine
+- enum:waveform::triangle
+- enum:waveform::square
+- enum:waveform::sawtooth
+- enum:waveform::pulse
+- enum:vowel::a
+- enum:vowel::i
+- enum:vowel::u
+- enum:vowel::e
+- enum:vowel::o
+- enum:vowel_morph::a
+- enum:vowel_morph::i
+- enum:vowel_morph::u
+- enum:vowel_morph::e
+- enum:vowel_morph::o
+- enum:source_type::noise
+- enum:source_type::tone
+- enum:source_type::formant
+- enum:excitation::impulse
+- enum:excitation::noise
+- enum:excitation::pluck
+- enum:noise_type::white
+- enum:noise_type::pink
+- enum:noise_type::brown
+- enum:waveform::sine
+- enum:waveform::square
+- enum:waveform::sawtooth
+- enum:waveform::triangle
+- enum:waveform::pulse
+- enum:curve::linear
+- enum:curve::exponential
+- enum:curve::logarithmic
+- enum:shape::sine
+- enum:shape::square
+- enum:shape::sawtooth
+- enum:shape::triangle
+- enum:shape::pulse
+- enum:detune_curve::linear
+- enum:detune_curve::exp2
+- enum:carrier_type::sawtooth
+- enum:carrier_type::pulse
+- enum:carrier_type::noise
+- enum:band_spacing::linear
+- enum:band_spacing::logarithmic
+- enum:table::basic
+- enum:table::analog
+- enum:table::digital
+- enum:table::pwm
+- enum:table::formant
+- enum:table::organ
+- enum:format::wav
+- enum:format::xm
+- enum:format::it
+- enum:format::png
+- enum:format::glb
+- enum:format::gltf
+- enum:format::json
+- enum:kind::primary
+- enum:kind::metadata
+- enum:kind::preview
+- enum:asset_type::audio
+- enum:asset_type::music
+- enum:asset_type::texture
+- enum:asset_type::sprite
+- enum:asset_type::vfx
+- enum:asset_type::ui
+- enum:asset_type::font
+- enum:asset_type::static_mesh
+- enum:asset_type::skeletal_mesh
+- enum:asset_type::skeletal_animation
+- enum:synth_type::pulse
+- enum:synth_type::square
+- enum:synth_type::triangle
+- enum:synth_type::sawtooth
+- enum:synth_type::sine
+- enum:synth_type::noise
+- enum:loop_mode::auto
+- enum:loop_mode::none
+- enum:loop_mode::forward
+- enum:loop_mode::pingpong
+- enum:format::xm
+- enum:format::it
+- enum:format::xm
+- enum:format::it
+- enum:direction::horizontal
+- enum:direction::vertical
+- enum:direction::radial
+- enum:algorithm::perlin
+- enum:algorithm::simplex
+- enum:algorithm::worley
+- enum:algorithm::value
+- enum:algorithm::fbm

@@ -6,7 +6,7 @@ spec(
     license = "CC0-1.0",
     seed = 2022,
     description = "Hi-hat cymbal - Metallic FM synthesis with noise",
-    style_tags = ["drums", "percussion", "hihat", "cymbal"],
+    tags = ["drums", "percussion", "hihat", "cymbal"],
     outputs = [output("drum_hihat.wav", "wav")],
     recipe = {
         "kind": "audio_v1",

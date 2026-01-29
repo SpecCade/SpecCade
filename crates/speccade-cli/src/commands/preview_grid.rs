@@ -55,7 +55,7 @@ pub fn run(spec_path: &str, out: Option<&str>, panel_size: u32) -> Result<ExitCo
             .and_then(|s| s.to_str())
             .unwrap_or("preview");
 
-        // Extract asset type from spec path (e.g., "static_mesh" from "golden/speccade/specs/static_mesh/foo.json")
+        // Extract asset type from spec path (e.g., "mesh" from "specs/mesh/foo.star")
         let asset_type = spec_path_pb
             .components()
             .filter_map(|c| c.as_os_str().to_str())

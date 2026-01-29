@@ -6,14 +6,13 @@
 
 use speccade_cli::commands::stdlib::StdlibDump;
 
-/// Path to the golden stdlib snapshot file.
+/// Path to the stdlib snapshot file.
 fn snapshot_path() -> std::path::PathBuf {
     std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .parent()
         .unwrap()
         .parent()
         .unwrap()
-        .join("golden")
         .join("stdlib")
         .join("stdlib.snapshot.json")
 }
@@ -25,7 +24,7 @@ fn stdlib_matches_snapshot() {
         panic!(
             "Failed to read stdlib snapshot at {}: {}\n\n\
              To create the snapshot, run:\n  \
-             cargo run -p speccade-cli -- stdlib dump --format json > golden/stdlib/stdlib.snapshot.json",
+             cargo run -p speccade-cli -- stdlib dump --format json > stdlib/stdlib.snapshot.json",
             snapshot_file.display(),
             e
         )
@@ -35,7 +34,7 @@ fn stdlib_matches_snapshot() {
         panic!(
             "Failed to parse stdlib snapshot as JSON: {}\n\n\
              The snapshot file may be corrupted. Regenerate it with:\n  \
-             cargo run -p speccade-cli -- stdlib dump --format json > golden/stdlib/stdlib.snapshot.json",
+             cargo run -p speccade-cli -- stdlib dump --format json > stdlib/stdlib.snapshot.json",
             e
         )
     });
@@ -74,7 +73,7 @@ fn stdlib_matches_snapshot() {
             "BREAKING: Functions removed from stdlib:\n  {}\n\n\
              These functions exist in the snapshot but are missing from the current stdlib.\n\
              If this removal is intentional, update the snapshot:\n  \
-             cargo run -p speccade-cli -- stdlib dump --format json > golden/stdlib/stdlib.snapshot.json",
+             cargo run -p speccade-cli -- stdlib dump --format json > stdlib/stdlib.snapshot.json",
             removed.join("\n  ")
         );
     }
@@ -100,7 +99,7 @@ fn stdlib_matches_snapshot() {
         panic!(
             "BREAKING: Function signatures changed in stdlib:\n{}\n\n\
              If these changes are intentional, update the snapshot:\n  \
-             cargo run -p speccade-cli -- stdlib dump --format json > golden/stdlib/stdlib.snapshot.json",
+             cargo run -p speccade-cli -- stdlib dump --format json > stdlib/stdlib.snapshot.json",
             changed.join("\n")
         );
     }
@@ -150,7 +149,7 @@ fn snapshot_file_exists() {
         path.exists(),
         "Stdlib snapshot file does not exist at {}.\n\n\
          To create the snapshot, run:\n  \
-         cargo run -p speccade-cli -- stdlib dump --format json > golden/stdlib/stdlib.snapshot.json",
+         cargo run -p speccade-cli -- stdlib dump --format json > stdlib/stdlib.snapshot.json",
         path.display()
     );
 }

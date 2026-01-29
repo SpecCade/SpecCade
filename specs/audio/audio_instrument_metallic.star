@@ -15,7 +15,7 @@ spec(
             "sample_rate": 44100,
             "layers": [
                 audio_layer(
-                    synthesis = metallic_synth(800.0, 8, 1.414),
+                    synthesis = metallic(800.0, 8, 1.414),
                     envelope = envelope(0.001, 0.5, 0.2, 1.5),
                     volume = 1.0,
                     pan = 0.0

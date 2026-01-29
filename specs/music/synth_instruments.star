@@ -2,58 +2,58 @@
 
 pulse_synth = tracker_instrument(
     name = "pulse_synth",
-    synth_type = "pulse",
-    synthesis = {"type": "pulse", "duty_cycle": 0.25},
+    synthesis = instrument_synthesis("pulse", duty_cycle = 0.25),
     envelope = envelope(0.01, 0.1, 0.7, 0.2)
 )
 
 square_synth = tracker_instrument(
     name = "square_synth",
-    synth_type = "square",
-    synthesis = {"type": "square"},
+    synthesis = instrument_synthesis("pulse", duty_cycle = 0.5),
     envelope = envelope(0.01, 0.1, 0.7, 0.2)
 )
 
 triangle_synth = tracker_instrument(
     name = "triangle_synth",
-    synth_type = "triangle",
-    synthesis = {"type": "triangle"},
+    synthesis = instrument_synthesis("triangle"),
     envelope = envelope(0.01, 0.1, 0.7, 0.2)
 )
 
 sawtooth_synth = tracker_instrument(
     name = "sawtooth_synth",
-    synth_type = "sawtooth",
-    synthesis = {"type": "sawtooth"},
+    synthesis = instrument_synthesis("sawtooth"),
     envelope = envelope(0.01, 0.1, 0.7, 0.2)
 )
 
 sine_synth = tracker_instrument(
     name = "sine_synth",
-    synth_type = "sine",
-    synthesis = {"type": "sine"},
+    synthesis = instrument_synthesis("sine"),
     envelope = envelope(0.01, 0.1, 0.7, 0.2)
 )
 
 noise_synth = tracker_instrument(
     name = "noise_synth",
-    synth_type = "noise",
-    synthesis = {"type": "noise", "periodic": False},
+    synthesis = instrument_synthesis("noise"),
     envelope = envelope(0.01, 0.05, 0.3, 0.1)
 )
 
-test_pattern = tracker_pattern(
-    name = "test",
-    rows = 64,
-    data = [
-        pattern_note(row = 0, channel = 0, note = "C4", instrument = 0, volume = 64),
-        pattern_note(row = 8, channel = 1, note = "D4", instrument = 1, volume = 64),
-        pattern_note(row = 16, channel = 2, note = "E4", instrument = 2, volume = 64),
-        pattern_note(row = 24, channel = 3, note = "F4", instrument = 3, volume = 64),
-        pattern_note(row = 32, channel = 4, note = "G4", instrument = 4, volume = 64),
-        pattern_note(row = 40, channel = 5, note = "C4", instrument = 5, volume = 64)
+test_pattern = tracker_pattern(64, notes = {
+    "0": [
+        pattern_note(0, "C4", 0, vol = 64),
+        pattern_note(8, "D4", 0, vol = 64)
+    ],
+    "1": [
+        pattern_note(16, "E4", 1, vol = 64),
+        pattern_note(24, "F4", 1, vol = 64)
+    ],
+    "2": [
+        pattern_note(32, "G4", 2, vol = 64),
+        pattern_note(40, "A4", 2, vol = 64)
+    ],
+    "3": [
+        pattern_note(48, "B4", 3, vol = 64),
+        pattern_note(56, "C5", 3, vol = 64)
     ]
-)
+})
 
 music_spec(
     asset_id = "synth-instruments",
@@ -63,11 +63,9 @@ music_spec(
     bpm = 120,
     speed = 6,
     channels = 6,
-    loop = False,
-    description = "Music spec covering all synth_type enum values for coverage tracking",
-    license = "CC0-1.0",
-    synth_type_coverage = ["pulse", "square", "triangle", "sawtooth", "sine", "noise"],
     instruments = [pulse_synth, square_synth, triangle_synth, sawtooth_synth, sine_synth, noise_synth],
     patterns = {"test": test_pattern},
-    arrangement = [arrangement_entry("test", 1)]
+    arrangement = [arrangement_entry("test", 1)],
+    description = "Music spec covering all synth_type enum values for coverage tracking",
+    license = "CC0-1.0"
 )

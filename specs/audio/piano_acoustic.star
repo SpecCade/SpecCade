@@ -6,7 +6,7 @@ spec(
     license = "CC0-1.0",
     seed = 2010,
     description = "Acoustic piano - FM synthesis with complex harmonic structure",
-    style_tags = ["acoustic", "piano", "classical"],
+    tags = ["acoustic", "piano", "classical"],
     outputs = [output("piano_acoustic.wav", "wav")],
     recipe = {
         "kind": "audio_v1",

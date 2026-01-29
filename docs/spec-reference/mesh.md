@@ -1,7 +1,7 @@
 # Static Mesh Specs
 
 > **SSOT:** Rust types in `crates/speccade-spec/src/recipe/mesh/`.
-> Golden specs: `golden/speccade/specs/static_mesh/`.
+> Starlark specs: `specs/mesh/`.
 
 | Property | Value |
 |----------|-------|

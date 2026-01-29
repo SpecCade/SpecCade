@@ -15,7 +15,7 @@ spec(
             "sample_rate": 44100,
             "layers": [
                 audio_layer(
-                    synthesis = pitched_body(200.0, 50.0),
+                    synthesis = pitched_body(start_freq = 200.0, end_freq = 50.0),
                     envelope = envelope(0.001, 0.1, 0.3, 0.35),
                     volume = 1.0,
                     pan = 0.0
