@@ -200,6 +200,7 @@ def build_armature_driven_character_mesh(*, armature, params: dict, out_root) ->
 
     try:
         import bpy  # type: ignore
+        import bmesh  # type: ignore
         from mathutils import Euler, Vector  # type: ignore
     except Exception as e:  # pragma: no cover
         raise RuntimeError("Blender Python (bpy) is required") from e
@@ -230,6 +231,49 @@ def build_armature_driven_character_mesh(*, armature, params: dict, out_root) ->
         _ensure_object_mode()
         _select_only([obj], active=obj)
         bpy.ops.object.transform_apply(location=False, rotation=True, scale=True)
+
+    def _remove_segment_caps(obj, *, cap_start: bool, cap_end: bool) -> None:
+        if cap_start and cap_end:
+            return
+        if getattr(obj, 'type', None) != 'MESH':
+            return
+
+        mesh = obj.data
+        bm = bmesh.new()
+        try:
+            bm.from_mesh(mesh)
+            bm.verts.ensure_lookup_table()
+            bm.faces.ensure_lookup_table()
+
+            if not bm.verts or not bm.faces:
+                return
+
+            z_min = min(v.co.z for v in bm.verts)
+            z_max = max(v.co.z for v in bm.verts)
+            dz = float(z_max - z_min)
+            eps = max(1e-6, dz * 1e-4)
+
+            faces_to_delete = []
+            for f in bm.faces:
+                zs = [v.co.z for v in f.verts]
+                if not zs:
+                    continue
+                if (not cap_start) and all(abs(z - z_min) <= eps for z in zs):
+                    faces_to_delete.append(f)
+                    continue
+                if (not cap_end) and all(abs(z - z_max) <= eps for z in zs):
+                    faces_to_delete.append(f)
+                    continue
+
+            if faces_to_delete:
+                bmesh.ops.delete(bm, geom=faces_to_delete, context='FACES')
+                bm.to_mesh(mesh)
+        finally:
+            bm.free()
+            try:
+                mesh.update()
+            except Exception:
+                pass
 
     def _quat_mul(a, b):
         # Blender versions differ on whether Quaternion supports @ for multiplication.
@@ -394,6 +438,19 @@ def build_armature_driven_character_mesh(*, armature, params: dict, out_root) ->
             obj.scale = (rx * 2.0, ry * 2.0, length)
         else:
             raise ValueError(f"unsupported profile kind: {kind!r}")
+
+        cap_start = mesh_spec.get('cap_start', True)
+        cap_end = mesh_spec.get('cap_end', True)
+        if not isinstance(cap_start, bool):
+            raise TypeError(
+                f"bone_meshes['{bone_name}'].cap_start must be a bool, got {type(cap_start).__name__}: {cap_start!r}"
+            )
+        if not isinstance(cap_end, bool):
+            raise TypeError(
+                f"bone_meshes['{bone_name}'].cap_end must be a bool, got {type(cap_end).__name__}: {cap_end!r}"
+            )
+
+        _remove_segment_caps(obj, cap_start=cap_start, cap_end=cap_end)
 
         obj.name = f"Segment_{bone_name}"
 
