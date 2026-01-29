@@ -203,6 +203,13 @@ def build_armature_driven_character_mesh(*, armature, params: dict, out_root) ->
     except Exception as e:  # pragma: no cover
         raise RuntimeError("Blender Python (bpy) is required") from e
 
+    if armature is None:
+        raise TypeError("armature is required")
+    if getattr(armature, 'type', None) != 'ARMATURE':
+        raise TypeError(
+            f"armature must be a Blender ARMATURE object, got {getattr(armature, 'type', None)!r}"
+        )
+
     def _select_only(objs, *, active=None) -> None:
         bpy.ops.object.select_all(action='DESELECT')
         for obj in objs:
@@ -246,18 +253,45 @@ def build_armature_driven_character_mesh(*, armature, params: dict, out_root) ->
         _ensure_armature_modifier(mesh_obj, armature_obj)
 
     def _ensure_uvs(mesh_obj) -> None:
-        if len(mesh_obj.data.uv_layers) == 0:
-            mesh_obj.data.uv_layers.new(name='UVMap')
+        if len(mesh_obj.data.uv_layers) != 0:
+            return
+
+        mesh_obj.data.uv_layers.new(name='UVMap')
 
         _ensure_object_mode()
         _select_only([mesh_obj], active=mesh_obj)
-        bpy.ops.object.mode_set(mode='EDIT')
-        bpy.ops.mesh.select_all(action='SELECT')
         try:
-            bpy.ops.uv.smart_project(island_margin=0.02)
-        except Exception:
-            pass
-        bpy.ops.object.mode_set(mode='OBJECT')
+            bpy.ops.object.mode_set(mode='EDIT')
+            bpy.ops.mesh.select_all(action='SELECT')
+            try:
+                bpy.ops.uv.smart_project(island_margin=0.02)
+            except Exception as e:
+                raise RuntimeError(
+                    f"failed to generate UVs via uv.smart_project for '{mesh_obj.name}': {e.__class__.__name__}: {e}"
+                ) from e
+        finally:
+            try:
+                bpy.ops.object.mode_set(mode='OBJECT')
+            except Exception:
+                # In background mode, mode switching can fail if no active object.
+                pass
+
+    def _primitive_add_with_uvs(add_op, **kwargs) -> None:
+        try:
+            add_op(calc_uvs=True, **kwargs)
+        except TypeError:
+            # Older Blender builds do not support calc_uvs.
+            add_op(**kwargs)
+
+    def _require_active_mesh(*, context: str):
+        obj = bpy.context.active_object
+        if obj is None:
+            raise RuntimeError(f"{context}: expected an active object, got None")
+        if getattr(obj, 'type', None) != 'MESH':
+            raise RuntimeError(
+                f"{context}: expected a MESH active object, got {getattr(obj, 'type', None)!r}"
+            )
+        return obj
 
     if not isinstance(params, dict):
         raise TypeError("params must be a dict")
@@ -308,20 +342,27 @@ def build_armature_driven_character_mesh(*, armature, params: dict, out_root) ->
             raise ValueError(f"profile_radius.y must be > 0 for '{bone_name}', got {ry!r}")
 
         if kind == 'circle':
-            bpy.ops.mesh.primitive_cylinder_add(
+            _primitive_add_with_uvs(
+                bpy.ops.mesh.primitive_cylinder_add,
                 vertices=int(segments),
                 radius=1.0,
                 depth=1.0,
                 location=mid,
             )
-            obj = bpy.context.active_object
+            obj = _require_active_mesh(context='primitive_cylinder_add')
             obj.scale = (rx, ry, length)
         elif kind in ('square', 'rectangle'):
-            bpy.ops.mesh.primitive_cube_add(size=1.0, location=mid)
-            obj = bpy.context.active_object
+            _primitive_add_with_uvs(
+                bpy.ops.mesh.primitive_cube_add,
+                size=1.0,
+                location=mid,
+            )
+            obj = _require_active_mesh(context='primitive_cube_add')
             obj.scale = (rx * 2.0, ry * 2.0, length)
         else:
             raise ValueError(f"unsupported profile kind: {kind!r}")
+
+        obj.name = f"Segment_{bone_name}"
 
         obj.rotation_mode = 'QUATERNION'
         obj.rotation_quaternion = axis_n.to_track_quat('Z', 'Y')
@@ -340,9 +381,20 @@ def build_armature_driven_character_mesh(*, armature, params: dict, out_root) ->
         raise ValueError("No segments generated")
 
     _ensure_object_mode()
-    _select_only(segment_objs, active=segment_objs[0])
-    bpy.ops.object.join()
-    combined = bpy.context.active_object
+    segment_objs_sorted = sorted(segment_objs, key=lambda o: o.name)
+    combined = segment_objs_sorted[0]
+    for other in segment_objs_sorted[1:]:
+        _ensure_object_mode()
+        _select_only([combined, other], active=combined)
+        bpy.ops.object.join()
+        combined = bpy.context.active_object
+        if combined is None:
+            raise RuntimeError("object.join: expected an active object, got None")
+
+    if getattr(combined, 'type', None) != 'MESH':
+        raise RuntimeError(
+            f"object.join: expected a MESH active object, got {getattr(combined, 'type', None)!r}"
+        )
     combined.name = 'Character'
 
     _parent_mesh_to_armature(combined, armature)
