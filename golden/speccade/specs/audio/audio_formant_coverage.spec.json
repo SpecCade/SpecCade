@@ -1,0 +1,399 @@
+{
+  "spec_version": 1,
+  "asset_id": "audio-formant-coverage-golden",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 999042,
+  "description": "Golden test for formant/vocal synthesis enum coverage - exercises vowel, vowel_morph, source_type, excitation, and band_spacing enums",
+  "style_tags": [
+    "golden",
+    "coverage",
+    "formant",
+    "vocal"
+  ],
+  "engine_targets": [
+    "godot",
+    "unity",
+    "unreal"
+  ],
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "audio_formant_coverage.wav"
+    }
+  ],
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "duration_seconds": 3.0,
+      "sample_rate": 44100,
+      "layers": [
+        {
+          "synthesis": {
+            "type": "formant",
+            "frequency": 220.0,
+            "vowel": "a",
+            "breathiness": 0.1
+          },
+          "envelope": {
+            "attack": 0.02,
+            "decay": 0.1,
+            "sustain": 0.7,
+            "release": 0.2
+          },
+          "volume": 0.3,
+          "pan": 0.0,
+          "delay": 0.0
+        },
+        {
+          "synthesis": {
+            "type": "formant",
+            "frequency": 220.0,
+            "vowel": "i",
+            "breathiness": 0.1
+          },
+          "envelope": {
+            "attack": 0.02,
+            "decay": 0.1,
+            "sustain": 0.7,
+            "release": 0.2
+          },
+          "volume": 0.3,
+          "pan": 0.0,
+          "delay": 0.2
+        },
+        {
+          "synthesis": {
+            "type": "formant",
+            "frequency": 220.0,
+            "vowel": "u",
+            "breathiness": 0.1
+          },
+          "envelope": {
+            "attack": 0.02,
+            "decay": 0.1,
+            "sustain": 0.7,
+            "release": 0.2
+          },
+          "volume": 0.3,
+          "pan": 0.0,
+          "delay": 0.4
+        },
+        {
+          "synthesis": {
+            "type": "formant",
+            "frequency": 220.0,
+            "vowel": "e",
+            "breathiness": 0.1
+          },
+          "envelope": {
+            "attack": 0.02,
+            "decay": 0.1,
+            "sustain": 0.7,
+            "release": 0.2
+          },
+          "volume": 0.3,
+          "pan": 0.0,
+          "delay": 0.6
+        },
+        {
+          "synthesis": {
+            "type": "formant",
+            "frequency": 220.0,
+            "vowel": "o",
+            "breathiness": 0.1
+          },
+          "envelope": {
+            "attack": 0.02,
+            "decay": 0.1,
+            "sustain": 0.7,
+            "release": 0.2
+          },
+          "volume": 0.3,
+          "pan": 0.0,
+          "delay": 0.8
+        },
+        {
+          "synthesis": {
+            "type": "formant",
+            "frequency": 220.0,
+            "vowel": "i",
+            "vowel_morph": "a",
+            "morph_amount": 0.5,
+            "breathiness": 0.1
+          },
+          "envelope": {
+            "attack": 0.02,
+            "decay": 0.15,
+            "sustain": 0.7,
+            "release": 0.2
+          },
+          "volume": 0.3,
+          "pan": 0.0,
+          "delay": 1.0
+        },
+        {
+          "synthesis": {
+            "type": "formant",
+            "frequency": 220.0,
+            "vowel": "a",
+            "vowel_morph": "i",
+            "morph_amount": 0.5,
+            "breathiness": 0.1
+          },
+          "envelope": {
+            "attack": 0.02,
+            "decay": 0.15,
+            "sustain": 0.7,
+            "release": 0.2
+          },
+          "volume": 0.3,
+          "pan": 0.0,
+          "delay": 1.2
+        },
+        {
+          "synthesis": {
+            "type": "formant",
+            "frequency": 220.0,
+            "vowel": "a",
+            "vowel_morph": "u",
+            "morph_amount": 0.5,
+            "breathiness": 0.1
+          },
+          "envelope": {
+            "attack": 0.02,
+            "decay": 0.15,
+            "sustain": 0.7,
+            "release": 0.2
+          },
+          "volume": 0.3,
+          "pan": 0.0,
+          "delay": 1.4
+        },
+        {
+          "synthesis": {
+            "type": "formant",
+            "frequency": 220.0,
+            "vowel": "a",
+            "vowel_morph": "e",
+            "morph_amount": 0.5,
+            "breathiness": 0.1
+          },
+          "envelope": {
+            "attack": 0.02,
+            "decay": 0.15,
+            "sustain": 0.7,
+            "release": 0.2
+          },
+          "volume": 0.3,
+          "pan": 0.0,
+          "delay": 1.6
+        },
+        {
+          "synthesis": {
+            "type": "formant",
+            "frequency": 220.0,
+            "vowel": "a",
+            "vowel_morph": "o",
+            "morph_amount": 0.5,
+            "breathiness": 0.1
+          },
+          "envelope": {
+            "attack": 0.02,
+            "decay": 0.15,
+            "sustain": 0.7,
+            "release": 0.2
+          },
+          "volume": 0.3,
+          "pan": 0.0,
+          "delay": 1.8
+        },
+        {
+          "synthesis": {
+            "type": "granular",
+            "source": {
+              "type": "noise",
+              "noise_type": "white"
+            },
+            "grain_size_ms": 50.0,
+            "grain_density": 20.0
+          },
+          "envelope": {
+            "attack": 0.05,
+            "decay": 0.2,
+            "sustain": 0.5,
+            "release": 0.3
+          },
+          "volume": 0.25,
+          "pan": 0.0,
+          "delay": 2.0
+        },
+        {
+          "synthesis": {
+            "type": "granular",
+            "source": {
+              "type": "tone",
+              "waveform": "sine",
+              "frequency": 440.0
+            },
+            "grain_size_ms": 75.0,
+            "grain_density": 25.0,
+            "pitch_spread": 1.0
+          },
+          "envelope": {
+            "attack": 0.02,
+            "decay": 0.3,
+            "sustain": 0.6,
+            "release": 0.25
+          },
+          "volume": 0.25,
+          "pan": 0.0,
+          "delay": 2.2
+        },
+        {
+          "synthesis": {
+            "type": "granular",
+            "source": {
+              "type": "formant",
+              "frequency": 220.0,
+              "formant_freq": 880.0
+            },
+            "grain_size_ms": 60.0,
+            "grain_density": 22.0
+          },
+          "envelope": {
+            "attack": 0.01,
+            "decay": 0.25,
+            "sustain": 0.55,
+            "release": 0.3
+          },
+          "volume": 0.25,
+          "pan": 0.0,
+          "delay": 2.4
+        },
+        {
+          "synthesis": {
+            "type": "modal",
+            "frequency": 440.0,
+            "modes": [
+              {"freq_ratio": 1.0, "amplitude": 1.0, "decay_time": 1.5},
+              {"freq_ratio": 2.0, "amplitude": 0.6, "decay_time": 1.2},
+              {"freq_ratio": 2.76, "amplitude": 0.4, "decay_time": 1.0}
+            ],
+            "excitation": "impulse"
+          },
+          "envelope": {
+            "attack": 0.001,
+            "decay": 0.1,
+            "sustain": 0.0,
+            "release": 2.0
+          },
+          "volume": 0.3,
+          "pan": 0.0,
+          "delay": 0.0
+        },
+        {
+          "synthesis": {
+            "type": "modal",
+            "frequency": 440.0,
+            "modes": [
+              {"freq_ratio": 1.0, "amplitude": 1.0, "decay_time": 1.5},
+              {"freq_ratio": 2.0, "amplitude": 0.6, "decay_time": 1.2}
+            ],
+            "excitation": "noise"
+          },
+          "envelope": {
+            "attack": 0.001,
+            "decay": 0.1,
+            "sustain": 0.0,
+            "release": 2.0
+          },
+          "volume": 0.3,
+          "pan": 0.0,
+          "delay": 0.5
+        },
+        {
+          "synthesis": {
+            "type": "modal",
+            "frequency": 440.0,
+            "modes": [
+              {"freq_ratio": 1.0, "amplitude": 1.0, "decay_time": 1.5},
+              {"freq_ratio": 2.0, "amplitude": 0.6, "decay_time": 1.2}
+            ],
+            "excitation": "pluck"
+          },
+          "envelope": {
+            "attack": 0.001,
+            "decay": 0.1,
+            "sustain": 0.0,
+            "release": 2.0
+          },
+          "volume": 0.3,
+          "pan": 0.0,
+          "delay": 1.0
+        },
+        {
+          "synthesis": {
+            "type": "vocoder",
+            "carrier_freq": 110.0,
+            "carrier_type": "sawtooth",
+            "num_bands": 16,
+            "band_spacing": "linear",
+            "envelope_attack": 0.01,
+            "envelope_release": 0.05
+          },
+          "envelope": {
+            "attack": 0.01,
+            "decay": 0.1,
+            "sustain": 0.7,
+            "release": 0.2
+          },
+          "volume": 0.3,
+          "pan": 0.0,
+          "delay": 0.0
+        },
+        {
+          "synthesis": {
+            "type": "vocoder",
+            "carrier_freq": 110.0,
+            "carrier_type": "pulse",
+            "num_bands": 16,
+            "band_spacing": "logarithmic",
+            "envelope_attack": 0.01,
+            "envelope_release": 0.05
+          },
+          "envelope": {
+            "attack": 0.01,
+            "decay": 0.1,
+            "sustain": 0.7,
+            "release": 0.2
+          },
+          "volume": 0.3,
+          "pan": 0.0,
+          "delay": 0.5
+        },
+        {
+          "synthesis": {
+            "type": "vocoder",
+            "carrier_freq": 110.0,
+            "carrier_type": "noise",
+            "num_bands": 16,
+            "band_spacing": "linear",
+            "envelope_attack": 0.01,
+            "envelope_release": 0.05
+          },
+          "envelope": {
+            "attack": 0.01,
+            "decay": 0.1,
+            "sustain": 0.7,
+            "release": 0.2
+          },
+          "volume": 0.3,
+          "pan": 0.0,
+          "delay": 1.0
+        }
+      ]
+    }
+  }
+}
