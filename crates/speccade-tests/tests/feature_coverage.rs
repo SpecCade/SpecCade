@@ -4,8 +4,14 @@
 //! If a feature exists, it MUST have a golden example.
 
 use std::path::PathBuf;
+use std::sync::{Mutex, OnceLock};
 
 use speccade_tests::harness::TestHarness;
+
+fn coverage_generate_lock() -> &'static Mutex<()> {
+    static LOCK: OnceLock<Mutex<()>> = OnceLock::new();
+    LOCK.get_or_init(|| Mutex::new(()))
+}
 
 /// Get the workspace root directory (speccade project root)
 fn workspace_root() -> PathBuf {
@@ -19,6 +25,9 @@ fn workspace_root() -> PathBuf {
 fn coverage_is_complete() {
     let root = workspace_root();
     let harness = TestHarness::new();
+    let _lock = coverage_generate_lock()
+        .lock()
+        .expect("coverage lock poisoned");
 
     let output = harness.run_cli_in_dir(&root, &["coverage", "generate", "--strict"]);
 
@@ -37,6 +46,9 @@ fn coverage_is_complete() {
 fn coverage_yaml_is_valid() {
     let root = workspace_root();
     let harness = TestHarness::new();
+    let _lock = coverage_generate_lock()
+        .lock()
+        .expect("coverage lock poisoned");
 
     // First generate the coverage report
     let gen_output = harness.run_cli_in_dir(&root, &["coverage", "generate"]);
