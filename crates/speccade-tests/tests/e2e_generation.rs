@@ -1799,6 +1799,265 @@ fn test_generate_skeletal_mesh_armature_driven_bevel_modifier_increases_triangle
     );
 }
 
+/// `attachments` (primitive) on armature-driven bone meshes should increase triangle count.
+///
+/// This is intentionally ignored by default because it requires Blender.
+#[test]
+#[ignore] // Run with SPECCADE_RUN_BLENDER_TESTS=1
+fn test_generate_skeletal_mesh_armature_driven_primitive_attachment_increases_triangle_count() {
+    if !should_run_blender_tests() {
+        println!("Blender tests not enabled, skipping");
+        return;
+    }
+
+    if !is_blender_available() {
+        println!("Blender not available, skipping");
+        return;
+    }
+
+    let base_harness = TestHarness::new();
+    let base_spec = Spec::builder(
+        "test-armature-driven-attachment-primitive-baseline-01",
+        AssetType::SkeletalMesh,
+    )
+    .license("CC0-1.0")
+    .seed(1)
+    .output(OutputSpec::primary(
+        OutputFormat::Glb,
+        "characters/armature_driven_attachment_primitive_baseline.glb",
+    ))
+    .recipe(Recipe::new(
+        "skeletal_mesh.armature_driven_v1",
+        serde_json::json!({
+            "skeleton_preset": "humanoid_basic_v1",
+            "export": {
+                "include_armature": true,
+                "include_normals": true,
+                "include_uvs": true,
+                "triangulate": true,
+                "include_skin_weights": true,
+                "save_blend": false
+            },
+            "bone_meshes": {
+                "spine": {
+                    "profile": "circle(8)",
+                    "profile_radius": 0.14,
+                    "cap_start": true,
+                    "cap_end": true
+                }
+            }
+        }),
+    ))
+    .build();
+
+    let base_result =
+        speccade_backend_blender::skeletal_mesh::generate(&base_spec, base_harness.path());
+    assert!(
+        base_result.is_ok(),
+        "Armature-driven skeletal mesh generation failed: {:?}",
+        base_result.err()
+    );
+    let base_result = base_result.unwrap();
+    let base_tris = base_result
+        .metrics
+        .triangle_count
+        .expect("Expected triangle_count metric for baseline");
+
+    let variant_harness = TestHarness::new();
+    let variant_spec = Spec::builder(
+        "test-armature-driven-attachment-primitive-variant-01",
+        AssetType::SkeletalMesh,
+    )
+    .license("CC0-1.0")
+    .seed(1)
+    .output(OutputSpec::primary(
+        OutputFormat::Glb,
+        "characters/armature_driven_attachment_primitive_variant.glb",
+    ))
+    .recipe(Recipe::new(
+        "skeletal_mesh.armature_driven_v1",
+        serde_json::json!({
+            "skeleton_preset": "humanoid_basic_v1",
+            "export": {
+                "include_armature": true,
+                "include_normals": true,
+                "include_uvs": true,
+                "triangulate": true,
+                "include_skin_weights": true,
+                "save_blend": false
+            },
+            "bone_meshes": {
+                "spine": {
+                    "profile": "circle(8)",
+                    "profile_radius": 0.14,
+                    "cap_start": true,
+                    "cap_end": true,
+                    "attachments": [
+                        {
+                            "primitive": "cube",
+                            "dimensions": [0.12, 0.12, 0.12],
+                            "offset": [0.0, 0.22, 0.50],
+                            "rotation": [0.0, 20.0, 0.0]
+                        }
+                    ]
+                }
+            }
+        }),
+    ))
+    .build();
+
+    let variant_result =
+        speccade_backend_blender::skeletal_mesh::generate(&variant_spec, variant_harness.path());
+    assert!(
+        variant_result.is_ok(),
+        "Armature-driven skeletal mesh generation failed: {:?}",
+        variant_result.err()
+    );
+    let variant_result = variant_result.unwrap();
+    let variant_tris = variant_result
+        .metrics
+        .triangle_count
+        .expect("Expected triangle_count metric for variant");
+
+    assert!(
+        variant_tris > base_tris,
+        "Expected triangle_count to increase with a primitive attachment; baseline={} variant={}",
+        base_tris,
+        variant_tris
+    );
+}
+
+/// `attachments` (extrude) on armature-driven bone meshes should increase triangle count.
+///
+/// This is intentionally ignored by default because it requires Blender.
+#[test]
+#[ignore] // Run with SPECCADE_RUN_BLENDER_TESTS=1
+fn test_generate_skeletal_mesh_armature_driven_extrude_attachment_increases_triangle_count() {
+    if !should_run_blender_tests() {
+        println!("Blender tests not enabled, skipping");
+        return;
+    }
+
+    if !is_blender_available() {
+        println!("Blender not available, skipping");
+        return;
+    }
+
+    let base_harness = TestHarness::new();
+    let base_spec = Spec::builder(
+        "test-armature-driven-attachment-extrude-baseline-01",
+        AssetType::SkeletalMesh,
+    )
+    .license("CC0-1.0")
+    .seed(1)
+    .output(OutputSpec::primary(
+        OutputFormat::Glb,
+        "characters/armature_driven_attachment_extrude_baseline.glb",
+    ))
+    .recipe(Recipe::new(
+        "skeletal_mesh.armature_driven_v1",
+        serde_json::json!({
+            "skeleton_preset": "humanoid_basic_v1",
+            "export": {
+                "include_armature": true,
+                "include_normals": true,
+                "include_uvs": true,
+                "triangulate": true,
+                "include_skin_weights": true,
+                "save_blend": false
+            },
+            "bone_meshes": {
+                "spine": {
+                    "profile": "circle(8)",
+                    "profile_radius": 0.14,
+                    "cap_start": true,
+                    "cap_end": true
+                }
+            }
+        }),
+    ))
+    .build();
+
+    let base_result =
+        speccade_backend_blender::skeletal_mesh::generate(&base_spec, base_harness.path());
+    assert!(
+        base_result.is_ok(),
+        "Armature-driven skeletal mesh generation failed: {:?}",
+        base_result.err()
+    );
+    let base_result = base_result.unwrap();
+    let base_tris = base_result
+        .metrics
+        .triangle_count
+        .expect("Expected triangle_count metric for baseline");
+
+    let variant_harness = TestHarness::new();
+    let variant_spec = Spec::builder(
+        "test-armature-driven-attachment-extrude-variant-01",
+        AssetType::SkeletalMesh,
+    )
+    .license("CC0-1.0")
+    .seed(1)
+    .output(OutputSpec::primary(
+        OutputFormat::Glb,
+        "characters/armature_driven_attachment_extrude_variant.glb",
+    ))
+    .recipe(Recipe::new(
+        "skeletal_mesh.armature_driven_v1",
+        serde_json::json!({
+            "skeleton_preset": "humanoid_basic_v1",
+            "export": {
+                "include_armature": true,
+                "include_normals": true,
+                "include_uvs": true,
+                "triangulate": true,
+                "include_skin_weights": true,
+                "save_blend": false
+            },
+            "bone_meshes": {
+                "spine": {
+                    "profile": "circle(8)",
+                    "profile_radius": 0.14,
+                    "cap_start": true,
+                    "cap_end": true,
+                    "attachments": [
+                        {
+                            "extrude": {
+                                "profile": "circle(6)",
+                                "start": [0.0, 0.22, 0.35],
+                                "end": [0.0, 0.22, 0.60],
+                                "profile_radius": { "absolute": 0.03 },
+                                "taper": 0.55
+                            }
+                        }
+                    ]
+                }
+            }
+        }),
+    ))
+    .build();
+
+    let variant_result =
+        speccade_backend_blender::skeletal_mesh::generate(&variant_spec, variant_harness.path());
+    assert!(
+        variant_result.is_ok(),
+        "Armature-driven skeletal mesh generation failed: {:?}",
+        variant_result.err()
+    );
+    let variant_result = variant_result.unwrap();
+    let variant_tris = variant_result
+        .metrics
+        .triangle_count
+        .expect("Expected triangle_count metric for variant");
+
+    assert!(
+        variant_tris > base_tris,
+        "Expected triangle_count to increase with an extrude attachment; baseline={} variant={}",
+        base_tris,
+        variant_tris
+    );
+}
+
 /// Test animation generation with Blender.
 #[test]
 #[ignore] // Run with SPECCADE_RUN_BLENDER_TESTS=1

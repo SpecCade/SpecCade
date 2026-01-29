@@ -531,6 +531,73 @@ def build_armature_driven_character_mesh(*, armature, params: dict, out_root) ->
             # Older Blender builds do not support calc_uvs.
             add_op(**kwargs)
 
+    def _join_into(base_obj, other_obj) -> object:
+        _ensure_object_mode()
+        _select_only([base_obj, other_obj], active=base_obj)
+        bpy.ops.object.join()
+        joined = bpy.context.active_object
+        if joined is None:
+            raise RuntimeError("object.join: expected an active object, got None")
+        return joined
+
+    def _create_primitive_mesh(*, primitive: str, location_w) -> object:
+        prim = primitive.strip().lower()
+        if prim == 'cube':
+            _primitive_add_with_uvs(bpy.ops.mesh.primitive_cube_add, size=1.0, location=location_w)
+            return _require_active_mesh(context='primitive_cube_add(attachment)')
+        if prim in ('sphere', 'uv_sphere'):
+            # Fixed tessellation for determinism.
+            _primitive_add_with_uvs(
+                bpy.ops.mesh.primitive_uv_sphere_add,
+                radius=0.5,
+                segments=16,
+                ring_count=8,
+                location=location_w,
+            )
+            return _require_active_mesh(context='primitive_uv_sphere_add(attachment)')
+        if prim == 'ico_sphere':
+            _primitive_add_with_uvs(
+                bpy.ops.mesh.primitive_ico_sphere_add,
+                radius=0.5,
+                subdivisions=2,
+                location=location_w,
+            )
+            return _require_active_mesh(context='primitive_ico_sphere_add(attachment)')
+        if prim == 'cylinder':
+            _primitive_add_with_uvs(
+                bpy.ops.mesh.primitive_cylinder_add,
+                radius=0.5,
+                depth=1.0,
+                vertices=16,
+                location=location_w,
+            )
+            return _require_active_mesh(context='primitive_cylinder_add(attachment)')
+        if prim == 'cone':
+            _primitive_add_with_uvs(
+                bpy.ops.mesh.primitive_cone_add,
+                radius1=0.5,
+                depth=1.0,
+                vertices=16,
+                location=location_w,
+            )
+            return _require_active_mesh(context='primitive_cone_add(attachment)')
+        if prim == 'torus':
+            _primitive_add_with_uvs(
+                bpy.ops.mesh.primitive_torus_add,
+                major_radius=0.35,
+                minor_radius=0.15,
+                major_segments=24,
+                minor_segments=12,
+                location=location_w,
+            )
+            return _require_active_mesh(context='primitive_torus_add(attachment)')
+        if prim == 'plane':
+            _primitive_add_with_uvs(bpy.ops.mesh.primitive_plane_add, size=1.0, location=location_w)
+            return _require_active_mesh(context='primitive_plane_add(attachment)')
+        raise ValueError(
+            f"unsupported attachment primitive: {primitive!r}; expected one of: cube, sphere, ico_sphere, cylinder, cone, torus, plane"
+        )
+
     def _require_active_mesh(*, context: str):
         obj = bpy.context.active_object
         if obj is None:
@@ -776,6 +843,242 @@ def build_armature_driven_character_mesh(*, armature, params: dict, out_root) ->
             obj.rotation_quaternion = _quat_mul(base_q, rot_q)
 
         _apply_rotation_only(obj)
+
+        segment_origin_w = obj.location.copy()
+
+        def _bone_local_head_to_segment_world(v_rel_head) -> Vector:
+            v = _parse_vec3(v_rel_head, name='attachment vec3')
+            if v is None:
+                raise TypeError("attachment vec3 is required")
+            x, y, z = v
+            # Bone-relative -> absolute (meters), head-origin.
+            local = Vector((x * length, y * length, z * length))
+            # Convert to segment-mid origin.
+            local = local - Vector((0.0, 0.0, length * 0.5))
+            return segment_origin_w + _quat_rotate_vec(base_q, local)
+
+        # Attachments: additional geometry joined into this segment.
+        attachments_spec = mesh_spec.get('attachments', []) or []
+        if attachments_spec is not None:
+            if not isinstance(attachments_spec, list):
+                raise TypeError(f"bone_meshes['{bone_name}'].attachments must be a list")
+
+            for ai, att in enumerate(attachments_spec):
+                if not isinstance(att, dict):
+                    raise TypeError(f"bone_meshes['{bone_name}'].attachments[{ai}] must be a dict")
+
+                # Primitive attachment (untagged form).
+                if 'primitive' in att:
+                    primitive = att.get('primitive')
+                    if not isinstance(primitive, str) or not primitive:
+                        raise TypeError(
+                            f"bone_meshes['{bone_name}'].attachments[{ai}].primitive must be a non-empty str"
+                        )
+
+                    dimensions = _parse_vec3(att.get('dimensions'), name=f"bone_meshes['{bone_name}'].attachments[{ai}].dimensions")
+                    if dimensions is None:
+                        raise TypeError(
+                            f"bone_meshes['{bone_name}'].attachments[{ai}].dimensions is required"
+                        )
+                    dx, dy, dz = dimensions
+                    if dx <= 0.0 or dy <= 0.0 or dz <= 0.0:
+                        raise ValueError(
+                            f"bone_meshes['{bone_name}'].attachments[{ai}].dimensions must be > 0, got ({dx!r}, {dy!r}, {dz!r})"
+                        )
+
+                    offset = att.get('offset', [0.0, 0.0, 0.0])
+                    location_w = _bone_local_head_to_segment_world(offset)
+
+                    attach_obj = _create_primitive_mesh(primitive=primitive, location_w=location_w)
+                    attach_obj.name = f"Attachment_{bone_name}_{ai}"
+
+                    # Bone-relative dimensions -> absolute scale.
+                    attach_obj.scale = (dx * length, dy * length, dz * length)
+                    _apply_scale_only(attach_obj)
+
+                    rot = _parse_vec3(att.get('rotation'), name=f"bone_meshes['{bone_name}'].attachments[{ai}].rotation")
+                    attach_obj.rotation_mode = 'QUATERNION'
+                    if rot is not None:
+                        rx, ry, rz = rot
+                        rot_q = Euler(
+                            (math.radians(rx), math.radians(ry), math.radians(rz)),
+                            'XYZ',
+                        ).to_quaternion()
+                        attach_obj.rotation_quaternion = _quat_mul(base_q, rot_q)
+                    else:
+                        attach_obj.rotation_quaternion = base_q
+                    _apply_rotation_only(attach_obj)
+
+                    obj = _join_into(obj, attach_obj)
+                    continue
+
+                # Extrude attachment (tagged as {"extrude": {...}}).
+                if 'extrude' in att:
+                    extr = att.get('extrude')
+                    if not isinstance(extr, dict):
+                        raise TypeError(
+                            f"bone_meshes['{bone_name}'].attachments[{ai}].extrude must be a dict"
+                        )
+
+                    start = extr.get('start')
+                    end = extr.get('end')
+                    if start is None or end is None:
+                        raise TypeError(
+                            f"bone_meshes['{bone_name}'].attachments[{ai}].extrude.start and .end are required"
+                        )
+
+                    start_w = _bone_local_head_to_segment_world(start)
+                    end_w = _bone_local_head_to_segment_world(end)
+                    axis_w = end_w - start_w
+                    dist = float(axis_w.length)
+                    if not math.isfinite(dist) or dist < 1e-6:
+                        raise ValueError(
+                            f"bone_meshes['{bone_name}'].attachments[{ai}].extrude has near-zero length: {dist!r}"
+                        )
+
+                    axis_n = axis_w.normalized()
+                    loc_w = (start_w + end_w) * 0.5
+
+                    kind_e, segments_e = _parse_profile(extr.get('profile'))
+                    radius_val_e = _resolve_bone_relative_length(
+                        extr.get('profile_radius', 0.15),
+                        bone_length=length,
+                    )
+                    if isinstance(radius_val_e, tuple):
+                        rx_e, ry_e = radius_val_e
+                    else:
+                        rx_e, ry_e = (radius_val_e, radius_val_e)
+                    rx_e = float(rx_e)
+                    ry_e = float(ry_e)
+                    if rx_e <= 0.0 or ry_e <= 0.0:
+                        raise ValueError(
+                            f"bone_meshes['{bone_name}'].attachments[{ai}].extrude.profile_radius must be > 0"
+                        )
+
+                    if kind_e == 'circle':
+                        _primitive_add_with_uvs(
+                            bpy.ops.mesh.primitive_cylinder_add,
+                            vertices=int(segments_e),
+                            radius=1.0,
+                            depth=1.0,
+                            location=loc_w,
+                        )
+                        attach_obj = _require_active_mesh(context='primitive_cylinder_add(extrude_attachment)')
+                        attach_obj.scale = (rx_e, ry_e, dist)
+                    elif kind_e in ('square', 'rectangle'):
+                        _primitive_add_with_uvs(
+                            bpy.ops.mesh.primitive_cube_add,
+                            size=1.0,
+                            location=loc_w,
+                        )
+                        attach_obj = _require_active_mesh(context='primitive_cube_add(extrude_attachment)')
+                        attach_obj.scale = (rx_e * 2.0, ry_e * 2.0, dist)
+                    else:
+                        raise ValueError(f"unsupported extrude profile kind: {kind_e!r}")
+
+                    attach_obj.name = f"AttachmentExtrude_{bone_name}_{ai}"
+                    _apply_scale_only(attach_obj)
+
+                    taper_e = _parse_finite_number(
+                        extr.get('taper'),
+                        name=f"bone_meshes['{bone_name}'].attachments[{ai}].extrude.taper",
+                        default=1.0,
+                    )
+                    if taper_e <= 0.0:
+                        raise ValueError(
+                            f"bone_meshes['{bone_name}'].attachments[{ai}].extrude.taper must be > 0, got {taper_e!r}"
+                        )
+                    _deform_taper_bulge_twist(attach_obj, taper=taper_e, bulge_points=[], twist_deg=0.0)
+
+                    attach_obj.rotation_mode = 'QUATERNION'
+                    attach_obj.rotation_quaternion = axis_n.to_track_quat('Z', 'Y')
+                    _apply_rotation_only(attach_obj)
+
+                    obj = _join_into(obj, attach_obj)
+                    continue
+
+                # Asset attachment (untagged form; key is 'asset').
+                if 'asset' in att:
+                    from pathlib import Path
+
+                    asset = att.get('asset')
+                    if not isinstance(asset, str) or not asset:
+                        raise TypeError(
+                            f"bone_meshes['{bone_name}'].attachments[{ai}].asset must be a non-empty str"
+                        )
+
+                    p = Path(asset)
+                    candidates = []
+                    if p.suffix:
+                        candidates.append(p)
+                    else:
+                        candidates.append(p.with_suffix('.glb'))
+                        candidates.append(p.with_suffix('.gltf'))
+                    candidates = [c if c.is_absolute() else (Path(out_root) / c) for c in candidates]
+                    src = next((c for c in candidates if c.exists()), None)
+                    if src is None:
+                        print(
+                            f"WARN: asset attachment source not found for '{bone_name}' attachments[{ai}]: {asset!r}; skipping"
+                        )
+                        continue
+
+                    _ensure_object_mode()
+                    bpy.ops.object.select_all(action='DESELECT')
+                    bpy.ops.import_scene.gltf(filepath=str(src))
+
+                    imported_meshes = [o for o in bpy.context.selected_objects if o.type == 'MESH']
+                    if not imported_meshes:
+                        print(
+                            f"WARN: asset attachment import produced no meshes for '{bone_name}' attachments[{ai}]: {src}"
+                        )
+                        continue
+
+                    imported_meshes.sort(key=lambda o: o.name)
+                    if len(imported_meshes) > 1:
+                        _select_only(imported_meshes, active=imported_meshes[0])
+                        bpy.ops.object.join()
+                        attach_obj = bpy.context.active_object
+                    else:
+                        attach_obj = imported_meshes[0]
+                    if attach_obj is None or getattr(attach_obj, 'type', None) != 'MESH':
+                        print(
+                            f"WARN: asset attachment join failed for '{bone_name}' attachments[{ai}]: {src}"
+                        )
+                        continue
+
+                    attach_obj.name = f"AttachmentAsset_{bone_name}_{ai}"
+
+                    offset = att.get('offset', [0.0, 0.0, 0.0])
+                    attach_obj.location = _bone_local_head_to_segment_world(offset)
+
+                    s = att.get('scale', 1.0)
+                    if isinstance(s, bool) or not isinstance(s, (int, float)):
+                        raise TypeError(
+                            f"bone_meshes['{bone_name}'].attachments[{ai}].scale must be a number"
+                        )
+                    s_f = float(s)
+                    if not math.isfinite(s_f) or s_f <= 0.0:
+                        raise ValueError(
+                            f"bone_meshes['{bone_name}'].attachments[{ai}].scale must be a finite, positive number"
+                        )
+                    attach_obj.scale = (s_f, s_f, s_f)
+                    _apply_scale_only(attach_obj)
+
+                    rot = _parse_vec3(att.get('rotation'), name=f"bone_meshes['{bone_name}'].attachments[{ai}].rotation")
+                    attach_obj.rotation_mode = 'QUATERNION'
+                    if rot is not None:
+                        rx, ry, rz = rot
+                        rot_q = Euler(
+                            (math.radians(rx), math.radians(ry), math.radians(rz)),
+                            'XYZ',
+                        ).to_quaternion()
+                        attach_obj.rotation_quaternion = _quat_mul(base_q, rot_q)
+                    else:
+                        attach_obj.rotation_quaternion = base_q
+                    _apply_rotation_only(attach_obj)
+
+                    obj = _join_into(obj, attach_obj)
+                    continue
 
         # Apply per-segment modifiers (in-order).
         modifiers_spec = mesh_spec.get('modifiers', []) or []
