@@ -101,12 +101,25 @@ pub struct UsageLocation {
     pub line: Option<u32>,
 }
 
-/// Scan specs/**/*.star files for function usages
+/// Usages found in Starlark spec files
+#[derive(Debug, Default)]
+pub struct StarlarkUsages {
+    /// Function usages (function_name -> locations)
+    pub function_usages: HashMap<String, Vec<UsageLocation>>,
+    /// Enum value usages (param_name -> value -> locations)
+    pub enum_usages: HashMap<String, HashMap<String, Vec<UsageLocation>>>,
+}
+
+/// Scan specs/**/*.star files for function and enum usages
 ///
 /// # Arguments
 /// * `base_path` - Optional base path to the project root. If None, uses current directory.
-pub fn scan_starlark_usages_from(base_path: Option<&Path>) -> Result<HashMap<String, Vec<UsageLocation>>> {
-    let mut usages: HashMap<String, Vec<UsageLocation>> = HashMap::new();
+/// * `inventory` - The feature inventory containing known enum values to scan for.
+pub fn scan_starlark_usages_from(
+    base_path: Option<&Path>,
+    inventory: &FeatureInventory,
+) -> Result<StarlarkUsages> {
+    let mut usages = StarlarkUsages::default();
 
     let pattern = match base_path {
         Some(base) => base.join("specs/**/*.star").to_string_lossy().to_string(),
@@ -119,8 +132,22 @@ pub fn scan_starlark_usages_from(base_path: Option<&Path>) -> Result<HashMap<Str
         .collect();
 
     // Find function calls: word boundary + function name + optional whitespace + (
-    let call_re = Regex::new(r"\b([a-z_][a-z0-9_]*)\s*\(")
-        .expect("valid regex");
+    let call_re = Regex::new(r"\b([a-z_][a-z0-9_]*)\s*\(").expect("valid regex");
+
+    // Find string literals: "some_value"
+    let string_re = Regex::new(r#""([a-z_][a-z0-9_]*)""#).expect("valid regex");
+
+    // Build reverse lookup: enum_value -> [(param_name, ...)]
+    // A single value like "sine" may appear in multiple enums (waveform, shape, etc.)
+    let mut value_to_params: HashMap<&str, Vec<&str>> = HashMap::new();
+    for (param_name, values) in &inventory.enums {
+        for value in values {
+            value_to_params
+                .entry(value.as_str())
+                .or_default()
+                .push(param_name.as_str());
+        }
+    }
 
     for path in entries {
         let content = fs::read_to_string(&path)
@@ -134,15 +161,36 @@ pub fn scan_starlark_usages_from(base_path: Option<&Path>) -> Result<HashMap<Str
                 continue;
             }
 
+            let location = UsageLocation {
+                file: file_str.clone(),
+                line: Some((line_num + 1) as u32),
+            };
+
+            // Find function calls
             for cap in call_re.captures_iter(line) {
                 let func_name = cap.get(1).unwrap().as_str().to_string();
+                usages
+                    .function_usages
+                    .entry(func_name)
+                    .or_default()
+                    .push(location.clone());
+            }
 
-                let location = UsageLocation {
-                    file: file_str.clone(),
-                    line: Some((line_num + 1) as u32),
-                };
-
-                usages.entry(func_name).or_default().push(location);
+            // Find string literals that match known enum values
+            for cap in string_re.captures_iter(line) {
+                let value = cap.get(1).unwrap().as_str();
+                if let Some(param_names) = value_to_params.get(value) {
+                    // Record this usage for all params that have this enum value
+                    for param_name in param_names {
+                        usages
+                            .enum_usages
+                            .entry((*param_name).to_string())
+                            .or_default()
+                            .entry(value.to_string())
+                            .or_default()
+                            .push(location.clone());
+                    }
+                }
             }
         }
     }
@@ -151,8 +199,8 @@ pub fn scan_starlark_usages_from(base_path: Option<&Path>) -> Result<HashMap<Str
 }
 
 /// Scan specs/**/*.star files for function usages (from current directory)
-pub fn scan_starlark_usages() -> Result<HashMap<String, Vec<UsageLocation>>> {
-    scan_starlark_usages_from(None)
+pub fn scan_starlark_usages(inventory: &FeatureInventory) -> Result<StarlarkUsages> {
+    scan_starlark_usages_from(None, inventory)
 }
 
 /// Usages found in JSON spec files
@@ -228,8 +276,7 @@ pub struct CoverageReport {
 pub fn generate_coverage_report_from(base_path: Option<&Path>) -> Result<CoverageReport> {
     // Load inventory and scan usages
     let inventory = load_feature_inventory_from(base_path)?;
-    let starlark_usages = scan_starlark_usages_from(base_path)?;
-    let json_usages = scan_json_spec_usages_from(base_path)?;
+    let starlark_usages = scan_starlark_usages_from(base_path, &inventory)?;
 
     let mut stdlib: HashMap<String, Vec<FunctionCoverage>> = HashMap::new();
     let mut uncovered_features: Vec<String> = Vec::new();
@@ -243,7 +290,7 @@ pub fn generate_coverage_report_from(base_path: Option<&Path>) -> Result<Coverag
         // Find examples from Starlark
         let mut examples: Vec<String> = Vec::new();
 
-        if let Some(usages) = starlark_usages.get(&func.name) {
+        if let Some(usages) = starlark_usages.function_usages.get(&func.name) {
             for usage in usages.iter().take(3) {
                 // Limit to 3 examples
                 let example = if let Some(line) = usage.line {
@@ -274,13 +321,19 @@ pub fn generate_coverage_report_from(base_path: Option<&Path>) -> Result<Coverag
                 for value in enum_values {
                     total_features += 1;
 
-                    // Check if this enum value is used in JSON specs
-                    let example = json_usages
+                    // Check if this enum value is used in Starlark specs
+                    let example = starlark_usages
                         .enum_usages
                         .get(&param.name)
                         .and_then(|values| values.get(value))
                         .and_then(|locs| locs.first())
-                        .map(|loc| loc.file.clone());
+                        .map(|loc| {
+                            if let Some(line) = loc.line {
+                                format!("{}:{}", loc.file, line)
+                            } else {
+                                loc.file.clone()
+                            }
+                        });
 
                     let value_is_covered = example.is_some();
                     if value_is_covered {
@@ -510,15 +563,35 @@ mod tests {
 
     #[test]
     fn test_scan_starlark_usages() {
-        let usages = scan_starlark_usages_from(Some(&project_root())).unwrap();
+        let inventory = load_feature_inventory_from(Some(&project_root())).unwrap();
+        let usages = scan_starlark_usages_from(Some(&project_root()), &inventory).unwrap();
 
-        // Should find usages in specs/**/*.star files
-        assert!(!usages.is_empty(), "expected some usages");
+        // Should find function usages in specs/**/*.star files
+        assert!(
+            !usages.function_usages.is_empty(),
+            "expected some function usages"
+        );
 
         // Should find oscillator usage (common in audio tests)
-        let osc_usages = usages.get("oscillator");
+        let osc_usages = usages.function_usages.get("oscillator");
         assert!(osc_usages.is_some(), "expected oscillator usage");
-        assert!(!osc_usages.unwrap().is_empty(), "expected oscillator examples");
+        assert!(
+            !osc_usages.unwrap().is_empty(),
+            "expected oscillator examples"
+        );
+
+        // Should find enum usages
+        assert!(
+            !usages.enum_usages.is_empty(),
+            "expected some enum value usages"
+        );
+
+        // Should find "sine" waveform usage (common in audio tests)
+        let waveform_usages = usages.enum_usages.get("waveform");
+        assert!(waveform_usages.is_some(), "expected waveform enum usages");
+        let sine_usages = waveform_usages.unwrap().get("sine");
+        assert!(sine_usages.is_some(), "expected sine waveform usage");
+        assert!(!sine_usages.unwrap().is_empty(), "expected sine examples");
     }
 
     #[test]
