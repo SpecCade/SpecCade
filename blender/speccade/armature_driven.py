@@ -287,6 +287,39 @@ def build_armature_driven_character_mesh(*, armature, params: dict, out_root) ->
             except Exception:
                 pass
 
+    def _subdivide_all_edges(obj, *, cuts: int) -> None:
+        if getattr(obj, 'type', None) != 'MESH':
+            return
+        if isinstance(cuts, bool) or not isinstance(cuts, int):
+            raise TypeError(f"subdivide.cuts must be an int, got {type(cuts).__name__}: {cuts!r}")
+        if cuts < 1:
+            raise ValueError(f"subdivide.cuts must be >= 1, got {cuts!r}")
+
+        mesh = obj.data
+        bm = bmesh.new()
+        try:
+            bm.from_mesh(mesh)
+            bm.verts.ensure_lookup_table()
+            bm.edges.ensure_lookup_table()
+            if not bm.edges:
+                return
+
+            # Subdivide deterministically by operating on the current edge list.
+            bmesh.ops.subdivide_edges(
+                bm,
+                edges=list(bm.edges),
+                cuts=cuts,
+                use_grid_fill=True,
+                smooth=0.0,
+            )
+            bm.to_mesh(mesh)
+        finally:
+            bm.free()
+            try:
+                mesh.update()
+            except Exception:
+                pass
+
     def _deform_taper_bulge_twist(
         obj,
         *,
@@ -752,52 +785,110 @@ def build_armature_driven_character_mesh(*, armature, params: dict, out_root) ->
         for mi, entry in enumerate(modifiers_spec):
             if not isinstance(entry, dict):
                 raise TypeError(f"bone_meshes['{bone_name}'].modifiers[{mi}] must be a dict")
-            if 'bool' not in entry:
-                # Other modifiers are handled elsewhere / not implemented in this module.
+
+            recognized = [k for k in ('bool', 'bevel', 'subdivide') if k in entry]
+            if not recognized:
+                # Unknown / unsupported modifier entry; ignore for forward-compat.
                 continue
-
-            bool_spec = entry.get('bool')
-            if not isinstance(bool_spec, dict):
-                raise TypeError(
-                    f"bone_meshes['{bone_name}'].modifiers[{mi}].bool must be a dict"
-                )
-
-            operation = bool_spec.get('operation', 'difference')
-            if not isinstance(operation, str) or not operation:
-                raise TypeError(
-                    f"bone_meshes['{bone_name}'].modifiers[{mi}].bool.operation must be a non-empty str"
-                )
-            op_lc = operation.strip().lower()
-            if op_lc in ('subtract', 'difference'):
-                blender_op = 'DIFFERENCE'
-            elif op_lc == 'union':
-                blender_op = 'UNION'
-            elif op_lc in ('intersect', 'intersection'):
-                blender_op = 'INTERSECT'
-            else:
+            if len(recognized) != 1:
                 raise ValueError(
-                    f"bone_meshes['{bone_name}'].modifiers[{mi}].bool.operation unsupported: {operation!r}"
+                    f"bone_meshes['{bone_name}'].modifiers[{mi}] must contain exactly one recognized modifier key, got {sorted(recognized)!r}"
                 )
+            kind = recognized[0]
 
-            target = bool_spec.get('target')
-            if not isinstance(target, str) or not target:
-                raise TypeError(
-                    f"bone_meshes['{bone_name}'].modifiers[{mi}].bool.target must be a non-empty str"
-                )
-            target_obj = bool_shape_objs.get(target)
-            if target_obj is None:
-                raise ValueError(
-                    f"bone_meshes['{bone_name}'].modifiers[{mi}].bool.target '{target}' not found in bool_shapes"
-                )
+            if kind == 'bool':
+                bool_spec = entry.get('bool')
+                if not isinstance(bool_spec, dict):
+                    raise TypeError(
+                        f"bone_meshes['{bone_name}'].modifiers[{mi}].bool must be a dict"
+                    )
 
-            mod = obj.modifiers.new(name=f"Bool_{mi}_{target}", type='BOOLEAN')
-            mod.operation = blender_op
-            mod.object = target_obj
-            try:
-                mod.solver = 'EXACT'
-            except Exception:
-                pass
-            _apply_modifier(obj, modifier_name=mod.name)
+                operation = bool_spec.get('operation', 'difference')
+                if not isinstance(operation, str) or not operation:
+                    raise TypeError(
+                        f"bone_meshes['{bone_name}'].modifiers[{mi}].bool.operation must be a non-empty str"
+                    )
+                op_lc = operation.strip().lower()
+                if op_lc in ('subtract', 'difference'):
+                    blender_op = 'DIFFERENCE'
+                elif op_lc == 'union':
+                    blender_op = 'UNION'
+                elif op_lc in ('intersect', 'intersection'):
+                    blender_op = 'INTERSECT'
+                else:
+                    raise ValueError(
+                        f"bone_meshes['{bone_name}'].modifiers[{mi}].bool.operation unsupported: {operation!r}"
+                    )
+
+                target = bool_spec.get('target')
+                if not isinstance(target, str) or not target:
+                    raise TypeError(
+                        f"bone_meshes['{bone_name}'].modifiers[{mi}].bool.target must be a non-empty str"
+                    )
+                target_obj = bool_shape_objs.get(target)
+                if target_obj is None:
+                    raise ValueError(
+                        f"bone_meshes['{bone_name}'].modifiers[{mi}].bool.target '{target}' not found in bool_shapes"
+                    )
+
+                mod = obj.modifiers.new(name=f"Bool_{mi}_{target}", type='BOOLEAN')
+                mod.operation = blender_op
+                mod.object = target_obj
+                try:
+                    mod.solver = 'EXACT'
+                except Exception:
+                    pass
+                _apply_modifier(obj, modifier_name=mod.name)
+
+            elif kind == 'bevel':
+                bevel_spec = entry.get('bevel')
+                if not isinstance(bevel_spec, dict):
+                    raise TypeError(
+                        f"bone_meshes['{bone_name}'].modifiers[{mi}].bevel must be a dict"
+                    )
+
+                width_raw = bevel_spec.get('width')
+                if width_raw is None:
+                    raise TypeError(
+                        f"bone_meshes['{bone_name}'].modifiers[{mi}].bevel.width is required"
+                    )
+                width_abs = _resolve_bone_relative_length(width_raw, bone_length=length)
+                if isinstance(width_abs, tuple):
+                    raise TypeError(
+                        f"bone_meshes['{bone_name}'].modifiers[{mi}].bevel.width must resolve to a scalar, got {width_abs!r}"
+                    )
+
+                segments = bevel_spec.get('segments', 1)
+                if isinstance(segments, bool) or not isinstance(segments, int):
+                    raise TypeError(
+                        f"bone_meshes['{bone_name}'].modifiers[{mi}].bevel.segments must be an int"
+                    )
+                if segments < 1:
+                    raise ValueError(
+                        f"bone_meshes['{bone_name}'].modifiers[{mi}].bevel.segments must be >= 1, got {segments!r}"
+                    )
+
+                mod = obj.modifiers.new(name=f"Bevel_{mi}", type='BEVEL')
+                mod.width = float(width_abs)
+                mod.segments = int(segments)
+                try:
+                    mod.limit_method = 'NONE'
+                except Exception:
+                    pass
+                _apply_modifier(obj, modifier_name=mod.name)
+
+            elif kind == 'subdivide':
+                subdiv_spec = entry.get('subdivide')
+                if not isinstance(subdiv_spec, dict):
+                    raise TypeError(
+                        f"bone_meshes['{bone_name}'].modifiers[{mi}].subdivide must be a dict"
+                    )
+                cuts = subdiv_spec.get('cuts')
+                if cuts is None:
+                    raise TypeError(
+                        f"bone_meshes['{bone_name}'].modifiers[{mi}].subdivide.cuts is required"
+                    )
+                _subdivide_all_edges(obj, cuts=cuts)
 
         vg = obj.vertex_groups.get(bone_name)
         if vg is None:
