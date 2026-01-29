@@ -204,15 +204,19 @@ impl Orchestrator {
         }
 
         // Environment override next.
-        if let Ok(path) = std::env::var("SPECCADE_BLENDER_ENTRYPOINT") {
-            let path = PathBuf::from(path);
-            if path.exists() {
-                return Ok(ResolvedEntrypoint {
-                    path,
-                    _tempfile: None,
-                });
+        if let Some(raw) = std::env::var_os("SPECCADE_BLENDER_ENTRYPOINT") {
+            // Treat empty/whitespace as unset. Use lossy conversion so non-UTF8 paths are still
+            // supported; we only care about detecting blank values.
+            if !raw.to_string_lossy().trim().is_empty() {
+                let path = PathBuf::from(raw);
+                if path.exists() {
+                    return Ok(ResolvedEntrypoint {
+                        path,
+                        _tempfile: None,
+                    });
+                }
+                return Err(BlenderError::EntrypointNotFound { path });
             }
-            return Err(BlenderError::EntrypointNotFound { path });
         }
 
         // Prefer a stable, on-disk entrypoint in the source tree.
@@ -530,7 +534,7 @@ mod tests {
 
     #[test]
     fn test_resolve_entrypoint_uses_source_tree_entrypoint_when_config_missing() {
-        let _lock = TEST_LOCK.lock().unwrap();
+        let _lock = TEST_LOCK.lock().unwrap_or_else(|e| e.into_inner());
         let _env = EnvVarGuard::unset("SPECCADE_BLENDER_ENTRYPOINT");
 
         let config = OrchestratorConfig::with_entrypoint("this/does/not/exist.py");
@@ -554,7 +558,7 @@ mod tests {
 
     #[test]
     fn test_resolve_entrypoint_prefers_repo_entrypoint_even_when_cwd_is_elsewhere() {
-        let _lock = TEST_LOCK.lock().unwrap();
+        let _lock = TEST_LOCK.lock().unwrap_or_else(|e| e.into_inner());
         let _env = EnvVarGuard::unset("SPECCADE_BLENDER_ENTRYPOINT");
 
         struct DirGuard {
@@ -591,7 +595,7 @@ mod tests {
 
     #[test]
     fn test_resolve_entrypoint_env_override_beats_source_tree_fallback() {
-        let _lock = TEST_LOCK.lock().unwrap();
+        let _lock = TEST_LOCK.lock().unwrap_or_else(|e| e.into_inner());
 
         let temp_dir = tempfile::tempdir().unwrap();
         let override_path = temp_dir.path().join("override_entrypoint.py");
@@ -607,7 +611,7 @@ mod tests {
 
     #[test]
     fn test_resolve_entrypoint_config_beats_env_override() {
-        let _lock = TEST_LOCK.lock().unwrap();
+        let _lock = TEST_LOCK.lock().unwrap_or_else(|e| e.into_inner());
 
         let temp_dir = tempfile::tempdir().unwrap();
         let config_path = temp_dir.path().join("config_entrypoint.py");
@@ -622,5 +626,29 @@ mod tests {
         let entrypoint = orchestrator.resolve_entrypoint().unwrap();
 
         assert_eq!(entrypoint.path, config_path);
+    }
+
+    #[test]
+    fn test_resolve_entrypoint_ignores_empty_env_override() {
+        let _lock = TEST_LOCK.lock().unwrap_or_else(|e| e.into_inner());
+
+        let _env = EnvVarGuard::set("SPECCADE_BLENDER_ENTRYPOINT", "");
+
+        let config = OrchestratorConfig::with_entrypoint("this/does/not/exist.py");
+        let orchestrator = Orchestrator::with_config(config);
+        let entrypoint = orchestrator.resolve_entrypoint().unwrap();
+
+        let expected =
+            PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../blender/entrypoint.py");
+        if expected.exists() {
+            assert_eq!(entrypoint.path, expected);
+            return;
+        }
+
+        // In environments where the on-disk entrypoint is unavailable (e.g. published crate
+        // artifacts), ensure we still fall back to a working embedded copy.
+        assert!(entrypoint.path.exists());
+        let content = std::fs::read_to_string(&entrypoint.path).unwrap();
+        assert!(content.contains("SpecCade Blender Entrypoint"));
     }
 }
