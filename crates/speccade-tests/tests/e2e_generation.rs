@@ -976,6 +976,187 @@ fn test_generate_skeletal_mesh_armature_driven_full_features_smoke() {
     assert_eq!(max_influences, 1, "Expected max_bone_influences == 1");
 }
 
+/// `export.include_uvs=false` should remove UV layers prior to metrics + export.
+///
+/// This is intentionally ignored by default because it requires Blender.
+#[test]
+#[ignore] // Run with SPECCADE_RUN_BLENDER_TESTS=1
+fn test_generate_skeletal_mesh_armature_driven_honors_export_include_uvs_false() {
+    if !should_run_blender_tests() {
+        println!("Blender tests not enabled, skipping");
+        return;
+    }
+
+    if !is_blender_available() {
+        println!("Blender not available, skipping");
+        return;
+    }
+
+    let harness = TestHarness::new();
+
+    let spec = Spec::builder("test-armature-driven-uvs-off-01", AssetType::SkeletalMesh)
+        .license("CC0-1.0")
+        .seed(1)
+        .output(OutputSpec::primary(
+            OutputFormat::Glb,
+            "characters/armature_driven_uvs_off.glb",
+        ))
+        .recipe(Recipe::new(
+            "skeletal_mesh.armature_driven_v1",
+            serde_json::json!({
+                "skeleton_preset": "humanoid_basic_v1",
+                "export": {
+                    "include_armature": true,
+                    "include_normals": true,
+                    "include_uvs": false,
+                    "triangulate": false,
+                    "include_skin_weights": true,
+                    "save_blend": false
+                },
+                "bone_meshes": {
+                    "spine": {
+                        "profile": "rectangle",
+                        "profile_radius": [0.14, 0.06],
+                        "cap_start": true,
+                        "cap_end": true
+                    }
+                }
+            }),
+        ))
+        .build();
+
+    let result = speccade_backend_blender::skeletal_mesh::generate(&spec, harness.path());
+    assert!(
+        result.is_ok(),
+        "Armature-driven skeletal mesh generation failed: {:?}",
+        result.err()
+    );
+
+    let gen_result = result.unwrap();
+    let uv_layers = gen_result.metrics.uv_layer_count.unwrap_or(u32::MAX);
+    assert_eq!(
+        uv_layers, 0,
+        "Expected uv_layer_count == 0 when include_uvs=false"
+    );
+}
+
+/// `export.triangulate=true` should remove quads prior to metrics + export.
+///
+/// This is intentionally ignored by default because it requires Blender.
+#[test]
+#[ignore] // Run with SPECCADE_RUN_BLENDER_TESTS=1
+fn test_generate_skeletal_mesh_armature_driven_honors_export_triangulate() {
+    if !should_run_blender_tests() {
+        println!("Blender tests not enabled, skipping");
+        return;
+    }
+
+    if !is_blender_available() {
+        println!("Blender not available, skipping");
+        return;
+    }
+
+    let base_harness = TestHarness::new();
+    let base_spec = Spec::builder(
+        "test-armature-driven-triangulate-off-01",
+        AssetType::SkeletalMesh,
+    )
+    .license("CC0-1.0")
+    .seed(1)
+    .output(OutputSpec::primary(
+        OutputFormat::Glb,
+        "characters/armature_driven_triangulate_off.glb",
+    ))
+    .recipe(Recipe::new(
+        "skeletal_mesh.armature_driven_v1",
+        serde_json::json!({
+            "skeleton_preset": "humanoid_basic_v1",
+            "export": {
+                "include_armature": true,
+                "include_normals": true,
+                "include_uvs": true,
+                "triangulate": false,
+                "include_skin_weights": true,
+                "save_blend": false
+            },
+            "bone_meshes": {
+                "spine": {
+                    "profile": "rectangle",
+                    "profile_radius": [0.14, 0.06],
+                    "cap_start": true,
+                    "cap_end": true
+                }
+            }
+        }),
+    ))
+    .build();
+
+    let base_result =
+        speccade_backend_blender::skeletal_mesh::generate(&base_spec, base_harness.path());
+    assert!(
+        base_result.is_ok(),
+        "Armature-driven skeletal mesh generation failed: {:?}",
+        base_result.err()
+    );
+    let base_result = base_result.unwrap();
+    let base_quads = base_result.metrics.quad_count.unwrap_or(0);
+    assert!(
+        base_quads > 0,
+        "Expected baseline quad_count > 0 when triangulate=false, got {}",
+        base_quads
+    );
+
+    let tri_harness = TestHarness::new();
+    let tri_spec = Spec::builder(
+        "test-armature-driven-triangulate-on-01",
+        AssetType::SkeletalMesh,
+    )
+    .license("CC0-1.0")
+    .seed(1)
+    .output(OutputSpec::primary(
+        OutputFormat::Glb,
+        "characters/armature_driven_triangulate_on.glb",
+    ))
+    .recipe(Recipe::new(
+        "skeletal_mesh.armature_driven_v1",
+        serde_json::json!({
+            "skeleton_preset": "humanoid_basic_v1",
+            "export": {
+                "include_armature": true,
+                "include_normals": true,
+                "include_uvs": true,
+                "triangulate": true,
+                "include_skin_weights": true,
+                "save_blend": false
+            },
+            "bone_meshes": {
+                "spine": {
+                    "profile": "rectangle",
+                    "profile_radius": [0.14, 0.06],
+                    "cap_start": true,
+                    "cap_end": true
+                }
+            }
+        }),
+    ))
+    .build();
+
+    let tri_result =
+        speccade_backend_blender::skeletal_mesh::generate(&tri_spec, tri_harness.path());
+    assert!(
+        tri_result.is_ok(),
+        "Armature-driven skeletal mesh generation failed: {:?}",
+        tri_result.err()
+    );
+    let tri_result = tri_result.unwrap();
+    let tri_quads = tri_result.metrics.quad_count.unwrap_or(u32::MAX);
+    assert_eq!(
+        tri_quads, 0,
+        "Expected quad_count == 0 when triangulate=true, got {}",
+        tri_quads
+    );
+}
+
 /// `material_index` on bone meshes and attachments should produce multiple materials.
 ///
 /// This is intentionally ignored by default because it requires Blender.

@@ -71,6 +71,61 @@ def _recalculate_normals(mesh_obj: 'bpy.types.Object') -> None:
     bpy.ops.object.mode_set(mode='OBJECT')
 
 
+def _remove_uv_layers(mesh_obj: 'bpy.types.Object') -> None:
+    """Remove all UV layers from the mesh (best effort)."""
+    _ensure_object_mode()
+    try:
+        mesh = mesh_obj.data
+
+        # Blender 2.8+ API.
+        try:
+            uv_layers = mesh.uv_layers
+            while len(uv_layers) > 0:
+                uv_layers.remove(uv_layers[0])
+        except Exception:
+            pass
+
+        # Blender 3.0+ stores UVs as mesh attributes; some versions may keep the
+        # attribute even if uv_layers is empty.
+        try:
+            attrs = getattr(mesh, 'attributes', None)
+            if attrs is not None:
+                for attr in list(attrs):
+                    name = str(getattr(attr, 'name', '')).lower()
+                    domain = getattr(attr, 'domain', None)
+                    data_type = getattr(attr, 'data_type', None)
+                    if domain == 'CORNER' and data_type == 'FLOAT2' and ('uv' in name or 'texcoord' in name):
+                        try:
+                            attrs.remove(attr)
+                        except Exception:
+                            continue
+        except Exception:
+            pass
+
+        try:
+            mesh.update()
+        except Exception:
+            pass
+        try:
+            bpy.context.view_layer.update()
+        except Exception:
+            pass
+    except Exception:
+        pass
+
+
+def _apply_triangulate_modifier(mesh_obj: 'bpy.types.Object') -> None:
+    """Triangulate the mesh by applying a TRIANGULATE modifier (best effort)."""
+    _ensure_object_mode()
+    _select_only([mesh_obj], active=mesh_obj)
+    try:
+        mod = mesh_obj.modifiers.new(name='SC_Triangulate', type='TRIANGULATE')
+        bpy.ops.object.modifier_apply(modifier=mod.name)
+    except Exception:
+        # If apply fails (e.g. no active object in bg mode), keep going.
+        pass
+
+
 def _assign_all_vertices_to_group(mesh_obj: 'bpy.types.Object', group_name: str, *, weight: float = 1.0) -> None:
     vg = mesh_obj.vertex_groups.get(group_name)
     if vg is None:
@@ -365,6 +420,21 @@ def handle_skeletal_mesh(spec: Dict, out_root: Path, report_path: Path) -> None:
         output_path = out_root / output_rel_path
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
+        export_settings = params.get("export", {}) or {}
+        include_armature = bool(export_settings.get("include_armature", True))
+        include_animation = bool(export_settings.get("include_animation", False))
+        include_normals = bool(export_settings.get("include_normals", True))
+        include_uvs = bool(export_settings.get("include_uvs", True))
+        include_skin_weights = bool(export_settings.get("include_skin_weights", True))
+        triangulate = bool(export_settings.get("triangulate", False))
+        export_tangents = bool(export_settings.get("tangents", False))
+
+        # Mesh prep that must be reflected in metrics.
+        if not include_uvs:
+            _remove_uv_layers(combined_mesh)
+        if triangulate:
+            _apply_triangulate_modifier(combined_mesh)
+
         # Compute metrics
         metrics = compute_skeletal_mesh_metrics(combined_mesh, armature)
 
@@ -374,10 +444,17 @@ def handle_skeletal_mesh(spec: Dict, out_root: Path, report_path: Path) -> None:
             metrics["tri_budget"] = tri_budget
             metrics["tri_budget_exceeded"] = metrics.get("triangle_count", 0) > tri_budget
 
-        # Export GLB with tangents if requested
-        export_settings = params.get("export", {})
-        export_tangents = export_settings.get("tangents", False)
-        export_glb(output_path, include_armature=True, export_tangents=export_tangents)
+        # Export GLB
+        export_glb(
+            output_path,
+            include_armature=include_armature,
+            include_animation=include_animation,
+            include_normals=include_normals,
+            include_uvs=include_uvs,
+            include_skin_weights=include_skin_weights,
+            triangulate=triangulate,
+            export_tangents=export_tangents,
+        )
 
         # Save .blend file if requested
         blend_rel_path = None
@@ -442,10 +519,25 @@ def handle_animation(spec: Dict, out_root: Path, report_path: Path) -> None:
         if extracted_delta:
             metrics["root_motion_delta"] = extracted_delta
 
-        # Export GLB with animation and tangents if requested
-        export_settings = params.get("export", {})
-        export_tangents = export_settings.get("tangents", False)
-        export_glb(output_path, include_armature=True, include_animation=True, export_tangents=export_tangents)
+        export_settings = params.get("export", {}) or {}
+        include_armature = bool(export_settings.get("include_armature", True))
+        include_animation = bool(export_settings.get("include_animation", True))
+        include_normals = bool(export_settings.get("include_normals", True))
+        include_uvs = bool(export_settings.get("include_uvs", True))
+        include_skin_weights = bool(export_settings.get("include_skin_weights", True))
+        triangulate = bool(export_settings.get("triangulate", False))
+        export_tangents = bool(export_settings.get("tangents", False))
+
+        export_glb(
+            output_path,
+            include_armature=include_armature,
+            include_animation=include_animation,
+            include_normals=include_normals,
+            include_uvs=include_uvs,
+            include_skin_weights=include_skin_weights,
+            triangulate=triangulate,
+            export_tangents=export_tangents,
+        )
 
         # Save .blend file if requested
         blend_rel_path = None
@@ -725,9 +817,24 @@ def handle_rigged_animation(spec: Dict, out_root: Path, report_path: Path) -> No
         metrics["phase_count"] = len(phases)
         metrics["pose_count"] = len(poses)
 
-        # Export GLB with animation and tangents if requested
-        export_tangents = export_settings.get("tangents", False)
-        export_glb(output_path, include_armature=True, include_animation=True, export_tangents=export_tangents)
+        include_armature = bool(export_settings.get("include_armature", True))
+        include_animation = bool(export_settings.get("include_animation", True))
+        include_normals = bool(export_settings.get("include_normals", True))
+        include_uvs = bool(export_settings.get("include_uvs", True))
+        include_skin_weights = bool(export_settings.get("include_skin_weights", True))
+        triangulate = bool(export_settings.get("triangulate", False))
+        export_tangents = bool(export_settings.get("tangents", False))
+
+        export_glb(
+            output_path,
+            include_armature=include_armature,
+            include_animation=include_animation,
+            include_normals=include_normals,
+            include_uvs=include_uvs,
+            include_skin_weights=include_skin_weights,
+            triangulate=triangulate,
+            export_tangents=export_tangents,
+        )
 
         # Save .blend file if requested (from params or export settings)
         blend_rel_path = None
@@ -785,8 +892,25 @@ def handle_animation_helpers(spec: Dict, out_root: Path, report_path: Path) -> N
         output_path = out_root / output_rel_path
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
-        # Export GLB with animation
-        export_glb(output_path, include_armature=True, include_animation=True)
+        export_settings = params.get("export", {}) or {}
+        include_armature = bool(export_settings.get("include_armature", True))
+        include_animation = bool(export_settings.get("include_animation", True))
+        include_normals = bool(export_settings.get("include_normals", True))
+        include_uvs = bool(export_settings.get("include_uvs", True))
+        include_skin_weights = bool(export_settings.get("include_skin_weights", True))
+        triangulate = bool(export_settings.get("triangulate", False))
+        export_tangents = bool(export_settings.get("tangents", False))
+
+        export_glb(
+            output_path,
+            include_armature=include_armature,
+            include_animation=include_animation,
+            include_normals=include_normals,
+            include_uvs=include_uvs,
+            include_skin_weights=include_skin_weights,
+            triangulate=triangulate,
+            export_tangents=export_tangents,
+        )
 
         # Compute animation metrics
         action = armature.animation_data.action if armature.animation_data else None

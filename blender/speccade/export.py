@@ -18,15 +18,18 @@ deterministic output for reproducible asset generation.
 
 import math
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, cast
 
 # Blender modules - only available when running inside Blender
 try:
-    import bpy
-    import bmesh
-    from mathutils import Vector
+    import bpy  # type: ignore
+    import bmesh  # type: ignore
+    from mathutils import Vector  # type: ignore
     BLENDER_AVAILABLE = True
 except ImportError:
+    bpy = cast(Any, object())
+    bmesh = cast(Any, object())
+    Vector = cast(Any, object())
     BLENDER_AVAILABLE = False
 
 # Import from sibling modules
@@ -125,29 +128,63 @@ def _normalize_operator_kwargs(op, kwargs: Dict[str, Any]) -> Dict[str, Any]:
         return kwargs
 
 
-def export_glb(output_path: Path, include_armature: bool = True,
-               include_animation: bool = False, export_tangents: bool = False) -> None:
+def export_glb(
+    output_path: Path,
+    *,
+    include_armature: bool = True,
+    include_animation: bool = False,
+    include_normals: bool = True,
+    include_uvs: bool = True,
+    include_skin_weights: bool = True,
+    triangulate: bool = False,
+    export_tangents: bool = False,
+) -> None:
     """Export scene to GLB format."""
+
+    # Best-effort triangulation for determinism and parity with metrics.
+    # We apply it directly to meshes (not as an export-only option) because the
+    # glTF exporter may triangulate internally without mutating the mesh.
+    if triangulate:
+        try:
+            if bpy.context.mode != 'OBJECT':
+                bpy.ops.object.mode_set(mode='OBJECT')
+        except Exception:
+            pass
+
+        for obj in list(getattr(bpy.data, 'objects', [])):
+            if getattr(obj, 'type', None) != 'MESH':
+                continue
+            try:
+                bpy.ops.object.select_all(action='DESELECT')
+                obj.select_set(True)
+                bpy.context.view_layer.objects.active = obj
+                mod = obj.modifiers.new(name='SC_Triangulate', type='TRIANGULATE')
+                bpy.ops.object.modifier_apply(modifier=mod.name)
+            except Exception as e:
+                print(f"Warning: Failed to triangulate '{obj.name}': {e}")
+
     export_settings = {
         'filepath': str(output_path),
         'export_format': 'GLB',
         'export_apply': True,
-        'export_texcoords': True,
-        'export_normals': True,
+        'export_texcoords': bool(include_uvs),
+        'export_normals': bool(include_normals),
+        'export_skins': bool(include_skin_weights),
+        # Armature export flag has changed names/semantics across Blender versions.
+        # We include a few likely spellings and filter to supported kwargs.
+        'export_armatures': bool(include_armature),
+        'export_armature': bool(include_armature),
         # Vertex color export flag has changed names across Blender versions.
         # We include both and filter to supported kwargs at call time.
         'export_colors': True,
         'export_vertex_color': True,
-        'export_tangents': export_tangents,
+        'export_tangents': bool(export_tangents),
+        'export_animations': bool(include_animation),
     }
 
     if include_animation:
-        export_settings['export_animations'] = True
         export_settings['export_current_frame'] = False
-    else:
-        export_settings['export_animations'] = False
 
-    export_settings = _normalize_operator_kwargs(bpy.ops.export_scene.gltf, export_settings)
     export_settings = _normalize_operator_kwargs(bpy.ops.export_scene.gltf, export_settings)
     bpy.ops.export_scene.gltf(**export_settings)
 
@@ -178,11 +215,11 @@ def compute_decimate_ratio_for_target(
 
 
 def create_lod_mesh(
-    source_obj: 'bpy.types.Object',
+    source_obj: Any,
     lod_level: int,
     target_tris: Optional[int],
     decimate_method: str = "collapse"
-) -> Tuple['bpy.types.Object', Dict[str, Any]]:
+) -> Tuple[Any, Dict[str, Any]]:
     """
     Create an LOD mesh by decimating the source object.
 
@@ -249,9 +286,9 @@ def create_lod_mesh(
 
 
 def generate_lod_chain(
-    source_obj: 'bpy.types.Object',
+    source_obj: Any,
     lod_chain_spec: Dict
-) -> Tuple[List['bpy.types.Object'], List[Dict[str, Any]]]:
+) -> Tuple[List[Any], List[Dict[str, Any]]]:
     """
     Generate a chain of LOD meshes from the source object.
 
@@ -293,9 +330,9 @@ def generate_lod_chain(
 # =============================================================================
 
 def generate_collision_mesh(
-    source_obj: 'bpy.types.Object',
+    source_obj: Any,
     collision_spec: Dict
-) -> Tuple['bpy.types.Object', Dict[str, Any]]:
+) -> Tuple[Any, Dict[str, Any]]:
     """
     Generate a collision mesh from the source object.
 
@@ -346,7 +383,7 @@ def generate_collision_mesh(
     return col_obj, metrics
 
 
-def _generate_convex_hull(obj: 'bpy.types.Object') -> None:
+def _generate_convex_hull(obj: Any) -> None:
     """
     Generate a convex hull from the mesh.
 
@@ -363,7 +400,7 @@ def _generate_convex_hull(obj: 'bpy.types.Object') -> None:
     bpy.ops.object.mode_set(mode='OBJECT')
 
 
-def _generate_simplified_collision(obj: 'bpy.types.Object', target_faces: Optional[int]) -> None:
+def _generate_simplified_collision(obj: Any, target_faces: Optional[int]) -> None:
     """
     Generate a simplified collision mesh using decimation.
 
@@ -394,7 +431,7 @@ def _generate_simplified_collision(obj: 'bpy.types.Object', target_faces: Option
     bpy.ops.object.modifier_apply(modifier=mod.name)
 
 
-def _generate_box_collision(obj: 'bpy.types.Object') -> None:
+def _generate_box_collision(obj: Any) -> None:
     """
     Generate a box collision mesh from the bounding box.
 
@@ -483,7 +520,7 @@ def _generate_box_collision(obj: 'bpy.types.Object') -> None:
     bpy.ops.object.mode_set(mode='OBJECT')
 
 
-def compute_collision_mesh_metrics(obj: 'bpy.types.Object', collision_type: str) -> Dict[str, Any]:
+def compute_collision_mesh_metrics(obj: Any, collision_type: str) -> Dict[str, Any]:
     """
     Compute metrics for a collision mesh.
 
@@ -535,7 +572,7 @@ def compute_collision_mesh_metrics(obj: 'bpy.types.Object', collision_type: str)
 
 
 def export_collision_mesh(
-    collision_obj: 'bpy.types.Object',
+    collision_obj: Any,
     output_path: Path,
     export_tangents: bool = False
 ) -> None:
@@ -572,7 +609,7 @@ def export_collision_mesh(
 # =============================================================================
 
 def analyze_navmesh(
-    obj: 'bpy.types.Object',
+    obj: Any,
     navmesh_spec: Dict
 ) -> Dict[str, Any]:
     """
@@ -720,7 +757,7 @@ def _detect_stair_candidates(
 # =============================================================================
 
 def bake_textures(
-    obj: 'bpy.types.Object',
+    obj: Any,
     baking_spec: Dict,
     out_root: Path,
     base_name: str
@@ -874,7 +911,7 @@ def bake_textures(
     }
 
 
-def _get_or_create_bake_material(obj: 'bpy.types.Object') -> 'bpy.types.Material':
+def _get_or_create_bake_material(obj: Any) -> Any:
     """Get or create a material for baking on the object."""
     if obj.data.materials:
         mat = obj.data.materials[0]
@@ -885,7 +922,7 @@ def _get_or_create_bake_material(obj: 'bpy.types.Object') -> 'bpy.types.Material
     return mat
 
 
-def _setup_bake_target_node(mat: 'bpy.types.Material', img: 'bpy.types.Image') -> None:
+def _setup_bake_target_node(mat: Any, img: Any) -> None:
     """Set up an image texture node as the bake target."""
     if not mat.use_nodes:
         mat.use_nodes = True
@@ -908,7 +945,7 @@ def _setup_bake_target_node(mat: 'bpy.types.Material', img: 'bpy.types.Image') -
     nodes.active = img_node
 
 
-def _bake_curvature(obj: 'bpy.types.Object', img: 'bpy.types.Image', margin: int) -> None:
+def _bake_curvature(obj: Any, img: Any, margin: int) -> None:
     """
     Bake curvature map using geometry pointiness.
 
@@ -972,7 +1009,7 @@ def _bake_curvature(obj: 'bpy.types.Object', img: 'bpy.types.Image', margin: int
 
 def export_glb_with_lods(
     output_path: Path,
-    lod_objects: List['bpy.types.Object'],
+    lod_objects: List[Any],
     export_tangents: bool = False
 ) -> None:
     """
