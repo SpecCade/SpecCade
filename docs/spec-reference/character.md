@@ -52,6 +52,45 @@ Minimal recipe example:
 }
 ```
 
+### Units + Bone-Relative Semantics
+
+- Most per-bone geometry fields are specified in *bone-local* coordinates (origin at the bone head).
+- *Bone-relative units* mean values are interpreted as a fraction of the bone length (head-to-tail distance).
+- Angles are in degrees.
+
+Common bone-relative fields:
+
+- `bone_meshes.<bone>.translate`: `[x, y, z]` offset in bone-local, bone-relative units.
+- `bone_meshes.<bone>.rotate`: `[x, y, z]` profile rotation in degrees (applied before extrusion).
+- `bone_meshes.<bone>.profile_radius`:
+  - number: uniform radius in bone-relative units
+  - `[x, y]`: elliptical radius in bone-relative units
+  - `{ "absolute": a }`: absolute units escape hatch (not scaled by bone length)
+- `bone_meshes.<bone>.bulge[*].at`: normalized position along the bone axis (`0.0` = head, `1.0` = tail)
+- `bone_meshes.<bone>.twist`: degrees of twist along the bone axis
+
+Attachment/bool-shape fields are also bone-relative:
+
+- `bone_meshes.<bone>.attachments[*].dimensions` / `.offset`: bone-relative units
+- `bone_meshes.<bone>.attachments[*].extrude.start` / `.end`: bone-local, bone-relative units
+- `bool_shapes.<shape>.position` / `.dimensions`: bone-local, bone-relative units (when `bone` is set)
+
+### Boolean Operations
+
+- Boolean modifiers reference `bool_shapes` by name.
+- Supported boolean operations: `difference`/`subtract`, `union`, `intersect`/`intersection`.
+- `bool_shapes` are helper shapes and are not exported in the final GLB.
+
+### Mirror References
+
+- `bone_meshes` and `bool_shapes` support mirror references: `{ "mirror": "other_key" }`.
+- Mirrors are a *copy-by-reference* convenience (the resolved definition is reused as-is).
+- Any visual left/right mirroring comes from using mirrored bones in the skeleton (or custom skeleton bones with `mirror`).
+
+### Export Settings
+
+- `params.export` is honored by the Blender backend; it affects GLB export (triangulation, normals, UVs, skin weights, and whether the armature is included).
+
 ## Recipe: `skeletal_mesh.skinned_mesh_v1`
 
 Bind an existing mesh **to** a skeleton. Supports rigid binding (vertex groups) and soft skinning (auto weights).
