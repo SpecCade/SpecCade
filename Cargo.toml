@@ -40,6 +40,7 @@ png = "0.17"
 image = { version = "0.25", default-features = false, features = ["png"] }
 gif = "0.13"
 tempfile = "3"
+fs2 = "0.4"
 which = "6"
 hound = "3"
 gltf = "1"

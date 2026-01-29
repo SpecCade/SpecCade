@@ -4,6 +4,8 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 use std::sync::OnceLock;
+
+use fs2::FileExt;
 use tempfile::TempDir;
 
 use speccade_spec::{OutputFormat, Spec};
@@ -58,6 +60,88 @@ pub struct TestHarness {
     pub work_dir: TempDir,
 }
 
+fn workspace_root() -> PathBuf {
+    speccade_manifest_path()
+        .parent()
+        .expect("workspace Cargo.toml should have a parent")
+        .to_path_buf()
+}
+
+struct CargoCliLock {
+    file: std::fs::File,
+}
+
+impl Drop for CargoCliLock {
+    fn drop(&mut self) {
+        let _ = self.file.unlock();
+    }
+}
+
+fn acquire_cargo_cli_lock() -> CargoCliLock {
+    // Cross-process lock to prevent multiple test binaries from trying to build
+    // the CLI at the same time.
+    let lock_path = workspace_root()
+        .join("target")
+        .join("speccade-tests-cli-build.lock");
+
+    if let Some(parent) = lock_path.parent() {
+        let _ = fs::create_dir_all(parent);
+    }
+
+    let file = std::fs::OpenOptions::new()
+        .read(true)
+        .write(true)
+        .create(true)
+        .open(&lock_path)
+        .unwrap_or_else(|e| panic!("Failed to open lock file {:?}: {}", lock_path, e));
+
+    file.lock_exclusive()
+        .unwrap_or_else(|e| panic!("Failed to lock {:?}: {}", lock_path, e));
+
+    CargoCliLock { file }
+}
+
+fn speccade_bin_path() -> PathBuf {
+    static PATH: OnceLock<PathBuf> = OnceLock::new();
+
+    PATH.get_or_init(|| {
+        let _lock = acquire_cargo_cli_lock();
+
+        let manifest_path = speccade_manifest_path();
+        let repo_root = workspace_root();
+
+        // Build into a dedicated target dir so we don't collide with the outer
+        // `cargo test` target dir (nested cargo invocations on Windows can
+        // otherwise trip link.exe errors).
+        let test_target_dir = repo_root.join("target").join("speccade-tests-target");
+
+        let status = Command::new("cargo")
+            .args(["build", "--quiet", "--manifest-path"])
+            .arg(&manifest_path)
+            .args(["-p", "speccade-cli", "--bin", "speccade"])
+            .env("CARGO_TARGET_DIR", &test_target_dir)
+            .status()
+            .expect("Failed to run `cargo build` for speccade-cli");
+
+        assert!(
+            status.success(),
+            "Failed to build speccade-cli (status={:?})",
+            status.code()
+        );
+
+        let exe_name = if cfg!(windows) {
+            "speccade.exe"
+        } else {
+            "speccade"
+        };
+        let bin_path = test_target_dir.join("debug").join(exe_name);
+        bin_path
+            .canonicalize()
+            .unwrap_or_else(|_| panic!("speccade binary not found at {:?}", bin_path))
+    })
+    .clone()
+}
+
 impl TestHarness {
     /// Create a new test harness.
     pub fn new() -> Self {
@@ -73,17 +157,22 @@ impl TestHarness {
 
     /// Run the speccade CLI with the given arguments.
     ///
-    /// Note: This runs the CLI as a library call, not as a subprocess,
-    /// which is more reliable for testing.
+    /// Note: We run the built `speccade` binary directly (built on-demand into
+    /// a dedicated target dir), to avoid nested `cargo run` during `cargo test`.
     pub fn run_cli(&self, args: &[&str]) -> CliResult {
-        let manifest_path = speccade_manifest_path();
+        self.run_cli_in_dir(self.path(), args)
+    }
 
-        let output = Command::new("cargo")
-            .args(["run", "--quiet", "--manifest-path"])
-            .arg(&manifest_path)
-            .args(["-p", "speccade-cli", "--"])
+    /// Run the speccade CLI with a custom working directory.
+    ///
+    /// This is useful for commands that resolve paths relative to the project
+    /// root (e.g. `speccade coverage ...`).
+    pub fn run_cli_in_dir(&self, cwd: &Path, args: &[&str]) -> CliResult {
+        let speccade_bin = speccade_bin_path();
+
+        let output = Command::new(&speccade_bin)
             .args(args)
-            .current_dir(self.path())
+            .current_dir(cwd)
             .output();
 
         match output {

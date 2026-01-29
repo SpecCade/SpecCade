@@ -79,6 +79,7 @@ serde = { workspace = true }
 walkdir = { workspace = true }
 blake3 = { workspace = true }
 regex = { workspace = true }
+fs2 = { workspace = true }
 
 # For WebSocket testing
 tokio = { workspace = true, features = ["rt", "time", "net", "sync", "macros"] }
