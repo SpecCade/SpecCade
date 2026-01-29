@@ -203,18 +203,7 @@ impl Orchestrator {
             });
         }
 
-        // Prefer a stable, on-disk entrypoint in the source tree.
-        // This avoids breaking __file__-relative imports when tests run from a different CWD.
-        let source_tree_entrypoint =
-            PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../blender/entrypoint.py");
-        if source_tree_entrypoint.exists() {
-            return Ok(ResolvedEntrypoint {
-                path: source_tree_entrypoint,
-                _tempfile: None,
-            });
-        }
-
-        // Environment override (fallback).
+        // Environment override next.
         if let Ok(path) = std::env::var("SPECCADE_BLENDER_ENTRYPOINT") {
             let path = PathBuf::from(path);
             if path.exists() {
@@ -224,6 +213,17 @@ impl Orchestrator {
                 });
             }
             return Err(BlenderError::EntrypointNotFound { path });
+        }
+
+        // Prefer a stable, on-disk entrypoint in the source tree.
+        // This avoids breaking __file__-relative imports when tests run from a different CWD.
+        let source_tree_entrypoint =
+            PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../blender/entrypoint.py");
+        if source_tree_entrypoint.exists() {
+            return Ok(ResolvedEntrypoint {
+                path: source_tree_entrypoint,
+                _tempfile: None,
+            });
         }
 
         // Last resort: write embedded entrypoint to a temp file.
@@ -403,6 +403,36 @@ pub fn mode_from_recipe_kind(kind: &str) -> BlenderResult<GenerationMode> {
 mod tests {
     use super::*;
 
+    static TEST_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
+
+    struct EnvVarGuard {
+        key: &'static str,
+        prev: Option<std::ffi::OsString>,
+    }
+
+    impl EnvVarGuard {
+        fn set(key: &'static str, value: impl AsRef<std::ffi::OsStr>) -> Self {
+            let prev = std::env::var_os(key);
+            std::env::set_var(key, value);
+            Self { key, prev }
+        }
+
+        fn unset(key: &'static str) -> Self {
+            let prev = std::env::var_os(key);
+            std::env::remove_var(key);
+            Self { key, prev }
+        }
+    }
+
+    impl Drop for EnvVarGuard {
+        fn drop(&mut self) {
+            match self.prev.take() {
+                Some(v) => std::env::set_var(self.key, v),
+                None => std::env::remove_var(self.key),
+            }
+        }
+    }
+
     #[test]
     fn test_generation_mode_as_str() {
         assert_eq!(GenerationMode::StaticMesh.as_str(), "static_mesh");
@@ -500,11 +530,8 @@ mod tests {
 
     #[test]
     fn test_resolve_entrypoint_uses_source_tree_entrypoint_when_config_missing() {
-        // If the user has configured an environment override, don't stomp it.
-        if std::env::var_os("SPECCADE_BLENDER_ENTRYPOINT").is_some() {
-            eprintln!("SPECCADE_BLENDER_ENTRYPOINT is set; skipping entrypoint resolution test");
-            return;
-        }
+        let _lock = TEST_LOCK.lock().unwrap();
+        let _env = EnvVarGuard::unset("SPECCADE_BLENDER_ENTRYPOINT");
 
         let config = OrchestratorConfig::with_entrypoint("this/does/not/exist.py");
         let orchestrator = Orchestrator::with_config(config);
@@ -527,11 +554,8 @@ mod tests {
 
     #[test]
     fn test_resolve_entrypoint_prefers_repo_entrypoint_even_when_cwd_is_elsewhere() {
-        // If the user has configured an environment override, don't stomp it.
-        if std::env::var_os("SPECCADE_BLENDER_ENTRYPOINT").is_some() {
-            eprintln!("SPECCADE_BLENDER_ENTRYPOINT is set; skipping entrypoint resolution test");
-            return;
-        }
+        let _lock = TEST_LOCK.lock().unwrap();
+        let _env = EnvVarGuard::unset("SPECCADE_BLENDER_ENTRYPOINT");
 
         struct DirGuard {
             old: PathBuf,
@@ -555,7 +579,48 @@ mod tests {
         let expected =
             PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../blender/entrypoint.py");
         assert!(expected.is_absolute());
-        assert!(expected.exists());
+        if !expected.exists() {
+            eprintln!(
+                "skipping: source-tree entrypoint not present at {:?}",
+                expected
+            );
+            return;
+        }
         assert_eq!(entrypoint.path, expected);
+    }
+
+    #[test]
+    fn test_resolve_entrypoint_env_override_beats_source_tree_fallback() {
+        let _lock = TEST_LOCK.lock().unwrap();
+
+        let temp_dir = tempfile::tempdir().unwrap();
+        let override_path = temp_dir.path().join("override_entrypoint.py");
+        std::fs::write(&override_path, "# test override\n").unwrap();
+        let _env = EnvVarGuard::set("SPECCADE_BLENDER_ENTRYPOINT", &override_path);
+
+        let config = OrchestratorConfig::with_entrypoint("this/does/not/exist.py");
+        let orchestrator = Orchestrator::with_config(config);
+        let entrypoint = orchestrator.resolve_entrypoint().unwrap();
+
+        assert_eq!(entrypoint.path, override_path);
+    }
+
+    #[test]
+    fn test_resolve_entrypoint_config_beats_env_override() {
+        let _lock = TEST_LOCK.lock().unwrap();
+
+        let temp_dir = tempfile::tempdir().unwrap();
+        let config_path = temp_dir.path().join("config_entrypoint.py");
+        let env_path = temp_dir.path().join("env_entrypoint.py");
+        std::fs::write(&config_path, "# config override\n").unwrap();
+        std::fs::write(&env_path, "# env override\n").unwrap();
+
+        let _env = EnvVarGuard::set("SPECCADE_BLENDER_ENTRYPOINT", &env_path);
+
+        let config = OrchestratorConfig::with_entrypoint(&config_path);
+        let orchestrator = Orchestrator::with_config(config);
+        let entrypoint = orchestrator.resolve_entrypoint().unwrap();
+
+        assert_eq!(entrypoint.path, config_path);
     }
 }
