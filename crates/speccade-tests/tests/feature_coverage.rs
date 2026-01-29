@@ -15,7 +15,6 @@ fn workspace_root() -> PathBuf {
 
 /// Run `speccade coverage generate --strict` and expect success
 #[test]
-#[ignore = "coverage not yet 100%"]
 fn coverage_is_complete() {
     let root = workspace_root();
 
