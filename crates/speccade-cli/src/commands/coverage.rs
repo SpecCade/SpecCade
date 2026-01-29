@@ -206,6 +206,38 @@ pub fn scan_json_spec_usages_from(base_path: Option<&Path>) -> Result<JsonSpecUs
             line: None,
         };
 
+        // Extract top-level asset_type
+        if let Some(asset_type) = spec.get("asset_type").and_then(|v| v.as_str()) {
+            result.enum_usages
+                .entry("asset_type".to_string())
+                .or_default()
+                .entry(asset_type.to_string())
+                .or_default()
+                .push(location.clone());
+        }
+
+        // Extract outputs[].format and outputs[].kind
+        if let Some(outputs) = spec.get("outputs").and_then(|v| v.as_array()) {
+            for output in outputs {
+                if let Some(format) = output.get("format").and_then(|v| v.as_str()) {
+                    result.enum_usages
+                        .entry("format".to_string())
+                        .or_default()
+                        .entry(format.to_string())
+                        .or_default()
+                        .push(location.clone());
+                }
+                if let Some(kind) = output.get("kind").and_then(|v| v.as_str()) {
+                    result.enum_usages
+                        .entry("kind".to_string())
+                        .or_default()
+                        .entry(kind.to_string())
+                        .or_default()
+                        .push(location.clone());
+                }
+            }
+        }
+
         // Extract recipe.kind if present
         if let Some(recipe) = spec.get("recipe") {
             if let Some(kind) = recipe.get("kind").and_then(|k| k.as_str()) {
