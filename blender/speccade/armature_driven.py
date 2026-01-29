@@ -238,6 +238,13 @@ def build_armature_driven_character_mesh(*, armature, params: dict, out_root) ->
         except TypeError:
             return a * b
 
+    def _quat_rotate_vec(q, v):
+        # Blender versions differ on whether Quaternion supports @ for rotating vectors.
+        try:
+            return q @ v
+        except TypeError:
+            return q * v
+
     def _parse_vec3(value, *, name: str) -> tuple[float, float, float] | None:
         if value is None:
             return None
@@ -247,7 +254,14 @@ def build_armature_driven_character_mesh(*, armature, params: dict, out_root) ->
         for c in (x, y, z):
             if isinstance(c, bool) or not isinstance(c, (int, float)):
                 raise TypeError(f"{name} components must be numbers")
-        return (float(x), float(y), float(z))
+
+        xf, yf, zf = (float(x), float(y), float(z))
+        if not (math.isfinite(xf) and math.isfinite(yf) and math.isfinite(zf)):
+            raise ValueError(
+                f"{name} components must be finite numbers, got ({xf!r}, {yf!r}, {zf!r})"
+            )
+
+        return (xf, yf, zf)
 
     def _recalculate_normals(obj) -> None:
         _ensure_object_mode()
@@ -285,9 +299,9 @@ def build_armature_driven_character_mesh(*, armature, params: dict, out_root) ->
             try:
                 bpy.ops.uv.smart_project(island_margin=0.02)
             except Exception as e:
-                raise RuntimeError(
-                    f"failed to generate UVs via uv.smart_project for '{mesh_obj.name}': {e.__class__.__name__}: {e}"
-                ) from e
+                print(
+                    f"WARN: uv.smart_project failed for '{mesh_obj.name}', continuing without unwrap: {e.__class__.__name__}: {e}"
+                )
         finally:
             try:
                 bpy.ops.object.mode_set(mode='OBJECT')
@@ -392,7 +406,7 @@ def build_armature_driven_character_mesh(*, armature, params: dict, out_root) ->
             tx, ty, tz = translate
             # Bone-relative translation is in bone-local axes and scales by bone length.
             offset_local = Vector((tx * length, ty * length, tz * length))
-            offset_world = base_q @ offset_local
+            offset_world = _quat_rotate_vec(base_q, offset_local)
             obj.location = obj.location + offset_world
 
         rotate = _parse_vec3(mesh_spec.get('rotate'), name=f"bone_meshes['{bone_name}'].rotate")
@@ -419,9 +433,9 @@ def build_armature_driven_character_mesh(*, armature, params: dict, out_root) ->
         raise ValueError("No segments generated")
 
     _ensure_object_mode()
-    segment_objs_sorted = sorted(segment_objs, key=lambda o: o.name)
-    combined = segment_objs_sorted[0]
-    for other in segment_objs_sorted[1:]:
+    # Deterministic join order: preserve the segment creation order.
+    combined = segment_objs[0]
+    for other in segment_objs[1:]:
         _ensure_object_mode()
         _select_only([combined, other], active=combined)
         bpy.ops.object.join()

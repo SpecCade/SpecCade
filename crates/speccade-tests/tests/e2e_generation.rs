@@ -1104,13 +1104,24 @@ fn test_generate_skeletal_mesh_armature_driven_translate_rotate_affects_bounds()
     let moved_bounds_min = moved_result.metrics.bounds_min.unwrap();
     let moved_bounds_max = moved_result.metrics.bounds_max.unwrap();
 
-    assert_ne!(
-        base_bounds_min, moved_bounds_min,
-        "Expected bounds_min to differ between baseline and translated/rotated specs"
+    let min_dx = (base_bounds_min[0] - moved_bounds_min[0]).abs();
+    let min_dy = (base_bounds_min[1] - moved_bounds_min[1]).abs();
+    let min_dz = (base_bounds_min[2] - moved_bounds_min[2]).abs();
+    assert!(
+        min_dx > 1e-3 || min_dy > 1e-3 || min_dz > 1e-3,
+        "Expected bounds_min to differ (epsilon) between baseline and translated/rotated specs; base={:?} moved={:?}",
+        base_bounds_min,
+        moved_bounds_min
     );
-    assert_ne!(
-        base_bounds_max, moved_bounds_max,
-        "Expected bounds_max to differ between baseline and translated/rotated specs"
+
+    let max_dx = (base_bounds_max[0] - moved_bounds_max[0]).abs();
+    let max_dy = (base_bounds_max[1] - moved_bounds_max[1]).abs();
+    let max_dz = (base_bounds_max[2] - moved_bounds_max[2]).abs();
+    assert!(
+        max_dx > 1e-3 || max_dy > 1e-3 || max_dz > 1e-3,
+        "Expected bounds_max to differ (epsilon) between baseline and translated/rotated specs; base={:?} moved={:?}",
+        base_bounds_max,
+        moved_bounds_max
     );
 }
 
