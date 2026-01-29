@@ -554,6 +554,41 @@ fn validate_static_mesh_organic_sculpt(recipe: &Recipe, result: &mut ValidationR
 
 /// Validates params for `skeletal_mesh.armature_driven_v1` recipe.
 fn validate_skeletal_mesh_armature_driven(recipe: &Recipe, result: &mut ValidationResult) {
+    fn validate_profile(profile: &Option<String>) -> Result<(), String> {
+        let Some(profile) = profile.as_ref() else {
+            return Ok(());
+        };
+
+        let s = profile.trim();
+        if s == "square" || s == "rectangle" {
+            return Ok(());
+        }
+
+        let segments = if let Some(inner) =
+            s.strip_prefix("circle(").and_then(|r| r.strip_suffix(')'))
+        {
+            Some(inner)
+        } else if let Some(inner) = s.strip_prefix("hexagon(").and_then(|r| r.strip_suffix(')')) {
+            Some(inner)
+        } else {
+            None
+        };
+
+        if let Some(inner) = segments {
+            let n: u32 = inner
+                .parse()
+                .map_err(|_| format!("invalid profile segments: {inner:?}"))?;
+            if n < 3 {
+                return Err(format!("profile segments must be >= 3, got {n}"));
+            }
+            return Ok(());
+        }
+
+        Err(format!(
+            "unknown profile string: {profile:?}; expected one of: None, 'square', 'rectangle', 'circle(N)', 'hexagon(N)'"
+        ))
+    }
+
     match recipe.as_skeletal_mesh_armature_driven_v1() {
         Ok(params) => {
             if params.skeleton_preset.is_none() && params.skeleton.is_empty() {
@@ -570,6 +605,177 @@ fn validate_skeletal_mesh_armature_driven(recipe: &Recipe, result: &mut Validati
                     "'bone_meshes' must not be empty",
                     "recipe.params.bone_meshes",
                 ));
+            }
+
+            use std::collections::HashSet;
+
+            let mut allowed_bones: HashSet<String> = HashSet::new();
+            if let Some(preset) = params.skeleton_preset {
+                for &bone in preset.bone_names() {
+                    allowed_bones.insert(bone.to_string());
+                }
+            }
+            for bone in &params.skeleton {
+                allowed_bones.insert(bone.bone.clone());
+            }
+
+            // Validate bone_meshes keys are actual bones.
+            for (bone_name, def) in &params.bone_meshes {
+                if !allowed_bones.contains(bone_name) {
+                    result.add_error(ValidationError::with_path(
+                        ErrorCode::InvalidRecipeParams,
+                        format!("bone_meshes key '{bone_name}' refers to unknown bone"),
+                        format!("recipe.params.bone_meshes.{bone_name}"),
+                    ));
+                }
+
+                match def {
+                    crate::recipe::character::ArmatureDrivenBoneMeshDef::Mirror(m) => {
+                        if !params.bone_meshes.contains_key(&m.mirror) {
+                            result.add_error(ValidationError::with_path(
+                                ErrorCode::InvalidRecipeParams,
+                                format!(
+                                    "bone_meshes['{bone_name}'] mirrors missing bone_meshes key '{target}'",
+                                    target = m.mirror
+                                ),
+                                format!("recipe.params.bone_meshes.{bone_name}.mirror"),
+                            ));
+                        }
+                    }
+                    crate::recipe::character::ArmatureDrivenBoneMeshDef::Mesh(mesh) => {
+                        // Profile strings must match Blender's _parse_profile() grammar.
+                        if let Err(msg) = validate_profile(&mesh.profile) {
+                            result.add_error(ValidationError::with_path(
+                                ErrorCode::InvalidRecipeParams,
+                                msg,
+                                format!("recipe.params.bone_meshes.{bone_name}.profile"),
+                            ));
+                        }
+
+                        for (idx, point) in mesh.bulge.iter().enumerate() {
+                            if !(0.0..=1.0).contains(&point.at) {
+                                result.add_error(ValidationError::with_path(
+                                    ErrorCode::InvalidRecipeParams,
+                                    format!("bulge.at must be in range [0, 1], got {}", point.at),
+                                    format!(
+                                        "recipe.params.bone_meshes.{bone_name}.bulge[{idx}].at"
+                                    ),
+                                ));
+                            }
+                            if point.scale <= 0.0 {
+                                result.add_error(ValidationError::with_path(
+                                    ErrorCode::InvalidRecipeParams,
+                                    format!("bulge.scale must be positive, got {}", point.scale),
+                                    format!(
+                                        "recipe.params.bone_meshes.{bone_name}.bulge[{idx}].scale"
+                                    ),
+                                ));
+                            }
+                        }
+
+                        if let Some(material_index) = mesh.material_index {
+                            if (material_index as usize) >= params.material_slots.len() {
+                                result.add_error(ValidationError::with_path(
+                                    ErrorCode::InvalidRecipeParams,
+                                    format!(
+                                        "material_index {} out of range for material_slots (len={})",
+                                        material_index,
+                                        params.material_slots.len()
+                                    ),
+                                    format!("recipe.params.bone_meshes.{bone_name}.material_index"),
+                                ));
+                            }
+                        }
+
+                        for (m_idx, modifier) in mesh.modifiers.iter().enumerate() {
+                            if let crate::recipe::character::ArmatureDrivenModifier::Bool {
+                                r#bool,
+                            } = modifier
+                            {
+                                if !params.bool_shapes.contains_key(&r#bool.target) {
+                                    result.add_error(ValidationError::with_path(
+                                        ErrorCode::InvalidRecipeParams,
+                                        format!(
+                                            "bool modifier target '{target}' not found in bool_shapes",
+                                            target = r#bool.target
+                                        ),
+                                        format!(
+                                            "recipe.params.bone_meshes.{bone_name}.modifiers[{m_idx}].bool.target"
+                                        ),
+                                    ));
+                                }
+                            }
+                        }
+
+                        for (a_idx, attachment) in mesh.attachments.iter().enumerate() {
+                            match attachment {
+                                crate::recipe::character::ArmatureDrivenAttachment::Primitive(
+                                    p,
+                                ) => {
+                                    if let Some(material_index) = p.material_index {
+                                        if (material_index as usize) >= params.material_slots.len()
+                                        {
+                                            result.add_error(ValidationError::with_path(
+                                                ErrorCode::InvalidRecipeParams,
+                                                format!(
+                                                    "material_index {} out of range for material_slots (len={})",
+                                                    material_index,
+                                                    params.material_slots.len()
+                                                ),
+                                                format!(
+                                                    "recipe.params.bone_meshes.{bone_name}.attachments[{a_idx}].material_index"
+                                                ),
+                                            ));
+                                        }
+                                    }
+                                }
+                                crate::recipe::character::ArmatureDrivenAttachment::Extrude {
+                                    extrude,
+                                } => {
+                                    if let Err(msg) = validate_profile(&extrude.profile) {
+                                        result.add_error(ValidationError::with_path(
+                                            ErrorCode::InvalidRecipeParams,
+                                            msg,
+                                            format!(
+                                                "recipe.params.bone_meshes.{bone_name}.attachments[{a_idx}].extrude.profile"
+                                            ),
+                                        ));
+                                    }
+                                }
+                                crate::recipe::character::ArmatureDrivenAttachment::Asset(_) => {}
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Validate bool_shapes mirrors and bone references.
+            for (shape_name, def) in &params.bool_shapes {
+                match def {
+                    crate::recipe::character::ArmatureDrivenBoolShapeDef::Mirror(m) => {
+                        if !params.bool_shapes.contains_key(&m.mirror) {
+                            result.add_error(ValidationError::with_path(
+                                ErrorCode::InvalidRecipeParams,
+                                format!(
+                                    "bool_shapes['{shape_name}'] mirrors missing bool_shapes key '{target}'",
+                                    target = m.mirror
+                                ),
+                                format!("recipe.params.bool_shapes.{shape_name}.mirror"),
+                            ));
+                        }
+                    }
+                    crate::recipe::character::ArmatureDrivenBoolShapeDef::Shape(shape) => {
+                        if let Some(bone) = &shape.bone {
+                            if !allowed_bones.contains(bone) {
+                                result.add_error(ValidationError::with_path(
+                                    ErrorCode::InvalidRecipeParams,
+                                    format!("bool_shapes['{shape_name}'].bone refers to unknown bone '{bone}'"),
+                                    format!("recipe.params.bool_shapes.{shape_name}.bone"),
+                                ));
+                            }
+                        }
+                    }
+                }
             }
         }
         Err(e) => {

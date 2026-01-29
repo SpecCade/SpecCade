@@ -228,6 +228,210 @@ fn test_skeletal_mesh_armature_driven_rejects_empty_bone_meshes() {
 }
 
 #[test]
+fn test_skeletal_mesh_armature_driven_rejects_unknown_bone_mesh_key() {
+    let spec = crate::spec::Spec::builder(
+        "skeletal-mesh-armature-driven-unknown-bone",
+        AssetType::SkeletalMesh,
+    )
+    .license("CC0-1.0")
+    .seed(123)
+    .output(OutputSpec::primary(OutputFormat::Glb, "character.glb"))
+    .recipe(Recipe::new(
+        "skeletal_mesh.armature_driven_v1",
+        serde_json::json!({
+            "skeleton_preset": "humanoid_basic_v1",
+            "bone_meshes": {
+                "not_a_bone": {
+                    "profile": "circle(8)",
+                    "profile_radius": 0.15
+                }
+            }
+        }),
+    ))
+    .build();
+
+    let result = validate_for_generate(&spec);
+    assert!(!result.is_ok());
+}
+
+#[test]
+fn test_skeletal_mesh_armature_driven_rejects_bone_mesh_mirror_missing_target() {
+    let spec = crate::spec::Spec::builder(
+        "skeletal-mesh-armature-driven-mirror-missing",
+        AssetType::SkeletalMesh,
+    )
+    .license("CC0-1.0")
+    .seed(123)
+    .output(OutputSpec::primary(OutputFormat::Glb, "character.glb"))
+    .recipe(Recipe::new(
+        "skeletal_mesh.armature_driven_v1",
+        serde_json::json!({
+            "skeleton_preset": "humanoid_basic_v1",
+            "bone_meshes": {
+                "spine": {"mirror": "missing_mesh"}
+            }
+        }),
+    ))
+    .build();
+
+    let result = validate_for_generate(&spec);
+    assert!(!result.is_ok());
+}
+
+#[test]
+fn test_skeletal_mesh_armature_driven_rejects_bool_modifier_target_missing_in_bool_shapes() {
+    let spec = crate::spec::Spec::builder(
+        "skeletal-mesh-armature-driven-bool-missing",
+        AssetType::SkeletalMesh,
+    )
+    .license("CC0-1.0")
+    .seed(123)
+    .output(OutputSpec::primary(OutputFormat::Glb, "character.glb"))
+    .recipe(Recipe::new(
+        "skeletal_mesh.armature_driven_v1",
+        serde_json::json!({
+            "skeleton_preset": "humanoid_basic_v1",
+            "bone_meshes": {
+                "spine": {
+                    "profile": "circle(8)",
+                    "profile_radius": 0.15,
+                    "modifiers": [
+                        {"bool": {"operation": "difference", "target": "cutout1"}}
+                    ]
+                }
+            }
+        }),
+    ))
+    .build();
+
+    let result = validate_for_generate(&spec);
+    assert!(!result.is_ok());
+}
+
+#[test]
+fn test_skeletal_mesh_armature_driven_rejects_material_index_out_of_range() {
+    let spec = crate::spec::Spec::builder(
+        "skeletal-mesh-armature-driven-material-index-oob",
+        AssetType::SkeletalMesh,
+    )
+    .license("CC0-1.0")
+    .seed(123)
+    .output(OutputSpec::primary(OutputFormat::Glb, "character.glb"))
+    .recipe(Recipe::new(
+        "skeletal_mesh.armature_driven_v1",
+        serde_json::json!({
+            "skeleton_preset": "humanoid_basic_v1",
+            "material_slots": [
+                {"name": "mat0"}
+            ],
+            "bone_meshes": {
+                "spine": {
+                    "profile": "circle(8)",
+                    "profile_radius": 0.15,
+                    "material_index": 1
+                }
+            }
+        }),
+    ))
+    .build();
+
+    let result = validate_for_generate(&spec);
+    assert!(!result.is_ok());
+}
+
+#[test]
+fn test_skeletal_mesh_armature_driven_rejects_bulge_at_out_of_range() {
+    let spec = crate::spec::Spec::builder(
+        "skeletal-mesh-armature-driven-bulge-at-oob",
+        AssetType::SkeletalMesh,
+    )
+    .license("CC0-1.0")
+    .seed(123)
+    .output(OutputSpec::primary(OutputFormat::Glb, "character.glb"))
+    .recipe(Recipe::new(
+        "skeletal_mesh.armature_driven_v1",
+        serde_json::json!({
+            "skeleton_preset": "humanoid_basic_v1",
+            "bone_meshes": {
+                "spine": {
+                    "profile": "circle(8)",
+                    "profile_radius": 0.15,
+                    "bulge": [
+                        {"at": 1.1, "scale": 1.0}
+                    ]
+                }
+            }
+        }),
+    ))
+    .build();
+
+    let result = validate_for_generate(&spec);
+    assert!(!result.is_ok());
+}
+
+#[test]
+fn test_skeletal_mesh_armature_driven_rejects_invalid_profile_string() {
+    let spec = crate::spec::Spec::builder(
+        "skeletal-mesh-armature-driven-invalid-profile",
+        AssetType::SkeletalMesh,
+    )
+    .license("CC0-1.0")
+    .seed(123)
+    .output(OutputSpec::primary(OutputFormat::Glb, "character.glb"))
+    .recipe(Recipe::new(
+        "skeletal_mesh.armature_driven_v1",
+        serde_json::json!({
+            "skeleton_preset": "humanoid_basic_v1",
+            "bone_meshes": {
+                "spine": {
+                    "profile": "triangle",
+                    "profile_radius": 0.15
+                }
+            }
+        }),
+    ))
+    .build();
+
+    let result = validate_for_generate(&spec);
+    assert!(!result.is_ok());
+}
+
+#[test]
+fn test_skeletal_mesh_armature_driven_rejects_bool_shape_unknown_bone_reference() {
+    let spec = crate::spec::Spec::builder(
+        "skeletal-mesh-armature-driven-bool-shape-bone-unknown",
+        AssetType::SkeletalMesh,
+    )
+    .license("CC0-1.0")
+    .seed(123)
+    .output(OutputSpec::primary(OutputFormat::Glb, "character.glb"))
+    .recipe(Recipe::new(
+        "skeletal_mesh.armature_driven_v1",
+        serde_json::json!({
+            "skeleton_preset": "humanoid_basic_v1",
+            "bone_meshes": {
+                "spine": {
+                    "profile": "circle(8)",
+                    "profile_radius": 0.15
+                }
+            },
+            "bool_shapes": {
+                "cutout1": {
+                    "primitive": "cube",
+                    "dimensions": [1.0, 1.0, 1.0],
+                    "position": [0.0, 0.0, 0.0],
+                    "bone": "not_a_bone"
+                }
+            }
+        }),
+    ))
+    .build();
+
+    let result = validate_for_generate(&spec);
+    assert!(!result.is_ok());
+}
+
+#[test]
 fn test_skeletal_mesh_skinned_mesh_minimal_valid_spec() {
     let spec = crate::spec::Spec::builder("skeletal-mesh-skinned", AssetType::SkeletalMesh)
         .license("CC0-1.0")
