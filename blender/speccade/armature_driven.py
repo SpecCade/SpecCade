@@ -50,7 +50,9 @@ def _parse_profile(profile: str | None) -> tuple[str, int]:
         if kind in ("circle", "hexagon"):
             return ("circle", n)
 
-    raise ValueError(f"unknown profile string: {profile!r}")
+    raise ValueError(
+        f"unknown profile string: {profile!r}; expected one of: None, 'square', 'rectangle', 'circle(N)', 'hexagon(N)'"
+    )
 
 
 def _resolve_mirrors(defs: dict) -> dict:
