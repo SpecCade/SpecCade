@@ -13,9 +13,8 @@
     }
   ],
   "recipe": {
-    "kind": "skeletal_mesh.blender_rigged_mesh_v1",
+    "kind": "skeletal_mesh.armature_driven_v1",
     "params": {
-      "tri_budget": 1500,
       "skeleton": [
         {
           "bone": "root",
@@ -59,175 +58,22 @@
           "parent": "body"
         }
       ],
-      "parts": {
-        "body_mesh": {
-          "bone": "body",
-          "base": "hexagon(8)",
-          "base_radius": [
-            0.15,
-            0.12
-          ],
-          "steps": [
-            {
-              "extrude": 0.1,
-              "scale": 1.2,
-              "bulge": [
-                1.1,
-                0.9
-              ]
-            },
-            {
-              "extrude": 0.1,
-              "scale": 1.0,
-              "tilt": [
-                5.0,
-                0.0
-              ]
-            },
-            {
-              "extrude": 0.1,
-              "scale": 0.8,
-              "rotate": 15.0
-            }
-          ],
-          "cap_start": true,
-          "cap_end": true,
-          "skinning_type": "soft"
+      "bone_meshes": {
+        "root": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
         },
-        "spike": {
-          "bone": "spike_base",
-          "base": "hexagon(4)",
-          "base_radius": 0.03,
-          "offset": [
-            0.15,
-            0,
-            0.25
-          ],
-          "rotation": [
-            0,
-            90,
-            0
-          ],
-          "steps": [
-            {
-              "extrude": 0.05,
-              "scale": 0.7,
-              "translate": [
-                0.01,
-                0,
-                0
-              ]
-            },
-            {
-              "extrude": 0.03,
-              "scale": 0.3
-            }
-          ],
-          "cap_start": false,
-          "cap_end": true,
-          "skinning_type": "rigid",
-          "instances": [
-            {
-              "position": [
-                0.15,
-                0,
-                0.25
-              ],
-              "rotation": [
-                0,
-                0,
-                0
-              ]
-            },
-            {
-              "position": [
-                -0.15,
-                0,
-                0.25
-              ],
-              "rotation": [
-                0,
-                180,
-                0
-              ]
-            },
-            {
-              "position": [
-                0,
-                0.15,
-                0.25
-              ],
-              "rotation": [
-                0,
-                90,
-                0
-              ]
-            },
-            {
-              "position": [
-                0,
-                -0.15,
-                0.25
-              ],
-              "rotation": [
-                0,
-                -90,
-                0
-              ]
-            },
-            {
-              "position": [
-                0.1,
-                0.1,
-                0.3
-              ],
-              "rotation": [
-                30,
-                45,
-                0
-              ]
-            },
-            {
-              "position": [
-                -0.1,
-                0.1,
-                0.3
-              ],
-              "rotation": [
-                30,
-                135,
-                0
-              ]
-            },
-            {
-              "position": [
-                0.1,
-                -0.1,
-                0.3
-              ],
-              "rotation": [
-                30,
-                -45,
-                0
-              ]
-            },
-            {
-              "position": [
-                -0.1,
-                -0.1,
-                0.3
-              ],
-              "rotation": [
-                30,
-                -135,
-                0
-              ]
-            }
-          ]
+        "body": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
+        },
+        "spike_base": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
         }
       },
-      "texturing": {
-        "uv_mode": "cube_project"
+      "constraints": {
+        "max_triangles": 1500
       }
     }
   }

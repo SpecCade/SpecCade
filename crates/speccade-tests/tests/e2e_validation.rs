@@ -176,3 +176,43 @@ fn test_golden_specs_pass_validation() {
         }
     }
 }
+
+/// Test that all golden specs are supported by `generate`.
+#[test]
+fn test_golden_specs_pass_generate_validation() {
+    if !GoldenFixtures::exists() {
+        println!("Golden fixtures not found, skipping");
+        return;
+    }
+
+    let asset_types = [
+        "audio",
+        "music",
+        "texture",
+        "static_mesh",
+        "skeletal_mesh",
+        "skeletal_animation",
+    ];
+
+    for asset_type in &asset_types {
+        let specs = GoldenFixtures::list_speccade_specs(asset_type);
+        for spec_path in specs {
+            let spec = parse_spec_file(&spec_path);
+            assert!(
+                spec.is_ok(),
+                "Failed to parse {:?}: {:?}",
+                spec_path,
+                spec.err()
+            );
+
+            let spec = spec.unwrap();
+            let result = speccade_spec::validate_for_generate(&spec);
+            assert!(
+                result.is_ok(),
+                "Golden spec {:?} should pass generate validation: {:?}",
+                spec_path,
+                result.errors
+            );
+        }
+    }
+}

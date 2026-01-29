@@ -82,7 +82,7 @@ to see which parts need manual conversion.
 | `textures/` | `texture` | `texture.procedural_v1` |
 | `normals/` | `texture` | `texture.procedural_v1` |
 | `meshes/` | `static_mesh` | `static_mesh.blender_primitives_v1` |
-| `characters/` | `skeletal_mesh` | `skeletal_mesh.blender_rigged_mesh_v1` |
+| `characters/` | `skeletal_mesh` | `skeletal_mesh.armature_driven_v1` |
 | `animations/` | `skeletal_animation` | `skeletal_animation.blender_clip_v1` |
 
 ## Manual Conversion Pointers

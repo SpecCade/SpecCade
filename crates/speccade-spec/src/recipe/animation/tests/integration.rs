@@ -96,6 +96,9 @@ fn test_skeletal_animation_blender_rigged_v1_params_complete() {
         procedural_layers,
         keyframes: vec![],
         ik_keyframes: vec![],
+        ikfk_keyframes: vec![],
+        space_keyframes: vec![],
+        finger_keyframes: vec![],
         interpolation: InterpolationMode::Bezier,
         export: Some(AnimationExportSettings {
             bake_transforms: true,
@@ -111,6 +114,7 @@ fn test_skeletal_animation_blender_rigged_v1_params_complete() {
         save_blend: true,
         conventions: Some(ConventionsConfig { strict: false }),
         root_motion: None,
+        preview: None,
     };
 
     let json = serde_json::to_string(&params).unwrap();
@@ -157,12 +161,16 @@ fn test_all_top_level_keys() {
         procedural_layers: vec![],                              // procedural_layers
         keyframes: vec![],                                      // (bone_transforms via keyframes)
         ik_keyframes: vec![],                                   // (IK keyframes)
+        ikfk_keyframes: vec![],                                 // (IK/FK keyframes)
+        space_keyframes: vec![],                                // (space switch keyframes)
+        finger_keyframes: vec![],                               // (finger keyframes)
         interpolation: InterpolationMode::Linear,               // (interpolation)
         export: Some(AnimationExportSettings::default()),       // export settings
         animator_rig: Some(AnimatorRigConfig::default()),       // animator_rig
         save_blend: true,                                       // save_blend
         conventions: Some(ConventionsConfig::default()),        // conventions
         root_motion: None,                                      // root_motion
+        preview: None,                                          // preview
     };
 
     let json = serde_json::to_string(&params).unwrap();
@@ -206,6 +214,9 @@ fn test_all_rig_setup_components() {
                 "aim", "bone", "target",
             )],
             twist_bones: vec![TwistBone::new("source", "target")], // twist_bones
+            ikfk_switches: vec![],                                 // ikfk_switches
+            space_switches: vec![],                                // space_switches
+            finger_controls: vec![],                               // finger_controls
             stretch: Some(StretchSettings::enabled()),             // stretch
             bake: Some(BakeSettings::new()),                       // bake
         };

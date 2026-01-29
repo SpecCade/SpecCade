@@ -217,12 +217,16 @@ mod tests {
             procedural_layers: vec![],
             keyframes: vec![],
             ik_keyframes: vec![],
+            ikfk_keyframes: vec![],
+            space_keyframes: vec![],
+            finger_keyframes: vec![],
             interpolation: Default::default(),
             export: None,
             animator_rig: None,
             save_blend: false,
             conventions: None,
             root_motion: None,
+            preview: None,
         }
     }
 

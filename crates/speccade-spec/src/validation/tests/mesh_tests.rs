@@ -146,8 +146,9 @@ fn test_static_mesh_rejects_negative_dimensions() {
 // Skeletal Mesh Tests
 // =============================================================================
 
-fn make_valid_skeletal_mesh_spec() -> crate::spec::Spec {
-    crate::spec::Spec::builder("skeletal-mesh-01", AssetType::SkeletalMesh)
+#[test]
+fn test_skeletal_mesh_old_kind_rejected() {
+    let spec = crate::spec::Spec::builder("skeletal-mesh-old-kind", AssetType::SkeletalMesh)
         .license("CC0-1.0")
         .seed(123)
         .output(OutputSpec::primary(OutputFormat::Glb, "character.glb"))
@@ -158,53 +159,34 @@ fn make_valid_skeletal_mesh_spec() -> crate::spec::Spec {
                 "body_parts": []
             }),
         ))
-        .build()
-}
-
-#[test]
-fn test_skeletal_mesh_valid_spec() {
-    let spec = make_valid_skeletal_mesh_spec();
-    let result = validate_for_generate(&spec);
-    assert!(result.is_ok(), "errors: {:?}", result.errors);
-}
-
-#[test]
-fn test_skeletal_mesh_with_custom_skeleton() {
-    let spec = crate::spec::Spec::builder("skeletal-mesh-custom", AssetType::SkeletalMesh)
-        .license("CC0-1.0")
-        .seed(123)
-        .output(OutputSpec::primary(OutputFormat::Glb, "character.glb"))
-        .recipe(Recipe::new(
-            "skeletal_mesh.blender_rigged_mesh_v1",
-            serde_json::json!({
-                "skeleton": [
-                    {"bone": "root", "head": [0, 0, 0], "tail": [0, 0, 0.1]},
-                    {"bone": "spine", "head": [0, 0, 0.1], "tail": [0, 0, 0.5], "parent": "root"}
-                ],
-                "body_parts": []
-            }),
-        ))
         .build();
 
     let result = validate_for_generate(&spec);
-    assert!(result.is_ok(), "errors: {:?}", result.errors);
+    assert!(!result.is_ok());
+    assert!(
+        result
+            .errors
+            .iter()
+            .any(|e| e.code == crate::error::ErrorCode::UnsupportedRecipeKind),
+        "expected UnsupportedRecipeKind error, got: {:?}",
+        result.errors
+    );
 }
 
 #[test]
-fn test_skeletal_mesh_with_parts() {
-    let spec = crate::spec::Spec::builder("skeletal-mesh-parts", AssetType::SkeletalMesh)
+fn test_skeletal_mesh_armature_driven_minimal_valid_spec() {
+    let spec = crate::spec::Spec::builder("skeletal-mesh-armature-driven", AssetType::SkeletalMesh)
         .license("CC0-1.0")
         .seed(123)
         .output(OutputSpec::primary(OutputFormat::Glb, "character.glb"))
         .recipe(Recipe::new(
-            "skeletal_mesh.blender_rigged_mesh_v1",
+            "skeletal_mesh.armature_driven_v1",
             serde_json::json!({
-                "parts": {
-                    "torso": {
-                        "bone": "spine",
-                        "base": "hexagon(6)",
-                        "base_radius": 0.15,
-                        "steps": [{"extrude": 0.4, "scale": 1.2}]
+                "skeleton_preset": "humanoid_basic_v1",
+                "bone_meshes": {
+                    "spine": {
+                        "profile": "circle(8)",
+                        "profile_radius": 0.15
                     }
                 }
             }),
@@ -216,19 +198,22 @@ fn test_skeletal_mesh_with_parts() {
 }
 
 #[test]
-fn test_skeletal_mesh_rejects_unknown_fields() {
-    let spec = crate::spec::Spec::builder("skeletal-mesh-bad", AssetType::SkeletalMesh)
-        .license("CC0-1.0")
-        .seed(123)
-        .output(OutputSpec::primary(OutputFormat::Glb, "character.glb"))
-        .recipe(Recipe::new(
-            "skeletal_mesh.blender_rigged_mesh_v1",
-            serde_json::json!({
-                "skeleton_preset": "humanoid_basic_v1",
-                "unknown_field": "should_fail"
-            }),
-        ))
-        .build();
+fn test_skeletal_mesh_armature_driven_rejects_empty_bone_meshes() {
+    let spec = crate::spec::Spec::builder(
+        "skeletal-mesh-armature-driven-empty",
+        AssetType::SkeletalMesh,
+    )
+    .license("CC0-1.0")
+    .seed(123)
+    .output(OutputSpec::primary(OutputFormat::Glb, "character.glb"))
+    .recipe(Recipe::new(
+        "skeletal_mesh.armature_driven_v1",
+        serde_json::json!({
+            "skeleton_preset": "humanoid_basic_v1",
+            "bone_meshes": {}
+        }),
+    ))
+    .build();
 
     let result = validate_for_generate(&spec);
     assert!(!result.is_ok());
@@ -243,27 +228,25 @@ fn test_skeletal_mesh_rejects_unknown_fields() {
 }
 
 #[test]
-fn test_skeletal_mesh_rejects_empty_params() {
-    let spec = crate::spec::Spec::builder("skeletal-mesh-empty", AssetType::SkeletalMesh)
+fn test_skeletal_mesh_skinned_mesh_minimal_valid_spec() {
+    let spec = crate::spec::Spec::builder("skeletal-mesh-skinned", AssetType::SkeletalMesh)
         .license("CC0-1.0")
         .seed(123)
         .output(OutputSpec::primary(OutputFormat::Glb, "character.glb"))
         .recipe(Recipe::new(
-            "skeletal_mesh.blender_rigged_mesh_v1",
-            serde_json::json!({}),
+            "skeletal_mesh.skinned_mesh_v1",
+            serde_json::json!({
+                "mesh_file": "path/to/mesh.glb",
+                "skeleton_preset": "humanoid_basic_v1",
+                "binding": {
+                    "mode": "rigid"
+                }
+            }),
         ))
         .build();
 
     let result = validate_for_generate(&spec);
-    assert!(!result.is_ok());
-    assert!(
-        result
-            .errors
-            .iter()
-            .any(|e| e.code == crate::error::ErrorCode::InvalidRecipeParams),
-        "expected InvalidRecipeParams error for empty params, got: {:?}",
-        result.errors
-    );
+    assert!(result.is_ok(), "errors: {:?}", result.errors);
 }
 
 // =============================================================================

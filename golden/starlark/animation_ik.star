@@ -4,20 +4,19 @@
 # Covers: custom_bone, ik_keyframe, ik_target_transform
 
 # custom_bone creates a custom bone definition for custom skeletons
+# (roll is not a parameter in custom_bone - use the skeleton definition for bone roll)
 custom = custom_bone(
     bone = "tail_01",
     parent = "spine_02",
     head = [0.0, 0.0, 0.5],
-    tail = [0.0, 0.0, 1.0],
-    roll = 0.0
+    tail = [0.0, 0.0, 1.0]
 )
 
 custom_2 = custom_bone(
     bone = "wing_l_01",
     parent = "spine_01",
     head = [0.5, 0.0, 0.3],
-    tail = [1.0, 0.0, 0.3],
-    roll = 90.0
+    tail = [1.0, 0.0, 0.3]
 )
 
 # ik_target_transform creates IK target position/rotation

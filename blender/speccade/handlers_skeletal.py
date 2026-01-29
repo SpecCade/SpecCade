@@ -19,6 +19,9 @@ try:
     from mathutils import Euler, Vector
     BLENDER_AVAILABLE = True
 except ImportError:
+    bpy = None  # type: ignore
+    Euler = None  # type: ignore
+    Vector = None  # type: ignore
     BLENDER_AVAILABLE = False
 
 # Internal module imports
@@ -26,13 +29,7 @@ from .report import write_report
 from .scene import clear_scene, setup_scene
 from .skeleton_presets import SKELETON_PRESETS
 from .skeleton import create_armature, apply_skeleton_overrides, create_custom_skeleton
-from .body_parts import (
-    create_body_part,
-    create_legacy_part,
-    create_part_instances,
-    skin_mesh_to_armature,
-    apply_texturing,
-)
+from .skeletal_mesh_rework import classify_skeletal_mesh_kind, compute_safe_rename_plan
 from .ik_fk import apply_rig_setup
 from .animation import (
     create_animation,
@@ -48,13 +45,206 @@ from .rendering import render_animation_preview_frames
 from .materials import apply_materials
 
 
+def _select_only(objs: List['bpy.types.Object'], *, active: Optional['bpy.types.Object'] = None) -> None:
+    bpy.ops.object.select_all(action='DESELECT')
+    for obj in objs:
+        obj.select_set(True)
+    if active is not None:
+        bpy.context.view_layer.objects.active = active
+
+
+def _ensure_object_mode() -> None:
+    try:
+        if bpy.context.mode != 'OBJECT':
+            bpy.ops.object.mode_set(mode='OBJECT')
+    except Exception:
+        # In background mode, mode switching can fail if no active object.
+        pass
+
+
+def _recalculate_normals(mesh_obj: 'bpy.types.Object') -> None:
+    _ensure_object_mode()
+    _select_only([mesh_obj], active=mesh_obj)
+    bpy.ops.object.mode_set(mode='EDIT')
+    bpy.ops.mesh.select_all(action='SELECT')
+    bpy.ops.mesh.normals_make_consistent(inside=False)
+    bpy.ops.object.mode_set(mode='OBJECT')
+
+
+def _assign_all_vertices_to_group(mesh_obj: 'bpy.types.Object', group_name: str, *, weight: float = 1.0) -> None:
+    vg = mesh_obj.vertex_groups.get(group_name)
+    if vg is None:
+        vg = mesh_obj.vertex_groups.new(name=group_name)
+    indices = [v.index for v in mesh_obj.data.vertices]
+    if indices:
+        vg.add(indices, weight, 'REPLACE')
+
+
+def _limit_vertex_group_influences(mesh_obj: 'bpy.types.Object', limit: int) -> None:
+    """Limit number of groups per vertex (best effort)."""
+    limit = max(1, int(limit))
+    _ensure_object_mode()
+    _select_only([mesh_obj], active=mesh_obj)
+
+    try:
+        bpy.ops.object.vertex_group_limit_total(limit=limit)
+        bpy.ops.object.vertex_group_normalize_all(lock_active=False)
+        return
+    except Exception:
+        # Fallback: manual pruning.
+        pass
+
+    for v in mesh_obj.data.vertices:
+        groups = [(g.group, g.weight) for g in v.groups]
+        if len(groups) <= limit:
+            continue
+        groups.sort(key=lambda t: t[1], reverse=True)
+        keep = groups[:limit]
+        remove = groups[limit:]
+
+        for group_idx, _w in remove:
+            try:
+                mesh_obj.vertex_groups[group_idx].remove([v.index])
+            except Exception:
+                continue
+
+        if limit == 1 and keep:
+            keep_group_idx, _keep_w = keep[0]
+            try:
+                mesh_obj.vertex_groups[keep_group_idx].add([v.index], 1.0, 'REPLACE')
+            except Exception:
+                pass
+
+
+def _ensure_armature_modifier(mesh_obj: 'bpy.types.Object', armature_obj: 'bpy.types.Object') -> None:
+    for mod in mesh_obj.modifiers:
+        if mod.type == 'ARMATURE':
+            mod.object = armature_obj
+            return
+    mod = mesh_obj.modifiers.new(name='Armature', type='ARMATURE')
+    mod.object = armature_obj
+
+
+def _parent_mesh_to_armature(mesh_obj: 'bpy.types.Object', armature_obj: 'bpy.types.Object', *, auto_weights: bool) -> None:
+    _ensure_object_mode()
+    _select_only([mesh_obj, armature_obj], active=armature_obj)
+
+    # Clear any existing armature binding from imported meshes.
+    if mesh_obj.parent and mesh_obj.parent.type == 'ARMATURE':
+        mesh_obj.parent = None
+    for mod in list(mesh_obj.modifiers):
+        if mod.type == 'ARMATURE':
+            mesh_obj.modifiers.remove(mod)
+
+    if auto_weights:
+        bpy.ops.object.parent_set(type='ARMATURE_AUTO')
+    else:
+        bpy.ops.object.parent_set(type='ARMATURE')
+
+    _ensure_armature_modifier(mesh_obj, armature_obj)
+
+
+def _merge_vertex_group_weights(mesh_obj: 'bpy.types.Object', src_name: str, dst_name: str) -> None:
+    src = mesh_obj.vertex_groups.get(src_name)
+    if src is None:
+        return
+    dst = mesh_obj.vertex_groups.get(dst_name)
+    if dst is None:
+        dst = mesh_obj.vertex_groups.new(name=dst_name)
+
+    src_idx = src.index
+    for v in mesh_obj.data.vertices:
+        for g in v.groups:
+            if g.group == src_idx:
+                dst.add([v.index], g.weight, 'ADD')
+                break
+
+    mesh_obj.vertex_groups.remove(src)
+
+
+def _apply_vertex_group_map(mesh_obj: 'bpy.types.Object', vertex_group_map: Dict[str, str]) -> None:
+    """Apply mesh vertex-group -> bone-name mapping.
+
+    Best-effort rules:
+    - Missing source groups are ignored.
+    - If the destination group already exists and is not being renamed away, we
+      merge weights and delete the source group.
+    - Cycles / chains are handled via temporary names.
+    """
+    if not vertex_group_map:
+        return
+
+    existing = [vg.name for vg in mesh_obj.vertex_groups]
+    existing_set = set(existing)
+    filtered = {
+        src: dst
+        for src, dst in sorted((vertex_group_map or {}).items(), key=lambda kv: kv[0])
+        if isinstance(src, str)
+        and isinstance(dst, str)
+        and src
+        and dst
+        and src in existing_set
+        and src != dst
+    }
+    if not filtered:
+        return
+
+    sources = set(filtered.keys())
+
+    rename_only: Dict[str, str] = {}
+    merges: List[tuple[str, str]] = []
+
+    # Handle many-to-one maps deterministically by merging weights into the
+    # destination group when the destination is not being renamed away.
+    by_dst: Dict[str, List[str]] = {}
+    for src, dst in filtered.items():
+        by_dst.setdefault(dst, []).append(src)
+
+    for dst, srcs in sorted(by_dst.items(), key=lambda kv: kv[0]):
+        if len(srcs) <= 1:
+            continue
+        if dst in sources:
+            raise ValueError(
+                f"vertex_group_map maps multiple sources to '{dst}', but '{dst}' is also a source"
+            )
+        for src in sorted(srcs):
+            merges.append((src, dst))
+
+    for src, dst in filtered.items():
+        if (src, dst) in merges:
+            continue
+        if dst in existing_set and dst not in sources:
+            merges.append((src, dst))
+        else:
+            rename_only[src] = dst
+
+    for src, dst in merges:
+        _merge_vertex_group_weights(mesh_obj, src, dst)
+        existing_set.discard(src)
+        existing_set.add(dst)
+
+    if not rename_only:
+        return
+
+    plan = compute_safe_rename_plan(rename_only, existing_names=[vg.name for vg in mesh_obj.vertex_groups])
+    for src, dst in plan:
+        vg = mesh_obj.vertex_groups.get(src)
+        if vg is None:
+            continue
+        vg.name = dst
+
+
 def handle_skeletal_mesh(spec: Dict, out_root: Path, report_path: Path) -> None:
     """Handle skeletal mesh generation."""
     start_time = time.time()
 
     try:
+        if not BLENDER_AVAILABLE:
+            raise RuntimeError("Blender Python (bpy) is required for skeletal mesh generation")
+
         recipe = spec.get("recipe", {})
         params = recipe.get("params", {})
+        kind = classify_skeletal_mesh_kind(recipe.get("kind", ""))
 
         # Create armature - support both preset and custom skeleton
         skeleton_spec = params.get("skeleton", [])
@@ -72,105 +262,204 @@ def handle_skeletal_mesh(spec: Dict, out_root: Path, report_path: Path) -> None:
             # Default to humanoid basic
             armature = create_armature("humanoid_basic_v1")
 
-        mesh_objects = []
+        combined_mesh = None
 
-        # Create body parts (new format)
-        body_parts = params.get("body_parts", [])
-        for part_spec in body_parts:
-            mesh_obj = create_body_part(armature, part_spec)
-            mesh_objects.append((mesh_obj, part_spec.get("bone")))
+        if kind == "skeletal_mesh.armature_driven_v1":
+            bone_meshes = params.get("bone_meshes", {})
+            if not bone_meshes:
+                raise ValueError("armature_driven_v1 requires params.bone_meshes")
 
-        # Create legacy parts (ai-studio-core format)
-        legacy_parts = params.get("parts", {})
-        if legacy_parts:
-            for part_name, part_spec in legacy_parts.items():
-                mesh_obj = create_legacy_part(armature, part_name, part_spec, legacy_parts)
-                if mesh_obj:
-                    bone_name = part_spec.get("bone", part_name)
-                    mesh_objects.append((mesh_obj, bone_name))
+            bone_entries = []
+            if isinstance(bone_meshes, dict):
+                for bone_name, mesh_spec in bone_meshes.items():
+                    bone_entries.append((bone_name, mesh_spec or {}))
+            elif isinstance(bone_meshes, list):
+                for entry in bone_meshes:
+                    if isinstance(entry, dict) and entry.get("bone"):
+                        bone_entries.append((entry.get("bone"), entry))
+            else:
+                raise ValueError("params.bone_meshes must be an object or array")
 
-                    # Handle instances for this part
-                    instances = part_spec.get("instances", [])
-                    if instances:
-                        instance_objects = create_part_instances(mesh_obj, instances)
-                        for inst_obj in instance_objects:
-                            mesh_objects.append((inst_obj, bone_name))
+            bone_entries.sort(key=lambda t: t[0])
 
-        # Join all meshes into one
-        if mesh_objects:
-            bpy.ops.object.select_all(action='DESELECT')
-            for mesh_obj, _ in mesh_objects:
-                mesh_obj.select_set(True)
-            bpy.context.view_layer.objects.active = mesh_objects[0][0]
-            if len(mesh_objects) > 1:
+            mesh_objs = []
+            for bone_name, mesh_spec in bone_entries:
+                bone = armature.data.bones.get(bone_name)
+                if bone is None:
+                    print(f"Warning: bone_meshes refers to missing bone: {bone_name}")
+                    continue
+
+                head_w = armature.matrix_world @ bone.head_local
+                tail_w = armature.matrix_world @ bone.tail_local
+                axis = (tail_w - head_w)
+                length = float(axis.length)
+                if length <= 1e-6:
+                    print(f"Warning: bone has near-zero length: {bone_name}")
+                    continue
+
+                radius_spec = mesh_spec.get("profile_radius", 0.15)
+                if isinstance(radius_spec, dict) and "absolute" in radius_spec:
+                    radius = float(radius_spec["absolute"])
+                elif isinstance(radius_spec, (list, tuple)) and len(radius_spec) >= 2:
+                    radius = float(radius_spec[0] + radius_spec[1]) * 0.5 * length
+                else:
+                    radius = float(radius_spec) * length
+
+                vertices = 12
+                profile = mesh_spec.get("profile")
+                if isinstance(profile, str) and "(" in profile and profile.endswith(")"):
+                    try:
+                        vertices = int(profile.split("(", 1)[1][:-1])
+                    except Exception:
+                        vertices = 12
+
+                bpy.ops.mesh.primitive_cylinder_add(
+                    radius=radius,
+                    depth=length,
+                    vertices=max(3, vertices),
+                    location=(head_w + tail_w) * 0.5,
+                )
+                seg_obj = bpy.context.active_object
+                seg_obj.name = f"BoneMesh_{bone_name}"
+
+                axis_n = axis.normalized()
+                seg_obj.rotation_euler = axis_n.to_track_quat('Z', 'Y').to_euler()
+                bpy.context.view_layer.objects.active = seg_obj
+                bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
+
+                _assign_all_vertices_to_group(seg_obj, bone_name, weight=1.0)
+                mesh_objs.append(seg_obj)
+
+            if not mesh_objs:
+                raise ValueError("armature_driven_v1 produced no meshes (check bone_meshes)")
+
+            if len(mesh_objs) > 1:
+                _select_only(mesh_objs, active=mesh_objs[0])
                 bpy.ops.object.join()
-            combined_mesh = bpy.context.active_object
+                combined_mesh = bpy.context.active_object
+            else:
+                combined_mesh = mesh_objs[0]
             combined_mesh.name = "Character"
 
-            # Recalculate normals after joining parts (rotation can flip winding)
-            bpy.ops.object.mode_set(mode='EDIT')
-            bpy.ops.mesh.select_all(action='SELECT')
-            bpy.ops.mesh.normals_make_consistent(inside=False)
-            bpy.ops.object.mode_set(mode='OBJECT')
+            _recalculate_normals(combined_mesh)
+            _parent_mesh_to_armature(combined_mesh, armature, auto_weights=False)
 
-            # Assign vertex groups for each original body part
-            # (Simplified - in real implementation, we'd track vertex indices)
-            for _, bone_name in mesh_objects:
-                if bone_name not in combined_mesh.vertex_groups:
-                    combined_mesh.vertex_groups.new(name=bone_name)
+        elif kind == "skeletal_mesh.skinned_mesh_v1":
+            mesh_file = params.get("mesh_file")
+            mesh_asset = params.get("mesh_asset")
+            if not mesh_file and not mesh_asset:
+                raise ValueError("skinned_mesh_v1 requires params.mesh_file or params.mesh_asset")
 
-            # Apply materials
-            material_slots = params.get("material_slots", [])
-            apply_materials(combined_mesh, material_slots)
+            mesh_path = None
+            if mesh_file:
+                p = Path(mesh_file)
+                mesh_path = p if p.is_absolute() else (out_root / p)
+            else:
+                p = Path(str(mesh_asset))
+                candidates = []
+                if p.suffix:
+                    candidates.append(p)
+                candidates.append(p.with_suffix('.glb'))
+                candidates.append(p.with_suffix('.gltf'))
+                candidates = [c if c.is_absolute() else (out_root / c) for c in candidates]
+                mesh_path = next((c for c in candidates if c.exists()), None)
 
-            # Apply texturing/UV settings
-            texturing = params.get("texturing")
-            if texturing:
-                apply_texturing(combined_mesh, texturing)
+            if mesh_path is None or not mesh_path.exists():
+                raise ValueError(f"Mesh file not found for skinned_mesh_v1: {mesh_file or mesh_asset}")
 
-            # Skin mesh to armature
-            skinning = params.get("skinning", {})
-            auto_weights = skinning.get("auto_weights", True)
-            skin_mesh_to_armature(combined_mesh, armature, auto_weights)
+            _ensure_object_mode()
+            bpy.ops.object.select_all(action='DESELECT')
+            bpy.ops.import_scene.gltf(filepath=str(mesh_path))
 
-            # Get output path
-            outputs = spec.get("outputs", [])
-            primary_output = next((o for o in outputs if o.get("kind") == "primary"), None)
-            if not primary_output:
-                raise ValueError("No primary output specified in spec")
+            imported_meshes = [o for o in bpy.context.selected_objects if o.type == 'MESH']
+            imported_armatures = [o for o in bpy.context.selected_objects if o.type == 'ARMATURE']
+            for other_arm in imported_armatures:
+                bpy.data.objects.remove(other_arm, do_unlink=True)
 
-            output_rel_path = primary_output.get("path", "output.glb")
-            output_path = out_root / output_rel_path
-            output_path.parent.mkdir(parents=True, exist_ok=True)
+            if not imported_meshes:
+                raise ValueError(f"No mesh objects found in imported file: {mesh_path}")
 
-            # Compute metrics
-            metrics = compute_skeletal_mesh_metrics(combined_mesh, armature)
+            if len(imported_meshes) > 1:
+                _select_only(imported_meshes, active=imported_meshes[0])
+                bpy.ops.object.join()
+                combined_mesh = bpy.context.active_object
+            else:
+                combined_mesh = imported_meshes[0]
 
-            # Add tri_budget validation to metrics
-            tri_budget = params.get("tri_budget")
-            if tri_budget:
-                metrics["tri_budget"] = tri_budget
-                metrics["tri_budget_exceeded"] = metrics.get("triangle_count", 0) > tri_budget
+            combined_mesh.name = "Character"
 
-            # Export GLB with tangents if requested
-            export_settings = params.get("export", {})
-            export_tangents = export_settings.get("tangents", False)
-            export_glb(output_path, include_armature=True, export_tangents=export_tangents)
+            binding = params.get("binding", {}) or {}
+            mode = binding.get("mode", "auto_weights")
 
-            # Save .blend file if requested
-            blend_rel_path = None
-            export_settings = params.get("export", {})
-            if export_settings.get("save_blend", False):
-                blend_rel_path = output_rel_path.replace(".glb", ".blend")
-                blend_path = out_root / blend_rel_path
-                bpy.ops.wm.save_as_mainfile(filepath=str(blend_path))
+            if mode == "auto_weights":
+                _parent_mesh_to_armature(combined_mesh, armature, auto_weights=True)
+                max_infl = binding.get("max_bone_influences", 4)
+                _limit_vertex_group_influences(combined_mesh, int(max_infl))
 
-            duration_ms = int((time.time() - start_time) * 1000)
-            write_report(report_path, ok=True, metrics=metrics,
-                         output_path=output_rel_path, blend_path=blend_rel_path,
-                         duration_ms=duration_ms)
+            elif mode == "rigid":
+                vertex_group_map = binding.get("vertex_group_map", {}) or {}
+                _apply_vertex_group_map(combined_mesh, vertex_group_map)
+                if not combined_mesh.vertex_groups:
+                    raise ValueError(
+                        "binding.mode=rigid requires vertex groups on the source mesh"
+                    )
+                _limit_vertex_group_influences(combined_mesh, 1)
+                _parent_mesh_to_armature(combined_mesh, armature, auto_weights=False)
+
+            else:
+                raise ValueError(f"Unknown binding.mode: {mode}")
+
         else:
-            raise ValueError("No body parts or legacy parts specified")
+            # classify_skeletal_mesh_kind() should have rejected this already.
+            raise ValueError(f"Unhandled skeletal mesh kind: {kind}")
+
+        if combined_mesh is None:
+            raise ValueError("Failed to produce a character mesh")
+
+        # Apply materials (if any)
+        material_slots = params.get("material_slots", [])
+        apply_materials(combined_mesh, material_slots)
+
+        # Get output path
+        outputs = spec.get("outputs", [])
+        primary_output = next((o for o in outputs if o.get("kind") == "primary"), None)
+        if not primary_output:
+            raise ValueError("No primary output specified in spec")
+
+        output_rel_path = primary_output.get("path", "output.glb")
+        output_path = out_root / output_rel_path
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+
+        # Compute metrics
+        metrics = compute_skeletal_mesh_metrics(combined_mesh, armature)
+
+        # Add tri_budget validation to metrics
+        tri_budget = params.get("tri_budget")
+        if tri_budget:
+            metrics["tri_budget"] = tri_budget
+            metrics["tri_budget_exceeded"] = metrics.get("triangle_count", 0) > tri_budget
+
+        # Export GLB with tangents if requested
+        export_settings = params.get("export", {})
+        export_tangents = export_settings.get("tangents", False)
+        export_glb(output_path, include_armature=True, export_tangents=export_tangents)
+
+        # Save .blend file if requested
+        blend_rel_path = None
+        if export_settings.get("save_blend", False):
+            blend_rel_path = output_rel_path.replace(".glb", ".blend")
+            blend_path = out_root / blend_rel_path
+            bpy.ops.wm.save_as_mainfile(filepath=str(blend_path))
+
+        duration_ms = int((time.time() - start_time) * 1000)
+        write_report(
+            report_path,
+            ok=True,
+            metrics=metrics,
+            output_path=output_rel_path,
+            blend_path=blend_rel_path,
+            duration_ms=duration_ms,
+        )
 
     except Exception as e:
         write_report(report_path, ok=False, error=str(e))

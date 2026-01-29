@@ -4,7 +4,7 @@
   "asset_type": "skeletal_mesh",
   "license": "CC0-1.0",
   "seed": 999007,
-  "description": "Golden comprehensive test - exercises skeletal_mesh.blender_rigged_mesh_v1: skeleton with bones, body_parts with mesh configs, material_slots, skinning, export, constraints",
+  "description": "Golden comprehensive test - exercises skeletal_mesh.armature_driven_v1: skeleton with bones, body_parts with mesh configs, material_slots, skinning, export, constraints",
   "style_tags": [
     "golden",
     "comprehensive",
@@ -35,60 +35,78 @@
     }
   ],
   "recipe": {
-    "kind": "skeletal_mesh.blender_rigged_mesh_v1",
+    "kind": "skeletal_mesh.armature_driven_v1",
     "params": {
-      "skeleton_preset": "humanoid_basic_v1",
       "skeleton": [
         {
           "bone": "root",
-          "head": [0, 0, 0],
-          "tail": [0, 0, 0.1]
+          "head": [
+            0,
+            0,
+            0
+          ],
+          "tail": [
+            0,
+            0,
+            0.1
+          ]
         },
         {
           "bone": "spine",
-          "head": [0, 0, 0.1],
-          "tail": [0, 0, 0.5],
+          "head": [
+            0,
+            0,
+            0.1
+          ],
+          "tail": [
+            0,
+            0,
+            0.5
+          ],
           "parent": "root"
         },
         {
           "bone": "head",
-          "head": [0, 0, 0.5],
-          "tail": [0, 0, 0.7],
+          "head": [
+            0,
+            0,
+            0.5
+          ],
+          "tail": [
+            0,
+            0,
+            0.7
+          ],
           "parent": "spine"
         }
       ],
-      "body_parts": [
-        {
-          "bone": "spine",
-          "mesh": {
-            "primitive": "cylinder",
-            "dimensions": [0.15, 0.15, 0.4],
-            "segments": 8
-          },
-          "material_index": 0
+      "bone_meshes": {
+        "root": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
         },
-        {
-          "bone": "head",
-          "mesh": {
-            "primitive": "sphere",
-            "dimensions": [0.1, 0.1, 0.1],
-            "segments": 16
-          },
-          "material_index": 0
+        "spine": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
+        },
+        "head": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
         }
-      ],
+      },
       "material_slots": [
         {
           "name": "skin",
-          "base_color": [0.9, 0.75, 0.65, 1.0],
+          "base_color": [
+            0.9,
+            0.75,
+            0.65,
+            1.0
+          ],
           "metallic": 0.0,
           "roughness": 0.5
         }
       ],
-      "skinning": {
-        "max_bone_influences": 4,
-        "auto_weights": true
-      },
       "export": {
         "include_armature": true,
         "include_normals": true,
@@ -100,8 +118,7 @@
         "max_triangles": 3000,
         "max_bones": 60,
         "max_materials": 4
-      },
-      "tri_budget": 3000
+      }
     }
   }
 }

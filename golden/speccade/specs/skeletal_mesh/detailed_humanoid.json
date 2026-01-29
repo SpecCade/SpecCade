@@ -13,9 +13,8 @@
     }
   ],
   "recipe": {
-    "kind": "skeletal_mesh.blender_rigged_mesh_v1",
+    "kind": "skeletal_mesh.armature_driven_v1",
     "params": {
-      "tri_budget": 2000,
       "skeleton": [
         {
           "bone": "root",
@@ -385,163 +384,143 @@
           "mirror": "toe_L"
         }
       ],
-      "parts": {
-        "torso": {
-          "bone": "spine_01",
-          "base": "hexagon(8)",
-          "base_radius": [
-            0.12,
-            0.14
-          ],
-          "steps": [
-            {
-              "extrude": 0.2,
-              "scale": 1.1
-            },
-            {
-              "extrude": 0.2,
-              "scale": 1.2
-            },
-            {
-              "extrude": 0.15,
-              "scale": [
-                1.3,
-                1.0
-              ]
-            },
-            {
-              "extrude": 0.15,
-              "scale": 1.1
-            }
-          ],
-          "cap_start": true,
-          "cap_end": true,
-          "skinning_type": "soft"
+      "bone_meshes": {
+        "root": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
         },
-        "head_mesh": {
-          "bone": "head",
-          "base": "hexagon(10)",
-          "base_radius": 0.1,
-          "offset": [
-            0,
-            0,
-            0.95
-          ],
-          "steps": [
-            {
-              "extrude": 0.08,
-              "scale": 1.2
-            },
-            {
-              "extrude": 0.12,
-              "scale": 1.0
-            },
-            {
-              "extrude": 0.05,
-              "scale": 0.9
-            }
-          ],
-          "cap_start": true,
-          "cap_end": true
+        "spine_01": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
         },
-        "arm_L": {
-          "bone": "arm_upper_L",
-          "base": "hexagon(6)",
-          "base_radius": [
-            0.05,
-            0.04
-          ],
-          "offset": [
-            0.15,
-            0,
-            0.8
-          ],
-          "rotation": [
-            0,
-            90,
-            0
-          ],
-          "steps": [
-            {
-              "extrude": 0.25,
-              "scale": 0.85
-            },
-            {
-              "extrude": 0.25,
-              "scale": 0.75
-            },
-            {
-              "extrude": 0.1,
-              "scale": 0.6
-            }
-          ],
-          "skinning_type": "soft"
+        "spine_02": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
         },
-        "arm_R": {
-          "mirror": "arm_L"
+        "spine_03": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
         },
-        "leg_L": {
-          "bone": "leg_upper_L",
-          "base": "hexagon(6)",
-          "base_radius": [
-            0.08,
-            0.06
-          ],
-          "offset": [
-            0.12,
-            0,
-            0.05
-          ],
-          "rotation": [
-            180,
-            0,
-            0
-          ],
-          "steps": [
-            {
-              "extrude": 0.45,
-              "scale": 0.8
-            },
-            {
-              "extrude": 0.4,
-              "scale": 0.6
-            },
-            {
-              "extrude": 0.05,
-              "scale": 0.9
-            }
-          ],
-          "skinning_type": "soft"
+        "chest": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
         },
-        "leg_R": {
-          "mirror": "leg_L"
+        "neck": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
+        },
+        "head": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
+        },
+        "shoulder_L": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
+        },
+        "arm_upper_L": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
+        },
+        "arm_lower_L": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
+        },
+        "hand_L": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
+        },
+        "finger_index_01_L": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
+        },
+        "finger_index_02_L": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
+        },
+        "finger_middle_01_L": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
+        },
+        "finger_middle_02_L": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
+        },
+        "thumb_01_L": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
+        },
+        "thumb_02_L": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
+        },
+        "shoulder_R": {
+          "mirror": "shoulder_L"
+        },
+        "arm_upper_R": {
+          "mirror": "arm_upper_L"
+        },
+        "arm_lower_R": {
+          "mirror": "arm_lower_L"
+        },
+        "hand_R": {
+          "mirror": "hand_L"
+        },
+        "finger_index_01_R": {
+          "mirror": "finger_index_01_L"
+        },
+        "finger_index_02_R": {
+          "mirror": "finger_index_02_L"
+        },
+        "finger_middle_01_R": {
+          "mirror": "finger_middle_01_L"
+        },
+        "finger_middle_02_R": {
+          "mirror": "finger_middle_02_L"
+        },
+        "thumb_01_R": {
+          "mirror": "thumb_01_L"
+        },
+        "thumb_02_R": {
+          "mirror": "thumb_02_L"
+        },
+        "hip_L": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
+        },
+        "leg_upper_L": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
+        },
+        "leg_lower_L": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
+        },
+        "foot_L": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
+        },
+        "toe_L": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
+        },
+        "hip_R": {
+          "mirror": "hip_L"
+        },
+        "leg_upper_R": {
+          "mirror": "leg_upper_L"
+        },
+        "leg_lower_R": {
+          "mirror": "leg_lower_L"
+        },
+        "foot_R": {
+          "mirror": "foot_L"
+        },
+        "toe_R": {
+          "mirror": "toe_L"
         }
       },
-      "texturing": {
-        "uv_mode": "region_based",
-        "regions": {
-          "body": {
-            "parts": [
-              "torso"
-            ],
-            "material_index": 0
-          },
-          "limbs": {
-            "parts": [
-              "arm_L",
-              "arm_R",
-              "leg_L",
-              "leg_R"
-            ],
-            "material_index": 0
-          },
-          "head": {
-            "parts": [
-              "head_mesh"
-            ],
-            "material_index": 0
-          }
-        }
+      "constraints": {
+        "max_triangles": 2000
       }
     }
   }

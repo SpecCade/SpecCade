@@ -73,9 +73,12 @@ pub enum RecipeKind {
     /// `static_mesh.boolean_kit_v1` - Boolean kitbashing for hard-surface modeling.
     #[serde(rename = "static_mesh.boolean_kit_v1")]
     StaticMeshBooleanKitV1,
-    /// `skeletal_mesh.blender_rigged_mesh_v1` - Rigged skeletal mesh.
-    #[serde(rename = "skeletal_mesh.blender_rigged_mesh_v1")]
-    SkeletalMeshBlenderRiggedMeshV1,
+    /// `skeletal_mesh.armature_driven_v1` - Generate mesh from skeleton (rigid skinning).
+    #[serde(rename = "skeletal_mesh.armature_driven_v1")]
+    SkeletalMeshArmatureDrivenV1,
+    /// `skeletal_mesh.skinned_mesh_v1` - Bind an existing mesh to a skeleton.
+    #[serde(rename = "skeletal_mesh.skinned_mesh_v1")]
+    SkeletalMeshSkinnedMeshV1,
     /// `skeletal_animation.blender_clip_v1` - Skeletal animation clip (simple keyframes).
     #[serde(rename = "skeletal_animation.blender_clip_v1")]
     SkeletalAnimationBlenderClipV1,
@@ -135,7 +138,8 @@ impl RecipeKind {
             RecipeKind::StaticMeshOrganicSculptV1 => "static_mesh.organic_sculpt_v1",
             RecipeKind::StaticMeshShrinkwrapV1 => "static_mesh.shrinkwrap_v1",
             RecipeKind::StaticMeshBooleanKitV1 => "static_mesh.boolean_kit_v1",
-            RecipeKind::SkeletalMeshBlenderRiggedMeshV1 => "skeletal_mesh.blender_rigged_mesh_v1",
+            RecipeKind::SkeletalMeshArmatureDrivenV1 => "skeletal_mesh.armature_driven_v1",
+            RecipeKind::SkeletalMeshSkinnedMeshV1 => "skeletal_mesh.skinned_mesh_v1",
             RecipeKind::SkeletalAnimationBlenderClipV1 => "skeletal_animation.blender_clip_v1",
             RecipeKind::SkeletalAnimationBlenderRiggedV1 => "skeletal_animation.blender_rigged_v1",
             RecipeKind::SkeletalAnimationHelpersV1 => "skeletal_animation.helpers_v1",
@@ -169,7 +173,9 @@ impl RecipeKind {
             RecipeKind::StaticMeshOrganicSculptV1 => "static_mesh",
             RecipeKind::StaticMeshShrinkwrapV1 => "static_mesh",
             RecipeKind::StaticMeshBooleanKitV1 => "static_mesh",
-            RecipeKind::SkeletalMeshBlenderRiggedMeshV1 => "skeletal_mesh",
+            RecipeKind::SkeletalMeshArmatureDrivenV1 | RecipeKind::SkeletalMeshSkinnedMeshV1 => {
+                "skeletal_mesh"
+            }
             RecipeKind::SkeletalAnimationBlenderClipV1 => "skeletal_animation",
             RecipeKind::SkeletalAnimationBlenderRiggedV1 => "skeletal_animation",
             RecipeKind::SkeletalAnimationHelpersV1 => "skeletal_animation",
@@ -212,7 +218,8 @@ impl RecipeKind {
             | RecipeKind::StaticMeshOrganicSculptV1
             | RecipeKind::StaticMeshShrinkwrapV1
             | RecipeKind::StaticMeshBooleanKitV1
-            | RecipeKind::SkeletalMeshBlenderRiggedMeshV1
+            | RecipeKind::SkeletalMeshArmatureDrivenV1
+            | RecipeKind::SkeletalMeshSkinnedMeshV1
             | RecipeKind::SkeletalAnimationBlenderClipV1
             | RecipeKind::SkeletalAnimationBlenderRiggedV1
             | RecipeKind::SkeletalAnimationHelpersV1
@@ -263,9 +270,8 @@ impl Recipe {
             "static_mesh.organic_sculpt_v1" => Some(RecipeKind::StaticMeshOrganicSculptV1),
             "static_mesh.shrinkwrap_v1" => Some(RecipeKind::StaticMeshShrinkwrapV1),
             "static_mesh.boolean_kit_v1" => Some(RecipeKind::StaticMeshBooleanKitV1),
-            "skeletal_mesh.blender_rigged_mesh_v1" => {
-                Some(RecipeKind::SkeletalMeshBlenderRiggedMeshV1)
-            }
+            "skeletal_mesh.armature_driven_v1" => Some(RecipeKind::SkeletalMeshArmatureDrivenV1),
+            "skeletal_mesh.skinned_mesh_v1" => Some(RecipeKind::SkeletalMeshSkinnedMeshV1),
             "skeletal_animation.blender_clip_v1" => {
                 Some(RecipeKind::SkeletalAnimationBlenderClipV1)
             }
@@ -301,19 +307,27 @@ impl Recipe {
 
     /// Attempts to parse params as unified audio params.
     pub fn as_audio(&self) -> Result<AudioV1Params, serde_json::Error> {
-        serde_json::from_value(self.params.clone())
+        let mut params = self.params.clone();
+        strip_internal_coverage_keys(&mut params);
+        serde_json::from_value(params)
     }
 
     /// Attempts to parse params as music tracker song params.
     pub fn as_music_tracker_song(&self) -> Result<MusicTrackerSongV1Params, serde_json::Error> {
-        serde_json::from_value(self.params.clone())
+        let mut params = self.params.clone();
+        strip_internal_coverage_keys(&mut params);
+        strip_internal_music_coverage_keys(&mut params);
+        serde_json::from_value(params)
     }
 
     /// Attempts to parse params as music tracker compose params.
     pub fn as_music_tracker_song_compose(
         &self,
     ) -> Result<MusicTrackerSongComposeV1Params, serde_json::Error> {
-        serde_json::from_value(self.params.clone())
+        let mut params = self.params.clone();
+        strip_internal_coverage_keys(&mut params);
+        strip_internal_music_coverage_keys(&mut params);
+        serde_json::from_value(params)
     }
 
     /// Attempts to parse params as procedural texture params.
@@ -383,10 +397,17 @@ impl Recipe {
         serde_json::from_value(self.params.clone())
     }
 
-    /// Attempts to parse params as skeletal mesh Blender rigged mesh params.
-    pub fn as_skeletal_mesh_blender_rigged_mesh(
+    /// Attempts to parse params as skeletal mesh armature-driven params.
+    pub fn as_skeletal_mesh_armature_driven_v1(
         &self,
-    ) -> Result<SkeletalMeshBlenderRiggedMeshV1Params, serde_json::Error> {
+    ) -> Result<SkeletalMeshArmatureDrivenV1Params, serde_json::Error> {
+        serde_json::from_value(self.params.clone())
+    }
+
+    /// Attempts to parse params as skeletal mesh skinned-mesh params.
+    pub fn as_skeletal_mesh_skinned_mesh_v1(
+        &self,
+    ) -> Result<SkeletalMeshSkinnedMeshV1Params, serde_json::Error> {
         serde_json::from_value(self.params.clone())
     }
 
@@ -568,8 +589,15 @@ impl Recipe {
                         error_message: e.to_string(),
                     })?;
             }
-            "skeletal_mesh.blender_rigged_mesh_v1" => {
-                self.as_skeletal_mesh_blender_rigged_mesh()
+            "skeletal_mesh.armature_driven_v1" => {
+                self.as_skeletal_mesh_armature_driven_v1()
+                    .map_err(|e| RecipeParamsError {
+                        recipe_kind: self.kind.clone(),
+                        error_message: e.to_string(),
+                    })?;
+            }
+            "skeletal_mesh.skinned_mesh_v1" => {
+                self.as_skeletal_mesh_skinned_mesh_v1()
                     .map_err(|e| RecipeParamsError {
                         recipe_kind: self.kind.clone(),
                         error_message: e.to_string(),
@@ -664,6 +692,42 @@ impl Recipe {
             }
         }
         Ok(())
+    }
+}
+
+fn strip_internal_coverage_keys(params: &mut serde_json::Value) {
+    // Golden specs can include internal keys like `_coverage_*` purely for
+    // feature-coverage scanning. They must be ignored by strict recipe param
+    // parsing/validation.
+    let Some(obj) = params.as_object_mut() else {
+        return;
+    };
+
+    obj.retain(|k, _v| !k.starts_with("_coverage_"));
+}
+
+fn strip_internal_music_coverage_keys(params: &mut serde_json::Value) {
+    // Used by golden coverage specs to mark enum coverage without altering the
+    // meaning of the underlying recipe.
+    let Some(obj) = params.as_object_mut() else {
+        return;
+    };
+
+    obj.remove("synth_type_coverage");
+
+    let Some(instruments) = obj.get_mut("instruments") else {
+        return;
+    };
+
+    let Some(instruments) = instruments.as_array_mut() else {
+        return;
+    };
+
+    for inst in instruments {
+        let Some(inst_obj) = inst.as_object_mut() else {
+            continue;
+        };
+        inst_obj.remove("synth_type");
     }
 }
 

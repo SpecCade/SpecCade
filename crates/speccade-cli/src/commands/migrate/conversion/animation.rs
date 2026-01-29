@@ -279,10 +279,7 @@ fn convert_direct_poses(
 
     for (_pose_name, pose_def) in poses_obj {
         // Extract frame number from pose definition
-        let frame = pose_def
-            .get("frame")
-            .and_then(|v| v.as_i64())
-            .unwrap_or(0);
+        let frame = pose_def.get("frame").and_then(|v| v.as_i64()).unwrap_or(0);
 
         let time = frame as f64 / fps as f64;
         let bones = convert_pose_bones(pose_def, warnings);
@@ -523,7 +520,10 @@ fn convert_ik_target_transform(target_data: &Value, _warnings: &mut Vec<String>)
         .or_else(|| obj.get("ikfk"))
     {
         if let Some(b) = blend.as_f64() {
-            transform.insert("ik_fk_blend".to_string(), serde_json::json!(b.clamp(0.0, 1.0)));
+            transform.insert(
+                "ik_fk_blend".to_string(),
+                serde_json::json!(b.clamp(0.0, 1.0)),
+            );
         }
     }
 
@@ -540,7 +540,9 @@ fn convert_export_settings(data: &HashMap<String, Value>) -> Option<Value> {
 
     // Check for rig_setup export options
     let rig_setup = data.get("rig_setup").and_then(|v| v.as_object());
-    let bake_settings = rig_setup.and_then(|r| r.get("bake")).and_then(|v| v.as_object());
+    let bake_settings = rig_setup
+        .and_then(|r| r.get("bake"))
+        .and_then(|v| v.as_object());
 
     let bake_transforms = bake_settings
         .and_then(|b| b.get("bake_transforms"))
@@ -618,7 +620,10 @@ mod tests {
         let (params, warnings) = map_animation_params(&data).unwrap();
 
         assert_eq!(params["clip_name"].as_str().unwrap(), "walk_cycle");
-        assert_eq!(params["skeleton_preset"].as_str().unwrap(), "humanoid_basic_v1");
+        assert_eq!(
+            params["skeleton_preset"].as_str().unwrap(),
+            "humanoid_basic_v1"
+        );
         assert_eq!(params["fps"].as_u64().unwrap(), 30);
         assert!(params["loop"].as_bool().unwrap());
         assert_eq!(params["duration_seconds"].as_f64().unwrap(), 2.0); // 60 frames / 30 fps
@@ -641,7 +646,10 @@ mod tests {
     fn test_map_animation_with_ik_targets() {
         let data = HashMap::from([
             ("name".to_string(), serde_json::json!("idle")),
-            ("character".to_string(), serde_json::json!("humanoid_basic_v1")),
+            (
+                "character".to_string(),
+                serde_json::json!("humanoid_basic_v1"),
+            ),
             ("fps".to_string(), serde_json::json!(24)),
             ("duration_frames".to_string(), serde_json::json!(48)),
             ("loop".to_string(), serde_json::json!(true)),
@@ -663,7 +671,10 @@ mod tests {
         let (params, _warnings) = map_animation_params(&data).unwrap();
 
         assert_eq!(params["clip_name"].as_str().unwrap(), "idle");
-        assert_eq!(params["skeleton_preset"].as_str().unwrap(), "humanoid_basic_v1");
+        assert_eq!(
+            params["skeleton_preset"].as_str().unwrap(),
+            "humanoid_basic_v1"
+        );
 
         // Check IK keyframes
         let ik_keyframes = params["ik_keyframes"].as_array().unwrap();
@@ -795,7 +806,10 @@ mod tests {
 
         assert_eq!(params["clip_name"].as_str().unwrap(), "jump");
         assert!(!params["loop"].as_bool().unwrap());
-        assert_eq!(params["skeleton_preset"].as_str().unwrap(), "humanoid_basic_v1");
+        assert_eq!(
+            params["skeleton_preset"].as_str().unwrap(),
+            "humanoid_basic_v1"
+        );
 
         let keyframes = params["keyframes"].as_array().unwrap();
         assert_eq!(keyframes.len(), 4);
@@ -870,7 +884,10 @@ mod tests {
     fn test_map_animation_idle() {
         let data = HashMap::from([
             ("name".to_string(), serde_json::json!("idle_breathe")),
-            ("character".to_string(), serde_json::json!("humanoid_basic_v1")),
+            (
+                "character".to_string(),
+                serde_json::json!("humanoid_basic_v1"),
+            ),
             ("fps".to_string(), serde_json::json!(24)),
             ("duration_frames".to_string(), serde_json::json!(72)),
             ("loop".to_string(), serde_json::json!(true)),
@@ -984,8 +1001,14 @@ mod tests {
             map_rig_to_preset("humanoid_basic", &mut warnings),
             "humanoid_basic_v1"
         );
-        assert_eq!(map_rig_to_preset("human", &mut warnings), "humanoid_basic_v1");
-        assert_eq!(map_rig_to_preset("biped", &mut warnings), "humanoid_basic_v1");
+        assert_eq!(
+            map_rig_to_preset("human", &mut warnings),
+            "humanoid_basic_v1"
+        );
+        assert_eq!(
+            map_rig_to_preset("biped", &mut warnings),
+            "humanoid_basic_v1"
+        );
 
         // Unknown rig should default with warning
         warnings.clear();

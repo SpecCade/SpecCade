@@ -343,12 +343,14 @@ fn test_migrate_character_produces_warning() {
     }
     let result = migrate_legacy_fixture("characters", "simple_biped");
     result.assert_migration_success();
-    let spec = result.parse_migrated_spec().expect("Should parse");
+    let spec = result.validate_migrated_spec();
     assert_eq!(spec.asset_type, AssetType::SkeletalMesh);
     assert_eq!(
         spec.recipe.as_ref().map(|r| r.kind.as_str()),
-        Some("skeletal_mesh.blender_rigged_mesh_v1")
+        Some("skeletal_mesh.armature_driven_v1")
     );
+    let params = &spec.recipe.as_ref().unwrap().params;
+    assert!(params.get("bone_meshes").is_some());
 }
 
 // ============================================================================

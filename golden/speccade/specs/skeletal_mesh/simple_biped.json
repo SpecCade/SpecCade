@@ -13,9 +13,8 @@
     }
   ],
   "recipe": {
-    "kind": "skeletal_mesh.blender_rigged_mesh_v1",
+    "kind": "skeletal_mesh.armature_driven_v1",
     "params": {
-      "tri_budget": 800,
       "skeleton": [
         {
           "bone": "root",
@@ -195,106 +194,72 @@
           "mirror": "foot_L"
         }
       ],
-      "parts": {
-        "torso": {
-          "bone": "spine",
-          "base": "hexagon(6)",
-          "base_radius": 0.15,
-          "steps": [
-            {
-              "extrude": 0.4,
-              "scale": 1.2
-            },
-            {
-              "extrude": 0.3,
-              "scale": [
-                1.3,
-                1.0
-              ]
-            }
-          ],
-          "cap_start": true,
-          "cap_end": true
+      "bone_meshes": {
+        "root": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
         },
-        "head_mesh": {
-          "bone": "head",
-          "base": "hexagon(8)",
-          "base_radius": 0.12,
-          "offset": [
-            0,
-            0,
-            0.9
-          ],
-          "steps": [
-            {
-              "extrude": 0.2,
-              "scale": 1.1
-            }
-          ],
-          "cap_start": true,
-          "cap_end": true
+        "spine": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
         },
-        "arm_L": {
-          "bone": "arm_upper_L",
-          "base": "hexagon(6)",
-          "base_radius": 0.05,
-          "offset": [
-            0.15,
-            0,
-            0.75
-          ],
-          "rotation": [
-            0,
-            90,
-            0
-          ],
-          "steps": [
-            {
-              "extrude": 0.2,
-              "scale": 0.9
-            },
-            {
-              "extrude": 0.2,
-              "scale": 0.8
-            }
-          ],
-          "skinning_type": "soft"
+        "chest": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
         },
-        "arm_R": {
-          "mirror": "arm_L"
+        "neck": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
         },
-        "leg_L": {
-          "bone": "leg_upper_L",
-          "base": "hexagon(6)",
-          "base_radius": 0.08,
-          "offset": [
-            0.1,
-            0,
-            0.1
-          ],
-          "rotation": [
-            180,
-            0,
-            0
-          ],
-          "steps": [
-            {
-              "extrude": 0.45,
-              "scale": 0.7
-            },
-            {
-              "extrude": 0.4,
-              "scale": 0.6
-            }
-          ],
-          "skinning_type": "soft"
+        "head": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
         },
-        "leg_R": {
-          "mirror": "leg_L"
+        "arm_upper_L": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
+        },
+        "arm_lower_L": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
+        },
+        "hand_L": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
+        },
+        "arm_upper_R": {
+          "mirror": "arm_upper_L"
+        },
+        "arm_lower_R": {
+          "mirror": "arm_lower_L"
+        },
+        "hand_R": {
+          "mirror": "hand_L"
+        },
+        "leg_upper_L": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
+        },
+        "leg_lower_L": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
+        },
+        "foot_L": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
+        },
+        "leg_upper_R": {
+          "mirror": "leg_upper_L"
+        },
+        "leg_lower_R": {
+          "mirror": "leg_lower_L"
+        },
+        "foot_R": {
+          "mirror": "foot_L"
         }
       },
-      "texturing": {
-        "uv_mode": "smart_project"
+      "constraints": {
+        "max_triangles": 800
       }
     }
   }

@@ -135,15 +135,103 @@ pub fn map_legacy_keys_to_params(
         "music.tracker_song_v1" => music::map_music_params(&legacy.data),
         "static_mesh.blender_primitives_v1" => mesh::map_mesh_params(&legacy.data),
         "skeletal_animation.blender_clip_v1" => animation::map_animation_params(&legacy.data),
-        // CHARACTER (skeletal_mesh) is handled by MIGRATE-004
-        "skeletal_mesh.blender_rigged_mesh_v1" => {
-            let warnings = vec![format!(
-                "Category '{}' migration not yet implemented. Passing through legacy data.",
-                legacy.category
-            )];
-            let mut params = legacy.data.clone();
-            params.remove("name");
-            Ok((serde_json::json!(params), warnings))
+        "skeletal_mesh.armature_driven_v1" => {
+            let mut warnings = vec![
+                "Character migration is lossy: legacy parts/body_parts are approximated as bone_meshes".to_string(),
+            ];
+
+            let mut params = serde_json::Map::new();
+
+            // Skeleton: prefer explicit preset, otherwise default.
+            if let Some(preset) = legacy.data.get("skeleton_preset").and_then(|v| v.as_str()) {
+                params.insert(
+                    "skeleton_preset".to_string(),
+                    serde_json::Value::String(preset.to_string()),
+                );
+            } else {
+                params.insert(
+                    "skeleton_preset".to_string(),
+                    serde_json::Value::String("humanoid_basic_v1".to_string()),
+                );
+                warnings
+                    .push("Missing skeleton_preset; defaulting to humanoid_basic_v1".to_string());
+            }
+
+            if let Some(skel) = legacy.data.get("skeleton") {
+                if skel.is_array() {
+                    params.insert("skeleton".to_string(), skel.clone());
+                }
+            }
+
+            // Bone meshes: derive from legacy parts if possible.
+            let mut bone_meshes = serde_json::Map::new();
+            if let Some(parts) = legacy.data.get("parts").and_then(|v| v.as_object()) {
+                for (part_name, part_val) in parts {
+                    let Some(part_obj) = part_val.as_object() else {
+                        continue;
+                    };
+
+                    let bone_name = part_obj
+                        .get("bone")
+                        .and_then(|v| v.as_str())
+                        .unwrap_or(part_name);
+
+                    let profile = part_obj
+                        .get("base")
+                        .and_then(|v| v.as_str())
+                        .unwrap_or("circle(8)");
+
+                    // Legacy base_radius is treated as absolute units.
+                    let profile_radius = match part_obj.get("base_radius") {
+                        Some(v) if v.is_number() => {
+                            serde_json::json!({"absolute": v.as_f64().unwrap_or(0.05)})
+                        }
+                        Some(v) if v.is_array() => {
+                            let arr = v.as_array().unwrap();
+                            let a = arr.get(0).and_then(|x| x.as_f64()).unwrap_or(0.05);
+                            let b = arr.get(1).and_then(|x| x.as_f64()).unwrap_or(a);
+                            serde_json::json!({"absolute": (a + b) * 0.5})
+                        }
+                        _ => serde_json::json!({"absolute": 0.05}),
+                    };
+
+                    let mut mesh_obj = serde_json::Map::new();
+                    mesh_obj.insert(
+                        "profile".to_string(),
+                        serde_json::Value::String(profile.to_string()),
+                    );
+                    mesh_obj.insert("profile_radius".to_string(), profile_radius);
+
+                    if let Some(v) = part_obj.get("cap_start") {
+                        mesh_obj.insert("cap_start".to_string(), v.clone());
+                    }
+                    if let Some(v) = part_obj.get("cap_end") {
+                        mesh_obj.insert("cap_end".to_string(), v.clone());
+                    }
+
+                    bone_meshes.insert(bone_name.to_string(), serde_json::Value::Object(mesh_obj));
+                }
+            }
+
+            if bone_meshes.is_empty() {
+                warnings.push(
+                    "No legacy parts found; using default bone_meshes for 'spine'".to_string(),
+                );
+                bone_meshes.insert(
+                    "spine".to_string(),
+                    serde_json::json!({
+                        "profile": "circle(8)",
+                        "profile_radius": {"absolute": 0.05}
+                    }),
+                );
+            }
+
+            params.insert(
+                "bone_meshes".to_string(),
+                serde_json::Value::Object(bone_meshes),
+            );
+
+            Ok((serde_json::Value::Object(params), warnings))
         }
         _ => {
             let warnings = vec![format!(

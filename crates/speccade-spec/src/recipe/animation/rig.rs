@@ -10,9 +10,7 @@ use super::pose::{AnimationPhase, PoseDefinition};
 use super::preview::PreviewRender;
 use super::procedural::ProceduralLayer;
 use super::root_motion::RootMotionSettings;
-use super::skeletal::{
-    FingerKeyframe, IkFkKeyframe, RigSetup, SpaceSwitchKeyframe,
-};
+use super::skeletal::{FingerKeyframe, IkFkKeyframe, RigSetup, SpaceSwitchKeyframe};
 use crate::recipe::character::SkeletonPreset;
 
 // =============================================================================

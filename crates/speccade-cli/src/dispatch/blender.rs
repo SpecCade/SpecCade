@@ -178,9 +178,14 @@ pub(super) fn generate_blender_skeletal_mesh(
         .find(|o| o.kind == OutputKind::Primary)
         .ok_or_else(|| DispatchError::BackendError("No primary output specified".to_string()))?;
     if primary_output.format != OutputFormat::Glb {
+        let kind = spec
+            .recipe
+            .as_ref()
+            .map(|r| r.kind.as_str())
+            .unwrap_or("skeletal_mesh.*");
         return Err(DispatchError::BackendError(format!(
-            "skeletal_mesh.blender_rigged_mesh_v1 requires primary output format 'glb', got '{}'",
-            primary_output.format
+            "{} requires primary output format 'glb', got '{}'",
+            kind, primary_output.format
         )));
     }
 

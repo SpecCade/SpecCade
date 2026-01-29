@@ -24,577 +24,683 @@
     }
   ],
   "recipe": {
-    "kind": "skeletal_mesh.blender_rigged_mesh_v1",
+    "kind": "skeletal_mesh.armature_driven_v1",
     "params": {
       "skeleton": [
         {
           "bone": "root",
-          "head": [0, 0, 0],
-          "tail": [0, 0, 0.05]
+          "head": [
+            0,
+            0,
+            0
+          ],
+          "tail": [
+            0,
+            0,
+            0.05
+          ]
         },
         {
           "bone": "body",
-          "head": [0, 0, 0.12],
-          "tail": [0, 0, 0.17],
+          "head": [
+            0,
+            0,
+            0.12
+          ],
+          "tail": [
+            0,
+            0,
+            0.17
+          ],
           "parent": "root"
         },
         {
           "bone": "cephalothorax",
-          "head": [0, 0.06, 0.12],
-          "tail": [0, 0.14, 0.12],
+          "head": [
+            0,
+            0.06,
+            0.12
+          ],
+          "tail": [
+            0,
+            0.14,
+            0.12
+          ],
           "parent": "body"
         },
         {
           "bone": "abdomen",
-          "head": [0, -0.06, 0.12],
-          "tail": [0, -0.22, 0.14],
+          "head": [
+            0,
+            -0.06,
+            0.12
+          ],
+          "tail": [
+            0,
+            -0.22,
+            0.14
+          ],
           "parent": "body"
         },
         {
           "bone": "leg_fr1_coxa",
-          "head": [0.05, 0.04, 0.12],
-          "tail": [0.09, 0.07, 0.14],
+          "head": [
+            0.05,
+            0.04,
+            0.12
+          ],
+          "tail": [
+            0.09,
+            0.07,
+            0.14
+          ],
           "parent": "body"
         },
         {
           "bone": "leg_fr1_femur",
-          "head": [0.09, 0.07, 0.14],
-          "tail": [0.20, 0.14, 0.22],
+          "head": [
+            0.09,
+            0.07,
+            0.14
+          ],
+          "tail": [
+            0.2,
+            0.14,
+            0.22
+          ],
           "parent": "leg_fr1_coxa"
         },
         {
           "bone": "leg_fr1_tibia",
-          "head": [0.20, 0.14, 0.22],
-          "tail": [0.32, 0.20, 0.06],
+          "head": [
+            0.2,
+            0.14,
+            0.22
+          ],
+          "tail": [
+            0.32,
+            0.2,
+            0.06
+          ],
           "parent": "leg_fr1_femur"
         },
         {
           "bone": "leg_fr1_tarsus",
-          "head": [0.32, 0.20, 0.06],
-          "tail": [0.38, 0.24, 0.0],
+          "head": [
+            0.32,
+            0.2,
+            0.06
+          ],
+          "tail": [
+            0.38,
+            0.24,
+            0.0
+          ],
           "parent": "leg_fr1_tibia"
         },
         {
           "bone": "leg_fr2_coxa",
-          "head": [0.055, 0.015, 0.12],
-          "tail": [0.10, 0.02, 0.14],
+          "head": [
+            0.055,
+            0.015,
+            0.12
+          ],
+          "tail": [
+            0.1,
+            0.02,
+            0.14
+          ],
           "parent": "body"
         },
         {
           "bone": "leg_fr2_femur",
-          "head": [0.10, 0.02, 0.14],
-          "tail": [0.22, 0.035, 0.22],
+          "head": [
+            0.1,
+            0.02,
+            0.14
+          ],
+          "tail": [
+            0.22,
+            0.035,
+            0.22
+          ],
           "parent": "leg_fr2_coxa"
         },
         {
           "bone": "leg_fr2_tibia",
-          "head": [0.22, 0.035, 0.22],
-          "tail": [0.36, 0.05, 0.06],
+          "head": [
+            0.22,
+            0.035,
+            0.22
+          ],
+          "tail": [
+            0.36,
+            0.05,
+            0.06
+          ],
           "parent": "leg_fr2_femur"
         },
         {
           "bone": "leg_fr2_tarsus",
-          "head": [0.36, 0.05, 0.06],
-          "tail": [0.42, 0.06, 0.0],
+          "head": [
+            0.36,
+            0.05,
+            0.06
+          ],
+          "tail": [
+            0.42,
+            0.06,
+            0.0
+          ],
           "parent": "leg_fr2_tibia"
         },
         {
           "bone": "leg_br1_coxa",
-          "head": [0.055, -0.015, 0.12],
-          "tail": [0.10, -0.035, 0.14],
+          "head": [
+            0.055,
+            -0.015,
+            0.12
+          ],
+          "tail": [
+            0.1,
+            -0.035,
+            0.14
+          ],
           "parent": "body"
         },
         {
           "bone": "leg_br1_femur",
-          "head": [0.10, -0.035, 0.14],
-          "tail": [0.22, -0.08, 0.22],
+          "head": [
+            0.1,
+            -0.035,
+            0.14
+          ],
+          "tail": [
+            0.22,
+            -0.08,
+            0.22
+          ],
           "parent": "leg_br1_coxa"
         },
         {
           "bone": "leg_br1_tibia",
-          "head": [0.22, -0.08, 0.22],
-          "tail": [0.36, -0.12, 0.06],
+          "head": [
+            0.22,
+            -0.08,
+            0.22
+          ],
+          "tail": [
+            0.36,
+            -0.12,
+            0.06
+          ],
           "parent": "leg_br1_femur"
         },
         {
           "bone": "leg_br1_tarsus",
-          "head": [0.36, -0.12, 0.06],
-          "tail": [0.42, -0.15, 0.0],
+          "head": [
+            0.36,
+            -0.12,
+            0.06
+          ],
+          "tail": [
+            0.42,
+            -0.15,
+            0.0
+          ],
           "parent": "leg_br1_tibia"
         },
         {
           "bone": "leg_br2_coxa",
-          "head": [0.05, -0.04, 0.12],
-          "tail": [0.09, -0.08, 0.14],
+          "head": [
+            0.05,
+            -0.04,
+            0.12
+          ],
+          "tail": [
+            0.09,
+            -0.08,
+            0.14
+          ],
           "parent": "body"
         },
         {
           "bone": "leg_br2_femur",
-          "head": [0.09, -0.08, 0.14],
-          "tail": [0.20, -0.16, 0.22],
+          "head": [
+            0.09,
+            -0.08,
+            0.14
+          ],
+          "tail": [
+            0.2,
+            -0.16,
+            0.22
+          ],
           "parent": "leg_br2_coxa"
         },
         {
           "bone": "leg_br2_tibia",
-          "head": [0.20, -0.16, 0.22],
-          "tail": [0.32, -0.26, 0.06],
+          "head": [
+            0.2,
+            -0.16,
+            0.22
+          ],
+          "tail": [
+            0.32,
+            -0.26,
+            0.06
+          ],
           "parent": "leg_br2_femur"
         },
         {
           "bone": "leg_br2_tarsus",
-          "head": [0.32, -0.26, 0.06],
-          "tail": [0.38, -0.30, 0.0],
+          "head": [
+            0.32,
+            -0.26,
+            0.06
+          ],
+          "tail": [
+            0.38,
+            -0.3,
+            0.0
+          ],
           "parent": "leg_br2_tibia"
         },
         {
           "bone": "leg_fl1_coxa",
-          "head": [-0.05, 0.04, 0.12],
-          "tail": [-0.09, 0.07, 0.14],
+          "head": [
+            -0.05,
+            0.04,
+            0.12
+          ],
+          "tail": [
+            -0.09,
+            0.07,
+            0.14
+          ],
           "parent": "body"
         },
         {
           "bone": "leg_fl1_femur",
-          "head": [-0.09, 0.07, 0.14],
-          "tail": [-0.20, 0.14, 0.22],
+          "head": [
+            -0.09,
+            0.07,
+            0.14
+          ],
+          "tail": [
+            -0.2,
+            0.14,
+            0.22
+          ],
           "parent": "leg_fl1_coxa"
         },
         {
           "bone": "leg_fl1_tibia",
-          "head": [-0.20, 0.14, 0.22],
-          "tail": [-0.32, 0.20, 0.06],
+          "head": [
+            -0.2,
+            0.14,
+            0.22
+          ],
+          "tail": [
+            -0.32,
+            0.2,
+            0.06
+          ],
           "parent": "leg_fl1_femur"
         },
         {
           "bone": "leg_fl1_tarsus",
-          "head": [-0.32, 0.20, 0.06],
-          "tail": [-0.38, 0.24, 0.0],
+          "head": [
+            -0.32,
+            0.2,
+            0.06
+          ],
+          "tail": [
+            -0.38,
+            0.24,
+            0.0
+          ],
           "parent": "leg_fl1_tibia"
         },
         {
           "bone": "leg_fl2_coxa",
-          "head": [-0.055, 0.015, 0.12],
-          "tail": [-0.10, 0.02, 0.14],
+          "head": [
+            -0.055,
+            0.015,
+            0.12
+          ],
+          "tail": [
+            -0.1,
+            0.02,
+            0.14
+          ],
           "parent": "body"
         },
         {
           "bone": "leg_fl2_femur",
-          "head": [-0.10, 0.02, 0.14],
-          "tail": [-0.22, 0.035, 0.22],
+          "head": [
+            -0.1,
+            0.02,
+            0.14
+          ],
+          "tail": [
+            -0.22,
+            0.035,
+            0.22
+          ],
           "parent": "leg_fl2_coxa"
         },
         {
           "bone": "leg_fl2_tibia",
-          "head": [-0.22, 0.035, 0.22],
-          "tail": [-0.36, 0.05, 0.06],
+          "head": [
+            -0.22,
+            0.035,
+            0.22
+          ],
+          "tail": [
+            -0.36,
+            0.05,
+            0.06
+          ],
           "parent": "leg_fl2_femur"
         },
         {
           "bone": "leg_fl2_tarsus",
-          "head": [-0.36, 0.05, 0.06],
-          "tail": [-0.42, 0.06, 0.0],
+          "head": [
+            -0.36,
+            0.05,
+            0.06
+          ],
+          "tail": [
+            -0.42,
+            0.06,
+            0.0
+          ],
           "parent": "leg_fl2_tibia"
         },
         {
           "bone": "leg_bl1_coxa",
-          "head": [-0.055, -0.015, 0.12],
-          "tail": [-0.10, -0.035, 0.14],
+          "head": [
+            -0.055,
+            -0.015,
+            0.12
+          ],
+          "tail": [
+            -0.1,
+            -0.035,
+            0.14
+          ],
           "parent": "body"
         },
         {
           "bone": "leg_bl1_femur",
-          "head": [-0.10, -0.035, 0.14],
-          "tail": [-0.22, -0.08, 0.22],
+          "head": [
+            -0.1,
+            -0.035,
+            0.14
+          ],
+          "tail": [
+            -0.22,
+            -0.08,
+            0.22
+          ],
           "parent": "leg_bl1_coxa"
         },
         {
           "bone": "leg_bl1_tibia",
-          "head": [-0.22, -0.08, 0.22],
-          "tail": [-0.36, -0.12, 0.06],
+          "head": [
+            -0.22,
+            -0.08,
+            0.22
+          ],
+          "tail": [
+            -0.36,
+            -0.12,
+            0.06
+          ],
           "parent": "leg_bl1_femur"
         },
         {
           "bone": "leg_bl1_tarsus",
-          "head": [-0.36, -0.12, 0.06],
-          "tail": [-0.42, -0.15, 0.0],
+          "head": [
+            -0.36,
+            -0.12,
+            0.06
+          ],
+          "tail": [
+            -0.42,
+            -0.15,
+            0.0
+          ],
           "parent": "leg_bl1_tibia"
         },
         {
           "bone": "leg_bl2_coxa",
-          "head": [-0.05, -0.04, 0.12],
-          "tail": [-0.09, -0.08, 0.14],
+          "head": [
+            -0.05,
+            -0.04,
+            0.12
+          ],
+          "tail": [
+            -0.09,
+            -0.08,
+            0.14
+          ],
           "parent": "body"
         },
         {
           "bone": "leg_bl2_femur",
-          "head": [-0.09, -0.08, 0.14],
-          "tail": [-0.20, -0.16, 0.22],
+          "head": [
+            -0.09,
+            -0.08,
+            0.14
+          ],
+          "tail": [
+            -0.2,
+            -0.16,
+            0.22
+          ],
           "parent": "leg_bl2_coxa"
         },
         {
           "bone": "leg_bl2_tibia",
-          "head": [-0.20, -0.16, 0.22],
-          "tail": [-0.32, -0.26, 0.06],
+          "head": [
+            -0.2,
+            -0.16,
+            0.22
+          ],
+          "tail": [
+            -0.32,
+            -0.26,
+            0.06
+          ],
           "parent": "leg_bl2_femur"
         },
         {
           "bone": "leg_bl2_tarsus",
-          "head": [-0.32, -0.26, 0.06],
-          "tail": [-0.38, -0.30, 0.0],
+          "head": [
+            -0.32,
+            -0.26,
+            0.06
+          ],
+          "tail": [
+            -0.38,
+            -0.3,
+            0.0
+          ],
           "parent": "leg_bl2_tibia"
         }
       ],
-      "body_parts": [
-        {
-          "bone": "cephalothorax",
-          "mesh": {
-            "primitive": "sphere",
-            "dimensions": [0.08, 0.10, 0.065],
-            "offset": [0, 0.04, 0],
-            "segments": 16
-          },
-          "material_index": 0
+      "bone_meshes": {
+        "root": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
         },
-        {
-          "bone": "abdomen",
-          "mesh": {
-            "primitive": "sphere",
-            "dimensions": [0.11, 0.18, 0.10],
-            "offset": [0, -0.08, 0.01],
-            "segments": 16
-          },
-          "material_index": 0
+        "body": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
         },
-        {
-          "bone": "leg_fr1_coxa",
-          "mesh": {
-            "primitive": "sphere",
-            "dimensions": [0.035, 0.04, 0.035],
-            "segments": 8
-          },
-          "material_index": 1
+        "cephalothorax": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
         },
-        {
-          "bone": "leg_fr1_femur",
-          "mesh": {
-            "primitive": "sphere",
-            "dimensions": [0.03, 0.08, 0.03],
-            "offset": [0.05, 0.03, 0.04],
-            "segments": 8
-          },
-          "material_index": 1
+        "abdomen": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
         },
-        {
-          "bone": "leg_fr1_tibia",
-          "mesh": {
-            "primitive": "sphere",
-            "dimensions": [0.025, 0.10, 0.025],
-            "offset": [0.06, 0.03, -0.08],
-            "segments": 8
-          },
-          "material_index": 1
+        "leg_fr1_coxa": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
         },
-        {
-          "bone": "leg_fr1_tarsus",
-          "mesh": {
-            "primitive": "sphere",
-            "dimensions": [0.018, 0.05, 0.018],
-            "offset": [0.03, 0.02, -0.03],
-            "segments": 6
-          },
-          "material_index": 1
+        "leg_fr1_femur": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
         },
-        {
-          "bone": "leg_fr2_coxa",
-          "mesh": {
-            "primitive": "sphere",
-            "dimensions": [0.035, 0.04, 0.035],
-            "segments": 8
-          },
-          "material_index": 1
+        "leg_fr1_tibia": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
         },
-        {
-          "bone": "leg_fr2_femur",
-          "mesh": {
-            "primitive": "sphere",
-            "dimensions": [0.03, 0.08, 0.03],
-            "offset": [0.06, 0.01, 0.04],
-            "segments": 8
-          },
-          "material_index": 1
+        "leg_fr1_tarsus": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
         },
-        {
-          "bone": "leg_fr2_tibia",
-          "mesh": {
-            "primitive": "sphere",
-            "dimensions": [0.025, 0.10, 0.025],
-            "offset": [0.07, 0.01, -0.08],
-            "segments": 8
-          },
-          "material_index": 1
+        "leg_fr2_coxa": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
         },
-        {
-          "bone": "leg_fr2_tarsus",
-          "mesh": {
-            "primitive": "sphere",
-            "dimensions": [0.018, 0.05, 0.018],
-            "offset": [0.03, 0.005, -0.03],
-            "segments": 6
-          },
-          "material_index": 1
+        "leg_fr2_femur": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
         },
-        {
-          "bone": "leg_br1_coxa",
-          "mesh": {
-            "primitive": "sphere",
-            "dimensions": [0.035, 0.04, 0.035],
-            "segments": 8
-          },
-          "material_index": 1
+        "leg_fr2_tibia": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
         },
-        {
-          "bone": "leg_br1_femur",
-          "mesh": {
-            "primitive": "sphere",
-            "dimensions": [0.03, 0.08, 0.03],
-            "offset": [0.06, -0.02, 0.04],
-            "segments": 8
-          },
-          "material_index": 1
+        "leg_fr2_tarsus": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
         },
-        {
-          "bone": "leg_br1_tibia",
-          "mesh": {
-            "primitive": "sphere",
-            "dimensions": [0.025, 0.10, 0.025],
-            "offset": [0.07, -0.02, -0.08],
-            "segments": 8
-          },
-          "material_index": 1
+        "leg_br1_coxa": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
         },
-        {
-          "bone": "leg_br1_tarsus",
-          "mesh": {
-            "primitive": "sphere",
-            "dimensions": [0.018, 0.05, 0.018],
-            "offset": [0.03, -0.015, -0.03],
-            "segments": 6
-          },
-          "material_index": 1
+        "leg_br1_femur": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
         },
-        {
-          "bone": "leg_br2_coxa",
-          "mesh": {
-            "primitive": "sphere",
-            "dimensions": [0.035, 0.04, 0.035],
-            "segments": 8
-          },
-          "material_index": 1
+        "leg_br1_tibia": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
         },
-        {
-          "bone": "leg_br2_femur",
-          "mesh": {
-            "primitive": "sphere",
-            "dimensions": [0.03, 0.08, 0.03],
-            "offset": [0.05, -0.04, 0.04],
-            "segments": 8
-          },
-          "material_index": 1
+        "leg_br1_tarsus": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
         },
-        {
-          "bone": "leg_br2_tibia",
-          "mesh": {
-            "primitive": "sphere",
-            "dimensions": [0.025, 0.10, 0.025],
-            "offset": [0.06, -0.05, -0.08],
-            "segments": 8
-          },
-          "material_index": 1
+        "leg_br2_coxa": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
         },
-        {
-          "bone": "leg_br2_tarsus",
-          "mesh": {
-            "primitive": "sphere",
-            "dimensions": [0.018, 0.05, 0.018],
-            "offset": [0.03, -0.02, -0.03],
-            "segments": 6
-          },
-          "material_index": 1
+        "leg_br2_femur": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
         },
-        {
-          "bone": "leg_fl1_coxa",
-          "mesh": {
-            "primitive": "sphere",
-            "dimensions": [0.035, 0.04, 0.035],
-            "segments": 8
-          },
-          "material_index": 1
+        "leg_br2_tibia": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
         },
-        {
-          "bone": "leg_fl1_femur",
-          "mesh": {
-            "primitive": "sphere",
-            "dimensions": [0.03, 0.08, 0.03],
-            "offset": [-0.05, 0.03, 0.04],
-            "segments": 8
-          },
-          "material_index": 1
+        "leg_br2_tarsus": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
         },
-        {
-          "bone": "leg_fl1_tibia",
-          "mesh": {
-            "primitive": "sphere",
-            "dimensions": [0.025, 0.10, 0.025],
-            "offset": [-0.06, 0.03, -0.08],
-            "segments": 8
-          },
-          "material_index": 1
+        "leg_fl1_coxa": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
         },
-        {
-          "bone": "leg_fl1_tarsus",
-          "mesh": {
-            "primitive": "sphere",
-            "dimensions": [0.018, 0.05, 0.018],
-            "offset": [-0.03, 0.02, -0.03],
-            "segments": 6
-          },
-          "material_index": 1
+        "leg_fl1_femur": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
         },
-        {
-          "bone": "leg_fl2_coxa",
-          "mesh": {
-            "primitive": "sphere",
-            "dimensions": [0.035, 0.04, 0.035],
-            "segments": 8
-          },
-          "material_index": 1
+        "leg_fl1_tibia": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
         },
-        {
-          "bone": "leg_fl2_femur",
-          "mesh": {
-            "primitive": "sphere",
-            "dimensions": [0.03, 0.08, 0.03],
-            "offset": [-0.06, 0.01, 0.04],
-            "segments": 8
-          },
-          "material_index": 1
+        "leg_fl1_tarsus": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
         },
-        {
-          "bone": "leg_fl2_tibia",
-          "mesh": {
-            "primitive": "sphere",
-            "dimensions": [0.025, 0.10, 0.025],
-            "offset": [-0.07, 0.01, -0.08],
-            "segments": 8
-          },
-          "material_index": 1
+        "leg_fl2_coxa": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
         },
-        {
-          "bone": "leg_fl2_tarsus",
-          "mesh": {
-            "primitive": "sphere",
-            "dimensions": [0.018, 0.05, 0.018],
-            "offset": [-0.03, 0.005, -0.03],
-            "segments": 6
-          },
-          "material_index": 1
+        "leg_fl2_femur": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
         },
-        {
-          "bone": "leg_bl1_coxa",
-          "mesh": {
-            "primitive": "sphere",
-            "dimensions": [0.035, 0.04, 0.035],
-            "segments": 8
-          },
-          "material_index": 1
+        "leg_fl2_tibia": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
         },
-        {
-          "bone": "leg_bl1_femur",
-          "mesh": {
-            "primitive": "sphere",
-            "dimensions": [0.03, 0.08, 0.03],
-            "offset": [-0.06, -0.02, 0.04],
-            "segments": 8
-          },
-          "material_index": 1
+        "leg_fl2_tarsus": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
         },
-        {
-          "bone": "leg_bl1_tibia",
-          "mesh": {
-            "primitive": "sphere",
-            "dimensions": [0.025, 0.10, 0.025],
-            "offset": [-0.07, -0.02, -0.08],
-            "segments": 8
-          },
-          "material_index": 1
+        "leg_bl1_coxa": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
         },
-        {
-          "bone": "leg_bl1_tarsus",
-          "mesh": {
-            "primitive": "sphere",
-            "dimensions": [0.018, 0.05, 0.018],
-            "offset": [-0.03, -0.015, -0.03],
-            "segments": 6
-          },
-          "material_index": 1
+        "leg_bl1_femur": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
         },
-        {
-          "bone": "leg_bl2_coxa",
-          "mesh": {
-            "primitive": "sphere",
-            "dimensions": [0.035, 0.04, 0.035],
-            "segments": 8
-          },
-          "material_index": 1
+        "leg_bl1_tibia": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
         },
-        {
-          "bone": "leg_bl2_femur",
-          "mesh": {
-            "primitive": "sphere",
-            "dimensions": [0.03, 0.08, 0.03],
-            "offset": [-0.05, -0.04, 0.04],
-            "segments": 8
-          },
-          "material_index": 1
+        "leg_bl1_tarsus": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
         },
-        {
-          "bone": "leg_bl2_tibia",
-          "mesh": {
-            "primitive": "sphere",
-            "dimensions": [0.025, 0.10, 0.025],
-            "offset": [-0.06, -0.05, -0.08],
-            "segments": 8
-          },
-          "material_index": 1
+        "leg_bl2_coxa": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
         },
-        {
-          "bone": "leg_bl2_tarsus",
-          "mesh": {
-            "primitive": "sphere",
-            "dimensions": [0.018, 0.05, 0.018],
-            "offset": [-0.03, -0.02, -0.03],
-            "segments": 6
-          },
-          "material_index": 1
+        "leg_bl2_femur": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
+        },
+        "leg_bl2_tibia": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
+        },
+        "leg_bl2_tarsus": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
         }
-      ],
+      },
       "material_slots": [
         {
           "name": "body",
-          "base_color": [0.15, 0.12, 0.10, 1.0],
+          "base_color": [
+            0.15,
+            0.12,
+            0.1,
+            1.0
+          ],
           "metallic": 0.0,
           "roughness": 0.7
         },
         {
           "name": "legs",
-          "base_color": [0.20, 0.15, 0.12, 1.0],
+          "base_color": [
+            0.2,
+            0.15,
+            0.12,
+            1.0
+          ],
           "metallic": 0.0,
           "roughness": 0.6
         }
       ],
-      "skinning": {
-        "max_bone_influences": 4,
-        "auto_weights": true
-      },
       "export": {
         "include_armature": true,
         "include_normals": true,
@@ -606,8 +712,7 @@
         "max_triangles": 6000,
         "max_bones": 80,
         "max_materials": 4
-      },
-      "tri_budget": 6000
+      }
     }
   }
 }

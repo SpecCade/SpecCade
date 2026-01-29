@@ -24,329 +24,402 @@
     }
   ],
   "recipe": {
-    "kind": "skeletal_mesh.blender_rigged_mesh_v1",
+    "kind": "skeletal_mesh.armature_driven_v1",
     "params": {
       "skeleton": [
         {
           "bone": "root",
-          "head": [0, 0, 0],
-          "tail": [0, 0, 0.05]
+          "head": [
+            0,
+            0,
+            0
+          ],
+          "tail": [
+            0,
+            0,
+            0.05
+          ]
         },
         {
           "bone": "spine_base",
-          "head": [0, 0, 0.4],
-          "tail": [0, 0.3, 0.4],
+          "head": [
+            0,
+            0,
+            0.4
+          ],
+          "tail": [
+            0,
+            0.3,
+            0.4
+          ],
           "parent": "root"
         },
         {
           "bone": "spine_mid",
-          "head": [0, 0.3, 0.4],
-          "tail": [0, 0.6, 0.4],
+          "head": [
+            0,
+            0.3,
+            0.4
+          ],
+          "tail": [
+            0,
+            0.6,
+            0.4
+          ],
           "parent": "spine_base"
         },
         {
           "bone": "spine_chest",
-          "head": [0, 0.6, 0.4],
-          "tail": [0, 0.8, 0.42],
+          "head": [
+            0,
+            0.6,
+            0.4
+          ],
+          "tail": [
+            0,
+            0.8,
+            0.42
+          ],
           "parent": "spine_mid"
         },
         {
           "bone": "neck",
-          "head": [0, 0.8, 0.42],
-          "tail": [0, 0.9, 0.55],
+          "head": [
+            0,
+            0.8,
+            0.42
+          ],
+          "tail": [
+            0,
+            0.9,
+            0.55
+          ],
           "parent": "spine_chest"
         },
         {
           "bone": "head",
-          "head": [0, 0.9, 0.55],
-          "tail": [0, 1.1, 0.55],
+          "head": [
+            0,
+            0.9,
+            0.55
+          ],
+          "tail": [
+            0,
+            1.1,
+            0.55
+          ],
           "parent": "neck"
         },
         {
           "bone": "tail_base",
-          "head": [0, 0, 0.4],
-          "tail": [0, -0.15, 0.45],
+          "head": [
+            0,
+            0,
+            0.4
+          ],
+          "tail": [
+            0,
+            -0.15,
+            0.45
+          ],
           "parent": "spine_base"
         },
         {
           "bone": "tail_mid",
-          "head": [0, -0.15, 0.45],
-          "tail": [0, -0.3, 0.5],
+          "head": [
+            0,
+            -0.15,
+            0.45
+          ],
+          "tail": [
+            0,
+            -0.3,
+            0.5
+          ],
           "parent": "tail_base"
         },
         {
           "bone": "tail_tip",
-          "head": [0, -0.3, 0.5],
-          "tail": [0, -0.4, 0.52],
+          "head": [
+            0,
+            -0.3,
+            0.5
+          ],
+          "tail": [
+            0,
+            -0.4,
+            0.52
+          ],
           "parent": "tail_mid"
         },
         {
           "bone": "leg_front_left_upper",
-          "head": [0.1, 0.7, 0.35],
-          "tail": [0.1, 0.7, 0.2],
+          "head": [
+            0.1,
+            0.7,
+            0.35
+          ],
+          "tail": [
+            0.1,
+            0.7,
+            0.2
+          ],
           "parent": "spine_chest"
         },
         {
           "bone": "leg_front_left_lower",
-          "head": [0.1, 0.7, 0.2],
-          "tail": [0.1, 0.7, 0.05],
+          "head": [
+            0.1,
+            0.7,
+            0.2
+          ],
+          "tail": [
+            0.1,
+            0.7,
+            0.05
+          ],
           "parent": "leg_front_left_upper"
         },
         {
           "bone": "leg_front_left_foot",
-          "head": [0.1, 0.7, 0.05],
-          "tail": [0.1, 0.75, 0],
+          "head": [
+            0.1,
+            0.7,
+            0.05
+          ],
+          "tail": [
+            0.1,
+            0.75,
+            0
+          ],
           "parent": "leg_front_left_lower"
         },
         {
           "bone": "leg_front_right_upper",
-          "head": [-0.1, 0.7, 0.35],
-          "tail": [-0.1, 0.7, 0.2],
+          "head": [
+            -0.1,
+            0.7,
+            0.35
+          ],
+          "tail": [
+            -0.1,
+            0.7,
+            0.2
+          ],
           "parent": "spine_chest"
         },
         {
           "bone": "leg_front_right_lower",
-          "head": [-0.1, 0.7, 0.2],
-          "tail": [-0.1, 0.7, 0.05],
+          "head": [
+            -0.1,
+            0.7,
+            0.2
+          ],
+          "tail": [
+            -0.1,
+            0.7,
+            0.05
+          ],
           "parent": "leg_front_right_upper"
         },
         {
           "bone": "leg_front_right_foot",
-          "head": [-0.1, 0.75, 0.05],
-          "tail": [-0.1, 0.75, 0],
+          "head": [
+            -0.1,
+            0.75,
+            0.05
+          ],
+          "tail": [
+            -0.1,
+            0.75,
+            0
+          ],
           "parent": "leg_front_right_lower"
         },
         {
           "bone": "leg_back_left_upper",
-          "head": [0.1, 0.1, 0.35],
-          "tail": [0.1, 0.1, 0.2],
+          "head": [
+            0.1,
+            0.1,
+            0.35
+          ],
+          "tail": [
+            0.1,
+            0.1,
+            0.2
+          ],
           "parent": "spine_base"
         },
         {
           "bone": "leg_back_left_lower",
-          "head": [0.1, 0.1, 0.2],
-          "tail": [0.1, 0.1, 0.05],
+          "head": [
+            0.1,
+            0.1,
+            0.2
+          ],
+          "tail": [
+            0.1,
+            0.1,
+            0.05
+          ],
           "parent": "leg_back_left_upper"
         },
         {
           "bone": "leg_back_left_foot",
-          "head": [0.1, 0.1, 0.05],
-          "tail": [0.1, 0.15, 0],
+          "head": [
+            0.1,
+            0.1,
+            0.05
+          ],
+          "tail": [
+            0.1,
+            0.15,
+            0
+          ],
           "parent": "leg_back_left_lower"
         },
         {
           "bone": "leg_back_right_upper",
-          "head": [-0.1, 0.1, 0.35],
-          "tail": [-0.1, 0.1, 0.2],
+          "head": [
+            -0.1,
+            0.1,
+            0.35
+          ],
+          "tail": [
+            -0.1,
+            0.1,
+            0.2
+          ],
           "parent": "spine_base"
         },
         {
           "bone": "leg_back_right_lower",
-          "head": [-0.1, 0.1, 0.2],
-          "tail": [-0.1, 0.1, 0.05],
+          "head": [
+            -0.1,
+            0.1,
+            0.2
+          ],
+          "tail": [
+            -0.1,
+            0.1,
+            0.05
+          ],
           "parent": "leg_back_right_upper"
         },
         {
           "bone": "leg_back_right_foot",
-          "head": [-0.1, 0.1, 0.05],
-          "tail": [-0.1, 0.15, 0],
+          "head": [
+            -0.1,
+            0.1,
+            0.05
+          ],
+          "tail": [
+            -0.1,
+            0.15,
+            0
+          ],
           "parent": "leg_back_right_lower"
         }
       ],
-      "body_parts": [
-        {
-          "bone": "spine_base",
-          "mesh": {
-            "primitive": "cylinder",
-            "dimensions": [0.12, 0.12, 0.3],
-            "segments": 8
-          },
-          "material_index": 0
+      "bone_meshes": {
+        "root": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
         },
-        {
-          "bone": "spine_mid",
-          "mesh": {
-            "primitive": "cylinder",
-            "dimensions": [0.13, 0.13, 0.3],
-            "segments": 8
-          },
-          "material_index": 0
+        "spine_base": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
         },
-        {
-          "bone": "spine_chest",
-          "mesh": {
-            "primitive": "cylinder",
-            "dimensions": [0.14, 0.14, 0.2],
-            "segments": 8
-          },
-          "material_index": 0
+        "spine_mid": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
         },
-        {
-          "bone": "neck",
-          "mesh": {
-            "primitive": "cylinder",
-            "dimensions": [0.06, 0.06, 0.15],
-            "segments": 8
-          },
-          "material_index": 0
+        "spine_chest": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
         },
-        {
-          "bone": "head",
-          "mesh": {
-            "primitive": "cube",
-            "dimensions": [0.1, 0.2, 0.1],
-            "segments": 1
-          },
-          "material_index": 0
+        "neck": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
         },
-        {
-          "bone": "tail_base",
-          "mesh": {
-            "primitive": "cylinder",
-            "dimensions": [0.03, 0.03, 0.15],
-            "segments": 6
-          },
-          "material_index": 0
+        "head": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
         },
-        {
-          "bone": "tail_mid",
-          "mesh": {
-            "primitive": "cylinder",
-            "dimensions": [0.025, 0.025, 0.15],
-            "segments": 6
-          },
-          "material_index": 0
+        "tail_base": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
         },
-        {
-          "bone": "tail_tip",
-          "mesh": {
-            "primitive": "cylinder",
-            "dimensions": [0.015, 0.015, 0.1],
-            "segments": 6
-          },
-          "material_index": 0
+        "tail_mid": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
         },
-        {
-          "bone": "leg_front_left_upper",
-          "mesh": {
-            "primitive": "cylinder",
-            "dimensions": [0.035, 0.035, 0.15],
-            "segments": 6
-          },
-          "material_index": 0
+        "tail_tip": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
         },
-        {
-          "bone": "leg_front_left_lower",
-          "mesh": {
-            "primitive": "cylinder",
-            "dimensions": [0.03, 0.03, 0.15],
-            "segments": 6
-          },
-          "material_index": 0
+        "leg_front_left_upper": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
         },
-        {
-          "bone": "leg_front_left_foot",
-          "mesh": {
-            "primitive": "cube",
-            "dimensions": [0.04, 0.06, 0.02],
-            "segments": 1
-          },
-          "material_index": 0
+        "leg_front_left_lower": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
         },
-        {
-          "bone": "leg_front_right_upper",
-          "mesh": {
-            "primitive": "cylinder",
-            "dimensions": [0.035, 0.035, 0.15],
-            "segments": 6
-          },
-          "material_index": 0
+        "leg_front_left_foot": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
         },
-        {
-          "bone": "leg_front_right_lower",
-          "mesh": {
-            "primitive": "cylinder",
-            "dimensions": [0.03, 0.03, 0.15],
-            "segments": 6
-          },
-          "material_index": 0
+        "leg_front_right_upper": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
         },
-        {
-          "bone": "leg_front_right_foot",
-          "mesh": {
-            "primitive": "cube",
-            "dimensions": [0.04, 0.06, 0.02],
-            "segments": 1
-          },
-          "material_index": 0
+        "leg_front_right_lower": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
         },
-        {
-          "bone": "leg_back_left_upper",
-          "mesh": {
-            "primitive": "cylinder",
-            "dimensions": [0.04, 0.04, 0.15],
-            "segments": 6
-          },
-          "material_index": 0
+        "leg_front_right_foot": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
         },
-        {
-          "bone": "leg_back_left_lower",
-          "mesh": {
-            "primitive": "cylinder",
-            "dimensions": [0.035, 0.035, 0.15],
-            "segments": 6
-          },
-          "material_index": 0
+        "leg_back_left_upper": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
         },
-        {
-          "bone": "leg_back_left_foot",
-          "mesh": {
-            "primitive": "cube",
-            "dimensions": [0.04, 0.06, 0.02],
-            "segments": 1
-          },
-          "material_index": 0
+        "leg_back_left_lower": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
         },
-        {
-          "bone": "leg_back_right_upper",
-          "mesh": {
-            "primitive": "cylinder",
-            "dimensions": [0.04, 0.04, 0.15],
-            "segments": 6
-          },
-          "material_index": 0
+        "leg_back_left_foot": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
         },
-        {
-          "bone": "leg_back_right_lower",
-          "mesh": {
-            "primitive": "cylinder",
-            "dimensions": [0.035, 0.035, 0.15],
-            "segments": 6
-          },
-          "material_index": 0
+        "leg_back_right_upper": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
         },
-        {
-          "bone": "leg_back_right_foot",
-          "mesh": {
-            "primitive": "cube",
-            "dimensions": [0.04, 0.06, 0.02],
-            "segments": 1
-          },
-          "material_index": 0
+        "leg_back_right_lower": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
+        },
+        "leg_back_right_foot": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
         }
-      ],
+      },
       "material_slots": [
         {
           "name": "fur",
-          "base_color": [0.6, 0.45, 0.3, 1.0],
+          "base_color": [
+            0.6,
+            0.45,
+            0.3,
+            1.0
+          ],
           "metallic": 0.0,
           "roughness": 0.8
         }
       ],
-      "skinning": {
-        "max_bone_influences": 4,
-        "auto_weights": true
-      },
       "export": {
         "include_armature": true,
         "include_normals": true,
@@ -358,8 +431,7 @@
         "max_triangles": 5000,
         "max_bones": 30,
         "max_materials": 2
-      },
-      "tri_budget": 5000
+      }
     }
   }
 }

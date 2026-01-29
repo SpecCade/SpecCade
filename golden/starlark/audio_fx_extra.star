@@ -32,7 +32,7 @@ limiter_fx = true_peak_limiter(
 )
 
 # audio_spec creates a complete audio spec
-audio_spec(
+spec = audio_spec(
     asset_id = "stdlib-audio-fx-extra-01",
     seed = 42,
     duration_seconds = 2.0,
@@ -61,7 +61,7 @@ audio_spec(
 # impact_builder creates a layered impact sound effect from three component layers
 # Parameters: transient, body, tail (all are audio_layer dicts)
 impact_transient = audio_layer(
-    synthesis = noise("white"),
+    synthesis = noise_burst("white"),
     envelope = oneshot_envelope(1.0, 20.0, 0.0),
     volume = 0.8,
     filter = highpass(2000)
@@ -74,7 +74,7 @@ impact_body = audio_layer(
 )
 
 impact_tail = audio_layer(
-    synthesis = noise("pink"),
+    synthesis = noise_burst("pink"),
     envelope = oneshot_envelope(10.0, 500.0, 0.0),
     volume = 0.3,
     filter = lowpass(500)
@@ -94,7 +94,7 @@ impact_layers = impact_builder(
 # whoosh_builder creates a whoosh sound effect with a filtered noise sweep
 # Parameters: direction, duration_ms, start_freq, end_freq, noise_type (optional)
 whoosh_layer = whoosh_builder(
-    direction = "left_to_right",
+    direction = "rising",
     duration_ms = 500.0,
     start_freq = 200.0,
     end_freq = 4000.0,
@@ -103,10 +103,10 @@ whoosh_layer = whoosh_builder(
 
 # whoosh with default noise type
 whoosh_simple = whoosh_builder(
-    direction = "right_to_left",
+    direction = "falling",
     duration_ms = 300.0,
-    start_freq = 500.0,
-    end_freq = 2000.0
+    start_freq = 2000.0,
+    end_freq = 500.0
 )
 
 # --------------------------------------------------------------------------
@@ -124,15 +124,17 @@ ambient_layer = audio_layer(
 # Add loop config to make the layer seamlessly loopable
 looped_ambient = with_loop_config(
     layer = ambient_layer,
-    loop_start = 0.1,
-    loop_end = 1.9,
+    loop_start = 4410,  # 100ms at 44100Hz
+    loop_end = 83790,   # 1900ms at 44100Hz
     crossfade_samples = 882
 )
 
 # Simple loop config with defaults
 simple_looped = with_loop_config(
     layer = audio_layer(
-        synthesis = noise("pink"),
+        synthesis = noise_burst("pink"),
         volume = 0.3
     )
 )
+
+spec

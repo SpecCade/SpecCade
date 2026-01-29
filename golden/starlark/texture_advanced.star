@@ -53,7 +53,7 @@ decal_spec(
     output_path = "textures/decal_blood_splatter.png",
     resolution = [256, 256],
     nodes = [
-        noise_node("base", "voronoi", 8.0),
+        noise_node("base", "worley", 8.0),
         threshold_node("thresh", "base", 0.5)
     ],
     albedo_output = "thresh",
@@ -68,7 +68,7 @@ decal_spec(
 # splat_layer creates a terrain splat layer definition
 grass_layer = splat_layer(
     id = "grass",
-    albedo_color = [0.2, 0.5, 0.15],
+    albedo_color = [0.2, 0.5, 0.15, 1.0],
     normal_strength = 0.8,
     roughness = 0.7,
     detail_scale = 4.0,
@@ -77,14 +77,14 @@ grass_layer = splat_layer(
 
 dirt_layer = splat_layer(
     id = "dirt",
-    albedo_color = [0.4, 0.3, 0.2],
+    albedo_color = [0.4, 0.3, 0.2, 1.0],
     normal_strength = 0.6,
     roughness = 0.9
 )
 
 rock_layer = splat_layer(
     id = "rock",
-    albedo_color = [0.5, 0.5, 0.5],
+    albedo_color = [0.5, 0.5, 0.5, 1.0],
     normal_strength = 1.0,
     roughness = 0.5
 )

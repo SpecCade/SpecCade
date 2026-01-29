@@ -308,62 +308,6 @@ fn test_skinning_type() {
 }
 
 #[test]
-fn test_full_character_spec() {
-    let json = r#"{
-        "skeleton": [
-            {"bone": "root", "head": [0, 0, 0], "tail": [0, 0, 0.1]},
-            {"bone": "spine", "head": [0, 0, 0.1], "tail": [0, 0, 0.3], "parent": "root"},
-            {"bone": "arm_l", "head": [0.1, 0, 0.25], "tail": [0.3, 0, 0.25], "parent": "spine"},
-            {"bone": "arm_r", "mirror": "arm_l"}
-        ],
-        "parts": {
-            "torso": {
-                "bone": "spine",
-                "base": "hexagon(6)",
-                "base_radius": [0.15, 0.12],
-                "steps": [
-                    {"extrude": 0.1, "scale": 0.95},
-                    {"extrude": 0.1, "scale": 0.9}
-                ],
-                "cap_start": true,
-                "cap_end": true
-            },
-            "arm_l": {
-                "bone": "arm_l",
-                "base": "circle(8)",
-                "base_radius": 0.05,
-                "steps": [{"extrude": 0.2, "scale": 0.8}],
-                "skinning_type": "soft"
-            },
-            "arm_r": {
-                "bone": "arm_r",
-                "mirror": "arm_l"
-            }
-        },
-        "tri_budget": 500,
-        "texturing": {
-            "uv_mode": "smart_project",
-            "regions": {
-                "body": {"parts": ["torso"], "material_index": 0}
-            }
-        }
-    }"#;
-    let params: SkeletalMeshBlenderRiggedMeshV1Params = serde_json::from_str(json).unwrap();
-    assert_eq!(params.skeleton.len(), 4);
-    assert_eq!(params.parts.len(), 3);
-    assert_eq!(params.tri_budget, Some(500));
-    assert!(params.texturing.is_some());
-
-    // Check skeleton mirror
-    let arm_r = params.skeleton.iter().find(|b| b.bone == "arm_r").unwrap();
-    assert_eq!(arm_r.mirror, Some("arm_l".to_string()));
-
-    // Check parts mirror
-    let arm_r_part = params.parts.get("arm_r").unwrap();
-    assert_eq!(arm_r_part.mirror, Some("arm_l".to_string()));
-}
-
-#[test]
 fn test_bulge_factor_variants() {
     let uniform: BulgeFactor = serde_json::from_str("1.2").unwrap();
     assert_eq!(uniform, BulgeFactor::Uniform(1.2));

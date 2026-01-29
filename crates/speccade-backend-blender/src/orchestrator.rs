@@ -376,7 +376,8 @@ pub fn mode_from_recipe_kind(kind: &str) -> BlenderResult<GenerationMode> {
         "static_mesh.blender_primitives_v1" => Ok(GenerationMode::StaticMesh),
         "static_mesh.modular_kit_v1" => Ok(GenerationMode::ModularKit),
         "static_mesh.organic_sculpt_v1" => Ok(GenerationMode::OrganicSculpt),
-        "skeletal_mesh.blender_rigged_mesh_v1" => Ok(GenerationMode::SkeletalMesh),
+        "skeletal_mesh.armature_driven_v1" => Ok(GenerationMode::SkeletalMesh),
+        "skeletal_mesh.skinned_mesh_v1" => Ok(GenerationMode::SkeletalMesh),
         "skeletal_animation.blender_clip_v1" => Ok(GenerationMode::Animation),
         "skeletal_animation.blender_rigged_v1" => Ok(GenerationMode::RiggedAnimation),
         "skeletal_animation.helpers_v1" => Ok(GenerationMode::AnimationHelpers),
@@ -399,7 +400,10 @@ mod tests {
         assert_eq!(GenerationMode::SkeletalMesh.as_str(), "skeletal_mesh");
         assert_eq!(GenerationMode::Animation.as_str(), "animation");
         assert_eq!(GenerationMode::RiggedAnimation.as_str(), "rigged_animation");
-        assert_eq!(GenerationMode::AnimationHelpers.as_str(), "animation_helpers");
+        assert_eq!(
+            GenerationMode::AnimationHelpers.as_str(),
+            "animation_helpers"
+        );
         assert_eq!(GenerationMode::MeshToSprite.as_str(), "mesh_to_sprite");
         assert_eq!(GenerationMode::ValidationGrid.as_str(), "validation_grid");
     }
@@ -424,7 +428,11 @@ mod tests {
             GenerationMode::OrganicSculpt
         );
         assert_eq!(
-            mode_from_recipe_kind("skeletal_mesh.blender_rigged_mesh_v1").unwrap(),
+            mode_from_recipe_kind("skeletal_mesh.armature_driven_v1").unwrap(),
+            GenerationMode::SkeletalMesh
+        );
+        assert_eq!(
+            mode_from_recipe_kind("skeletal_mesh.skinned_mesh_v1").unwrap(),
             GenerationMode::SkeletalMesh
         );
         assert_eq!(
@@ -444,6 +452,7 @@ mod tests {
             GenerationMode::MeshToSprite
         );
 
+        assert!(mode_from_recipe_kind("skeletal_mesh.blender_rigged_mesh_v1").is_err());
         assert!(mode_from_recipe_kind("invalid.kind").is_err());
     }
 

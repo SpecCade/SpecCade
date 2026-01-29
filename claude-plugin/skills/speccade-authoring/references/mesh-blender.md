@@ -24,13 +24,18 @@ Non-animated 3D models.
 ```
 
 ### Skeletal Mesh
-Rigged characters with bones.
+Rigged characters (armature + mesh).
+
+Recipe kinds:
+
+- `skeletal_mesh.armature_driven_v1`
+- `skeletal_mesh.skinned_mesh_v1`
 
 ```json
 {
   "asset_type": "skeletal_mesh",
   "recipe": {
-    "kind": "skeletal_mesh.blender_rigged_mesh_v1",
+    "kind": "skeletal_mesh.armature_driven_v1",
     "params": { ... }
   }
 }
@@ -136,47 +141,45 @@ Basic PBR material setup:
 
 ## Skeletal Mesh
 
-Rigged character mesh with armature.
+Skeletal meshes are produced via Blender (Tier 2) and validated by metrics.
+
+Two workflows:
+
+- `skeletal_mesh.armature_driven_v1`: build mesh from a skeleton (rigid skinning)
+- `skeletal_mesh.skinned_mesh_v1`: bind an existing mesh to a skeleton (rigid or auto weights)
+
+Minimal recipe example (armature-driven):
 
 ```json
 {
   "recipe": {
-    "kind": "skeletal_mesh.blender_rigged_mesh_v1",
+    "kind": "skeletal_mesh.armature_driven_v1",
     "params": {
-      "mesh": {
-        "primitive": "cube",
-        "size": [1.0, 2.0, 0.5]
-      },
-      "armature": {
-        "bones": [
-          { "name": "root", "head": [0, 0, 0], "tail": [0, 0, 1], "parent": null },
-          { "name": "spine", "head": [0, 0, 1], "tail": [0, 0, 2], "parent": "root" },
-          { "name": "head", "head": [0, 0, 2], "tail": [0, 0, 2.5], "parent": "spine" }
-        ]
-      },
-      "auto_weights": true  // Automatic weight painting
+      "skeleton_preset": "humanoid_basic_v1",
+      "bone_meshes": {
+        "spine": { "profile": "hexagon(8)", "profile_radius": 0.15, "taper": 0.9 }
+      }
     }
   }
 }
 ```
 
-### Bone Structure
+Minimal recipe example (skinned mesh):
 
 ```json
 {
-  "bones": [
-    {
-      "name": "bone_name",
-      "head": [x, y, z],      // Bone start position
-      "tail": [x, y, z],      // Bone end position
-      "parent": "parent_name", // null for root
-      "connected": false,     // Connect to parent tail
-      "inherit_rotation": true,
-      "inherit_scale": "full" // full, fix_shear, none
+  "recipe": {
+    "kind": "skeletal_mesh.skinned_mesh_v1",
+    "params": {
+      "mesh_file": "assets/character.glb",
+      "skeleton_preset": "humanoid_basic_v1",
+      "binding": { "mode": "rigid" }
     }
-  ]
+  }
 }
 ```
+
+Full parameter reference: `docs/spec-reference/character.md`
 
 ## Skeletal Animation
 
@@ -263,27 +266,16 @@ Tier 2 backends validate by metrics, not byte-identical:
   "seed": 100,
   "outputs": [{ "kind": "primary", "format": "glb", "path": "character.glb" }],
   "recipe": {
-    "kind": "skeletal_mesh.blender_rigged_mesh_v1",
+    "kind": "skeletal_mesh.armature_driven_v1",
     "params": {
-      "mesh": {
-        "primitive": "cube",
-        "size": [0.5, 0.3, 1.8]
+      "skeleton_preset": "humanoid_basic_v1",
+      "bone_meshes": {
+        "spine": { "profile": "hexagon(8)", "profile_radius": 0.15, "taper": 0.9 },
+        "head": { "profile": "circle(12)", "profile_radius": 0.12 }
       },
-      "armature": {
-        "bones": [
-          { "name": "root", "head": [0, 0, 0], "tail": [0, 0, 0.2], "parent": null },
-          { "name": "spine_01", "head": [0, 0, 0.2], "tail": [0, 0, 0.6], "parent": "root" },
-          { "name": "spine_02", "head": [0, 0, 0.6], "tail": [0, 0, 1.0], "parent": "spine_01" },
-          { "name": "neck", "head": [0, 0, 1.0], "tail": [0, 0, 1.2], "parent": "spine_02" },
-          { "name": "head", "head": [0, 0, 1.2], "tail": [0, 0, 1.5], "parent": "neck" }
-        ]
-      },
-      "auto_weights": true,
-      "material": {
-        "name": "Skin",
-        "base_color": [0.9, 0.75, 0.65, 1.0],
-        "roughness": 0.8
-      }
+      "material_slots": [
+        { "name": "skin", "base_color": [0.9, 0.75, 0.65, 1.0], "roughness": 0.8 }
+      ]
     }
   }
 }

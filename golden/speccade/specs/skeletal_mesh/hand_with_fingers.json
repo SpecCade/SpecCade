@@ -13,9 +13,8 @@
     }
   ],
   "recipe": {
-    "kind": "skeletal_mesh.blender_rigged_mesh_v1",
+    "kind": "skeletal_mesh.armature_driven_v1",
     "params": {
-      "tri_budget": 600,
       "skeleton": [
         {
           "bone": "wrist",
@@ -185,153 +184,58 @@
           "parent": "finger_pinky_01"
         }
       ],
-      "parts": {
-        "palm_mesh": {
-          "bone": "palm",
-          "base": "hexagon(6)",
-          "base_radius": 0.04,
-          "offset": [
-            0.1,
-            0,
-            0
-          ],
-          "rotation": [
-            0,
-            90,
-            0
-          ],
-          "steps": [
-            {
-              "extrude": 0.1,
-              "scale": [
-                1.2,
-                0.6
-              ]
-            }
-          ],
-          "cap_start": true,
-          "cap_end": true,
-          "thumb": {
-            "bone": "thumb_01",
-            "base": "circle(4)",
-            "base_radius": 0.015,
-            "offset": [
-              0.12,
-              0.04,
-              0
-            ],
-            "rotation": [
-              0,
-              45,
-              30
-            ],
-            "steps": [
-              {
-                "extrude": 0.03,
-                "scale": 0.9
-              },
-              {
-                "extrude": 0.03,
-                "scale": 0.85
-              }
-            ],
-            "cap_start": false,
-            "cap_end": true
-          },
-          "fingers": [
-            {
-              "bone": "finger_index_01",
-              "base": "circle(4)",
-              "base_radius": 0.012,
-              "offset": [
-                0.2,
-                0.02,
-                0
-              ],
-              "steps": [
-                {
-                  "extrude": 0.04,
-                  "scale": 0.9
-                },
-                {
-                  "extrude": 0.03,
-                  "scale": 0.85
-                }
-              ],
-              "cap_start": false,
-              "cap_end": true
-            },
-            {
-              "bone": "finger_middle_01",
-              "base": "circle(4)",
-              "base_radius": 0.012,
-              "offset": [
-                0.2,
-                0,
-                0
-              ],
-              "steps": [
-                {
-                  "extrude": 0.05,
-                  "scale": 0.9
-                },
-                {
-                  "extrude": 0.04,
-                  "scale": 0.85
-                }
-              ],
-              "cap_start": false,
-              "cap_end": true
-            },
-            {
-              "bone": "finger_ring_01",
-              "base": "circle(4)",
-              "base_radius": 0.011,
-              "offset": [
-                0.2,
-                -0.02,
-                0
-              ],
-              "steps": [
-                {
-                  "extrude": 0.04,
-                  "scale": 0.9
-                },
-                {
-                  "extrude": 0.03,
-                  "scale": 0.85
-                }
-              ],
-              "cap_start": false,
-              "cap_end": true
-            },
-            {
-              "bone": "finger_pinky_01",
-              "base": "circle(4)",
-              "base_radius": 0.01,
-              "offset": [
-                0.19,
-                -0.04,
-                0
-              ],
-              "steps": [
-                {
-                  "extrude": 0.03,
-                  "scale": 0.9
-                },
-                {
-                  "extrude": 0.02,
-                  "scale": 0.85
-                }
-              ],
-              "cap_start": false,
-              "cap_end": true
-            }
-          ]
+      "bone_meshes": {
+        "wrist": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
+        },
+        "palm": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
+        },
+        "thumb_01": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
+        },
+        "thumb_02": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
+        },
+        "finger_index_01": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
+        },
+        "finger_index_02": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
+        },
+        "finger_middle_01": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
+        },
+        "finger_middle_02": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
+        },
+        "finger_ring_01": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
+        },
+        "finger_ring_02": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
+        },
+        "finger_pinky_01": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
+        },
+        "finger_pinky_02": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
         }
       },
-      "texturing": {
-        "uv_mode": "smart_project"
+      "constraints": {
+        "max_triangles": 600
       }
     }
   }

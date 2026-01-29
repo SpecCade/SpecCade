@@ -5,13 +5,16 @@
 //!
 //! # Overview
 //!
-//! The Blender backend supports six recipe kinds:
+//! The Blender backend supports these recipe kinds:
 //!
 //! - **`static_mesh.blender_primitives_v1`** - Generate static meshes from primitives
 //! - **`static_mesh.modular_kit_v1`** - Generate modular kit meshes (walls, pipes, doors)
-//! - **`skeletal_mesh.blender_rigged_mesh_v1`** - Generate rigged character meshes
+//! - **`static_mesh.organic_sculpt_v1`** - Generate organic sculpt meshes (metaballs, remesh)
+//! - **`skeletal_mesh.armature_driven_v1`** - Generate mesh from armature (rigid skinning)
+//! - **`skeletal_mesh.skinned_mesh_v1`** - Bind existing mesh to armature (rigid/auto weights)
 //! - **`skeletal_animation.blender_clip_v1`** - Generate animation clips (simple keyframes)
 //! - **`skeletal_animation.blender_rigged_v1`** - Generate IK/rig-aware animations
+//! - **`skeletal_animation.helpers_v1`** - Generate locomotion presets (walk/run cycles)
 //! - **`sprite.render_from_mesh_v1`** - Render 3D mesh to sprite atlas
 //!
 //! # Architecture
@@ -126,7 +129,7 @@ pub fn generate(
             let result = organic_sculpt::generate(spec, out_root)?;
             Ok(GenerateResult::OrganicSculpt(result))
         }
-        "skeletal_mesh.blender_rigged_mesh_v1" => {
+        "skeletal_mesh.armature_driven_v1" | "skeletal_mesh.skinned_mesh_v1" => {
             let result = skeletal_mesh::generate(spec, out_root)?;
             Ok(GenerateResult::SkeletalMesh(result))
         }
@@ -274,14 +277,16 @@ mod tests {
     fn test_mode_dispatch() {
         assert!(orchestrator::mode_from_recipe_kind("static_mesh.blender_primitives_v1").is_ok());
         assert!(orchestrator::mode_from_recipe_kind("static_mesh.modular_kit_v1").is_ok());
-        assert!(
-            orchestrator::mode_from_recipe_kind("skeletal_mesh.blender_rigged_mesh_v1").is_ok()
-        );
+        assert!(orchestrator::mode_from_recipe_kind("skeletal_mesh.armature_driven_v1").is_ok());
+        assert!(orchestrator::mode_from_recipe_kind("skeletal_mesh.skinned_mesh_v1").is_ok());
         assert!(orchestrator::mode_from_recipe_kind("skeletal_animation.blender_clip_v1").is_ok());
         assert!(
             orchestrator::mode_from_recipe_kind("skeletal_animation.blender_rigged_v1").is_ok()
         );
         assert!(orchestrator::mode_from_recipe_kind("skeletal_animation.helpers_v1").is_ok());
+        assert!(
+            orchestrator::mode_from_recipe_kind("skeletal_mesh.blender_rigged_mesh_v1").is_err()
+        );
         assert!(orchestrator::mode_from_recipe_kind("invalid.kind").is_err());
     }
 

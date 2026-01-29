@@ -228,12 +228,16 @@ fn test_rigged_params_serde() {
         procedural_layers: vec![],
         keyframes: vec![],
         ik_keyframes: vec![],
+        ikfk_keyframes: vec![],
+        space_keyframes: vec![],
+        finger_keyframes: vec![],
         interpolation: InterpolationMode::Linear,
         export: None,
         animator_rig: None,
         save_blend: false,
         conventions: None,
         root_motion: None,
+        preview: None,
     };
 
     let json = serde_json::to_string(&params).unwrap();
@@ -264,6 +268,9 @@ fn test_rigged_params_with_animator_rig() {
         procedural_layers: vec![],
         keyframes: vec![],
         ik_keyframes: vec![],
+        ikfk_keyframes: vec![],
+        space_keyframes: vec![],
+        finger_keyframes: vec![],
         interpolation: InterpolationMode::Linear,
         export: None,
         animator_rig: Some(
@@ -274,6 +281,7 @@ fn test_rigged_params_with_animator_rig() {
         save_blend: false,
         conventions: None,
         root_motion: None,
+        preview: None,
     };
 
     let json = serde_json::to_string(&params).unwrap();

@@ -13,137 +13,15 @@
     }
   ],
   "recipe": {
-    "kind": "skeletal_mesh.blender_rigged_mesh_v1",
+    "kind": "skeletal_mesh.armature_driven_v1",
     "params": {
       "skeleton_preset": "humanoid_basic_v1",
-      "body_parts": [
-        {
-          "bone": "spine",
-          "mesh": {
-            "primitive": "cylinder",
-            "dimensions": [
-              0.25,
-              0.4,
-              0.25
-            ],
-            "segments": 8,
-            "offset": [
-              0,
-              0,
-              0.3
-            ]
-          },
-          "material_index": 0
-        },
-        {
-          "bone": "chest",
-          "mesh": {
-            "primitive": "cylinder",
-            "dimensions": [
-              0.3,
-              0.3,
-              0.28
-            ],
-            "segments": 8,
-            "offset": [
-              0,
-              0,
-              0.6
-            ]
-          },
-          "material_index": 0
-        },
-        {
-          "bone": "head",
-          "mesh": {
-            "primitive": "sphere",
-            "dimensions": [
-              0.15,
-              0.18,
-              0.15
-            ],
-            "segments": 12,
-            "offset": [
-              0,
-              0,
-              0.95
-            ]
-          },
-          "material_index": 1
-        },
-        {
-          "bone": "upper_arm_l",
-          "mesh": {
-            "primitive": "cylinder",
-            "dimensions": [
-              0.06,
-              0.25,
-              0.06
-            ],
-            "segments": 6,
-            "rotation": [
-              0,
-              0,
-              90
-            ]
-          },
-          "material_index": 0
-        },
-        {
-          "bone": "upper_arm_r",
-          "mesh": {
-            "primitive": "cylinder",
-            "dimensions": [
-              0.06,
-              0.25,
-              0.06
-            ],
-            "segments": 6,
-            "rotation": [
-              0,
-              0,
-              -90
-            ]
-          },
-          "material_index": 0
-        },
-        {
-          "bone": "upper_leg_l",
-          "mesh": {
-            "primitive": "cylinder",
-            "dimensions": [
-              0.08,
-              0.35,
-              0.08
-            ],
-            "segments": 6,
-            "rotation": [
-              180,
-              0,
-              0
-            ]
-          },
-          "material_index": 0
-        },
-        {
-          "bone": "upper_leg_r",
-          "mesh": {
-            "primitive": "cylinder",
-            "dimensions": [
-              0.08,
-              0.35,
-              0.08
-            ],
-            "segments": 6,
-            "rotation": [
-              180,
-              0,
-              0
-            ]
-          },
-          "material_index": 0
+      "bone_meshes": {
+        "spine": {
+          "profile": "circle(8)",
+          "profile_radius": 0.15
         }
-      ],
+      },
       "material_slots": [
         {
           "name": "body_material",
@@ -164,10 +42,6 @@
           ]
         }
       ],
-      "skinning": {
-        "max_bone_influences": 4,
-        "auto_weights": true
-      },
       "export": {
         "include_armature": true,
         "include_normals": true,
@@ -180,9 +54,6 @@
         "max_triangles": 5000,
         "max_bones": 64,
         "max_materials": 4
-      },
-      "texturing": {
-        "uv_mode": "cylinder_project"
       }
     }
   }

@@ -24,10 +24,11 @@
             "table": "basic",
             "frequency": 220.0,
             "position": 0.0,
-            "sweep_to": 0.5
+            "position_sweep": { "end_position": 0.5 }
           },
           "envelope": { "attack": 0.05, "decay": 0.2, "sustain": 0.6, "release": 0.3 },
           "volume": 0.5,
+          "pan": 0.0,
           "delay": 0.0
         },
         {
@@ -36,10 +37,11 @@
             "table": "analog",
             "frequency": 330.0,
             "position": 0.2,
-            "sweep_to": 0.8
+            "position_sweep": { "end_position": 0.8 }
           },
           "envelope": { "attack": 0.05, "decay": 0.2, "sustain": 0.6, "release": 0.3 },
           "volume": 0.5,
+          "pan": 0.0,
           "delay": 1.0
         },
         {
@@ -48,10 +50,11 @@
             "table": "digital",
             "frequency": 440.0,
             "position": 0.3,
-            "sweep_to": 0.9
+            "position_sweep": { "end_position": 0.9 }
           },
           "envelope": { "attack": 0.05, "decay": 0.2, "sustain": 0.6, "release": 0.3 },
           "volume": 0.5,
+          "pan": 0.0,
           "delay": 2.0
         },
         {
@@ -60,10 +63,11 @@
             "table": "pwm",
             "frequency": 550.0,
             "position": 0.4,
-            "sweep_to": 1.0
+            "position_sweep": { "end_position": 1.0 }
           },
           "envelope": { "attack": 0.05, "decay": 0.2, "sustain": 0.6, "release": 0.3 },
           "volume": 0.5,
+          "pan": 0.0,
           "delay": 3.0
         },
         {
@@ -72,10 +76,11 @@
             "table": "formant",
             "frequency": 660.0,
             "position": 0.5,
-            "sweep_to": 1.0
+            "position_sweep": { "end_position": 1.0 }
           },
           "envelope": { "attack": 0.05, "decay": 0.2, "sustain": 0.6, "release": 0.3 },
           "volume": 0.5,
+          "pan": 0.0,
           "delay": 4.0
         },
         {
@@ -84,10 +89,11 @@
             "table": "organ",
             "frequency": 770.0,
             "position": 0.6,
-            "sweep_to": 1.0
+            "position_sweep": { "end_position": 1.0 }
           },
           "envelope": { "attack": 0.05, "decay": 0.2, "sustain": 0.6, "release": 0.3 },
           "volume": 0.5,
+          "pan": 0.0,
           "delay": 5.0
         }
       ]

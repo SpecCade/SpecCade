@@ -183,7 +183,7 @@ Currently supported output kinds are:
 | `ui` | `ui.nine_slice_v1`, `ui.icon_set_v1`, `ui.item_card_v1`, `ui.damage_number_v1` | PNG / JSON | [ui.md](ui.md) |
 | `font` | `font.bitmap_v1` | PNG / JSON | [font.md](font.md) |
 | `static_mesh` | `static_mesh.blender_primitives_v1`, `static_mesh.modular_kit_v1`, `static_mesh.organic_sculpt_v1` | GLB | [mesh.md](mesh.md) |
-| `skeletal_mesh` | `skeletal_mesh.blender_rigged_mesh_v1` | GLB | [character.md](character.md) |
+| `skeletal_mesh` | `skeletal_mesh.armature_driven_v1`, `skeletal_mesh.skinned_mesh_v1` | GLB | [character.md](character.md) |
 | `skeletal_animation` | `skeletal_animation.blender_clip_v1`, `skeletal_animation.blender_rigged_v1`, `skeletal_animation.helpers_v1` | GLB | [animation.md](animation.md) |
 
 ## Recipe Structure

@@ -52,7 +52,7 @@ LLMs should always output Starlark (`.star`) specs using stdlib functions unless
 | texture | `texture.procedural_v1` | PNG | Rust (Tier 1) |
 | music | `music.tracker_song_v1` | XM/IT | Rust (Tier 1) |
 | static_mesh | `static_mesh.blender_primitives_v1` | GLB | Blender (Tier 2) |
-| skeletal_mesh | `skeletal_mesh.blender_rigged_mesh_v1` | GLB | Blender (Tier 2) |
+| skeletal_mesh | `skeletal_mesh.armature_driven_v1`, `skeletal_mesh.skinned_mesh_v1` | GLB | Blender (Tier 2) |
 | skeletal_animation | `skeletal_animation.blender_clip_v1` | GLB | Blender (Tier 2) |
 
 **Tier 1** = byte-identical output (same spec + seed = same file)
@@ -241,28 +241,32 @@ For detailed documentation:
 
 ## Character / Humanoid
 
-For humanoid characters, use `skeletal_mesh_spec()` with `skeleton_preset = "humanoid_basic_v1"`. A blank-material template (single white material, all parts `material_index = 0`) is the standard starting point:
+Skeletal meshes have two recipe kinds:
+
+- `skeletal_mesh.armature_driven_v1`: build mesh from a skeleton (procedural / LLM-friendly)
+- `skeletal_mesh.skinned_mesh_v1`: bind an existing mesh to a skeleton (import/rig workflows)
+
+Minimal Starlark starting point for an armature-driven humanoid:
 
 ```starlark
-skeletal_mesh_spec(
+spec(
     asset_id = "my-humanoid-01",
+    asset_type = "skeletal_mesh",
     seed = 42,
-    output_path = "characters/my_humanoid.glb",
-    format = "glb",
-    skeleton_preset = "humanoid_basic_v1",
-    body_parts = [
-        body_part(bone = "spine", primitive = "cylinder", dimensions = [0.25,0.4,0.25], segments = 8, offset = [0,0,0.3], material_index = 0),
-        # ... (see references/character-humanoid.md for full template)
-    ],
-    material_slots = [material_slot(name = "blank_white", base_color = [1.0,1.0,1.0,1.0])],
-    skinning = skinning_config(max_bone_influences = 4, auto_weights = True),
-    export = skeletal_export_settings(triangulate = True, include_skin_weights = True),
-    constraints = skeletal_constraints(max_triangles = 5000, max_bones = 64, max_materials = 4),
-    texturing = skeletal_texturing(uv_mode = "cylinder_project")
+    outputs = [output("characters/my_humanoid.glb", "glb")],
+    recipe = {
+        "kind": "skeletal_mesh.armature_driven_v1",
+        "params": {
+            "skeleton_preset": "humanoid_basic_v1",
+            "bone_meshes": {
+                "spine": {"profile": "hexagon(8)", "profile_radius": 0.15, "taper": 0.9},
+            },
+        },
+    },
 )
 ```
 
-Full reference: [`references/character-humanoid.md`](references/character-humanoid.md) | [`docs/starlark-authoring.md`](../../../docs/starlark-authoring.md)
+Full reference: `docs/spec-reference/character.md`
 
 ## Example Specs
 

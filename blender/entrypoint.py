@@ -15,7 +15,7 @@ Modes:
     organic_sculpt  - Generate organic sculpt mesh (organic_sculpt_v1)
     shrinkwrap      - Generate shrinkwrap mesh (shrinkwrap_v1) - armor/clothing wrapping
     boolean_kit     - Generate boolean kitbash mesh (boolean_kit_v1) - hard-surface modeling
-    skeletal_mesh   - Generate skeletal mesh (blender_rigged_mesh_v1)
+    skeletal_mesh   - Generate skeletal mesh (armature_driven_v1 / skinned_mesh_v1)
     animation       - Generate animation clip (blender_clip_v1)
     rigged_animation - Generate rigged animation (skeletal_mesh + animation)
     mesh_to_sprite  - Generate sprite sheet from mesh

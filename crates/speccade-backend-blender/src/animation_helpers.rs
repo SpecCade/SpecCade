@@ -161,7 +161,8 @@ mod tests {
 
         assert_eq!(metrics.bone_count, Some(20)); // Humanoid
         assert_eq!(metrics.animation_frame_count, Some(60)); // Default walk cycle frames
-        assert!((metrics.animation_duration_seconds.unwrap() - 2.0).abs() < 0.01); // 60 frames / 30 fps
+        assert!((metrics.animation_duration_seconds.unwrap() - 2.0).abs() < 0.01);
+        // 60 frames / 30 fps
     }
 
     #[test]
@@ -171,7 +172,8 @@ mod tests {
 
         assert_eq!(metrics.bone_count, Some(20)); // Humanoid
         assert_eq!(metrics.animation_frame_count, Some(30)); // Run cycle frames
-        assert!((metrics.animation_duration_seconds.unwrap() - 1.0).abs() < 0.01); // 30 frames / 30 fps
+        assert!((metrics.animation_duration_seconds.unwrap() - 1.0).abs() < 0.01);
+        // 30 frames / 30 fps
     }
 
     #[test]
@@ -198,7 +200,11 @@ mod tests {
     #[test]
     fn test_cycle_settings_customization() {
         let params = AnimationHelpersV1Params::walk_cycle()
-            .with_settings(CycleSettings::new().with_stride_length(1.0).with_cycle_frames(48))
+            .with_settings(
+                CycleSettings::new()
+                    .with_stride_length(1.0)
+                    .with_cycle_frames(48),
+            )
             .with_clip_name("custom_walk")
             .with_fps(24);
 

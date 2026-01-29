@@ -1,0 +1,74 @@
+# Simple car mesh made of primitives
+# A recognizable car shape with body, cabin, and 4 wheels
+
+spec_version = 1
+asset_id = "vehicle_car"
+asset_type = "static_mesh"
+license = "CC0-1.0"
+seed = 7801
+description = "Simple car - body with cabin and 4 wheels made from primitives"
+style_tags = ["vehicle", "car", "transport", "lowpoly"]
+engine_targets = ["godot", "unity", "unreal"]
+
+[[outputs]]
+kind = "primary"
+format = "glb"
+path = "test-outputs/static_mesh/vehicle_car.glb"
+
+[recipe]
+kind = "static_mesh.blender_primitives_v1"
+
+[recipe.params]
+# Main car body - elongated cube
+base_primitive = "cube"
+dimensions = [2.0, 0.8, 0.5]  # Long, medium width, flat body
+uv_projection = "box"
+
+# Cabin on top of body
+[[recipe.params.attachments]]
+primitive = "cube"
+dimensions = [0.9, 0.7, 0.4]  # Smaller cabin
+position = [-0.2, 0.0, 0.45]  # Centered on body, slightly back, on top
+rotation = [0.0, 0.0, 0.0]
+
+# Front left wheel
+[[recipe.params.attachments]]
+primitive = "cylinder"
+dimensions = [0.25, 0.25, 0.15]  # Radius 0.25, height 0.15
+position = [0.6, 0.45, -0.1]  # Front left
+rotation = [90.0, 0.0, 0.0]  # Rotate to lie flat (wheel orientation)
+
+# Front right wheel
+[[recipe.params.attachments]]
+primitive = "cylinder"
+dimensions = [0.25, 0.25, 0.15]
+position = [0.6, -0.45, -0.1]  # Front right
+rotation = [90.0, 0.0, 0.0]
+
+# Rear left wheel
+[[recipe.params.attachments]]
+primitive = "cylinder"
+dimensions = [0.25, 0.25, 0.15]
+position = [-0.6, 0.45, -0.1]  # Rear left
+rotation = [90.0, 0.0, 0.0]
+
+# Rear right wheel
+[[recipe.params.attachments]]
+primitive = "cylinder"
+dimensions = [0.25, 0.25, 0.15]
+position = [-0.6, -0.45, -0.1]  # Rear right
+rotation = [90.0, 0.0, 0.0]
+
+# Body paint material
+[[recipe.params.material_slots]]
+name = "car_body"
+base_color = [0.2, 0.4, 0.8, 1.0]  # Blue
+metallic = 0.3
+roughness = 0.4
+
+[recipe.params.export]
+apply_modifiers = true
+triangulate = true
+include_normals = true
+include_uvs = true
+include_vertex_colors = false

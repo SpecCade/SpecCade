@@ -1,18 +1,39 @@
 //! Skeletal mesh generation handler.
 //!
 //! This module provides the interface for generating skeletal (rigged) meshes
-//! using the `skeletal_mesh.blender_rigged_mesh_v1` recipe.
+//! using Blender via the `skeletal_mesh.*` recipes.
 
 use std::path::Path;
 
 use speccade_spec::recipe::character::{
-    SkeletalMeshBlenderRiggedMeshV1Params, SkeletalMeshConstraints,
+    SkeletalMeshArmatureDrivenV1Params, SkeletalMeshConstraints, SkeletalMeshSkinnedMeshV1Params,
 };
 use speccade_spec::Spec;
 
 use crate::error::{BlenderError, BlenderResult};
 use crate::metrics::{BlenderMetrics, BlenderReport};
 use crate::orchestrator::{GenerationMode, Orchestrator, OrchestratorConfig};
+
+enum SkeletalMeshRecipeParams {
+    ArmatureDriven(SkeletalMeshArmatureDrivenV1Params),
+    SkinnedMesh(SkeletalMeshSkinnedMeshV1Params),
+}
+
+impl SkeletalMeshRecipeParams {
+    fn constraints(&self) -> Option<&SkeletalMeshConstraints> {
+        match self {
+            SkeletalMeshRecipeParams::ArmatureDriven(p) => p.constraints.as_ref(),
+            SkeletalMeshRecipeParams::SkinnedMesh(p) => p.constraints.as_ref(),
+        }
+    }
+
+    fn skeleton_preset(&self) -> Option<&speccade_spec::recipe::character::SkeletonPreset> {
+        match self {
+            SkeletalMeshRecipeParams::ArmatureDriven(p) => p.skeleton_preset.as_ref(),
+            SkeletalMeshRecipeParams::SkinnedMesh(p) => p.skeleton_preset.as_ref(),
+        }
+    }
+}
 
 /// Result of skeletal mesh generation.
 #[derive(Debug, Clone)]
@@ -31,7 +52,7 @@ pub struct SkeletalMeshResult {
 ///
 /// # Arguments
 ///
-/// * `spec` - The SpecCade spec with a `skeletal_mesh.blender_rigged_mesh_v1` recipe
+/// * `spec` - The SpecCade spec with a skeletal mesh recipe
 /// * `out_root` - Root directory for output files
 ///
 /// # Returns
@@ -47,18 +68,24 @@ pub fn generate_with_config(
     out_root: &Path,
     config: OrchestratorConfig,
 ) -> BlenderResult<SkeletalMeshResult> {
-    // Validate recipe kind
     let recipe = spec.recipe.as_ref().ok_or(BlenderError::MissingRecipe)?;
-    if recipe.kind != "skeletal_mesh.blender_rigged_mesh_v1" {
-        return Err(BlenderError::InvalidRecipeKind {
-            kind: recipe.kind.clone(),
-        });
-    }
 
     // Parse and validate params
-    let params: SkeletalMeshBlenderRiggedMeshV1Params =
-        serde_json::from_value(recipe.params.clone())
-            .map_err(BlenderError::DeserializeParamsFailed)?;
+    let params = match recipe.kind.as_str() {
+        "skeletal_mesh.armature_driven_v1" => SkeletalMeshRecipeParams::ArmatureDriven(
+            serde_json::from_value(recipe.params.clone())
+                .map_err(BlenderError::DeserializeParamsFailed)?,
+        ),
+        "skeletal_mesh.skinned_mesh_v1" => SkeletalMeshRecipeParams::SkinnedMesh(
+            serde_json::from_value(recipe.params.clone())
+                .map_err(BlenderError::DeserializeParamsFailed)?,
+        ),
+        _ => {
+            return Err(BlenderError::InvalidRecipeKind {
+                kind: recipe.kind.clone(),
+            });
+        }
+    };
 
     // Serialize spec to JSON
     let spec_json = serde_json::to_string(spec).map_err(BlenderError::SerializeFailed)?;
@@ -89,18 +116,18 @@ pub fn generate_with_config(
         .ok_or_else(|| BlenderError::generation_failed("No metrics in report"))?;
 
     // Validate constraints if specified
-    if let Some(ref constraints) = params.constraints {
+    if let Some(constraints) = params.constraints() {
         validate_constraints(&metrics, constraints)?;
     }
 
     // Validate bone count matches skeleton preset
-    if let Some(skeleton_preset) = &params.skeleton_preset {
+    if let Some(skeleton_preset) = params.skeleton_preset() {
         let expected_bone_count = skeleton_preset.bone_count() as u32;
         if let Some(actual_bone_count) = metrics.bone_count {
             if actual_bone_count != expected_bone_count {
                 return Err(BlenderError::metrics_validation_failed(format!(
                     "Bone count {} does not match skeleton preset {:?} (expected {})",
-                    actual_bone_count, params.skeleton_preset, expected_bone_count
+                    actual_bone_count, skeleton_preset, expected_bone_count
                 )));
             }
         }
@@ -156,7 +183,7 @@ fn validate_constraints(
 ///
 /// This is useful for testing or when you want to bypass spec validation.
 pub fn generate_from_params(
-    params: &SkeletalMeshBlenderRiggedMeshV1Params,
+    params: &SkeletalMeshArmatureDrivenV1Params,
     asset_id: &str,
     seed: u32,
     out_root: &Path,
@@ -172,7 +199,31 @@ pub fn generate_from_params(
             format!("characters/{}.glb", asset_id),
         ))
         .recipe(speccade_spec::recipe::Recipe::new(
-            "skeletal_mesh.blender_rigged_mesh_v1",
+            "skeletal_mesh.armature_driven_v1",
+            serde_json::to_value(params).map_err(BlenderError::SerializeFailed)?,
+        ))
+        .build();
+
+    generate(&spec, out_root)
+}
+
+pub fn generate_from_skinned_mesh_params(
+    params: &SkeletalMeshSkinnedMeshV1Params,
+    asset_id: &str,
+    seed: u32,
+    out_root: &Path,
+) -> BlenderResult<SkeletalMeshResult> {
+    use speccade_spec::{AssetType, OutputFormat, OutputSpec};
+
+    let spec = Spec::builder(asset_id, AssetType::SkeletalMesh)
+        .license("CC0-1.0")
+        .seed(seed)
+        .output(OutputSpec::primary(
+            OutputFormat::Glb,
+            format!("characters/{}.glb", asset_id),
+        ))
+        .recipe(speccade_spec::recipe::Recipe::new(
+            "skeletal_mesh.skinned_mesh_v1",
             serde_json::to_value(params).map_err(BlenderError::SerializeFailed)?,
         ))
         .build();
@@ -183,35 +234,21 @@ pub fn generate_from_params(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use speccade_spec::recipe::character::{BodyPart, BodyPartMesh, SkeletonPreset};
-    use speccade_spec::recipe::mesh::MeshPrimitive;
+    use speccade_spec::recipe::character::SkeletonPreset;
 
-    fn create_test_params() -> SkeletalMeshBlenderRiggedMeshV1Params {
-        SkeletalMeshBlenderRiggedMeshV1Params {
+    fn create_test_params() -> SkeletalMeshArmatureDrivenV1Params {
+        SkeletalMeshArmatureDrivenV1Params {
             skeleton_preset: Some(SkeletonPreset::HumanoidBasicV1),
             skeleton: vec![],
-            parts: std::collections::HashMap::new(),
-            body_parts: vec![BodyPart {
-                bone: "spine".to_string(),
-                mesh: BodyPartMesh {
-                    primitive: MeshPrimitive::Cylinder,
-                    dimensions: [0.3, 0.5, 0.3],
-                    segments: Some(8),
-                    offset: None,
-                    rotation: None,
-                },
-                material_index: Some(0),
-            }],
+            bone_meshes: std::collections::HashMap::new(),
+            bool_shapes: std::collections::HashMap::new(),
             material_slots: vec![],
-            skinning: None,
             export: None,
             constraints: Some(SkeletalMeshConstraints {
                 max_triangles: Some(5000),
                 max_bones: Some(64),
                 max_materials: Some(4),
             }),
-            tri_budget: None,
-            texturing: None,
         }
     }
 
@@ -260,15 +297,41 @@ mod tests {
         let params = create_test_params();
         let json = serde_json::to_string(&params).unwrap();
         assert!(json.contains("humanoid_basic_v1"));
-        assert!(json.contains("spine"));
-        assert!(json.contains("cylinder"));
 
-        let parsed: SkeletalMeshBlenderRiggedMeshV1Params = serde_json::from_str(&json).unwrap();
+        let parsed: SkeletalMeshArmatureDrivenV1Params = serde_json::from_str(&json).unwrap();
         assert_eq!(
             parsed.skeleton_preset,
             Some(SkeletonPreset::HumanoidBasicV1)
         );
-        assert_eq!(parsed.body_parts.len(), 1);
+        assert!(parsed.bone_meshes.is_empty());
+    }
+
+    #[test]
+    fn test_skinned_mesh_params_serialization() {
+        use speccade_spec::recipe::character::{SkinnedMeshBindingConfig, SkinnedMeshBindingMode};
+
+        let params = SkeletalMeshSkinnedMeshV1Params {
+            mesh_file: Some("./mesh.glb".to_string()),
+            mesh_asset: None,
+            skeleton_preset: Some(SkeletonPreset::HumanoidBasicV1),
+            skeleton: vec![],
+            binding: SkinnedMeshBindingConfig {
+                mode: SkinnedMeshBindingMode::AutoWeights,
+                vertex_group_map: std::collections::HashMap::new(),
+                max_bone_influences: 4,
+            },
+            material_slots: vec![],
+            export: None,
+            constraints: None,
+        };
+
+        let json = serde_json::to_string(&params).unwrap();
+        assert!(json.contains("mesh.glb"));
+        assert!(json.contains("auto_weights"));
+
+        let parsed: SkeletalMeshSkinnedMeshV1Params = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed.mesh_file.as_deref(), Some("./mesh.glb"));
+        assert_eq!(parsed.binding.mode, SkinnedMeshBindingMode::AutoWeights);
     }
 
     #[test]

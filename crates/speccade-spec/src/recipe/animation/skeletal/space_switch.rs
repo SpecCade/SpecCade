@@ -112,7 +112,9 @@ impl SpaceSwitch {
     pub fn with_object_space(mut self, name: impl Into<String>, object: impl Into<String>) -> Self {
         self.spaces.push(ParentSpace {
             name: name.into(),
-            kind: SpaceKind::Object { object: object.into() },
+            kind: SpaceKind::Object {
+                object: object.into(),
+            },
         });
         self
     }

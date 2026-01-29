@@ -20,7 +20,7 @@ pub fn map_category_to_type(category: &str) -> Result<(AssetType, String)> {
         )),
         "characters" => Ok((
             AssetType::SkeletalMesh,
-            "skeletal_mesh.blender_rigged_mesh_v1".to_string(),
+            "skeletal_mesh.armature_driven_v1".to_string(),
         )),
         "animations" => Ok((
             AssetType::SkeletalAnimation,

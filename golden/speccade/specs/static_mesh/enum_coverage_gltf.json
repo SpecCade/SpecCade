@@ -15,7 +15,7 @@
   "recipe": {
     "kind": "static_mesh.blender_primitives_v1",
     "params": {
-      "primitive": "cube",
+      "base_primitive": "cube",
       "dimensions": [1.0, 1.0, 1.0],
       "modifiers": []
     }

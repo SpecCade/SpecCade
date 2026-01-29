@@ -60,7 +60,11 @@ fn default_true() -> bool {
 
 impl IkFkSwitch {
     /// Creates a new IK/FK switch.
-    pub fn new(name: impl Into<String>, ik_chain: impl Into<String>, fk_bones: Vec<String>) -> Self {
+    pub fn new(
+        name: impl Into<String>,
+        ik_chain: impl Into<String>,
+        fk_bones: Vec<String>,
+    ) -> Self {
         Self {
             name: name.into(),
             ik_chain: ik_chain.into(),

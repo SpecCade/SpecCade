@@ -231,7 +231,11 @@ impl FingerControls {
     pub fn finger_bone_names(&self, finger: FingerName) -> Vec<String> {
         let finger_name = finger.bone_name();
         let suffix = self.side.suffix();
-        let bones = if finger == FingerName::Thumb { 2 } else { self.bones_per_finger };
+        let bones = if finger == FingerName::Thumb {
+            2
+        } else {
+            self.bones_per_finger
+        };
 
         (1..=bones)
             .map(|i| format!("{}_{}{:02}{}", self.bone_prefix, finger_name, i, suffix))
@@ -291,16 +295,12 @@ mod tests {
         let controls = FingerControls::new("hand_l_fingers", HandSide::Left);
 
         let index_bones = controls.finger_bone_names(FingerName::Index);
-        assert_eq!(index_bones, vec![
-            "finger_index01_l",
-            "finger_index02_l",
-            "finger_index03_l",
-        ]);
+        assert_eq!(
+            index_bones,
+            vec!["finger_index01_l", "finger_index02_l", "finger_index03_l",]
+        );
 
         let thumb_bones = controls.finger_bone_names(FingerName::Thumb);
-        assert_eq!(thumb_bones, vec![
-            "finger_thumb01_l",
-            "finger_thumb02_l",
-        ]);
+        assert_eq!(thumb_bones, vec!["finger_thumb01_l", "finger_thumb02_l",]);
     }
 }

@@ -63,7 +63,7 @@ simple_transition = transition(
 # Explore to combat transition
 explore_to_combat = transition(
     name = "explore_to_combat",
-    transition_type = "crossfade",
+    transition_type = "build",
     from_intensity = "main",
     to_intensity = "hi",
     measures = 2,

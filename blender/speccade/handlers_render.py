@@ -466,8 +466,9 @@ def handle_validation_grid(
             if export_settings.get("apply_modifiers", True):
                 apply_all_modifiers(obj)
 
-        elif recipe_kind.startswith("skeletal_mesh.") or recipe_kind == "blender_rigged_mesh_v1":
-            # Skeletal mesh - create armature and body parts
+        elif recipe_kind.startswith("skeletal_mesh."):
+            # Skeletal mesh preview helpers (not the main generation handler).
+            # We intentionally only support the new recipe kinds.
             skeleton_spec = params.get("skeleton", [])
             skeleton_preset = params.get("skeleton_preset")
 
@@ -480,37 +481,95 @@ def handle_validation_grid(
             else:
                 armature = create_armature("humanoid_basic_v1")
 
-            mesh_objects = []
+            if recipe_kind == "skeletal_mesh.armature_driven_v1":
+                bone_meshes = params.get("bone_meshes", {}) or {}
+                mesh_objs = []
+                if isinstance(bone_meshes, dict):
+                    for bone_name in sorted(bone_meshes.keys()):
+                        bone = armature.data.bones.get(bone_name)
+                        if bone is None:
+                            continue
+                        head_w = armature.matrix_world @ bone.head_local
+                        tail_w = armature.matrix_world @ bone.tail_local
+                        axis = (tail_w - head_w)
+                        length = float(axis.length)
+                        if length <= 1e-6:
+                            continue
 
-            # Create body parts (new format) - use imported function directly
-            body_parts_list = params.get("body_parts", [])
-            body_part_fn = create_body_part_fn if create_body_part_fn else create_body_part
-            for part_spec in body_parts_list:
-                mesh_obj = body_part_fn(armature, part_spec)
-                mesh_objects.append((mesh_obj, part_spec.get("bone")))
+                        mesh_spec = bone_meshes.get(bone_name) or {}
+                        radius_spec = mesh_spec.get("profile_radius", 0.15)
+                        if isinstance(radius_spec, dict) and "absolute" in radius_spec:
+                            radius = float(radius_spec["absolute"])
+                        else:
+                            try:
+                                radius = float(radius_spec) * length
+                            except Exception:
+                                radius = 0.15 * length
 
-            # Create legacy parts (ai-studio-core format) - use imported function directly
-            legacy_parts = params.get("parts", {})
-            legacy_part_fn = create_legacy_part_fn if create_legacy_part_fn else create_legacy_part
-            if legacy_parts:
-                for part_name, part_spec in legacy_parts.items():
-                    mesh_obj = legacy_part_fn(armature, part_name, part_spec, legacy_parts)
-                    if mesh_obj:
-                        bone_name = part_spec.get("bone", part_name)
-                        mesh_objects.append((mesh_obj, bone_name))
+                        vertices = 12
+                        profile = mesh_spec.get("profile")
+                        if isinstance(profile, str) and "(" in profile and profile.endswith(")"):
+                            try:
+                                vertices = int(profile.split("(", 1)[1][:-1])
+                            except Exception:
+                                vertices = 12
 
-            # Join all meshes
-            if mesh_objects:
-                bpy.ops.object.select_all(action='DESELECT')
-                for mesh_obj, _ in mesh_objects:
-                    mesh_obj.select_set(True)
-                bpy.context.view_layer.objects.active = mesh_objects[0][0]
-                if len(mesh_objects) > 1:
-                    bpy.ops.object.join()
-                obj = bpy.context.active_object
+                        bpy.ops.mesh.primitive_cylinder_add(
+                            radius=radius,
+                            depth=length,
+                            vertices=max(3, vertices),
+                            location=(head_w + tail_w) * 0.5,
+                        )
+                        seg_obj = bpy.context.active_object
+                        axis_n = axis.normalized()
+                        seg_obj.rotation_euler = axis_n.to_track_quat('Z', 'Y').to_euler()
+                        bpy.context.view_layer.objects.active = seg_obj
+                        bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
+                        mesh_objs.append(seg_obj)
+
+                if mesh_objs:
+                    bpy.ops.object.select_all(action='DESELECT')
+                    for m in mesh_objs:
+                        m.select_set(True)
+                    bpy.context.view_layer.objects.active = mesh_objs[0]
+                    if len(mesh_objs) > 1:
+                        bpy.ops.object.join()
+                    obj = bpy.context.active_object
+                else:
+                    obj = armature
+
+            elif recipe_kind == "skeletal_mesh.skinned_mesh_v1":
+                mesh_file = params.get("mesh_file")
+                mesh_asset = params.get("mesh_asset")
+                mesh_ref = mesh_file or mesh_asset
+
+                if mesh_ref and isinstance(mesh_ref, str):
+                    p = Path(mesh_ref)
+                    candidates = [p]
+                    if not p.suffix:
+                        candidates.append(p.with_suffix('.glb'))
+                        candidates.append(p.with_suffix('.gltf'))
+                    mesh_path = next((c for c in candidates if c.exists()), None)
+                    if mesh_path is not None:
+                        bpy.ops.object.select_all(action='DESELECT')
+                        bpy.ops.import_scene.gltf(filepath=str(mesh_path))
+                        imported_meshes = [o for o in bpy.context.selected_objects if o.type == 'MESH']
+                        if imported_meshes:
+                            bpy.context.view_layer.objects.active = imported_meshes[0]
+                            if len(imported_meshes) > 1:
+                                bpy.ops.object.join()
+                            obj = bpy.context.active_object
+                        else:
+                            obj = armature
+                    else:
+                        obj = armature
+                else:
+                    obj = armature
+
             else:
-                # Fallback - use armature bounds
-                obj = armature
+                raise ValueError(
+                    f"Unsupported skeletal_mesh recipe kind for preview: {recipe_kind}"
+                )
 
         elif recipe_kind == "mesh_to_sprite_v1":
             # Sprite mesh - extract mesh subparams

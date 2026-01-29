@@ -46,18 +46,34 @@ pub(super) fn validate_outputs_for_recipe_with_budget(
         }
         "static_mesh.blender_primitives_v1" => {
             validate_static_mesh_blender_primitives(recipe, result);
-            validate_single_primary_output_format(spec, OutputFormat::Glb, result);
+            validate_single_primary_output_format_one_of(
+                spec,
+                &[OutputFormat::Glb, OutputFormat::Gltf],
+                result,
+            );
         }
         "static_mesh.modular_kit_v1" => {
             validate_static_mesh_modular_kit(recipe, result);
-            validate_single_primary_output_format(spec, OutputFormat::Glb, result);
+            validate_single_primary_output_format_one_of(
+                spec,
+                &[OutputFormat::Glb, OutputFormat::Gltf],
+                result,
+            );
         }
         "static_mesh.organic_sculpt_v1" => {
             validate_static_mesh_organic_sculpt(recipe, result);
+            validate_single_primary_output_format_one_of(
+                spec,
+                &[OutputFormat::Glb, OutputFormat::Gltf],
+                result,
+            );
+        }
+        "skeletal_mesh.armature_driven_v1" => {
+            validate_skeletal_mesh_armature_driven(recipe, result);
             validate_single_primary_output_format(spec, OutputFormat::Glb, result);
         }
-        "skeletal_mesh.blender_rigged_mesh_v1" => {
-            validate_skeletal_mesh_blender_rigged(recipe, result);
+        "skeletal_mesh.skinned_mesh_v1" => {
+            validate_skeletal_mesh_skinned_mesh(recipe, result);
             validate_single_primary_output_format(spec, OutputFormat::Glb, result);
         }
         "skeletal_animation.blender_clip_v1" => {
@@ -536,24 +552,94 @@ fn validate_static_mesh_organic_sculpt(recipe: &Recipe, result: &mut ValidationR
     }
 }
 
-/// Validates params for `skeletal_mesh.blender_rigged_mesh_v1` recipe.
-///
-/// This validates that the params match the expected schema and rejects
-/// unknown fields.
-fn validate_skeletal_mesh_blender_rigged(recipe: &Recipe, result: &mut ValidationResult) {
-    match recipe.as_skeletal_mesh_blender_rigged_mesh() {
+/// Validates params for `skeletal_mesh.armature_driven_v1` recipe.
+fn validate_skeletal_mesh_armature_driven(recipe: &Recipe, result: &mut ValidationResult) {
+    match recipe.as_skeletal_mesh_armature_driven_v1() {
         Ok(params) => {
-            // Validate that either skeleton_preset or skeleton is provided
             if params.skeleton_preset.is_none() && params.skeleton.is_empty() {
-                // Only warn if both body_parts and parts are also empty
-                // (legacy specs may rely on external armature)
-                if params.body_parts.is_empty() && params.parts.is_empty() {
-                    result.add_error(ValidationError::with_path(
-                        ErrorCode::InvalidRecipeParams,
-                        "either 'skeleton_preset', 'skeleton', 'body_parts', or 'parts' must be provided",
-                        "recipe.params",
-                    ));
-                }
+                result.add_error(ValidationError::with_path(
+                    ErrorCode::InvalidRecipeParams,
+                    "either 'skeleton_preset' or 'skeleton' must be provided",
+                    "recipe.params",
+                ));
+            }
+
+            if params.bone_meshes.is_empty() {
+                result.add_error(ValidationError::with_path(
+                    ErrorCode::InvalidRecipeParams,
+                    "'bone_meshes' must not be empty",
+                    "recipe.params.bone_meshes",
+                ));
+            }
+        }
+        Err(e) => {
+            result.add_error(ValidationError::with_path(
+                ErrorCode::InvalidRecipeParams,
+                format!("invalid params for {}: {}", recipe.kind, e),
+                "recipe.params",
+            ));
+        }
+    }
+}
+
+pub(crate) fn validate_single_primary_output_format_one_of(
+    spec: &Spec,
+    allowed_formats: &[OutputFormat],
+    result: &mut ValidationResult,
+) {
+    validate_primary_output_present(spec, result);
+
+    let primary_outputs: Vec<(usize, &crate::output::OutputSpec)> = spec
+        .outputs
+        .iter()
+        .enumerate()
+        .filter(|(_, o)| o.kind == OutputKind::Primary)
+        .collect();
+
+    for (idx, output) in primary_outputs {
+        if !allowed_formats.contains(&output.format) {
+            result.add_error(ValidationError::with_path(
+                ErrorCode::OutputValidationFailed,
+                format!(
+                    "primary output format must be one of {:?} for this recipe, got '{:?}'",
+                    allowed_formats, output.format
+                ),
+                format!("outputs[{idx}].format"),
+            ));
+        }
+    }
+}
+
+/// Validates params for `skeletal_mesh.skinned_mesh_v1` recipe.
+fn validate_skeletal_mesh_skinned_mesh(recipe: &Recipe, result: &mut ValidationResult) {
+    match recipe.as_skeletal_mesh_skinned_mesh_v1() {
+        Ok(params) => {
+            if params.mesh_file.is_none() && params.mesh_asset.is_none() {
+                result.add_error(ValidationError::with_path(
+                    ErrorCode::InvalidRecipeParams,
+                    "either 'mesh_file' or 'mesh_asset' must be provided",
+                    "recipe.params",
+                ));
+            }
+
+            if params.skeleton_preset.is_none() && params.skeleton.is_empty() {
+                result.add_error(ValidationError::with_path(
+                    ErrorCode::InvalidRecipeParams,
+                    "either 'skeleton_preset' or 'skeleton' must be provided",
+                    "recipe.params",
+                ));
+            }
+
+            // Bounds check for max_bone_influences (shared contract with legacy SkinningSettings)
+            if !(1..=8).contains(&params.binding.max_bone_influences) {
+                result.add_error(ValidationError::with_path(
+                    ErrorCode::InvalidRecipeParams,
+                    format!(
+                        "binding.max_bone_influences must be in range [1, 8], got {}",
+                        params.binding.max_bone_influences
+                    ),
+                    "recipe.params.binding.max_bone_influences",
+                ));
             }
         }
         Err(e) => {

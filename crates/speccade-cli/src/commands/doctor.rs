@@ -110,7 +110,8 @@ pub fn run() -> Result<ExitCode> {
         "music.tracker_song_compose_v1",
         "texture.procedural_v1",
         "static_mesh.blender_primitives_v1",
-        "skeletal_mesh.blender_rigged_mesh_v1",
+        "skeletal_mesh.armature_driven_v1",
+        "skeletal_mesh.skinned_mesh_v1",
         "skeletal_animation.blender_clip_v1",
     ];
     for kind in recipe_kinds {
