@@ -3,6 +3,7 @@
 //! Handles the actual migration of legacy specs to canonical JSON format.
 
 use anyhow::Result;
+use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -166,10 +167,63 @@ pub fn map_legacy_keys_to_params(
             // Bone meshes: derive from legacy parts if possible.
             let mut bone_meshes = serde_json::Map::new();
             if let Some(parts) = legacy.data.get("parts").and_then(|v| v.as_object()) {
+                // Build a helper map for resolving mirrored bones using the legacy skeleton.
+                // Example: if skeleton contains { bone: "arm_upper_R", mirror: "arm_upper_L" },
+                // we record arm_upper_L -> arm_upper_R.
+                let mut mirror_bone_of: HashMap<String, String> = HashMap::new();
+                if let Some(skel) = legacy.data.get("skeleton").and_then(|v| v.as_array()) {
+                    for bone_val in skel {
+                        let Some(bone_obj) = bone_val.as_object() else {
+                            continue;
+                        };
+                        let Some(bone_name) = bone_obj.get("bone").and_then(|v| v.as_str()) else {
+                            continue;
+                        };
+                        let Some(mirror_src) = bone_obj.get("mirror").and_then(|v| v.as_str())
+                        else {
+                            continue;
+                        };
+                        mirror_bone_of.insert(mirror_src.to_string(), bone_name.to_string());
+                    }
+                }
+
                 for (part_name, part_val) in parts {
                     let Some(part_obj) = part_val.as_object() else {
                         continue;
                     };
+
+                    // Mirror parts (e.g. {"mirror": "arm_L"}) should become a bone_meshes mirror
+                    // entry for the mirrored *bone*, not the legacy part name.
+                    if let Some(mirror_part) = part_obj.get("mirror").and_then(|v| v.as_str()) {
+                        if let Some(src_part_obj) =
+                            parts.get(mirror_part).and_then(|v| v.as_object())
+                        {
+                            let src_bone_name = src_part_obj
+                                .get("bone")
+                                .and_then(|v| v.as_str())
+                                .unwrap_or(mirror_part);
+
+                            let mirrored_bone_name = mirror_bone_of
+                                .get(src_bone_name)
+                                .cloned()
+                                .or_else(|| {
+                                    if let Some(stem) = src_bone_name.strip_suffix("_L") {
+                                        Some(format!("{}_R", stem))
+                                    } else if let Some(stem) = src_bone_name.strip_suffix("_l") {
+                                        Some(format!("{}_r", stem))
+                                    } else {
+                                        None
+                                    }
+                                })
+                                .unwrap_or_else(|| part_name.to_string());
+
+                            bone_meshes.insert(
+                                mirrored_bone_name,
+                                serde_json::json!({ "mirror": src_bone_name }),
+                            );
+                            continue;
+                        }
+                    }
 
                     let bone_name = part_obj
                         .get("bone")
