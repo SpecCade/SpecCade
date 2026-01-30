@@ -39,6 +39,18 @@ fn should_update_hashes() -> bool {
         .unwrap_or(false)
 }
 
+fn assert_non_empty_golden_fixtures(asset_type: &str) {
+    let specs = GoldenFixtures::list_speccade_specs(asset_type);
+    assert!(
+        !specs.is_empty(),
+        "Golden fixtures exist, but no '{}' spec fixtures found in {}",
+        asset_type,
+        GoldenFixtures::speccade_specs_dir()
+            .join(asset_type)
+            .display()
+    );
+}
+
 /// Compute BLAKE3 hash of data and return as hex string.
 fn compute_hash(data: &[u8]) -> String {
     blake3::hash(data).to_hex().to_string()
@@ -370,6 +382,8 @@ fn test_golden_audio_hashes() {
         return;
     }
 
+    assert_non_empty_golden_fixtures("audio");
+
     let results = verify_specs("audio", generate_audio_hash);
     assert_verification_results("Audio", &results);
 }
@@ -385,6 +399,8 @@ fn test_golden_texture_hashes() {
         return;
     }
 
+    assert_non_empty_golden_fixtures("texture");
+
     let results = verify_specs("texture", generate_texture_hash);
     assert_verification_results("Texture", &results);
 }
@@ -399,6 +415,8 @@ fn test_golden_music_hashes() {
         println!("Golden fixtures not found, skipping test");
         return;
     }
+
+    assert_non_empty_golden_fixtures("music");
 
     let results = verify_specs("music", generate_music_hash);
     assert_verification_results("Music", &results);
@@ -416,6 +434,10 @@ fn test_golden_hashes_all() {
         println!("Golden fixtures not found, skipping test");
         return;
     }
+
+    assert_non_empty_golden_fixtures("audio");
+    assert_non_empty_golden_fixtures("texture");
+    assert_non_empty_golden_fixtures("music");
 
     let mut all_results: HashMap<&str, Vec<VerificationResult>> = HashMap::new();
 

@@ -291,7 +291,7 @@ impl GoldenFixtures {
             return Vec::new();
         }
 
-        fs::read_dir(&type_dir)
+        let mut specs: Vec<PathBuf> = fs::read_dir(&type_dir)
             .into_iter()
             .flatten()
             .filter_map(|e| e.ok())
@@ -302,7 +302,11 @@ impl GoldenFixtures {
                     .map(|name| name.to_string_lossy().contains(".report."))
                     .unwrap_or(false)
             })
-            .collect()
+            .collect();
+
+        // Deterministic ordering: sort by filename.
+        specs.sort_by(|a, b| a.file_name().cmp(&b.file_name()));
+        specs
     }
 }
 
