@@ -45,7 +45,7 @@ if [ -d "golden/speccade/specs" ]; then
   while IFS= read -r -d '' spec; do
     echo "Validating: $spec"
     ./target/release/speccade validate --spec "$spec"
-  done < <(find golden/speccade/specs -name "*.json" -type f -print0)
+  done < <(find golden/speccade/specs -name "*.spec.json" -type f -print0)
 else
   echo "==> golden: no specs directory found, skipping"
 fi

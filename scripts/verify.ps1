@@ -43,9 +43,13 @@ $goldenDir = Join-Path $repoRoot "golden\speccade\specs"
 if (Test-Path $goldenDir) {
   Write-Host "==> golden: validate specs"
   $exe = Join-Path $repoRoot "target\release\speccade.exe"
-  Get-ChildItem -Path $goldenDir -Recurse -Filter "*.json" -File | ForEach-Object {
+  # Only validate Spec JSON fixtures; ignore report JSONs and other artifacts.
+  Get-ChildItem -Path $goldenDir -Recurse -Filter "*.spec.json" -File | ForEach-Object {
     Write-Host ("Validating: " + $_.FullName)
     & $exe validate --spec $_.FullName
+    if ($LASTEXITCODE -ne 0) {
+      throw "golden spec validation failed: $($_.FullName)"
+    }
   }
 } else {
   Write-Host "==> golden: no specs directory found, skipping"
