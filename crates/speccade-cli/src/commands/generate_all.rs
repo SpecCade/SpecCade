@@ -195,7 +195,12 @@ pub fn run(
         if result.skipped_fresh {
             fresh_skipped_count += 1;
             if verbose {
-                println!("  {} {} {}", "SKIPPED".yellow(), "(fresh)".dimmed(), result.asset_id);
+                println!(
+                    "  {} {} {}",
+                    "SKIPPED".yellow(),
+                    "(fresh)".dimmed(),
+                    result.asset_id
+                );
             } else {
                 print!("{}", "s".yellow());
             }
@@ -294,7 +299,11 @@ pub fn run(
     println!("{} {}", "Successful:".green().bold(), summary.successful);
     println!("{} {}", "Failed:".red().bold(), summary.failed);
     println!("{} {}", "Skipped:".yellow().bold(), summary.skipped);
-    println!("{} {}", "Fresh (skipped):".yellow().bold(), fresh_skipped_count);
+    println!(
+        "{} {}",
+        "Fresh (skipped):".yellow().bold(),
+        fresh_skipped_count
+    );
     println!(
         "{} {:.2}s",
         "Total runtime:".blue().bold(),
@@ -363,7 +372,13 @@ pub fn run(
 }
 
 /// Process a single spec file
-fn process_spec(spec_path: &Path, out_root: &Path, _verbose: bool, force: bool, backend_version: &str) -> SpecResult {
+fn process_spec(
+    spec_path: &Path,
+    out_root: &Path,
+    _verbose: bool,
+    force: bool,
+    backend_version: &str,
+) -> SpecResult {
     let start = Instant::now();
 
     // Default result for errors
@@ -427,7 +442,9 @@ fn process_spec(spec_path: &Path, out_root: &Path, _verbose: bool, force: bool, 
     // Freshness check: skip if report exists, matches, and outputs are present
     if !force {
         if let Some(ref spec_hash) = result.spec_hash {
-            let report_path = spec_path.parent().unwrap_or(Path::new("."))
+            let report_path = spec_path
+                .parent()
+                .unwrap_or(Path::new("."))
                 .join(format!("{}.report.json", result.asset_id));
 
             if report_path.exists() {
@@ -439,9 +456,10 @@ fn process_spec(spec_path: &Path, out_root: &Path, _verbose: bool, force: bool, 
                         {
                             // Verify all output files exist (guard against empty outputs)
                             let all_outputs_exist = !report.outputs.is_empty()
-                                && report.outputs.iter().all(|o| {
-                                    out_root.join(&o.path).exists()
-                                });
+                                && report
+                                    .outputs
+                                    .iter()
+                                    .all(|o| out_root.join(&o.path).exists());
 
                             if all_outputs_exist {
                                 result.skipped_fresh = true;
@@ -570,16 +588,20 @@ mod tests {
     #[test]
     fn test_extract_asset_type() {
         assert_eq!(
-            extract_asset_type(Path::new("specs/audio/beep.star")),
+            extract_asset_type(Path::new(
+                "golden/speccade/specs/audio/simple_beep.spec.json",
+            )),
             Some("audio".to_string())
         );
         assert_eq!(
-            extract_asset_type(Path::new("specs/texture/brick.star")),
+            extract_asset_type(Path::new("golden/speccade/specs/texture/brick.spec.json")),
             Some("texture".to_string())
         );
         assert_eq!(
-            extract_asset_type(Path::new("specs/mesh/cube.star")),
-            Some("mesh".to_string())
+            extract_asset_type(Path::new(
+                "golden/speccade/specs/static_mesh/cube.spec.json",
+            )),
+            Some("static_mesh".to_string())
         );
         assert_eq!(extract_asset_type(Path::new("random/path/file.star")), None);
     }
@@ -642,7 +664,10 @@ mod tests {
         let spec = speccade_spec::Spec::builder(asset_id, AssetType::Audio)
             .license("CC0-1.0")
             .seed(42)
-            .output(OutputSpec::primary(OutputFormat::Wav, &format!("{}.wav", asset_id)))
+            .output(OutputSpec::primary(
+                OutputFormat::Wav,
+                &format!("{}.wav", asset_id),
+            ))
             .recipe(Recipe::new(
                 "audio_v1",
                 serde_json::json!({
@@ -703,7 +728,13 @@ mod tests {
         fs::write(out_root.join(&output_rel), b"audio data").unwrap();
 
         // Write matching report
-        write_test_report(&spec_dir, asset_id, &spec_hash, backend_version, &[&output_rel]);
+        write_test_report(
+            &spec_dir,
+            asset_id,
+            &spec_hash,
+            backend_version,
+            &[&output_rel],
+        );
 
         let spec_path = spec_dir.join(format!("{}.json", asset_id));
         let result = process_spec(&spec_path, &out_root, false, false, backend_version);
@@ -728,12 +759,21 @@ mod tests {
         fs::write(out_root.join(&output_rel), b"audio data").unwrap();
 
         // Write report with wrong spec hash
-        write_test_report(&spec_dir, asset_id, "wrong-hash", backend_version, &[&output_rel]);
+        write_test_report(
+            &spec_dir,
+            asset_id,
+            "wrong-hash",
+            backend_version,
+            &[&output_rel],
+        );
 
         let spec_path = spec_dir.join(format!("{}.json", asset_id));
         let result = process_spec(&spec_path, &out_root, false, false, backend_version);
 
-        assert!(!result.skipped_fresh, "should not skip when spec hash differs");
+        assert!(
+            !result.skipped_fresh,
+            "should not skip when spec hash differs"
+        );
     }
 
     #[test]
@@ -753,12 +793,21 @@ mod tests {
         // Do NOT create the output file
 
         // Write matching report (hashes match, but output file is missing)
-        write_test_report(&spec_dir, asset_id, &spec_hash, backend_version, &[&output_rel]);
+        write_test_report(
+            &spec_dir,
+            asset_id,
+            &spec_hash,
+            backend_version,
+            &[&output_rel],
+        );
 
         let spec_path = spec_dir.join(format!("{}.json", asset_id));
         let result = process_spec(&spec_path, &out_root, false, false, backend_version);
 
-        assert!(!result.skipped_fresh, "should not skip when output file missing");
+        assert!(
+            !result.skipped_fresh,
+            "should not skip when output file missing"
+        );
     }
 
     #[test]
@@ -778,7 +827,13 @@ mod tests {
         fs::write(out_root.join(&output_rel), b"audio data").unwrap();
 
         // Write matching report — everything looks fresh
-        write_test_report(&spec_dir, asset_id, &spec_hash, backend_version, &[&output_rel]);
+        write_test_report(
+            &spec_dir,
+            asset_id,
+            &spec_hash,
+            backend_version,
+            &[&output_rel],
+        );
 
         let spec_path = spec_dir.join(format!("{}.json", asset_id));
         let result = process_spec(&spec_path, &out_root, false, true, backend_version);
@@ -802,12 +857,21 @@ mod tests {
         fs::write(out_root.join(&output_rel), b"audio data").unwrap();
 
         // Report has old version
-        write_test_report(&spec_dir, asset_id, &spec_hash, "test-v0.9.0", &[&output_rel]);
+        write_test_report(
+            &spec_dir,
+            asset_id,
+            &spec_hash,
+            "test-v0.9.0",
+            &[&output_rel],
+        );
 
         let spec_path = spec_dir.join(format!("{}.json", asset_id));
         let result = process_spec(&spec_path, &out_root, false, false, "test-v1.0.0");
 
-        assert!(!result.skipped_fresh, "should not skip when backend version differs");
+        assert!(
+            !result.skipped_fresh,
+            "should not skip when backend version differs"
+        );
     }
 
     #[test]
@@ -829,6 +893,9 @@ mod tests {
         let spec_path = spec_dir.join(format!("{}.json", asset_id));
         let result = process_spec(&spec_path, &out_root, false, false, backend_version);
 
-        assert!(!result.skipped_fresh, "should not skip when report has empty outputs");
+        assert!(
+            !result.skipped_fresh,
+            "should not skip when report has empty outputs"
+        );
     }
 }
