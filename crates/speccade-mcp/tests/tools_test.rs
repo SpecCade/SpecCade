@@ -1,7 +1,7 @@
 use speccade_mcp::tools::SpeccadeMcp;
 use std::collections::HashSet;
 
-/// All 12 tools must be registered in the tool router.
+/// All tools must be registered in the tool router.
 #[test]
 fn all_tools_registered() {
     let server = SpeccadeMcp::new();
@@ -22,6 +22,7 @@ fn all_tools_registered() {
         "validate_spec",
         "generate_preview",
         "generate_full",
+        "generate_png_outputs",
         // Analysis
         "analyze_asset",
         "compare_assets",
@@ -74,6 +75,7 @@ fn parameterized_tools_have_input_schema() {
         "validate_spec",
         "generate_preview",
         "generate_full",
+        "generate_png_outputs",
         "analyze_asset",
         "compare_assets",
     ];
@@ -156,6 +158,12 @@ fn param_deserialization() {
     let p: GenerateFullParams =
         serde_json::from_str(r#"{"path": "test.star", "out_dir": "/tmp/out"}"#).unwrap();
     assert_eq!(p.out_dir.as_deref(), Some("/tmp/out"));
+
+    // GeneratePngOutputsParams
+    let p: GeneratePngOutputsParams =
+        serde_json::from_str(r#"{"path": "test.star", "budget": "strict"}"#).unwrap();
+    assert_eq!(p.path, "test.star");
+    assert_eq!(p.budget.as_deref(), Some("strict"));
 
     // AnalyzeAssetParams
     let p: AnalyzeAssetParams =

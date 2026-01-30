@@ -7,13 +7,15 @@ use rmcp::handler::server::tool::ToolRouter;
 use rmcp::handler::server::wrapper::Parameters;
 use rmcp::model::{CallToolResult, Content, ServerCapabilities, ServerInfo};
 use rmcp::{tool_handler, tool_router, ServerHandler};
+use base64::Engine;
+use std::path::{Component, Path, PathBuf};
 
 use crate::cli_runner;
 
 use analysis::{AnalyzeAssetParams, CompareAssetsParams};
 use authoring::{EvalSpecParams, WriteSpecParams};
 use discovery::{GetTemplateParams, ListSpecsParams, ListTemplatesParams, ReadSpecParams};
-use generation::{GenerateFullParams, GeneratePreviewParams, ValidateSpecParams};
+use generation::{GenerateFullParams, GeneratePngOutputsParams, GeneratePreviewParams, ValidateSpecParams};
 
 #[derive(Clone)]
 pub struct SpeccadeMcp {
@@ -22,6 +24,7 @@ pub struct SpeccadeMcp {
 
 impl SpeccadeMcp {
     /// Access the tool router for testing/introspection.
+    #[allow(dead_code)]
     pub fn router(&self) -> &ToolRouter<Self> {
         &self.tool_router
     }
@@ -285,6 +288,140 @@ impl SpeccadeMcp {
         }
     }
 
+    /// Generate all declared PNG outputs for a spec and return them as base64.
+    ///
+    /// This is intended as a lightweight "screenshot" mechanism for LLM workflows.
+    #[rmcp::tool]
+    async fn generate_png_outputs(
+        &self,
+        Parameters(params): Parameters<GeneratePngOutputsParams>,
+    ) -> Result<CallToolResult, rmcp::ErrorData> {
+        const MAX_PNG_FILES: usize = 32;
+        const MAX_TOTAL_BYTES: usize = 25 * 1024 * 1024;
+
+        let tmp = match tempfile::tempdir() {
+            Ok(d) => d,
+            Err(e) => {
+                return Ok(CallToolResult::success(vec![Content::text(format!(
+                    "Error: failed to create temp dir: {e}"
+                ))]));
+            }
+        };
+        let out_root = tmp.path().to_string_lossy().to_string();
+
+        let mut args = vec!["generate", "--spec", &params.path, "--out-root", &out_root, "--json"];
+        let budget;
+        if let Some(ref b) = params.budget {
+            budget = b.clone();
+            args.push("--budget");
+            args.push(&budget);
+        }
+
+        let out = match cli_runner::run_cli(&args).await {
+            Ok(out) => out,
+            Err(e) => {
+                return Ok(CallToolResult::success(vec![Content::text(format!(
+                    "Error: {e}"
+                ))]));
+            }
+        };
+
+        if !out.success {
+            let msg = if out.stderr.is_empty() {
+                out.stdout
+            } else {
+                out.stderr
+            };
+            return Ok(CallToolResult::success(vec![Content::text(format!(
+                "Error: generate failed:\n{msg}"
+            ))]));
+        }
+
+        let generate_json: serde_json::Value = match serde_json::from_str(&out.stdout) {
+            Ok(v) => v,
+            Err(e) => {
+                return Ok(CallToolResult::success(vec![Content::text(format!(
+                    "Error: failed to parse generate JSON: {e}\n{}",
+                    out.stdout
+                ))]));
+            }
+        };
+
+        let outputs = generate_json
+            .get("result")
+            .and_then(|r| r.get("outputs"))
+            .and_then(|o| o.as_array())
+            .cloned()
+            .unwrap_or_default();
+
+        let mut pngs = Vec::new();
+        let mut total_bytes: usize = 0;
+
+        for o in outputs {
+            let format = o.get("format").and_then(|v| v.as_str()).unwrap_or("");
+            if format != "png" {
+                continue;
+            }
+            let path = match o.get("path").and_then(|v| v.as_str()) {
+                Some(p) => p,
+                None => continue,
+            };
+
+            if pngs.len() >= MAX_PNG_FILES {
+                return Ok(CallToolResult::success(vec![Content::text(format!(
+                    "Error: too many PNG outputs (max {MAX_PNG_FILES})"
+                ))]));
+            }
+
+            let full_path = match safe_relpath_join(tmp.path(), path) {
+                Ok(p) => p,
+                Err(msg) => {
+                    return Ok(CallToolResult::success(vec![Content::text(format!(
+                        "Error: invalid output path '{path}': {msg}"
+                    ))]));
+                }
+            };
+            let bytes = match tokio::fs::read(&full_path).await {
+                Ok(b) => b,
+                Err(e) => {
+                    return Ok(CallToolResult::success(vec![Content::text(format!(
+                        "Error: failed to read generated PNG '{}': {e}",
+                        full_path.display()
+                    ))]));
+                }
+            };
+
+            total_bytes = total_bytes.saturating_add(bytes.len());
+            if total_bytes > MAX_TOTAL_BYTES {
+                return Ok(CallToolResult::success(vec![Content::text(format!(
+                    "Error: PNG outputs exceed max total size ({MAX_TOTAL_BYTES} bytes)"
+                ))]));
+            }
+
+            let b64 = base64::engine::general_purpose::STANDARD.encode(&bytes);
+            pngs.push(serde_json::json!({
+                "path": path,
+                "mime_type": "image/png",
+                "bytes": bytes.len(),
+                "base64": b64,
+            }));
+        }
+
+        let asset_id = generate_json
+            .get("result")
+            .and_then(|r| r.get("asset_id"))
+            .and_then(|v| v.as_str());
+
+        let response = serde_json::json!({
+            "asset_id": asset_id,
+            "pngs": pngs,
+        });
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::to_string_pretty(&response).unwrap_or_else(|_| "{}".to_string()),
+        )]))
+    }
+
     // ── Analysis ───────────────────────────────────────────
 
     /// Analyze a generated asset file. Returns JSON with metrics and metadata.
@@ -333,6 +470,35 @@ impl SpeccadeMcp {
     }
 }
 
+fn safe_relpath_join(root: &Path, rel: &str) -> Result<PathBuf, &'static str> {
+    let p = Path::new(rel);
+
+    // Prevent path traversal or absolute paths escaping the temp out_root.
+    if p.is_absolute() {
+        return Err("absolute paths are not allowed");
+    }
+
+    let mut cleaned = PathBuf::new();
+    for c in p.components() {
+        match c {
+            Component::Normal(s) => cleaned.push(s),
+            Component::CurDir => {
+                // ignore
+            }
+            Component::ParentDir => return Err("'..' path traversal is not allowed"),
+            Component::Prefix(_) | Component::RootDir => {
+                return Err("path prefixes/root are not allowed")
+            }
+        }
+    }
+
+    if cleaned.as_os_str().is_empty() {
+        return Err("empty paths are not allowed");
+    }
+
+    Ok(root.join(cleaned))
+}
+
 #[tool_handler]
 impl ServerHandler for SpeccadeMcp {
     fn get_info(&self) -> ServerInfo {
@@ -348,6 +514,115 @@ impl ServerHandler for SpeccadeMcp {
                 .enable_tools()
                 .build(),
             ..Default::default()
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use base64::Engine;
+    use rmcp::model::RawContent;
+
+    #[test]
+    fn tool_router_includes_generate_png_outputs() {
+        let mcp = SpeccadeMcp::new();
+        assert!(mcp.router().map.contains_key("generate_png_outputs"));
+    }
+
+    #[test]
+    fn safe_relpath_join_rejects_escaping_paths() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let root = dir.path();
+
+        assert!(safe_relpath_join(root, "../evil.png").is_err());
+        assert!(safe_relpath_join(root, "..\\evil.png").is_err());
+
+        if cfg!(windows) {
+            assert!(safe_relpath_join(root, "C:\\evil.png").is_err());
+        } else {
+            assert!(safe_relpath_join(root, "/etc/passwd").is_err());
+        }
+
+        let ok = safe_relpath_join(root, "textures/out.png").expect("ok");
+        assert!(ok.starts_with(root));
+    }
+
+    #[tokio::test]
+    async fn generate_png_outputs_returns_base64_pngs() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let spec_path = dir.path().join("test.star");
+
+        let content = r#"# Two-output texture spec for MCP PNG extraction tests
+
+spec(
+    asset_id = "mcp-test-two-pngs",
+    asset_type = "texture",
+    license = "CC0-1.0",
+    seed = 42,
+    outputs = [
+        output("textures/height.png", "png", source = "height"),
+        output("textures/mask.png", "png", source = "mask")
+    ],
+    recipe = {
+        "kind": "texture.procedural_v1",
+        "params": texture_graph(
+            [64, 64],
+            [
+                noise_node("height", "perlin", 0.1, 4, 0.5, 2.0),
+                threshold_node("mask", "height", 0.5)
+            ],
+            True
+        )
+    }
+)
+"#;
+
+        tokio::fs::write(&spec_path, content)
+            .await
+            .expect("write spec");
+
+        let spec_path = spec_path
+            .to_str()
+            .expect("spec path should be valid UTF-8")
+            .to_string();
+
+        let mcp = SpeccadeMcp::new();
+        let result = mcp
+            .generate_png_outputs(Parameters(GeneratePngOutputsParams {
+                path: spec_path,
+                budget: None,
+            }))
+            .await
+            .expect("tool call should succeed");
+
+        assert_eq!(result.is_error, Some(false));
+        assert_eq!(result.content.len(), 1);
+
+        let text = match &result.content[0].raw {
+            RawContent::Text(t) => t.text.as_str(),
+            other => panic!("expected text content, got: {other:?}"),
+        };
+
+        let json: serde_json::Value = serde_json::from_str(text)
+            .unwrap_or_else(|e| panic!("expected JSON response, got parse error: {e}\n{text}"));
+
+        let pngs = json
+            .get("pngs")
+            .and_then(|v| v.as_array())
+            .expect("expected 'pngs' array");
+        assert_eq!(pngs.len(), 2, "expected 2 png outputs");
+
+        for item in pngs {
+            assert_eq!(item.get("mime_type").and_then(|v| v.as_str()), Some("image/png"));
+            let b64 = item
+                .get("base64")
+                .and_then(|v| v.as_str())
+                .expect("expected base64 field");
+            let bytes = base64::engine::general_purpose::STANDARD
+                .decode(b64)
+                .expect("base64 should decode");
+            assert!(bytes.starts_with(b"\x89PNG\r\n\x1a\n"));
         }
     }
 }

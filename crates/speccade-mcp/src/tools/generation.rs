@@ -22,3 +22,11 @@ pub struct GenerateFullParams {
     /// Output directory
     pub out_dir: Option<String>,
 }
+
+#[derive(Deserialize, JsonSchema)]
+pub struct GeneratePngOutputsParams {
+    /// Path to the .star spec file
+    pub path: String,
+    /// Budget profile (e.g. "default", "strict")
+    pub budget: Option<String>,
+}
