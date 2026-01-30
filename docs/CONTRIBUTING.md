@@ -38,6 +38,18 @@ cargo test --workspace
 cargo test -p speccade-tests
 ```
 
+## CI-Equivalent Local Verification
+
+Use the repo scripts to run the same checks CI runs (format, tests, clippy, docs, coverage, golden gates):
+
+```bash
+./scripts/verify.sh
+```
+
+```powershell
+./scripts/verify.ps1
+```
+
 ## Formatting and Linting
 
 ```bash

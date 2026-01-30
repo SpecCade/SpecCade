@@ -39,6 +39,11 @@ Deterministic asset pipeline: takes a `Spec` (JSON or Starlark) and produces art
 - Workspace: `cargo test --workspace`
 - Integration/determinism: `cargo test -p speccade-tests`
 
+### Verify (mirrors CI)
+
+- macOS/Linux: `./scripts/verify.sh`
+- Windows: `./scripts/verify.ps1`
+
 ### CLI
 
 - Help: `speccade --help`
