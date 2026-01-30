@@ -63,7 +63,10 @@ impl ExtensionOutputManifest {
     }
 
     /// Creates a failed output manifest.
-    pub fn failure(errors: Vec<ExtensionErrorEntry>, determinism_report: DeterminismReport) -> Self {
+    pub fn failure(
+        errors: Vec<ExtensionErrorEntry>,
+        determinism_report: DeterminismReport,
+    ) -> Self {
         Self {
             manifest_version: 1,
             success: false,
@@ -130,7 +133,12 @@ impl ExtensionOutputFile {
     }
 
     /// Creates a primary output file.
-    pub fn primary(path: impl Into<String>, hash: impl Into<String>, size: u64, format: impl Into<String>) -> Self {
+    pub fn primary(
+        path: impl Into<String>,
+        hash: impl Into<String>,
+        size: u64,
+        format: impl Into<String>,
+    ) -> Self {
         Self {
             path: path.into(),
             hash: hash.into(),
@@ -206,7 +214,11 @@ impl DeterminismReport {
     }
 
     /// Creates a new determinism report for a non-deterministic extension.
-    pub fn non_deterministic(input_hash: impl Into<String>, seed: u64, reason: impl Into<String>) -> Self {
+    pub fn non_deterministic(
+        input_hash: impl Into<String>,
+        seed: u64,
+        reason: impl Into<String>,
+    ) -> Self {
         Self {
             input_hash: input_hash.into(),
             output_hash: None,
@@ -266,7 +278,11 @@ pub enum ExtensionError {
     /// An output file is missing.
     OutputFileMissing(PathBuf),
     /// An output file hash mismatch.
-    OutputHashMismatch { path: PathBuf, expected: String, actual: String },
+    OutputHashMismatch {
+        path: PathBuf,
+        expected: String,
+        actual: String,
+    },
     /// Determinism tier mismatch.
     TierMismatch { declared: u8, expected: u8 },
     /// Input hash mismatch (spec was modified).
@@ -289,17 +305,38 @@ impl std::fmt::Display for ExtensionError {
             Self::ManifestInvalid(msg) => write!(f, "Invalid manifest.json: {}", msg),
             Self::ManifestValidation(msg) => write!(f, "Manifest validation failed: {}", msg),
             Self::OutputFileMissing(path) => write!(f, "Output file missing: {}", path.display()),
-            Self::OutputHashMismatch { path, expected, actual } => {
-                write!(f, "Hash mismatch for {}: expected {}, got {}", path.display(), expected, actual)
+            Self::OutputHashMismatch {
+                path,
+                expected,
+                actual,
+            } => {
+                write!(
+                    f,
+                    "Hash mismatch for {}: expected {}, got {}",
+                    path.display(),
+                    expected,
+                    actual
+                )
             }
             Self::TierMismatch { declared, expected } => {
-                write!(f, "Tier mismatch: extension declared tier {}, manifest reports tier {}", expected, declared)
+                write!(
+                    f,
+                    "Tier mismatch: extension declared tier {}, manifest reports tier {}",
+                    expected, declared
+                )
             }
             Self::InputHashMismatch { expected, actual } => {
-                write!(f, "Input hash mismatch: expected {}, got {}", expected, actual)
+                write!(
+                    f,
+                    "Input hash mismatch: expected {}, got {}",
+                    expected, actual
+                )
             }
             Self::ExtensionReportedError(errors) => {
-                let msgs: Vec<_> = errors.iter().map(|e| format!("[{}] {}", e.code, e.message)).collect();
+                let msgs: Vec<_> = errors
+                    .iter()
+                    .map(|e| format!("[{}] {}", e.code, e.message))
+                    .collect();
                 write!(f, "Extension reported errors: {}", msgs.join("; "))
             }
         }
@@ -322,7 +359,10 @@ pub enum OutputManifestValidationError {
     /// Determinism report is missing.
     MissingDeterminismReport,
     /// Tier mismatch in determinism report.
-    DeterminismTierMismatch { tier: u8, determinism: DeterminismLevel },
+    DeterminismTierMismatch {
+        tier: u8,
+        determinism: DeterminismLevel,
+    },
     /// Tier 1 extension missing output hash.
     MissingOutputHash,
 }
@@ -336,7 +376,11 @@ impl std::fmt::Display for OutputManifestValidationError {
             Self::InvalidOutputHash(hash) => write!(f, "Invalid output hash: {}", hash),
             Self::MissingDeterminismReport => write!(f, "Missing determinism report"),
             Self::DeterminismTierMismatch { tier, determinism } => {
-                write!(f, "Tier {} doesn't match determinism level {}", tier, determinism)
+                write!(
+                    f,
+                    "Tier {} doesn't match determinism level {}",
+                    tier, determinism
+                )
             }
             Self::MissingOutputHash => write!(f, "Tier 1 extension must provide output_hash"),
         }
@@ -366,10 +410,14 @@ pub fn validate_output_manifest(
     // Validate output file paths and hashes
     for file in &manifest.output_files {
         if file.path.is_empty() || file.path.contains("..") || file.path.starts_with('/') {
-            errors.push(OutputManifestValidationError::InvalidOutputPath(file.path.clone()));
+            errors.push(OutputManifestValidationError::InvalidOutputPath(
+                file.path.clone(),
+            ));
         }
         if file.hash.len() != 64 || !file.hash.chars().all(|c| c.is_ascii_hexdigit()) {
-            errors.push(OutputManifestValidationError::InvalidOutputHash(file.hash.clone()));
+            errors.push(OutputManifestValidationError::InvalidOutputHash(
+                file.hash.clone(),
+            ));
         }
     }
 

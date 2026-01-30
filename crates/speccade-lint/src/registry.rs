@@ -113,7 +113,11 @@ impl RuleRegistry {
     /// Runs all applicable rules on the given asset.
     ///
     /// Returns a `LintReport` containing all detected issues.
-    pub fn lint(&self, asset_path: &Path, spec: Option<&Spec>) -> Result<LintReport, std::io::Error> {
+    pub fn lint(
+        &self,
+        asset_path: &Path,
+        spec: Option<&Spec>,
+    ) -> Result<LintReport, std::io::Error> {
         let bytes = std::fs::read(asset_path)?;
         self.lint_bytes(asset_path, &bytes, spec)
     }

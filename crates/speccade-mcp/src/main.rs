@@ -6,7 +6,10 @@ use rmcp::ServiceExt;
 use tools::SpeccadeMcp;
 
 #[derive(Parser)]
-#[command(name = "speccade-mcp", about = "MCP server for SpecCade asset pipeline")]
+#[command(
+    name = "speccade-mcp",
+    about = "MCP server for SpecCade asset pipeline"
+)]
 struct Args {
     /// Project directory (defaults to current dir)
     #[arg(long, default_value = ".")]

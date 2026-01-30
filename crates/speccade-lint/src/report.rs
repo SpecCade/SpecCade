@@ -74,7 +74,12 @@ pub struct LintIssue {
 
 impl LintIssue {
     /// Creates a new lint issue with required fields.
-    pub fn new(rule_id: impl Into<String>, severity: Severity, message: impl Into<String>, suggestion: impl Into<String>) -> Self {
+    pub fn new(
+        rule_id: impl Into<String>,
+        severity: Severity,
+        message: impl Into<String>,
+        suggestion: impl Into<String>,
+    ) -> Self {
         Self {
             rule_id: rule_id.into(),
             severity,

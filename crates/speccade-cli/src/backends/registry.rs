@@ -1,6 +1,6 @@
 //! Extension registry for managing external backends.
 
-use speccade_spec::extension::{ExtensionManifest, validate_extension_manifest};
+use speccade_spec::extension::{validate_extension_manifest, ExtensionManifest};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
@@ -38,7 +38,11 @@ impl std::fmt::Display for RegistryError {
             Self::InvalidManifest(msg) => write!(f, "Invalid extension manifest: {}", msg),
             Self::AlreadyRegistered(name) => write!(f, "Extension already registered: {}", name),
             Self::RecipeKindConflict { kind, existing } => {
-                write!(f, "Recipe kind '{}' already claimed by extension '{}'", kind, existing)
+                write!(
+                    f,
+                    "Recipe kind '{}' already claimed by extension '{}'",
+                    kind, existing
+                )
             }
             Self::NotFound(name) => write!(f, "Extension not found: {}", name),
             Self::ReadError(msg) => write!(f, "Failed to read manifest: {}", msg),
@@ -67,14 +71,20 @@ impl ExtensionRegistry {
 
         // 2. User config directory
         if let Some(config_dir) = dirs::config_dir() {
-            registry.search_paths.push(config_dir.join("speccade").join("extensions"));
+            registry
+                .search_paths
+                .push(config_dir.join("speccade").join("extensions"));
         }
 
         // 3. System-wide (Unix-like)
         #[cfg(unix)]
         {
-            registry.search_paths.push(PathBuf::from("/usr/share/speccade/extensions"));
-            registry.search_paths.push(PathBuf::from("/usr/local/share/speccade/extensions"));
+            registry
+                .search_paths
+                .push(PathBuf::from("/usr/share/speccade/extensions"));
+            registry
+                .search_paths
+                .push(PathBuf::from("/usr/local/share/speccade/extensions"));
         }
 
         registry
@@ -89,7 +99,11 @@ impl ExtensionRegistry {
     pub fn register(&mut self, manifest: ExtensionManifest) -> Result<(), RegistryError> {
         // Validate the manifest
         if let Err(errors) = validate_extension_manifest(&manifest) {
-            let msg = errors.iter().map(|e| e.to_string()).collect::<Vec<_>>().join("; ");
+            let msg = errors
+                .iter()
+                .map(|e| e.to_string())
+                .collect::<Vec<_>>()
+                .join("; ");
             return Err(RegistryError::InvalidManifest(msg));
         }
 
@@ -162,7 +176,8 @@ impl ExtensionRegistry {
 
     /// Gets the extension that handles a recipe kind.
     pub fn get_for_recipe(&self, recipe_kind: &str) -> Option<&ExtensionManifest> {
-        self.recipe_map.get(recipe_kind)
+        self.recipe_map
+            .get(recipe_kind)
             .and_then(|name| self.extensions.get(name))
     }
 
@@ -183,7 +198,9 @@ impl ExtensionRegistry {
 
     /// Unregisters an extension by name.
     pub fn unregister(&mut self, name: &str) -> Result<ExtensionManifest, RegistryError> {
-        let manifest = self.extensions.remove(name)
+        let manifest = self
+            .extensions
+            .remove(name)
             .ok_or_else(|| RegistryError::NotFound(name.to_string()))?;
 
         // Remove recipe kind mappings

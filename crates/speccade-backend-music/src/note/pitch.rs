@@ -165,8 +165,8 @@ pub fn xm_pitch_deviation_cents(
     relative_note: i8,
 ) -> f64 {
     let base_xm_note_0indexed = base_midi_note as f64 - 12.0;
-    let semitones = (base_xm_note_0indexed + relative_note as f64 - 48.0)
-        + (finetune as f64 / 128.0);
+    let semitones =
+        (base_xm_note_0indexed + relative_note as f64 - 48.0) + (finetune as f64 / 128.0);
     let playback_rate = XM_BASE_FREQ * 2.0_f64.powf(semitones / 12.0);
     1200.0 * (playback_rate / sample_rate as f64).log2()
 }

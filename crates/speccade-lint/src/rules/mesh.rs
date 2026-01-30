@@ -296,7 +296,11 @@ fn calculate_centroid(positions: &[[f32; 3]]) -> [f32; 3] {
         sum[2] += p[2] as f64;
     }
     let n = positions.len() as f64;
-    [(sum[0] / n) as f32, (sum[1] / n) as f32, (sum[2] / n) as f32]
+    [
+        (sum[0] / n) as f32,
+        (sum[1] / n) as f32,
+        (sum[2] / n) as f32,
+    ]
 }
 
 /// Dot product of two 3D vectors.
@@ -542,15 +546,9 @@ impl LintRule for DegenerateFacesRule {
             }
 
             // Check area
-            if v0 < mesh.positions.len()
-                && v1 < mesh.positions.len()
-                && v2 < mesh.positions.len()
-            {
-                let area = triangle_area_3d(
-                    mesh.positions[v0],
-                    mesh.positions[v1],
-                    mesh.positions[v2],
-                );
+            if v0 < mesh.positions.len() && v1 < mesh.positions.len() && v2 < mesh.positions.len() {
+                let area =
+                    triangle_area_3d(mesh.positions[v0], mesh.positions[v1], mesh.positions[v2]);
                 if area < threshold {
                     degenerate_count += 1;
                 }
@@ -708,11 +706,8 @@ impl LintRule for InvertedNormalsRule {
             ];
 
             // Calculate face normal
-            let face_normal = calculate_face_normal(
-                mesh.positions[v0],
-                mesh.positions[v1],
-                mesh.positions[v2],
-            );
+            let face_normal =
+                calculate_face_normal(mesh.positions[v0], mesh.positions[v1], mesh.positions[v2]);
 
             // Vector from centroid to face center
             let to_face = [
@@ -835,9 +830,9 @@ impl LintRule for HumanoidProportionsRule {
                 .map(|(_, l)| *l)
                 .collect();
 
-            let has_any_lower = lower_patterns.iter().any(|lp| {
-                mesh.bone_names.iter().any(|n| n.contains(lp))
-            });
+            let has_any_lower = lower_patterns
+                .iter()
+                .any(|lp| mesh.bone_names.iter().any(|n| n.contains(lp)));
 
             if !has_any_lower {
                 issues.push(
@@ -987,11 +982,8 @@ impl LintRule for UvStretchRule {
 
             total_faces += 1;
 
-            let area_3d = triangle_area_3d(
-                mesh.positions[v0],
-                mesh.positions[v1],
-                mesh.positions[v2],
-            );
+            let area_3d =
+                triangle_area_3d(mesh.positions[v0], mesh.positions[v1], mesh.positions[v2]);
             let area_uv = triangle_area_2d(
                 mesh.uvs[uv_base],
                 mesh.uvs[uv_base + 1],
@@ -1073,10 +1065,7 @@ impl LintRule for MissingMaterialRule {
         vec![LintIssue::new(
             self.id(),
             self.default_severity(),
-            format!(
-                "{} face(s) have no material assigned",
-                missing_count
-            ),
+            format!("{} face(s) have no material assigned", missing_count),
             "Assign a material to all faces",
         )
         .with_actual_value(format!("{} faces", missing_count))
@@ -1485,11 +1474,7 @@ mod tests {
 
     #[test]
     fn test_calculate_centroid() {
-        let positions = vec![
-            [0.0f32, 0.0, 0.0],
-            [2.0f32, 0.0, 0.0],
-            [1.0f32, 2.0, 0.0],
-        ];
+        let positions = vec![[0.0f32, 0.0, 0.0], [2.0f32, 0.0, 0.0], [1.0f32, 2.0, 0.0]];
         let centroid = calculate_centroid(&positions);
         assert!((centroid[0] - 1.0).abs() < 1e-6);
         assert!((centroid[1] - 2.0 / 3.0).abs() < 1e-6);

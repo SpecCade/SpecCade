@@ -54,7 +54,7 @@ mod registry;
 mod subprocess;
 
 pub use registry::{ExtensionRegistry, RegistryError};
-pub use subprocess::{SubprocessRunner, SubprocessConfig};
+pub use subprocess::{SubprocessConfig, SubprocessRunner};
 
 #[cfg(test)]
 mod tests;

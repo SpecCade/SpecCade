@@ -323,10 +323,7 @@ impl LintRule for SilenceRule {
         vec![LintIssue::new(
             self.id(),
             self.default_severity(),
-            format!(
-                "Audio is silent (peak: {:.6}, RMS: {:.1}dB)",
-                peak, rms_db
-            ),
+            format!("Audio is silent (peak: {:.6}, RMS: {:.1}dB)", peak, rms_db),
             "Check envelope attack or oscillator amplitude",
         )
         .with_actual_value(format!("{:.6}", peak))
@@ -391,7 +388,10 @@ impl LintRule for TooQuietRule {
                 "Audio is too quiet (RMS: {:.1}dB, threshold: {}dB)",
                 rms_db, QUIET_THRESHOLD_DB
             ),
-            format!("Increase amplitude by ~{:.1}x to reach {}dB", fix_delta, TARGET_DB),
+            format!(
+                "Increase amplitude by ~{:.1}x to reach {}dB",
+                fix_delta, TARGET_DB
+            ),
         )
         .with_actual_value(format!("{:.1}dB", rms_db))
         .with_expected_range(format!(">= {}dB", QUIET_THRESHOLD_DB))
@@ -721,7 +721,10 @@ impl LintRule for MonoRecommendedRule {
             ),
             "Use mono output format for short sound effects",
         )
-        .with_actual_value(format!("{} channels, {:.2}s", analysis.channels, analysis.duration))
+        .with_actual_value(format!(
+            "{} channels, {:.2}s",
+            analysis.channels, analysis.duration
+        ))
         .with_expected_range(format!("mono for duration < {}s", MAX_DURATION_FOR_MONO))]
     }
 }
@@ -786,7 +789,10 @@ mod tests {
         let samples: Vec<f32> = (0..1000).map(|i| (i as f32 / 1000.0).sin() * 0.9).collect();
         let wav = create_wav(&samples, 44100, 1);
         let issues = rule.check(&asset_data(&wav), None);
-        assert!(issues.is_empty(), "Should not detect clipping in normal audio");
+        assert!(
+            issues.is_empty(),
+            "Should not detect clipping in normal audio"
+        );
 
         // Clipping audio
         let samples: Vec<f32> = (0..1000).map(|i| (i as f32 / 1000.0).sin() * 1.5).collect();
@@ -813,7 +819,10 @@ mod tests {
             .collect();
         let wav = create_wav(&samples, 44100, 1);
         let issues = rule.check(&asset_data(&wav), None);
-        assert!(issues.is_empty(), "Should not detect DC offset in centered audio");
+        assert!(
+            issues.is_empty(),
+            "Should not detect DC offset in centered audio"
+        );
 
         // With DC offset
         let samples: Vec<f32> = (0..10000)
@@ -841,7 +850,10 @@ mod tests {
         let samples: Vec<f32> = (0..1000).map(|i| (i as f32 / 50.0).sin() * 0.5).collect();
         let wav = create_wav(&samples, 44100, 1);
         let issues = rule.check(&asset_data(&wav), None);
-        assert!(issues.is_empty(), "Should not detect silence in normal audio");
+        assert!(
+            issues.is_empty(),
+            "Should not detect silence in normal audio"
+        );
 
         // Silent audio
         let samples: Vec<f32> = vec![0.0; 1000];
@@ -866,7 +878,10 @@ mod tests {
         let samples: Vec<f32> = (0..1000).map(|i| (i as f32 / 50.0).sin() * 0.5).collect();
         let wav = create_wav(&samples, 44100, 1);
         let issues = rule.check(&asset_data(&wav), None);
-        assert!(issues.is_empty(), "Should not detect too-quiet in normal audio");
+        assert!(
+            issues.is_empty(),
+            "Should not detect too-quiet in normal audio"
+        );
 
         // Very quiet audio
         let samples: Vec<f32> = (0..1000).map(|i| (i as f32 / 50.0).sin() * 0.01).collect();
@@ -886,7 +901,10 @@ mod tests {
         let samples: Vec<f32> = (0..1000).map(|i| (i as f32 / 50.0).sin() * 0.3).collect();
         let wav = create_wav(&samples, 44100, 1);
         let issues = rule.check(&asset_data(&wav), None);
-        assert!(issues.is_empty(), "Should not detect too-loud in normal audio");
+        assert!(
+            issues.is_empty(),
+            "Should not detect too-loud in normal audio"
+        );
 
         // Very loud audio (near clipping but not over)
         let samples: Vec<f32> = (0..1000).map(|i| (i as f32 / 50.0).sin() * 0.95).collect();
@@ -915,7 +933,10 @@ mod tests {
             .collect();
         let wav = create_wav(&samples, 44100, 1);
         let issues = rule.check(&asset_data(&wav), None);
-        assert!(issues.is_empty(), "Should not detect abrupt end in faded audio");
+        assert!(
+            issues.is_empty(),
+            "Should not detect abrupt end in faded audio"
+        );
 
         // Audio with abrupt end - constant amplitude sine wave
         let samples: Vec<f32> = (0..4410)
@@ -943,9 +964,7 @@ mod tests {
         assert!(issues.is_empty(), "Should not flag mono audio");
 
         // Short stereo audio - should flag
-        let samples: Vec<f32> = (0..2000)
-            .map(|i| (i as f32 / 50.0).sin() * 0.5)
-            .collect(); // Interleaved L/R
+        let samples: Vec<f32> = (0..2000).map(|i| (i as f32 / 50.0).sin() * 0.5).collect(); // Interleaved L/R
         let wav = create_wav(&samples, 44100, 2);
         let issues = rule.check(&asset_data(&wav), None);
         assert_eq!(issues.len(), 1, "Should flag short stereo audio");
@@ -953,9 +972,7 @@ mod tests {
         assert_eq!(issues[0].severity, Severity::Info);
 
         // Long stereo audio - no issue
-        let samples: Vec<f32> = (0..200000)
-            .map(|i| (i as f32 / 50.0).sin() * 0.5)
-            .collect();
+        let samples: Vec<f32> = (0..200000).map(|i| (i as f32 / 50.0).sin() * 0.5).collect();
         let wav = create_wav(&samples, 44100, 2);
         let issues = rule.check(&asset_data(&wav), None);
         assert!(issues.is_empty(), "Should not flag long stereo audio");

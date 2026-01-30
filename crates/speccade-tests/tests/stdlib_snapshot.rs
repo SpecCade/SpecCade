@@ -30,14 +30,15 @@ fn stdlib_matches_snapshot() {
         )
     });
 
-    let expected: serde_json::Value = serde_json::from_str(&snapshot_contents).unwrap_or_else(|e| {
-        panic!(
-            "Failed to parse stdlib snapshot as JSON: {}\n\n\
+    let expected: serde_json::Value =
+        serde_json::from_str(&snapshot_contents).unwrap_or_else(|e| {
+            panic!(
+                "Failed to parse stdlib snapshot as JSON: {}\n\n\
              The snapshot file may be corrupted. Regenerate it with:\n  \
              cargo run -p speccade-cli -- stdlib dump --format json > stdlib/stdlib.snapshot.json",
-            e
-        )
-    });
+                e
+            )
+        });
 
     // Generate the current stdlib dump
     let current_dump = StdlibDump::new();

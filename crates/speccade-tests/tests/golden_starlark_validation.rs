@@ -53,7 +53,8 @@ fn validate_all_starlark_spec_files() {
     println!("\n=== Validating {} .star files ===\n", star_files.len());
 
     for path in star_files {
-        let relative_path = path.strip_prefix(&specs_dir)
+        let relative_path = path
+            .strip_prefix(&specs_dir)
             .map(|p| p.to_string_lossy().to_string())
             .unwrap_or_else(|_| path.file_name().unwrap().to_string_lossy().to_string());
 

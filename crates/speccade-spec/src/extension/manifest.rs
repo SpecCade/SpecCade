@@ -176,8 +176,12 @@ impl ExtensionManifest {
     /// Returns the timeout in seconds for this extension.
     pub fn timeout_seconds(&self) -> u64 {
         match &self.interface {
-            ExtensionInterface::Subprocess { timeout_seconds, .. } => *timeout_seconds,
-            ExtensionInterface::Wasm { timeout_seconds, .. } => *timeout_seconds,
+            ExtensionInterface::Subprocess {
+                timeout_seconds, ..
+            } => *timeout_seconds,
+            ExtensionInterface::Wasm {
+                timeout_seconds, ..
+            } => *timeout_seconds,
         }
     }
 }
@@ -209,7 +213,11 @@ impl std::fmt::Display for ManifestValidationError {
             Self::InvalidName(name) => write!(f, "Invalid extension name: {}", name),
             Self::InvalidVersion(version) => write!(f, "Invalid version string: {}", version),
             Self::TierMismatch { declared, expected } => {
-                write!(f, "Tier mismatch: declared {}, expected {} for determinism level", declared, expected)
+                write!(
+                    f,
+                    "Tier mismatch: declared {}, expected {} for determinism level",
+                    declared, expected
+                )
             }
             Self::NoRecipeKinds => write!(f, "No recipe kinds specified"),
             Self::InvalidRecipeKind(kind) => write!(f, "Invalid recipe kind: {}", kind),
@@ -225,7 +233,9 @@ impl std::fmt::Display for ManifestValidationError {
 impl std::error::Error for ManifestValidationError {}
 
 /// Validates an extension manifest.
-pub fn validate_extension_manifest(manifest: &ExtensionManifest) -> Result<(), Vec<ManifestValidationError>> {
+pub fn validate_extension_manifest(
+    manifest: &ExtensionManifest,
+) -> Result<(), Vec<ManifestValidationError>> {
     let mut errors = Vec::new();
 
     // Validate name (lowercase alphanumeric with hyphens)
@@ -235,7 +245,9 @@ pub fn validate_extension_manifest(manifest: &ExtensionManifest) -> Result<(), V
 
     // Validate version (semver-like)
     if manifest.version.is_empty() || !is_valid_version(&manifest.version) {
-        errors.push(ManifestValidationError::InvalidVersion(manifest.version.clone()));
+        errors.push(ManifestValidationError::InvalidVersion(
+            manifest.version.clone(),
+        ));
     }
 
     // Validate tier matches determinism level
@@ -259,7 +271,11 @@ pub fn validate_extension_manifest(manifest: &ExtensionManifest) -> Result<(), V
 
     // Validate interface-specific fields
     match &manifest.interface {
-        ExtensionInterface::Subprocess { executable, timeout_seconds, .. } => {
+        ExtensionInterface::Subprocess {
+            executable,
+            timeout_seconds,
+            ..
+        } => {
             if executable.is_empty() {
                 errors.push(ManifestValidationError::EmptyExecutable);
             }
@@ -267,7 +283,11 @@ pub fn validate_extension_manifest(manifest: &ExtensionManifest) -> Result<(), V
                 errors.push(ManifestValidationError::TimeoutTooShort(*timeout_seconds));
             }
         }
-        ExtensionInterface::Wasm { module_path, timeout_seconds, .. } => {
+        ExtensionInterface::Wasm {
+            module_path,
+            timeout_seconds,
+            ..
+        } => {
             if module_path.is_empty() {
                 errors.push(ManifestValidationError::EmptyWasmPath);
             }
@@ -294,7 +314,8 @@ fn is_valid_extension_name(name: &str) -> bool {
     if !first_char.is_ascii_lowercase() {
         return false;
     }
-    name.chars().all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-')
+    name.chars()
+        .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-')
         && !name.ends_with('-')
         && !name.contains("--")
 }
@@ -328,7 +349,10 @@ fn is_valid_recipe_kind(kind: &str) -> bool {
     }
     // Each part must be valid identifier
     parts.iter().all(|part| {
-        !part.is_empty() && part.chars().next().unwrap().is_ascii_lowercase()
-            && part.chars().all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '_')
+        !part.is_empty()
+            && part.chars().next().unwrap().is_ascii_lowercase()
+            && part
+                .chars()
+                .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '_')
     })
 }

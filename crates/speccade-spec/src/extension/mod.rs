@@ -43,13 +43,13 @@ mod contract;
 mod manifest;
 
 pub use contract::{
-    ExtensionError, ExtensionErrorEntry, ExtensionOutputFile, ExtensionOutputManifest,
-    DeterminismReport, OutputManifestValidationError,
-    validate_output_manifest, validate_determinism_report,
+    validate_determinism_report, validate_output_manifest, DeterminismReport, ExtensionError,
+    ExtensionErrorEntry, ExtensionOutputFile, ExtensionOutputManifest,
+    OutputManifestValidationError,
 };
 pub use manifest::{
-    ExtensionManifest, ExtensionInterface, DeterminismLevel,
-    ManifestValidationError, validate_extension_manifest,
+    validate_extension_manifest, DeterminismLevel, ExtensionInterface, ExtensionManifest,
+    ManifestValidationError,
 };
 
 #[cfg(test)]

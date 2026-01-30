@@ -87,10 +87,7 @@ pub fn run_json(
             if let Some(params) = recipe.params.as_object_mut() {
                 if let Some(export) = params.get_mut("export") {
                     if let Some(export_obj) = export.as_object_mut() {
-                        export_obj.insert(
-                            "save_blend".to_string(),
-                            serde_json::Value::Bool(true),
-                        );
+                        export_obj.insert("save_blend".to_string(), serde_json::Value::Bool(true));
                     }
                 } else {
                     params.insert(
@@ -98,10 +95,7 @@ pub fn run_json(
                         serde_json::json!({"save_blend": true}),
                     );
                 }
-                params.insert(
-                    "save_blend".to_string(),
-                    serde_json::Value::Bool(true),
-                );
+                params.insert("save_blend".to_string(), serde_json::Value::Bool(true));
             }
         }
     }

@@ -39,7 +39,10 @@ fn test_registry_recipe_lookup() {
         "custom-texture-gen",
         "1.0.0",
         "custom-texture-gen",
-        vec!["texture.custom_v1".to_string(), "texture.fancy_v1".to_string()],
+        vec![
+            "texture.custom_v1".to_string(),
+            "texture.fancy_v1".to_string(),
+        ],
         DeterminismLevel::ByteIdentical,
     );
 
@@ -103,7 +106,10 @@ fn test_registry_recipe_conflict() {
     assert!(registry.register(manifest1).is_ok());
 
     let result = registry.register(manifest2);
-    assert!(matches!(result, Err(RegistryError::RecipeKindConflict { .. })));
+    assert!(matches!(
+        result,
+        Err(RegistryError::RecipeKindConflict { .. })
+    ));
 }
 
 #[test]
@@ -180,36 +186,30 @@ fn test_subprocess_runner_new() {
 
 #[test]
 fn test_combine_output_hashes_deterministic() {
-    let hashes = vec![
-        "a".repeat(64),
-        "b".repeat(64),
-        "c".repeat(64),
-    ];
+    let hashes = vec!["a".repeat(64), "b".repeat(64), "c".repeat(64)];
 
     let combined1 = subprocess::combine_output_hashes(&hashes);
     let combined2 = subprocess::combine_output_hashes(&hashes);
 
-    assert_eq!(combined1, combined2, "hash combination should be deterministic");
+    assert_eq!(
+        combined1, combined2,
+        "hash combination should be deterministic"
+    );
 }
 
 #[test]
 fn test_combine_output_hashes_order_independent() {
-    let hashes1 = vec![
-        "a".repeat(64),
-        "b".repeat(64),
-        "c".repeat(64),
-    ];
+    let hashes1 = vec!["a".repeat(64), "b".repeat(64), "c".repeat(64)];
 
-    let hashes2 = vec![
-        "c".repeat(64),
-        "a".repeat(64),
-        "b".repeat(64),
-    ];
+    let hashes2 = vec!["c".repeat(64), "a".repeat(64), "b".repeat(64)];
 
     let combined1 = subprocess::combine_output_hashes(&hashes1);
     let combined2 = subprocess::combine_output_hashes(&hashes2);
 
-    assert_eq!(combined1, combined2, "hash combination should be order-independent");
+    assert_eq!(
+        combined1, combined2,
+        "hash combination should be order-independent"
+    );
 }
 
 #[test]
@@ -220,5 +220,8 @@ fn test_combine_output_hashes_different_inputs() {
     let combined1 = subprocess::combine_output_hashes(&hashes1);
     let combined2 = subprocess::combine_output_hashes(&hashes2);
 
-    assert_ne!(combined1, combined2, "different inputs should produce different hashes");
+    assert_ne!(
+        combined1, combined2,
+        "different inputs should produce different hashes"
+    );
 }

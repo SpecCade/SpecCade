@@ -573,9 +573,11 @@ fn main() -> ExitCode {
             fps,
             scale,
         } => commands::preview::run(&spec, out_root.as_deref(), gif, out.as_deref(), fps, scale),
-        Commands::PreviewGrid { spec, out, panel_size } => {
-            commands::preview_grid::run(&spec, out.as_deref(), panel_size)
-        }
+        Commands::PreviewGrid {
+            spec,
+            out,
+            panel_size,
+        } => commands::preview_grid::run(&spec, out.as_deref(), panel_size),
         Commands::Doctor => commands::doctor::run(),
         Commands::Expand {
             spec,
@@ -2208,15 +2210,13 @@ mod tests {
 
     #[test]
     fn test_cli_parses_preview_grid() {
-        let cli = Cli::try_parse_from([
-            "speccade",
-            "preview-grid",
-            "--spec",
-            "mesh.star",
-        ])
-        .unwrap();
+        let cli = Cli::try_parse_from(["speccade", "preview-grid", "--spec", "mesh.star"]).unwrap();
         match cli.command {
-            Commands::PreviewGrid { spec, out, panel_size } => {
+            Commands::PreviewGrid {
+                spec,
+                out,
+                panel_size,
+            } => {
                 assert_eq!(spec, "mesh.star");
                 assert!(out.is_none());
                 assert_eq!(panel_size, 256);
@@ -2239,7 +2239,11 @@ mod tests {
         ])
         .unwrap();
         match cli.command {
-            Commands::PreviewGrid { spec, out, panel_size } => {
+            Commands::PreviewGrid {
+                spec,
+                out,
+                panel_size,
+            } => {
                 assert_eq!(spec, "mesh.star");
                 assert_eq!(out.as_deref(), Some("grid.png"));
                 assert_eq!(panel_size, 128);
@@ -2250,12 +2254,7 @@ mod tests {
 
     #[test]
     fn test_cli_parses_coverage_generate() {
-        let cli = Cli::try_parse_from([
-            "speccade",
-            "coverage",
-            "generate",
-        ])
-        .unwrap();
+        let cli = Cli::try_parse_from(["speccade", "coverage", "generate"]).unwrap();
         match cli.command {
             Commands::Coverage { command } => match command {
                 CoverageCommands::Generate { strict, output } => {
@@ -2293,12 +2292,7 @@ mod tests {
 
     #[test]
     fn test_cli_parses_coverage_report() {
-        let cli = Cli::try_parse_from([
-            "speccade",
-            "coverage",
-            "report",
-        ])
-        .unwrap();
+        let cli = Cli::try_parse_from(["speccade", "coverage", "report"]).unwrap();
         match cli.command {
             Commands::Coverage { command } => match command {
                 CoverageCommands::Report => {}

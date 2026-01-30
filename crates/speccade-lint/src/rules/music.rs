@@ -119,9 +119,10 @@ fn notes_by_row(pattern: &TrackerPattern) -> HashMap<u16, Vec<(u8, &PatternNote)
 /// Check if a pattern is empty (has no notes).
 fn is_pattern_empty(pattern: &TrackerPattern) -> bool {
     let flat = pattern.flat_notes();
-    flat.is_empty() || flat.iter().all(|(_, n)| {
-        n.note.is_empty() || n.note == "---" || n.note == "..." || n.note == "==="
-    })
+    flat.is_empty()
+        || flat.iter().all(|(_, n)| {
+            n.note.is_empty() || n.note == "---" || n.note == "..." || n.note == "==="
+        })
 }
 
 /// Calculate interval in semitones between two MIDI notes.
@@ -341,16 +342,24 @@ impl LintRule for ParallelOctavesRule {
                             continue;
                         }
 
-                        let Some(midi1_a) = note_to_midi(&n1_a.note) else { continue };
-                        let Some(midi1_b) = note_to_midi(&n1_b.note) else { continue };
+                        let Some(midi1_a) = note_to_midi(&n1_a.note) else {
+                            continue;
+                        };
+                        let Some(midi1_b) = note_to_midi(&n1_b.note) else {
+                            continue;
+                        };
 
                         // Find same channels in next row
                         let n2_a = notes2.iter().find(|(ch, _)| ch == ch1_a);
                         let n2_b = notes2.iter().find(|(ch, _)| ch == ch1_b);
 
                         if let (Some((_, n2_a)), Some((_, n2_b))) = (n2_a, n2_b) {
-                            let Some(midi2_a) = note_to_midi(&n2_a.note) else { continue };
-                            let Some(midi2_b) = note_to_midi(&n2_b.note) else { continue };
+                            let Some(midi2_a) = note_to_midi(&n2_a.note) else {
+                                continue;
+                            };
+                            let Some(midi2_b) = note_to_midi(&n2_b.note) else {
+                                continue;
+                            };
 
                             let interval1 = interval(midi1_a, midi1_b);
                             let interval2 = interval(midi2_a, midi2_b);
@@ -438,15 +447,23 @@ impl LintRule for ParallelFifthsRule {
                             continue;
                         }
 
-                        let Some(midi1_a) = note_to_midi(&n1_a.note) else { continue };
-                        let Some(midi1_b) = note_to_midi(&n1_b.note) else { continue };
+                        let Some(midi1_a) = note_to_midi(&n1_a.note) else {
+                            continue;
+                        };
+                        let Some(midi1_b) = note_to_midi(&n1_b.note) else {
+                            continue;
+                        };
 
                         let n2_a = notes2.iter().find(|(ch, _)| ch == ch1_a);
                         let n2_b = notes2.iter().find(|(ch, _)| ch == ch1_b);
 
                         if let (Some((_, n2_a)), Some((_, n2_b))) = (n2_a, n2_b) {
-                            let Some(midi2_a) = note_to_midi(&n2_a.note) else { continue };
-                            let Some(midi2_b) = note_to_midi(&n2_b.note) else { continue };
+                            let Some(midi2_a) = note_to_midi(&n2_a.note) else {
+                                continue;
+                            };
+                            let Some(midi2_b) = note_to_midi(&n2_b.note) else {
+                                continue;
+                            };
 
                             let interval1 = interval(midi1_a, midi1_b) % 12;
                             let interval2 = interval(midi2_a, midi2_b) % 12;
@@ -522,7 +539,8 @@ impl LintRule for VoiceCrossingRule {
 
             for (row, notes) in &by_row {
                 // Sort notes by channel (lower channel = higher voice typically)
-                let mut sorted_notes: Vec<_> = notes.iter()
+                let mut sorted_notes: Vec<_> = notes
+                    .iter()
                     .filter_map(|(ch, n)| note_to_midi(&n.note).map(|midi| (*ch, midi)))
                     .collect();
                 sorted_notes.sort_by_key(|(ch, _)| *ch);
@@ -597,7 +615,8 @@ impl LintRule for DensePatternRule {
 
             for (row, notes) in &by_row {
                 // Count actual notes (not note-offs or empty)
-                let note_count = notes.iter()
+                let note_count = notes
+                    .iter()
                     .filter(|(_, n)| note_to_midi(&n.note).is_some())
                     .count();
 
@@ -612,14 +631,8 @@ impl LintRule for DensePatternRule {
                             ),
                             "Reduce polyphony by removing or offsetting notes",
                         )
-                        .with_spec_path(format!(
-                            "recipe.params.patterns[\"{}\"]",
-                            pattern_name
-                        ))
-                        .with_asset_location(format!(
-                            "pattern:{}:row{}",
-                            pattern_name, row
-                        ))
+                        .with_spec_path(format!("recipe.params.patterns[\"{}\"]", pattern_name))
+                        .with_asset_location(format!("pattern:{}:row{}", pattern_name, row))
                         .with_actual_value(note_count.to_string())
                         .with_expected_range(format!("1-{}", MAX_POLYPHONY)),
                     );
@@ -670,7 +683,9 @@ impl LintRule for SparsePatternRule {
             }
 
             let total_cells = rows * channels;
-            let filled_cells = pattern.flat_notes().iter()
+            let filled_cells = pattern
+                .flat_notes()
+                .iter()
                 .filter(|(_, n)| note_to_midi(&n.note).is_some())
                 .count();
 
@@ -683,14 +698,14 @@ impl LintRule for SparsePatternRule {
                         self.default_severity(),
                         format!(
                             "Pattern '{}' has only {:.1}% cell occupancy ({}/{} cells)",
-                            pattern_name, occupancy * 100.0, filled_cells, total_cells
+                            pattern_name,
+                            occupancy * 100.0,
+                            filled_cells,
+                            total_cells
                         ),
                         "Add more notes or reduce pattern size",
                     )
-                    .with_spec_path(format!(
-                        "recipe.params.patterns[\"{}\"]",
-                        pattern_name
-                    ))
+                    .with_spec_path(format!("recipe.params.patterns[\"{}\"]", pattern_name))
                     .with_asset_location(format!("pattern:{}", pattern_name))
                     .with_actual_value(format!("{:.1}%", occupancy * 100.0))
                     .with_expected_range(format!(">={:.0}%", MIN_OCCUPANCY * 100.0)),
@@ -945,7 +960,8 @@ impl LintRule for UnresolvedTensionRule {
         let last_notes = &by_row[&last_row];
 
         // Get all MIDI values in the last row
-        let midi_values: Vec<i32> = last_notes.iter()
+        let midi_values: Vec<i32> = last_notes
+            .iter()
             .filter_map(|(_, n)| note_to_midi(&n.note))
             .collect();
 
@@ -1079,9 +1095,9 @@ mod tests {
 
     #[test]
     fn test_note_to_midi_sharps_flats() {
-        assert_eq!(note_to_midi("C#4"), Some(61));  // C4=60 + 1 = 61
-        assert_eq!(note_to_midi("Db4"), Some(61));  // D4=62 - 1 = 61 (enharmonic with C#4)
-        assert_eq!(note_to_midi("F#3"), Some(54));  // F3=53 + 1 = 54
+        assert_eq!(note_to_midi("C#4"), Some(61)); // C4=60 + 1 = 61
+        assert_eq!(note_to_midi("Db4"), Some(61)); // D4=62 - 1 = 61 (enharmonic with C#4)
+        assert_eq!(note_to_midi("F#3"), Some(54)); // F3=53 + 1 = 54
     }
 
     #[test]
@@ -1109,11 +1125,14 @@ mod tests {
         let asset = test_asset_data();
 
         let mut patterns = HashMap::new();
-        patterns.insert("intro".to_string(), TrackerPattern {
-            rows: 64,
-            notes: Some(HashMap::new()),
-            data: None,
-        });
+        patterns.insert(
+            "intro".to_string(),
+            TrackerPattern {
+                rows: 64,
+                notes: Some(HashMap::new()),
+                data: None,
+            },
+        );
 
         let params = MusicTrackerSongV1Params {
             bpm: 120,
@@ -1140,10 +1159,10 @@ mod tests {
         let asset = test_asset_data();
 
         let mut patterns = HashMap::new();
-        patterns.insert("intro".to_string(), make_pattern(64, vec![
-            (0, 0, "C4"),
-            (0, 16, "E4"),
-        ]));
+        patterns.insert(
+            "intro".to_string(),
+            make_pattern(64, vec![(0, 0, "C4"), (0, 16, "E4")]),
+        );
 
         let params = MusicTrackerSongV1Params {
             bpm: 120,
@@ -1173,9 +1192,15 @@ mod tests {
         let asset = test_asset_data();
 
         let mut patterns = HashMap::new();
-        patterns.insert("test".to_string(), make_pattern(64, vec![
-            (0, 0, "C12"),  // Invalid: too high (C12 = 156)
-        ]));
+        patterns.insert(
+            "test".to_string(),
+            make_pattern(
+                64,
+                vec![
+                    (0, 0, "C12"), // Invalid: too high (C12 = 156)
+                ],
+            ),
+        );
 
         let params = MusicTrackerSongV1Params {
             bpm: 120,
@@ -1199,11 +1224,17 @@ mod tests {
         let asset = test_asset_data();
 
         let mut patterns = HashMap::new();
-        patterns.insert("test".to_string(), make_pattern(64, vec![
-            (0, 0, "C4"),
-            (1, 0, "G9"),  // G9 = 127 (highest valid)
-            (2, 0, "C-1"), // C-1 = 0 (lowest valid)
-        ]));
+        patterns.insert(
+            "test".to_string(),
+            make_pattern(
+                64,
+                vec![
+                    (0, 0, "C4"),
+                    (1, 0, "G9"),  // G9 = 127 (highest valid)
+                    (2, 0, "C-1"), // C-1 = 0 (lowest valid)
+                ],
+            ),
+        );
 
         let params = MusicTrackerSongV1Params {
             bpm: 120,
@@ -1339,11 +1370,24 @@ mod tests {
 
         let mut patterns = HashMap::new();
         // 10 simultaneous notes on row 0
-        patterns.insert("dense".to_string(), make_pattern(64, vec![
-            (0, 0, "C4"), (1, 0, "D4"), (2, 0, "E4"), (3, 0, "F4"),
-            (4, 0, "G4"), (5, 0, "A4"), (6, 0, "B4"), (7, 0, "C5"),
-            (8, 0, "D5"), (9, 0, "E5"),
-        ]));
+        patterns.insert(
+            "dense".to_string(),
+            make_pattern(
+                64,
+                vec![
+                    (0, 0, "C4"),
+                    (1, 0, "D4"),
+                    (2, 0, "E4"),
+                    (3, 0, "F4"),
+                    (4, 0, "G4"),
+                    (5, 0, "A4"),
+                    (6, 0, "B4"),
+                    (7, 0, "C5"),
+                    (8, 0, "D5"),
+                    (9, 0, "E5"),
+                ],
+            ),
+        );
 
         let params = MusicTrackerSongV1Params {
             bpm: 120,
@@ -1367,9 +1411,13 @@ mod tests {
         let asset = test_asset_data();
 
         let mut patterns = HashMap::new();
-        patterns.insert("normal".to_string(), make_pattern(64, vec![
-            (0, 0, "C4"), (1, 0, "E4"), (2, 0, "G4"), (3, 0, "C5"),
-        ]));
+        patterns.insert(
+            "normal".to_string(),
+            make_pattern(
+                64,
+                vec![(0, 0, "C4"), (1, 0, "E4"), (2, 0, "G4"), (3, 0, "C5")],
+            ),
+        );
 
         let params = MusicTrackerSongV1Params {
             bpm: 120,
@@ -1397,10 +1445,10 @@ mod tests {
 
         let mut patterns = HashMap::new();
         // 64 rows * 8 channels = 512 cells, only 2 notes = 0.4%
-        patterns.insert("sparse".to_string(), make_pattern(64, vec![
-            (0, 0, "C4"),
-            (0, 32, "E4"),
-        ]));
+        patterns.insert(
+            "sparse".to_string(),
+            make_pattern(64, vec![(0, 0, "C4"), (0, 32, "E4")]),
+        );
 
         let params = MusicTrackerSongV1Params {
             bpm: 120,
@@ -1432,9 +1480,10 @@ mod tests {
             speed: 6,
             channels: 4,
             patterns: HashMap::new(),
-            arrangement: vec![
-                ArrangementEntry { pattern: "A".to_string(), repeat: 8 },
-            ],
+            arrangement: vec![ArrangementEntry {
+                pattern: "A".to_string(),
+                repeat: 8,
+            }],
             ..Default::default()
         };
 
@@ -1456,9 +1505,18 @@ mod tests {
             channels: 4,
             patterns: HashMap::new(),
             arrangement: vec![
-                ArrangementEntry { pattern: "A".to_string(), repeat: 2 },
-                ArrangementEntry { pattern: "B".to_string(), repeat: 2 },
-                ArrangementEntry { pattern: "A".to_string(), repeat: 2 },
+                ArrangementEntry {
+                    pattern: "A".to_string(),
+                    repeat: 2,
+                },
+                ArrangementEntry {
+                    pattern: "B".to_string(),
+                    repeat: 2,
+                },
+                ArrangementEntry {
+                    pattern: "A".to_string(),
+                    repeat: 2,
+                },
             ],
             ..Default::default()
         };
@@ -1480,10 +1538,10 @@ mod tests {
 
         let mut patterns = HashMap::new();
         // Only channels 0 and 1 used, but 4 channels declared
-        patterns.insert("test".to_string(), make_pattern(64, vec![
-            (0, 0, "C4"),
-            (1, 0, "E4"),
-        ]));
+        patterns.insert(
+            "test".to_string(),
+            make_pattern(64, vec![(0, 0, "C4"), (1, 0, "E4")]),
+        );
 
         let params = MusicTrackerSongV1Params {
             bpm: 120,
@@ -1513,10 +1571,10 @@ mod tests {
 
         let mut patterns = HashMap::new();
         // Ends with C4 and F#4 (tritone = 6 semitones)
-        patterns.insert("ending".to_string(), make_pattern(64, vec![
-            (0, 63, "C4"),
-            (1, 63, "F#4"),
-        ]));
+        patterns.insert(
+            "ending".to_string(),
+            make_pattern(64, vec![(0, 63, "C4"), (1, 63, "F#4")]),
+        );
 
         let params = MusicTrackerSongV1Params {
             bpm: 120,
@@ -1545,11 +1603,10 @@ mod tests {
 
         let mut patterns = HashMap::new();
         // Ends with C major chord (consonant)
-        patterns.insert("ending".to_string(), make_pattern(64, vec![
-            (0, 63, "C4"),
-            (1, 63, "E4"),
-            (2, 63, "G4"),
-        ]));
+        patterns.insert(
+            "ending".to_string(),
+            make_pattern(64, vec![(0, 63, "C4"), (1, 63, "E4"), (2, 63, "G4")]),
+        );
 
         let params = MusicTrackerSongV1Params {
             bpm: 120,
@@ -1580,10 +1637,16 @@ mod tests {
 
         let mut patterns = HashMap::new();
         // Channel 0 (soprano) at C3, Channel 1 (alto) at C5 - crossing!
-        patterns.insert("test".to_string(), make_pattern(64, vec![
-            (0, 0, "C3"),  // Soprano too low
-            (1, 0, "C5"),  // Alto too high
-        ]));
+        patterns.insert(
+            "test".to_string(),
+            make_pattern(
+                64,
+                vec![
+                    (0, 0, "C3"), // Soprano too low
+                    (1, 0, "C5"), // Alto too high
+                ],
+            ),
+        );
 
         let params = MusicTrackerSongV1Params {
             bpm: 120,
@@ -1628,9 +1691,18 @@ mod tests {
     fn test_severity_distribution() {
         let rules = all_rules();
 
-        let errors = rules.iter().filter(|r| r.default_severity() == Severity::Error).count();
-        let warnings = rules.iter().filter(|r| r.default_severity() == Severity::Warning).count();
-        let infos = rules.iter().filter(|r| r.default_severity() == Severity::Info).count();
+        let errors = rules
+            .iter()
+            .filter(|r| r.default_severity() == Severity::Error)
+            .count();
+        let warnings = rules
+            .iter()
+            .filter(|r| r.default_severity() == Severity::Warning)
+            .count();
+        let infos = rules
+            .iter()
+            .filter(|r| r.default_severity() == Severity::Info)
+            .count();
 
         assert_eq!(errors, 3, "Expected 3 error-level rules");
         assert_eq!(warnings, 6, "Expected 6 warning-level rules");

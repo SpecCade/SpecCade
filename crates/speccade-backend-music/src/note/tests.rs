@@ -511,7 +511,9 @@ fn test_xm_pitch_deviation_cents_sweep() {
             assert!(
                 cents.abs() < 1.0,
                 "XM deviation too large: sr={}, midi={}, cents={:.4}",
-                sr, midi, cents
+                sr,
+                midi,
+                cents
             );
         }
     }
@@ -550,7 +552,10 @@ fn test_it_pitch_deviation_cents_sweep() {
             assert!(
                 cents.abs() < 1.0,
                 "IT deviation too large: sr={}, midi={}, c5_speed={}, cents={:.4}",
-                sr, midi, c5, cents
+                sr,
+                midi,
+                c5,
+                cents
             );
         }
     }

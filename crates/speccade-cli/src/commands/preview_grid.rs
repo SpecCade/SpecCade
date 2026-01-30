@@ -30,8 +30,8 @@ pub fn run(spec_path: &str, out: Option<&str>, panel_size: u32) -> Result<ExitCo
     let spec_path_pb = PathBuf::from(spec_path);
 
     // Read and parse spec (JSON or Starlark)
-    let load_result = load_spec(&spec_path_pb)
-        .with_context(|| format!("Failed to load spec: {}", spec_path))?;
+    let load_result =
+        load_spec(&spec_path_pb).with_context(|| format!("Failed to load spec: {}", spec_path))?;
 
     let mut spec = load_result.spec;
 
@@ -60,11 +60,16 @@ pub fn run(spec_path: &str, out: Option<&str>, panel_size: u32) -> Result<ExitCo
             .components()
             .filter_map(|c| c.as_os_str().to_str())
             .find(|&name| {
-                matches!(name, "static_mesh" | "skeletal_mesh" | "skeletal_animation" | "sprite")
+                matches!(
+                    name,
+                    "static_mesh" | "skeletal_mesh" | "skeletal_animation" | "sprite"
+                )
             })
             .unwrap_or("mesh");
 
-        PathBuf::from("test-outputs").join(asset_type).join(format!("{}.grid.png", stem))
+        PathBuf::from("test-outputs")
+            .join(asset_type)
+            .join(format!("{}.grid.png", stem))
     };
 
     // Inject panel_size into recipe params for Blender
@@ -133,7 +138,11 @@ pub fn run(spec_path: &str, out: Option<&str>, panel_size: u32) -> Result<ExitCo
             }
             out_path.clone()
         } else {
-            anyhow::bail!("Blender completed but output not found at {} or {}", out_path.display(), frames_dir.display());
+            anyhow::bail!(
+                "Blender completed but output not found at {} or {}",
+                out_path.display(),
+                frames_dir.display()
+            );
         }
     };
 
@@ -182,7 +191,11 @@ fn composite_frames_to_grid(frames_dir: &Path, out_path: &Path, panel_size: u32)
 
         if let Some(frame) = frame_opt {
             // Resize frame to panel_size if needed
-            let resized = frame.resize_exact(panel_size, panel_size, image::imageops::FilterType::Lanczos3);
+            let resized = frame.resize_exact(
+                panel_size,
+                panel_size,
+                image::imageops::FilterType::Lanczos3,
+            );
             let rgba = resized.to_rgba8();
 
             // Copy pixels to grid
@@ -237,25 +250,63 @@ fn draw_label(img: &mut RgbaImage, x: u32, y: u32, label: &str) {
 /// Simple 5x7 bitmap font patterns for A-Z and space
 fn get_char_bitmap(ch: char) -> Option<[u8; 7]> {
     match ch.to_ascii_uppercase() {
-        'A' => Some([0b01110, 0b10001, 0b10001, 0b11111, 0b10001, 0b10001, 0b10001]),
-        'B' => Some([0b11110, 0b10001, 0b11110, 0b10001, 0b10001, 0b10001, 0b11110]),
-        'C' => Some([0b01110, 0b10001, 0b10000, 0b10000, 0b10000, 0b10001, 0b01110]),
-        'D' => Some([0b11110, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b11110]),
-        'E' => Some([0b11111, 0b10000, 0b11110, 0b10000, 0b10000, 0b10000, 0b11111]),
-        'F' => Some([0b11111, 0b10000, 0b11110, 0b10000, 0b10000, 0b10000, 0b10000]),
-        'G' => Some([0b01110, 0b10001, 0b10000, 0b10111, 0b10001, 0b10001, 0b01110]),
-        'H' => Some([0b10001, 0b10001, 0b11111, 0b10001, 0b10001, 0b10001, 0b10001]),
-        'I' => Some([0b01110, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100, 0b01110]),
-        'K' => Some([0b10001, 0b10010, 0b11100, 0b10010, 0b10001, 0b10001, 0b10001]),
-        'L' => Some([0b10000, 0b10000, 0b10000, 0b10000, 0b10000, 0b10000, 0b11111]),
-        'N' => Some([0b10001, 0b11001, 0b10101, 0b10011, 0b10001, 0b10001, 0b10001]),
-        'O' => Some([0b01110, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b01110]),
-        'P' => Some([0b11110, 0b10001, 0b10001, 0b11110, 0b10000, 0b10000, 0b10000]),
-        'R' => Some([0b11110, 0b10001, 0b10001, 0b11110, 0b10010, 0b10001, 0b10001]),
-        'S' => Some([0b01110, 0b10001, 0b10000, 0b01110, 0b00001, 0b10001, 0b01110]),
-        'T' => Some([0b11111, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100]),
-        'U' => Some([0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b01110]),
-        ' ' => Some([0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000]),
+        'A' => Some([
+            0b01110, 0b10001, 0b10001, 0b11111, 0b10001, 0b10001, 0b10001,
+        ]),
+        'B' => Some([
+            0b11110, 0b10001, 0b11110, 0b10001, 0b10001, 0b10001, 0b11110,
+        ]),
+        'C' => Some([
+            0b01110, 0b10001, 0b10000, 0b10000, 0b10000, 0b10001, 0b01110,
+        ]),
+        'D' => Some([
+            0b11110, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b11110,
+        ]),
+        'E' => Some([
+            0b11111, 0b10000, 0b11110, 0b10000, 0b10000, 0b10000, 0b11111,
+        ]),
+        'F' => Some([
+            0b11111, 0b10000, 0b11110, 0b10000, 0b10000, 0b10000, 0b10000,
+        ]),
+        'G' => Some([
+            0b01110, 0b10001, 0b10000, 0b10111, 0b10001, 0b10001, 0b01110,
+        ]),
+        'H' => Some([
+            0b10001, 0b10001, 0b11111, 0b10001, 0b10001, 0b10001, 0b10001,
+        ]),
+        'I' => Some([
+            0b01110, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100, 0b01110,
+        ]),
+        'K' => Some([
+            0b10001, 0b10010, 0b11100, 0b10010, 0b10001, 0b10001, 0b10001,
+        ]),
+        'L' => Some([
+            0b10000, 0b10000, 0b10000, 0b10000, 0b10000, 0b10000, 0b11111,
+        ]),
+        'N' => Some([
+            0b10001, 0b11001, 0b10101, 0b10011, 0b10001, 0b10001, 0b10001,
+        ]),
+        'O' => Some([
+            0b01110, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b01110,
+        ]),
+        'P' => Some([
+            0b11110, 0b10001, 0b10001, 0b11110, 0b10000, 0b10000, 0b10000,
+        ]),
+        'R' => Some([
+            0b11110, 0b10001, 0b10001, 0b11110, 0b10010, 0b10001, 0b10001,
+        ]),
+        'S' => Some([
+            0b01110, 0b10001, 0b10000, 0b01110, 0b00001, 0b10001, 0b01110,
+        ]),
+        'T' => Some([
+            0b11111, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100,
+        ]),
+        'U' => Some([
+            0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b01110,
+        ]),
+        ' ' => Some([
+            0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000,
+        ]),
         _ => None,
     }
 }

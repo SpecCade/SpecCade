@@ -182,7 +182,8 @@ pub(crate) fn generate_xm_instrument(
     let (finetune, relative_note) =
         calculate_xm_pitch_correction(baked.sample_rate, baked.base_midi);
 
-    let pitch_cents = xm_pitch_deviation_cents(baked.sample_rate, baked.base_midi, finetune, relative_note);
+    let pitch_cents =
+        xm_pitch_deviation_cents(baked.sample_rate, baked.base_midi, finetune, relative_note);
 
     // Create sample
     let mut sample = XmSample::new(&instr.name, baked.pcm16_mono, true);

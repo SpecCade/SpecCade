@@ -24,10 +24,7 @@ impl std::str::FromStr for OutputFormat {
         match s.to_lowercase().as_str() {
             "text" => Ok(OutputFormat::Text),
             "json" => Ok(OutputFormat::Json),
-            _ => Err(format!(
-                "unknown format '{}', expected 'text' or 'json'",
-                s
-            )),
+            _ => Err(format!("unknown format '{}', expected 'text' or 'json'", s)),
         }
     }
 }

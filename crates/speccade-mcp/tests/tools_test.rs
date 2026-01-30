@@ -50,11 +50,7 @@ fn all_tools_have_descriptions() {
 
     for tool in &tools {
         let desc = tool.description.as_deref().unwrap_or("");
-        assert!(
-            !desc.is_empty(),
-            "Tool '{}' has no description",
-            tool.name
-        );
+        assert!(!desc.is_empty(), "Tool '{}' has no description", tool.name);
     }
 }
 
@@ -104,14 +100,13 @@ fn parameterized_tools_have_input_schema() {
 /// Parameter structs must deserialize correctly from JSON.
 #[test]
 fn param_deserialization() {
-    use speccade_mcp::tools::discovery::*;
-    use speccade_mcp::tools::authoring::*;
-    use speccade_mcp::tools::generation::*;
     use speccade_mcp::tools::analysis::*;
+    use speccade_mcp::tools::authoring::*;
+    use speccade_mcp::tools::discovery::*;
+    use speccade_mcp::tools::generation::*;
 
     // ListTemplatesParams with asset_type
-    let p: ListTemplatesParams =
-        serde_json::from_str(r#"{"asset_type": "audio"}"#).unwrap();
+    let p: ListTemplatesParams = serde_json::from_str(r#"{"asset_type": "audio"}"#).unwrap();
     assert_eq!(p.asset_type.as_deref(), Some("audio"));
 
     // ListTemplatesParams without asset_type
@@ -119,8 +114,7 @@ fn param_deserialization() {
     assert!(p.asset_type.is_none());
 
     // GetTemplateParams
-    let p: GetTemplateParams =
-        serde_json::from_str(r#"{"template_id": "laser-01"}"#).unwrap();
+    let p: GetTemplateParams = serde_json::from_str(r#"{"template_id": "laser-01"}"#).unwrap();
     assert_eq!(p.template_id, "laser-01");
     assert!(p.asset_type.is_none());
 
@@ -129,8 +123,7 @@ fn param_deserialization() {
     assert!(p.directory.is_none());
 
     // ReadSpecParams
-    let p: ReadSpecParams =
-        serde_json::from_str(r#"{"path": "specs/test.star"}"#).unwrap();
+    let p: ReadSpecParams = serde_json::from_str(r#"{"path": "specs/test.star"}"#).unwrap();
     assert_eq!(p.path, "specs/test.star");
 
     // WriteSpecParams
@@ -140,8 +133,7 @@ fn param_deserialization() {
     assert_eq!(p.content, "spec(...)");
 
     // EvalSpecParams
-    let p: EvalSpecParams =
-        serde_json::from_str(r#"{"path": "test.star"}"#).unwrap();
+    let p: EvalSpecParams = serde_json::from_str(r#"{"path": "test.star"}"#).unwrap();
     assert_eq!(p.path, "test.star");
 
     // ValidateSpecParams with budget
@@ -150,8 +142,7 @@ fn param_deserialization() {
     assert_eq!(p.budget.as_deref(), Some("strict"));
 
     // GeneratePreviewParams
-    let p: GeneratePreviewParams =
-        serde_json::from_str(r#"{"path": "test.star"}"#).unwrap();
+    let p: GeneratePreviewParams = serde_json::from_str(r#"{"path": "test.star"}"#).unwrap();
     assert_eq!(p.path, "test.star");
 
     // GenerateFullParams with out_dir
@@ -166,8 +157,7 @@ fn param_deserialization() {
     assert_eq!(p.budget.as_deref(), Some("strict"));
 
     // AnalyzeAssetParams
-    let p: AnalyzeAssetParams =
-        serde_json::from_str(r#"{"path": "output.wav"}"#).unwrap();
+    let p: AnalyzeAssetParams = serde_json::from_str(r#"{"path": "output.wav"}"#).unwrap();
     assert_eq!(p.path, "output.wav");
 
     // CompareAssetsParams
@@ -198,11 +188,21 @@ async fn list_specs_finds_star_files() {
     let dir = tempfile::tempdir().unwrap();
 
     // Create some .star files and a non-.star file
-    tokio::fs::write(dir.path().join("a.star"), "").await.unwrap();
-    tokio::fs::write(dir.path().join("b.star"), "").await.unwrap();
-    tokio::fs::write(dir.path().join("c.txt"), "").await.unwrap();
-    tokio::fs::create_dir_all(dir.path().join("sub")).await.unwrap();
-    tokio::fs::write(dir.path().join("sub/d.star"), "").await.unwrap();
+    tokio::fs::write(dir.path().join("a.star"), "")
+        .await
+        .unwrap();
+    tokio::fs::write(dir.path().join("b.star"), "")
+        .await
+        .unwrap();
+    tokio::fs::write(dir.path().join("c.txt"), "")
+        .await
+        .unwrap();
+    tokio::fs::create_dir_all(dir.path().join("sub"))
+        .await
+        .unwrap();
+    tokio::fs::write(dir.path().join("sub/d.star"), "")
+        .await
+        .unwrap();
 
     let pattern = format!("{}/**/*.star", dir.path().display());
     let paths: Vec<String> = glob::glob(&pattern)

@@ -3,11 +3,11 @@ pub mod authoring;
 pub mod discovery;
 pub mod generation;
 
+use base64::Engine;
 use rmcp::handler::server::tool::ToolRouter;
 use rmcp::handler::server::wrapper::Parameters;
 use rmcp::model::{CallToolResult, Content, ServerCapabilities, ServerInfo};
 use rmcp::{tool_handler, tool_router, ServerHandler};
-use base64::Engine;
 use std::path::{Component, Path, PathBuf};
 
 use crate::cli_runner;
@@ -15,7 +15,9 @@ use crate::cli_runner;
 use analysis::{AnalyzeAssetParams, CompareAssetsParams};
 use authoring::{EvalSpecParams, WriteSpecParams};
 use discovery::{GetTemplateParams, ListSpecsParams, ListTemplatesParams, ReadSpecParams};
-use generation::{GenerateFullParams, GeneratePngOutputsParams, GeneratePreviewParams, ValidateSpecParams};
+use generation::{
+    GenerateFullParams, GeneratePngOutputsParams, GeneratePreviewParams, ValidateSpecParams,
+};
 
 #[derive(Clone)]
 pub struct SpeccadeMcp {
@@ -309,7 +311,14 @@ impl SpeccadeMcp {
         };
         let out_root = tmp.path().to_string_lossy().to_string();
 
-        let mut args = vec!["generate", "--spec", &params.path, "--out-root", &out_root, "--json"];
+        let mut args = vec![
+            "generate",
+            "--spec",
+            &params.path,
+            "--out-root",
+            &out_root,
+            "--json",
+        ];
         let budget;
         if let Some(ref b) = params.budget {
             budget = b.clone();
@@ -510,9 +519,7 @@ impl ServerHandler for SpeccadeMcp {
                  create/edit specs, and generate tools to produce assets."
                     .into(),
             ),
-            capabilities: ServerCapabilities::builder()
-                .enable_tools()
-                .build(),
+            capabilities: ServerCapabilities::builder().enable_tools().build(),
             ..Default::default()
         }
     }
@@ -614,7 +621,10 @@ spec(
         assert_eq!(pngs.len(), 2, "expected 2 png outputs");
 
         for item in pngs {
-            assert_eq!(item.get("mime_type").and_then(|v| v.as_str()), Some("image/png"));
+            assert_eq!(
+                item.get("mime_type").and_then(|v| v.as_str()),
+                Some("image/png")
+            );
             let b64 = item
                 .get("base64")
                 .and_then(|v| v.as_str())

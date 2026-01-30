@@ -71,7 +71,9 @@ fn test_validate_extension_manifest_invalid_name() {
     let result = validate_extension_manifest(&manifest);
     assert!(result.is_err());
     let errors = result.unwrap_err();
-    assert!(errors.iter().any(|e| matches!(e, ManifestValidationError::InvalidName(_))));
+    assert!(errors
+        .iter()
+        .any(|e| matches!(e, ManifestValidationError::InvalidName(_))));
 }
 
 #[test]
@@ -88,7 +90,9 @@ fn test_validate_extension_manifest_tier_mismatch() {
     let result = validate_extension_manifest(&manifest);
     assert!(result.is_err());
     let errors = result.unwrap_err();
-    assert!(errors.iter().any(|e| matches!(e, ManifestValidationError::TierMismatch { .. })));
+    assert!(errors
+        .iter()
+        .any(|e| matches!(e, ManifestValidationError::TierMismatch { .. })));
 }
 
 #[test]
@@ -104,7 +108,9 @@ fn test_validate_extension_manifest_no_recipe_kinds() {
     let result = validate_extension_manifest(&manifest);
     assert!(result.is_err());
     let errors = result.unwrap_err();
-    assert!(errors.iter().any(|e| matches!(e, ManifestValidationError::NoRecipeKinds)));
+    assert!(errors
+        .iter()
+        .any(|e| matches!(e, ManifestValidationError::NoRecipeKinds)));
 }
 
 #[test]
@@ -120,7 +126,9 @@ fn test_validate_extension_manifest_invalid_recipe_kind() {
     let result = validate_extension_manifest(&manifest);
     assert!(result.is_err());
     let errors = result.unwrap_err();
-    assert!(errors.iter().any(|e| matches!(e, ManifestValidationError::InvalidRecipeKind(_))));
+    assert!(errors
+        .iter()
+        .any(|e| matches!(e, ManifestValidationError::InvalidRecipeKind(_))));
 }
 
 // ============================================================================
@@ -184,7 +192,10 @@ fn test_determinism_report_non_deterministic() {
     assert_eq!(report.tier, 3);
     assert_eq!(report.determinism, DeterminismLevel::NonDeterministic);
     assert!(!report.deterministic);
-    assert_eq!(report.non_determinism_reason, Some("Uses system time".to_string()));
+    assert_eq!(
+        report.non_determinism_reason,
+        Some("Uses system time".to_string())
+    );
 }
 
 #[test]
@@ -217,7 +228,9 @@ fn test_validate_output_manifest_invalid_path() {
     let result = validate_output_manifest(&manifest);
     assert!(result.is_err());
     let errors = result.unwrap_err();
-    assert!(errors.iter().any(|e| matches!(e, OutputManifestValidationError::InvalidOutputPath(_))));
+    assert!(errors
+        .iter()
+        .any(|e| matches!(e, OutputManifestValidationError::InvalidOutputPath(_))));
 }
 
 #[test]
@@ -235,7 +248,9 @@ fn test_validate_output_manifest_invalid_hash() {
     let result = validate_output_manifest(&manifest);
     assert!(result.is_err());
     let errors = result.unwrap_err();
-    assert!(errors.iter().any(|e| matches!(e, OutputManifestValidationError::InvalidOutputHash(_))));
+    assert!(errors
+        .iter()
+        .any(|e| matches!(e, OutputManifestValidationError::InvalidOutputHash(_))));
 }
 
 #[test]
@@ -256,7 +271,9 @@ fn test_validate_output_manifest_tier1_missing_output_hash() {
     let result = validate_output_manifest(&manifest);
     assert!(result.is_err());
     let errors = result.unwrap_err();
-    assert!(errors.iter().any(|e| matches!(e, OutputManifestValidationError::MissingOutputHash)));
+    assert!(errors
+        .iter()
+        .any(|e| matches!(e, OutputManifestValidationError::MissingOutputHash)));
 }
 
 #[test]
@@ -269,7 +286,9 @@ fn test_validate_output_manifest_success_no_files() {
     let result = validate_output_manifest(&manifest);
     assert!(result.is_err());
     let errors = result.unwrap_err();
-    assert!(errors.iter().any(|e| matches!(e, OutputManifestValidationError::NoOutputFiles)));
+    assert!(errors
+        .iter()
+        .any(|e| matches!(e, OutputManifestValidationError::NoOutputFiles)));
 }
 
 // ============================================================================

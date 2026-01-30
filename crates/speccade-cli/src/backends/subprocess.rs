@@ -1,10 +1,10 @@
 //! Subprocess-based extension runner.
 
 use speccade_spec::extension::{
-    DeterminismLevel, ExtensionError, ExtensionInterface,
-    ExtensionManifest, ExtensionOutputManifest, validate_output_manifest,
+    validate_output_manifest, DeterminismLevel, ExtensionError, ExtensionInterface,
+    ExtensionManifest, ExtensionOutputManifest,
 };
-use speccade_spec::{Spec, canonical_spec_hash, hash::blake3_hash};
+use speccade_spec::{canonical_spec_hash, hash::blake3_hash, Spec};
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use std::time::{Duration, Instant};
@@ -105,9 +105,9 @@ impl SubprocessRunner {
 
         // Write spec to temp file
         let spec_path = out_dir.join("input.spec.json");
-        let spec_json = spec.to_json_pretty().map_err(|e| {
-            ExtensionError::SpawnFailed(format!("Failed to serialize spec: {}", e))
-        })?;
+        let spec_json = spec
+            .to_json_pretty()
+            .map_err(|e| ExtensionError::SpawnFailed(format!("Failed to serialize spec: {}", e)))?;
         std::fs::write(&spec_path, &spec_json).map_err(|e| {
             ExtensionError::SpawnFailed(format!("Failed to write spec file: {}", e))
         })?;
@@ -195,13 +195,19 @@ impl SubprocessRunner {
 
         // Validate manifest structure
         if let Err(errors) = validate_output_manifest(&manifest) {
-            let msg = errors.iter().map(|e| e.to_string()).collect::<Vec<_>>().join("; ");
+            let msg = errors
+                .iter()
+                .map(|e| e.to_string())
+                .collect::<Vec<_>>()
+                .join("; ");
             return Err(ExtensionError::ManifestValidation(msg));
         }
 
         // Check for extension-reported errors
         if !manifest.success {
-            return Err(ExtensionError::ExtensionReportedError(manifest.errors.clone()));
+            return Err(ExtensionError::ExtensionReportedError(
+                manifest.errors.clone(),
+            ));
         }
 
         // Verify input hash matches
@@ -293,7 +299,9 @@ fn wait_with_timeout(
         match child.try_wait() {
             Ok(Some(status)) => {
                 // Process has exited
-                let stdout = child.stdout.take()
+                let stdout = child
+                    .stdout
+                    .take()
                     .map(|mut s| {
                         let mut buf = Vec::new();
                         std::io::Read::read_to_end(&mut s, &mut buf).ok();
@@ -301,7 +309,9 @@ fn wait_with_timeout(
                     })
                     .unwrap_or_default();
 
-                let stderr = child.stderr.take()
+                let stderr = child
+                    .stderr
+                    .take()
                     .map(|mut s| {
                         let mut buf = Vec::new();
                         std::io::Read::read_to_end(&mut s, &mut buf).ok();
@@ -309,7 +319,11 @@ fn wait_with_timeout(
                     })
                     .unwrap_or_default();
 
-                return Ok(std::process::Output { status, stdout, stderr });
+                return Ok(std::process::Output {
+                    status,
+                    stdout,
+                    stderr,
+                });
             }
             Ok(None) => {
                 // Still running

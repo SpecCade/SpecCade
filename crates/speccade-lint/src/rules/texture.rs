@@ -758,10 +758,7 @@ impl LintRule for ColorCastRule {
             ),
             "Balance color ramp",
         )
-        .with_actual_value(format!(
-            "R={:.1}, G={:.1}, B={:.1}",
-            r_avg, g_avg, b_avg
-        ))
+        .with_actual_value(format!("R={:.1}, G={:.1}, B={:.1}", r_avg, g_avg, b_avg))
         .with_expected_range("channels within 1.5x of each other")]
     }
 }
@@ -813,7 +810,10 @@ impl LintRule for PowerOfTwoRule {
             vec![LintIssue::new(
                 self.id(),
                 self.default_severity(),
-                format!("Image has non-power-of-two dimensions ({})", issues.join(", ")),
+                format!(
+                    "Image has non-power-of-two dimensions ({})",
+                    issues.join(", ")
+                ),
                 "Use 256/512/1024",
             )
             .with_actual_value(format!("{}x{}", image.width, image.height))
@@ -866,7 +866,10 @@ impl LintRule for LargeSolidRegionsRule {
             vec![LintIssue::new(
                 self.id(),
                 self.default_severity(),
-                format!("Image has large solid regions ({:.1}% identical pixels)", percentage),
+                format!(
+                    "Image has large solid regions ({:.1}% identical pixels)",
+                    percentage
+                ),
                 "Add subtle variation",
             )
             .with_actual_value(format!("{:.1}%", percentage))
@@ -887,7 +890,12 @@ mod tests {
     use std::path::Path;
 
     /// Creates a minimal PNG image with the given pixel data.
-    fn create_test_png(width: u32, height: u32, pixels: &[u8], color_type: png::ColorType) -> Vec<u8> {
+    fn create_test_png(
+        width: u32,
+        height: u32,
+        pixels: &[u8],
+        color_type: png::ColorType,
+    ) -> Vec<u8> {
         let mut buffer = Vec::new();
         {
             let mut encoder = png::Encoder::new(&mut buffer, width, height);
@@ -1005,7 +1013,7 @@ mod tests {
     fn test_corrupt_alpha_rule_passes_with_varied_alpha() {
         // 2x2 RGBA image with varied alpha
         let pixels = vec![
-            128, 128, 128, 0,   // pixel 0: transparent
+            128, 128, 128, 0, // pixel 0: transparent
             128, 128, 128, 128, // pixel 1: semi-transparent
             128, 128, 128, 200, // pixel 2: mostly opaque
             128, 128, 128, 255, // pixel 3: opaque
@@ -1059,9 +1067,9 @@ mod tests {
     fn test_low_contrast_rule_passes() {
         // 2x2 image with high contrast (black and white pixels)
         let pixels = vec![
-            0, 0, 0,       // black
+            0, 0, 0, // black
             255, 255, 255, // white
-            0, 0, 0,       // black
+            0, 0, 0, // black
             255, 255, 255, // white
         ];
         let png_data = create_test_png(2, 2, &pixels, png::ColorType::Rgb);
@@ -1182,10 +1190,8 @@ mod tests {
     fn test_color_cast_rule_triggers() {
         // 2x2 image with strong red cast
         let pixels = vec![
-            200, 50, 50,  // red-heavy
-            200, 50, 50,
-            200, 50, 50,
-            200, 50, 50,
+            200, 50, 50, // red-heavy
+            200, 50, 50, 200, 50, 50, 200, 50, 50,
         ];
         let png_data = create_test_png(2, 2, &pixels, png::ColorType::Rgb);
         let asset = make_asset_data(&png_data);

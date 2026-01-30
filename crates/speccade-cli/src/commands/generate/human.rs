@@ -88,10 +88,7 @@ pub fn run_human(
                 // For mesh pipelines, inject into nested export settings
                 if let Some(export) = params.get_mut("export") {
                     if let Some(export_obj) = export.as_object_mut() {
-                        export_obj.insert(
-                            "save_blend".to_string(),
-                            serde_json::Value::Bool(true),
-                        );
+                        export_obj.insert("save_blend".to_string(), serde_json::Value::Bool(true));
                     }
                 } else {
                     // No export block yet - create one with save_blend
@@ -101,10 +98,7 @@ pub fn run_human(
                     );
                 }
                 // Also set top-level save_blend for handlers that read it directly
-                params.insert(
-                    "save_blend".to_string(),
-                    serde_json::Value::Bool(true),
-                );
+                params.insert("save_blend".to_string(), serde_json::Value::Bool(true));
             }
         }
     }
@@ -315,8 +309,7 @@ pub fn run_human(
             }
 
             // Run lint on generated outputs
-            if let Some(lint_data) =
-                reporting::run_lint_on_outputs(&outputs, &spec, out_root, true)
+            if let Some(lint_data) = reporting::run_lint_on_outputs(&outputs, &spec, out_root, true)
             {
                 report_builder = report_builder.lint(lint_data);
             }
