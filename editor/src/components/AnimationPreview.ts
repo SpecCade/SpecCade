@@ -88,6 +88,13 @@ export class AnimationPreview {
   // Metadata
   private metadata: AnimationMetadata | null = null;
 
+  // Callbacks
+  private onModeChange: ((mode: PreviewMode) => void) | null = null;
+
+  // Mode toggle buttons
+  private specModeBtn!: HTMLButtonElement;
+  private exportedModeBtn!: HTMLButtonElement;
+
   constructor(container: HTMLElement) {
     this.container = container;
     this.clock = new THREE.Clock();
@@ -320,6 +327,43 @@ export class AnimationPreview {
       this.saveSettings();
     };
     transport.appendChild(speedSelect);
+
+    // Mode toggle group
+    const modeGroup = document.createElement("div");
+    modeGroup.style.cssText = "display: flex; gap: 2px; margin-left: 8px;";
+
+    const activeModeStyle = `
+      padding: 4px 8px;
+      background: #4a9eff;
+      color: #fff;
+      border: 1px solid #4a9eff;
+      border-radius: 4px 0 0 4px;
+      cursor: pointer;
+      font-size: 10px;
+    `;
+    const inactiveModeStyle = `
+      padding: 4px 8px;
+      background: #333;
+      color: #888;
+      border: 1px solid #444;
+      border-radius: 0 4px 4px 0;
+      cursor: pointer;
+      font-size: 10px;
+    `;
+
+    this.specModeBtn = document.createElement("button");
+    this.specModeBtn.textContent = "Spec";
+    this.specModeBtn.style.cssText = this.previewMode === "spec" ? activeModeStyle : inactiveModeStyle.replace("0 4px 4px 0", "4px 0 0 4px");
+    this.specModeBtn.onclick = () => this.setPreviewMode("spec");
+
+    this.exportedModeBtn = document.createElement("button");
+    this.exportedModeBtn.textContent = "Export";
+    this.exportedModeBtn.style.cssText = this.previewMode === "exported" ? activeModeStyle.replace("4px 0 0 4px", "0 4px 4px 0") : inactiveModeStyle;
+    this.exportedModeBtn.onclick = () => this.setPreviewMode("exported");
+
+    modeGroup.appendChild(this.specModeBtn);
+    modeGroup.appendChild(this.exportedModeBtn);
+    transport.appendChild(modeGroup);
 
     // Bones toggle
     const bonesBtn = document.createElement("button");
@@ -554,6 +598,40 @@ export class AnimationPreview {
     }
 
     this.infoDiv.textContent = parts.join(" | ") || "Animation loaded";
+  }
+
+  // Mode controls
+  setModeChangeCallback(callback: ((mode: PreviewMode) => void) | null): void {
+    this.onModeChange = callback;
+  }
+
+  setPreviewMode(mode: PreviewMode): void {
+    if (this.previewMode === mode) return;
+    this.previewMode = mode;
+    this.updateModeButtonStyles();
+    this.saveSettings();
+    if (this.onModeChange) {
+      this.onModeChange(mode);
+    }
+  }
+
+  getPreviewMode(): PreviewMode {
+    return this.previewMode;
+  }
+
+  private updateModeButtonStyles(): void {
+    const activeStyle = "background: #4a9eff; color: #fff; border-color: #4a9eff;";
+    const inactiveStyle = "background: #333; color: #888; border-color: #444;";
+
+    if (this.specModeBtn && this.exportedModeBtn) {
+      if (this.previewMode === "spec") {
+        this.specModeBtn.style.cssText = this.specModeBtn.style.cssText.replace(/background:[^;]+;/, activeStyle.split(";")[0] + ";").replace(/color:[^;]+;/, activeStyle.split(";")[1] + ";").replace(/border-color:[^;]+;/, activeStyle.split(";")[2] + ";");
+        this.exportedModeBtn.style.cssText = this.exportedModeBtn.style.cssText.replace(/background:[^;]+;/, inactiveStyle.split(";")[0] + ";").replace(/color:[^;]+;/, inactiveStyle.split(";")[1] + ";").replace(/border-color:[^;]+;/, inactiveStyle.split(";")[2] + ";");
+      } else {
+        this.specModeBtn.style.cssText = this.specModeBtn.style.cssText.replace(/background:[^;]+;/, inactiveStyle.split(";")[0] + ";").replace(/color:[^;]+;/, inactiveStyle.split(";")[1] + ";").replace(/border-color:[^;]+;/, inactiveStyle.split(";")[2] + ";");
+        this.exportedModeBtn.style.cssText = this.exportedModeBtn.style.cssText.replace(/background:[^;]+;/, activeStyle.split(";")[0] + ";").replace(/color:[^;]+;/, activeStyle.split(";")[1] + ";").replace(/border-color:[^;]+;/, activeStyle.split(";")[2] + ";");
+      }
+    }
   }
 
   // Playback controls
