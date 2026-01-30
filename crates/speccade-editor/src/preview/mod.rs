@@ -3,6 +3,7 @@
 //! These backends generate fast, low-fidelity previews for real-time feedback
 //! during spec authoring. They trade output quality for speed.
 
+pub mod animation;
 pub mod audio;
 pub mod lod;
 pub mod mesh;

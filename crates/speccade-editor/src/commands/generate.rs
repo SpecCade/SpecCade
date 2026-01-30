@@ -75,8 +75,7 @@ pub fn generate_preview(
             preview::music::generate_music_preview(&spec, std::path::Path::new(&filename))
         }
         speccade_spec::AssetType::SkeletalAnimation => {
-            // Animation preview is not yet implemented
-            PreviewResult::failure("animation", "Animation preview not yet implemented")
+            preview::animation::generate_animation_preview(&spec, &settings)
         }
     };
 
