@@ -14,6 +14,7 @@ import { MeshPreview } from "./components/MeshPreview";
 import { AudioPreview } from "./components/AudioPreview";
 import { TexturePreview } from "./components/TexturePreview";
 import { MusicPreview } from "./components/MusicPreview";
+import { AnimationPreview, type AnimationMetadata } from "./components/AnimationPreview";
 import { NewAssetDialog } from "./components/NewAssetDialog";
 import { FileBrowser } from "./components/FileBrowser";
 import { ProjectExplorer } from "./components/ProjectExplorer";
@@ -111,6 +112,7 @@ let meshPreview: MeshPreview | null = null;
 let audioPreview: AudioPreview | null = null;
 let musicPreview: MusicPreview | null = null;
 let texturePreview: TexturePreview | null = null;
+let animationPreview: AnimationPreview | null = null;
 let fileBrowser: FileBrowser | null = null;
 let projectExplorer: ProjectExplorer | null = null;
 let generatePanel: GeneratePanel | null = null;
@@ -486,6 +488,10 @@ function clearPreviewComponents(): void {
     texturePreview.dispose();
     texturePreview = null;
   }
+  if (animationPreview) {
+    animationPreview.dispose();
+    animationPreview = null;
+  }
   previewContent.innerHTML = "";
 }
 
@@ -594,6 +600,8 @@ async function updatePreview(result: unknown, source: string): Promise<void> {
     assetType === "mesh"
   ) {
     await renderMeshPreview(source);
+  } else if (assetType === "skeletal_animation") {
+    await renderAnimationPreview(source);
   } else {
     // Fallback to JSON preview for unknown types
     replaceStage("compile", []);
@@ -648,6 +656,63 @@ async function renderMeshPreview(source: string): Promise<void> {
     try {
       await meshPreview.loadGLB(preview.data);
       updateStatus("Mesh preview ready");
+    } catch (error) {
+      replaceStage("preview", [previewProblem(String(error))]);
+      updateStatus(`Preview error: ${error}`);
+    }
+  } else {
+    replaceStage("preview", [previewProblem(preview?.error ?? "Unknown error")]);
+    replaceStage("lint", []);
+    updateStatus(`Preview error: ${preview?.error ?? "Unknown error"}`);
+  }
+}
+
+/**
+ * Render animation preview with three.js.
+ */
+async function renderAnimationPreview(source: string): Promise<void> {
+  // Create animation preview if needed
+  if (!animationPreview) {
+    previewContent.innerHTML = "";
+    animationPreview = new AnimationPreview(previewContent);
+  }
+
+  const filename = currentFilePath ?? "editor.star";
+  updateStatus("Generating animation preview...");
+
+  let result: GeneratePreviewOutput;
+  try {
+    result = await invoke<GeneratePreviewOutput>("plugin:speccade|generate_preview", {
+      source,
+      filename,
+    });
+  } catch (error) {
+    replaceStage("ipc", [ipcProblem(String(error))]);
+    replaceStage("compile", []);
+    replaceStage("preview", []);
+    replaceStage("lint", []);
+    updateStatus(`IPC Error: ${error}`);
+    return;
+  }
+
+  if (!result.compile_success) {
+    replaceStage("compile", [compileProblem(result.compile_error ?? "Unknown error")]);
+    replaceStage("preview", []);
+    replaceStage("lint", []);
+    updateStatus(`Compile error: ${result.compile_error ?? "Unknown error"}`);
+    return;
+  }
+
+  replaceStage("compile", []);
+
+  const preview = result.preview;
+  if (preview?.success && preview.data) {
+    replaceStage("preview", []);
+    processLintResults(preview);
+    try {
+      const metadata = preview.metadata as AnimationMetadata | undefined;
+      await animationPreview.loadGLB(preview.data, metadata, filename);
+      updateStatus("Animation preview ready");
     } catch (error) {
       replaceStage("preview", [previewProblem(String(error))]);
       updateStatus(`Preview error: ${error}`);
