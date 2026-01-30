@@ -3,7 +3,6 @@
 //! Generates coverage reports showing which stdlib features have golden examples.
 
 use anyhow::{Context, Result};
-use chrono::Utc;
 use glob::glob;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
@@ -62,8 +61,8 @@ pub fn load_feature_inventory_from(base_path: Option<&Path>) -> Result<FeatureIn
     let content = fs::read_to_string(&snapshot_path)
         .with_context(|| format!("Failed to read {}", snapshot_path.display()))?;
 
-    let snapshot: StdlibSnapshot = serde_json::from_str(&content)
-        .with_context(|| "Failed to parse stdlib.snapshot.json")?;
+    let snapshot: StdlibSnapshot =
+        serde_json::from_str(&content).with_context(|| "Failed to parse stdlib.snapshot.json")?;
 
     // Extract enums from function parameters
     let mut enums: HashMap<String, Vec<String>> = HashMap::new();
@@ -383,7 +382,8 @@ pub fn generate_coverage_report_from(base_path: Option<&Path>) -> Result<Coverag
 
     Ok(CoverageReport {
         schema_version: 1,
-        generated_at: Utc::now().to_rfc3339(),
+        // Deterministic value so `coverage generate` doesn't dirty worktrees.
+        generated_at: "1970-01-01T00:00:00Z".to_string(),
         summary: CoverageSummary {
             total_features,
             covered,
@@ -558,7 +558,10 @@ mod tests {
             .iter()
             .map(|f| f.name.as_str())
             .collect();
-        assert!(func_names.contains("oscillator"), "expected oscillator function");
+        assert!(
+            func_names.contains("oscillator"),
+            "expected oscillator function"
+        );
     }
 
     #[test]
