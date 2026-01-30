@@ -6,7 +6,7 @@ use anyhow::{Context, Result};
 use glob::glob;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
@@ -244,8 +244,8 @@ pub struct FunctionCoverage {
     pub covered: bool,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub examples: Vec<String>,
-    #[serde(skip_serializing_if = "HashMap::is_empty")]
-    pub enum_coverage: HashMap<String, HashMap<String, EnumValueCoverage>>,
+    #[serde(skip_serializing_if = "BTreeMap::is_empty")]
+    pub enum_coverage: BTreeMap<String, BTreeMap<String, EnumValueCoverage>>,
 }
 
 /// Coverage info for a single enum value
@@ -263,7 +263,7 @@ pub struct CoverageReport {
     pub generated_at: String,
     pub summary: CoverageSummary,
     /// Map of category -> functions
-    pub stdlib: HashMap<String, Vec<FunctionCoverage>>,
+    pub stdlib: BTreeMap<String, Vec<FunctionCoverage>>,
     /// Features with no coverage
     pub uncovered_features: Vec<String>,
 }
@@ -277,7 +277,7 @@ pub fn generate_coverage_report_from(base_path: Option<&Path>) -> Result<Coverag
     let inventory = load_feature_inventory_from(base_path)?;
     let starlark_usages = scan_starlark_usages_from(base_path, &inventory)?;
 
-    let mut stdlib: HashMap<String, Vec<FunctionCoverage>> = HashMap::new();
+    let mut stdlib: BTreeMap<String, Vec<FunctionCoverage>> = BTreeMap::new();
     let mut uncovered_features: Vec<String> = Vec::new();
     let mut total_features = 0u32;
     let mut covered = 0u32;
@@ -311,11 +311,12 @@ pub fn generate_coverage_report_from(base_path: Option<&Path>) -> Result<Coverag
         }
 
         // Check enum coverage for this function's params
-        let mut enum_coverage: HashMap<String, HashMap<String, EnumValueCoverage>> = HashMap::new();
+        let mut enum_coverage: BTreeMap<String, BTreeMap<String, EnumValueCoverage>> =
+            BTreeMap::new();
 
         for param in &func.params {
             if let Some(ref enum_values) = param.enum_values {
-                let mut value_coverage: HashMap<String, EnumValueCoverage> = HashMap::new();
+                let mut value_coverage: BTreeMap<String, EnumValueCoverage> = BTreeMap::new();
 
                 for value in enum_values {
                     total_features += 1;

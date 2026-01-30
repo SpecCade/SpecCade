@@ -7,6 +7,7 @@ use std::path::PathBuf;
 use std::sync::{Mutex, OnceLock};
 
 use speccade_tests::harness::TestHarness;
+use tempfile::tempdir;
 
 fn coverage_generate_lock() -> &'static Mutex<()> {
     static LOCK: OnceLock<Mutex<()>> = OnceLock::new();
@@ -29,7 +30,16 @@ fn coverage_is_complete() {
         .lock()
         .expect("coverage lock poisoned");
 
-    let output = harness.run_cli_in_dir(&root, &["coverage", "generate", "--strict"]);
+    let tmp = tempdir().expect("tempdir");
+    let yaml_path = tmp.path().join("feature-coverage.yaml");
+    let yaml_path = yaml_path
+        .to_str()
+        .expect("temp yaml path should be valid UTF-8");
+
+    let output = harness.run_cli_in_dir(
+        &root,
+        &["coverage", "generate", "--strict", "--output", yaml_path],
+    );
 
     if !output.success {
         panic!(
@@ -50,20 +60,21 @@ fn coverage_yaml_is_valid() {
         .lock()
         .expect("coverage lock poisoned");
 
+    let tmp = tempdir().expect("tempdir");
+    let yaml_path = tmp.path().join("feature-coverage.yaml");
+    let yaml_path_str = yaml_path
+        .to_str()
+        .expect("temp yaml path should be valid UTF-8");
+
     // First generate the coverage report
-    let gen_output = harness.run_cli_in_dir(&root, &["coverage", "generate"]);
+    let gen_output =
+        harness.run_cli_in_dir(&root, &["coverage", "generate", "--output", yaml_path_str]);
 
     if !gen_output.success {
         panic!("Coverage generate failed!\nstderr: {}", gen_output.stderr);
     }
 
-    let yaml_path = root.join("docs/coverage/feature-coverage.yaml");
-
-    assert!(
-        yaml_path.exists(),
-        "Coverage YAML not found at {}",
-        yaml_path.display()
-    );
+    assert!(yaml_path.exists(), "Coverage YAML not generated");
 
     let content = std::fs::read_to_string(&yaml_path).expect("Failed to read coverage YAML");
 
