@@ -1,0 +1,257 @@
+{
+  "spec_version": 1,
+  "asset_id": "humanoid_female",
+  "asset_type": "skeletal_mesh",
+  "license": "CC0-1.0",
+  "seed": 7102,
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "glb",
+      "path": "skeletal_mesh/humanoid_female.glb"
+    }
+  ],
+  "description": "Golden fixture: humanoid female (armature-driven, preset skeleton)",
+  "style_tags": [
+    "golden",
+    "skeletal_mesh",
+    "character",
+    "humanoid",
+    "female",
+    "armature_driven_v1"
+  ],
+  "recipe": {
+    "kind": "skeletal_mesh.armature_driven_v1",
+    "params": {
+      "bone_meshes": {
+        "chest": {
+          "attachments": [
+            {
+              "dimensions": [
+                0.18,
+                0.18,
+                0.05
+              ],
+              "material_index": 2,
+              "offset": [
+                0.0,
+                0.2,
+                0.35
+              ],
+              "primitive": "torus",
+              "rotation": [
+                90.0,
+                0.0,
+                0.0
+              ]
+            }
+          ],
+          "bulge": [
+            {
+              "at": 0.3,
+              "scale": 1.18
+            },
+            {
+              "at": 0.86,
+              "scale": 0.88
+            }
+          ],
+          "material_index": 1,
+          "profile": "hexagon(8)",
+          "profile_radius": [
+            0.14,
+            0.11
+          ],
+          "rotate": [
+            -2.0,
+            0.0,
+            0.0
+          ],
+          "taper": 0.9,
+          "translate": [
+            0.0,
+            0.04,
+            0.0
+          ]
+        },
+        "head": {
+          "attachments": [
+            {
+              "extrude": {
+                "end": [
+                  0.0,
+                  -0.25,
+                  0.1
+                ],
+                "profile": "rectangle",
+                "profile_radius": [
+                  0.06,
+                  0.1
+                ],
+                "start": [
+                  0.0,
+                  -0.02,
+                  0.15
+                ],
+                "taper": 0.7
+              }
+            }
+          ],
+          "bulge": [
+            {
+              "at": 0.1,
+              "scale": 1.08
+            },
+            {
+              "at": 0.55,
+              "scale": 1.22
+            }
+          ],
+          "material_index": 0,
+          "modifiers": [
+            {
+              "bool": {
+                "operation": "difference",
+                "target": "eye_cut_l"
+              }
+            },
+            {
+              "bool": {
+                "operation": "difference",
+                "target": "eye_cut_r"
+              }
+            }
+          ],
+          "profile": "circle(16)",
+          "profile_radius": {
+            "absolute": 0.115
+          },
+          "taper": 1.0
+        },
+        "spine": {
+          "bulge": [
+            {
+              "at": 0.35,
+              "scale": 1.08
+            }
+          ],
+          "material_index": 1,
+          "profile": "circle(12)",
+          "profile_radius": 0.105,
+          "taper": 0.96
+        },
+        "upper_arm_l": {
+          "bulge": [
+            {
+              "at": 0.18,
+              "scale": 1.12
+            },
+            {
+              "at": 0.7,
+              "scale": 0.92
+            }
+          ],
+          "material_index": 0,
+          "profile": "rectangle",
+          "profile_radius": [
+            0.075,
+            0.105
+          ],
+          "rotate": [
+            0.0,
+            0.0,
+            -12.0
+          ],
+          "taper": 0.82
+        },
+        "upper_arm_r": {
+          "mirror": "upper_arm_l"
+        },
+        "upper_leg_l": {
+          "bulge": [
+            {
+              "at": 0.2,
+              "scale": 1.12
+            },
+            {
+              "at": 0.65,
+              "scale": 0.95
+            }
+          ],
+          "material_index": 0,
+          "profile": "circle(10)",
+          "profile_radius": 0.125,
+          "taper": 0.75
+        },
+        "upper_leg_r": {
+          "mirror": "upper_leg_l"
+        }
+      },
+      "bool_shapes": {
+        "eye_cut_l": {
+          "bone": "head",
+          "dimensions": [
+            0.07,
+            0.07,
+            0.07
+          ],
+          "position": [
+            -0.18,
+            0.22,
+            0.14
+          ],
+          "primitive": "sphere"
+        },
+        "eye_cut_r": {
+          "mirror": "eye_cut_l"
+        }
+      },
+      "constraints": {
+        "max_bones": 64,
+        "max_materials": 8,
+        "max_triangles": 12000
+      },
+      "export": {
+        "include_armature": true,
+        "include_normals": true,
+        "include_skin_weights": true,
+        "include_uvs": true,
+        "save_blend": false,
+        "triangulate": true
+      },
+      "material_slots": [
+        {
+          "base_color": [
+            0.86,
+            0.73,
+            0.64,
+            1.0
+          ],
+          "name": "skin",
+          "roughness": 0.55
+        },
+        {
+          "base_color": [
+            0.2,
+            0.18,
+            0.16,
+            1.0
+          ],
+          "name": "cloth",
+          "roughness": 0.85
+        },
+        {
+          "base_color": [
+            0.6,
+            0.2,
+            0.18,
+            1.0
+          ],
+          "name": "accent",
+          "roughness": 0.6
+        }
+      ],
+      "skeleton_preset": "humanoid_basic_v1"
+    }
+  }
+}

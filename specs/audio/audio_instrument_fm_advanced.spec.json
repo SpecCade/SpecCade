@@ -1,0 +1,85 @@
+{
+  "spec_version": 1,
+  "asset_id": "audio-instrument-fm-advanced-golden",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 999011,
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "audio_instrument_fm_advanced.wav"
+    }
+  ],
+  "description": "Golden test for advanced FM synthesis - exercises fm_synth with carrier/modulator frequencies, modulation_index, freq_sweep, and pitch_envelope",
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "base_note": "A4",
+      "duration_seconds": 2.0,
+      "generate_loop_points": true,
+      "layers": [
+        {
+          "envelope": {
+            "attack": 0.01,
+            "decay": 0.2,
+            "release": 0.3,
+            "sustain": 0.7
+          },
+          "pan": 0.0,
+          "synthesis": {
+            "carrier_freq": 440.0,
+            "modulation_index": 3.0,
+            "modulator_freq": 440.0,
+            "type": "fm_synth"
+          },
+          "volume": 0.6
+        },
+        {
+          "envelope": {
+            "attack": 0.005,
+            "decay": 0.15,
+            "release": 0.2,
+            "sustain": 0.5
+          },
+          "pan": -0.2,
+          "synthesis": {
+            "carrier_freq": 440.0,
+            "freq_sweep": {
+              "curve": "exponential",
+              "end_freq": 220.0
+            },
+            "modulation_index": 2.0,
+            "modulator_freq": 880.0,
+            "type": "fm_synth"
+          },
+          "volume": 0.4
+        },
+        {
+          "envelope": {
+            "attack": 0.02,
+            "decay": 0.3,
+            "release": 0.4,
+            "sustain": 0.6
+          },
+          "pan": 0.2,
+          "synthesis": {
+            "carrier_freq": 440.0,
+            "modulation_index": 1.0,
+            "modulator_freq": 1540.0,
+            "type": "fm_synth"
+          },
+          "volume": 0.3
+        }
+      ],
+      "pitch_envelope": {
+        "attack": 0.01,
+        "decay": 0.1,
+        "depth": 2.0,
+        "release": 0.0,
+        "sustain": 0.0
+      },
+      "sample_rate": 48000
+    }
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "spec_version": 1,
+  "asset_id": "simple_beep",
+  "asset_type": "audio",
+  "license": "CC0-1.0",
+  "seed": 1001,
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "wav",
+      "path": "simple_beep.wav"
+    }
+  ],
+  "description": "Simple sine wave beep - the most basic SFX",
+  "recipe": {
+    "kind": "audio_v1",
+    "params": {
+      "duration_seconds": 0.3,
+      "layers": [
+        {
+          "envelope": {
+            "attack": 0.01,
+            "decay": 0.05,
+            "release": 0.15,
+            "sustain": 0.6
+          },
+          "pan": 0.0,
+          "synthesis": {
+            "frequency": 880.0,
+            "type": "oscillator",
+            "waveform": "sine"
+          },
+          "volume": 0.8
+        }
+      ],
+      "sample_rate": 44100
+    }
+  }
+}

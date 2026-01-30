@@ -1,0 +1,231 @@
+{
+  "spec_version": 1,
+  "asset_id": "mesh_comprehensive",
+  "asset_type": "static_mesh",
+  "license": "CC0-1.0",
+  "seed": 4243,
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "glb",
+      "path": "meshes/mesh_comprehensive.glb"
+    }
+  ],
+  "description": "Comprehensive static mesh spec (modifiers, UVs, normals, materials, LOD, collision, navmesh, baking, attachments)",
+  "recipe": {
+    "kind": "static_mesh.blender_primitives_v1",
+    "params": {
+      "attachments": [
+        {
+          "dimensions": [
+            0.8,
+            0.8,
+            0.25
+          ],
+          "position": [
+            0.0,
+            0.0,
+            1.2
+          ],
+          "primitive": "torus",
+          "rotation": [
+            0.0,
+            90.0,
+            0.0
+          ]
+        },
+        {
+          "dimensions": [
+            0.4,
+            0.4,
+            0.7
+          ],
+          "position": [
+            0.0,
+            0.9,
+            0.3
+          ],
+          "primitive": "cone",
+          "rotation": [
+            -90.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "dimensions": [
+            0.2,
+            0.6,
+            0.2
+          ],
+          "position": [
+            0.0,
+            -0.8,
+            0.8
+          ],
+          "primitive": "cube",
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        }
+      ],
+      "baking": {
+        "bake_types": [
+          "normal",
+          "ao",
+          "curvature"
+        ],
+        "margin": 16,
+        "ray_distance": 0.1,
+        "resolution": [
+          512,
+          512
+        ]
+      },
+      "base_primitive": "cylinder",
+      "collision_mesh": {
+        "collision_type": "simplified_mesh",
+        "output_suffix": "_col",
+        "target_faces": 128
+      },
+      "constraints": {
+        "max_materials": 8,
+        "max_triangles": 50000,
+        "max_vertices": 50000
+      },
+      "dimensions": [
+        1.2,
+        1.2,
+        2.2
+      ],
+      "export": {
+        "apply_modifiers": true,
+        "include_normals": true,
+        "include_uvs": true,
+        "include_vertex_colors": false,
+        "save_blend": false,
+        "tangents": true,
+        "triangulate": true
+      },
+      "lod_chain": {
+        "decimate_method": "planar",
+        "levels": [
+          {
+            "level": 0
+          },
+          {
+            "level": 1,
+            "target_tris": 1200
+          },
+          {
+            "level": 2,
+            "target_tris": 400
+          }
+        ]
+      },
+      "material_slots": [
+        {
+          "base_color": [
+            0.15,
+            0.16,
+            0.18,
+            1.0
+          ],
+          "metallic": 0.7,
+          "name": "painted_metal",
+          "roughness": 0.35
+        },
+        {
+          "base_color": [
+            0.03,
+            0.03,
+            0.035,
+            1.0
+          ],
+          "metallic": 0.0,
+          "name": "rubber",
+          "roughness": 0.9
+        },
+        {
+          "base_color": [
+            0.9,
+            0.75,
+            0.1,
+            1.0
+          ],
+          "name": "warning_stripe",
+          "roughness": 0.5
+        },
+        {
+          "emissive": [
+            0.2,
+            1.0,
+            0.3
+          ],
+          "emissive_strength": 3.0,
+          "name": "status_led"
+        }
+      ],
+      "modifiers": [
+        {
+          "angle_limit": 0.6108652381980153,
+          "segments": 2,
+          "type": "bevel",
+          "width": 0.03
+        },
+        {
+          "levels": 2,
+          "render_levels": 2,
+          "type": "subdivision"
+        },
+        {
+          "axis_x": true,
+          "axis_y": false,
+          "axis_z": false,
+          "type": "mirror"
+        },
+        {
+          "count": 2,
+          "offset": [
+            0.0,
+            1.6,
+            0.0
+          ],
+          "type": "array"
+        },
+        {
+          "offset": 0.0,
+          "thickness": 0.04,
+          "type": "solidify"
+        },
+        {
+          "ratio": 0.85,
+          "type": "decimate"
+        },
+        {
+          "ngon_method": "clip",
+          "quad_method": "fixed",
+          "type": "triangulate"
+        }
+      ],
+      "navmesh": {
+        "stair_detection": true,
+        "stair_step_height": 0.25,
+        "walkable_slope_max": 50.0
+      },
+      "normals": {
+        "keep_sharp": true,
+        "preset": "weighted_normals"
+      },
+      "uv_projection": {
+        "angle_limit": 66.0,
+        "lightmap_uv": true,
+        "method": "smart",
+        "texel_density": 512.0,
+        "uv_margin": 0.001
+      }
+    }
+  }
+}

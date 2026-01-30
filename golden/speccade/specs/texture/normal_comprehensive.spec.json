@@ -1,0 +1,111 @@
+{
+  "spec_version": 1,
+  "asset_id": "golden-normal-comprehensive-01",
+  "asset_type": "texture",
+  "license": "CC0-1.0",
+  "seed": 4243,
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "png",
+      "path": "textures/normal_comprehensive.png",
+      "source": "normals"
+    }
+  ],
+  "description": "Comprehensive normal-map fixture derived from height field (Tier 1)",
+  "recipe": {
+    "kind": "texture.procedural_v1",
+    "params": {
+      "nodes": [
+        {
+          "id": "base",
+          "noise": {
+            "algorithm": "perlin",
+            "lacunarity": 2.0,
+            "octaves": 5,
+            "persistence": 0.5,
+            "scale": 0.06
+          },
+          "type": "noise"
+        },
+        {
+          "id": "detail",
+          "noise": {
+            "algorithm": "simplex",
+            "lacunarity": 2.2,
+            "octaves": 3,
+            "persistence": 0.6,
+            "scale": 0.15
+          },
+          "type": "noise"
+        },
+        {
+          "a": "base",
+          "b": "detail",
+          "id": "sum",
+          "type": "add"
+        },
+        {
+          "direction": "radial",
+          "end": 1.0,
+          "id": "mask",
+          "start": 0.0,
+          "type": "gradient"
+        },
+        {
+          "a": "sum",
+          "b": "mask",
+          "id": "masked",
+          "type": "multiply"
+        },
+        {
+          "id": "rocks",
+          "noise": {
+            "algorithm": "worley",
+            "lacunarity": 2.0,
+            "octaves": 2,
+            "persistence": 0.5,
+            "scale": 0.25
+          },
+          "type": "noise"
+        },
+        {
+          "blend_mode": "max",
+          "density": 0.35,
+          "id": "bombed",
+          "input": "rocks",
+          "rotation_variation": 30.0,
+          "scale_variation": [
+            0.6,
+            1.4
+          ],
+          "type": "texture_bomb"
+        },
+        {
+          "a": "masked",
+          "b": "bombed",
+          "id": "height_raw",
+          "type": "add"
+        },
+        {
+          "id": "height",
+          "input": "height_raw",
+          "max": 1.0,
+          "min": 0.0,
+          "type": "clamp"
+        },
+        {
+          "id": "normals",
+          "input": "height",
+          "strength": 2.0,
+          "type": "normal_from_height"
+        }
+      ],
+      "resolution": [
+        256,
+        256
+      ],
+      "tileable": true
+    }
+  }
+}
