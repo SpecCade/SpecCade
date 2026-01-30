@@ -22,6 +22,7 @@ import { GeneratePanel } from "./components/GeneratePanel";
 import { StdlibPalette } from "./components/StdlibPalette";
 import { HelpPanel } from "./components/HelpPanel";
 import { ProblemsPanel, ProblemItem, ProblemStage } from "./components/ProblemsPanel";
+import { initPanelResizers } from "./components/PanelResizer";
 import { addRecentFile } from "./lib/recent-files";
 
 // Configure Monaco worker paths for Vite
@@ -978,6 +979,9 @@ async function init(): Promise<void> {
       editor?.focus();
     });
   }
+
+  // Initialize resizable panel splitters
+  initPanelResizers();
 
   initEditor();
 

@@ -50,6 +50,7 @@ const STORAGE_KEY = "speccade:animation_preview:v1";
 export class AnimationPreview {
   private container: HTMLElement;
   private wrapper: HTMLDivElement;
+  private viewportContainer!: HTMLDivElement;
 
   // Three.js core
   private scene: THREE.Scene;
@@ -155,13 +156,14 @@ export class AnimationPreview {
     this.renderer.setPixelRatio(window.devicePixelRatio);
 
     // Create viewport container
-    const viewportContainer = document.createElement("div");
-    viewportContainer.style.cssText = `
+    this.viewportContainer = document.createElement("div");
+    this.viewportContainer.style.cssText = `
       position: relative;
       flex: 1;
       min-height: 200px;
+      overflow: hidden;
     `;
-    viewportContainer.appendChild(this.renderer.domElement);
+    this.viewportContainer.appendChild(this.renderer.domElement);
 
     // Create info overlay
     this.infoDiv = document.createElement("div");
@@ -174,7 +176,7 @@ export class AnimationPreview {
       pointer-events: none;
     `;
     this.infoDiv.textContent = "No animation loaded";
-    viewportContainer.appendChild(this.infoDiv);
+    this.viewportContainer.appendChild(this.infoDiv);
 
     // Create status overlay (for "Generating..." state)
     this.statusOverlay = document.createElement("div");
@@ -193,9 +195,9 @@ export class AnimationPreview {
       pointer-events: none;
     `;
     this.statusOverlay.innerHTML = `<span style="animation: pulse 1.5s infinite; @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }">Generating...</span>`;
-    viewportContainer.appendChild(this.statusOverlay);
+    this.viewportContainer.appendChild(this.statusOverlay);
 
-    this.wrapper.appendChild(viewportContainer);
+    this.wrapper.appendChild(this.viewportContainer);
 
     // Create controls
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
@@ -237,9 +239,9 @@ export class AnimationPreview {
     this.updateLoopRegionUI();
     this.updateLoopVisibility();
 
-    // Handle resize
+    // Handle resize - observe viewportContainer, not the parent container
     const resizeObserver = new ResizeObserver(() => this.handleResize());
-    resizeObserver.observe(container);
+    resizeObserver.observe(this.viewportContainer);
 
     // Start animation loop
     this.animate();
@@ -1448,12 +1450,14 @@ export class AnimationPreview {
   }
 
   private handleResize(): void {
-    const width = this.container.clientWidth;
-    const height = this.container.clientHeight;
+    const width = this.viewportContainer.clientWidth;
+    const height = this.viewportContainer.clientHeight;
 
-    this.camera.aspect = width / height;
-    this.camera.updateProjectionMatrix();
-    this.renderer.setSize(width, height);
+    if (width > 0 && height > 0) {
+      this.camera.aspect = width / height;
+      this.camera.updateProjectionMatrix();
+      this.renderer.setSize(width, height);
+    }
   }
 
   clear(): void {
