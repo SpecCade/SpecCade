@@ -94,6 +94,11 @@ export class AnimationPreview {
   // Mode toggle buttons
   private specModeBtn!: HTMLButtonElement;
   private exportedModeBtn!: HTMLButtonElement;
+  private renderModeSelect!: HTMLSelectElement;
+
+  // Material layer state
+  private originalMaterials: Map<THREE.Mesh, THREE.Material | THREE.Material[]> = new Map();
+  private overrideMaterials: THREE.Material[] = [];
 
   constructor(container: HTMLElement) {
     this.container = container;
@@ -365,6 +370,36 @@ export class AnimationPreview {
     modeGroup.appendChild(this.exportedModeBtn);
     transport.appendChild(modeGroup);
 
+    // Render mode selector
+    const renderGroup = document.createElement("div");
+    renderGroup.style.cssText = "display: flex; align-items: center; gap: 4px; margin-left: 8px;";
+    const renderLabel = document.createElement("span");
+    renderLabel.textContent = "Render:";
+    renderLabel.style.cssText = "font-size: 10px; color: #888;";
+
+    this.renderModeSelect = document.createElement("select");
+    this.renderModeSelect.style.cssText = `
+      padding: 2px 6px;
+      background: #333;
+      color: #ccc;
+      border: 1px solid #444;
+      border-radius: 3px;
+      font-size: 10px;
+    `;
+    this.renderModeSelect.innerHTML = `
+      <option value="lit">Lit</option>
+      <option value="unlit">Unlit</option>
+      <option value="wireframe">Wireframe</option>
+    `;
+    this.renderModeSelect.value = this.renderMode;
+    this.renderModeSelect.addEventListener("change", () => {
+      this.setRenderMode(this.renderModeSelect.value as RenderMode);
+    });
+
+    renderGroup.appendChild(renderLabel);
+    renderGroup.appendChild(this.renderModeSelect);
+    transport.appendChild(renderGroup);
+
     // Bones toggle
     const bonesBtn = document.createElement("button");
     bonesBtn.textContent = "Bones";
@@ -465,6 +500,16 @@ export class AnimationPreview {
             this.currentAction.clampWhenFinished = true;
           }
 
+          // Cache original materials
+          this.originalMaterials.clear();
+          this.disposeOverrideMaterials();
+          gltf.scene.traverse((child) => {
+            if ((child as THREE.Mesh).isMesh) {
+              const mesh = child as THREE.Mesh;
+              this.originalMaterials.set(mesh, mesh.material);
+            }
+          });
+
           // Auto-fit camera
           this.fitCameraToModel(gltf.scene);
 
@@ -473,6 +518,9 @@ export class AnimationPreview {
 
           // Update bone visibility
           this.updateBoneVisibility();
+
+          // Apply current render mode
+          this.applyMaterials();
 
           // Update info display
           this.updateInfoDisplay();
@@ -634,6 +682,63 @@ export class AnimationPreview {
     }
   }
 
+  // Render mode controls
+  setRenderMode(mode: RenderMode): void {
+    if (this.renderMode === mode) return;
+    this.renderMode = mode;
+    this.saveSettings();
+    this.applyMaterials();
+
+    // Update UI
+    if (this.renderModeSelect) {
+      this.renderModeSelect.value = mode;
+    }
+  }
+
+  getRenderMode(): RenderMode {
+    return this.renderMode;
+  }
+
+  private applyMaterials(): void {
+    if (!this.currentModel) return;
+
+    // Dispose old override materials
+    this.disposeOverrideMaterials();
+
+    if (this.renderMode === "lit") {
+      // Restore original materials
+      this.originalMaterials.forEach((material, mesh) => {
+        mesh.material = material;
+      });
+    } else if (this.renderMode === "unlit") {
+      // Apply MeshBasicMaterial
+      this.originalMaterials.forEach((_, mesh) => {
+        const mat = new THREE.MeshBasicMaterial({
+          color: 0x888888,
+        });
+        this.overrideMaterials.push(mat);
+        mesh.material = mat;
+      });
+    } else if (this.renderMode === "wireframe") {
+      // Apply wireframe material
+      this.originalMaterials.forEach((_, mesh) => {
+        const mat = new THREE.MeshBasicMaterial({
+          color: 0x00ff00,
+          wireframe: true,
+        });
+        this.overrideMaterials.push(mat);
+        mesh.material = mat;
+      });
+    }
+  }
+
+  private disposeOverrideMaterials(): void {
+    for (const mat of this.overrideMaterials) {
+      mat.dispose();
+    }
+    this.overrideMaterials = [];
+  }
+
   // Playback controls
   togglePlayPause(): void {
     if (this.playbackState === "playing") {
@@ -761,6 +866,8 @@ export class AnimationPreview {
     this.currentGltf = null;
     this.metadata = null;
     this.clearBoneHelpers();
+    this.originalMaterials.clear();
+    this.disposeOverrideMaterials();
     this.boneList.innerHTML = "";
     this.boneInspector.textContent = "Select a bone to inspect";
     this.infoDiv.textContent = "No animation loaded";
@@ -773,6 +880,8 @@ export class AnimationPreview {
     this.controls.dispose();
     this.renderer.dispose();
     this.clearBoneHelpers();
+    this.originalMaterials.clear();
+    this.disposeOverrideMaterials();
     if (this.wrapper.parentElement === this.container) {
       this.container.removeChild(this.wrapper);
     }
