@@ -10,15 +10,13 @@ fn test_armature_driven_params_parses_yaml_style_examples() {
             "spine": {
                 "profile": "hexagon(8)",
                 "profile_radius": 0.15,
-                "taper": 0.9,
+                "extrusion_steps": [
+                    {"extrude": 0.3, "scale": 0.8},
+                    {"extrude": 0.4, "scale": 1.2},
+                    {"extrude": 0.3, "scale": 0.9}
+                ],
                 "translate": [0, 0, 0],
                 "rotate": [0, 0, 0],
-                "bulge": [
-                    {"at": 0.0, "scale": 0.8},
-                    {"at": 0.5, "scale": 1.2},
-                    {"at": 1.0, "scale": 0.9}
-                ],
-                "twist": 0,
                 "cap_start": true,
                 "cap_end": false,
                 "modifiers": [

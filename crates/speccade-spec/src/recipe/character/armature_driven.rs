@@ -8,6 +8,78 @@ use crate::recipe::mesh::{MaterialSlot, MeshPrimitive};
 
 use super::{SkeletalMeshConstraints, SkeletalMeshExportSettings, SkeletonBone, SkeletonPreset};
 
+// ============================================================================
+// Step-Based Extrusion Types
+// ============================================================================
+
+/// A single extrusion step - either shorthand (just distance) or full definition.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum ExtrusionStep {
+    /// Shorthand: just extrusion distance as fraction of bone length.
+    Shorthand(f64),
+    /// Full step with all parameters.
+    Full(ExtrusionStepDef),
+}
+
+/// Full extrusion step definition with all modifiers.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ExtrusionStepDef {
+    /// Extrusion distance as fraction of bone length (required, must be > 0).
+    pub extrude: f64,
+
+    /// Scale factor for the extruded ring.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub scale: Option<ScaleValue>,
+
+    /// Translation offset (bone-relative).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub translate: Option<[f64; 3]>,
+
+    /// Z-axis rotation in degrees.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub rotate: Option<f64>,
+
+    /// X/Y tilt in degrees.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tilt: Option<TiltValue>,
+
+    /// Asymmetric bulge multiplier.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub bulge: Option<StepBulgeValue>,
+}
+
+/// Scale can be uniform or per-axis [x, y].
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum ScaleValue {
+    /// Uniform scale factor.
+    Uniform(f64),
+    /// Per-axis scale [x, y].
+    PerAxis([f64; 2]),
+}
+
+/// Tilt can be single value (X only) or both axes [x, y].
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum TiltValue {
+    /// Single axis tilt (X rotation in degrees).
+    SingleAxis(f64),
+    /// Both axes tilt [x, y] in degrees.
+    BothAxes([f64; 2]),
+}
+
+/// Bulge can be uniform or asymmetric [side, front_back].
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum StepBulgeValue {
+    /// Uniform bulge multiplier.
+    Uniform(f64),
+    /// Asymmetric bulge [side, front_back].
+    Asymmetric([f64; 2]),
+}
+
 /// Parameters for the `skeletal_mesh.armature_driven_v1` recipe.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -70,9 +142,11 @@ pub struct ArmatureDrivenBoneMesh {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub profile_radius: Option<BoneRelativeLength>,
 
-    /// End radius as multiplier of start radius.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub taper: Option<f64>,
+    /// Step-based extrusion along the bone axis.
+    /// Steps sum to 1.0 = mesh exactly spans bone head to tail.
+    /// Steps sum to >1.0 = mesh extends past bone tail.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub extrusion_steps: Vec<ExtrusionStep>,
 
     /// Bone-relative translation offset.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -81,14 +155,6 @@ pub struct ArmatureDrivenBoneMesh {
     /// Rotation (degrees) applied to the profile before extrusion.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub rotate: Option<[f64; 3]>,
-
-    /// Bulge control points along the bone axis.
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub bulge: Vec<ArmatureDrivenBulgePoint>,
-
-    /// Twist (degrees) along the bone axis.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub twist: Option<f64>,
 
     /// Cap at bone start.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -109,16 +175,6 @@ pub struct ArmatureDrivenBoneMesh {
     /// Attachments (geometry not necessarily on the bone axis).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub attachments: Vec<ArmatureDrivenAttachment>,
-}
-
-/// A bulge control point.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct ArmatureDrivenBulgePoint {
-    /// Position along bone axis: 0.0 = head, 1.0 = tail.
-    pub at: f64,
-    /// Scale multiplier at that point.
-    pub scale: f64,
 }
 
 /// Length value in bone-relative units, elliptical units, or absolute units.

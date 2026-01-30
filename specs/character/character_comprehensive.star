@@ -59,14 +59,13 @@ spec(
                 "spine": {
                     "profile": "circle(12)",
                     "profile_radius": 0.11,
-                    "taper": 0.95,
                     "translate": [0.0, 0.0, 0.05],
                     "rotate": [0.0, 0.0, 10.0],
-                    "bulge": [
-                        {"at": 0.15, "scale": 1.15},
-                        {"at": 0.60, "scale": 0.95},
+                    "extrusion_steps": [
+                        {"extrude": 0.15, "scale": 1.15, "rotate": 3.0},
+                        {"extrude": 0.45, "scale": 0.95, "rotate": 6.0},
+                        {"extrude": 0.40, "scale": 0.95, "rotate": 3.0},
                     ],
-                    "twist": 12.0,
                     "cap_start": True,
                     "cap_end": False,
                     "material_index": 1,
@@ -118,14 +117,13 @@ spec(
                 "chest": {
                     "profile": "hexagon(6)",
                     "profile_radius": [0.14, 0.11],
-                    "taper": 0.85,
                     "translate": [0.0, 0.03, 0.0],
                     "rotate": [-4.0, 0.0, 0.0],
-                    "bulge": [
-                        {"at": 0.25, "scale": 1.2},
-                        {"at": 0.85, "scale": 0.8},
+                    "extrusion_steps": [
+                        {"extrude": 0.25, "scale": 1.2, "rotate": -2.0},
+                        {"extrude": 0.60, "scale": 0.8, "rotate": -4.0},
+                        {"extrude": 0.15, "scale": 0.85, "rotate": -2.0},
                     ],
-                    "twist": -8.0,
                     "cap_start": False,
                     "cap_end": False,
                     "material_index": 1,
@@ -141,15 +139,14 @@ spec(
                 "head": {
                     "profile": "circle(16)",
                     "profile_radius": {"absolute": 0.11},
-                    "taper": 1.0,
                     "translate": [0.0, 0.08, 0.0],
                     "rotate": [0.0, 0.0, 0.0],
-                    "bulge": [
-                        {"at": 0.05, "scale": 1.15},
-                        {"at": 0.55, "scale": 1.25},
-                        {"at": 0.95, "scale": 0.85},
+                    "extrusion_steps": [
+                        {"extrude": 0.05, "scale": 1.15},
+                        {"extrude": 0.50, "scale": 1.25},
+                        {"extrude": 0.40, "scale": 0.85},
+                        {"extrude": 0.05, "scale": 1.0},
                     ],
-                    "twist": 0.0,
                     "cap_start": True,
                     "cap_end": True,
                     "material_index": 0,
@@ -191,14 +188,13 @@ spec(
                 "upper_arm_l": {
                     "profile": "rectangle",
                     "profile_radius": [0.08, 0.12],
-                    "taper": 0.8,
                     "translate": [0.0, 0.0, 0.02],
                     "rotate": [0.0, 0.0, -15.0],
-                    "bulge": [
-                        {"at": 0.2, "scale": 1.15},
-                        {"at": 0.7, "scale": 0.9},
+                    "extrusion_steps": [
+                        {"extrude": 0.20, "scale": 1.15, "rotate": 8.0},
+                        {"extrude": 0.50, "scale": 0.9, "rotate": 12.0},
+                        {"extrude": 0.30, "scale": 0.8, "rotate": 5.0},
                     ],
-                    "twist": 25.0,
                     "cap_start": False,
                     "cap_end": False,
                     "material_index": 0,
@@ -232,13 +228,12 @@ spec(
                 "lower_arm_l": {
                     "profile": "hexagon(8)",
                     "profile_radius": 0.07,
-                    "taper": 0.75,
                     "translate": [0.0, 0.02, 0.0],
                     "rotate": [0.0, 10.0, 0.0],
-                    "bulge": [
-                        {"at": 0.35, "scale": 1.1},
+                    "extrusion_steps": [
+                        {"extrude": 0.35, "scale": 1.1, "rotate": -6.0},
+                        {"extrude": 0.65, "scale": 0.75, "rotate": -12.0},
                     ],
-                    "twist": -18.0,
                     "cap_start": False,
                     "cap_end": False,
                     "material_index": 0,

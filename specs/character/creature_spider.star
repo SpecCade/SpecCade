@@ -80,30 +80,41 @@ spec(
                 "root": {
                     "profile": "circle(8)",
                     "profile_radius": 0.08,
+                    "extrusion_steps": [
+                        {"extrude": 1.0, "scale": 1.0},
+                    ],
                     "material_index": 0,
                 },
                 "abdomen": {
                     "profile": "circle(16)",
                     "profile_radius": [0.16, 0.12],
-                    "taper": 0.70,
-                    "bulge": [
-                        {"at": 0.25, "scale": 1.25},
-                        {"at": 0.75, "scale": 1.05},
+                    "extrusion_steps": [
+                        # 0% -> 25%: big bulge to 1.25
+                        {"extrude": 0.25, "scale": 1.25},
+                        # 25% -> 75%: taper to 1.05
+                        {"extrude": 0.50, "scale": 1.05},
+                        # 75% -> 100%: final taper to 0.70
+                        {"extrude": 0.25, "scale": 0.70},
                     ],
                     "material_index": 0,
                 },
                 "thorax": {
                     "profile": "circle(16)",
                     "profile_radius": [0.13, 0.10],
-                    "taper": 0.85,
-                    "bulge": [
-                        {"at": 0.30, "scale": 1.15},
+                    "extrusion_steps": [
+                        # 0% -> 30%: bulge to 1.15
+                        {"extrude": 0.30, "scale": 1.15},
+                        # 30% -> 100%: taper to 0.85
+                        {"extrude": 0.70, "scale": 0.85},
                     ],
                     "material_index": 0,
                 },
                 "head": {
                     "profile": "circle(12)",
                     "profile_radius": {"absolute": 0.07},
+                    "extrusion_steps": [
+                        {"extrude": 1.0, "scale": 1.0},
+                    ],
                     "material_index": 0,
                     "attachments": [
                         {
@@ -125,25 +136,37 @@ spec(
                 "leg1_l": {
                     "profile": "circle(8)",
                     "profile_radius": 0.04,
-                    "taper": 0.55,
+                    "extrusion_steps": [
+                        {"extrude": 0.50, "scale": 0.75},
+                        {"extrude": 0.50, "scale": 0.55},
+                    ],
                     "material_index": 0,
                 },
                 "leg2_l": {
                     "profile": "circle(8)",
                     "profile_radius": 0.04,
-                    "taper": 0.55,
+                    "extrusion_steps": [
+                        {"extrude": 0.50, "scale": 0.75},
+                        {"extrude": 0.50, "scale": 0.55},
+                    ],
                     "material_index": 0,
                 },
                 "leg3_l": {
                     "profile": "circle(8)",
                     "profile_radius": 0.04,
-                    "taper": 0.55,
+                    "extrusion_steps": [
+                        {"extrude": 0.50, "scale": 0.75},
+                        {"extrude": 0.50, "scale": 0.55},
+                    ],
                     "material_index": 0,
                 },
                 "leg4_l": {
                     "profile": "circle(8)",
                     "profile_radius": 0.045,
-                    "taper": 0.55,
+                    "extrusion_steps": [
+                        {"extrude": 0.50, "scale": 0.75},
+                        {"extrude": 0.50, "scale": 0.55},
+                    ],
                     "material_index": 0,
                 },
                 "leg1_r": {

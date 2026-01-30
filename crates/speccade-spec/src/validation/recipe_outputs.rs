@@ -652,22 +652,21 @@ fn validate_skeletal_mesh_armature_driven(recipe: &Recipe, result: &mut Validati
                             ));
                         }
 
-                        for (idx, point) in mesh.bulge.iter().enumerate() {
-                            if !(0.0..=1.0).contains(&point.at) {
+                        // Validate extrusion_steps
+                        for (idx, step) in mesh.extrusion_steps.iter().enumerate() {
+                            let extrude_val = match step {
+                                crate::recipe::character::ExtrusionStep::Shorthand(d) => *d,
+                                crate::recipe::character::ExtrusionStep::Full(def) => def.extrude,
+                            };
+                            if extrude_val <= 0.0 {
                                 result.add_error(ValidationError::with_path(
                                     ErrorCode::InvalidRecipeParams,
-                                    format!("bulge.at must be in range [0, 1], got {}", point.at),
                                     format!(
-                                        "recipe.params.bone_meshes.{bone_name}.bulge[{idx}].at"
+                                        "extrusion_steps[{idx}].extrude must be positive, got {}",
+                                        extrude_val
                                     ),
-                                ));
-                            }
-                            if point.scale <= 0.0 {
-                                result.add_error(ValidationError::with_path(
-                                    ErrorCode::InvalidRecipeParams,
-                                    format!("bulge.scale must be positive, got {}", point.scale),
                                     format!(
-                                        "recipe.params.bone_meshes.{bone_name}.bulge[{idx}].scale"
+                                        "recipe.params.bone_meshes.{bone_name}.extrusion_steps[{idx}]"
                                     ),
                                 ));
                             }

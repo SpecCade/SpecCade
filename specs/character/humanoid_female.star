@@ -30,17 +30,27 @@ spec(
                 "spine": {
                     "profile": "circle(12)",
                     "profile_radius": 0.105,
-                    "taper": 0.96,
-                    "bulge": [{"at": 0.35, "scale": 1.08}],
+                    "extrusion_steps": [
+                        # 0% -> 35%: slight bulge to 1.08
+                        {"extrude": 0.35, "scale": 1.08},
+                        # 35% -> 100%: taper to 0.96
+                        {"extrude": 0.65, "scale": 0.96},
+                    ],
                     "material_index": 1,
                 },
                 "chest": {
                     "profile": "hexagon(8)",
                     "profile_radius": [0.14, 0.11],
-                    "taper": 0.90,
                     "translate": [0.0, 0.04, 0.0],
                     "rotate": [-2.0, 0.0, 0.0],
-                    "bulge": [{"at": 0.30, "scale": 1.18}, {"at": 0.86, "scale": 0.88}],
+                    "extrusion_steps": [
+                        # 0% -> 30%: chest bulge to 1.18
+                        {"extrude": 0.30, "scale": 1.18},
+                        # 30% -> 86%: taper to 0.88
+                        {"extrude": 0.56, "scale": 0.88},
+                        # 86% -> 100%: final taper to 0.90
+                        {"extrude": 0.14, "scale": 0.90},
+                    ],
                     "material_index": 1,
                     "attachments": [
                         {
@@ -55,8 +65,14 @@ spec(
                 "head": {
                     "profile": "circle(16)",
                     "profile_radius": {"absolute": 0.115},
-                    "taper": 1.0,
-                    "bulge": [{"at": 0.10, "scale": 1.08}, {"at": 0.55, "scale": 1.22}],
+                    "extrusion_steps": [
+                        # 0% -> 10%: slight swell to 1.08
+                        {"extrude": 0.10, "scale": 1.08},
+                        # 10% -> 55%: bulge to 1.22 (cranium)
+                        {"extrude": 0.45, "scale": 1.22},
+                        # 55% -> 100%: taper to 1.0 (top of head)
+                        {"extrude": 0.45, "scale": 1.0},
+                    ],
                     "material_index": 0,
                     "modifiers": [
                         {"bool": {"operation": "difference", "target": "eye_cut_l"}},
@@ -77,17 +93,29 @@ spec(
                 "upper_arm_l": {
                     "profile": "rectangle",
                     "profile_radius": [0.075, 0.105],
-                    "taper": 0.82,
                     "rotate": [0.0, 0.0, -12.0],
-                    "bulge": [{"at": 0.18, "scale": 1.12}, {"at": 0.70, "scale": 0.92}],
+                    "extrusion_steps": [
+                        # 0% -> 18%: shoulder bulge to 1.12
+                        {"extrude": 0.18, "scale": 1.12},
+                        # 18% -> 70%: taper to 0.92
+                        {"extrude": 0.52, "scale": 0.92},
+                        # 70% -> 100%: final taper to 0.82
+                        {"extrude": 0.30, "scale": 0.82},
+                    ],
                     "material_index": 0,
                 },
                 "upper_arm_r": {"mirror": "upper_arm_l"},
                 "upper_leg_l": {
                     "profile": "circle(10)",
                     "profile_radius": 0.125,
-                    "taper": 0.75,
-                    "bulge": [{"at": 0.20, "scale": 1.12}, {"at": 0.65, "scale": 0.95}],
+                    "extrusion_steps": [
+                        # 0% -> 20%: hip bulge to 1.12
+                        {"extrude": 0.20, "scale": 1.12},
+                        # 20% -> 65%: taper to 0.95
+                        {"extrude": 0.45, "scale": 0.95},
+                        # 65% -> 100%: final taper to 0.75
+                        {"extrude": 0.35, "scale": 0.75},
+                    ],
                     "material_index": 0,
                 },
                 "upper_leg_r": {"mirror": "upper_leg_l"},

@@ -18,6 +18,55 @@ if TYPE_CHECKING:  # pragma: no cover
 _PROFILE_RE = re.compile(r"^(circle|hexagon)\((\d+)\)$")
 
 
+# ============================================================================
+# Step-Based Extrusion Helpers
+# ============================================================================
+
+
+def _parse_step_scale(value) -> tuple[float, float]:
+    """Parse step scale value to (sx, sy) tuple."""
+    if value is None:
+        return (1.0, 1.0)
+    if isinstance(value, (int, float)):
+        s = float(value)
+        return (s, s)
+    if isinstance(value, (list, tuple)) and len(value) == 2:
+        return (float(value[0]), float(value[1]))
+    raise TypeError(f"scale must be a number or [x, y], got {type(value).__name__}: {value!r}")
+
+
+def _parse_step_tilt(value) -> tuple[float, float]:
+    """Parse step tilt value to (x_deg, y_deg) tuple."""
+    if value is None:
+        return (0.0, 0.0)
+    if isinstance(value, (int, float)):
+        return (float(value), 0.0)
+    if isinstance(value, (list, tuple)) and len(value) == 2:
+        return (float(value[0]), float(value[1]))
+    raise TypeError(f"tilt must be a number or [x, y], got {type(value).__name__}: {value!r}")
+
+
+def _parse_step_bulge(value) -> tuple[float, float]:
+    """Parse step bulge value to (side, front_back) tuple."""
+    if value is None:
+        return (1.0, 1.0)
+    if isinstance(value, (int, float)):
+        b = float(value)
+        return (b, b)
+    if isinstance(value, (list, tuple)) and len(value) == 2:
+        return (float(value[0]), float(value[1]))
+    raise TypeError(f"bulge must be a number or [side, fb], got {type(value).__name__}: {value!r}")
+
+
+def _normalize_extrusion_step(step) -> dict:
+    """Normalize step to full dict form."""
+    if isinstance(step, (int, float)):
+        return {"extrude": float(step)}
+    if isinstance(step, dict):
+        return step
+    raise TypeError(f"extrusion step must be a number or dict, got {type(step).__name__}: {step!r}")
+
+
 def _parse_profile(profile: str | None) -> tuple[str, int]:
     """Parse a profile string used by armature-driven recipes.
 
@@ -186,6 +235,245 @@ def _resolve_bone_relative_length(
     )
 
 
+def _resolve_profile_radius(mesh_spec: dict, *, bone_length: float) -> tuple[float, float]:
+    """Resolve profile_radius to (rx, ry) tuple in absolute units."""
+    radius_val = _resolve_bone_relative_length(
+        mesh_spec.get('profile_radius', 0.15),
+        bone_length=bone_length,
+    )
+    if isinstance(radius_val, tuple):
+        rx, ry = radius_val
+    else:
+        rx, ry = (radius_val, radius_val)
+    rx = float(rx)
+    ry = float(ry)
+
+    if not math.isfinite(rx) or rx <= 0.0:
+        raise ValueError(f"profile_radius.x must be > 0, got {rx!r}")
+    if not math.isfinite(ry) or ry <= 0.0:
+        raise ValueError(f"profile_radius.y must be > 0, got {ry!r}")
+
+    return (rx, ry)
+
+
+def _build_mesh_with_steps(
+    *,
+    bpy_module,
+    bmesh_module,
+    bone_name: str,
+    bone_length: float,
+    head_w,
+    base_q,
+    profile: tuple[str, int],
+    profile_radius: tuple[float, float],
+    steps: list,
+    cap_start: bool,
+    cap_end: bool,
+    ensure_object_mode,
+    select_only,
+    apply_scale_only,
+    apply_rotation_only,
+    quat_rotate_vec,
+) -> object:
+    """Build mesh using step-based extrusion along bone axis.
+
+    True box modeling: start with a profile, extrude, modify, extrude, modify.
+    All distances are bone-relative, so resizing the skeleton preserves silhouette.
+
+    Args:
+        bpy_module: Blender bpy module.
+        bmesh_module: Blender bmesh module.
+        bone_name: Name of the bone (for error messages).
+        bone_length: Length of the bone in world units.
+        head_w: Bone head position in world coordinates.
+        base_q: Base quaternion rotation aligning Z to bone axis.
+        profile: Tuple of (kind, segments) from _parse_profile.
+        profile_radius: Tuple of (rx, ry) radii in absolute units.
+        steps: List of extrusion step definitions.
+        cap_start: Whether to keep the cap at bone head.
+        cap_end: Whether to keep the cap at bone tail.
+        ensure_object_mode: Callback to ensure object mode.
+        select_only: Callback to select objects.
+        apply_scale_only: Callback to apply scale transform.
+        apply_rotation_only: Callback to apply rotation transform.
+        quat_rotate_vec: Callback to rotate vector by quaternion.
+
+    Returns:
+        The generated mesh object.
+    """
+    from mathutils import Vector
+
+    bpy = bpy_module
+    bmesh = bmesh_module
+    kind, segments = profile
+    rx, ry = profile_radius
+
+    # Create initial profile at bone head as a filled polygon (NGON)
+    # The circle primitive creates vertices at radius, we scale afterward.
+    bpy.ops.mesh.primitive_circle_add(
+        vertices=int(segments),
+        radius=1.0,
+        fill_type='NGON',
+        location=head_w,
+    )
+    obj = bpy.context.active_object
+    if obj is None:
+        raise RuntimeError("primitive_circle_add: expected an active object, got None")
+
+    # Apply elliptical radius via scale
+    obj.scale = (rx, ry, 1.0)
+    apply_scale_only(obj)
+
+    # Align circle normal (local Z) with bone axis
+    obj.rotation_mode = 'QUATERNION'
+    obj.rotation_quaternion = base_q
+    apply_rotation_only(obj)
+
+    obj.name = f"Segment_{bone_name}"
+
+    # Process each extrusion step
+    for si, step in enumerate(steps):
+        step = _normalize_extrusion_step(step)
+
+        extrude_frac = step.get("extrude", 0.1)
+        if not isinstance(extrude_frac, (int, float)) or extrude_frac <= 0:
+            raise ValueError(
+                f"bone_meshes['{bone_name}'].extrusion_steps[{si}].extrude must be > 0, got {extrude_frac!r}"
+            )
+        extrude_dist = float(extrude_frac) * bone_length
+
+        sx, sy = _parse_step_scale(step.get("scale"))
+        translate = step.get("translate", [0, 0, 0])
+        if translate is None:
+            translate = [0, 0, 0]
+        rotate_deg = float(step.get("rotate", 0) or 0)
+        tilt_x, tilt_y = _parse_step_tilt(step.get("tilt"))
+        bulge_x, bulge_y = _parse_step_bulge(step.get("bulge"))
+
+        ensure_object_mode()
+        select_only([obj], active=obj)
+        bpy.ops.object.mode_set(mode='EDIT')
+
+        # Select top faces for extrusion (faces with highest Z in local space)
+        mesh = obj.data
+        bm = bmesh.from_edit_mesh(mesh)
+        bm.faces.ensure_lookup_table()
+
+        if not bm.faces:
+            raise RuntimeError(f"bone_meshes['{bone_name}'].extrusion_steps[{si}]: mesh has no faces")
+
+        # Find the top faces (highest local Z after transforms are applied)
+        # Since we already applied rotation, the mesh is now in world space oriented along bone.
+        # In edit mode, co gives local coordinates. Z axis is along the bone.
+        bm.verts.ensure_lookup_table()
+        if bm.verts:
+            z_coords = [v.co.z for v in bm.verts]
+            z_max = max(z_coords)
+            z_range = z_max - min(z_coords)
+            eps = max(1e-6, z_range * 0.01)
+
+            # Deselect all, then select top faces
+            for f in bm.faces:
+                f.select = False
+            for e in bm.edges:
+                e.select = False
+            for v in bm.verts:
+                v.select = False
+
+            for f in bm.faces:
+                if all(abs(v.co.z - z_max) <= eps for v in f.verts):
+                    f.select = True
+
+            bmesh.update_edit_mesh(mesh)
+
+        # Extrude along local Z (bone axis)
+        bpy.ops.mesh.extrude_region_move(
+            TRANSFORM_OT_translate={'value': (0, 0, extrude_dist)}
+        )
+
+        # Apply scale combined with bulge
+        final_sx = sx * bulge_x
+        final_sy = sy * bulge_y
+        if final_sx != 1.0 or final_sy != 1.0:
+            bpy.ops.transform.resize(
+                value=(final_sx, final_sy, 1.0),
+                orient_type='LOCAL',
+            )
+
+        # Apply translation (bone-relative, scaled by bone_length)
+        if any(t != 0 for t in translate):
+            tx = float(translate[0]) * bone_length
+            ty = float(translate[1]) * bone_length
+            tz = float(translate[2]) * bone_length
+            bpy.ops.transform.translate(
+                value=(tx, ty, tz),
+                orient_type='LOCAL',
+            )
+
+        # Apply Z-axis rotation
+        if rotate_deg != 0:
+            bpy.ops.transform.rotate(
+                value=math.radians(rotate_deg),
+                orient_axis='Z',
+                orient_type='LOCAL',
+            )
+
+        # Apply tilt (X/Y rotation)
+        if tilt_x != 0:
+            bpy.ops.transform.rotate(
+                value=math.radians(tilt_x),
+                orient_axis='X',
+                orient_type='LOCAL',
+            )
+        if tilt_y != 0:
+            bpy.ops.transform.rotate(
+                value=math.radians(tilt_y),
+                orient_axis='Y',
+                orient_type='LOCAL',
+            )
+
+        bpy.ops.object.mode_set(mode='OBJECT')
+
+    # Handle end caps: remove bottom (start) or top (end) faces if needed
+    ensure_object_mode()
+    if not cap_start or not cap_end:
+        mesh = obj.data
+        bm = bmesh.new()
+        try:
+            bm.from_mesh(mesh)
+            bm.verts.ensure_lookup_table()
+            bm.faces.ensure_lookup_table()
+
+            if bm.verts and bm.faces:
+                z_coords = [v.co.z for v in bm.verts]
+                z_min = min(z_coords)
+                z_max = max(z_coords)
+                z_range = z_max - z_min
+                eps = max(1e-6, z_range * 0.01)
+
+                faces_to_delete = []
+                for f in bm.faces:
+                    zs = [v.co.z for v in f.verts]
+                    if not zs:
+                        continue
+                    if not cap_start and all(abs(z - z_min) <= eps for z in zs):
+                        faces_to_delete.append(f)
+                    elif not cap_end and all(abs(z - z_max) <= eps for z in zs):
+                        faces_to_delete.append(f)
+
+                if faces_to_delete:
+                    bmesh.ops.delete(bm, geom=faces_to_delete, context='FACES')
+                    bm.to_mesh(mesh)
+        finally:
+            bm.free()
+            try:
+                mesh.update()
+            except Exception:
+                pass
+
+    return obj
+
+
 def build_armature_driven_character_mesh(*, armature, params: dict, out_root) -> object:
     """Build a character mesh driven by an existing armature.
 
@@ -244,49 +532,6 @@ def build_armature_driven_character_mesh(*, armature, params: dict, out_root) ->
         _select_only([obj], active=obj)
         bpy.ops.object.modifier_apply(modifier=modifier_name)
 
-    def _remove_segment_caps(obj, *, cap_start: bool, cap_end: bool) -> None:
-        if cap_start and cap_end:
-            return
-        if getattr(obj, 'type', None) != 'MESH':
-            return
-
-        mesh = obj.data
-        bm = bmesh.new()
-        try:
-            bm.from_mesh(mesh)
-            bm.verts.ensure_lookup_table()
-            bm.faces.ensure_lookup_table()
-
-            if not bm.verts or not bm.faces:
-                return
-
-            z_min = min(v.co.z for v in bm.verts)
-            z_max = max(v.co.z for v in bm.verts)
-            dz = float(z_max - z_min)
-            eps = max(1e-6, dz * 1e-4)
-
-            faces_to_delete = []
-            for f in bm.faces:
-                zs = [v.co.z for v in f.verts]
-                if not zs:
-                    continue
-                if (not cap_start) and all(abs(z - z_min) <= eps for z in zs):
-                    faces_to_delete.append(f)
-                    continue
-                if (not cap_end) and all(abs(z - z_max) <= eps for z in zs):
-                    faces_to_delete.append(f)
-                    continue
-
-            if faces_to_delete:
-                bmesh.ops.delete(bm, geom=faces_to_delete, context='FACES')
-                bm.to_mesh(mesh)
-        finally:
-            bm.free()
-            try:
-                mesh.update()
-            except Exception:
-                pass
-
     def _subdivide_all_edges(obj, *, cuts: int) -> None:
         if getattr(obj, 'type', None) != 'MESH':
             return
@@ -312,101 +557,6 @@ def build_armature_driven_character_mesh(*, armature, params: dict, out_root) ->
                 use_grid_fill=True,
                 smooth=0.0,
             )
-            bm.to_mesh(mesh)
-        finally:
-            bm.free()
-            try:
-                mesh.update()
-            except Exception:
-                pass
-
-    def _deform_taper_bulge_twist(
-        obj,
-        *,
-        taper: float = 1.0,
-        bulge_points: list[tuple[float, float]] | None = None,
-        twist_deg: float = 0.0,
-    ) -> None:
-        if getattr(obj, 'type', None) != 'MESH':
-            return
-
-        taper_f = float(taper)
-        if not math.isfinite(taper_f) or taper_f <= 0.0:
-            raise ValueError(f"taper must be a finite, positive number, got {taper!r}")
-
-        twist_f = float(twist_deg)
-        if not math.isfinite(twist_f):
-            raise ValueError(f"twist must be a finite number, got {twist_deg!r}")
-
-        pts: list[tuple[float, float]] = []
-        if bulge_points:
-            for at, scale in bulge_points:
-                at_f = float(at)
-                scale_f = float(scale)
-                if not math.isfinite(at_f):
-                    raise ValueError(f"bulge.at must be finite, got {at!r}")
-                if not math.isfinite(scale_f) or scale_f <= 0.0:
-                    raise ValueError(f"bulge.scale must be a finite, positive number, got {scale!r}")
-                # Spec says clamp and linearly interpolate.
-                if at_f < 0.0:
-                    at_f = 0.0
-                if at_f > 1.0:
-                    at_f = 1.0
-                pts.append((at_f, scale_f))
-
-        pts.sort(key=lambda p: p[0])
-
-        def bulge_scale(t: float) -> float:
-            if not pts:
-                return 1.0
-            if t <= pts[0][0]:
-                return pts[0][1]
-            for i in range(1, len(pts)):
-                at1, s1 = pts[i]
-                at0, s0 = pts[i - 1]
-                if t <= at1:
-                    denom = at1 - at0
-                    if abs(denom) < 1e-12:
-                        return s1
-                    u = (t - at0) / denom
-                    return s0 + (s1 - s0) * u
-            return pts[-1][1]
-
-        mesh = obj.data
-        bm = bmesh.new()
-        try:
-            bm.from_mesh(mesh)
-            bm.verts.ensure_lookup_table()
-            if not bm.verts:
-                return
-
-            z_min = min(v.co.z for v in bm.verts)
-            z_max = max(v.co.z for v in bm.verts)
-            dz = float(z_max - z_min)
-            if not math.isfinite(dz) or abs(dz) < 1e-12:
-                return
-
-            for v in bm.verts:
-                t = (float(v.co.z) - float(z_min)) / dz
-                if t < 0.0:
-                    t = 0.0
-                if t > 1.0:
-                    t = 1.0
-
-                s = (1.0 + (taper_f - 1.0) * t) * bulge_scale(t)
-
-                x = float(v.co.x) * s
-                y = float(v.co.y) * s
-
-                if twist_f != 0.0:
-                    a = math.radians(twist_f * t)
-                    ca = math.cos(a)
-                    sa = math.sin(a)
-                    x, y = (x * ca - y * sa, x * sa + y * ca)
-
-                v.co.x = x
-                v.co.y = y
-
             bm.to_mesh(mesh)
         finally:
             bm.free()
@@ -457,25 +607,6 @@ def build_armature_driven_character_mesh(*, armature, params: dict, out_root) ->
         out = float(value)
         if not math.isfinite(out):
             raise ValueError(f"{name} must be a finite number, got {out!r}")
-        return out
-
-    def _parse_bulge_points(value, *, name: str) -> list[tuple[float, float]]:
-        if value is None:
-            return []
-        if not isinstance(value, list):
-            raise TypeError(f"{name} must be a list")
-        out: list[tuple[float, float]] = []
-        for i, item in enumerate(value):
-            if not isinstance(item, dict):
-                raise TypeError(f"{name}[{i}] must be a dict")
-            if set(item.keys()) != {"at", "scale"}:
-                keys = sorted(item.keys())
-                raise ValueError(f"{name}[{i}] must have exactly keys ['at', 'scale'], got {keys!r}")
-            at = _parse_finite_number(item.get("at"), name=f"{name}[{i}].at")
-            scale = _parse_finite_number(item.get("scale"), name=f"{name}[{i}].scale")
-            if scale <= 0.0:
-                raise ValueError(f"{name}[{i}].scale must be > 0, got {scale!r}")
-            out.append((at, scale))
         return out
 
     def _recalculate_normals(obj) -> None:
@@ -835,49 +966,10 @@ def build_armature_driven_character_mesh(*, armature, params: dict, out_root) ->
         axis_n = axis.normalized()
         mid = (head_w + tail_w) * 0.5
 
+        base_q = axis_n.to_track_quat('Z', 'Y')
+
         kind, segments = _parse_profile(mesh_spec.get('profile'))
-
-        radius_val = _resolve_bone_relative_length(
-            mesh_spec.get('profile_radius', 0.15),
-            bone_length=length,
-        )
-        if isinstance(radius_val, tuple):
-            rx, ry = radius_val
-        else:
-            rx, ry = (radius_val, radius_val)
-        rx = float(rx)
-        ry = float(ry)
-
-        if not math.isfinite(rx) or rx <= 0.0:
-            raise ValueError(f"profile_radius.x must be > 0 for '{bone_name}', got {rx!r}")
-        if not math.isfinite(ry) or ry <= 0.0:
-            raise ValueError(f"profile_radius.y must be > 0 for '{bone_name}', got {ry!r}")
-
-        if kind == 'circle':
-            _primitive_add_with_uvs(
-                bpy.ops.mesh.primitive_cylinder_add,
-                vertices=int(segments),
-                radius=1.0,
-                depth=1.0,
-                location=mid,
-            )
-            obj = _require_active_mesh(context='primitive_cylinder_add')
-            obj.scale = (rx, ry, length)
-        elif kind in ('square', 'rectangle'):
-            _primitive_add_with_uvs(
-                bpy.ops.mesh.primitive_cube_add,
-                size=1.0,
-                location=mid,
-            )
-            obj = _require_active_mesh(context='primitive_cube_add')
-            obj.scale = (rx * 2.0, ry * 2.0, length)
-        else:
-            raise ValueError(f"unsupported profile kind: {kind!r}")
-
-        # Apply scale early so taper/bulge/twist operates on real dimensions.
-        _apply_scale_only(obj)
-
-        _ensure_material_slot_placeholders(obj)
+        rx, ry = _resolve_profile_radius(mesh_spec, bone_length=length)
 
         cap_start = mesh_spec.get('cap_start', True)
         cap_end = mesh_spec.get('cap_end', True)
@@ -890,70 +982,41 @@ def build_armature_driven_character_mesh(*, armature, params: dict, out_root) ->
                 f"bone_meshes['{bone_name}'].cap_end must be a bool, got {type(cap_end).__name__}: {cap_end!r}"
             )
 
-        _remove_segment_caps(obj, cap_start=cap_start, cap_end=cap_end)
-
-        obj.name = f"Segment_{bone_name}"
-
         bone_material_index = _parse_material_index(
             mesh_spec.get('material_index'),
             default=0,
             name=f"bone_meshes['{bone_name}'].material_index",
         )
 
-        taper = _parse_finite_number(
-            mesh_spec.get('taper'),
-            name=f"bone_meshes['{bone_name}'].taper",
-            default=1.0,
-        )
-        if taper <= 0.0:
+        extrusion_steps = mesh_spec.get('extrusion_steps', [])
+        if not extrusion_steps:
             raise ValueError(
-                f"bone_meshes['{bone_name}'].taper must be > 0, got {taper!r}"
+                f"bone_meshes['{bone_name}'].extrusion_steps is required"
             )
 
-        bulge_points = _parse_bulge_points(
-            mesh_spec.get('bulge'),
-            name=f"bone_meshes['{bone_name}'].bulge",
+        obj = _build_mesh_with_steps(
+            bpy_module=bpy,
+            bmesh_module=bmesh,
+            bone_name=bone_name,
+            bone_length=length,
+            head_w=head_w,
+            base_q=base_q,
+            profile=(kind, segments),
+            profile_radius=(rx, ry),
+            steps=extrusion_steps,
+            cap_start=cap_start,
+            cap_end=cap_end,
+            ensure_object_mode=_ensure_object_mode,
+            select_only=_select_only,
+            apply_scale_only=_apply_scale_only,
+            apply_rotation_only=_apply_rotation_only,
+            quat_rotate_vec=_quat_rotate_vec,
         )
-
-        twist = _parse_finite_number(
-            mesh_spec.get('twist'),
-            name=f"bone_meshes['{bone_name}'].twist",
-            default=0.0,
-        )
-
-        _deform_taper_bulge_twist(
-            obj,
-            taper=taper,
-            bulge_points=bulge_points,
-            twist_deg=twist,
-        )
-
-        obj.rotation_mode = 'QUATERNION'
-        base_q = axis_n.to_track_quat('Z', 'Y')
-        obj.rotation_quaternion = base_q
-
-        translate = _parse_vec3(mesh_spec.get('translate'), name=f"bone_meshes['{bone_name}'].translate")
-        if translate is not None:
-            tx, ty, tz = translate
-            # Bone-relative translation is in bone-local axes and scales by bone length.
-            offset_local = Vector((tx * length, ty * length, tz * length))
-            offset_world = _quat_rotate_vec(base_q, offset_local)
-            obj.location = obj.location + offset_world
-
-        rotate = _parse_vec3(mesh_spec.get('rotate'), name=f"bone_meshes['{bone_name}'].rotate")
-        if rotate is not None:
-            rx, ry, rz = rotate
-            rot_q = Euler(
-                (math.radians(rx), math.radians(ry), math.radians(rz)),
-                'XYZ',
-            ).to_quaternion()
-            obj.rotation_quaternion = _quat_mul(base_q, rot_q)
-
-        _apply_rotation_only(obj)
+        _ensure_material_slot_placeholders(obj)
 
         _set_all_poly_material_index(obj, material_index=bone_material_index)
 
-        segment_origin_w = obj.location.copy()
+        segment_origin_w = mid
 
         def _bone_local_head_to_segment_world(v_rel_head) -> Vector:
             v = _parse_vec3(v_rel_head, name='attachment vec3')
