@@ -11,11 +11,15 @@ export type PreviewMode = "spec" | "exported";
 /** Playback state. */
 export type PlaybackState = "stopped" | "playing" | "paused";
 
+/** Camera preset view angle. */
+export type CameraPreset = "front" | "side" | "back" | "top" | "three-quarter";
+
 /** Animation metadata from backend. */
 export interface AnimationMetadata {
   bone_count?: number;
   duration_seconds?: number;
   keyframe_count?: number;
+  keyframe_times?: number[];
   animations?: Array<{
     name: string;
     duration: number;
@@ -63,6 +67,8 @@ export class AnimationPreview {
   // Bone visualization
   private boneHelpers: THREE.Object3D[] = [];
   private selectedBone: THREE.Bone | null = null;
+  private boneFilter = "";
+  private expandedBones: Set<string> = new Set();
 
   // State
   private playbackState: PlaybackState = "stopped";
@@ -96,13 +102,32 @@ export class AnimationPreview {
   private exportedModeBtn!: HTMLButtonElement;
   private renderModeSelect!: HTMLSelectElement;
 
+  // Loop region elements
+  private loopRegionDiv!: HTMLDivElement;
+  private loopStartHandle!: HTMLDivElement;
+  private loopEndHandle!: HTMLDivElement;
+  private loopToggleBtn!: HTMLButtonElement;
+
+  // Keyframe marker elements
+  private keyframeMarkersContainer!: HTMLDivElement;
+  private keyframeMarkers: HTMLDivElement[] = [];
+
+  // Status overlay
+  private statusOverlay!: HTMLDivElement;
+
   // Material layer state
   private originalMaterials: Map<THREE.Mesh, THREE.Material | THREE.Material[]> = new Map();
   private overrideMaterials: THREE.Material[] = [];
 
+  // Raycasting for bone selection
+  private raycaster: THREE.Raycaster;
+  private bones: THREE.Bone[] = [];
+  private selectedBoneHelper: THREE.AxesHelper | null = null;
+
   constructor(container: HTMLElement) {
     this.container = container;
     this.clock = new THREE.Clock();
+    this.raycaster = new THREE.Raycaster();
 
     // Create wrapper
     this.wrapper = document.createElement("div");
@@ -151,12 +176,34 @@ export class AnimationPreview {
     this.infoDiv.textContent = "No animation loaded";
     viewportContainer.appendChild(this.infoDiv);
 
+    // Create status overlay (for "Generating..." state)
+    this.statusOverlay = document.createElement("div");
+    this.statusOverlay.style.cssText = `
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(26, 26, 26, 0.85);
+      font-size: 14px;
+      color: #4a9eff;
+      pointer-events: none;
+    `;
+    this.statusOverlay.innerHTML = `<span style="animation: pulse 1.5s infinite; @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }">Generating...</span>`;
+    viewportContainer.appendChild(this.statusOverlay);
+
     this.wrapper.appendChild(viewportContainer);
 
     // Create controls
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
     this.controls.enableDamping = true;
     this.controls.dampingFactor = 0.05;
+
+    // Add click handler for bone selection
+    this.renderer.domElement.addEventListener("click", (e) => this.handleViewportClick(e));
 
     // Add grid helper
     const gridHelper = new THREE.GridHelper(10, 10, 0x444444, 0x222222);
@@ -186,6 +233,10 @@ export class AnimationPreview {
     // Load persisted state
     this.loadSettings();
 
+    // Update loop UI after settings load
+    this.updateLoopRegionUI();
+    this.updateLoopVisibility();
+
     // Handle resize
     const resizeObserver = new ResizeObserver(() => this.handleResize());
     resizeObserver.observe(container);
@@ -203,6 +254,62 @@ export class AnimationPreview {
       position: relative;
       cursor: pointer;
     `;
+
+    // Keyframe markers container (behind loop region)
+    this.keyframeMarkersContainer = document.createElement("div");
+    this.keyframeMarkersContainer.style.cssText = `
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      pointer-events: none;
+    `;
+    timeline.appendChild(this.keyframeMarkersContainer);
+
+    // Loop region (behind playhead)
+    this.loopRegionDiv = document.createElement("div");
+    this.loopRegionDiv.style.cssText = `
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      background: rgba(74, 158, 255, 0.2);
+      left: 0;
+      width: 100%;
+      display: ${this.loopEnabled ? "block" : "none"};
+      pointer-events: none;
+    `;
+    timeline.appendChild(this.loopRegionDiv);
+
+    // Loop start handle
+    this.loopStartHandle = document.createElement("div");
+    this.loopStartHandle.style.cssText = `
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 8px;
+      background: #4a9eff;
+      left: 0;
+      cursor: ew-resize;
+      display: ${this.loopEnabled ? "block" : "none"};
+    `;
+    this.setupLoopHandleDrag(this.loopStartHandle, "start");
+    timeline.appendChild(this.loopStartHandle);
+
+    // Loop end handle
+    this.loopEndHandle = document.createElement("div");
+    this.loopEndHandle.style.cssText = `
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 8px;
+      background: #4a9eff;
+      right: 0;
+      cursor: ew-resize;
+      display: ${this.loopEnabled ? "block" : "none"};
+    `;
+    this.setupLoopHandleDrag(this.loopEndHandle, "end");
+    timeline.appendChild(this.loopEndHandle);
 
     // Playhead
     this.playheadDiv = document.createElement("div");
@@ -229,8 +336,9 @@ export class AnimationPreview {
     this.timeDisplay.textContent = "0:00.000 / 0:00.000";
     timeline.appendChild(this.timeDisplay);
 
-    // Click to seek
+    // Click to seek (only if not clicking on handles)
     timeline.addEventListener("click", (e) => {
+      if (e.target === this.loopStartHandle || e.target === this.loopEndHandle) return;
       const rect = timeline.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const progress = x / rect.width;
@@ -400,6 +508,45 @@ export class AnimationPreview {
     renderGroup.appendChild(this.renderModeSelect);
     transport.appendChild(renderGroup);
 
+    // Camera preset buttons
+    const cameraGroup = document.createElement("div");
+    cameraGroup.style.cssText = "display: flex; gap: 2px; margin-left: 8px;";
+
+    const cameraPresets: Array<{ label: string; preset: CameraPreset }> = [
+      { label: "3/4", preset: "three-quarter" },
+      { label: "F", preset: "front" },
+      { label: "S", preset: "side" },
+      { label: "B", preset: "back" },
+      { label: "T", preset: "top" },
+    ];
+
+    const smallBtnStyle = `
+      padding: 2px 6px;
+      background: #333;
+      color: #888;
+      border: 1px solid #444;
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 9px;
+    `;
+
+    for (const { label, preset } of cameraPresets) {
+      const btn = document.createElement("button");
+      btn.textContent = label;
+      btn.title = preset.charAt(0).toUpperCase() + preset.slice(1).replace("-", " ") + " view";
+      btn.style.cssText = smallBtnStyle;
+      btn.onclick = () => this.setCameraPreset(preset);
+      cameraGroup.appendChild(btn);
+    }
+    transport.appendChild(cameraGroup);
+
+    // Loop toggle
+    this.loopToggleBtn = document.createElement("button");
+    this.loopToggleBtn.textContent = "Loop";
+    this.loopToggleBtn.style.cssText = buttonStyle + (this.loopEnabled ? " background: #4a9eff; color: #fff;" : "");
+    this.loopToggleBtn.onclick = () => this.toggleLoop();
+    transport.appendChild(this.loopToggleBtn);
+
     // Bones toggle
     const bonesBtn = document.createElement("button");
     bonesBtn.textContent = "Bones";
@@ -415,6 +562,143 @@ export class AnimationPreview {
     return transport;
   }
 
+  /**
+   * Set up drag behavior for loop region handles.
+   */
+  private setupLoopHandleDrag(handle: HTMLDivElement, which: "start" | "end"): void {
+    let dragging = false;
+
+    const onMouseMove = (e: MouseEvent) => {
+      if (!dragging) return;
+      const timeline = this.timelineDiv;
+      const rect = timeline.getBoundingClientRect();
+      const x = Math.max(0, Math.min(e.clientX - rect.left, rect.width));
+      const progress = x / rect.width;
+
+      if (which === "start") {
+        // Clamp start to be before end
+        this.loopStart = Math.min(progress, this.loopEnd - 0.01);
+      } else {
+        // Clamp end to be after start
+        this.loopEnd = Math.max(progress, this.loopStart + 0.01);
+      }
+
+      this.updateLoopRegionUI();
+      this.saveSettings();
+    };
+
+    const onMouseUp = () => {
+      dragging = false;
+      document.removeEventListener("mousemove", onMouseMove);
+      document.removeEventListener("mouseup", onMouseUp);
+    };
+
+    handle.addEventListener("mousedown", (e) => {
+      e.stopPropagation();
+      dragging = true;
+      document.addEventListener("mousemove", onMouseMove);
+      document.addEventListener("mouseup", onMouseUp);
+    });
+  }
+
+  /**
+   * Update loop region UI positions based on loopStart/loopEnd.
+   */
+  private updateLoopRegionUI(): void {
+    const startPercent = this.loopStart * 100;
+    const endPercent = this.loopEnd * 100;
+
+    this.loopRegionDiv.style.left = `${startPercent}%`;
+    this.loopRegionDiv.style.width = `${endPercent - startPercent}%`;
+
+    this.loopStartHandle.style.left = `${startPercent}%`;
+    this.loopEndHandle.style.left = `${endPercent}%`;
+    this.loopEndHandle.style.right = "auto";
+  }
+
+  /**
+   * Toggle loop playback on/off.
+   */
+  private toggleLoop(): void {
+    this.loopEnabled = !this.loopEnabled;
+    this.updateLoopVisibility();
+    this.saveSettings();
+
+    // Update action loop mode
+    if (this.currentAction) {
+      this.currentAction.loop = this.loopEnabled ? THREE.LoopRepeat : THREE.LoopOnce;
+    }
+  }
+
+  /**
+   * Render keyframe markers on the timeline.
+   */
+  private renderKeyframeMarkers(): void {
+    // Clear existing markers
+    this.keyframeMarkers.forEach((marker) => marker.remove());
+    this.keyframeMarkers = [];
+
+    // Get animation duration
+    const duration = this.currentGltf?.animations[0]?.duration;
+    if (!duration || duration <= 0) return;
+
+    // Get keyframe times from metadata
+    const times = this.metadata?.keyframe_times;
+    if (!times || times.length === 0) return;
+
+    times.forEach((time) => {
+      const progress = time / duration;
+      if (progress < 0 || progress > 1) return;
+
+      const marker = document.createElement("div");
+      marker.style.cssText = `
+        position: absolute;
+        top: 4px;
+        bottom: 4px;
+        width: 2px;
+        background: rgba(255, 200, 100, 0.6);
+        left: ${progress * 100}%;
+        transform: translateX(-50%);
+        pointer-events: auto;
+        cursor: pointer;
+        border-radius: 1px;
+      `;
+      marker.title = `Keyframe at ${this.formatTime(time)}`;
+      marker.addEventListener("click", (e) => {
+        e.stopPropagation();
+        this.seekToTime(time);
+      });
+      this.keyframeMarkersContainer.appendChild(marker);
+      this.keyframeMarkers.push(marker);
+    });
+  }
+
+  /**
+   * Seek to a specific time in seconds.
+   */
+  private seekToTime(time: number): void {
+    if (!this.currentAction || !this.currentGltf?.animations[0]) return;
+    const duration = this.currentGltf.animations[0].duration;
+    this.currentAction.time = Math.max(0, Math.min(time, duration));
+    this.mixer?.update(0);
+    this.updateTimelineUI();
+  }
+
+  /**
+   * Update visibility of loop UI elements.
+   */
+  private updateLoopVisibility(): void {
+    const display = this.loopEnabled ? "block" : "none";
+    this.loopRegionDiv.style.display = display;
+    this.loopStartHandle.style.display = display;
+    this.loopEndHandle.style.display = display;
+
+    if (this.loopToggleBtn) {
+      this.loopToggleBtn.style.background = this.loopEnabled ? "#4a9eff" : "#333";
+      this.loopToggleBtn.style.color = this.loopEnabled ? "#fff" : "#888";
+    }
+  }
+
   private createBonePanel(): HTMLDivElement {
     const panel = document.createElement("div");
     panel.style.cssText = `
@@ -425,15 +709,43 @@ export class AnimationPreview {
       border-top: 1px solid #333;
     `;
 
-    // Bone list (left)
+    // Bone list container (left) - includes filter input and tree
+    const boneListContainer = document.createElement("div");
+    boneListContainer.style.cssText = `
+      width: 200px;
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid #333;
+    `;
+
+    // Filter input
+    const filterInput = document.createElement("input");
+    filterInput.type = "text";
+    filterInput.placeholder = "Filter bones...";
+    filterInput.style.cssText = `
+      padding: 4px 8px;
+      background: #252525;
+      border: none;
+      border-bottom: 1px solid #333;
+      color: #ccc;
+      font-size: 11px;
+      outline: none;
+    `;
+    filterInput.addEventListener("input", () => {
+      this.boneFilter = filterInput.value.toLowerCase();
+      this.rebuildBoneTree();
+    });
+    boneListContainer.appendChild(filterInput);
+
+    // Bone tree container
     this.boneList = document.createElement("div");
     this.boneList.style.cssText = `
-      width: 200px;
+      flex: 1;
       overflow-y: auto;
-      border-right: 1px solid #333;
       font-size: 11px;
     `;
-    panel.appendChild(this.boneList);
+    boneListContainer.appendChild(this.boneList);
+    panel.appendChild(boneListContainer);
 
     // Bone inspector (right)
     this.boneInspector = document.createElement("div");
@@ -525,17 +837,33 @@ export class AnimationPreview {
           // Update info display
           this.updateInfoDisplay();
 
+          // Render keyframe markers
+          this.renderKeyframeMarkers();
+
+          // Hide generating status
+          this.hideGenerating();
+
           resolve();
         },
         (error) => {
+          this.hideGenerating();
           reject(new Error(`Failed to parse GLB: ${error}`));
         }
       );
     });
   }
 
-  private fitCameraToModel(model: THREE.Object3D): void {
-    const box = new THREE.Box3().setFromObject(model);
+  private fitCameraToModel(_model: THREE.Object3D): void {
+    this.setCameraPreset("three-quarter");
+  }
+
+  /**
+   * Set camera to a preset view angle.
+   */
+  private setCameraPreset(preset: CameraPreset): void {
+    if (!this.currentModel) return;
+
+    const box = new THREE.Box3().setFromObject(this.currentModel);
     const center = box.getCenter(new THREE.Vector3());
     const size = box.getSize(new THREE.Vector3());
 
@@ -543,41 +871,284 @@ export class AnimationPreview {
     const fov = this.camera.fov * (Math.PI / 180);
     const distance = (maxDim / (2 * Math.tan(fov / 2))) * 1.5;
 
-    this.camera.position.set(
-      center.x + distance * 0.7,
-      center.y + distance * 0.5,
-      center.z + distance * 0.7
-    );
+    let position: THREE.Vector3;
+
+    switch (preset) {
+      case "front":
+        position = new THREE.Vector3(center.x, center.y, center.z + distance);
+        break;
+      case "back":
+        position = new THREE.Vector3(center.x, center.y, center.z - distance);
+        break;
+      case "side":
+        position = new THREE.Vector3(center.x + distance, center.y, center.z);
+        break;
+      case "top":
+        position = new THREE.Vector3(center.x, center.y + distance, center.z);
+        break;
+      case "three-quarter":
+      default:
+        position = new THREE.Vector3(
+          center.x + distance * 0.7,
+          center.y + distance * 0.5,
+          center.z + distance * 0.7
+        );
+        break;
+    }
+
+    this.camera.position.copy(position);
     this.controls.target.copy(center);
     this.controls.update();
   }
 
   private buildBoneList(scene: THREE.Object3D): void {
-    this.boneList.innerHTML = "";
-    const bones: THREE.Bone[] = [];
+    this.bones = [];
 
     scene.traverse((obj) => {
       if ((obj as THREE.Bone).isBone) {
-        bones.push(obj as THREE.Bone);
+        this.bones.push(obj as THREE.Bone);
       }
     });
 
-    bones.forEach((bone) => {
-      const item = document.createElement("div");
-      item.style.cssText = `
-        padding: 4px 8px;
-        cursor: pointer;
-        border-bottom: 1px solid #333;
+    // By default, expand root bones
+    this.expandedBones.clear();
+    for (const bone of this.bones) {
+      if (!bone.parent || !(bone.parent as THREE.Bone).isBone) {
+        this.expandedBones.add(this.getBoneId(bone));
+      }
+    }
+
+    this.rebuildBoneTree();
+  }
+
+  /**
+   * Get a unique identifier for a bone.
+   */
+  private getBoneId(bone: THREE.Bone): string {
+    return bone.uuid;
+  }
+
+  /**
+   * Rebuild the bone tree UI with current filter and expansion state.
+   */
+  private rebuildBoneTree(): void {
+    this.boneList.innerHTML = "";
+
+    // Find root bones (bones whose parent is not a bone)
+    const rootBones = this.bones.filter(
+      (bone) => !bone.parent || !(bone.parent as THREE.Bone).isBone
+    );
+
+    for (const rootBone of rootBones) {
+      this.renderBoneTreeNode(rootBone, 0);
+    }
+  }
+
+  /**
+   * Render a bone tree node and its children recursively.
+   */
+  private renderBoneTreeNode(bone: THREE.Bone, depth: number): void {
+    const boneName = bone.name || "Unnamed";
+    const boneId = this.getBoneId(bone);
+
+    // Filter check - if filter is set, only show matching bones and their ancestors/descendants
+    const matchesFilter = this.boneFilter === "" || boneName.toLowerCase().includes(this.boneFilter);
+
+    // Get children bones
+    const childBones = bone.children.filter((child) => (child as THREE.Bone).isBone) as THREE.Bone[];
+    const hasChildren = childBones.length > 0;
+
+    // Check if any descendant matches filter
+    const hasMatchingDescendant = this.boneFilter !== "" && this.hasMatchingDescendant(bone);
+
+    // Skip if no match and no matching descendants
+    if (this.boneFilter !== "" && !matchesFilter && !hasMatchingDescendant) {
+      return;
+    }
+
+    const isExpanded = this.expandedBones.has(boneId);
+    const isSelected = this.selectedBone === bone;
+
+    // Create item container
+    const item = document.createElement("div");
+    item.style.cssText = `
+      padding: 2px 8px 2px ${8 + depth * 12}px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      ${isSelected ? "background: #4a9eff; color: #fff;" : ""}
+    `;
+    item.dataset.boneId = boneId;
+
+    // Expand/collapse toggle
+    if (hasChildren) {
+      const toggle = document.createElement("span");
+      toggle.textContent = isExpanded ? "▼" : "▶";
+      toggle.style.cssText = `
+        font-size: 8px;
+        width: 10px;
+        user-select: none;
       `;
-      item.textContent = bone.name || "Unnamed";
-      item.onclick = () => this.selectBone(bone);
-      this.boneList.appendChild(item);
+      toggle.onclick = (e) => {
+        e.stopPropagation();
+        if (isExpanded) {
+          this.expandedBones.delete(boneId);
+        } else {
+          this.expandedBones.add(boneId);
+        }
+        this.rebuildBoneTree();
+      };
+      item.appendChild(toggle);
+    } else {
+      // Spacer for alignment
+      const spacer = document.createElement("span");
+      spacer.style.width = "10px";
+      item.appendChild(spacer);
+    }
+
+    // Bone name
+    const nameSpan = document.createElement("span");
+    nameSpan.textContent = boneName;
+    if (this.boneFilter && matchesFilter) {
+      nameSpan.style.fontWeight = "bold";
+    }
+    item.appendChild(nameSpan);
+
+    item.onclick = () => {
+      this.selectBone(bone);
+      this.highlightBoneInList(bone);
+    };
+
+    this.boneList.appendChild(item);
+
+    // Render children if expanded
+    if (hasChildren && (isExpanded || (this.boneFilter !== "" && hasMatchingDescendant))) {
+      for (const childBone of childBones) {
+        this.renderBoneTreeNode(childBone, depth + 1);
+      }
+    }
+  }
+
+  /**
+   * Check if a bone or any of its descendants matches the current filter.
+   */
+  private hasMatchingDescendant(bone: THREE.Bone): boolean {
+    for (const child of bone.children) {
+      if ((child as THREE.Bone).isBone) {
+        const childBone = child as THREE.Bone;
+        const childName = childBone.name || "Unnamed";
+        if (childName.toLowerCase().includes(this.boneFilter)) {
+          return true;
+        }
+        if (this.hasMatchingDescendant(childBone)) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Handle click on viewport to select bone via raycasting.
+   */
+  private handleViewportClick(event: MouseEvent): void {
+    if (!this.currentModel || this.bones.length === 0) return;
+
+    // Get mouse coordinates in normalized device coordinates (-1 to +1)
+    const rect = this.renderer.domElement.getBoundingClientRect();
+    const x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    const y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+    // Set up raycaster
+    this.raycaster.setFromCamera(new THREE.Vector2(x, y), this.camera);
+
+    // Find all meshes in the model
+    const meshes: THREE.Mesh[] = [];
+    this.currentModel.traverse((obj) => {
+      if ((obj as THREE.Mesh).isMesh) {
+        meshes.push(obj as THREE.Mesh);
+      }
     });
+
+    // Test intersection with meshes
+    const intersects = this.raycaster.intersectObjects(meshes, false);
+    if (intersects.length === 0) return;
+
+    // Get the intersection point
+    const hitPoint = intersects[0].point;
+
+    // Find the nearest bone to the hit point
+    let nearestBone: THREE.Bone | null = null;
+    let nearestDistance = Infinity;
+
+    for (const bone of this.bones) {
+      const boneWorldPos = new THREE.Vector3();
+      bone.getWorldPosition(boneWorldPos);
+      const distance = hitPoint.distanceTo(boneWorldPos);
+      if (distance < nearestDistance) {
+        nearestDistance = distance;
+        nearestBone = bone;
+      }
+    }
+
+    if (nearestBone) {
+      this.selectBone(nearestBone);
+      this.highlightBoneInList(nearestBone);
+    }
+  }
+
+  /**
+   * Highlight the selected bone in the bone list panel.
+   */
+  private highlightBoneInList(bone: THREE.Bone): void {
+    const boneId = this.getBoneId(bone);
+
+    // Expand ancestors to make sure the bone is visible
+    let parent = bone.parent;
+    while (parent) {
+      if ((parent as THREE.Bone).isBone) {
+        this.expandedBones.add(this.getBoneId(parent as THREE.Bone));
+      }
+      parent = parent.parent;
+    }
+
+    // Rebuild to ensure the bone is visible
+    this.rebuildBoneTree();
+
+    // Find and scroll to the item
+    const items = this.boneList.querySelectorAll("[data-bone-id]");
+    for (const item of items) {
+      if ((item as HTMLDivElement).dataset.boneId === boneId) {
+        item.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        break;
+      }
+    }
   }
 
   private selectBone(bone: THREE.Bone): void {
     this.selectedBone = bone;
+    this.updateSelectedBoneHighlight();
     this.updateBoneInspector();
+  }
+
+  /**
+   * Update the 3D highlight for selected bone.
+   */
+  private updateSelectedBoneHighlight(): void {
+    // Remove previous highlight
+    if (this.selectedBoneHelper) {
+      this.selectedBoneHelper.parent?.remove(this.selectedBoneHelper);
+      this.selectedBoneHelper = null;
+    }
+
+    // Add new highlight for selected bone
+    if (this.selectedBone) {
+      this.selectedBoneHelper = new THREE.AxesHelper(0.15);
+      // Make the helper more visible (thicker lines via scale)
+      this.selectedBoneHelper.scale.set(1.5, 1.5, 1.5);
+      this.selectedBone.add(this.selectedBoneHelper);
+    }
   }
 
   private updateBoneInspector(): void {
@@ -651,6 +1222,22 @@ export class AnimationPreview {
   // Mode controls
   setModeChangeCallback(callback: ((mode: PreviewMode) => void) | null): void {
     this.onModeChange = callback;
+  }
+
+  /**
+   * Show the "Generating..." overlay.
+   * Call this when starting a new preview generation.
+   */
+  showGenerating(): void {
+    this.statusOverlay.style.display = "flex";
+  }
+
+  /**
+   * Hide the "Generating..." overlay.
+   * Called automatically when GLB loads.
+   */
+  hideGenerating(): void {
+    this.statusOverlay.style.display = "none";
   }
 
   setPreviewMode(mode: PreviewMode): void {
@@ -839,6 +1426,20 @@ export class AnimationPreview {
 
     if (this.mixer && this.playbackState === "playing") {
       this.mixer.update(delta);
+
+      // Loop region clamping
+      if (this.loopEnabled && this.currentAction && this.currentGltf?.animations[0]) {
+        const duration = this.currentGltf.animations[0].duration;
+        const loopStartTime = this.loopStart * duration;
+        const loopEndTime = this.loopEnd * duration;
+
+        if (this.currentAction.time >= loopEndTime) {
+          this.currentAction.time = loopStartTime;
+        } else if (this.currentAction.time < loopStartTime) {
+          this.currentAction.time = loopStartTime;
+        }
+      }
+
       this.updateTimelineUI();
     }
 
@@ -866,11 +1467,21 @@ export class AnimationPreview {
     this.currentGltf = null;
     this.metadata = null;
     this.clearBoneHelpers();
+    this.clearSelectedBoneHelper();
+    this.bones = [];
+    this.selectedBone = null;
     this.originalMaterials.clear();
     this.disposeOverrideMaterials();
     this.boneList.innerHTML = "";
     this.boneInspector.textContent = "Select a bone to inspect";
     this.infoDiv.textContent = "No animation loaded";
+  }
+
+  private clearSelectedBoneHelper(): void {
+    if (this.selectedBoneHelper) {
+      this.selectedBoneHelper.parent?.remove(this.selectedBoneHelper);
+      this.selectedBoneHelper = null;
+    }
   }
 
   dispose(): void {
@@ -880,6 +1491,8 @@ export class AnimationPreview {
     this.controls.dispose();
     this.renderer.dispose();
     this.clearBoneHelpers();
+    this.clearSelectedBoneHelper();
+    this.bones = [];
     this.originalMaterials.clear();
     this.disposeOverrideMaterials();
     if (this.wrapper.parentElement === this.container) {

@@ -679,6 +679,7 @@ async function renderAnimationPreview(source: string): Promise<void> {
 
   const filename = currentFilePath ?? "editor.star";
   updateStatus("Generating animation preview...");
+  animationPreview.showGenerating();
 
   let result: GeneratePreviewOutput;
   try {
