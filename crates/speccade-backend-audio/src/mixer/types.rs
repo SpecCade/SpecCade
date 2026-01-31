@@ -1,10 +1,48 @@
 //! Core types for audio mixing.
 
+/// Sample data for a layer, supporting both mono and stereo sources.
+#[derive(Debug, Clone)]
+pub enum LayerSamples {
+    /// Mono samples (single channel).
+    Mono(Vec<f64>),
+    /// Stereo samples (separate left/right channels).
+    Stereo { left: Vec<f64>, right: Vec<f64> },
+}
+
+impl LayerSamples {
+    /// Get the number of samples (per channel for stereo).
+    pub fn len(&self) -> usize {
+        match self {
+            LayerSamples::Mono(samples) => samples.len(),
+            LayerSamples::Stereo { left, .. } => left.len(),
+        }
+    }
+
+    /// Check if empty.
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
+    /// Returns true if this is stereo data.
+    pub fn is_stereo(&self) -> bool {
+        matches!(self, LayerSamples::Stereo { .. })
+    }
+}
+
+impl PartialEq<Vec<f64>> for LayerSamples {
+    fn eq(&self, other: &Vec<f64>) -> bool {
+        match self {
+            LayerSamples::Mono(samples) => samples == other,
+            LayerSamples::Stereo { .. } => false,
+        }
+    }
+}
+
 /// A single audio layer with mixing parameters.
 #[derive(Debug, Clone)]
 pub struct Layer {
-    /// Audio samples.
-    pub samples: Vec<f64>,
+    /// Audio samples (mono or stereo).
+    pub samples: LayerSamples,
     /// Volume level (0.0 to 1.0).
     pub volume: f64,
     /// Stereo pan (-1.0 = left, 0.0 = center, 1.0 = right).
@@ -18,10 +56,24 @@ pub struct Layer {
 }
 
 impl Layer {
-    /// Creates a new layer.
+    /// Creates a new mono layer.
     pub fn new(samples: Vec<f64>, volume: f64, pan: f64) -> Self {
         Self {
-            samples,
+            samples: LayerSamples::Mono(samples),
+            volume: volume.clamp(0.0, 1.0),
+            pan: pan.clamp(-1.0, 1.0),
+            pan_curve: None,
+            delay_samples: 0,
+        }
+    }
+
+    /// Creates a new stereo layer with separate left/right channels.
+    ///
+    /// For stereo layers, `pan` shifts the stereo image (0.0 = unchanged,
+    /// -1.0 = collapse to left, 1.0 = collapse to right).
+    pub fn new_stereo(left: Vec<f64>, right: Vec<f64>, volume: f64, pan: f64) -> Self {
+        Self {
+            samples: LayerSamples::Stereo { left, right },
             volume: volume.clamp(0.0, 1.0),
             pan: pan.clamp(-1.0, 1.0),
             pan_curve: None,
@@ -34,6 +86,11 @@ impl Layer {
         Self::new(samples, volume, 0.0)
     }
 
+    /// Creates a centered stereo layer.
+    pub fn centered_stereo(left: Vec<f64>, right: Vec<f64>, volume: f64) -> Self {
+        Self::new_stereo(left, right, volume, 0.0)
+    }
+
     /// Sets a delay for the layer.
     pub fn with_delay(mut self, delay_samples: usize) -> Self {
         self.delay_samples = delay_samples;
@@ -42,6 +99,11 @@ impl Layer {
 
     /// Sets a per-sample pan curve for the layer.
     pub fn with_pan_curve(mut self, pan_curve: Vec<f64>) -> Self {
+        debug_assert_eq!(
+            pan_curve.len(),
+            self.samples.len(),
+            "pan_curve length must match samples length"
+        );
         self.pan_curve = Some(pan_curve);
         self
     }

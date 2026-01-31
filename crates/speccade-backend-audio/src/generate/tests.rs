@@ -393,3 +393,133 @@ fn test_generate_supersaw_unison_with_delay() {
     let result = generate_from_params(&params, 42).expect("should generate");
     assert!(!result.wav.wav_data.is_empty());
 }
+
+#[test]
+fn test_granular_stereo_with_pan_spread() {
+    use speccade_spec::recipe::audio::GranularSource;
+
+    let params = AudioV1Params {
+        duration_seconds: 0.2,
+        sample_rate: 44100,
+        master_filter: None,
+        layers: vec![AudioLayer {
+            synthesis: Synthesis::Granular {
+                source: GranularSource::Noise {
+                    noise_type: NoiseType::White,
+                },
+                grain_size_ms: 50.0,
+                grain_density: 10.0,
+                pitch_spread: 0.1,
+                position_spread: 0.2,
+                pan_spread: 0.8, // This should produce stereo output
+            },
+            envelope: Envelope {
+                attack: 0.01,
+                decay: 0.05,
+                sustain: 0.7,
+                release: 0.1,
+            },
+            volume: 0.8,
+            pan: 0.0,
+            delay: None,
+            filter: None,
+            lfo: None,
+        }],
+        pitch_envelope: None,
+        base_note: None,
+        loop_config: None,
+        generate_loop_points: false,
+        effects: vec![],
+        post_fx_lfos: vec![],
+    };
+
+    let result = generate_from_params(&params, 42).expect("should generate");
+
+    // Granular with pan_spread > 0 should produce stereo output
+    assert!(result.wav.is_stereo, "granular with pan_spread should be stereo");
+    assert!(!result.wav.wav_data.is_empty());
+}
+
+#[test]
+fn test_granular_mono_without_pan_spread() {
+    use speccade_spec::recipe::audio::GranularSource;
+
+    let params = AudioV1Params {
+        duration_seconds: 0.2,
+        sample_rate: 44100,
+        master_filter: None,
+        layers: vec![AudioLayer {
+            synthesis: Synthesis::Granular {
+                source: GranularSource::Noise {
+                    noise_type: NoiseType::Pink,
+                },
+                grain_size_ms: 30.0,
+                grain_density: 15.0,
+                pitch_spread: 0.0,
+                position_spread: 0.0,
+                pan_spread: 0.0, // No pan spread = mono output
+            },
+            envelope: Envelope::default(),
+            volume: 1.0,
+            pan: 0.0, // Center pan
+            delay: None,
+            filter: None,
+            lfo: None,
+        }],
+        pitch_envelope: None,
+        base_note: None,
+        loop_config: None,
+        generate_loop_points: false,
+        effects: vec![],
+        post_fx_lfos: vec![],
+    };
+
+    let result = generate_from_params(&params, 42).expect("should generate");
+
+    // Granular without pan_spread and center pan should be mono
+    assert!(!result.wav.is_stereo, "granular without pan_spread should be mono");
+    assert!(!result.wav.wav_data.is_empty());
+}
+
+#[test]
+fn test_granular_stereo_determinism() {
+    use speccade_spec::recipe::audio::GranularSource;
+
+    let params = AudioV1Params {
+        duration_seconds: 0.1,
+        sample_rate: 22050,
+        master_filter: None,
+        layers: vec![AudioLayer {
+            synthesis: Synthesis::Granular {
+                source: GranularSource::Tone {
+                    waveform: Waveform::Sawtooth,
+                    frequency: 220.0,
+                },
+                grain_size_ms: 40.0,
+                grain_density: 12.0,
+                pitch_spread: 0.2,
+                position_spread: 0.1,
+                pan_spread: 0.5,
+            },
+            envelope: Envelope::default(),
+            volume: 0.8,
+            pan: 0.0,
+            delay: None,
+            filter: None,
+            lfo: None,
+        }],
+        pitch_envelope: None,
+        base_note: None,
+        loop_config: None,
+        generate_loop_points: false,
+        effects: vec![],
+        post_fx_lfos: vec![],
+    };
+
+    let result1 = generate_from_params(&params, 42).expect("should generate");
+    let result2 = generate_from_params(&params, 42).expect("should generate");
+
+    // Same seed should produce identical stereo output
+    assert_eq!(result1.wav.pcm_hash, result2.wav.pcm_hash);
+    assert!(result1.wav.is_stereo);
+}

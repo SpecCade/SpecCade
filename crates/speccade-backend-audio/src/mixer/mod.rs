@@ -28,4 +28,4 @@ mod tests_stereo_output;
 // Re-export public API
 pub use mixer::Mixer;
 pub use processing::{normalize, normalize_stereo, soft_clip, soft_clip_buffer};
-pub use types::{Layer, MixerOutput, StereoOutput};
+pub use types::{Layer, LayerSamples, MixerOutput, StereoOutput};

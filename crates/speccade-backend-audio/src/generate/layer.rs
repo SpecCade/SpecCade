@@ -4,6 +4,47 @@ use speccade_spec::recipe::audio::{AudioLayer, Filter, ModulationTarget, Synthes
 
 use crate::error::{AudioError, AudioResult};
 use crate::rng::create_rng;
+
+/// Output from layer generation, supporting both mono and stereo sources.
+#[derive(Debug, Clone)]
+pub enum LayerOutput {
+    /// Mono output (single channel).
+    Mono(Vec<f64>),
+    /// Stereo output (separate left/right channels).
+    Stereo { left: Vec<f64>, right: Vec<f64> },
+}
+
+impl LayerOutput {
+    /// Convert to mono by averaging stereo channels if needed.
+    pub fn to_mono(self) -> Vec<f64> {
+        match self {
+            LayerOutput::Mono(samples) => samples,
+            LayerOutput::Stereo { left, right } => left
+                .into_iter()
+                .zip(right)
+                .map(|(l, r)| (l + r) * 0.5)
+                .collect(),
+        }
+    }
+
+    /// Returns true if this is stereo output.
+    pub fn is_stereo(&self) -> bool {
+        matches!(self, LayerOutput::Stereo { .. })
+    }
+
+    /// Get the number of samples (per channel for stereo).
+    pub fn len(&self) -> usize {
+        match self {
+            LayerOutput::Mono(samples) => samples.len(),
+            LayerOutput::Stereo { left, .. } => left.len(),
+        }
+    }
+
+    /// Check if empty.
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+}
 use crate::synthesis::am::AmSynth;
 use crate::synthesis::bowed_string::BowedStringSynth;
 use crate::synthesis::comb_synth::CombFilterSynth;
@@ -37,14 +78,14 @@ use super::filters;
 use super::modulation;
 use super::oscillators;
 
-/// Generates a single audio layer.
+/// Generates a single audio layer, returning mono or stereo output.
 pub fn generate_layer(
     layer: &AudioLayer,
     layer_idx: usize,
     num_samples: usize,
     sample_rate: f64,
     seed: u32,
-) -> AudioResult<Vec<f64>> {
+) -> AudioResult<LayerOutput> {
     let mut rng = create_rng(seed);
 
     // Calculate delay padding
@@ -78,6 +119,12 @@ pub fn generate_layer(
         None => 0,
     };
     let synthesis_samples = num_samples.saturating_sub(delay_samples);
+
+    // Track if we're generating stereo (only granular with pan_spread > 0 for now)
+    let is_stereo_granular = matches!(
+        &layer.synthesis,
+        Synthesis::Granular { pan_spread, .. } if *pan_spread > 0.0
+    );
 
     // Generate base synthesis
     let mut samples = match &layer.synthesis {
@@ -250,23 +297,9 @@ pub fn generate_layer(
                 *position_spread,
                 *pan_spread,
             );
-            let raw_samples = synth.synthesize(synthesis_samples, sample_rate, &mut rng);
-
             // If pan_spread > 0, granular synthesis returns interleaved stereo [L, R, L, R, ...]
-            // We need to de-interleave and mix to mono for now, or handle stereo properly
-            if *pan_spread > 0.0 {
-                // De-interleave and mix to mono
-                // TODO: In the future, could support per-layer stereo
-                let mut mono_samples = Vec::with_capacity(synthesis_samples);
-                for i in 0..synthesis_samples {
-                    let left = raw_samples[i * 2];
-                    let right = raw_samples[i * 2 + 1];
-                    mono_samples.push((left + right) * 0.5);
-                }
-                mono_samples
-            } else {
-                raw_samples
-            }
+            // We keep it interleaved for now and will split at the end
+            synth.synthesize(synthesis_samples, sample_rate, &mut rng)
         }
 
         Synthesis::Wavetable {
@@ -524,6 +557,45 @@ pub fn generate_layer(
         }
     };
 
+    // Handle stereo granular separately - it has interleaved samples [L, R, L, R, ...]
+    if is_stereo_granular {
+        // De-interleave stereo samples
+        assert_eq!(
+            samples.len(),
+            synthesis_samples * 2,
+            "Granular stereo synthesis must return exactly {} samples, got {}",
+            synthesis_samples * 2,
+            samples.len()
+        );
+        let mut left = Vec::with_capacity(synthesis_samples);
+        let mut right = Vec::with_capacity(synthesis_samples);
+        for i in 0..synthesis_samples {
+            left.push(samples[i * 2]);
+            right.push(samples[i * 2 + 1]);
+        }
+
+        // Apply envelope to both channels
+        let envelope =
+            modulation::generate_envelope(&layer.envelope, sample_rate, synthesis_samples);
+        for (i, env) in envelope.iter().enumerate() {
+            left[i] *= env;
+            right[i] *= env;
+        }
+
+        // Pad with delay at the start if needed
+        if delay_samples > 0 {
+            let mut padded_left = vec![0.0; delay_samples];
+            let mut padded_right = vec![0.0; delay_samples];
+            padded_left.extend(left);
+            padded_right.extend(right);
+            left = padded_left;
+            right = padded_right;
+        }
+
+        return Ok(LayerOutput::Stereo { left, right });
+    }
+
+    // Standard mono processing path
     // Apply LFO modulation if specified
     if let Some(ref lfo_mod) = layer.lfo {
         use crate::modulation::lfo::{apply_volume_modulation, Lfo};
@@ -683,5 +755,5 @@ pub fn generate_layer(
         samples = padded;
     }
 
-    Ok(samples)
+    Ok(LayerOutput::Mono(samples))
 }

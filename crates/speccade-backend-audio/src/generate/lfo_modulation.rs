@@ -142,7 +142,8 @@ pub fn apply_lfo_pitch_modulation(params: LfoPitchParams<'_>) -> AudioResult<Vec
         }
         _ => {
             // For other synthesis types, generate without pitch modulation
-            return generate_layer(layer, layer_idx, num_samples, sample_rate, seed);
+            // Convert LayerOutput to mono (stereo will be downmixed)
+            return Ok(generate_layer(layer, layer_idx, num_samples, sample_rate, seed)?.to_mono());
         }
     }
 

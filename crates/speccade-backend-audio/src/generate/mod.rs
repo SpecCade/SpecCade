@@ -20,7 +20,7 @@ use crate::error::{AudioError, AudioResult};
 use crate::mixer::{Layer, Mixer, MixerOutput};
 use crate::wav::WavResult;
 
-pub use layer::generate_layer;
+pub use layer::{generate_layer, LayerOutput};
 pub use modulation::{calculate_loop_point, generate_envelope};
 
 /// Result of audio generation.
@@ -223,24 +223,33 @@ fn generate_from_unified_params(params: &AudioV1Params, seed: u32) -> AudioResul
             continue;
         }
 
-        let mut layer_samples =
+        let layer_output =
             generate_layer(layer, layer_idx, num_samples, sample_rate, layer_seed)?;
 
-        // Apply pitch envelope if specified
-        if let Some(ref pitch_env) = params.pitch_envelope {
-            let pitch_curve =
-                modulation::generate_pitch_envelope_curve(pitch_env, sample_rate, num_samples);
-            layer_samples = modulation::apply_pitch_envelope_to_layer_samples(
-                layer,
-                layer_idx,
-                &pitch_curve,
-                num_samples,
-                sample_rate,
-                layer_seed,
-            )?;
-        }
-
-        let mut mix_layer = Layer::new(layer_samples, layer.volume, layer.pan);
+        // Create the mixer layer based on mono/stereo output
+        let mut mix_layer = match layer_output {
+            layer::LayerOutput::Mono(mut samples) => {
+                // Apply pitch envelope if specified (mono only for now)
+                if let Some(ref pitch_env) = params.pitch_envelope {
+                    let pitch_curve =
+                        modulation::generate_pitch_envelope_curve(pitch_env, sample_rate, num_samples);
+                    samples = modulation::apply_pitch_envelope_to_layer_samples(
+                        layer,
+                        layer_idx,
+                        &pitch_curve,
+                        num_samples,
+                        sample_rate,
+                        layer_seed,
+                    )?;
+                }
+                Layer::new(samples, layer.volume, layer.pan)
+            }
+            layer::LayerOutput::Stereo { left, right } => {
+                // For stereo layers, pitch envelope is not supported
+                // (granular synthesis with pan_spread doesn't typically use pitch envelope)
+                Layer::new_stereo(left, right, layer.volume, layer.pan)
+            }
+        };
 
         // Pan LFO is applied during mixing. Keep it deterministic and aligned to layer start:
         // delay time does not advance LFO phase.

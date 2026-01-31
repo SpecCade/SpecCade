@@ -231,3 +231,127 @@ fn test_center_pan_equal_power() {
     assert!((output.left[50] - expected).abs() < 0.01);
     assert!((output.right[50] - expected).abs() < 0.01);
 }
+
+// ============================================================================
+// Stereo Layer Tests (LayerSamples::Stereo)
+// ============================================================================
+
+#[test]
+fn test_stereo_layer_basic() {
+    let mut mixer = Mixer::new(100, 44100.0);
+    // Stereo layer: left channel has 0.8, right channel has 0.3
+    mixer.add_layer(Layer::new_stereo(vec![0.8; 100], vec![0.3; 100], 1.0, 0.0));
+
+    let output = mixer.mix_stereo();
+
+    // At pan=0, stereo image is preserved
+    // pan_normalized = 0.5, so:
+    // left_to_left = 0.5, left_to_right = 0.5
+    // right_to_left = 0.5, right_to_right = 0.5
+    // output.left = 0.8 * 0.5 + 0.3 * 0.5 = 0.55
+    // output.right = 0.8 * 0.5 + 0.3 * 0.5 = 0.55
+    assert!((output.left[50] - 0.55).abs() < 0.01);
+    assert!((output.right[50] - 0.55).abs() < 0.01);
+}
+
+#[test]
+fn test_stereo_layer_pan_left() {
+    let mut mixer = Mixer::new(100, 44100.0);
+    // Stereo layer with distinct L/R content, panned hard left
+    mixer.add_layer(Layer::new_stereo(vec![1.0; 100], vec![0.5; 100], 1.0, -1.0));
+
+    let output = mixer.mix_stereo();
+
+    // At pan=-1 (hard left), both channels go to left output
+    // pan_normalized = 0, so:
+    // left_to_left = 1.0, left_to_right = 0.0
+    // right_to_left = 1.0, right_to_right = 0.0
+    // output.left = 1.0 * 1.0 + 0.5 * 1.0 = 1.5
+    // output.right = 1.0 * 0.0 + 0.5 * 0.0 = 0.0
+    assert!((output.left[50] - 1.5).abs() < 0.01);
+    assert!(output.right[50].abs() < 0.01);
+}
+
+#[test]
+fn test_stereo_layer_pan_right() {
+    let mut mixer = Mixer::new(100, 44100.0);
+    // Stereo layer with distinct L/R content, panned hard right
+    mixer.add_layer(Layer::new_stereo(vec![1.0; 100], vec![0.5; 100], 1.0, 1.0));
+
+    let output = mixer.mix_stereo();
+
+    // At pan=1 (hard right), both channels go to right output
+    // pan_normalized = 1, so:
+    // left_to_left = 0.0, left_to_right = 1.0
+    // right_to_left = 0.0, right_to_right = 1.0
+    // output.left = 1.0 * 0.0 + 0.5 * 0.0 = 0.0
+    // output.right = 1.0 * 1.0 + 0.5 * 1.0 = 1.5
+    assert!(output.left[50].abs() < 0.01);
+    assert!((output.right[50] - 1.5).abs() < 0.01);
+}
+
+#[test]
+fn test_stereo_layer_with_volume() {
+    let mut mixer = Mixer::new(100, 44100.0);
+    mixer.add_layer(Layer::new_stereo(vec![1.0; 100], vec![1.0; 100], 0.5, 0.0));
+
+    let output = mixer.mix_stereo();
+
+    // Volume 0.5 should halve the output
+    // At center pan with equal L/R, output should be 0.5 in both channels
+    assert!((output.left[50] - 0.5).abs() < 0.01);
+    assert!((output.right[50] - 0.5).abs() < 0.01);
+}
+
+#[test]
+fn test_stereo_layer_mixer_detects_stereo() {
+    let mut mixer = Mixer::new(100, 44100.0);
+    mixer.add_layer(Layer::new_stereo(vec![1.0; 100], vec![1.0; 100], 1.0, 0.0));
+
+    // Mixer should detect stereo content from stereo layer
+    assert!(mixer.is_stereo());
+}
+
+#[test]
+fn test_stereo_layer_mix_mono_downmixes() {
+    let mut mixer = Mixer::new(100, 44100.0);
+    // Stereo layer: left=1.0, right=0.5
+    mixer.add_layer(Layer::new_stereo(vec![1.0; 100], vec![0.5; 100], 1.0, 0.0));
+
+    let output = mixer.mix_mono();
+
+    // Mono mixing should average the channels
+    // (1.0 + 0.5) * 0.5 = 0.75
+    assert!((output[50] - 0.75).abs() < 0.01);
+}
+
+#[test]
+fn test_stereo_layer_centered_constructor() {
+    let mut mixer = Mixer::new(100, 44100.0);
+    mixer.add_layer(Layer::centered_stereo(vec![1.0; 100], vec![0.5; 100], 1.0));
+
+    let output = mixer.mix_stereo();
+
+    // centered_stereo should have pan=0
+    // Output should blend L and R to both channels equally
+    assert!((output.left[50] - 0.75).abs() < 0.01);
+    assert!((output.right[50] - 0.75).abs() < 0.01);
+}
+
+#[test]
+fn test_mixed_mono_and_stereo_layers() {
+    let mut mixer = Mixer::new(100, 44100.0);
+    // Add a mono layer panned left
+    mixer.add_panned(vec![0.5; 100], 1.0, -1.0);
+    // Add a stereo layer centered
+    mixer.add_layer(Layer::centered_stereo(vec![0.3; 100], vec![0.3; 100], 1.0));
+
+    let output = mixer.mix_stereo();
+
+    // Mono layer: hard left, so only contributes to left channel (0.5)
+    // Stereo layer: center, both channels get 0.3 * 0.5 + 0.3 * 0.5 = 0.3
+    // Total left: 0.5 + 0.3 = 0.8
+    // Total right: 0.0 + 0.3 = 0.3
+    assert!((output.left[50] - 0.8).abs() < 0.01);
+    assert!((output.right[50] - 0.3).abs() < 0.01);
+}
