@@ -329,22 +329,49 @@ pub fn run(
         .with_context(|| format!("Failed to parse spec file: {}", spec_path))?;
 
     if !gif {
-        // TODO: Implement preview for generated assets (open viewers, or launch Blender for mesh/anim).
         println!("{} {}", "Preview:".cyan().bold(), spec_path);
 
-        // Preview is currently only planned for Blender-based assets
-        println!(
-            "\n{} Preview is not yet implemented for asset type '{}'",
-            "INFO".yellow().bold(),
-            spec.asset_type
-        );
-        println!(
-            "{}",
-            "Preview functionality will be available in a future release for mesh and animation assets."
-                .dimmed()
-        );
+        // Determine output directory (same as generate command)
+        let spec_file = std::path::Path::new(spec_path);
+        let default_out = spec_file.parent().unwrap_or(std::path::Path::new(".")).join("output");
+        let out_dir = out.map(std::path::Path::new).unwrap_or(&default_out);
 
-        // Return success since this is expected behavior for now
+        // Find primary output file
+        let primary_output = spec
+            .outputs
+            .iter()
+            .find(|o| o.kind == speccade_spec::output::OutputKind::Primary);
+
+        if let Some(output) = primary_output {
+            let output_path = out_dir.join(&output.path);
+
+            if output_path.exists() {
+                println!("Opening: {}", output_path.display());
+
+                // Use system default application
+                if let Err(e) = open::that(&output_path) {
+                    eprintln!(
+                        "{} Failed to open preview: {}",
+                        "ERROR".red().bold(),
+                        e
+                    );
+                    return Ok(ExitCode::FAILURE);
+                }
+            } else {
+                eprintln!(
+                    "{} Output file not found: {}",
+                    "WARN".yellow().bold(),
+                    output_path.display()
+                );
+                println!("Run 'speccade generate {}' first to create the output.", spec_path);
+            }
+        } else {
+            println!(
+                "{} No primary output defined in spec",
+                "INFO".yellow().bold()
+            );
+        }
+
         return Ok(ExitCode::SUCCESS);
     }
 

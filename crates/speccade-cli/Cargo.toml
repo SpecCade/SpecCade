@@ -65,6 +65,9 @@ tempfile.workspace = true
 # Glob pattern matching for file scanning
 glob = "0.3"
 
+# Open files with system default applications
+open = "5"
+
 # YAML serialization for coverage reports
 serde_yaml.workspace = true
 
