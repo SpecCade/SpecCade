@@ -2211,16 +2211,22 @@
           "markdownDescription": "Denies the save command without any pre-configured scope."
         },
         {
-          "description": "Default permissions for the speccade plugin.\n#### This default permission set includes:\n\n- `allow-batch-generate`\n- `allow-eval-spec`\n- `allow-validate-spec`\n- `allow-generate-preview`\n- `allow-generate-full`\n- `allow-refine-mesh-preview`\n- `allow-list-golden-preview-textures`\n- `allow-get-golden-preview-texture-source`\n- `allow-read-binary-file-base64`\n- `allow-generate-png-output-base64`\n- `allow-generate-pack-manifest`\n- `allow-write-pack-manifest`\n- `allow-watch-file`\n- `allow-unwatch-file`\n- `allow-open-folder`\n- `allow-read-file`\n- `allow-save-file`\n- `allow-scan-project-tree`\n- `allow-list-templates`\n- `allow-get-template`",
+          "description": "Default permissions for the speccade plugin.\n#### This default permission set includes:\n\n- `allow-batch-generate`\n- `allow-batch-validate`\n- `allow-eval-spec`\n- `allow-validate-spec`\n- `allow-generate-preview`\n- `allow-generate-full`\n- `allow-refine-mesh-preview`\n- `allow-list-golden-preview-textures`\n- `allow-get-golden-preview-texture-source`\n- `allow-read-binary-file-base64`\n- `allow-generate-png-output-base64`\n- `allow-generate-pack-manifest`\n- `allow-write-pack-manifest`\n- `allow-watch-file`\n- `allow-unwatch-file`\n- `allow-open-folder`\n- `allow-read-file`\n- `allow-save-file`\n- `allow-scan-project-tree`\n- `allow-list-templates`\n- `allow-get-template`",
           "type": "string",
           "const": "speccade:default",
-          "markdownDescription": "Default permissions for the speccade plugin.\n#### This default permission set includes:\n\n- `allow-batch-generate`\n- `allow-eval-spec`\n- `allow-validate-spec`\n- `allow-generate-preview`\n- `allow-generate-full`\n- `allow-refine-mesh-preview`\n- `allow-list-golden-preview-textures`\n- `allow-get-golden-preview-texture-source`\n- `allow-read-binary-file-base64`\n- `allow-generate-png-output-base64`\n- `allow-generate-pack-manifest`\n- `allow-write-pack-manifest`\n- `allow-watch-file`\n- `allow-unwatch-file`\n- `allow-open-folder`\n- `allow-read-file`\n- `allow-save-file`\n- `allow-scan-project-tree`\n- `allow-list-templates`\n- `allow-get-template`"
+          "markdownDescription": "Default permissions for the speccade plugin.\n#### This default permission set includes:\n\n- `allow-batch-generate`\n- `allow-batch-validate`\n- `allow-eval-spec`\n- `allow-validate-spec`\n- `allow-generate-preview`\n- `allow-generate-full`\n- `allow-refine-mesh-preview`\n- `allow-list-golden-preview-textures`\n- `allow-get-golden-preview-texture-source`\n- `allow-read-binary-file-base64`\n- `allow-generate-png-output-base64`\n- `allow-generate-pack-manifest`\n- `allow-write-pack-manifest`\n- `allow-watch-file`\n- `allow-unwatch-file`\n- `allow-open-folder`\n- `allow-read-file`\n- `allow-save-file`\n- `allow-scan-project-tree`\n- `allow-list-templates`\n- `allow-get-template`"
         },
         {
           "description": "Enables the batch_generate command without any pre-configured scope.",
           "type": "string",
           "const": "speccade:allow-batch-generate",
           "markdownDescription": "Enables the batch_generate command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the batch_validate command without any pre-configured scope.",
+          "type": "string",
+          "const": "speccade:allow-batch-validate",
+          "markdownDescription": "Enables the batch_validate command without any pre-configured scope."
         },
         {
           "description": "Enables the eval_spec command without any pre-configured scope.",
@@ -2341,6 +2347,12 @@
           "type": "string",
           "const": "speccade:deny-batch-generate",
           "markdownDescription": "Denies the batch_generate command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the batch_validate command without any pre-configured scope.",
+          "type": "string",
+          "const": "speccade:deny-batch-validate",
+          "markdownDescription": "Denies the batch_validate command without any pre-configured scope."
         },
         {
           "description": "Denies the eval_spec command without any pre-configured scope.",

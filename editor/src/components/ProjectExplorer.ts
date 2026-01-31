@@ -93,9 +93,28 @@ export class ProjectExplorer {
         this.batchActionBar?.update();
         this.fileTree?.refresh();
       },
-      onValidate: (paths) => {
+      onValidate: async (paths) => {
         console.log("Validate:", paths);
-        // TODO: wire to backend validate command
+        try {
+          const result = await invoke<{
+            total: number;
+            valid: number;
+            invalid: number;
+            results: Array<{ path: string; result: { success: boolean } }>;
+          }>("plugin:speccade|batch_validate", {
+            paths,
+            budget: null,
+          });
+          console.log("Validation result:", result);
+          if (result.invalid > 0) {
+            alert(`Validation: ${result.valid}/${result.total} passed`);
+          } else {
+            alert(`All ${result.total} specs valid!`);
+          }
+        } catch (e) {
+          console.error("Validation failed:", e);
+          alert(`Validation error: ${e}`);
+        }
       },
       onGenerate: (paths) => {
         console.log("Generate:", paths);

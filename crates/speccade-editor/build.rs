@@ -3,6 +3,7 @@
 // - crates/speccade-editor/permissions/default.toml (default permission set)
 const COMMANDS: &[&str] = &[
     "batch_generate",
+    "batch_validate",
     "eval_spec",
     "validate_spec",
     "generate_preview",

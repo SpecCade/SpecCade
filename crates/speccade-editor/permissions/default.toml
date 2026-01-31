@@ -7,6 +7,7 @@ description = "Default permissions for the speccade plugin."
 # - crates/speccade-editor/build.rs (COMMANDS)
 permissions = [
   "allow-batch-generate",
+  "allow-batch-validate",
   "allow-eval-spec",
   "allow-validate-spec",
   "allow-generate-preview",
