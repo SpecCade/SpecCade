@@ -116,9 +116,39 @@ export class ProjectExplorer {
           alert(`Validation error: ${e}`);
         }
       },
-      onGenerate: (paths) => {
+      onGenerate: async (paths) => {
         console.log("Generate:", paths);
-        // TODO: wire to backend batch_generate command
+        try {
+          // Determine output directory from first selected file
+          const firstPath = paths[0];
+          const lastSlash = Math.max(firstPath.lastIndexOf('/'), firstPath.lastIndexOf('\\'));
+          const dir = lastSlash >= 0 ? firstPath.substring(0, lastSlash) : '.';
+          const outputDir = `${dir}/output`;
+
+          const result = await invoke<{
+            total: number;
+            succeeded: number;
+            failed: number;
+            results: Array<{ path: string; success: boolean; error?: string }>;
+            elapsed_ms: number;
+          }>("plugin:speccade|batch_generate", {
+            paths,
+            outputDir,
+          });
+          console.log("Generate result:", result);
+
+          if (result.failed > 0) {
+            alert(`Generated: ${result.succeeded}/${result.total} succeeded\n${result.failed} failed`);
+          } else {
+            alert(`Generated ${result.total} assets successfully!`);
+          }
+
+          // Refresh project tree to show new outputs
+          await this.refresh();
+        } catch (e) {
+          console.error("Generation failed:", e);
+          alert(`Generation error: ${e}`);
+        }
       },
       onDelete: (paths) => {
         console.log("Delete:", paths);
