@@ -15,6 +15,7 @@ use tauri::{
 // Re-export the commands at crate level for Tauri's generate_handler!
 pub use commands::batch::batch_generate;
 pub use commands::batch_validate::batch_validate;
+pub use commands::delete::batch_delete;
 pub use commands::eval::eval_spec;
 pub use commands::generate::{generate_full, generate_preview, refine_mesh_preview};
 pub use commands::pack::{generate_pack_manifest, write_pack_manifest};
@@ -45,6 +46,7 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
             // Keep in sync with:
             // - crates/speccade-editor/build.rs (COMMANDS)
             // - crates/speccade-editor/permissions/default.toml (default permission set)
+            batch_delete,
             batch_generate,
             batch_validate,
             eval_spec,

@@ -4,6 +4,7 @@
 
 pub mod batch;
 pub mod batch_validate;
+pub mod delete;
 pub mod eval;
 pub mod generate;
 pub mod lint;

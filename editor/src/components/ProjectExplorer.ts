@@ -150,9 +150,37 @@ export class ProjectExplorer {
           alert(`Generation error: ${e}`);
         }
       },
-      onDelete: (paths) => {
+      onDelete: async (paths) => {
         console.log("Delete:", paths);
-        // TODO: wire to backend delete + refresh
+
+        // Confirm deletion
+        const confirmed = confirm(`Delete ${paths.length} file(s)?\n\n${paths.join('\n')}`);
+        if (!confirmed) return;
+
+        try {
+          const result = await invoke<{
+            total: number;
+            deleted: number;
+            failed: number;
+            errors: Array<{ path: string; message: string }>;
+          }>("plugin:speccade|batch_delete", {
+            paths,
+          });
+          console.log("Delete result:", result);
+
+          if (result.failed > 0) {
+            alert(`Deleted: ${result.deleted}/${result.total}\nFailed: ${result.failed}`);
+          } else {
+            alert(`Deleted ${result.total} files`);
+          }
+
+          // Clear selection and refresh
+          this.selectionManager.clear();
+          await this.refresh();
+        } catch (e) {
+          console.error("Delete failed:", e);
+          alert(`Delete error: ${e}`);
+        }
       },
     });
 

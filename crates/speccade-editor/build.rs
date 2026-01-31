@@ -2,6 +2,7 @@
 // - crates/speccade-editor/src/lib.rs (generate_handler![...])
 // - crates/speccade-editor/permissions/default.toml (default permission set)
 const COMMANDS: &[&str] = &[
+    "batch_delete",
     "batch_generate",
     "batch_validate",
     "eval_spec",
