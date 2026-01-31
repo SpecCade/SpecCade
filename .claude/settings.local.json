@@ -89,7 +89,8 @@
       "Bash(for:*)",
       "Bash(git branch:*)",
       "Bash(npm run check:*)",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(git stash:*)"
     ]
   },
   "disabledMcpjsonServers": [
