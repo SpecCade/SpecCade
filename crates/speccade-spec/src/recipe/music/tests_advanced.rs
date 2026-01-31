@@ -281,7 +281,10 @@ fn test_full_song_serialization_roundtrip() {
 
     let instrument = TrackerInstrument {
         name: "Lead".to_string(),
-        synthesis: Some(InstrumentSynthesis::Pulse { duty_cycle: 0.5 }),
+        synthesis: Some(InstrumentSynthesis::Pulse {
+            duty_cycle: 0.5,
+            base_note: None,
+        }),
         envelope: envelope.clone(),
         default_volume: Some(64),
         ..Default::default()

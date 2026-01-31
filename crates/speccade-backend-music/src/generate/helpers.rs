@@ -172,35 +172,35 @@ pub(super) fn legacy_synthesis_to_audio_v1_params(
     };
 
     let synthesis = match synthesis {
-        InstrumentSynthesis::Pulse { duty_cycle } => AudioSynthesis::Oscillator {
+        InstrumentSynthesis::Pulse { duty_cycle, .. } => AudioSynthesis::Oscillator {
             waveform: Waveform::Pulse,
             frequency: midi_to_freq(base_midi),
             freq_sweep: None,
             detune: None,
             duty: Some(*duty_cycle),
         },
-        InstrumentSynthesis::Square => AudioSynthesis::Oscillator {
+        InstrumentSynthesis::Square { .. } => AudioSynthesis::Oscillator {
             waveform: Waveform::Square,
             frequency: midi_to_freq(base_midi),
             freq_sweep: None,
             detune: None,
             duty: None,
         },
-        InstrumentSynthesis::Triangle => AudioSynthesis::Oscillator {
+        InstrumentSynthesis::Triangle { .. } => AudioSynthesis::Oscillator {
             waveform: Waveform::Triangle,
             frequency: midi_to_freq(base_midi),
             freq_sweep: None,
             detune: None,
             duty: None,
         },
-        InstrumentSynthesis::Sawtooth => AudioSynthesis::Oscillator {
+        InstrumentSynthesis::Sawtooth { .. } => AudioSynthesis::Oscillator {
             waveform: Waveform::Sawtooth,
             frequency: midi_to_freq(base_midi),
             freq_sweep: None,
             detune: None,
             duty: None,
         },
-        InstrumentSynthesis::Sine => AudioSynthesis::Oscillator {
+        InstrumentSynthesis::Sine { .. } => AudioSynthesis::Oscillator {
             waveform: Waveform::Sine,
             frequency: midi_to_freq(base_midi),
             freq_sweep: None,
@@ -271,32 +271,24 @@ fn midi_to_note_name(midi: u8) -> String {
     format!("{}{}", NAMES[note], octave)
 }
 
-/// Extract the base_note from an InstrumentSynthesis::Sample, if present.
+/// Extract the base_note from an InstrumentSynthesis variant, if present.
 ///
-/// Note: This is kept for backwards compatibility with Sample synthesis type
-/// which has base_note inside the enum variant. For other synthesis types,
-/// base_note is now at the TrackerInstrument level.
+/// All synthesis types now support an optional base_note field that can be used
+/// for pitch correction when the synthesis is at a specific pitch.
 ///
 /// # Returns
-/// - `Some(note_name)` if Sample synthesis has base_note set
+/// - `Some(note_name)` if the synthesis variant has base_note set
 /// - `None` otherwise
 #[allow(dead_code)]
 pub(crate) fn get_synthesis_base_note(synthesis: &InstrumentSynthesis) -> Option<&str> {
-    // TODO: Once the spec schema adds base_note to all synthesis types, implement this:
-    //
-    // match synthesis {
-    //     InstrumentSynthesis::Pulse { base_note, .. } => base_note.as_deref(),
-    //     InstrumentSynthesis::Triangle { base_note, .. } => base_note.as_deref(),
-    //     InstrumentSynthesis::Sawtooth { base_note, .. } => base_note.as_deref(),
-    //     InstrumentSynthesis::Sine { base_note, .. } => base_note.as_deref(),
-    //     InstrumentSynthesis::Noise { base_note, .. } => base_note.as_deref(),
-    //     InstrumentSynthesis::Sample { base_note, .. } => base_note.as_deref(),
-    // }
-    //
-    // For now, only Sample type has base_note in the schema:
     match synthesis {
+        InstrumentSynthesis::Pulse { base_note, .. } => base_note.as_deref(),
+        InstrumentSynthesis::Square { base_note } => base_note.as_deref(),
+        InstrumentSynthesis::Triangle { base_note } => base_note.as_deref(),
+        InstrumentSynthesis::Sawtooth { base_note } => base_note.as_deref(),
+        InstrumentSynthesis::Sine { base_note } => base_note.as_deref(),
+        InstrumentSynthesis::Noise { base_note, .. } => base_note.as_deref(),
         InstrumentSynthesis::Sample { base_note, .. } => base_note.as_deref(),
-        _ => None, // Other synthesis types don't have base_note in schema yet
     }
 }
 

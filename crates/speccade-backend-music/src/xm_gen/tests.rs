@@ -21,7 +21,10 @@ fn create_test_params() -> MusicTrackerSongV1Params {
 
     let instrument = TrackerInstrument {
         name: "Test Lead".to_string(),
-        synthesis: Some(InstrumentSynthesis::Pulse { duty_cycle: 0.5 }),
+        synthesis: Some(InstrumentSynthesis::Pulse {
+            duty_cycle: 0.5,
+            base_note: None,
+        }),
         envelope: envelope.clone(),
         default_volume: Some(64),
         ..Default::default()
@@ -113,7 +116,7 @@ fn test_volume_fade_xm() {
 fn test_xm_pattern_note_omitted_triggers_default_note() {
     let instruments = vec![TrackerInstrument {
         name: "Kick".to_string(),
-        synthesis: Some(InstrumentSynthesis::Sine),
+        synthesis: Some(InstrumentSynthesis::Sine { base_note: None }),
         ..Default::default()
     }];
 
@@ -141,7 +144,7 @@ fn test_xm_pattern_note_omitted_triggers_default_note() {
 fn test_xm_pattern_note_omitted_uses_instrument_base_note() {
     let instruments = vec![TrackerInstrument {
         name: "Lead".to_string(),
-        synthesis: Some(InstrumentSynthesis::Triangle),
+        synthesis: Some(InstrumentSynthesis::Triangle { base_note: None }),
         base_note: Some("C5".to_string()),
         ..Default::default()
     }];
@@ -195,7 +198,7 @@ fn test_xm_pattern_note_omitted_uses_sample_synth_base_note_when_instrument_base
 fn test_xm_pattern_explicit_note_overrides_instrument_base_note() {
     let instruments = vec![TrackerInstrument {
         name: "Lead".to_string(),
-        synthesis: Some(InstrumentSynthesis::Triangle),
+        synthesis: Some(InstrumentSynthesis::Triangle { base_note: None }),
         base_note: Some("C5".to_string()),
         ..Default::default()
     }];
@@ -222,7 +225,7 @@ fn test_xm_pattern_explicit_note_overrides_instrument_base_note() {
 fn test_xm_pattern_no_note_marker_preserves_instrument_column() {
     let instruments = vec![TrackerInstrument {
         name: "Kick".to_string(),
-        synthesis: Some(InstrumentSynthesis::Sine),
+        synthesis: Some(InstrumentSynthesis::Sine { base_note: None }),
         ..Default::default()
     }];
 
@@ -252,7 +255,7 @@ fn test_xm_pattern_no_note_marker_preserves_instrument_column() {
 fn test_xm_non_periodic_noise_one_shot_does_not_loop() {
     let instrument = TrackerInstrument {
         name: "Hihat".to_string(),
-        synthesis: Some(InstrumentSynthesis::Noise { periodic: false }),
+        synthesis: Some(InstrumentSynthesis::Noise { periodic: false, base_note: None }),
         envelope: Envelope {
             attack: 0.001,
             decay: 0.02,
@@ -294,7 +297,7 @@ fn create_test_instrument(synthesis: InstrumentSynthesis) -> TrackerInstrument {
 fn test_synthesized_pulse_instrument_pitch_correction() {
     // Synthesized Pulse instrument generates at MIDI 60 (C4), 22050 Hz
     // Should get relative_note = 16
-    let instr = create_test_instrument(InstrumentSynthesis::Pulse { duty_cycle: 0.5 });
+    let instr = create_test_instrument(InstrumentSynthesis::Pulse { duty_cycle: 0.5, base_note: None });
     let spec_dir = Path::new(".");
 
     let (xm_instr, _) = generate_xm_instrument(&instr, 42, 0, spec_dir).unwrap();
@@ -310,7 +313,7 @@ fn test_synthesized_pulse_instrument_pitch_correction() {
 fn test_synthesized_sine_instrument_pitch_correction() {
     // Synthesized Sine instrument generates at MIDI 60 (C4), 22050 Hz
     // Should get relative_note = 16
-    let instr = create_test_instrument(InstrumentSynthesis::Sine);
+    let instr = create_test_instrument(InstrumentSynthesis::Sine { base_note: None });
     let spec_dir = Path::new(".");
 
     let (xm_instr, _) = generate_xm_instrument(&instr, 42, 0, spec_dir).unwrap();
@@ -325,7 +328,7 @@ fn test_synthesized_sine_instrument_pitch_correction() {
 fn test_synthesized_noise_instrument_pitch_correction() {
     // Synthesized Noise instrument generates at MIDI 60 (C4), 22050 Hz
     // Should get relative_note = 16
-    let instr = create_test_instrument(InstrumentSynthesis::Noise { periodic: false });
+    let instr = create_test_instrument(InstrumentSynthesis::Noise { periodic: false, base_note: None });
     let spec_dir = Path::new(".");
 
     let (xm_instr, _) = generate_xm_instrument(&instr, 42, 0, spec_dir).unwrap();
@@ -340,7 +343,7 @@ fn test_synthesized_noise_instrument_pitch_correction() {
 fn test_synthesized_triangle_instrument_pitch_correction() {
     // Synthesized Triangle instrument generates at MIDI 60 (C4), 22050 Hz
     // Should get relative_note = 16
-    let instr = create_test_instrument(InstrumentSynthesis::Triangle);
+    let instr = create_test_instrument(InstrumentSynthesis::Triangle { base_note: None });
     let spec_dir = Path::new(".");
 
     let (xm_instr, _) = generate_xm_instrument(&instr, 42, 0, spec_dir).unwrap();
@@ -355,7 +358,7 @@ fn test_synthesized_triangle_instrument_pitch_correction() {
 fn test_synthesized_sawtooth_instrument_pitch_correction() {
     // Synthesized Sawtooth instrument generates at MIDI 60 (C4), 22050 Hz
     // Should get relative_note = 16
-    let instr = create_test_instrument(InstrumentSynthesis::Sawtooth);
+    let instr = create_test_instrument(InstrumentSynthesis::Sawtooth { base_note: None });
     let spec_dir = Path::new(".");
 
     let (xm_instr, _) = generate_xm_instrument(&instr, 42, 0, spec_dir).unwrap();
@@ -370,7 +373,7 @@ fn test_synthesized_sawtooth_instrument_pitch_correction() {
 fn test_finetune_value_for_synthesized_instruments() {
     // All synthesized instruments at 22050 Hz should have finetune ~101
     // (from the fractional part of 16.79 semitones)
-    let instr = create_test_instrument(InstrumentSynthesis::Pulse { duty_cycle: 0.5 });
+    let instr = create_test_instrument(InstrumentSynthesis::Pulse { duty_cycle: 0.5, base_note: None });
     let spec_dir = Path::new(".");
 
     let (xm_instr, _) = generate_xm_instrument(&instr, 42, 0, spec_dir).unwrap();
@@ -410,7 +413,7 @@ fn test_xm_variant_a_no_base_note_no_pattern_note() {
     // Instrument with no base_note (defaults to MIDI 60 = C4)
     let instrument = TrackerInstrument {
         name: "Drum Kick".to_string(),
-        synthesis: Some(InstrumentSynthesis::Sine),
+        synthesis: Some(InstrumentSynthesis::Sine { base_note: None }),
         // base_note: None - defaults to MIDI 60 (C4)
         default_volume: Some(64),
         ..Default::default()
@@ -452,7 +455,7 @@ fn test_xm_variant_b_no_base_note_pattern_note_c4() {
     // Instrument with no base_note
     let instrument = TrackerInstrument {
         name: "Drum Snare".to_string(),
-        synthesis: Some(InstrumentSynthesis::Noise { periodic: false }),
+        synthesis: Some(InstrumentSynthesis::Noise { periodic: false, base_note: None }),
         // base_note: None - defaults to MIDI 60 (C4)
         default_volume: Some(64),
         ..Default::default()
@@ -480,7 +483,7 @@ fn test_xm_variant_c_base_note_c5_no_pattern_note() {
     // Instrument with base_note = "C5" (MIDI 72)
     let instrument = TrackerInstrument {
         name: "Lead Synth".to_string(),
-        synthesis: Some(InstrumentSynthesis::Sawtooth),
+        synthesis: Some(InstrumentSynthesis::Sawtooth { base_note: None }),
         base_note: Some("C5".to_string()), // MIDI 72 = XM C-5 (note 61 = index 60)
         default_volume: Some(64),
         ..Default::default()
@@ -514,7 +517,7 @@ fn test_xm_variant_d_base_note_c5_pattern_note_c4() {
     // Instrument with base_note = "C5"
     let instrument = TrackerInstrument {
         name: "Bass".to_string(),
-        synthesis: Some(InstrumentSynthesis::Triangle),
+        synthesis: Some(InstrumentSynthesis::Triangle { base_note: None }),
         base_note: Some("C5".to_string()), // MIDI 72 = XM C-5
         default_volume: Some(64),
         ..Default::default()
@@ -557,7 +560,7 @@ fn test_xm_base_note_a4_non_c_note() {
     // Instrument with base_note = "A4" (A440 = MIDI 69)
     let instrument = TrackerInstrument {
         name: "Tuning Fork".to_string(),
-        synthesis: Some(InstrumentSynthesis::Sine),
+        synthesis: Some(InstrumentSynthesis::Sine { base_note: None }),
         base_note: Some("A4".to_string()), // MIDI 69 = XM A-4 (note 58, index 57)
         default_volume: Some(64),
         ..Default::default()
@@ -587,7 +590,7 @@ fn test_xm_base_note_a4_non_c_note() {
 fn test_xm_base_note_c3_two_octaves_below() {
     let instrument = TrackerInstrument {
         name: "Sub Bass".to_string(),
-        synthesis: Some(InstrumentSynthesis::Sine),
+        synthesis: Some(InstrumentSynthesis::Sine { base_note: None }),
         base_note: Some("C3".to_string()), // MIDI 48 = XM C-3 (note 37, index 36)
         default_volume: Some(64),
         ..Default::default()
@@ -618,7 +621,7 @@ fn test_xm_base_note_c3_two_octaves_below() {
 fn test_xm_base_note_c6_two_octaves_above() {
     let instrument = TrackerInstrument {
         name: "High Lead".to_string(),
-        synthesis: Some(InstrumentSynthesis::Sine),
+        synthesis: Some(InstrumentSynthesis::Sine { base_note: None }),
         base_note: Some("C6".to_string()), // MIDI 84 = XM C-6 (note 73, index 72)
         default_volume: Some(64),
         ..Default::default()
@@ -653,7 +656,7 @@ fn test_xm_relative_note_octave_relationships() {
     for (note_name, _midi) in &notes {
         let instrument = TrackerInstrument {
             name: format!("{} Test", note_name),
-            synthesis: Some(InstrumentSynthesis::Sine),
+            synthesis: Some(InstrumentSynthesis::Sine { base_note: None }),
             base_note: Some(note_name.to_string()),
             default_volume: Some(64),
             ..Default::default()
@@ -695,7 +698,7 @@ fn test_xm_finetune_consistent_across_base_notes() {
     for note_name in &notes {
         let instrument = TrackerInstrument {
             name: format!("{} Test", note_name),
-            synthesis: Some(InstrumentSynthesis::Sine),
+            synthesis: Some(InstrumentSynthesis::Sine { base_note: None }),
             base_note: Some(note_name.to_string()),
             default_volume: Some(64),
             ..Default::default()

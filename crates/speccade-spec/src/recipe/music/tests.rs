@@ -92,7 +92,7 @@ fn test_loop_default_value() {
 fn test_instruments_serialization() {
     let instr = TrackerInstrument {
         name: "Lead".to_string(),
-        synthesis: Some(InstrumentSynthesis::Sine),
+        synthesis: Some(InstrumentSynthesis::Sine { base_note: None }),
         envelope: Envelope {
             attack: 0.01,
             decay: 0.1,
@@ -257,7 +257,7 @@ fn test_it_options_serialization() {
 fn test_instrument_name_serialization() {
     let instr = TrackerInstrument {
         name: "Bass".to_string(),
-        synthesis: Some(InstrumentSynthesis::Sawtooth),
+        synthesis: Some(InstrumentSynthesis::Sawtooth { base_note: None }),
         ..Default::default()
     };
 
@@ -322,7 +322,10 @@ fn test_instrument_synthesis_audio_v1_serialization() {
 
 #[test]
 fn test_instrument_synthesis_pulse() {
-    let pulse = InstrumentSynthesis::Pulse { duty_cycle: 0.5 };
+    let pulse = InstrumentSynthesis::Pulse {
+        duty_cycle: 0.5,
+        base_note: None,
+    };
     let json = serde_json::to_string(&pulse).unwrap();
     assert!(json.contains("pulse"));
     assert!(json.contains("duty_cycle"));
@@ -333,7 +336,7 @@ fn test_instrument_synthesis_pulse() {
 
 #[test]
 fn test_instrument_synthesis_triangle() {
-    let triangle = InstrumentSynthesis::Triangle;
+    let triangle = InstrumentSynthesis::Triangle { base_note: None };
     let json = serde_json::to_string(&triangle).unwrap();
     assert!(json.contains("triangle"));
 
@@ -343,7 +346,7 @@ fn test_instrument_synthesis_triangle() {
 
 #[test]
 fn test_instrument_synthesis_sawtooth() {
-    let sawtooth = InstrumentSynthesis::Sawtooth;
+    let sawtooth = InstrumentSynthesis::Sawtooth { base_note: None };
     let json = serde_json::to_string(&sawtooth).unwrap();
     assert!(json.contains("sawtooth"));
 
@@ -353,7 +356,7 @@ fn test_instrument_synthesis_sawtooth() {
 
 #[test]
 fn test_instrument_synthesis_sine() {
-    let sine = InstrumentSynthesis::Sine;
+    let sine = InstrumentSynthesis::Sine { base_note: None };
     let json = serde_json::to_string(&sine).unwrap();
     assert!(json.contains("sine"));
 
@@ -363,7 +366,10 @@ fn test_instrument_synthesis_sine() {
 
 #[test]
 fn test_instrument_synthesis_noise() {
-    let noise = InstrumentSynthesis::Noise { periodic: true };
+    let noise = InstrumentSynthesis::Noise {
+        periodic: true,
+        base_note: None,
+    };
     let json = serde_json::to_string(&noise).unwrap();
     assert!(json.contains("noise"));
 
@@ -383,6 +389,198 @@ fn test_instrument_synthesis_sample() {
 
     let parsed: InstrumentSynthesis = serde_json::from_str(&json).unwrap();
     assert_eq!(parsed, sample);
+}
+
+// ==================== InstrumentSynthesis base_note Tests ====================
+
+#[test]
+fn test_instrument_synthesis_pulse_with_base_note() {
+    let pulse = InstrumentSynthesis::Pulse {
+        duty_cycle: 0.5,
+        base_note: Some("A4".to_string()),
+    };
+    let json = serde_json::to_string(&pulse).unwrap();
+    assert!(json.contains("pulse"));
+    assert!(json.contains("base_note"));
+    assert!(json.contains("A4"));
+
+    let parsed: InstrumentSynthesis = serde_json::from_str(&json).unwrap();
+    assert_eq!(parsed, pulse);
+}
+
+#[test]
+fn test_instrument_synthesis_pulse_without_base_note_deserializes() {
+    // Test backwards compatibility: JSON without base_note should still deserialize
+    let json = r#"{"type":"pulse","duty_cycle":0.5}"#;
+    let parsed: InstrumentSynthesis = serde_json::from_str(json).unwrap();
+    if let InstrumentSynthesis::Pulse {
+        duty_cycle,
+        base_note,
+    } = parsed
+    {
+        assert_eq!(duty_cycle, 0.5);
+        assert!(base_note.is_none());
+    } else {
+        panic!("Expected Pulse variant");
+    }
+}
+
+#[test]
+fn test_instrument_synthesis_square_with_base_note() {
+    let square = InstrumentSynthesis::Square {
+        base_note: Some("C5".to_string()),
+    };
+    let json = serde_json::to_string(&square).unwrap();
+    assert!(json.contains("square"));
+    assert!(json.contains("base_note"));
+    assert!(json.contains("C5"));
+
+    let parsed: InstrumentSynthesis = serde_json::from_str(&json).unwrap();
+    assert_eq!(parsed, square);
+}
+
+#[test]
+fn test_instrument_synthesis_square_without_base_note_deserializes() {
+    // Test backwards compatibility: JSON without base_note should still deserialize
+    let json = r#"{"type":"square"}"#;
+    let parsed: InstrumentSynthesis = serde_json::from_str(json).unwrap();
+    if let InstrumentSynthesis::Square { base_note } = parsed {
+        assert!(base_note.is_none());
+    } else {
+        panic!("Expected Square variant");
+    }
+}
+
+#[test]
+fn test_instrument_synthesis_triangle_with_base_note() {
+    let triangle = InstrumentSynthesis::Triangle {
+        base_note: Some("D4".to_string()),
+    };
+    let json = serde_json::to_string(&triangle).unwrap();
+    assert!(json.contains("triangle"));
+    assert!(json.contains("base_note"));
+
+    let parsed: InstrumentSynthesis = serde_json::from_str(&json).unwrap();
+    assert_eq!(parsed, triangle);
+}
+
+#[test]
+fn test_instrument_synthesis_triangle_without_base_note_deserializes() {
+    let json = r#"{"type":"triangle"}"#;
+    let parsed: InstrumentSynthesis = serde_json::from_str(json).unwrap();
+    if let InstrumentSynthesis::Triangle { base_note } = parsed {
+        assert!(base_note.is_none());
+    } else {
+        panic!("Expected Triangle variant");
+    }
+}
+
+#[test]
+fn test_instrument_synthesis_sawtooth_with_base_note() {
+    let sawtooth = InstrumentSynthesis::Sawtooth {
+        base_note: Some("E4".to_string()),
+    };
+    let json = serde_json::to_string(&sawtooth).unwrap();
+    assert!(json.contains("sawtooth"));
+    assert!(json.contains("base_note"));
+
+    let parsed: InstrumentSynthesis = serde_json::from_str(&json).unwrap();
+    assert_eq!(parsed, sawtooth);
+}
+
+#[test]
+fn test_instrument_synthesis_sawtooth_without_base_note_deserializes() {
+    let json = r#"{"type":"sawtooth"}"#;
+    let parsed: InstrumentSynthesis = serde_json::from_str(json).unwrap();
+    if let InstrumentSynthesis::Sawtooth { base_note } = parsed {
+        assert!(base_note.is_none());
+    } else {
+        panic!("Expected Sawtooth variant");
+    }
+}
+
+#[test]
+fn test_instrument_synthesis_sine_with_base_note() {
+    let sine = InstrumentSynthesis::Sine {
+        base_note: Some("F4".to_string()),
+    };
+    let json = serde_json::to_string(&sine).unwrap();
+    assert!(json.contains("sine"));
+    assert!(json.contains("base_note"));
+
+    let parsed: InstrumentSynthesis = serde_json::from_str(&json).unwrap();
+    assert_eq!(parsed, sine);
+}
+
+#[test]
+fn test_instrument_synthesis_sine_without_base_note_deserializes() {
+    let json = r#"{"type":"sine"}"#;
+    let parsed: InstrumentSynthesis = serde_json::from_str(json).unwrap();
+    if let InstrumentSynthesis::Sine { base_note } = parsed {
+        assert!(base_note.is_none());
+    } else {
+        panic!("Expected Sine variant");
+    }
+}
+
+#[test]
+fn test_instrument_synthesis_noise_with_base_note() {
+    let noise = InstrumentSynthesis::Noise {
+        periodic: true,
+        base_note: Some("G4".to_string()),
+    };
+    let json = serde_json::to_string(&noise).unwrap();
+    assert!(json.contains("noise"));
+    assert!(json.contains("base_note"));
+
+    let parsed: InstrumentSynthesis = serde_json::from_str(&json).unwrap();
+    assert_eq!(parsed, noise);
+}
+
+#[test]
+fn test_instrument_synthesis_noise_without_base_note_deserializes() {
+    let json = r#"{"type":"noise","periodic":false}"#;
+    let parsed: InstrumentSynthesis = serde_json::from_str(json).unwrap();
+    if let InstrumentSynthesis::Noise { periodic, base_note } = parsed {
+        assert!(!periodic);
+        assert!(base_note.is_none());
+    } else {
+        panic!("Expected Noise variant");
+    }
+}
+
+#[test]
+fn test_instrument_synthesis_base_note_skipped_when_none() {
+    // Verify that base_note is not serialized when None (skip_serializing_if)
+    let pulse = InstrumentSynthesis::Pulse {
+        duty_cycle: 0.5,
+        base_note: None,
+    };
+    let json = serde_json::to_string(&pulse).unwrap();
+    assert!(!json.contains("base_note"));
+
+    let square = InstrumentSynthesis::Square { base_note: None };
+    let json = serde_json::to_string(&square).unwrap();
+    assert!(!json.contains("base_note"));
+
+    let triangle = InstrumentSynthesis::Triangle { base_note: None };
+    let json = serde_json::to_string(&triangle).unwrap();
+    assert!(!json.contains("base_note"));
+
+    let sawtooth = InstrumentSynthesis::Sawtooth { base_note: None };
+    let json = serde_json::to_string(&sawtooth).unwrap();
+    assert!(!json.contains("base_note"));
+
+    let sine = InstrumentSynthesis::Sine { base_note: None };
+    let json = serde_json::to_string(&sine).unwrap();
+    assert!(!json.contains("base_note"));
+
+    let noise = InstrumentSynthesis::Noise {
+        periodic: true,
+        base_note: None,
+    };
+    let json = serde_json::to_string(&noise).unwrap();
+    assert!(!json.contains("base_note"));
 }
 
 #[test]

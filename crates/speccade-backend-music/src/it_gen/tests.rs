@@ -25,7 +25,10 @@ fn create_test_params() -> MusicTrackerSongV1Params {
 
     let instrument = TrackerInstrument {
         name: "Test Lead".to_string(),
-        synthesis: Some(InstrumentSynthesis::Pulse { duty_cycle: 0.5 }),
+        synthesis: Some(InstrumentSynthesis::Pulse {
+            duty_cycle: 0.5,
+            base_note: None,
+        }),
         envelope: envelope.clone(),
         default_volume: Some(64),
         ..Default::default()
@@ -117,7 +120,7 @@ fn test_volume_fade_it() {
 fn test_it_pattern_note_omitted_triggers_default_note() {
     let instruments = vec![TrackerInstrument {
         name: "Kick".to_string(),
-        synthesis: Some(InstrumentSynthesis::Sine),
+        synthesis: Some(InstrumentSynthesis::Sine { base_note: None }),
         ..Default::default()
     }];
 
@@ -145,7 +148,7 @@ fn test_it_pattern_note_omitted_triggers_default_note() {
 fn test_it_pattern_note_omitted_uses_instrument_base_note() {
     let instruments = vec![TrackerInstrument {
         name: "Lead".to_string(),
-        synthesis: Some(InstrumentSynthesis::Triangle),
+        synthesis: Some(InstrumentSynthesis::Triangle { base_note: None }),
         base_note: Some("C4".to_string()),
         ..Default::default()
     }];
@@ -199,7 +202,7 @@ fn test_it_pattern_note_omitted_uses_sample_synth_base_note_when_instrument_base
 fn test_it_pattern_explicit_note_overrides_instrument_base_note() {
     let instruments = vec![TrackerInstrument {
         name: "Lead".to_string(),
-        synthesis: Some(InstrumentSynthesis::Triangle),
+        synthesis: Some(InstrumentSynthesis::Triangle { base_note: None }),
         base_note: Some("C5".to_string()),
         ..Default::default()
     }];
@@ -226,7 +229,7 @@ fn test_it_pattern_explicit_note_overrides_instrument_base_note() {
 fn test_it_pattern_no_note_marker_preserves_instrument_column() {
     let instruments = vec![TrackerInstrument {
         name: "Kick".to_string(),
-        synthesis: Some(InstrumentSynthesis::Sine),
+        synthesis: Some(InstrumentSynthesis::Sine { base_note: None }),
         ..Default::default()
     }];
 
@@ -267,7 +270,7 @@ fn test_tempo_change_it() {
 fn test_it_non_periodic_noise_one_shot_does_not_loop() {
     let instrument = TrackerInstrument {
         name: "Hihat".to_string(),
-        synthesis: Some(InstrumentSynthesis::Noise { periodic: false }),
+        synthesis: Some(InstrumentSynthesis::Noise { periodic: false, base_note: None }),
         envelope: Envelope {
             attack: 0.001,
             decay: 0.02,
@@ -299,7 +302,10 @@ fn test_synthesized_pulse_instrument_c5_speed() {
     // c5_speed = sample_rate because sample is at IT's reference pitch
     let instrument = TrackerInstrument {
         name: "Test Pulse".to_string(),
-        synthesis: Some(InstrumentSynthesis::Pulse { duty_cycle: 0.5 }),
+        synthesis: Some(InstrumentSynthesis::Pulse {
+            duty_cycle: 0.5,
+            base_note: None,
+        }),
         default_volume: Some(64),
         ..Default::default()
     };
@@ -317,7 +323,7 @@ fn test_synthesized_sine_instrument_c5_speed() {
     // Sine synthesis with no base_note generates at MIDI 72 (C5)
     let instrument = TrackerInstrument {
         name: "Test Sine".to_string(),
-        synthesis: Some(InstrumentSynthesis::Sine),
+        synthesis: Some(InstrumentSynthesis::Sine { base_note: None }),
         default_volume: Some(64),
         ..Default::default()
     };
@@ -334,7 +340,7 @@ fn test_synthesized_noise_instrument_c5_speed() {
     // Noise synthesis with no base_note generates at MIDI 72 (IT's default)
     let instrument = TrackerInstrument {
         name: "Test Noise".to_string(),
-        synthesis: Some(InstrumentSynthesis::Noise { periodic: false }),
+        synthesis: Some(InstrumentSynthesis::Noise { periodic: false, base_note: None }),
         default_volume: Some(64),
         ..Default::default()
     };
@@ -351,7 +357,7 @@ fn test_synthesized_triangle_instrument_c5_speed() {
     // Triangle synthesis with no base_note generates at MIDI 72 (C5)
     let instrument = TrackerInstrument {
         name: "Test Triangle".to_string(),
-        synthesis: Some(InstrumentSynthesis::Triangle),
+        synthesis: Some(InstrumentSynthesis::Triangle { base_note: None }),
         default_volume: Some(64),
         ..Default::default()
     };
@@ -368,7 +374,7 @@ fn test_synthesized_sawtooth_instrument_c5_speed() {
     // Sawtooth synthesis with no base_note generates at MIDI 72 (C5)
     let instrument = TrackerInstrument {
         name: "Test Sawtooth".to_string(),
-        synthesis: Some(InstrumentSynthesis::Sawtooth),
+        synthesis: Some(InstrumentSynthesis::Sawtooth { base_note: None }),
         default_volume: Some(64),
         ..Default::default()
     };
@@ -421,7 +427,7 @@ fn test_it_variant_a_no_base_note_no_pattern_note() {
     // Instrument with no base_note (defaults to MIDI 72 = C5 for IT)
     let instrument = TrackerInstrument {
         name: "Drum Kick".to_string(),
-        synthesis: Some(InstrumentSynthesis::Sine),
+        synthesis: Some(InstrumentSynthesis::Sine { base_note: None }),
         // base_note: None - defaults to MIDI 72 (C5) for IT format
         default_volume: Some(64),
         ..Default::default()
@@ -458,7 +464,7 @@ fn test_it_variant_b_no_base_note_pattern_note_c5() {
     // Instrument with no base_note
     let instrument = TrackerInstrument {
         name: "Drum Snare".to_string(),
-        synthesis: Some(InstrumentSynthesis::Noise { periodic: false }),
+        synthesis: Some(InstrumentSynthesis::Noise { periodic: false, base_note: None }),
         // base_note: None - defaults to MIDI 72 (C5) for IT format
         default_volume: Some(64),
         ..Default::default()
@@ -489,7 +495,7 @@ fn test_it_variant_c_base_note_c5_no_pattern_note() {
     // Instrument with base_note = "C5" (MIDI 72)
     let instrument = TrackerInstrument {
         name: "Lead Synth".to_string(),
-        synthesis: Some(InstrumentSynthesis::Sawtooth),
+        synthesis: Some(InstrumentSynthesis::Sawtooth { base_note: None }),
         base_note: Some("C5".to_string()), // MIDI 72 = IT C-5
         default_volume: Some(64),
         ..Default::default()
@@ -526,7 +532,7 @@ fn test_it_variant_d_base_note_c5_pattern_note_c4() {
     // Instrument with base_note = "C5"
     let instrument = TrackerInstrument {
         name: "Bass".to_string(),
-        synthesis: Some(InstrumentSynthesis::Triangle),
+        synthesis: Some(InstrumentSynthesis::Triangle { base_note: None }),
         base_note: Some("C5".to_string()), // MIDI 72 = IT C-5
         default_volume: Some(64),
         ..Default::default()
@@ -570,7 +576,7 @@ fn test_it_base_note_a4_non_c_note() {
     // Instrument with base_note = "A4" (A440 = MIDI 69)
     let instrument = TrackerInstrument {
         name: "Tuning Fork".to_string(),
-        synthesis: Some(InstrumentSynthesis::Sine),
+        synthesis: Some(InstrumentSynthesis::Sine { base_note: None }),
         base_note: Some("A4".to_string()), // MIDI 69 = IT A-4 (note 57)
         default_volume: Some(64),
         ..Default::default()
@@ -601,7 +607,7 @@ fn test_it_base_note_a4_non_c_note() {
 fn test_it_base_note_c3_two_octaves_below() {
     let instrument = TrackerInstrument {
         name: "Sub Bass".to_string(),
-        synthesis: Some(InstrumentSynthesis::Sine),
+        synthesis: Some(InstrumentSynthesis::Sine { base_note: None }),
         base_note: Some("C3".to_string()), // MIDI 48 = IT C-3 (note 36)
         default_volume: Some(64),
         ..Default::default()

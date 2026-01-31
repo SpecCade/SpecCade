@@ -21,7 +21,10 @@ fn create_test_params() -> MusicTrackerSongV1Params {
 
     let instrument = TrackerInstrument {
         name: "Test Lead".to_string(),
-        synthesis: Some(InstrumentSynthesis::Pulse { duty_cycle: 0.5 }),
+        synthesis: Some(InstrumentSynthesis::Pulse {
+            duty_cycle: 0.5,
+            base_note: None,
+        }),
         envelope: envelope.clone(),
         default_volume: Some(64),
         ..Default::default()
@@ -125,7 +128,10 @@ fn test_determinism() {
 fn test_different_seeds_different_output() {
     // Use noise synthesis which uses the seed
     let mut params = create_test_params();
-    params.instruments[0].synthesis = Some(InstrumentSynthesis::Noise { periodic: false });
+    params.instruments[0].synthesis = Some(InstrumentSynthesis::Noise {
+        periodic: false,
+        base_note: None,
+    });
 
     let spec_dir = Path::new(".");
     let result1 = generate_music(&params, 42, spec_dir).unwrap();
@@ -182,7 +188,7 @@ fn test_bake_instrument_sample_rejects_multiple_sources() {
     let instr = TrackerInstrument {
         name: "Bad".to_string(),
         wav: Some("samples/kick.wav".to_string()),
-        synthesis: Some(InstrumentSynthesis::Sine),
+        synthesis: Some(InstrumentSynthesis::Sine { base_note: None }),
         ..Default::default()
     };
 

@@ -49,17 +49,21 @@ pub fn generate_instrument_sample(
     seed: u32,
 ) -> Vec<u8> {
     let samples = match synthesis {
-        InstrumentSynthesis::Pulse { duty_cycle } => {
+        InstrumentSynthesis::Pulse { duty_cycle, .. } => {
             generate_pulse_wave(*duty_cycle, sample_rate, duration_samples)
         }
-        InstrumentSynthesis::Square => {
+        InstrumentSynthesis::Square { .. } => {
             // Square wave is a 50% duty cycle pulse
             generate_pulse_wave(0.5, sample_rate, duration_samples)
         }
-        InstrumentSynthesis::Triangle => generate_triangle_wave(sample_rate, duration_samples),
-        InstrumentSynthesis::Sawtooth => generate_sawtooth_wave(sample_rate, duration_samples),
-        InstrumentSynthesis::Sine => generate_sine_wave(sample_rate, duration_samples),
-        InstrumentSynthesis::Noise { periodic } => {
+        InstrumentSynthesis::Triangle { .. } => {
+            generate_triangle_wave(sample_rate, duration_samples)
+        }
+        InstrumentSynthesis::Sawtooth { .. } => {
+            generate_sawtooth_wave(sample_rate, duration_samples)
+        }
+        InstrumentSynthesis::Sine { .. } => generate_sine_wave(sample_rate, duration_samples),
+        InstrumentSynthesis::Noise { periodic, .. } => {
             generate_noise(*periodic, sample_rate, duration_samples, seed)
         }
         InstrumentSynthesis::Sample { .. } => {
@@ -92,7 +96,7 @@ pub fn generate_single_cycle(
     seed: u32,
 ) -> Vec<f64> {
     match synthesis {
-        InstrumentSynthesis::Pulse { duty_cycle } => (0..samples_per_cycle)
+        InstrumentSynthesis::Pulse { duty_cycle, .. } => (0..samples_per_cycle)
             .map(|i| {
                 let t = i as f64 / samples_per_cycle as f64;
                 if t < *duty_cycle {
@@ -102,7 +106,7 @@ pub fn generate_single_cycle(
                 }
             })
             .collect(),
-        InstrumentSynthesis::Square => {
+        InstrumentSynthesis::Square { .. } => {
             // Square wave is a 50% duty cycle pulse
             (0..samples_per_cycle)
                 .map(|i| {
@@ -115,7 +119,7 @@ pub fn generate_single_cycle(
                 })
                 .collect()
         }
-        InstrumentSynthesis::Triangle => (0..samples_per_cycle)
+        InstrumentSynthesis::Triangle { .. } => (0..samples_per_cycle)
             .map(|i| {
                 let t = i as f64 / samples_per_cycle as f64;
                 if t < 0.5 {
@@ -125,19 +129,19 @@ pub fn generate_single_cycle(
                 }
             })
             .collect(),
-        InstrumentSynthesis::Sawtooth => (0..samples_per_cycle)
+        InstrumentSynthesis::Sawtooth { .. } => (0..samples_per_cycle)
             .map(|i| {
                 let t = i as f64 / samples_per_cycle as f64;
                 2.0 * t - 1.0
             })
             .collect(),
-        InstrumentSynthesis::Sine => (0..samples_per_cycle)
+        InstrumentSynthesis::Sine { .. } => (0..samples_per_cycle)
             .map(|i| {
                 let t = i as f64 / samples_per_cycle as f64;
                 (2.0 * PI * t).sin()
             })
             .collect(),
-        InstrumentSynthesis::Noise { periodic } => {
+        InstrumentSynthesis::Noise { periodic, .. } => {
             let mut rng = create_rng(seed);
             if *periodic {
                 // Generate periodic noise (loopable)
@@ -217,7 +221,11 @@ pub fn generate_fixed_length_sample(
             generate_single_cycle(synthesis, duration_samples, seed)
         }
         InstrumentSynthesis::Sample { .. } => vec![0.0; duration_samples],
-        _ => {
+        InstrumentSynthesis::Pulse { .. }
+        | InstrumentSynthesis::Square { .. }
+        | InstrumentSynthesis::Triangle { .. }
+        | InstrumentSynthesis::Sawtooth { .. }
+        | InstrumentSynthesis::Sine { .. } => {
             let freq = midi_to_freq(base_note_midi);
             let samples_per_cycle = (sample_rate as f64 / freq).round().max(1.0) as usize;
             let cycle = generate_single_cycle(synthesis, samples_per_cycle, seed);

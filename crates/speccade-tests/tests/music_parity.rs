@@ -108,7 +108,10 @@ fn create_test_spec(format: TrackerFormat) -> MusicTrackerSongV1Params {
         instruments: vec![
             TrackerInstrument {
                 name: "lead".to_string(),
-                synthesis: Some(InstrumentSynthesis::Pulse { duty_cycle: 0.5 }),
+                synthesis: Some(InstrumentSynthesis::Pulse {
+                    duty_cycle: 0.5,
+                    base_note: None,
+                }),
                 envelope: Envelope {
                     attack: 0.01,
                     decay: 0.1,
@@ -119,7 +122,7 @@ fn create_test_spec(format: TrackerFormat) -> MusicTrackerSongV1Params {
             },
             TrackerInstrument {
                 name: "bass".to_string(),
-                synthesis: Some(InstrumentSynthesis::Sine),
+                synthesis: Some(InstrumentSynthesis::Sine { base_note: None }),
                 envelope: Envelope {
                     attack: 0.005,
                     decay: 0.15,
@@ -331,7 +334,7 @@ fn test_parity_minimal_spec() {
         r#loop: false,
         instruments: vec![TrackerInstrument {
             name: "test".to_string(),
-            synthesis: Some(InstrumentSynthesis::Sine),
+            synthesis: Some(InstrumentSynthesis::Sine { base_note: None }),
             envelope: Envelope {
                 attack: 0.01,
                 decay: 0.1,

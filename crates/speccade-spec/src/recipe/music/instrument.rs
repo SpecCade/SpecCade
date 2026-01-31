@@ -93,27 +93,49 @@ pub enum InstrumentSynthesis {
         /// Duty cycle (0.0 to 1.0, 0.5 = square).
         #[serde(default = "default_duty_cycle")]
         duty_cycle: f64,
+        /// Base note for the synthesis (e.g., "C4", "A#3").
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        base_note: Option<String>,
     },
     /// Square wave (50% duty cycle pulse).
-    Square,
+    Square {
+        /// Base note for the synthesis (e.g., "C4", "A#3").
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        base_note: Option<String>,
+    },
     /// Triangle wave.
-    Triangle,
+    Triangle {
+        /// Base note for the synthesis (e.g., "C4", "A#3").
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        base_note: Option<String>,
+    },
     /// Sawtooth wave.
-    Sawtooth,
+    Sawtooth {
+        /// Base note for the synthesis (e.g., "C4", "A#3").
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        base_note: Option<String>,
+    },
     /// Sine wave.
-    Sine,
+    Sine {
+        /// Base note for the synthesis (e.g., "C4", "A#3").
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        base_note: Option<String>,
+    },
     /// Noise generator.
     Noise {
         /// Whether to use periodic noise (more tonal).
         #[serde(default)]
         periodic: bool,
+        /// Base note for the synthesis (e.g., "C4", "A#3").
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        base_note: Option<String>,
     },
     /// Sample-based instrument.
     Sample {
         /// Path to sample file (relative to spec).
         path: String,
         /// Base note for the sample.
-        #[serde(skip_serializing_if = "Option::is_none")]
+        #[serde(default, skip_serializing_if = "Option::is_none")]
         base_note: Option<String>,
     },
 }

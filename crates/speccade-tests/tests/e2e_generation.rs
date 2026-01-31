@@ -321,7 +321,10 @@ fn test_generate_music_xm() {
         r#loop: false,
         instruments: vec![TrackerInstrument {
             name: "bass".to_string(),
-            synthesis: Some(InstrumentSynthesis::Pulse { duty_cycle: 0.5 }),
+            synthesis: Some(InstrumentSynthesis::Pulse {
+                duty_cycle: 0.5,
+                base_note: None,
+            }),
             envelope: Envelope {
                 attack: 0.01,
                 decay: 0.1,
