@@ -1,0 +1,59 @@
+{
+  "bounds": {
+    "bounds_max": [
+      0.1982,
+      0.76,
+      0.353
+    ],
+    "bounds_min": [
+      -0.1982,
+      0.0,
+      -0.3668
+    ],
+    "center": [
+      0.0,
+      0.38,
+      -0.0069
+    ],
+    "size": [
+      0.3964,
+      0.76,
+      0.7198
+    ]
+  },
+  "format": {
+    "format": "glb",
+    "gltf_version": "2.0",
+    "mesh_count": 1,
+    "node_count": 21
+  },
+  "manifold": {
+    "degenerate_face_count": 11,
+    "manifold": false,
+    "non_manifold_edge_count": 1132
+  },
+  "materials": {
+    "material_count": 2,
+    "texture_count": 0
+  },
+  "skeleton": {
+    "bone_count": 19,
+    "has_inverse_bind_matrices": true,
+    "max_bone_influences": 4
+  },
+  "topology": {
+    "edge_count": 1027,
+    "face_count": 642,
+    "quad_count": 0,
+    "quad_percentage": 0.0,
+    "triangle_count": 642,
+    "vertex_count": 1154
+  },
+  "uv": {
+    "has_uvs": true,
+    "uv_coverage": 1.0,
+    "uv_island_count": 60,
+    "uv_overlap_percentage": 22.049517,
+    "uv_set_count": 1
+  }
+}

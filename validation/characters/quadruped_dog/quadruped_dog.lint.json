@@ -1,0 +1,18 @@
+[
+  {
+    "rule_id": "mesh/uv-overlap",
+    "severity": "warning",
+    "message": "UV islands overlap by approximately 22.0%",
+    "actual_value": "22.0% overlap",
+    "expected_range": "< 5% overlap",
+    "suggestion": "Repack UVs to eliminate overlapping islands"
+  },
+  {
+    "rule_id": "mesh/uv-stretch",
+    "severity": "warning",
+    "message": "10.7% of faces have high UV distortion (stretch ratio > 2)",
+    "actual_value": "10.7% stretched",
+    "expected_range": "< 10% faces stretched",
+    "suggestion": "Adjust UV seams and unwrap settings to reduce distortion"
+  }
+]
