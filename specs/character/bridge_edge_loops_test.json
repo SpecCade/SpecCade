@@ -1,0 +1,54 @@
+{
+  "spec_version": 1,
+  "asset_id": "character/bridge_edge_loops_test",
+  "asset_type": "skeletal_mesh",
+  "license": "CC0-1.0",
+  "seed": 9001,
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "glb",
+      "path": "character/bridge_edge_loops_test.glb"
+    }
+  ],
+  "description": "Integration test for bridge edge loops feature",
+  "style_tags": ["test", "skeletal_mesh", "bridge_edge_loops"],
+  "recipe": {
+    "kind": "skeletal_mesh.armature_driven_v1",
+    "params": {
+      "skeleton": [
+        {"name": "root", "head": [0, 0, 0], "tail": [0, 0, 0.2]},
+        {"name": "spine", "head": [0, 0, 0.2], "tail": [0, 0, 0.5], "parent": "root"},
+        {"name": "chest", "head": [0, 0, 0.5], "tail": [0, 0, 0.8], "parent": "spine"},
+        {"name": "neck", "head": [0, 0, 0.8], "tail": [0, 0, 1.0], "parent": "chest"}
+      ],
+      "bone_meshes": {
+        "spine": {
+          "profile": "circle(8)",
+          "profile_radius": 0.1,
+          "extrusion_steps": [{"extrude": 0.5}, {"extrude": 0.5}],
+          "cap_start": true,
+          "connect_end": "bridge"
+        },
+        "chest": {
+          "profile": "circle(8)",
+          "profile_radius": 0.12,
+          "extrusion_steps": [{"extrude": 0.5}, {"extrude": 0.5}],
+          "connect_start": "bridge",
+          "connect_end": "bridge"
+        },
+        "neck": {
+          "profile": "circle(8)",
+          "profile_radius": 0.06,
+          "extrusion_steps": [{"extrude": 0.5}, {"extrude": 0.5}],
+          "connect_start": "bridge",
+          "cap_end": true
+        }
+      },
+      "export": {
+        "include_armature": true,
+        "include_skin_weights": true
+      }
+    }
+  }
+}
