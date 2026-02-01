@@ -104,6 +104,61 @@ def _parse_profile(profile: str | None) -> tuple[str, int]:
     )
 
 
+def are_profiles_compatible(count_a: int, count_b: int) -> bool:
+    """Check if two profile segment counts are compatible for bridging.
+
+    Compatible means: exact match OR one is exactly 2x the other.
+    """
+    if count_a == count_b:
+        return True
+    if count_a == 2 * count_b or count_b == 2 * count_a:
+        return True
+    return False
+
+
+def get_bridge_pairs(bone_hierarchy: dict, bone_meshes: dict) -> list[tuple[str, str]]:
+    """Determine which bone pairs should have their edge loops bridged.
+
+    A bridge is created when:
+    1. Parent bone's mesh has connect_end="bridge"
+    2. Child bone's mesh has connect_start="bridge"
+    3. Both bones have mesh definitions (not just mirrors)
+
+    Args:
+        bone_hierarchy: Dict mapping bone_name -> {"parent": str|None, "children": [str]}
+        bone_meshes: Dict mapping bone_name -> bone mesh definition dict
+
+    Returns:
+        List of (parent_bone, child_bone) tuples to bridge.
+    """
+    pairs = []
+
+    for child_name, info in bone_hierarchy.items():
+        parent_name = info.get("parent")
+        if parent_name is None:
+            continue
+
+        parent_mesh = bone_meshes.get(parent_name)
+        child_mesh = bone_meshes.get(child_name)
+
+        if parent_mesh is None or child_mesh is None:
+            continue
+
+        # Skip mirror references - they resolve to their target's settings
+        if isinstance(parent_mesh, dict) and "mirror" in parent_mesh:
+            continue
+        if isinstance(child_mesh, dict) and "mirror" in child_mesh:
+            continue
+
+        parent_connect_end = parent_mesh.get("connect_end")
+        child_connect_start = child_mesh.get("connect_start")
+
+        if parent_connect_end == "bridge" and child_connect_start == "bridge":
+            pairs.append((parent_name, child_name))
+
+    return pairs
+
+
 def _resolve_mirrors(defs: dict) -> dict:
     """Resolve `{ "mirror": "other" }` entries to concrete dicts.
 
