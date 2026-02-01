@@ -159,6 +159,16 @@ def get_bridge_pairs(bone_hierarchy: dict, bone_meshes: dict) -> list[tuple[str,
     return pairs
 
 
+def get_bridge_head_vgroup_name(bone_name: str) -> str:
+    """Get the vertex group name for a bone's head (start) edge loop."""
+    return f"_bridge_head_{bone_name}"
+
+
+def get_bridge_tail_vgroup_name(bone_name: str) -> str:
+    """Get the vertex group name for a bone's tail (end) edge loop."""
+    return f"_bridge_tail_{bone_name}"
+
+
 def _resolve_mirrors(defs: dict) -> dict:
     """Resolve `{ "mirror": "other" }` entries to concrete dicts.
 

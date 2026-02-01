@@ -88,5 +88,18 @@ class TestBridgeEdgeLoopHelpers(unittest.TestCase):
         self.assertEqual(pairs, [])  # No bridge - requires both sides
 
 
+class TestEdgeLoopTracking(unittest.TestCase):
+    """Test edge loop vertex group tracking (requires Blender mock or skip)."""
+
+    def test_bridge_vertex_group_names(self) -> None:
+        """Test the naming convention for bridge vertex groups."""
+        from speccade.armature_driven import (
+            get_bridge_head_vgroup_name,
+            get_bridge_tail_vgroup_name,
+        )
+        self.assertEqual(get_bridge_head_vgroup_name("spine"), "_bridge_head_spine")
+        self.assertEqual(get_bridge_tail_vgroup_name("spine"), "_bridge_tail_spine")
+
+
 if __name__ == "__main__":
     unittest.main()
