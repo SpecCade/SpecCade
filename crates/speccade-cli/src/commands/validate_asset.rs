@@ -12,6 +12,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
+use crate::analysis::mesh;
 use crate::commands::generate;
 use crate::commands::preview_grid;
 use crate::input::load_spec;
@@ -115,7 +116,39 @@ pub fn run(spec_path: &str, out_root: Option<&str>, _full_report: bool) -> Resul
         }
     }
 
-    println!("\nPreview-grid complete. Ready for analysis.");
+    // Step 3: Analyze asset metrics
+    println!("\n[3/4] Analyzing asset metrics...");
+
+    let asset_data = std::fs::read(&asset_path)
+        .with_context(|| format!("Failed to read asset: {}", asset_path.display()))?;
+
+    let metrics = mesh::analyze_glb(&asset_data)
+        .map_err(|e| anyhow::anyhow!("Mesh analysis failed: {}", e))?;
+
+    let metrics_btree = mesh::metrics_to_btree(&metrics);
+
+    println!("  ✓ Metrics extracted:");
+    println!(
+        "    - Topology: {} vertices, {} triangles",
+        metrics.topology.vertex_count, metrics.topology.triangle_count
+    );
+    if let Some(ref skel) = metrics.skeleton {
+        println!("    - Skeleton: {} bones", skel.bone_count);
+    }
+    if let Some(ref anim) = metrics.animation {
+        println!(
+            "    - Animation: {} clips, {:.1}s duration",
+            anim.animation_count, anim.total_duration_seconds
+        );
+    }
+
+    // Save metrics to JSON
+    let metrics_path = out_dir.join(format!("{}.metrics.json", spec.asset_id.replace("/", "_")));
+    let metrics_json = serde_json::to_string_pretty(&metrics_btree)?;
+    std::fs::write(&metrics_path, &metrics_json)?;
+    println!("  Metrics saved: {}", metrics_path.display());
+
+    println!("\nAnalysis complete. Ready for lint.");
 
     Ok(ExitCode::SUCCESS)
 }
