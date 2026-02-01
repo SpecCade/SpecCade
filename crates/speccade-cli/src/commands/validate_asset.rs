@@ -13,6 +13,7 @@ use serde::Serialize;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
+use std::time::Instant;
 
 use crate::analysis::mesh;
 use crate::commands::generate;
@@ -34,6 +35,7 @@ struct ValidationReport {
     metrics: serde_json::Value,
     lint_results: Vec<serde_json::Value>,
     quality_gates: QualityGates,
+    validation_comments: Option<String>,
 }
 
 #[derive(Debug, Serialize)]
@@ -80,6 +82,16 @@ pub fn run(spec_path: &str, out_root: Option<&str>, _full_report: bool) -> Resul
         }
     }
 
+    // Extract validation comments from spec source
+    let validation_comments = if spec_path.ends_with(".star") {
+        let source = std::fs::read_to_string(&spec_path_pb).ok();
+        source
+            .as_ref()
+            .and_then(|s| preview_grid::extract_validation_comments(s))
+    } else {
+        None
+    };
+
     // Set up output directory
     let out_dir = if let Some(root) = out_root {
         PathBuf::from(root)
@@ -91,9 +103,11 @@ pub fn run(spec_path: &str, out_root: Option<&str>, _full_report: bool) -> Resul
 
     println!("Validating: {} (type: {})", spec_path, spec.asset_type);
     println!("Output directory: {}", out_dir.display());
+    let validation_start = Instant::now();
 
     // Step 1: Generate the asset
     println!("\n[1/4] Generating asset...");
+    let step_start = Instant::now();
     let gen_result = generate::run(
         spec_path,
         Some(out_dir.to_str().unwrap()),
@@ -108,29 +122,46 @@ pub fn run(spec_path: &str, out_root: Option<&str>, _full_report: bool) -> Resul
         None,  // max_dc_offset
         false, // save_blend
     );
+    let gen_elapsed = step_start.elapsed();
 
     match gen_result {
         Ok(ExitCode::SUCCESS) => {
-            println!("  ✓ Asset generated successfully");
+            println!(
+                "  ✓ Asset generated successfully ({})",
+                format!("{:.1}s", gen_elapsed.as_secs_f64()).dimmed()
+            );
         }
         Ok(code) => {
-            println!("  ✗ Generation failed with exit code: {:?}", code);
+            println!(
+                "  ✗ Generation failed with exit code: {:?} ({})",
+                code,
+                format!("{:.1}s", gen_elapsed.as_secs_f64()).dimmed()
+            );
             return Ok(code);
         }
         Err(e) => {
-            println!("  ✗ Generation error: {}", e);
-            return Err(e);
+            println!(
+                "  ✗ Generation error after {}: {}",
+                format!("{:.1}s", gen_elapsed.as_secs_f64()).dimmed(),
+                e
+            );
+            return Err(e).context(format!("Asset generation failed for {}", spec_path));
         }
     }
 
     // Find the generated asset
-    let asset_path = find_generated_glb(&out_dir, &spec)
-        .ok_or_else(|| anyhow::anyhow!("Generated GLB not found in {}", out_dir.display()))?;
+    let asset_path = find_generated_glb(&out_dir, &spec).ok_or_else(|| {
+        anyhow::anyhow!(
+            "Generated GLB not found in {} after successful generation",
+            out_dir.display()
+        )
+    })?;
 
     println!("  Generated: {}", asset_path.display());
 
     // Step 2: Generate preview grid
     println!("\n[2/4] Generating preview grid...");
+    let step_start = Instant::now();
 
     let grid_filename = format!("{}.grid.png", spec.asset_id.replace("/", "_"));
     let grid_path = out_dir.join(&grid_filename);
@@ -141,34 +172,49 @@ pub fn run(spec_path: &str, out_root: Option<&str>, _full_report: bool) -> Resul
         256, // panel size
     );
 
+    let grid_elapsed = step_start.elapsed();
+
     match grid_result {
         Ok(ExitCode::SUCCESS) => {
-            println!("  ✓ Preview grid generated: {}", grid_path.display());
+            println!(
+                "  ✓ Preview grid generated ({})",
+                format!("{:.1}s", grid_elapsed.as_secs_f64()).dimmed()
+            );
         }
         Ok(code) => {
             println!(
-                "  ⚠ Preview grid failed (exit code: {:?}), continuing...",
+                "  ⚠ Preview grid failed after {} (exit code: {:?}), continuing...",
+                format!("{:.1}s", grid_elapsed.as_secs_f64()).dimmed(),
                 code
             );
             // Don't fail validation if preview fails - asset might still be valid
         }
         Err(e) => {
-            println!("  ⚠ Preview grid error: {}, continuing...", e);
+            println!(
+                "  ⚠ Preview grid error after {}: {}, continuing...",
+                format!("{:.1}s", grid_elapsed.as_secs_f64()).dimmed(),
+                e
+            );
         }
     }
 
     // Step 3: Analyze asset metrics
     println!("\n[3/4] Analyzing asset metrics...");
+    let step_start = Instant::now();
 
     let asset_data = std::fs::read(&asset_path)
-        .with_context(|| format!("Failed to read asset: {}", asset_path.display()))?;
+        .with_context(|| format!("Failed to read generated asset at {}. Generation may have produced an invalid or empty file.", asset_path.display()))?;
 
     let metrics = mesh::analyze_glb(&asset_data)
-        .map_err(|e| anyhow::anyhow!("Mesh analysis failed: {}", e))?;
+        .map_err(|e| anyhow::anyhow!("Mesh analysis failed for {}: {}. The asset may be corrupted or have unsupported geometry.", asset_path.display(), e))?;
 
     let metrics_btree = mesh::metrics_to_btree(&metrics);
+    let metrics_elapsed = step_start.elapsed();
 
-    println!("  ✓ Metrics extracted:");
+    println!(
+        "  ✓ Metrics extracted ({}):",
+        format!("{:.1}s", metrics_elapsed.as_secs_f64()).dimmed()
+    );
     println!(
         "    - Topology: {} vertices, {} triangles",
         metrics.topology.vertex_count, metrics.topology.triangle_count
@@ -191,14 +237,20 @@ pub fn run(spec_path: &str, out_root: Option<&str>, _full_report: bool) -> Resul
 
     // Step 4: Run lint rules
     println!("\n[4/4] Running lint rules...");
+    let step_start = Instant::now();
 
     let lint_results = mesh_lint::lint_glb(&asset_data);
+    let lint_elapsed = step_start.elapsed();
 
     let lint_path = out_dir.join(format!("{}.lint.json", spec.asset_id.replace("/", "_")));
     let lint_json = serde_json::to_string_pretty(&lint_results)?;
     std::fs::write(&lint_path, &lint_json)?;
 
-    println!("  ✓ Lint complete: {} issues found", lint_results.len());
+    println!(
+        "  ✓ Lint complete ({}): {} issues found",
+        format!("{:.1}s", lint_elapsed.as_secs_f64()).dimmed(),
+        lint_results.len()
+    );
     for issue in &lint_results {
         let icon = match issue.severity {
             Severity::Error => "✗",
@@ -254,6 +306,7 @@ pub fn run(spec_path: &str, out_root: Option<&str>, _full_report: bool) -> Resul
             .map(|r| serde_json::to_value(r).unwrap())
             .collect(),
         quality_gates,
+        validation_comments,
     };
 
     // Save report
@@ -265,8 +318,14 @@ pub fn run(spec_path: &str, out_root: Option<&str>, _full_report: bool) -> Resul
     std::fs::write(&report_path, &report_json)?;
 
     // Print summary
+    let total_elapsed = validation_start.elapsed();
+
     println!("\n{}", "=".repeat(60));
-    println!("{}", "VALIDATION COMPLETE".bold().green());
+    println!(
+        "{} {}",
+        "VALIDATION COMPLETE".bold().green(),
+        format!("({:.1}s)", total_elapsed.as_secs_f64()).dimmed()
+    );
     println!("{}", "=".repeat(60));
     println!("Report: {}", report_path.display());
     println!("\nQuality Gates:");
