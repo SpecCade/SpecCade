@@ -8,6 +8,8 @@
 //! 5. Combine into validation report
 
 use anyhow::{Context, Result};
+use colored::Colorize;
+use serde::Serialize;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
@@ -19,6 +21,43 @@ use crate::input::load_spec;
 use speccade_lint::report::Severity;
 use speccade_lint::rules::mesh as mesh_lint;
 use speccade_spec::Spec;
+
+/// Comprehensive validation report
+#[derive(Debug, Serialize)]
+struct ValidationReport {
+    spec_path: String,
+    asset_id: String,
+    asset_type: String,
+    timestamp: String,
+    generation: GenerationResult,
+    visual_evidence: VisualEvidence,
+    metrics: serde_json::Value,
+    lint_results: Vec<serde_json::Value>,
+    quality_gates: QualityGates,
+}
+
+#[derive(Debug, Serialize)]
+struct GenerationResult {
+    success: bool,
+    asset_path: Option<String>,
+    error: Option<String>,
+}
+
+#[derive(Debug, Serialize)]
+struct VisualEvidence {
+    grid_path: Option<String>,
+    grid_generated: bool,
+}
+
+#[derive(Debug, Serialize, Clone, Copy)]
+struct QualityGates {
+    generation: bool,
+    has_geometry: bool,
+    manifold: bool,
+    has_uvs: bool,
+    skeleton_valid: bool,
+    animation_valid: bool,
+}
 
 /// Run the validate-asset command
 pub fn run(spec_path: &str, out_root: Option<&str>, _full_report: bool) -> Result<ExitCode> {
@@ -170,7 +209,119 @@ pub fn run(spec_path: &str, out_root: Option<&str>, _full_report: bool) -> Resul
     }
     println!("  Lint report saved: {}", lint_path.display());
 
-    println!("\nAll validation steps complete.");
+    // Build quality gates
+    let quality_gates = QualityGates {
+        generation: true,
+        has_geometry: metrics.topology.vertex_count > 0 && metrics.topology.triangle_count > 0,
+        manifold: metrics.manifold.manifold,
+        has_uvs: metrics.uv.has_uvs,
+        skeleton_valid: metrics.skeleton.is_some()
+            && metrics
+                .skeleton
+                .as_ref()
+                .map(|s| s.bone_count > 0)
+                .unwrap_or(false),
+        animation_valid: metrics.animation.is_some()
+            && metrics
+                .animation
+                .as_ref()
+                .map(|a| a.animation_count > 0)
+                .unwrap_or(false),
+    };
+
+    // Build report
+    let report = ValidationReport {
+        spec_path: spec_path.to_string(),
+        asset_id: spec.asset_id.clone(),
+        asset_type: spec.asset_type.to_string(),
+        timestamp: chrono::Utc::now().to_rfc3339(),
+        generation: GenerationResult {
+            success: true,
+            asset_path: Some(asset_path.to_string_lossy().to_string()),
+            error: None,
+        },
+        visual_evidence: VisualEvidence {
+            grid_path: if grid_path.exists() {
+                Some(grid_filename)
+            } else {
+                None
+            },
+            grid_generated: grid_path.exists(),
+        },
+        metrics: serde_json::to_value(&metrics_btree)?,
+        lint_results: lint_results
+            .iter()
+            .map(|r| serde_json::to_value(r).unwrap())
+            .collect(),
+        quality_gates,
+    };
+
+    // Save report
+    let report_path = out_dir.join(format!(
+        "{}.validation-report.json",
+        spec.asset_id.replace("/", "_")
+    ));
+    let report_json = serde_json::to_string_pretty(&report)?;
+    std::fs::write(&report_path, &report_json)?;
+
+    // Print summary
+    println!("\n{}", "=".repeat(60));
+    println!("{}", "VALIDATION COMPLETE".bold().green());
+    println!("{}", "=".repeat(60));
+    println!("Report: {}", report_path.display());
+    println!("\nQuality Gates:");
+    println!(
+        "  Generation:    {}",
+        if quality_gates.generation {
+            "✓ PASS".green()
+        } else {
+            "✗ FAIL".red()
+        }
+    );
+    println!(
+        "  Has Geometry:  {}",
+        if quality_gates.has_geometry {
+            "✓ PASS".green()
+        } else {
+            "✗ FAIL".red()
+        }
+    );
+    println!(
+        "  Manifold:      {}",
+        if quality_gates.manifold {
+            "✓ PASS".green()
+        } else {
+            "⚠ WARN".yellow()
+        }
+    );
+    println!(
+        "  Has UVs:       {}",
+        if quality_gates.has_uvs {
+            "✓ PASS".green()
+        } else {
+            "⚠ WARN".yellow()
+        }
+    );
+    if spec.asset_type == speccade_spec::AssetType::SkeletalMesh {
+        println!(
+            "  Skeleton:      {}",
+            if quality_gates.skeleton_valid {
+                "✓ PASS".green()
+            } else {
+                "✗ FAIL".red()
+            }
+        );
+    }
+    if spec.asset_type == speccade_spec::AssetType::SkeletalAnimation {
+        println!(
+            "  Animation:     {}",
+            if quality_gates.animation_valid {
+                "✓ PASS".green()
+            } else {
+                "✗ FAIL".red()
+            }
+        );
+    }
 
     Ok(ExitCode::SUCCESS)
 }

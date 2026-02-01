@@ -41,7 +41,7 @@ png.workspace = true
 image.workspace = true
 gif.workspace = true
 dirs = "5"
-chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
+chrono = { version = "0.4", default-features = false, features = ["clock", "std", "serde"] }
 
 # FFT for audio spectral analysis
 rustfft = "6"
