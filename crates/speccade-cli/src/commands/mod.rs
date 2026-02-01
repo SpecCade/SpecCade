@@ -49,6 +49,7 @@ mod tests {
         let _ = preview_grid::run;
         let _ = template::list;
         let _ = validate::run;
+        let _ = validate_asset::run;
         let _ = verify::run;
         let _ = coverage::run_generate;
         let _ = coverage::run_report;
