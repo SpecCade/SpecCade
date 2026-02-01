@@ -13,6 +13,7 @@ use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
 use crate::commands::generate;
+use crate::commands::preview_grid;
 use crate::input::load_spec;
 use speccade_spec::Spec;
 
@@ -86,7 +87,35 @@ pub fn run(spec_path: &str, out_root: Option<&str>, _full_report: bool) -> Resul
 
     println!("  Generated: {}", asset_path.display());
 
-    println!("\nAsset generation complete. Ready for preview-grid.");
+    // Step 2: Generate preview grid
+    println!("\n[2/4] Generating preview grid...");
+
+    let grid_filename = format!("{}.grid.png", spec.asset_id.replace("/", "_"));
+    let grid_path = out_dir.join(&grid_filename);
+
+    let grid_result = preview_grid::run(
+        spec_path,
+        Some(grid_path.to_str().unwrap()),
+        256, // panel size
+    );
+
+    match grid_result {
+        Ok(ExitCode::SUCCESS) => {
+            println!("  ✓ Preview grid generated: {}", grid_path.display());
+        }
+        Ok(code) => {
+            println!(
+                "  ⚠ Preview grid failed (exit code: {:?}), continuing...",
+                code
+            );
+            // Don't fail validation if preview fails - asset might still be valid
+        }
+        Err(e) => {
+            println!("  ⚠ Preview grid error: {}, continuing...", e);
+        }
+    }
+
+    println!("\nPreview-grid complete. Ready for analysis.");
 
     Ok(ExitCode::SUCCESS)
 }
