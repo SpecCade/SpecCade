@@ -3,6 +3,7 @@
 pub mod analyze;
 mod analyze_csv;
 pub mod audit;
+pub mod batch_validate;
 pub mod cache;
 pub mod compare;
 pub mod coverage;
@@ -36,6 +37,7 @@ mod tests {
     fn commands_module_exports_entrypoints() {
         let _ = analyze::run;
         let _ = audit::run;
+        let _ = batch_validate::run;
         let _ = compare::run;
         let _ = doctor::run;
         let _ = eval::run;

@@ -391,6 +391,19 @@ enum Commands {
         #[arg(long)]
         full_report: bool,
     },
+
+    /// Batch validate multiple assets
+    BatchValidate {
+        /// Glob pattern for spec files (e.g., "specs/character/*.star")
+        #[arg(short, long)]
+        specs: String,
+        /// Output directory for all validation artifacts
+        #[arg(short, long)]
+        out_root: Option<String>,
+        /// Output format for batch report
+        #[arg(short, long, default_value = "json")]
+        format: String,
+    },
 }
 
 #[derive(Subcommand)]
@@ -680,6 +693,11 @@ fn main() -> ExitCode {
             out_root,
             full_report,
         } => commands::validate_asset::run(&spec, out_root.as_deref(), full_report),
+        Commands::BatchValidate {
+            specs,
+            out_root,
+            format,
+        } => commands::batch_validate::run(&specs, out_root.as_deref(), &format),
     };
 
     match result {
