@@ -46,15 +46,10 @@
               ]
             }
           ],
-          "bulge": [
-            {
-              "at": 0.25,
-              "scale": 1.2
-            },
-            {
-              "at": 0.85,
-              "scale": 0.85
-            }
+          "extrusion_steps": [
+            {"extrude": 0.25, "scale": 1.2},
+            {"extrude": 0.6, "scale": 0.85},
+            {"extrude": 0.15, "scale": 0.88}
           ],
           "material_index": 1,
           "modifiers": [
@@ -75,7 +70,6 @@
             0.0,
             0.0
           ],
-          "taper": 0.88,
           "translate": [
             0.0,
             0.02,
@@ -104,15 +98,10 @@
               ]
             }
           ],
-          "bulge": [
-            {
-              "at": 0.1,
-              "scale": 1.1
-            },
-            {
-              "at": 0.55,
-              "scale": 1.25
-            }
+          "extrusion_steps": [
+            {"extrude": 0.1, "scale": 1.1},
+            {"extrude": 0.45, "scale": 1.25},
+            {"extrude": 0.45, "scale": 1.0}
           ],
           "material_index": 0,
           "modifiers": [
@@ -126,35 +115,23 @@
           "profile": "circle(16)",
           "profile_radius": {
             "absolute": 0.12
-          },
-          "taper": 1.0
+          }
         },
         "spine": {
-          "bulge": [
-            {
-              "at": 0.3,
-              "scale": 1.1
-            },
-            {
-              "at": 0.75,
-              "scale": 0.92
-            }
+          "extrusion_steps": [
+            {"extrude": 0.3, "scale": 1.1},
+            {"extrude": 0.45, "scale": 0.92},
+            {"extrude": 0.25, "scale": 0.95}
           ],
           "material_index": 1,
           "profile": "circle(12)",
-          "profile_radius": 0.115,
-          "taper": 0.95
+          "profile_radius": 0.115
         },
         "upper_arm_l": {
-          "bulge": [
-            {
-              "at": 0.22,
-              "scale": 1.15
-            },
-            {
-              "at": 0.75,
-              "scale": 0.9
-            }
+          "extrusion_steps": [
+            {"extrude": 0.22, "scale": 1.15},
+            {"extrude": 0.53, "scale": 0.9},
+            {"extrude": 0.25, "scale": 0.8}
           ],
           "material_index": 0,
           "profile": "rectangle",
@@ -166,23 +143,19 @@
             0.0,
             0.0,
             -15.0
-          ],
-          "taper": 0.8
+          ]
         },
         "upper_arm_r": {
           "mirror": "upper_arm_l"
         },
         "upper_leg_l": {
-          "bulge": [
-            {
-              "at": 0.3,
-              "scale": 1.1
-            }
+          "extrusion_steps": [
+            {"extrude": 0.3, "scale": 1.1},
+            {"extrude": 0.7, "scale": 0.78}
           ],
           "material_index": 0,
           "profile": "circle(10)",
-          "profile_radius": 0.12,
-          "taper": 0.78
+          "profile_radius": 0.12
         },
         "upper_leg_r": {
           "mirror": "upper_leg_l"

@@ -62,14 +62,13 @@
         "spine": {
           "profile": "circle(12)",
           "profile_radius": 0.11,
-          "taper": 0.95,
           "translate": [0.0, 0.0, 0.05],
           "rotate": [0.0, 0.0, 10.0],
-          "bulge": [
-            { "at": 0.15, "scale": 1.15 },
-            { "at": 0.6, "scale": 0.95 }
+          "extrusion_steps": [
+            { "extrude": 0.15, "scale": 1.15 },
+            { "extrude": 0.45, "scale": 0.95 },
+            { "extrude": 0.40, "scale": 0.95 }
           ],
-          "twist": 12.0,
           "cap_start": true,
           "cap_end": false,
           "material_index": 1,
@@ -85,35 +84,19 @@
               "offset": [0.0, 0.25, -0.05],
               "rotation": [0.0, 0.0, 25.0],
               "material_index": 2
-            },
-            {
-              "extrude": {
-                "profile": "rectangle",
-                "start": [0.0, 0.05, 0.0],
-                "end": [0.0, 0.45, 0.0],
-                "profile_radius": [0.05, 0.09],
-                "taper": 0.7
-              }
-            },
-            {
-              "asset": "nonexistent/attachments/hat",
-              "offset": [0.0, 0.05, 0.65],
-              "rotation": [0.0, 0.0, 0.0],
-              "scale": 1.0
             }
           ]
         },
         "chest": {
           "profile": "hexagon(6)",
           "profile_radius": [0.14, 0.11],
-          "taper": 0.85,
           "translate": [0.0, 0.03, 0.0],
           "rotate": [-4.0, 0.0, 0.0],
-          "bulge": [
-            { "at": 0.25, "scale": 1.2 },
-            { "at": 0.85, "scale": 0.8 }
+          "extrusion_steps": [
+            { "extrude": 0.25, "scale": 1.2 },
+            { "extrude": 0.60, "scale": 0.8 },
+            { "extrude": 0.15, "scale": 0.85 }
           ],
-          "twist": -8.0,
           "cap_start": false,
           "cap_end": false,
           "material_index": 1,
@@ -122,15 +105,14 @@
         "head": {
           "profile": "circle(16)",
           "profile_radius": { "absolute": 0.11 },
-          "taper": 1.0,
           "translate": [0.0, 0.08, 0.0],
           "rotate": [0.0, 0.0, 0.0],
-          "bulge": [
-            { "at": 0.05, "scale": 1.15 },
-            { "at": 0.55, "scale": 1.25 },
-            { "at": 0.95, "scale": 0.85 }
+          "extrusion_steps": [
+            { "extrude": 0.05, "scale": 1.15 },
+            { "extrude": 0.50, "scale": 1.25 },
+            { "extrude": 0.40, "scale": 0.85 },
+            { "extrude": 0.05, "scale": 0.85 }
           ],
-          "twist": 0.0,
           "cap_start": true,
           "cap_end": true,
           "material_index": 0,
@@ -153,14 +135,13 @@
         "upper_arm_l": {
           "profile": "rectangle",
           "profile_radius": [0.08, 0.12],
-          "taper": 0.8,
           "translate": [0.0, 0.0, 0.02],
           "rotate": [0.0, 0.0, -15.0],
-          "bulge": [
-            { "at": 0.2, "scale": 1.15 },
-            { "at": 0.7, "scale": 0.9 }
+          "extrusion_steps": [
+            { "extrude": 0.20, "scale": 1.15 },
+            { "extrude": 0.50, "scale": 0.9 },
+            { "extrude": 0.30, "scale": 0.8 }
           ],
-          "twist": 25.0,
           "cap_start": false,
           "cap_end": false,
           "material_index": 0,
@@ -182,11 +163,12 @@
         "lower_arm_l": {
           "profile": "hexagon(8)",
           "profile_radius": 0.07,
-          "taper": 0.75,
           "translate": [0.0, 0.02, 0.0],
           "rotate": [0.0, 10.0, 0.0],
-          "bulge": [{ "at": 0.35, "scale": 1.1 }],
-          "twist": -18.0,
+          "extrusion_steps": [
+            { "extrude": 0.35, "scale": 1.1 },
+            { "extrude": 0.65, "scale": 0.75 }
+          ],
           "cap_start": false,
           "cap_end": false,
           "material_index": 0,

@@ -25,37 +25,49 @@
     "params": {
       "bone_meshes": {
         "chest": {
+          "extrusion_steps": [
+            {"extrude": 0.5, "scale": 1.0},
+            {"extrude": 0.5, "scale": 0.9}
+          ],
           "material_index": 0,
           "profile": "hexagon(8)",
           "profile_radius": [
             0.15,
             0.12
-          ],
-          "taper": 0.9
+          ]
         },
         "front_lower_leg_l": {
+          "extrusion_steps": [
+            {"extrude": 0.5, "scale": 1.0},
+            {"extrude": 0.5, "scale": 0.75}
+          ],
           "material_index": 0,
           "profile": "circle(8)",
-          "profile_radius": 0.05,
-          "taper": 0.75
+          "profile_radius": 0.05
         },
         "front_lower_leg_r": {
           "mirror": "front_lower_leg_l"
         },
         "front_paw_l": {
+          "extrusion_steps": [
+            {"extrude": 0.5, "scale": 1.0},
+            {"extrude": 0.5, "scale": 0.95}
+          ],
           "material_index": 0,
           "profile": "circle(8)",
-          "profile_radius": 0.045,
-          "taper": 0.95
+          "profile_radius": 0.045
         },
         "front_paw_r": {
           "mirror": "front_paw_l"
         },
         "front_upper_leg_l": {
+          "extrusion_steps": [
+            {"extrude": 0.5, "scale": 1.0},
+            {"extrude": 0.5, "scale": 0.8}
+          ],
           "material_index": 0,
           "profile": "circle(8)",
-          "profile_radius": 0.06,
-          "taper": 0.8
+          "profile_radius": 0.06
         },
         "front_upper_leg_r": {
           "mirror": "front_upper_leg_l"
@@ -108,37 +120,49 @@
           }
         },
         "hind_lower_leg_l": {
+          "extrusion_steps": [
+            {"extrude": 0.5, "scale": 1.0},
+            {"extrude": 0.5, "scale": 0.72}
+          ],
           "material_index": 0,
           "profile": "circle(8)",
-          "profile_radius": 0.055,
-          "taper": 0.72
+          "profile_radius": 0.055
         },
         "hind_lower_leg_r": {
           "mirror": "hind_lower_leg_l"
         },
         "hind_paw_l": {
+          "extrusion_steps": [
+            {"extrude": 0.5, "scale": 1.0},
+            {"extrude": 0.5, "scale": 0.95}
+          ],
           "material_index": 0,
           "profile": "circle(8)",
-          "profile_radius": 0.05,
-          "taper": 0.95
+          "profile_radius": 0.05
         },
         "hind_paw_r": {
           "mirror": "hind_paw_l"
         },
         "hind_upper_leg_l": {
+          "extrusion_steps": [
+            {"extrude": 0.5, "scale": 1.0},
+            {"extrude": 0.5, "scale": 0.78}
+          ],
           "material_index": 0,
           "profile": "circle(8)",
-          "profile_radius": 0.07,
-          "taper": 0.78
+          "profile_radius": 0.07
         },
         "hind_upper_leg_r": {
           "mirror": "hind_upper_leg_l"
         },
         "neck": {
+          "extrusion_steps": [
+            {"extrude": 0.5, "scale": 1.0},
+            {"extrude": 0.5, "scale": 0.85}
+          ],
           "material_index": 0,
           "profile": "circle(10)",
-          "profile_radius": 0.08,
-          "taper": 0.85
+          "profile_radius": 0.08
         },
         "root": {
           "material_index": 0,
@@ -146,32 +170,32 @@
           "profile_radius": 0.1
         },
         "spine": {
-          "bulge": [
-            {
-              "at": 0.3,
-              "scale": 1.15
-            },
-            {
-              "at": 0.85,
-              "scale": 0.82
-            }
+          "extrusion_steps": [
+            {"extrude": 0.3, "scale": 1.15},
+            {"extrude": 0.55, "scale": 0.82},
+            {"extrude": 0.15, "scale": 0.88}
           ],
           "material_index": 0,
           "profile": "circle(12)",
-          "profile_radius": 0.11,
-          "taper": 0.88
+          "profile_radius": 0.11
         },
         "tail_base": {
+          "extrusion_steps": [
+            {"extrude": 0.5, "scale": 1.0},
+            {"extrude": 0.5, "scale": 0.7}
+          ],
           "material_index": 0,
           "profile": "circle(8)",
-          "profile_radius": 0.06,
-          "taper": 0.7
+          "profile_radius": 0.06
         },
         "tail_tip": {
+          "extrusion_steps": [
+            {"extrude": 0.5, "scale": 1.0},
+            {"extrude": 0.5, "scale": 0.6}
+          ],
           "material_index": 0,
           "profile": "circle(8)",
-          "profile_radius": 0.05,
-          "taper": 0.6
+          "profile_radius": 0.05
         }
       },
       "constraints": {

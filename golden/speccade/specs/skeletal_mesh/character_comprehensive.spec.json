@@ -24,18 +24,13 @@
     "params": {
       "bone_meshes": {
         "chest": {
-          "bulge": [
-            {
-              "at": 0.25,
-              "scale": 1.2
-            },
-            {
-              "at": 0.85,
-              "scale": 0.8
-            }
-          ],
           "cap_end": false,
           "cap_start": false,
+          "extrusion_steps": [
+            {"extrude": 0.25, "scale": 1.2},
+            {"extrude": 0.60, "scale": 0.8},
+            {"extrude": 0.15, "scale": 0.85}
+          ],
           "material_index": 1,
           "modifiers": [
             {
@@ -55,13 +50,11 @@
             0.0,
             0.0
           ],
-          "taper": 0.85,
           "translate": [
             0.0,
             0.03,
             0.0
-          ],
-          "twist": -8.0
+          ]
         },
         "head": {
           "attachments": [
@@ -85,22 +78,14 @@
               ]
             }
           ],
-          "bulge": [
-            {
-              "at": 0.05,
-              "scale": 1.15
-            },
-            {
-              "at": 0.55,
-              "scale": 1.25
-            },
-            {
-              "at": 0.95,
-              "scale": 0.85
-            }
-          ],
           "cap_end": true,
           "cap_start": true,
+          "extrusion_steps": [
+            {"extrude": 0.05, "scale": 1.15},
+            {"extrude": 0.50, "scale": 1.25},
+            {"extrude": 0.40, "scale": 0.85},
+            {"extrude": 0.05, "scale": 1.0}
+          ],
           "material_index": 0,
           "modifiers": [
             {
@@ -136,13 +121,11 @@
             0.0,
             0.0
           ],
-          "taper": 1.0,
           "translate": [
             0.0,
             0.08,
             0.0
-          ],
-          "twist": 0.0
+          ]
         },
         "lower_arm_l": {
           "attachments": [
@@ -166,14 +149,12 @@
               ]
             }
           ],
-          "bulge": [
-            {
-              "at": 0.35,
-              "scale": 1.1
-            }
-          ],
           "cap_end": false,
           "cap_start": false,
+          "extrusion_steps": [
+            {"extrude": 0.35, "scale": 1.1},
+            {"extrude": 0.65, "scale": 0.75}
+          ],
           "material_index": 0,
           "modifiers": [
             {
@@ -195,13 +176,11 @@
             10.0,
             0.0
           ],
-          "taper": 0.75,
           "translate": [
             0.0,
             0.02,
             0.0
-          ],
-          "twist": -18.0
+          ]
         },
         "lower_arm_r": {
           "mirror": "lower_arm_l"
@@ -228,26 +207,6 @@
               ]
             },
             {
-              "extrude": {
-                "end": [
-                  0.0,
-                  0.45,
-                  0.0
-                ],
-                "profile": "rectangle",
-                "profile_radius": [
-                  0.05,
-                  0.09
-                ],
-                "start": [
-                  0.0,
-                  0.05,
-                  0.0
-                ],
-                "taper": 0.7
-              }
-            },
-            {
               "dimensions": [
                 0.16,
                 0.16,
@@ -267,18 +226,13 @@
               ]
             }
           ],
-          "bulge": [
-            {
-              "at": 0.15,
-              "scale": 1.15
-            },
-            {
-              "at": 0.6,
-              "scale": 0.95
-            }
-          ],
           "cap_end": false,
           "cap_start": true,
+          "extrusion_steps": [
+            {"extrude": 0.15, "scale": 1.15},
+            {"extrude": 0.45, "scale": 0.95},
+            {"extrude": 0.40, "scale": 0.95}
+          ],
           "material_index": 1,
           "modifiers": [
             {
@@ -306,13 +260,11 @@
             0.0,
             10.0
           ],
-          "taper": 0.95,
           "translate": [
             0.0,
             0.0,
             0.05
-          ],
-          "twist": 12.0
+          ]
         },
         "upper_arm_l": {
           "attachments": [
@@ -336,18 +288,13 @@
               ]
             }
           ],
-          "bulge": [
-            {
-              "at": 0.2,
-              "scale": 1.15
-            },
-            {
-              "at": 0.7,
-              "scale": 0.9
-            }
-          ],
           "cap_end": false,
           "cap_start": false,
+          "extrusion_steps": [
+            {"extrude": 0.2, "scale": 1.15},
+            {"extrude": 0.5, "scale": 0.9},
+            {"extrude": 0.3, "scale": 0.8}
+          ],
           "material_index": 0,
           "modifiers": [
             {
@@ -373,13 +320,11 @@
             0.0,
             -15.0
           ],
-          "taper": 0.8,
           "translate": [
             0.0,
             0.0,
             0.02
-          ],
-          "twist": 25.0
+          ]
         },
         "upper_arm_r": {
           "mirror": "upper_arm_l"
