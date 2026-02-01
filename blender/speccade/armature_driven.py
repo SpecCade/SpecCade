@@ -199,6 +199,7 @@ def _perform_bridge_operations(
     bmesh_module,
     mesh_obj,
     bridge_pairs: list[tuple[str, str]],
+    armature,
 ) -> None:
     """Bridge edge loops between connected bone pairs.
 
@@ -265,6 +266,16 @@ def _perform_bridge_operations(
     finally:
         bpy.ops.object.mode_set(mode='OBJECT')
 
+    # Blend weights for bridged regions
+    for parent_bone, child_bone in bridge_pairs:
+        _blend_bridge_weights(
+            bpy_module=bpy,
+            mesh_obj=mesh_obj,
+            parent_bone=parent_bone,
+            child_bone=child_bone,
+            armature=armature,
+        )
+
     # Remove temporary bridge vertex groups
     for parent_bone, child_bone in bridge_pairs:
         for vg_name in [
@@ -273,6 +284,76 @@ def _perform_bridge_operations(
         ]:
             if vg_name in mesh_obj.vertex_groups:
                 mesh_obj.vertex_groups.remove(mesh_obj.vertex_groups[vg_name])
+
+
+def _blend_bridge_weights(
+    *,
+    bpy_module,
+    mesh_obj,
+    parent_bone: str,
+    child_bone: str,
+    armature,
+) -> None:
+    """Blend skin weights for vertices in the bridge region.
+
+    Vertices in the bridge get interpolated weights between parent and child bones
+    based on their position along the bridge axis.
+    """
+    bpy = bpy_module
+
+    # Get bone positions for interpolation
+    parent_bone_obj = armature.data.bones.get(parent_bone)
+    child_bone_obj = armature.data.bones.get(child_bone)
+
+    if not parent_bone_obj or not child_bone_obj:
+        return
+
+    # Parent tail and child head positions in armature space
+    parent_tail = armature.matrix_world @ parent_bone_obj.tail_local
+    child_head = armature.matrix_world @ child_bone_obj.head_local
+
+    # Bridge axis
+    bridge_vec = child_head - parent_tail
+    bridge_len = bridge_vec.length
+
+    if bridge_len < 1e-6:
+        return  # Bones are at same position
+
+    bridge_dir = bridge_vec.normalized()
+
+    # Get or create vertex groups for the bones
+    parent_vg = mesh_obj.vertex_groups.get(parent_bone)
+    child_vg = mesh_obj.vertex_groups.get(child_bone)
+
+    if not parent_vg:
+        parent_vg = mesh_obj.vertex_groups.new(name=parent_bone)
+    if not child_vg:
+        child_vg = mesh_obj.vertex_groups.new(name=child_bone)
+
+    # Find vertices in bridge region (between parent tail and child head)
+    mesh = mesh_obj.data
+    world_matrix = mesh_obj.matrix_world
+
+    for v in mesh.vertices:
+        v_world = world_matrix @ v.co
+
+        # Project vertex onto bridge axis
+        to_vert = v_world - parent_tail
+        proj_dist = to_vert.dot(bridge_dir)
+
+        # Check if vertex is in bridge region
+        if proj_dist < -0.001 or proj_dist > bridge_len + 0.001:
+            continue  # Outside bridge region
+
+        # Calculate blend factor (0 = parent, 1 = child)
+        t = max(0.0, min(1.0, proj_dist / bridge_len))
+
+        parent_weight = 1.0 - t
+        child_weight = t
+
+        # Apply blended weights
+        parent_vg.add([v.index], parent_weight, 'REPLACE')
+        child_vg.add([v.index], child_weight, 'REPLACE')
 
 
 def _resolve_mirrors(defs: dict) -> dict:
@@ -1667,6 +1748,7 @@ def build_armature_driven_character_mesh(*, armature, params: dict, out_root) ->
             bmesh_module=bmesh,
             mesh_obj=combined,
             bridge_pairs=bridge_pairs,
+            armature=armature,
         )
 
     _ensure_material_slot_placeholders(combined)
