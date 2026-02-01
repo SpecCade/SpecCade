@@ -87,6 +87,50 @@ Attachment/bool-shape fields are also bone-relative:
 - Mirrors are a *copy-by-reference* convenience (the resolved definition is reused as-is).
 - Any visual left/right mirroring comes from using mirrored bones in the skeleton (or custom skeleton bones with `mirror`).
 
+### Bridge Edge Loops
+
+Connect bone mesh segments topologically using bridge edge loops for smooth deformation at joints.
+
+**Connection modes:**
+- `"segmented"` (default): Mesh ends are independent, capped or uncapped per `cap_start`/`cap_end`
+- `"bridge"`: Merge edge loops with adjacent bone's mesh, blend weights at junction
+
+**Per-bone mesh fields:**
+
+| Field | Type | Default | Notes |
+|-------|------|---------|-------|
+| `connect_start` | string | `"segmented"` | How this bone's mesh start connects to parent bone's mesh end |
+| `connect_end` | string | `"segmented"` | How this bone's mesh end connects to child bones' mesh starts |
+
+**Requirements for bridging:**
+- Both parent's `connect_end` and child's `connect_start` must be `"bridge"`
+- Profile segment counts must be compatible (exact match or 2x multiple)
+- Both bones must have mesh definitions (not mirror references)
+
+**Example - connected torso:**
+
+```json
+{
+  "bone_meshes": {
+    "spine": {
+      "profile": "circle(8)",
+      "connect_end": "bridge"
+    },
+    "chest": {
+      "profile": "circle(8)",
+      "connect_start": "bridge",
+      "connect_end": "bridge"
+    },
+    "neck": {
+      "profile": "circle(8)",
+      "connect_start": "bridge"
+    }
+  }
+}
+```
+
+**Weight blending:** Vertices in the bridge region receive interpolated weights between the parent and child bones based on their position along the bridge axis.
+
 ### Export Settings
 
 - `params.export` is honored by the Blender backend; it affects GLB export (triangulation, normals, UVs, skin weights, and whether the armature is included).
