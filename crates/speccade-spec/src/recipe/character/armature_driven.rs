@@ -9,6 +9,26 @@ use crate::recipe::mesh::{MaterialSlot, MeshPrimitive};
 use super::{SkeletalMeshConstraints, SkeletalMeshExportSettings, SkeletonBone, SkeletonPreset};
 
 // ============================================================================
+// Connection Mode Types
+// ============================================================================
+
+/// Connection mode for bone mesh boundaries.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ConnectionMode {
+    /// No topological connection (current behavior) - mesh ends are independent.
+    Segmented,
+    /// Bridge edge loops with adjacent bone's mesh, blend weights at junction.
+    Bridge,
+}
+
+impl Default for ConnectionMode {
+    fn default() -> Self {
+        ConnectionMode::Segmented
+    }
+}
+
+// ============================================================================
 // Step-Based Extrusion Types
 // ============================================================================
 
@@ -175,6 +195,14 @@ pub struct ArmatureDrivenBoneMesh {
     /// Attachments (geometry not necessarily on the bone axis).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub attachments: Vec<ArmatureDrivenAttachment>,
+
+    /// Connection mode at the start (head) of the bone mesh.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub connect_start: Option<ConnectionMode>,
+
+    /// Connection mode at the end (tail) of the bone mesh.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub connect_end: Option<ConnectionMode>,
 }
 
 /// Length value in bone-relative units, elliptical units, or absolute units.
