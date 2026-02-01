@@ -3,9 +3,11 @@
 //! Validates multiple assets in parallel
 
 use anyhow::Result;
+use colored::Colorize;
 use glob::glob;
 use std::path::PathBuf;
 use std::process::ExitCode;
+use std::time::Instant;
 
 use crate::commands::validate_asset;
 
@@ -40,12 +42,27 @@ pub fn run(specs_pattern: &str, out_root: Option<&str>, _format: &str) -> Result
     let mut results = Vec::new();
     let mut passed = 0;
     let mut failed = 0;
+    let batch_start = Instant::now();
 
     for (i, spec_path) in specs.iter().enumerate() {
-        println!("\n[{}/{}] {}", i + 1, specs.len(), spec_path.display());
+        let item_start = Instant::now();
+        let progress = format!("[{}/{}]", i + 1, specs.len()).cyan().bold();
+        println!("\n{} {}", progress, spec_path.display());
 
         let spec_out_dir = out_dir.join(spec_path.file_stem().unwrap_or_default());
         std::fs::create_dir_all(&spec_out_dir)?;
+
+        // Print progress bar
+        let progress_pct = ((i + 1) as f64 / specs.len() as f64 * 100.0) as u32;
+        let bar_width = 30;
+        let filled = (progress_pct as usize * bar_width) / 100;
+        let bar = format!(
+            "[{}{}] {}%",
+            "=".repeat(filled),
+            " ".repeat(bar_width - filled),
+            progress_pct
+        );
+        eprintln!("  Progress: {}", bar.dimmed());
 
         let result = validate_asset::run(
             spec_path.to_str().unwrap(),
@@ -53,9 +70,17 @@ pub fn run(specs_pattern: &str, out_root: Option<&str>, _format: &str) -> Result
             true,
         );
 
+        let elapsed = item_start.elapsed();
+        let time_str = format!("{:.1}s", elapsed.as_secs_f64()).dimmed();
+
         match result {
             Ok(ExitCode::SUCCESS) => {
-                println!("  ✓ PASS");
+                println!(
+                    "  {} {} {}",
+                    "✓ PASS".green().bold(),
+                    "•".dimmed(),
+                    time_str
+                );
                 passed += 1;
                 results.push(BatchResult {
                     spec: spec_path.to_string_lossy().to_string(),
@@ -64,7 +89,13 @@ pub fn run(specs_pattern: &str, out_root: Option<&str>, _format: &str) -> Result
                 });
             }
             Ok(code) => {
-                println!("  ✗ FAIL (exit code: {:?})", code);
+                println!(
+                    "  {} {} {} (exit code: {:?})",
+                    "✗ FAIL".red().bold(),
+                    "•".dimmed(),
+                    time_str,
+                    code
+                );
                 failed += 1;
                 results.push(BatchResult {
                     spec: spec_path.to_string_lossy().to_string(),
@@ -73,7 +104,13 @@ pub fn run(specs_pattern: &str, out_root: Option<&str>, _format: &str) -> Result
                 });
             }
             Err(e) => {
-                println!("  ✗ ERROR: {}", e);
+                println!(
+                    "  {} {} {}: {}",
+                    "✗ ERROR".red().bold(),
+                    "•".dimmed(),
+                    time_str,
+                    e
+                );
                 failed += 1;
                 results.push(BatchResult {
                     spec: spec_path.to_string_lossy().to_string(),
@@ -97,11 +134,42 @@ pub fn run(specs_pattern: &str, out_root: Option<&str>, _format: &str) -> Result
     std::fs::write(&report_path, &report_json)?;
 
     // Print summary
+    let total_elapsed = batch_start.elapsed();
+    let avg_time = if !specs.is_empty() {
+        total_elapsed.as_secs_f64() / specs.len() as f64
+    } else {
+        0.0
+    };
+
     println!("\n{}", "=".repeat(60));
-    println!("Batch Validation Summary:");
+    println!(
+        "{} {} {}",
+        "Batch Validation Summary".bold(),
+        "•".dimmed(),
+        format!(
+            "{:.1}s total, {:.1}s avg",
+            total_elapsed.as_secs_f64(),
+            avg_time
+        )
+        .dimmed()
+    );
     println!("  Total:  {}", specs.len());
-    println!("  Passed: {}", passed);
-    println!("  Failed: {}", failed);
+    println!(
+        "  Passed: {}",
+        if failed == 0 {
+            passed.to_string().green()
+        } else {
+            passed.to_string().normal()
+        }
+    );
+    println!(
+        "  Failed: {}",
+        if failed > 0 {
+            failed.to_string().red()
+        } else {
+            failed.to_string().normal()
+        }
+    );
     println!("Report: {}", report_path.display());
 
     if failed > 0 {
