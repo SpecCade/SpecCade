@@ -90,7 +90,10 @@
       "Bash(git branch:*)",
       "Bash(npm run check:*)",
       "Bash(npm run:*)",
-      "Bash(git stash:*)"
+      "Bash(git stash:*)",
+      "WebFetch(domain:docs.blender.org)",
+      "WebFetch(domain:blenderartists.org)",
+      "WebFetch(domain:topologyguides.com)"
     ]
   },
   "disabledMcpjsonServers": [
