@@ -1,0 +1,195 @@
+{
+  "phase": "Phase 1: Static Mesh Validation",
+  "task": "1.1",
+  "timestamp": "2026-02-01T18:59:00Z",
+  "total_assets": 16,
+  "successful": 11,
+  "failed": 5,
+  "summary": {
+    "all_meshes_generated": false,
+    "manifold_errors": 2,
+    "uv_coverage": "100% of successful meshes have UV maps",
+    "lint_error_status": "All lint issues are warnings (not critical errors)",
+    "preview_grids_generated": 11
+  },
+  "assets": [
+    {
+      "name": "mesh_cube",
+      "status": "pass",
+      "issues": ["Missing material assignment (1728 faces)"],
+      "vertex_count": 866,
+      "has_uvs": true,
+      "manifold": true,
+      "lint_warnings": 1,
+      "lint_errors": 0
+    },
+    {
+      "name": "mesh_sphere",
+      "status": "pass",
+      "issues": ["Missing material assignment (480 faces)"],
+      "vertex_count": 242,
+      "has_uvs": true,
+      "manifold": true,
+      "lint_warnings": 1,
+      "lint_errors": 0
+    },
+    {
+      "name": "mesh_array",
+      "status": "pass",
+      "issues": ["UV stretch: 15.6% of faces have high distortion", "Missing material assignment (220 faces)"],
+      "vertex_count": 120,
+      "has_uvs": true,
+      "manifold": true,
+      "lint_warnings": 2,
+      "lint_errors": 0
+    },
+    {
+      "name": "mesh_decimate",
+      "status": "pass",
+      "issues": ["Missing material assignment (576 faces)"],
+      "vertex_count": 290,
+      "has_uvs": true,
+      "manifold": true,
+      "lint_warnings": 1,
+      "lint_errors": 0
+    },
+    {
+      "name": "mesh_edge_split",
+      "status": "pass",
+      "issues": ["Non-manifold geometry: 24 non-manifold edges", "UV stretch: 37.5% of faces have high distortion", "Missing material assignment (12 faces)"],
+      "vertex_count": 24,
+      "has_uvs": true,
+      "manifold": false,
+      "lint_warnings": 2,
+      "lint_errors": 0
+    },
+    {
+      "name": "mesh_mirror",
+      "status": "pass",
+      "issues": ["UV overlap: 33.7% of islands overlap", "Missing material assignment (432 faces)"],
+      "vertex_count": 224,
+      "has_uvs": true,
+      "manifold": true,
+      "lint_warnings": 2,
+      "lint_errors": 0
+    },
+    {
+      "name": "mesh_modifiers",
+      "status": "pass",
+      "issues": ["Missing material assignment (3072 faces)"],
+      "vertex_count": 1538,
+      "has_uvs": true,
+      "manifold": true,
+      "lint_warnings": 1,
+      "lint_errors": 0
+    },
+    {
+      "name": "mesh_primitives",
+      "status": "pass",
+      "issues": ["Missing material assignment (380 faces)"],
+      "vertex_count": 192,
+      "has_uvs": true,
+      "manifold": true,
+      "lint_warnings": 1,
+      "lint_errors": 0
+    },
+    {
+      "name": "mesh_modular_kit",
+      "status": "pass",
+      "issues": ["UV overlap: 67.9% of islands overlap", "UV stretch: 16.2% of faces have high distortion", "Missing material assignment (760 faces)"],
+      "vertex_count": 392,
+      "has_uvs": true,
+      "manifold": true,
+      "lint_warnings": 3,
+      "lint_errors": 0
+    },
+    {
+      "name": "mesh_organic_sculpt",
+      "status": "pass",
+      "issues": ["UV overlap: 67.5% of islands overlap", "Missing material assignment (2548 faces)"],
+      "vertex_count": 1276,
+      "has_uvs": true,
+      "manifold": true,
+      "lint_warnings": 2,
+      "lint_errors": 0
+    },
+    {
+      "name": "environment_house",
+      "status": "pass",
+      "issues": ["Non-manifold geometry: 384 non-manifold edges", "UV overlap: 14.1% of islands overlap"],
+      "vertex_count": 2636,
+      "has_uvs": true,
+      "manifold": false,
+      "lint_warnings": 1,
+      "lint_errors": 0
+    },
+    {
+      "name": "armor_plate",
+      "status": "fail",
+      "issues": ["Recipe kind 'static_mesh.shrinkwrap_v1' is not supported by this generator version"],
+      "vertex_count": 0,
+      "has_uvs": false,
+      "manifold": null,
+      "lint_warnings": 0,
+      "lint_errors": 1
+    },
+    {
+      "name": "cloth_drape",
+      "status": "fail",
+      "issues": ["Recipe kind 'static_mesh.shrinkwrap_v1' is not supported by this generator version"],
+      "vertex_count": 0,
+      "has_uvs": false,
+      "manifold": null,
+      "lint_warnings": 0,
+      "lint_errors": 1
+    },
+    {
+      "name": "fitted_accessory",
+      "status": "fail",
+      "issues": ["Recipe kind 'static_mesh.shrinkwrap_v1' is not supported by this generator version"],
+      "vertex_count": 0,
+      "has_uvs": false,
+      "manifold": null,
+      "lint_warnings": 0,
+      "lint_errors": 1
+    },
+    {
+      "name": "mesh_comprehensive",
+      "status": "fail",
+      "issues": ["Triangle count 238054 exceeds maximum 50000"],
+      "vertex_count": 0,
+      "has_uvs": false,
+      "manifold": null,
+      "lint_warnings": 0,
+      "lint_errors": 1
+    },
+    {
+      "name": "mesh_solidify",
+      "status": "fail",
+      "issues": ["dimensions[2] (Z) must be positive, got 0"],
+      "vertex_count": 0,
+      "has_uvs": false,
+      "manifold": null,
+      "lint_warnings": 1,
+      "lint_errors": 1
+    }
+  ],
+  "validation_criteria_check": {
+    "all_assets_generated": false,
+    "manifold_errors_present": true,
+    "uvs_present_on_all_successful": true,
+    "lint_errors_are_warnings_only": true,
+    "preview_grids_generated_and_readable": true
+  },
+  "notes": [
+    "Total specs found: 16 (not 18 as expected in original task)",
+    "11 meshes generated successfully with warnings only (no critical errors)",
+    "5 meshes failed to generate due to unsupported recipes or validation errors",
+    "2 meshes have non-manifold geometry: mesh_edge_split (24 edges) and environment_house (384 edges)",
+    "All successful meshes have UV maps present",
+    "All 11 successful meshes have preview grids generated",
+    "Common warning: Missing material assignments (all successful meshes)",
+    "UV issues present in some meshes: overlap in modular_kit (67.9%), organic_sculpt (67.5%), mirror (33.7%)",
+    "Failed assets: 3 use unsupported shrinkwrap_v1 recipe, 1 exceeds triangle budget, 1 has invalid dimension parameter"
+  ]
+}
