@@ -16,6 +16,8 @@ use crate::analysis::mesh;
 use crate::commands::generate;
 use crate::commands::preview_grid;
 use crate::input::load_spec;
+use speccade_lint::report::Severity;
+use speccade_lint::rules::mesh as mesh_lint;
 use speccade_spec::Spec;
 
 /// Run the validate-asset command
@@ -148,7 +150,27 @@ pub fn run(spec_path: &str, out_root: Option<&str>, _full_report: bool) -> Resul
     std::fs::write(&metrics_path, &metrics_json)?;
     println!("  Metrics saved: {}", metrics_path.display());
 
-    println!("\nAnalysis complete. Ready for lint.");
+    // Step 4: Run lint rules
+    println!("\n[4/4] Running lint rules...");
+
+    let lint_results = mesh_lint::lint_glb(&asset_data);
+
+    let lint_path = out_dir.join(format!("{}.lint.json", spec.asset_id.replace("/", "_")));
+    let lint_json = serde_json::to_string_pretty(&lint_results)?;
+    std::fs::write(&lint_path, &lint_json)?;
+
+    println!("  ✓ Lint complete: {} issues found", lint_results.len());
+    for issue in &lint_results {
+        let icon = match issue.severity {
+            Severity::Error => "✗",
+            Severity::Warning => "⚠",
+            Severity::Info => "ℹ",
+        };
+        println!("    {} [{}] {}", icon, issue.rule_id, issue.message);
+    }
+    println!("  Lint report saved: {}", lint_path.display());
+
+    println!("\nAll validation steps complete.");
 
     Ok(ExitCode::SUCCESS)
 }
