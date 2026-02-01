@@ -23,6 +23,7 @@ pub mod serve;
 pub mod stdlib;
 pub mod template;
 pub mod validate;
+pub mod validate_asset;
 pub mod verify;
 
 mod reporting;

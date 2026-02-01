@@ -378,6 +378,19 @@ enum Commands {
         #[arg(long, default_value = "text", value_parser = ["text", "json"])]
         format: String,
     },
+
+    /// Validate a single asset through full pipeline
+    ValidateAsset {
+        /// Path to spec file
+        #[arg(short, long)]
+        spec: String,
+        /// Output directory for validation artifacts
+        #[arg(short, long)]
+        out_root: Option<String>,
+        /// Generate full validation report
+        #[arg(long)]
+        full_report: bool,
+    },
 }
 
 #[derive(Subcommand)]
@@ -662,6 +675,11 @@ fn main() -> ExitCode {
                 output_format,
             )
         }
+        Commands::ValidateAsset {
+            spec,
+            out_root,
+            full_report,
+        } => commands::validate_asset::run(&spec, out_root.as_deref(), full_report),
     };
 
     match result {
