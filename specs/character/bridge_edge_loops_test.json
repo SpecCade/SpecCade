@@ -17,10 +17,10 @@
     "kind": "skeletal_mesh.armature_driven_v1",
     "params": {
       "skeleton": [
-        {"name": "root", "head": [0, 0, 0], "tail": [0, 0, 0.2]},
-        {"name": "spine", "head": [0, 0, 0.2], "tail": [0, 0, 0.5], "parent": "root"},
-        {"name": "chest", "head": [0, 0, 0.5], "tail": [0, 0, 0.8], "parent": "spine"},
-        {"name": "neck", "head": [0, 0, 0.8], "tail": [0, 0, 1.0], "parent": "chest"}
+        {"bone": "root", "head": [0, 0, 0], "tail": [0, 0, 0.2]},
+        {"bone": "spine", "head": [0, 0, 0.2], "tail": [0, 0, 0.5], "parent": "root"},
+        {"bone": "chest", "head": [0, 0, 0.5], "tail": [0, 0, 0.8], "parent": "spine"},
+        {"bone": "neck", "head": [0, 0, 0.8], "tail": [0, 0, 1.0], "parent": "chest"}
       ],
       "bone_meshes": {
         "spine": {
