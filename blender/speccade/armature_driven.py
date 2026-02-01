@@ -339,6 +339,8 @@ def _build_mesh_with_steps(
     apply_scale_only,
     apply_rotation_only,
     quat_rotate_vec,
+    connect_start: str | None = None,
+    connect_end: str | None = None,
 ) -> object:
     """Build mesh using step-based extrusion along bone axis.
 
@@ -535,6 +537,51 @@ def _build_mesh_with_steps(
                 mesh.update()
             except Exception:
                 pass
+
+    # Track edge loops for bridging via vertex groups
+    if connect_start == "bridge" or connect_end == "bridge":
+        mesh = obj.data
+        bm = bmesh_module.new()
+        try:
+            bm.from_mesh(mesh)
+            bm.verts.ensure_lookup_table()
+
+            if bm.verts:
+                z_coords = [v.co.z for v in bm.verts]
+                z_min = min(z_coords)
+                z_max = max(z_coords)
+                z_range = z_max - z_min
+                eps = max(1e-6, z_range * 0.01)
+
+                head_verts = []
+                tail_verts = []
+
+                for v in bm.verts:
+                    if abs(v.co.z - z_min) <= eps:
+                        head_verts.append(v.index)
+                    elif abs(v.co.z - z_max) <= eps:
+                        tail_verts.append(v.index)
+
+                bm.free()
+
+                # Create vertex groups in object mode
+                if connect_start == "bridge" and head_verts:
+                    vg_name = get_bridge_head_vgroup_name(bone_name)
+                    vg = obj.vertex_groups.new(name=vg_name)
+                    vg.add(head_verts, 1.0, 'REPLACE')
+
+                if connect_end == "bridge" and tail_verts:
+                    vg_name = get_bridge_tail_vgroup_name(bone_name)
+                    vg = obj.vertex_groups.new(name=vg_name)
+                    vg.add(tail_verts, 1.0, 'REPLACE')
+            else:
+                bm.free()
+        except Exception:
+            try:
+                bm.free()
+            except Exception:
+                pass
+            raise
 
     return obj
 
@@ -1059,6 +1106,9 @@ def build_armature_driven_character_mesh(*, armature, params: dict, out_root) ->
                 f"bone_meshes['{bone_name}'].extrusion_steps is required"
             )
 
+        connect_start = mesh_spec.get("connect_start")
+        connect_end = mesh_spec.get("connect_end")
+
         obj = _build_mesh_with_steps(
             bpy_module=bpy,
             bmesh_module=bmesh,
@@ -1076,6 +1126,8 @@ def build_armature_driven_character_mesh(*, armature, params: dict, out_root) ->
             apply_scale_only=_apply_scale_only,
             apply_rotation_only=_apply_rotation_only,
             quat_rotate_vec=_quat_rotate_vec,
+            connect_start=connect_start,
+            connect_end=connect_end,
         )
         _ensure_material_slot_placeholders(obj)
 
