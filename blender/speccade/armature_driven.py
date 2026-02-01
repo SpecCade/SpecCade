@@ -169,6 +169,112 @@ def get_bridge_tail_vgroup_name(bone_name: str) -> str:
     return f"_bridge_tail_{bone_name}"
 
 
+def _build_bone_hierarchy(armature) -> dict:
+    """Build bone hierarchy dict from armature.
+
+    Returns:
+        Dict mapping bone_name -> {"parent": str|None, "children": [str]}
+    """
+    hierarchy = {}
+
+    for bone in armature.data.bones:
+        parent_name = bone.parent.name if bone.parent else None
+        hierarchy[bone.name] = {
+            "parent": parent_name,
+            "children": [],
+        }
+
+    # Fill in children
+    for bone_name, info in hierarchy.items():
+        parent_name = info["parent"]
+        if parent_name and parent_name in hierarchy:
+            hierarchy[parent_name]["children"].append(bone_name)
+
+    return hierarchy
+
+
+def _perform_bridge_operations(
+    *,
+    bpy_module,
+    bmesh_module,
+    mesh_obj,
+    bridge_pairs: list[tuple[str, str]],
+) -> None:
+    """Bridge edge loops between connected bone pairs.
+
+    Args:
+        bpy_module: Blender bpy module
+        bmesh_module: Blender bmesh module
+        mesh_obj: The combined mesh object
+        bridge_pairs: List of (parent_bone, child_bone) tuples to bridge
+    """
+    if not bridge_pairs:
+        return
+
+    bpy = bpy_module
+
+    # Enter edit mode
+    bpy.context.view_layer.objects.active = mesh_obj
+    bpy.ops.object.mode_set(mode='EDIT')
+
+    try:
+        for parent_bone, child_bone in bridge_pairs:
+            tail_vg = get_bridge_tail_vgroup_name(parent_bone)
+            head_vg = get_bridge_head_vgroup_name(child_bone)
+
+            # Check if both vertex groups exist
+            if tail_vg not in mesh_obj.vertex_groups:
+                continue
+            if head_vg not in mesh_obj.vertex_groups:
+                continue
+
+            # Deselect all
+            bpy.ops.mesh.select_all(action='DESELECT')
+
+            # Select vertices in parent's tail group
+            bpy.ops.object.mode_set(mode='OBJECT')
+            tail_vg_idx = mesh_obj.vertex_groups[tail_vg].index
+            for v in mesh_obj.data.vertices:
+                for g in v.groups:
+                    if g.group == tail_vg_idx:
+                        v.select = True
+                        break
+
+            # Also select vertices in child's head group
+            head_vg_idx = mesh_obj.vertex_groups[head_vg].index
+            for v in mesh_obj.data.vertices:
+                for g in v.groups:
+                    if g.group == head_vg_idx:
+                        v.select = True
+                        break
+
+            bpy.ops.object.mode_set(mode='EDIT')
+
+            # Bridge the selected edge loops
+            try:
+                bpy.ops.mesh.bridge_edge_loops()
+            except RuntimeError as e:
+                # Bridge can fail if selection isn't valid edge loops
+                import sys
+                print(f"Warning: bridge_edge_loops failed for {parent_bone}->{child_bone}: {e}", file=sys.stderr)
+
+        # Clean up: merge very close vertices at bridge points
+        bpy.ops.mesh.select_all(action='SELECT')
+        bpy.ops.mesh.remove_doubles(threshold=0.0001)
+
+    finally:
+        bpy.ops.object.mode_set(mode='OBJECT')
+
+    # Remove temporary bridge vertex groups
+    for parent_bone, child_bone in bridge_pairs:
+        for vg_name in [
+            get_bridge_tail_vgroup_name(parent_bone),
+            get_bridge_head_vgroup_name(child_bone),
+        ]:
+            if vg_name in mesh_obj.vertex_groups:
+                mesh_obj.vertex_groups.remove(mesh_obj.vertex_groups[vg_name])
+
+
 def _resolve_mirrors(defs: dict) -> dict:
     """Resolve `{ "mirror": "other" }` entries to concrete dicts.
 
@@ -1550,6 +1656,18 @@ def build_armature_driven_character_mesh(*, armature, params: dict, out_root) ->
             f"object.join: expected a MESH active object, got {getattr(combined, 'type', None)!r}"
         )
     combined.name = 'Character'
+
+    # Determine bridge pairs and perform bridging
+    bone_hierarchy = _build_bone_hierarchy(armature)
+    bridge_pairs = get_bridge_pairs(bone_hierarchy, bone_meshes)
+
+    if bridge_pairs:
+        _perform_bridge_operations(
+            bpy_module=bpy,
+            bmesh_module=bmesh,
+            mesh_obj=combined,
+            bridge_pairs=bridge_pairs,
+        )
 
     _ensure_material_slot_placeholders(combined)
 
