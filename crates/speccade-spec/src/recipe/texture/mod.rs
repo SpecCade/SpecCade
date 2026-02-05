@@ -1,4 +1,4 @@
-//! Texture recipe types (procedural graphs and legacy helpers).
+//! Texture recipe types (procedural graphs and material generators).
 
 mod common;
 mod decal;

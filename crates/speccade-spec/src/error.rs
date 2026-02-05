@@ -43,7 +43,7 @@ pub enum ErrorCode {
     /// E017: Budget limit exceeded
     BudgetExceeded,
 
-    // Legacy packed output errors (E020-E023)
+    // Packed output errors (E020-E023)
     /// E020: Packed output channel references an unknown map key
     PackedChannelsUnknownMapKey,
     /// E021: Packed output is missing a channels mapping

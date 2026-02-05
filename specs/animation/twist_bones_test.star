@@ -5,12 +5,12 @@ spec(
     asset_type = "skeletal_animation",
     license = "CC0-1.0",
     seed = 9003,
-    description = "Verification test for TwistBone - arm rotation distributed across twist bones (uses humanoid_game_v1 with built-in twist bones)",
+    description = "Verification test for TwistBone - arm rotation distributed across twist bones (uses humanoid_connected_v1 with built-in twist bones)",
     outputs = [output("twist_bones_test.glb", "glb")],
     recipe = {
         "kind": "skeletal_animation.blender_rigged_v1",
         "params": {
-            "skeleton_preset": "humanoid_game_v1",
+            "skeleton_preset": "humanoid_connected_v1",
             "clip_name": "twist_bones_test",
             "duration_frames": 60,
             "fps": 30,

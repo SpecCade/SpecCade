@@ -10,7 +10,7 @@ spec(
     recipe = {
         "kind": "skeletal_animation.blender_rigged_v1",
         "params": {
-            "skeleton_preset": "humanoid_detailed_v1",
+            "skeleton_preset": "humanoid_connected_v1",
             "clip_name": "finger_controls_test",
             "duration_frames": 60,
             "fps": 30,

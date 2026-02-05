@@ -1,11 +1,11 @@
-# Skinned character mesh - demonstrates skinned mesh stdlib functions
+# Skinned character mesh - demonstrates armature-driven stdlib functions
 #
-# This example creates a skinned humanoid character that binds an external
-# mesh file to a skeleton, using body_part, skeletal_texturing, and
-# skinning_config helpers.
+# This example creates a skinned humanoid character using armature-driven
+# procedural mesh generation, demonstrating body_part helpers and material
+# configuration.
 #
 # Functions covered:
-# - skeletal_mesh_skinned_spec: Creates a spec that binds an existing mesh to a skeleton
+# - spec with skeletal_mesh.armature_driven_v1: Creates an armature-driven skeletal mesh
 # - body_part: Defines body part geometry attached to bones
 # - skeletal_texturing: Configures UV unwrapping for the mesh
 # - skinning_config: Configures bone influence weights
@@ -58,39 +58,86 @@ SKINNING_MOBILE = skinning_config(max_bone_influences = 2, auto_weights = True)
 SKINNING_HIGH_QUALITY = skinning_config(max_bone_influences = 8, auto_weights = True)
 SKINNING_MANUAL = skinning_config(max_bone_influences = 4, auto_weights = False)
 
-# Main skinned mesh spec (demonstrates skeletal_mesh_skinned_spec function)
-skeletal_mesh_skinned_spec(
+# Main skinned mesh spec using armature-driven generation
+spec(
     asset_id = "stdlib-character-skinned-01",
+    asset_type = "skeletal_mesh",
     seed = 42,
-    output_path = "characters/skinned_character.glb",
-    format = "glb",
-    mesh_file = "assets/humanoid_mesh.glb",
-    skeleton_preset = "humanoid_basic_v1",
-    binding = {
-        "mode": "auto_weights",
-        "max_bone_influences": 4,
-        "vertex_group_map": {}
-    },
-    material_slots = [
-        material_slot(
-            name = "body_material",
-            base_color = [0.8, 0.6, 0.5, 1.0],
-            roughness = 0.6
-        ),
-        material_slot(
-            name = "head_material",
-            base_color = [0.9, 0.7, 0.6, 1.0],
-            roughness = 0.5
-        ),
-    ],
-    export = skeletal_export_settings(
-        triangulate = True,
-        include_skin_weights = True
-    ),
-    constraints = skeletal_constraints(
-        max_triangles = 8000,
-        max_bones = 64,
-        max_materials = 8
-    ),
-    description = "Stdlib skinned character example"
+    description = "Stdlib skinned character example",
+    outputs = [output("characters/skinned_character.glb", "glb")],
+    recipe = {
+        "kind": "skeletal_mesh.armature_driven_v1",
+        "params": {
+            "skeleton_preset": "humanoid_connected_v1",
+            "bone_meshes": {
+                "spine": {
+                    "profile": "circle(8)",
+                    "profile_radius": 0.15,
+                    "material_index": 0,
+                    "cap_start": True,
+                    "cap_end": False
+                },
+                "chest": {
+                    "profile": "circle(8)",
+                    "profile_radius": 0.18,
+                    "material_index": 0,
+                    "cap_start": False,
+                    "cap_end": True
+                },
+                "head": {
+                    "profile": "circle(8)",
+                    "profile_radius": 0.08,
+                    "material_index": 1,
+                    "cap_start": False,
+                    "cap_end": True,
+                    "attachments": [
+                        {
+                            "primitive": "sphere",
+                            "dimensions": [0.15, 0.18, 0.15],
+                            "offset": [0, 0, 0.6],
+                            "material_index": 1
+                        }
+                    ]
+                },
+                "shoulder_l": {"profile": "circle(6)", "profile_radius": 0.07, "cap_start": True, "cap_end": False, "material_index": 0},
+                "shoulder_r": {"mirror": "shoulder_l"},
+                "upper_arm_l": {
+                    "profile": "circle(6)",
+                    "profile_radius": 0.08,
+                    "material_index": 0,
+                    "rotate": [0, 0, 90]
+                },
+                "upper_arm_r": {
+                    "profile": "circle(6)",
+                    "profile_radius": 0.08,
+                    "material_index": 0,
+                    "rotate": [0, 0, -90]
+                },
+                "upper_leg_l": {
+                    "profile": "circle(6)",
+                    "profile_radius": 0.1,
+                    "material_index": 0,
+                    "rotate": [180, 0, 0]
+                },
+                "upper_leg_r": {
+                    "profile": "circle(6)",
+                    "profile_radius": 0.1,
+                    "material_index": 0,
+                    "rotate": [180, 0, 0]
+                }
+            },
+            "material_slots": [
+                material_slot(
+                    name = "body_material",
+                    base_color = [0.8, 0.6, 0.5, 1.0],
+                    roughness = 0.6
+                ),
+                material_slot(
+                    name = "head_material",
+                    base_color = [0.9, 0.7, 0.6, 1.0],
+                    roughness = 0.5
+                )
+            ]
+        }
+    }
 )

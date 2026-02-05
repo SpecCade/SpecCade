@@ -51,26 +51,29 @@ verse_pattern = tracker_pattern(64, notes = {
 })
 
 # Create the complete music spec
-music_spec(
+spec(
     asset_id = "example-tracker-song-01",
+    asset_type = "music",
     seed = 12345,
-    output_path = "music/example.xm",
-    format = "xm",
-    bpm = 120,
-    speed = 6,
-    channels = 4,
-    instruments = [bass_inst, lead_inst],
-    patterns = {
-        "intro": intro_pattern,
-        "verse": verse_pattern
-    },
-    arrangement = [
-        arrangement_entry("intro", 2),
-        arrangement_entry("verse", 4),
-        arrangement_entry("intro", 1)
-    ],
-    name = "Example Song",
-    title = "SpecCade Example Tracker Song",
     description = "A simple tracker song demonstrating the music stdlib",
-    tags = ["retro", "chiptune", "example"]
+    tags = ["retro", "chiptune", "example"],
+    outputs = [output("music/example.xm", "xm")],
+    recipe = {
+        "kind": "music.tracker_v1",
+        "params": {
+            "bpm": 120,
+            "speed": 6,
+            "channels": 4,
+            "instruments": [bass_inst, lead_inst],
+            "patterns": {
+                "intro": intro_pattern,
+                "verse": verse_pattern
+            },
+            "arrangement": [
+                arrangement_entry("intro", 2),
+                arrangement_entry("verse", 4),
+                arrangement_entry("intro", 1)
+            ]
+        }
+    }
 )

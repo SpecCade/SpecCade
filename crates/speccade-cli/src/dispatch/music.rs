@@ -60,7 +60,7 @@ fn generate_music_from_params(
         TrackerFormat::It => OutputFormat::It,
     };
 
-    // Single-output mode (legacy behavior).
+    // Single-output mode.
     if primary_outputs.len() == 1 {
         let primary_output = primary_outputs[0];
         if primary_output.format != expected {

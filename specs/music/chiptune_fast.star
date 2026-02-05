@@ -47,17 +47,22 @@ verse_pattern = tracker_pattern(32, notes = {
     ]
 })
 
-music_spec(
+spec(
     asset_id = "chiptune_fast",
+    asset_type = "music",
     seed = 3002,
-    output_path = "chiptune_fast.xm",
-    format = "xm",
-    bpm = 160,
-    speed = 4,
-    channels = 4,
-    instruments = [square_lead, square_bass, noise_drum],
-    patterns = {"verse": verse_pattern},
-    arrangement = [arrangement_entry("verse", 4)],
+    license = "CC0-1.0",
     description = "Fast chiptune track - high tempo, square waves",
-    license = "CC0-1.0"
+    outputs = [output("chiptune_fast.xm", "xm")],
+    recipe = {
+        "kind": "music.tracker_v1",
+        "params": {
+            "bpm": 160,
+            "speed": 4,
+            "channels": 4,
+            "instruments": [square_lead, square_bass, noise_drum],
+            "patterns": {"verse": verse_pattern},
+            "arrangement": [arrangement_entry("verse", 4)]
+        }
+    }
 )

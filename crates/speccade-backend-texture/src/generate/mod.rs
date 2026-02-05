@@ -1,6 +1,6 @@
 //! Main entry point for texture generation.
 //!
-//! This module provides the high-level API for procedural graphs and legacy
+//! This module provides the high-level API for procedural graphs and
 //! PBR material map helpers.
 
 mod albedo;

@@ -149,7 +149,7 @@ pub struct Spec {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub engine_targets: Option<Vec<EngineTarget>>,
 
-    /// Migration notes (e.g., from legacy `.spec.py` conversion).
+    /// Migration notes.
     ///
     /// This field is informational and ignored by generators.
     #[serde(skip_serializing_if = "Option::is_none")]

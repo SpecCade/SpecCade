@@ -27,17 +27,22 @@ pad_intro = tracker_pattern(128, notes = {
     ]
 })
 
-music_spec(
+spec(
     asset_id = "ambient_slow",
+    asset_type = "music",
     seed = 3003,
-    output_path = "ambient_slow.it",
-    format = "it",
-    bpm = 70,
-    speed = 8,
-    channels = 8,
-    instruments = [pad_warm, bell_soft],
-    patterns = {"pad_intro": pad_intro},
-    arrangement = [arrangement_entry("pad_intro", 2)],
+    license = "CC0-1.0",
     description = "Slow ambient track - IT format with more channels",
-    license = "CC0-1.0"
+    outputs = [output("ambient_slow.it", "it")],
+    recipe = {
+        "kind": "music.tracker_v1",
+        "params": {
+            "bpm": 70,
+            "speed": 8,
+            "channels": 8,
+            "instruments": [pad_warm, bell_soft],
+            "patterns": {"pad_intro": pad_intro},
+            "arrangement": [arrangement_entry("pad_intro", 2)]
+        }
+    }
 )

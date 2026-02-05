@@ -30,7 +30,7 @@ from .scene import clear_scene, setup_scene
 from .skeleton_presets import SKELETON_PRESETS
 from .skeleton import create_armature, apply_skeleton_overrides, create_custom_skeleton
 from .skeletal_mesh_rework import classify_skeletal_mesh_kind, compute_safe_rename_plan
-from .ik_fk import apply_rig_setup
+from .ik_fk import apply_rig_setup, snap_fk_to_ik, snap_ik_to_fk
 from .animation import (
     create_animation,
     apply_procedural_layers,
@@ -314,8 +314,8 @@ def handle_skeletal_mesh(spec: Dict, out_root: Path, report_path: Path) -> None:
             # Use custom skeleton definition
             armature = create_custom_skeleton(skeleton_spec)
         else:
-            # Default to humanoid basic
-            armature = create_armature("humanoid_basic_v1")
+            # Default to humanoid connected
+            armature = create_armature("humanoid_connected_v1")
 
         combined_mesh = None
 
@@ -487,7 +487,7 @@ def handle_animation(spec: Dict, out_root: Path, report_path: Path) -> None:
         params = recipe.get("params", {})
 
         # Create armature
-        skeleton_preset = params.get("skeleton_preset", "humanoid_basic_v1")
+        skeleton_preset = params.get("skeleton_preset", "humanoid_connected_v1")
         armature = create_armature(skeleton_preset)
 
         # Create animation
@@ -568,7 +568,7 @@ def handle_rigged_animation(spec: Dict, out_root: Path, report_path: Path) -> No
         # Determine armature source: input_armature, character, or skeleton_preset
         input_armature_path = params.get("input_armature")
         character_ref = params.get("character")
-        skeleton_preset = params.get("skeleton_preset", "humanoid_basic_v1")
+        skeleton_preset = params.get("skeleton_preset", "humanoid_connected_v1")
 
         if input_armature_path:
             # Import existing armature from file
@@ -720,6 +720,59 @@ def handle_rigged_animation(spec: Dict, out_root: Path, report_path: Path) -> No
                         armature[prop_name] = pose[finger_curl_key]
                         armature.keyframe_insert(data_path=f'["{prop_name}"]', frame=frame)
 
+        # Apply IK/FK switch keyframes (mode transitions with optional snapping)
+        ikfk_keyframes = params.get("ikfk_keyframes", [])
+        for ikfk_kf in ikfk_keyframes:
+            time_sec = ikfk_kf.get("time", 0)
+            frame_index = int(time_sec * fps)
+            if frame_count > 0:
+                frame_index = max(0, min(frame_index, frame_count - 1))
+            frame = 1 + frame_index
+
+            switch_name = ikfk_kf.get("switch")
+            mode = ikfk_kf.get("mode")  # "ik" or "fk"
+            snap = ikfk_kf.get("snap", True)  # Default to snapping enabled
+
+            if not switch_name:
+                print(f"Warning: ikfk_keyframe missing 'switch' field")
+                continue
+
+            prop_name = f"ikfk_{switch_name}"
+            if prop_name not in armature:
+                print(f"Warning: IK/FK switch property '{prop_name}' not found")
+                continue
+
+            # Get current mode before switching
+            current_value = armature[prop_name]
+            current_mode = "ik" if current_value > 0.5 else "fk"
+
+            # Determine target value
+            if mode == "ik":
+                target_value = 1.0
+            elif mode == "fk":
+                target_value = 0.0
+            else:
+                # If mode not specified, toggle
+                target_value = 0.0 if current_value > 0.5 else 1.0
+
+            # Apply snapping if transitioning modes
+            target_mode = "ik" if target_value > 0.5 else "fk"
+            if snap and current_mode != target_mode:
+                # Set frame for snap calculation
+                bpy.context.scene.frame_set(frame)
+
+                if target_mode == "fk":
+                    # Switching from IK to FK: snap FK bones to match IK pose
+                    snap_fk_to_ik(armature, switch_name)
+                else:
+                    # Switching from FK to IK: snap IK target/pole to match FK pose
+                    snap_ik_to_fk(armature, switch_name)
+
+            # Set the IK/FK blend property and insert keyframe
+            armature[prop_name] = target_value
+            armature.keyframe_insert(data_path=f'["{prop_name}"]', frame=frame)
+            print(f"Set IK/FK switch '{switch_name}' to {target_mode} at frame {frame}")
+
         # Get output path
         outputs = spec.get("outputs", [])
         primary_output = next((o for o in outputs if o.get("kind") == "primary"), None)
@@ -776,7 +829,7 @@ def handle_rigged_animation(spec: Dict, out_root: Path, report_path: Path) -> No
             # Use explicit bake settings
             bake_animation(armature, bake_settings, 1, frame_count)
         elif export_settings.get("bake_transforms", True):
-            # Legacy bake behavior
+            # Default bake behavior
             # NOTE: visual_keying=False to bake the action keyframes directly,
             # not the visual pose (which is rest pose in Blender 5.0 background mode)
             bpy.context.view_layer.objects.active = armature

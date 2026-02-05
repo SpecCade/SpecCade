@@ -1,4 +1,4 @@
-//! Legacy and auxiliary types for tracker effects.
+//! Tracker module options and auxiliary types.
 
 use serde::{Deserialize, Serialize};
 
@@ -73,7 +73,7 @@ pub enum AutomationEntry {
     },
 }
 
-/// Legacy string-based effect pattern (deprecated - use PatternEffect struct instead).
+/// String-based effect pattern for inline pattern definitions.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct PatternEffect {

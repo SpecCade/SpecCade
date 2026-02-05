@@ -538,8 +538,8 @@ mod integration_tests {
     }
 
     #[test]
-    fn test_legacy_generate_loop_points() {
-        // Test backward compatibility with legacy generate_loop_points field
+    fn test_deprecated_generate_loop_points() {
+        // Test backward compatibility with deprecated generate_loop_points field
         let params = AudioV1Params {
             duration_seconds: 0.5,
             sample_rate: 44100,
@@ -562,12 +562,12 @@ mod integration_tests {
             pitch_envelope: None,
             base_note: None,
             loop_config: None,          // No new config
-            generate_loop_points: true, // Legacy flag
+            generate_loop_points: true, // Deprecated flag
             effects: vec![],
             post_fx_lfos: vec![],
         };
 
-        let spec = Spec::builder("legacy-loop-test", AssetType::Audio)
+        let spec = Spec::builder("deprecated-loop-test", AssetType::Audio)
             .license("CC0-1.0")
             .seed(42)
             .output(OutputSpec::primary(OutputFormat::Wav, "test.wav"))
@@ -579,7 +579,7 @@ mod integration_tests {
 
         let result = generate(&spec).expect("generation should succeed");
 
-        // Legacy flag should still generate loop points
+        // Deprecated flag should still generate loop points
         assert!(result.loop_point.is_some());
         assert!(result.loop_end.is_some());
     }

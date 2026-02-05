@@ -13,5 +13,3 @@ pub mod compiler;
 
 pub mod commands;
 pub mod dispatch;
-pub mod parity_data;
-pub mod parity_matrix;

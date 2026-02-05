@@ -9,6 +9,7 @@ from __future__ import annotations
 import copy
 import math
 import re
+import sys
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -16,6 +17,116 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 _PROFILE_RE = re.compile(r"^(circle|hexagon)\((\d+)\)$")
+
+
+# ============================================================================
+# Mesh Deformation Helpers
+# ============================================================================
+
+
+def _deform_taper_bulge_twist(
+    obj,
+    *,
+    taper: float = 1.0,
+    bulge_points: list | None = None,
+    twist_deg: float = 0.0,
+) -> None:
+    """Apply taper, bulge, and twist deformations to a mesh along its local Z axis.
+
+    This function modifies vertex positions in-place to achieve:
+    - Taper: Linear scale from 1.0 at z_min to `taper` at z_max
+    - Bulge: Additional scale adjustments at specific t values (0.0 to 1.0 along length)
+    - Twist: Rotation around Z axis that increases linearly with height
+
+    Args:
+        obj: Blender mesh object to deform.
+        taper: Scale factor at the top (z_max). 1.0 means no taper; 0.5 means half-width at top.
+        bulge_points: List of (t, scale) tuples for intermediate scale adjustments.
+                      t is 0.0 at bottom, 1.0 at top. Scale multiplies the interpolated taper.
+        twist_deg: Total twist in degrees from bottom to top.
+    """
+    if bulge_points is None:
+        bulge_points = []
+
+    if getattr(obj, 'type', None) != 'MESH':
+        return
+
+    mesh = obj.data
+    verts = mesh.vertices
+
+    if not verts:
+        return
+
+    # Get Z range
+    z_coords = [v.co.z for v in verts]
+    z_min = min(z_coords)
+    z_max = max(z_coords)
+    z_range = z_max - z_min
+
+    if z_range < 1e-9:
+        return  # Flat mesh, nothing to deform
+
+    # Pre-compute bulge lookup: sort by t and prepare for interpolation
+    # bulge_points is a list of (t, scale) tuples
+    bulge_sorted = sorted(bulge_points, key=lambda p: p[0]) if bulge_points else []
+
+    def get_bulge_scale(t: float) -> float:
+        """Get bulge scale factor at parameter t (0.0 to 1.0)."""
+        if not bulge_sorted:
+            return 1.0
+
+        # Find surrounding bulge points
+        if t <= bulge_sorted[0][0]:
+            return bulge_sorted[0][1]
+        if t >= bulge_sorted[-1][0]:
+            return bulge_sorted[-1][1]
+
+        # Linear interpolation between surrounding points
+        for i in range(len(bulge_sorted) - 1):
+            t0, s0 = bulge_sorted[i]
+            t1, s1 = bulge_sorted[i + 1]
+            if t0 <= t <= t1:
+                if t1 - t0 < 1e-9:
+                    return s0
+                local_t = (t - t0) / (t1 - t0)
+                return s0 + local_t * (s1 - s0)
+
+        return 1.0
+
+    twist_rad = math.radians(twist_deg)
+
+    # Deform each vertex
+    for v in verts:
+        # Parameter t: 0.0 at bottom, 1.0 at top
+        t = (v.co.z - z_min) / z_range
+
+        # Taper: linear interpolation from 1.0 to taper
+        taper_scale = 1.0 + t * (taper - 1.0)
+
+        # Bulge: additional scale factor
+        bulge_scale = get_bulge_scale(t)
+
+        # Combined scale
+        final_scale = taper_scale * bulge_scale
+
+        # Apply scale to X and Y (keep Z unchanged)
+        v.co.x *= final_scale
+        v.co.y *= final_scale
+
+        # Apply twist rotation around Z axis
+        if twist_rad != 0.0:
+            angle = t * twist_rad
+            cos_a = math.cos(angle)
+            sin_a = math.sin(angle)
+            x, y = v.co.x, v.co.y
+            v.co.x = x * cos_a - y * sin_a
+            v.co.y = x * sin_a + y * cos_a
+
+    # Mark mesh as updated
+    try:
+        mesh.update()
+    except Exception:
+        pass
 
 
 # ============================================================================
@@ -208,11 +319,17 @@ def _perform_bridge_operations(
         bmesh_module: Blender bmesh module
         mesh_obj: The combined mesh object
         bridge_pairs: List of (parent_bone, child_bone) tuples to bridge
+        armature: The armature object (for weight blending)
     """
+    # Debug to file since stderr is captured
+    debug_file = open("/tmp/speccade_bridge_debug.log", "w")
+    debug_file.write(f"_perform_bridge_operations called with {len(bridge_pairs)} pairs: {bridge_pairs}\n")
     if not bridge_pairs:
+        debug_file.close()
         return
 
     bpy = bpy_module
+    bmesh = bmesh_module
 
     # Enter edit mode
     bpy.context.view_layer.objects.active = mesh_obj
@@ -229,40 +346,133 @@ def _perform_bridge_operations(
             if head_vg not in mesh_obj.vertex_groups:
                 continue
 
-            # Deselect all
-            bpy.ops.mesh.select_all(action='DESELECT')
+            debug_file.write(f"Found vertex groups tail_vg={tail_vg} (exists={tail_vg in mesh_obj.vertex_groups}), head_vg={head_vg} (exists={head_vg in mesh_obj.vertex_groups})\n")
 
-            # Select vertices in parent's tail group
-            bpy.ops.object.mode_set(mode='OBJECT')
             tail_vg_idx = mesh_obj.vertex_groups[tail_vg].index
-            for v in mesh_obj.data.vertices:
-                for g in v.groups:
-                    if g.group == tail_vg_idx:
-                        v.select = True
-                        break
-
-            # Also select vertices in child's head group
             head_vg_idx = mesh_obj.vertex_groups[head_vg].index
-            for v in mesh_obj.data.vertices:
-                for g in v.groups:
-                    if g.group == head_vg_idx:
-                        v.select = True
-                        break
 
-            bpy.ops.object.mode_set(mode='EDIT')
+            # Use bmesh to properly select edge loops and perform bridging
+            bm = bmesh.from_edit_mesh(mesh_obj.data)
+            bm.verts.ensure_lookup_table()
+            bm.edges.ensure_lookup_table()
 
-            # Bridge the selected edge loops
+            # Access the deform layer to check vertex group membership
+            deform_layer = bm.verts.layers.deform.active
+            if deform_layer is None:
+                debug_file.write(f"WARNING: No deform layer for {parent_bone}->{child_bone}\n")
+
+            # Write additional debug info
+            debug_file.write(f"=== Bridge {parent_bone}->{child_bone} ===\n")
+            debug_file.write(f"  deform_layer: {deform_layer}\n")
+            debug_file.write(f"  tail_vg: {tail_vg} (idx={tail_vg_idx})\n")
+            debug_file.write(f"  head_vg: {head_vg} (idx={head_vg_idx})\n")
+            debug_file.write(f"  total verts in bmesh: {len(bm.verts)}\n")
+
+            if deform_layer is None:
+                debug_file.write(f"  WARNING: deform_layer is None!\n")
+
+            def is_in_vgroup(vert, vg_idx: int) -> bool:
+                """Check if a bmesh vertex belongs to a vertex group."""
+                if deform_layer is None:
+                    return False
+                dvert = vert[deform_layer]
+                return vg_idx in dvert
+
+            # Get vertices from each vertex group
+            tail_verts = set(v for v in bm.verts if is_in_vgroup(v, tail_vg_idx))
+            head_verts = set(v for v in bm.verts if is_in_vgroup(v, head_vg_idx))
+
+            debug_file.write(f"{parent_bone}->{child_bone}: tail_verts={len(tail_verts)}, head_verts={len(head_verts)}\n")
+            debug_file.write(f"bridge {parent_bone}->{child_bone}: tail_verts={len(tail_verts)}, head_verts={len(head_verts)}\n")
+            debug_file.write(f"  tail_verts: {len(tail_verts)}\n")
+            debug_file.write(f"  head_verts: {len(head_verts)}\n")
+
+            if not tail_verts or not head_verts:
+                # Note: Don't free bm from from_edit_mesh - it's tied to the mesh
+                continue
+
+            # Find boundary edges for each vertex group
+            # A boundary edge is one where BOTH vertices are in the group
+            # and the edge is on the boundary (has exactly one face, or
+            # separates faces inside/outside the group)
+            def get_boundary_edges(verts_set):
+                """Get edges that form the boundary loop of a vertex set."""
+                boundary_edges = []
+                for edge in bm.edges:
+                    v0_in = edge.verts[0] in verts_set
+                    v1_in = edge.verts[1] in verts_set
+                    if v0_in and v1_in:
+                        # Both vertices in the set - check if it's a boundary edge
+                        # An edge is a boundary if it has fewer than 2 faces,
+                        # or if adjacent faces have different "in-group" status
+                        if len(edge.link_faces) < 2:
+                            boundary_edges.append(edge)
+                        else:
+                            # Check if this edge separates in-group from out-of-group faces
+                            # For our purposes (bridging open loops), we want edges where
+                            # all vertices of at least one adjacent face are in the group
+                            face_in_counts = []
+                            for face in edge.link_faces:
+                                all_in = all(fv in verts_set for fv in face.verts)
+                                face_in_counts.append(all_in)
+                            # If faces have different in-group status, it's a boundary
+                            if len(set(face_in_counts)) > 1:
+                                boundary_edges.append(edge)
+                return boundary_edges
+
+            tail_edges = get_boundary_edges(tail_verts)
+            head_edges = get_boundary_edges(head_verts)
+
+            debug_file.write(f"edges: tail={len(tail_edges)}, head={len(head_edges)}\n")
+            debug_file.write(f"bridge edges: tail_edges={len(tail_edges)}, head_edges={len(head_edges)}\n")
+            debug_file.write(f"  tail_edges: {len(tail_edges)}\n")
+            debug_file.write(f"  head_edges: {len(head_edges)}\n")
+
+            if not tail_edges or not head_edges:
+                # Note: Don't free bm from from_edit_mesh - it's tied to the mesh
+                continue
+
+            # Deselect all geometry
+            for v in bm.verts:
+                v.select = False
+            for e in bm.edges:
+                e.select = False
+            for f in bm.faces:
+                f.select = False
+
+            # Select the boundary edges from both groups
+            for e in tail_edges:
+                e.select = True
+            for e in head_edges:
+                e.select = True
+
+            # Also select the vertices of these edges (required for bridge_loops)
+            for e in tail_edges + head_edges:
+                for v in e.verts:
+                    v.select = True
+
+            bmesh.update_edit_mesh(mesh_obj.data)
+
+            # Set selection mode to edges before bridging
+            bpy.context.tool_settings.mesh_select_mode = (False, True, False)
+
+            # Bridge the selected edge loops using bmesh operator for reliability
             try:
-                bpy.ops.mesh.bridge_edge_loops()
-            except RuntimeError as e:
-                # Bridge can fail if selection isn't valid edge loops
-                import sys
-                print(f"Warning: bridge_edge_loops failed for {parent_bone}->{child_bone}: {e}", file=sys.stderr)
+                bmesh.ops.bridge_loops(bm, edges=tail_edges + head_edges)
+                bmesh.update_edit_mesh(mesh_obj.data)
+            except Exception as e:
+                # Fall back to bpy operator if bmesh.ops.bridge_loops fails
+                debug_file.write(f"Warning: bmesh bridge_loops failed for {parent_bone}->{child_bone}: {e}, trying bpy operator\n")
+                try:
+                    bpy.ops.mesh.bridge_edge_loops()
+                except RuntimeError as e2:
+                    debug_file.write(f"Warning: bridge_edge_loops also failed for {parent_bone}->{child_bone}: {e2}\n")
 
         # Clean up: merge very close vertices at bridge points
         bpy.ops.mesh.select_all(action='SELECT')
         bpy.ops.mesh.remove_doubles(threshold=0.0001)
 
+        debug_file.close()
     finally:
         bpy.ops.object.mode_set(mode='OBJECT')
 
@@ -578,10 +788,12 @@ def _build_mesh_with_steps(
     obj.scale = (rx, ry, 1.0)
     apply_scale_only(obj)
 
-    # Align circle normal (local Z) with bone axis
+    # Set rotation to align circle normal (local Z) with bone axis.
+    # NOTE: We do NOT apply the rotation yet - we keep the object rotated so that
+    # local Z remains aligned with the bone axis during extrusion. The rotation
+    # is applied (baked into vertices) after all extrusion and cap operations.
     obj.rotation_mode = 'QUATERNION'
     obj.rotation_quaternion = base_q
-    apply_rotation_only(obj)
 
     obj.name = f"Segment_{bone_name}"
 
@@ -641,8 +853,13 @@ def _build_mesh_with_steps(
             bmesh.update_edit_mesh(mesh)
 
         # Extrude along local Z (bone axis)
+        # IMPORTANT: Must use orient_type='LOCAL' because the object's rotation is SET
+        # but not yet APPLIED. The extrusion needs to follow the object's local Z axis.
         bpy.ops.mesh.extrude_region_move(
-            TRANSFORM_OT_translate={'value': (0, 0, extrude_dist)}
+            TRANSFORM_OT_translate={
+                'value': (0, 0, extrude_dist),
+                'orient_type': 'LOCAL'
+            }
         )
 
         # Apply scale combined with bulge
@@ -725,6 +942,12 @@ def _build_mesh_with_steps(
             except Exception:
                 pass
 
+    # Now apply the rotation to bake it into vertices.
+    # This must happen AFTER all extrusion and cap operations (which rely on local Z
+    # being aligned with the bone axis), but BEFORE bridge vertex group creation
+    # (which projects vertices onto the world-space bone axis).
+    apply_rotation_only(obj)
+
     # Track edge loops for bridging via vertex groups
     if connect_start == "bridge" or connect_end == "bridge":
         mesh = obj.data
@@ -734,20 +957,57 @@ def _build_mesh_with_steps(
             bm.verts.ensure_lookup_table()
 
             if bm.verts:
-                z_coords = [v.co.z for v in bm.verts]
-                z_min = min(z_coords)
-                z_max = max(z_coords)
-                z_range = z_max - z_min
-                eps = max(1e-6, z_range * 0.01)
+                # After rotation is applied, the mesh is in world space but we need to find
+                # vertices at head/tail of the bone. Project vertices onto the bone axis.
+                from mathutils import Vector
 
-                head_verts = []
-                tail_verts = []
+                # Get bone axis direction (unit vector)
+                bone_axis = quat_rotate_vec(base_q, Vector((0, 0, 1)))
 
+                # Project all vertices onto the bone axis to find min/max positions
+                projections = []
                 for v in bm.verts:
-                    if abs(v.co.z - z_min) <= eps:
-                        head_verts.append(v.index)
-                    elif abs(v.co.z - z_max) <= eps:
-                        tail_verts.append(v.index)
+                    # Project vertex position onto bone axis
+                    v_world = Vector(v.co)  # Already in world-ish space after apply_rotation
+                    proj = v_world.dot(bone_axis)
+                    projections.append((proj, v))
+
+                if projections:
+                    proj_min = min(p[0] for p in projections)
+                    proj_max = max(p[0] for p in projections)
+                    proj_range = proj_max - proj_min
+                    eps = max(1e-6, proj_range * 0.01)
+
+                    head_verts = []
+                    tail_verts = []
+
+                    for proj, v in projections:
+                        if abs(proj - proj_min) <= eps:
+                            head_verts.append(v.index)
+                        elif abs(proj - proj_max) <= eps:
+                            tail_verts.append(v.index)
+
+                    # Debug output
+                    import tempfile
+                    import os
+                    debug_file = os.path.join(tempfile.gettempdir(), "speccade_bridge_debug.txt")
+                    with open(debug_file, "a") as df:
+                        df.write(f"\n=== _build_mesh_with_steps for {bone_name} ===\n")
+                        df.write(f"  bone_axis: {bone_axis}\n")
+                        df.write(f"  bone_length: {bone_length}\n")
+                        df.write(f"  total verts: {len(list(bm.verts))}\n")
+                        df.write(f"  proj_min={proj_min:.4f}, proj_max={proj_max:.4f}, range={proj_range:.4f}\n")
+                        df.write(f"  eps={eps:.6f}\n")
+                        df.write(f"  connect_start={connect_start}, connect_end={connect_end}\n")
+                        df.write(f"  head_verts found: {len(head_verts)}\n")
+                        df.write(f"  tail_verts found: {len(tail_verts)}\n")
+                        # Sample vertex coordinates
+                        sample_verts = list(bm.verts)[:5]
+                        for sv in sample_verts:
+                            df.write(f"    sample vert {sv.index}: co={sv.co}, proj={sv.co.dot(bone_axis):.4f}\n")
+                else:
+                    head_verts = []
+                    tail_verts = []
 
                 bm.free()
 
@@ -1289,9 +1549,8 @@ def build_armature_driven_character_mesh(*, armature, params: dict, out_root) ->
 
         extrusion_steps = mesh_spec.get('extrusion_steps', [])
         if not extrusion_steps:
-            raise ValueError(
-                f"bone_meshes['{bone_name}'].extrusion_steps is required"
-            )
+            # Default: single extrusion spanning full bone length with no scale change
+            extrusion_steps = [{"extrude": 1.0, "scale": 1.0}]
 
         connect_start = mesh_spec.get("connect_start")
         connect_end = mesh_spec.get("connect_end")
@@ -1737,6 +1996,22 @@ def build_armature_driven_character_mesh(*, armature, params: dict, out_root) ->
             f"object.join: expected a MESH active object, got {getattr(combined, 'type', None)!r}"
         )
     combined.name = 'Character'
+
+    # Debug: print all vertex groups after join
+    import tempfile
+    import os
+    debug_file = os.path.join(tempfile.gettempdir(), "speccade_bridge_debug.txt")
+    with open(debug_file, "a") as df:
+        df.write("\n=== After join: vertex groups ===\n")
+        for vg in combined.vertex_groups:
+            # Count vertices in this group
+            count = 0
+            for v in combined.data.vertices:
+                for g in v.groups:
+                    if g.group == vg.index:
+                        count += 1
+                        break
+            df.write(f"  {vg.name} (idx={vg.index}): {count} verts\n")
 
     # Determine bridge pairs and perform bridging
     bone_hierarchy = _build_bone_hierarchy(armature)

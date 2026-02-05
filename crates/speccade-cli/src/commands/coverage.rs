@@ -213,7 +213,7 @@ pub struct JsonSpecUsages {
     pub enum_usages: HashMap<String, HashMap<String, Vec<UsageLocation>>>,
 }
 
-/// Scan specs/**/*.star for recipe features (legacy JSON support removed)
+/// Scan specs/**/*.star for recipe features (JSON support removed)
 ///
 /// # Arguments
 /// * `base_path` - Optional base path to the project root. If None, uses current directory.
@@ -223,7 +223,7 @@ pub fn scan_json_spec_usages_from(_base_path: Option<&Path>) -> Result<JsonSpecU
     Ok(JsonSpecUsages::default())
 }
 
-/// Scan for legacy JSON spec usages (no longer used - all specs are Starlark)
+/// Scan for JSON spec usages (no longer used - all specs are Starlark)
 pub fn scan_json_spec_usages() -> Result<JsonSpecUsages> {
     scan_json_spec_usages_from(None)
 }
@@ -603,7 +603,7 @@ mod tests {
         // JSON specs are no longer used - all specs are now Starlark
         let usages = scan_json_spec_usages_from(Some(&project_root())).unwrap();
 
-        // Returns empty (legacy function kept for compatibility)
+        // Returns empty (function kept for compatibility)
         assert!(usages.function_usages.is_empty());
         assert!(usages.recipe_usages.is_empty());
         assert!(usages.enum_usages.is_empty());

@@ -84,27 +84,32 @@ outro_fade = tracker_pattern(64, notes = {
     ]
 })
 
-music_spec(
+spec(
     asset_id = "advanced_features",
+    asset_type = "music",
     seed = 3020,
-    output_path = "advanced_features.it",
-    format = "it",
-    bpm = 120,
-    speed = 6,
-    channels = 8,
-    instruments = [lead_synth, bass_pulse, percussion],
-    patterns = {
-        "intro_fade": intro_fade,
-        "main_section": main_section,
-        "tempo_section": tempo_section,
-        "outro_fade": outro_fade
-    },
-    arrangement = [
-        arrangement_entry("intro_fade", 1),
-        arrangement_entry("main_section", 2),
-        arrangement_entry("tempo_section", 1),
-        arrangement_entry("outro_fade", 1)
-    ],
+    license = "CC0-1.0",
     description = "Advanced features demo - showcases IT format with multiple patterns",
-    license = "CC0-1.0"
+    outputs = [output("advanced_features.it", "it")],
+    recipe = {
+        "kind": "music.tracker_v1",
+        "params": {
+            "bpm": 120,
+            "speed": 6,
+            "channels": 8,
+            "instruments": [lead_synth, bass_pulse, percussion],
+            "patterns": {
+                "intro_fade": intro_fade,
+                "main_section": main_section,
+                "tempo_section": tempo_section,
+                "outro_fade": outro_fade
+            },
+            "arrangement": [
+                arrangement_entry("intro_fade", 1),
+                arrangement_entry("main_section", 2),
+                arrangement_entry("tempo_section", 1),
+                arrangement_entry("outro_fade", 1)
+            ]
+        }
+    }
 )

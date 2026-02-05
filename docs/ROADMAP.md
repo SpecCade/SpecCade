@@ -173,13 +173,3 @@ Resolved questions:
 
 ---
 
-## Migration (Legacy `.studio` / spec.py)
-
-Reference: `docs/MIGRATION.md`
-
-- [x] `MIGRATE-001` ~~Implement a real params mapping layer in the migrator (legacy keys -> canonical recipe schemas).~~ Done: 2026-01-24
-  - Implemented mapping functions for SOUND, INSTRUMENT, SONG, MESH categories. Modular structure in conversion/{audio,music,mesh,texture}.rs.
-- [x] `MIGRATE-002` ~~Add migration fixtures + tests that validate migrated specs against `speccade validate`.~~ Done: 2026-01-24
-  - 28 e2e tests covering SOUND, INSTRUMENT, CHARACTER migration + seed determinism + CLI validation.
-- [x] `MIGRATE-003` ~~Map legacy `ANIMATION` dict keys to canonical `skeletal_animation` params (incl. rig_setup/poses/phases/IK).~~ Done: 2026-01-25
-  - Animation conversion module with pose/phase/bone/IK mapping, actionable diagnostics for unknown keys, 5 test fixtures (walk/run/idle/attack/jump), parity matrix updated.

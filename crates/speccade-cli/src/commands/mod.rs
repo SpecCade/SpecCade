@@ -16,7 +16,6 @@ pub mod generate_all;
 pub mod inspect;
 pub mod json_output; // Directory module: analysis, convert, manifest, records
 pub mod lint;
-pub mod migrate;
 pub mod preview;
 pub mod preview_grid;
 #[cfg(feature = "serve")]

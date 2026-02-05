@@ -8,7 +8,6 @@ This guide covers development setup, repo structure, and how to add/modify backe
 
 - **Rust:** recent stable toolchain (must support the workspace `Cargo.lock` format)
 - **Blender:** 3.6+ (only required for Blender-backed backends)
-- **Python:** 3.x (optional; only required for `speccade migrate --allow-exec-specs`)
 
 ### Build
 

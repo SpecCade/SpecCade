@@ -51,17 +51,22 @@ beat_pattern = tracker_pattern(64, notes = {
     ]
 })
 
-music_spec(
+spec(
     asset_id = "drum_pattern",
+    asset_type = "music",
     seed = 3004,
-    output_path = "drum_pattern.xm",
-    format = "xm",
-    bpm = 140,
-    speed = 6,
-    channels = 6,
-    instruments = [kick_inst, snare_inst, hihat_inst],
-    patterns = {"beat_basic": beat_pattern},
-    arrangement = [arrangement_entry("beat_basic", 4)],
+    license = "CC0-1.0",
     description = "Drum-focused track - showcases percussion synthesis",
-    license = "CC0-1.0"
+    outputs = [output("drum_pattern.xm", "xm")],
+    recipe = {
+        "kind": "music.tracker_v1",
+        "params": {
+            "bpm": 140,
+            "speed": 6,
+            "channels": 6,
+            "instruments": [kick_inst, snare_inst, hihat_inst],
+            "patterns": {"beat_basic": beat_pattern},
+            "arrangement": [arrangement_entry("beat_basic", 4)]
+        }
+    }
 )

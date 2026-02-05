@@ -1,7 +1,7 @@
 //! Core logic for baking tracker instruments into samples.
 //!
 //! This module handles the conversion of various instrument sources (WAV files, audio_v1 specs,
-//! legacy synthesis) into tracker-compatible PCM samples with appropriate loop points.
+//! deprecated synthesis) into tracker-compatible PCM samples with appropriate loop points.
 
 use std::path::Path;
 
@@ -21,7 +21,7 @@ use crate::note::{midi_to_freq, DEFAULT_IT_SYNTH_MIDI_NOTE, DEFAULT_SYNTH_MIDI_N
 use crate::synthesis::{derive_instrument_seed, load_wav_sample};
 
 use super::helpers::{
-    downmix_pcm16_stereo_to_mono, enforce_max_sample_len, legacy_synthesis_to_audio_v1_params,
+    deprecated_synthesis_to_audio_v1_params, downmix_pcm16_stereo_to_mono, enforce_max_sample_len,
     load_audio_v1_params_from_ref, neutralize_audio_layer_envelopes, parse_base_note_midi,
 };
 
@@ -31,7 +31,7 @@ use super::helpers::{
 /// - `wav`: load PCM from disk
 /// - `ref`: load an external `audio_v1` spec and render via `speccade-backend-audio`
 /// - `synthesis_audio_v1`: inline `audio_v1` params, rendered via `speccade-backend-audio`
-/// - `synthesis` (legacy): mapped to `audio_v1` oscillator/noise then rendered
+/// - `synthesis` (deprecated): mapped to `audio_v1` oscillator/noise then rendered
 pub(crate) fn bake_instrument_sample(
     instr: &TrackerInstrument,
     base_seed: u32,
@@ -121,8 +121,8 @@ pub(crate) fn bake_instrument_sample(
             load_audio_v1_params_from_ref(ref_path, spec_dir)?
         } else if let Some(ref params) = instr.synthesis_audio_v1 {
             params.clone()
-        } else if let Some(ref legacy) = instr.synthesis {
-            legacy_synthesis_to_audio_v1_params(instr, legacy, format)?
+        } else if let Some(ref synth) = instr.synthesis {
+            deprecated_synthesis_to_audio_v1_params(instr, synth, format)?
         } else {
             return Err(GenerateError::InstrumentError(format!(
                 "Instrument '{}' must set exactly one of: ref, wav, synthesis_audio_v1, synthesis",

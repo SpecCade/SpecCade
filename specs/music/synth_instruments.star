@@ -55,17 +55,22 @@ test_pattern = tracker_pattern(64, notes = {
     ]
 })
 
-music_spec(
+spec(
     asset_id = "synth-instruments",
+    asset_type = "music",
     seed = 42,
-    output_path = "synth_instruments.xm",
-    format = "xm",
-    bpm = 120,
-    speed = 6,
-    channels = 6,
-    instruments = [pulse_synth, square_synth, triangle_synth, sawtooth_synth, sine_synth, noise_synth],
-    patterns = {"test": test_pattern},
-    arrangement = [arrangement_entry("test", 1)],
+    license = "CC0-1.0",
     description = "Music spec covering all synth_type enum values for coverage tracking",
-    license = "CC0-1.0"
+    outputs = [output("synth_instruments.xm", "xm")],
+    recipe = {
+        "kind": "music.tracker_v1",
+        "params": {
+            "bpm": 120,
+            "speed": 6,
+            "channels": 6,
+            "instruments": [pulse_synth, square_synth, triangle_synth, sawtooth_synth, sine_synth, noise_synth],
+            "patterns": {"test": test_pattern},
+            "arrangement": [arrangement_entry("test", 1)]
+        }
+    }
 )

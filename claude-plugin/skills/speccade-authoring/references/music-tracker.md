@@ -108,7 +108,7 @@ Each instrument must use **exactly one** source (mutually exclusive):
 | **External ref** (recommended) | `ref` | Reusable instruments across songs |
 | **Inline audio_v1** | `synthesis_audio_v1` | Complex one-off instruments |
 | **WAV sample** | `wav` | Pre-recorded samples |
-| **Legacy synthesis** | `synthesis` | Quick prototyping only |
+| **Deprecated synthesis** | `synthesis` | Quick prototyping only |
 
 ### External Reference (Recommended)
 
@@ -146,7 +146,7 @@ The referenced file must be an `audio_v1` spec. Tracker-level `envelope` and `ba
 }
 ```
 
-### Legacy Synthesis (Prototyping Only)
+### Deprecated Synthesis (Prototyping Only)
 
 ```json
 {
@@ -156,7 +156,7 @@ The referenced file must be an `audio_v1` spec. Tracker-level `envelope` and `ba
 }
 ```
 
-Legacy types: `sine`, `saw`, `square`, `triangle`, `pulse`, `noise`
+Deprecated types: `sine`, `saw`, `square`, `triangle`, `pulse`, `noise`
 
 ## Effects
 

@@ -5,14 +5,14 @@
 
 mod conversion;
 pub mod it_codes;
-mod legacy;
+mod tracker_options;
 #[cfg(test)]
 mod tests;
 mod validation;
 pub mod xm_codes;
 
 pub use conversion::parse_effect_name;
-pub use legacy::{AutomationEntry, ItOptions, PatternEffect};
+pub use tracker_options::{AutomationEntry, ItOptions, PatternEffect};
 pub use validation::EffectValidationError;
 
 use serde::{Deserialize, Serialize};

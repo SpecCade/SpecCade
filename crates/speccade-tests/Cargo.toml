@@ -12,10 +12,6 @@ publish = false
 path = "src/lib.rs"
 
 [[test]]
-name = "e2e_migration"
-path = "tests/e2e_migration.rs"
-
-[[test]]
 name = "e2e_generation"
 path = "tests/e2e_generation.rs"
 

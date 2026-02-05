@@ -75,7 +75,7 @@ pub struct AudioLayer {
 /// - Loop points snap to zero crossings to minimize clicks
 /// - Crossfade is applied at loop boundaries for seamless looping
 ///
-/// Legacy `generate_loop_points: true` is supported and creates a default LoopConfig.
+/// The deprecated `generate_loop_points: true` is still supported and creates a default LoopConfig.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct AudioV1Params {
@@ -97,7 +97,7 @@ pub struct AudioV1Params {
     /// When None, no loop points are generated.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub loop_config: Option<LoopConfig>,
-    /// Legacy: Whether to generate loop points (deprecated, use loop_config instead).
+    /// Deprecated: Whether to generate loop points (use loop_config instead).
     /// If true and loop_config is None, creates a default LoopConfig.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub generate_loop_points: bool,
@@ -317,7 +317,7 @@ mod tests {
         let json = serde_json::to_string(&params).unwrap();
         assert!(json.contains("pitch_envelope"));
         assert!(json.contains("generate_loop_points"));
-        // Legacy generate_loop_points should trigger effective_loop_config
+        // Deprecated generate_loop_points should trigger effective_loop_config
         assert!(params.effective_loop_config().is_some());
         let parsed: AudioV1Params = serde_json::from_str(&json).unwrap();
         assert_eq!(parsed, params);
@@ -502,7 +502,7 @@ mod tests {
 
     #[test]
     fn test_effective_loop_config() {
-        // No loop config and no legacy flag
+        // No loop config and no deprecated flag
         let params = AudioV1Params {
             base_note: None,
             duration_seconds: 1.0,
@@ -517,7 +517,7 @@ mod tests {
         };
         assert!(params.effective_loop_config().is_none());
 
-        // Legacy flag set
+        // Deprecated flag set
         let params = AudioV1Params {
             generate_loop_points: true,
             loop_config: None,

@@ -48,7 +48,7 @@ Each instrument must use **exactly one** source (mutually exclusive):
 | **External ref** (recommended) | `ref` | Reusable instruments across songs |
 | **Inline audio_v1** | `synthesis_audio_v1` | Complex one-off instruments |
 | **WAV sample** | `wav` | Pre-recorded samples |
-| **Legacy synthesis** | `synthesis` | Quick prototyping only |
+| **Deprecated synthesis** | `synthesis` | Quick prototyping only |
 
 #### External Instrument Reference (Recommended)
 
@@ -103,7 +103,7 @@ Embed full `audio_v1` params directly (same power as audio specs, but not reusab
 }
 ```
 
-#### Legacy Synthesis (Quick Prototyping)
+#### Deprecated Synthesis (Quick Prototyping)
 
 Simple built-in waveforms for quick tests (limited options):
 
@@ -116,7 +116,7 @@ Simple built-in waveforms for quick tests (limited options):
 }
 ```
 
-Legacy types: `sine`, `square`, `sawtooth`, `triangle`, `noise`
+Deprecated types: `sine`, `square`, `sawtooth`, `triangle`, `noise`
 
 ### Defs (Reusable Fragments)
 
@@ -665,4 +665,4 @@ See `docs/examples/music/compose_eurobeat_4bars.json` for a complete example wit
 6. **Review expanded output** - Always run `speccade expand` before generating
 7. **Use named channels/instruments** - Avoid index errors with RFC-0004 helpers
 8. **Test incrementally** - Build patterns layer by layer, validating each step
-9. **Avoid legacy `synthesis`** - Only use for quick prototyping; prefer `ref` or `synthesis_audio_v1`
+9. **Avoid deprecated `synthesis`** - Only use for quick prototyping; prefer `ref` or `synthesis_audio_v1`

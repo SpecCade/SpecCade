@@ -25,17 +25,22 @@ intro_pattern = tracker_pattern(64, notes = {
     ]
 })
 
-music_spec(
+spec(
     asset_id = "simple_loop",
+    asset_type = "music",
     seed = 3001,
-    output_path = "simple_loop.xm",
-    format = "xm",
-    bpm = 120,
-    speed = 6,
-    channels = 4,
-    instruments = [lead_inst, bass_inst],
-    patterns = {"intro": intro_pattern},
-    arrangement = [arrangement_entry("intro", 4)],
+    license = "CC0-1.0",
     description = "Simple 4-channel loop - basic XM module",
-    license = "CC0-1.0"
+    outputs = [output("simple_loop.xm", "xm")],
+    recipe = {
+        "kind": "music.tracker_v1",
+        "params": {
+            "bpm": 120,
+            "speed": 6,
+            "channels": 4,
+            "instruments": [lead_inst, bass_inst],
+            "patterns": {"intro": intro_pattern},
+            "arrangement": [arrangement_entry("intro", 4)]
+        }
+    }
 )

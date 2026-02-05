@@ -89,20 +89,21 @@ pattern_a = tracker_pattern(32, notes = {
     ]
 })
 
-music_spec(
+spec(
     asset_id = "stdlib-music-functions-coverage-01",
+    asset_type = "music",
     seed = 42,
-    output_path = "music/coverage_track.xm",
-    format = "xm",
-    bpm = 120,
-    speed = 6,
-    channels = 2,
-    instruments = [bass_inst],
-    patterns = {
-        "loop": pattern_a
-    },
-    arrangement = [
-        arrangement_entry("loop", 4)
-    ],
-    name = "Coverage Track"
+    description = "Coverage Track",
+    outputs = [output("music/coverage_track.xm", "xm")],
+    recipe = {
+        "kind": "music.tracker_v1",
+        "params": {
+            "bpm": 120,
+            "speed": 6,
+            "channels": 2,
+            "instruments": [bass_inst],
+            "patterns": {"loop": pattern_a},
+            "arrangement": [arrangement_entry("loop", 4)]
+        }
+    }
 )

@@ -1,4 +1,4 @@
-# Humanoid female (golden fixture) - armature-driven using humanoid_basic_v1 preset
+# Humanoid female (golden fixture) - armature-driven using humanoid_connected_v1 preset
 
 spec(
     asset_id = "humanoid_female",
@@ -11,7 +11,7 @@ spec(
     recipe = {
         "kind": "skeletal_mesh.armature_driven_v1",
         "params": {
-            "skeleton_preset": "humanoid_basic_v1",
+            "skeleton_preset": "humanoid_connected_v1",
             "material_slots": [
                 {"name": "skin", "base_color": [0.86, 0.73, 0.64, 1.0], "roughness": 0.55},
                 {"name": "cloth", "base_color": [0.20, 0.18, 0.16, 1.0], "roughness": 0.85},
@@ -90,10 +90,22 @@ spec(
                         },
                     ],
                 },
+                # Shoulder bones connect chest to upper arms
+                "shoulder_l": {
+                    "profile": "circle(10)",
+                    "profile_radius": 0.08,
+                    "extrusion_steps": [
+                        {"extrude": 0.4, "scale": 1.08},
+                        {"extrude": 0.6, "scale": 0.92},
+                    ],
+                    "material_index": 0,
+                    "cap_start": True,
+                    "cap_end": False,
+                },
+                "shoulder_r": {"mirror": "shoulder_l"},
                 "upper_arm_l": {
-                    "profile": "rectangle",
-                    "profile_radius": [0.075, 0.105],
-                    "rotate": [0.0, 0.0, -12.0],
+                    "profile": "circle(10)",
+                    "profile_radius": 0.075,
                     "extrusion_steps": [
                         # 0% -> 18%: shoulder bulge to 1.12
                         {"extrude": 0.18, "scale": 1.12},
@@ -103,6 +115,8 @@ spec(
                         {"extrude": 0.30, "scale": 0.82},
                     ],
                     "material_index": 0,
+                    "cap_start": False,
+                    "cap_end": True,
                 },
                 "upper_arm_r": {"mirror": "upper_arm_l"},
                 "upper_leg_l": {

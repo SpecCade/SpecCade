@@ -1,8 +1,7 @@
-//! End-to-End Determinism and Audit Tests for SpecCade
+//! End-to-End Determinism Tests for SpecCade
 //!
 //! Tests verify:
 //! - Deterministic generation (same seed -> same output)
-//! - Migrator audit mode
 //!
 //! ## Running Tests
 //!
@@ -16,7 +15,6 @@ use speccade_spec::recipe::texture::{
     TextureProceduralV1Params,
 };
 use speccade_spec::{AssetType, OutputFormat, OutputSpec, Recipe, Spec};
-use speccade_tests::fixtures::{GoldenFixtures, LegacyProjectFixture};
 
 // ============================================================================
 // Determinism Tests
@@ -192,69 +190,4 @@ fn test_audio_params_determinism() {
         result1.wav.pcm_hash, result2.wav.pcm_hash,
         "Same seed should produce same hash"
     );
-}
-
-// ============================================================================
-// Audit Tests
-// ============================================================================
-
-/// Test that audit works on a fixture with all implemented keys.
-#[test]
-fn test_audit_high_completeness() {
-    let fixture = LegacyProjectFixture::new();
-
-    // Add specs that use only well-known implemented keys
-    fixture.add_sound("beep_01");
-    fixture.add_sound("beep_02");
-    fixture.add_texture("metal_01");
-
-    // The audit should report high completeness for these minimal specs
-    // since they only use core implemented keys (name, duration, layers, etc.)
-    assert!(fixture.path().exists());
-    assert!(fixture.specs_dir.exists());
-}
-
-/// Test that audit works on golden legacy fixtures.
-#[test]
-fn test_audit_golden_fixtures() {
-    if !GoldenFixtures::exists() {
-        println!("Golden fixtures not found, skipping");
-        return;
-    }
-
-    // Verify the golden legacy directory has the expected structure
-    let sounds = GoldenFixtures::list_legacy_specs("sounds");
-    let textures = GoldenFixtures::list_legacy_specs("textures");
-    let instruments = GoldenFixtures::list_legacy_specs("instruments");
-
-    // These should all have files
-    println!("Found {} sounds", sounds.len());
-    println!("Found {} textures", textures.len());
-    println!("Found {} instruments", instruments.len());
-
-    assert!(!sounds.is_empty() || !textures.is_empty() || !instruments.is_empty());
-}
-
-/// Test that the fixture structure matches what migrate expects.
-#[test]
-fn test_fixture_structure_for_migrate() {
-    let fixture = LegacyProjectFixture::new();
-
-    // Add some specs
-    fixture.add_sound("test_sound");
-    fixture.add_texture("test_texture");
-
-    // Verify the structure is what migrate expects
-    let studio_dir = fixture.path().join(".studio");
-    let specs_dir = studio_dir.join("specs");
-    let sounds_dir = specs_dir.join("sounds");
-    let textures_dir = specs_dir.join("textures");
-
-    assert!(studio_dir.exists(), ".studio should exist");
-    assert!(specs_dir.exists(), ".studio/specs should exist");
-    assert!(sounds_dir.exists(), ".studio/specs/sounds should exist");
-    assert!(textures_dir.exists(), ".studio/specs/textures should exist");
-
-    assert!(sounds_dir.join("test_sound.spec.py").exists());
-    assert!(textures_dir.join("test_texture.spec.py").exists());
 }

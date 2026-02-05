@@ -10,9 +10,21 @@ spec(
     recipe = {
         "kind": "skeletal_mesh.armature_driven_v1",
         "params": {
-            "skeleton_preset": "humanoid_basic_v1",
+            "skeleton_preset": "humanoid_connected_v1",
             "bone_meshes": {
-                "spine": {"profile": "circle(8)", "profile_radius": 0.15}
+                "hips": {"profile": "circle(8)", "profile_radius": 0.12, "cap_start": True},
+                "spine": {"profile": "circle(8)", "profile_radius": 0.13},
+                "chest": {"profile": "circle(8)", "profile_radius": 0.14, "cap_end": True},
+                "neck": {"profile": "circle(8)", "profile_radius": 0.05, "cap_start": True},
+                "head": {"profile": "circle(12)", "profile_radius": {"absolute": 0.1}, "cap_end": True},
+                # Shoulders bridge chest to upper arms
+                "shoulder_l": {"profile": "circle(6)", "profile_radius": 0.06, "cap_start": True},
+                "shoulder_r": {"mirror": "shoulder_l"},
+                "upper_arm_l": {"profile": "circle(6)", "profile_radius": 0.05, "cap_end": True},
+                "upper_arm_r": {"mirror": "upper_arm_l"},
+                # Legs
+                "upper_leg_l": {"profile": "circle(6)", "profile_radius": 0.07, "cap_start": True, "cap_end": True},
+                "upper_leg_r": {"mirror": "upper_leg_l"},
             },
             "material_slots": [
                 {"name": "body_material", "base_color": [0.8, 0.6, 0.5, 1.0]},

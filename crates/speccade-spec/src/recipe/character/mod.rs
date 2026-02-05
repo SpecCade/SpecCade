@@ -2,7 +2,7 @@
 
 mod armature_driven;
 mod body_parts;
-mod legacy;
+mod extrusion_parts;
 mod materials;
 mod skeleton;
 mod skinned_mesh;
@@ -14,9 +14,9 @@ mod tests;
 // Re-export all public types
 pub use armature_driven::*;
 pub use body_parts::{BodyPart, BodyPartMesh};
-pub use legacy::{
-    BaseRadius, BulgeFactor, Instance, LegacyPart, ScaleFactor, SkinningType, Step, StepDefinition,
-    SubPart, SubPartOrList, TiltFactor,
+pub use extrusion_parts::{
+    BaseRadius, BulgeFactor, ExtrusionPart, Instance, ScaleFactor, SkinningType, Step,
+    StepDefinition, SubPart, SubPartOrList, TiltFactor,
 };
 pub use materials::{SkeletalMeshConstraints, SkeletalMeshExportSettings, SkinningSettings};
 pub use skeleton::{SkeletonBone, SkeletonPreset};

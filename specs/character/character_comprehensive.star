@@ -11,7 +11,7 @@ spec(
     recipe = {
         "kind": "skeletal_mesh.armature_driven_v1",
         "params": {
-            "skeleton_preset": "humanoid_basic_v1",
+            "skeleton_preset": "humanoid_connected_v1",
             "material_slots": [
                 {
                     "name": "skin",
@@ -185,15 +185,26 @@ spec(
                         },
                     ],
                 },
-                "upper_arm_l": {
-                    "profile": "rectangle",
-                    "profile_radius": [0.08, 0.12],
-                    "translate": [0.0, 0.0, 0.02],
-                    "rotate": [0.0, 0.0, -15.0],
+                # Shoulder meshes connect chest to upper arms
+                "shoulder_l": {
+                    "profile": "circle(10)",
+                    "profile_radius": 0.09,
                     "extrusion_steps": [
-                        {"extrude": 0.20, "scale": 1.15, "rotate": 8.0},
-                        {"extrude": 0.50, "scale": 0.9, "rotate": 12.0},
-                        {"extrude": 0.30, "scale": 0.8, "rotate": 5.0},
+                        {"extrude": 0.4, "scale": 1.1},
+                        {"extrude": 0.6, "scale": 0.95},
+                    ],
+                    "material_index": 0,
+                    "cap_start": True,
+                    "cap_end": False,
+                },
+                "shoulder_r": {"mirror": "shoulder_l"},
+                "upper_arm_l": {
+                    "profile": "circle(10)",
+                    "profile_radius": 0.08,
+                    "extrusion_steps": [
+                        {"extrude": 0.20, "scale": 1.15},
+                        {"extrude": 0.50, "scale": 0.9},
+                        {"extrude": 0.30, "scale": 0.8},
                     ],
                     "cap_start": False,
                     "cap_end": False,
@@ -203,12 +214,6 @@ spec(
                             "bevel": {
                                 "width": 0.01,
                                 "segments": 2,
-                            },
-                        },
-                        {
-                            "bool": {
-                                "operation": "intersect",
-                                "target": "chest_notch",
                             },
                         },
                     ],
@@ -226,27 +231,19 @@ spec(
                     "mirror": "upper_arm_l",
                 },
                 "lower_arm_l": {
-                    "profile": "hexagon(8)",
-                    "profile_radius": 0.07,
-                    "translate": [0.0, 0.02, 0.0],
-                    "rotate": [0.0, 10.0, 0.0],
+                    "profile": "circle(8)",
+                    "profile_radius": 0.065,
                     "extrusion_steps": [
-                        {"extrude": 0.35, "scale": 1.1, "rotate": -6.0},
-                        {"extrude": 0.65, "scale": 0.75, "rotate": -12.0},
+                        {"extrude": 0.35, "scale": 1.1},
+                        {"extrude": 0.65, "scale": 0.75},
                     ],
                     "cap_start": False,
-                    "cap_end": False,
+                    "cap_end": True,
                     "material_index": 0,
                     "modifiers": [
                         {
                             "subdivide": {
-                                "cuts": 2,
-                            },
-                        },
-                        {
-                            "bool": {
-                                "operation": "union",
-                                "target": "eye_cut_l",
+                                "cuts": 1,
                             },
                         },
                     ],
@@ -263,6 +260,20 @@ spec(
                 "lower_arm_r": {
                     "mirror": "lower_arm_l",
                 },
+                # Legs
+                "upper_leg_l": {
+                    "profile": "circle(10)",
+                    "profile_radius": 0.10,
+                    "extrusion_steps": [
+                        {"extrude": 0.25, "scale": 1.1},
+                        {"extrude": 0.50, "scale": 0.85},
+                        {"extrude": 0.25, "scale": 0.75},
+                    ],
+                    "material_index": 0,
+                    "cap_start": True,
+                    "cap_end": True,
+                },
+                "upper_leg_r": {"mirror": "upper_leg_l"},
             },
             "export": {
                 "include_armature": True,

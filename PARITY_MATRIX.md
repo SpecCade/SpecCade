@@ -7,9 +7,6 @@ SSOT: keep this table aligned with:
 - `crates/speccade-spec/src/validation/mod.rs` (what generation-time validation will accept)
 - `crates/speccade-cli/src/dispatch/mod.rs` (what `speccade generate` can actually dispatch)
 
-For the legacy `.studio/specs/**.spec.py` key taxonomy used by `speccade migrate --audit`, see:
-`docs/legacy/PARITY_MATRIX_LEGACY_SPEC_PY.md`.
-
 ---
 
 ## Canonical Generators (Implemented)

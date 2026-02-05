@@ -139,7 +139,7 @@ fn test_skeletal_animation_blender_rigged_v1_params_complete() {
 }
 
 // =========================================================================
-// Complete Legacy Key Coverage Tests
+// Complete Key Coverage Tests
 // =========================================================================
 
 #[test]

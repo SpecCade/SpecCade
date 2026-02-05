@@ -63,7 +63,7 @@ Command-line tool for spec operations.
 - `compiler/stdlib/` - Starlark stdlib functions (core, audio, music, texture, mesh, character, animation)
 - `input` - Unified spec loading (JSON/Starlark dispatch by extension)
 - `dispatch/` - Routes specs to appropriate backends
-- `commands/` - CLI command implementations (eval, validate, generate, fmt, migrate)
+- `commands/` - CLI command implementations (eval, validate, generate, fmt, lint, etc.)
 
 ### speccade-backend-audio
 Generates WAV files from synthesis specifications.

@@ -2,5 +2,5 @@
 
 mod basic;
 mod connection_mode;
-mod legacy_parts;
+mod extrusion_parts;
 mod skeletal_mesh_rework;

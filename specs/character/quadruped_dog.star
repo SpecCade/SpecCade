@@ -12,263 +12,218 @@ spec(
         "kind": "skeletal_mesh.armature_driven_v1",
         "params": {
             "skeleton": [
+                # Root at body center
                 {
                     "bone": "root",
-                    "head": [0.0, 0.0, 0.0],
-                    "tail": [0.0, 0.0, 0.12],
+                    "head": [0.0, 0.0, 0.35],
+                    "tail": [0.0, 0.05, 0.35],
+                },
+                # Spine/body runs along +Y (horizontal)
+                {
+                    "bone": "spine_rear",
+                    "head": [0.0, -0.15, 0.35],
+                    "tail": [0.0, 0.0, 0.35],
+                    "parent": "root",
                 },
                 {
-                    "bone": "spine",
-                    "head": [0.0, 0.0, 0.12],
-                    "tail": [0.0, 0.0, 0.45],
+                    "bone": "spine_front",
+                    "head": [0.0, 0.0, 0.35],
+                    "tail": [0.0, 0.15, 0.35],
                     "parent": "root",
                 },
                 {
                     "bone": "chest",
-                    "head": [0.0, 0.0, 0.45],
-                    "tail": [0.0, 0.0, 0.60],
-                    "parent": "spine",
+                    "head": [0.0, 0.15, 0.35],
+                    "tail": [0.0, 0.25, 0.35],
+                    "parent": "spine_front",
                 },
+                # Neck goes up and forward
                 {
                     "bone": "neck",
-                    "head": [0.0, 0.0, 0.60],
-                    "tail": [0.0, 0.30, 0.66],
+                    "head": [0.0, 0.25, 0.35],
+                    "tail": [0.0, 0.32, 0.45],
                     "parent": "chest",
                 },
+                # Head goes forward (horizontal)
                 {
                     "bone": "head",
-                    "head": [0.0, 0.30, 0.66],
-                    "tail": [0.0, 0.55, 0.66],
+                    "head": [0.0, 0.32, 0.45],
+                    "tail": [0.0, 0.50, 0.45],
                     "parent": "neck",
                 },
+                # Tail goes backward (-Y)
                 {
-                    "bone": "tail_base",
-                    "head": [0.0, -0.10, 0.44],
-                    "tail": [0.0, -0.35, 0.50],
-                    "parent": "spine",
+                    "bone": "tail",
+                    "head": [0.0, -0.15, 0.38],
+                    "tail": [0.0, -0.35, 0.42],
+                    "parent": "spine_rear",
                 },
+                # Front left leg - goes DOWN from chest
                 {
-                    "bone": "tail_tip",
-                    "head": [0.0, -0.35, 0.50],
-                    "tail": [0.0, -0.60, 0.56],
-                    "parent": "tail_base",
-                },
-                {
-                    "bone": "front_upper_leg_l",
-                    "head": [-0.16, 0.35, 0.46],
-                    "tail": [-0.16, 0.35, 0.18],
+                    "bone": "front_leg_l",
+                    "head": [-0.08, 0.18, 0.35],
+                    "tail": [-0.08, 0.18, 0.0],
                     "parent": "chest",
                 },
+                # Front right leg
                 {
-                    "bone": "front_lower_leg_l",
-                    "head": [-0.16, 0.35, 0.18],
-                    "tail": [-0.16, 0.35, 0.02],
-                    "parent": "front_upper_leg_l",
+                    "bone": "front_leg_r",
+                    "head": [0.08, 0.18, 0.35],
+                    "tail": [0.08, 0.18, 0.0],
+                    "parent": "chest",
                 },
+                # Hind left leg - goes DOWN from rear spine
                 {
-                    "bone": "front_paw_l",
-                    "head": [-0.16, 0.35, 0.02],
-                    "tail": [-0.16, 0.52, 0.02],
-                    "parent": "front_lower_leg_l",
+                    "bone": "hind_leg_l",
+                    "head": [-0.08, -0.10, 0.35],
+                    "tail": [-0.08, -0.10, 0.0],
+                    "parent": "spine_rear",
                 },
+                # Hind right leg
                 {
-                    "bone": "front_upper_leg_r",
-                    "mirror": "front_upper_leg_l",
-                },
-                {
-                    "bone": "front_lower_leg_r",
-                    "mirror": "front_lower_leg_l",
-                },
-                {
-                    "bone": "front_paw_r",
-                    "mirror": "front_paw_l",
-                },
-                {
-                    "bone": "hind_upper_leg_l",
-                    "head": [-0.18, -0.08, 0.42],
-                    "tail": [-0.18, -0.08, 0.16],
-                    "parent": "spine",
-                },
-                {
-                    "bone": "hind_lower_leg_l",
-                    "head": [-0.18, -0.08, 0.16],
-                    "tail": [-0.18, -0.08, 0.02],
-                    "parent": "hind_upper_leg_l",
-                },
-                {
-                    "bone": "hind_paw_l",
-                    "head": [-0.18, -0.08, 0.02],
-                    "tail": [-0.18, 0.06, 0.02],
-                    "parent": "hind_lower_leg_l",
-                },
-                {
-                    "bone": "hind_upper_leg_r",
-                    "mirror": "hind_upper_leg_l",
-                },
-                {
-                    "bone": "hind_lower_leg_r",
-                    "mirror": "hind_lower_leg_l",
-                },
-                {
-                    "bone": "hind_paw_r",
-                    "mirror": "hind_paw_l",
+                    "bone": "hind_leg_r",
+                    "head": [0.08, -0.10, 0.35],
+                    "tail": [0.08, -0.10, 0.0],
+                    "parent": "spine_rear",
                 },
             ],
             "bone_meshes": {
                 "root": {
-                    "profile": "circle(10)",
+                    "profile": "circle(12)",
                     "profile_radius": 0.10,
                     "extrusion_steps": [
                         {"extrude": 1.0, "scale": 1.0},
                     ],
                     "material_index": 0,
+                    "connect_end": "bridge",
                 },
-                "spine": {
+                "spine_rear": {
                     "profile": "circle(12)",
                     "profile_radius": 0.11,
                     "extrusion_steps": [
-                        # 0% -> 30%: belly bulge to 1.15
-                        {"extrude": 0.30, "scale": 1.15},
-                        # 30% -> 85%: taper to 0.82
-                        {"extrude": 0.55, "scale": 0.82},
-                        # 85% -> 100%: final taper to 0.88
-                        {"extrude": 0.15, "scale": 0.88},
+                        # Rear section: belly bulge
+                        {"extrude": 0.40, "scale": 1.15},
+                        {"extrude": 0.60, "scale": 1.0},
                     ],
                     "material_index": 0,
+                    "connect_end": "bridge",
+                },
+                "spine_front": {
+                    "profile": "circle(12)",
+                    "profile_radius": 0.11,
+                    "extrusion_steps": [
+                        {"extrude": 0.50, "scale": 0.95},
+                        {"extrude": 0.50, "scale": 0.88},
+                    ],
+                    "material_index": 0,
+                    "connect_start": "bridge",
+                    "connect_end": "bridge",
                 },
                 "chest": {
-                    "profile": "hexagon(8)",
-                    "profile_radius": [0.15, 0.12],
+                    "profile": "circle(12)",
+                    "profile_radius": 0.12,
                     "extrusion_steps": [
-                        # 0% -> 50%: chest
                         {"extrude": 0.50, "scale": 0.95},
-                        # 50% -> 100%: taper to 0.90
-                        {"extrude": 0.50, "scale": 0.90},
-                    ],
-                    "material_index": 0,
-                },
-                "neck": {
-                    "profile": "circle(10)",
-                    "profile_radius": 0.08,
-                    "extrusion_steps": [
-                        # 0% -> 50%: slight taper
-                        {"extrude": 0.50, "scale": 0.92},
-                        # 50% -> 100%: taper to 0.85
                         {"extrude": 0.50, "scale": 0.85},
                     ],
                     "material_index": 0,
+                    "connect_start": "bridge",
+                    "connect_end": "bridge",
+                },
+                "neck": {
+                    "profile": "circle(12)",
+                    "profile_radius": 0.08,
+                    "extrusion_steps": [
+                        {"extrude": 0.50, "scale": 0.92},
+                        {"extrude": 0.50, "scale": 0.85},
+                    ],
+                    "material_index": 0,
+                    "connect_start": "bridge",
+                    "connect_end": "bridge",
                 },
                 "head": {
-                    "profile": "circle(16)",
+                    "profile": "circle(12)",
                     "profile_radius": {"absolute": 0.10},
                     "extrusion_steps": [
                         {"extrude": 1.0, "scale": 1.0},
                     ],
                     "material_index": 0,
+                    "connect_start": "bridge",
+                    "cap_end": True,
                     "attachments": [
                         {
                             "primitive": "cone",
                             "dimensions": [0.08, 0.08, 0.12],
-                            "offset": [-0.08, 0.16, 0.10],
+                            "offset": [-0.08, 0.10, 0.08],
                             "rotation": [0.0, 0.0, -20.0],
                             "material_index": 1,
                         },
                         {
                             "primitive": "cone",
                             "dimensions": [0.08, 0.08, 0.12],
-                            "offset": [0.08, 0.16, 0.10],
+                            "offset": [0.08, 0.10, 0.08],
                             "rotation": [0.0, 0.0, 20.0],
                             "material_index": 1,
                         },
                     ],
                 },
-                "tail_base": {
+                "tail": {
                     "profile": "circle(8)",
                     "profile_radius": 0.06,
                     "extrusion_steps": [
-                        {"extrude": 0.50, "scale": 0.85},
-                        {"extrude": 0.50, "scale": 0.70},
+                        {"extrude": 0.50, "scale": 0.80},
+                        {"extrude": 0.50, "scale": 0.50},
                     ],
                     "material_index": 0,
+                    "cap_end": True,
                 },
-                "tail_tip": {
+                "front_leg_l": {
                     "profile": "circle(8)",
                     "profile_radius": 0.05,
                     "extrusion_steps": [
-                        {"extrude": 0.50, "scale": 0.80},
-                        {"extrude": 0.50, "scale": 0.60},
+                        {"extrude": 0.30, "scale": 0.92},
+                        {"extrude": 0.40, "scale": 0.82},
+                        {"extrude": 0.30, "scale": 0.95},
                     ],
                     "material_index": 0,
+                    "cap_start": True,
+                    "cap_end": True,
                 },
-                "front_upper_leg_l": {
-                    "profile": "circle(8)",
-                    "profile_radius": 0.06,
-                    "extrusion_steps": [
-                        {"extrude": 0.50, "scale": 0.90},
-                        {"extrude": 0.50, "scale": 0.80},
-                    ],
-                    "material_index": 0,
-                },
-                "front_lower_leg_l": {
+                "front_leg_r": {
                     "profile": "circle(8)",
                     "profile_radius": 0.05,
                     "extrusion_steps": [
-                        {"extrude": 0.50, "scale": 0.88},
-                        {"extrude": 0.50, "scale": 0.75},
+                        {"extrude": 0.30, "scale": 0.92},
+                        {"extrude": 0.40, "scale": 0.82},
+                        {"extrude": 0.30, "scale": 0.95},
                     ],
                     "material_index": 0,
+                    "cap_start": True,
+                    "cap_end": True,
                 },
-                "front_paw_l": {
-                    "profile": "circle(8)",
-                    "profile_radius": 0.045,
-                    "extrusion_steps": [
-                        {"extrude": 1.0, "scale": 0.95},
-                    ],
-                    "material_index": 0,
-                },
-                "front_upper_leg_r": {
-                    "mirror": "front_upper_leg_l",
-                },
-                "front_lower_leg_r": {
-                    "mirror": "front_lower_leg_l",
-                },
-                "front_paw_r": {
-                    "mirror": "front_paw_l",
-                },
-                "hind_upper_leg_l": {
-                    "profile": "circle(8)",
-                    "profile_radius": 0.07,
-                    "extrusion_steps": [
-                        {"extrude": 0.50, "scale": 0.89},
-                        {"extrude": 0.50, "scale": 0.78},
-                    ],
-                    "material_index": 0,
-                },
-                "hind_lower_leg_l": {
+                "hind_leg_l": {
                     "profile": "circle(8)",
                     "profile_radius": 0.055,
                     "extrusion_steps": [
-                        {"extrude": 0.50, "scale": 0.86},
-                        {"extrude": 0.50, "scale": 0.72},
+                        {"extrude": 0.30, "scale": 0.93},
+                        {"extrude": 0.40, "scale": 0.80},
+                        {"extrude": 0.30, "scale": 0.95},
                     ],
                     "material_index": 0,
+                    "cap_start": True,
+                    "cap_end": True,
                 },
-                "hind_paw_l": {
+                "hind_leg_r": {
                     "profile": "circle(8)",
-                    "profile_radius": 0.05,
+                    "profile_radius": 0.055,
                     "extrusion_steps": [
-                        {"extrude": 1.0, "scale": 0.95},
+                        {"extrude": 0.30, "scale": 0.93},
+                        {"extrude": 0.40, "scale": 0.80},
+                        {"extrude": 0.30, "scale": 0.95},
                     ],
                     "material_index": 0,
-                },
-                "hind_upper_leg_r": {
-                    "mirror": "hind_upper_leg_l",
-                },
-                "hind_lower_leg_r": {
-                    "mirror": "hind_lower_leg_l",
-                },
-                "hind_paw_r": {
-                    "mirror": "hind_paw_l",
+                    "cap_start": True,
+                    "cap_end": True,
                 },
             },
             "material_slots": [

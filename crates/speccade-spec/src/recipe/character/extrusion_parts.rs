@@ -1,11 +1,11 @@
-//! Legacy dict-based parts system (from ai-studio-core SPEC format).
+//! Extrusion-based parts system for skeletal mesh generation.
 
 use serde::{Deserialize, Serialize};
 
-/// Legacy part definition matching ai-studio-core SPEC dict format.
+/// Extrusion part definition for procedural mesh generation.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub struct LegacyPart {
+pub struct ExtrusionPart {
     /// Associated bone name (optional for mirrored parts).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub bone: Option<String>,

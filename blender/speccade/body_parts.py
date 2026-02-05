@@ -2,12 +2,12 @@
 SpecCade Body Parts Module
 
 This module handles the creation and manipulation of body part meshes for rigged characters.
-It supports both the new simplified mesh format and the legacy ai-studio-core SPEC format
+It supports both the new simplified mesh format and the extrusion-based format
 for procedural body part generation with extrusion steps.
 
 Key functions:
 - create_body_part(): Create a body part mesh attached to a bone
-- create_legacy_part(): Create a part using the legacy SPEC format with extrusion steps
+- create_extrusion_part(): Create a part using the extrusion-based format with extrusion steps
 - create_mirrored_part(): Create a mirrored copy of a part (L<->R reflection)
 - apply_texturing(): Apply UV mapping and texture regions to a mesh
 - skin_mesh_to_armature(): Parent a mesh to an armature with automatic weights
@@ -70,7 +70,7 @@ def create_body_part(armature: 'bpy.types.Object', part_spec: Dict) -> 'bpy.type
 
 
 # =============================================================================
-# Legacy Part System (ai-studio-core SPEC dict format)
+# Extrusion Part System (SPEC dict format)
 # =============================================================================
 
 def parse_base_shape(base: str) -> Tuple[str, int]:
@@ -279,14 +279,14 @@ def apply_step_to_mesh(obj: 'bpy.types.Object', step: Dict, step_index: int) -> 
     bpy.ops.object.mode_set(mode='OBJECT')
 
 
-def create_legacy_part(
+def create_extrusion_part(
     armature: 'bpy.types.Object',
     part_name: str,
     part_spec: Dict,
     all_parts: Dict[str, Dict]
 ) -> Optional['bpy.types.Object']:
     """
-    Create a mesh part using the legacy ai-studio-core SPEC format.
+    Create a mesh part using the extrusion-based SPEC format.
 
     Args:
         armature: The armature object (can be None for standalone parts).
@@ -439,7 +439,7 @@ def create_mirrored_part(
     source_copy['bone'] = bone_name
 
     # Create the part
-    obj = create_legacy_part(armature, f"{part_name}_temp", source_copy, all_parts)
+    obj = create_extrusion_part(armature, f"{part_name}_temp", source_copy, all_parts)
     if not obj:
         return None
 

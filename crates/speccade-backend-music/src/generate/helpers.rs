@@ -1,6 +1,6 @@
 //! Helper functions for music generation.
 //!
-//! This module contains utility functions for parsing, conversion, and legacy synthesis support.
+//! This module contains utility functions for parsing, conversion, and deprecated synthesis support.
 
 use std::path::Path;
 
@@ -140,12 +140,12 @@ pub(crate) fn load_audio_v1_params_from_ref(
     })
 }
 
-pub(super) fn legacy_synthesis_to_audio_v1_params(
+pub(super) fn deprecated_synthesis_to_audio_v1_params(
     instr: &TrackerInstrument,
     synthesis: &InstrumentSynthesis,
     format: TrackerFormat,
 ) -> Result<AudioV1Params, GenerateError> {
-    // Legacy synth is baked as a single-layer audio_v1 oscillator/noise.
+    // Deprecated synth is baked as a single-layer audio_v1 oscillator/noise.
     let default_base_midi = match format {
         TrackerFormat::Xm => DEFAULT_SYNTH_MIDI_NOTE,
         TrackerFormat::It => DEFAULT_IT_SYNTH_MIDI_NOTE,
@@ -213,7 +213,7 @@ pub(super) fn legacy_synthesis_to_audio_v1_params(
         },
         InstrumentSynthesis::Sample { .. } => {
             return Err(GenerateError::InstrumentError(format!(
-                "Instrument '{}' uses legacy 'synthesis: {{ type: sample }}' which should have been handled as wav",
+                "Instrument '{}' uses deprecated 'synthesis: {{ type: sample }}' which should have been handled as wav",
                 instr.name
             )));
         }

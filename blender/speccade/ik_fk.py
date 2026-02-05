@@ -447,13 +447,15 @@ def setup_ikfk_switch(
     Set up IK/FK switching for a limb.
 
     Creates a custom property on the armature to control IK influence,
-    and sets up drivers for seamless switching.
+    sets up drivers for seamless switching, and stores metadata for snapping.
 
     Args:
         armature: The armature object.
         switch_config: Dictionary with switch configuration.
         ik_controls: Dictionary of existing IK control objects.
     """
+    import json
+
     name = switch_config.get('name', 'ikfk_switch')
     ik_chain = switch_config.get('ik_chain')
     fk_bones = switch_config.get('fk_bones', [])
@@ -481,17 +483,44 @@ def setup_ikfk_switch(
         "description": f"IK/FK blend for {name} (0=FK, 1=IK)"
     }
 
+    # Initialize metadata for snapping
+    meta = {
+        'fk_bones': fk_bones,
+        'ik_chain': ik_chain,
+        'target_name': None,
+        'pole_name': None,
+        'chain_length': 2,
+    }
+
     # Find the IK constraint on the tip bone and add driver for influence
     if ik_chain in ik_controls:
         chain_data = ik_controls[ik_chain]
         tip_bone_name = chain_data.get('tip_bone')
 
+        # Extract IK target and pole names from chain_data
+        target_obj = chain_data.get('target')
+        pole_obj = chain_data.get('pole')
+        if target_obj and hasattr(target_obj, 'name'):
+            meta['target_name'] = target_obj.name
+        if pole_obj and hasattr(pole_obj, 'name'):
+            meta['pole_name'] = pole_obj.name
+
         if tip_bone_name and tip_bone_name in armature.pose.bones:
             pose_bone = armature.pose.bones[tip_bone_name]
 
-            # Find IK constraint
+            # Find IK constraint and extract chain length
             for constraint in pose_bone.constraints:
                 if constraint.type == 'IK':
+                    meta['chain_length'] = constraint.chain_count
+
+                    # Also get target/pole names from constraint if not in chain_data
+                    if not meta['target_name'] and constraint.target:
+                        if constraint.target != armature:
+                            meta['target_name'] = constraint.target.name
+                    if not meta['pole_name'] and constraint.pole_target:
+                        if constraint.pole_target != armature:
+                            meta['pole_name'] = constraint.pole_target.name
+
                     # Add driver to influence
                     driver = constraint.driver_add('influence').driver
                     driver.type = 'AVERAGE'
@@ -505,26 +534,218 @@ def setup_ikfk_switch(
                     print(f"Set up IK/FK switch '{name}' on {tip_bone_name}")
                     break
 
+    # Store metadata as JSON in a hidden custom property for snap functions
+    meta_prop = f"_ikfk_meta_{name}"
+    armature[meta_prop] = json.dumps(meta)
+
     print(f"Created IK/FK switch property: {prop_name}")
+    print(f"Stored IK/FK metadata: fk_bones={fk_bones}, target={meta['target_name']}, pole={meta['pole_name']}")
 
 
-def snap_fk_to_ik(armature: 'bpy.types.Object', switch_name: str, ik_controls: Dict) -> None:
+def snap_fk_to_ik(armature: 'bpy.types.Object', switch_name: str) -> bool:
     """
     Snap FK bones to match current IK pose.
 
     Called before switching from IK to FK mode to prevent popping.
+    Copies the current world-space rotations of bones (influenced by IK)
+    to the FK bone pose rotations.
+
+    Args:
+        armature: The armature object.
+        switch_name: The IK/FK switch name (e.g., "arm_l").
+
+    Returns:
+        True if snapping was successful, False otherwise.
     """
-    # This would copy the current world-space rotations of the FK bones
-    # Implementation depends on the specific bone chain
-    pass
+    import json
+
+    # Get switch metadata from armature custom property
+    meta_prop = f"_ikfk_meta_{switch_name}"
+    if meta_prop not in armature:
+        print(f"Warning: No IK/FK metadata found for switch '{switch_name}'")
+        return False
+
+    try:
+        meta = json.loads(armature[meta_prop])
+    except (json.JSONDecodeError, TypeError):
+        print(f"Warning: Invalid IK/FK metadata for switch '{switch_name}'")
+        return False
+
+    fk_bones = meta.get('fk_bones', [])
+    if not fk_bones:
+        print(f"Warning: No FK bones defined for switch '{switch_name}'")
+        return False
+
+    # Ensure we're in pose mode
+    if bpy.context.mode != 'POSE':
+        bpy.context.view_layer.objects.active = armature
+        bpy.ops.object.mode_set(mode='POSE')
+
+    # Force scene update to get current IK-influenced pose
+    bpy.context.view_layer.update()
+
+    # For each FK bone, copy the current world-space rotation to the pose
+    for bone_name in fk_bones:
+        pose_bone = armature.pose.bones.get(bone_name)
+        if not pose_bone:
+            print(f"Warning: FK bone '{bone_name}' not found")
+            continue
+
+        # Get current world matrix (includes IK influence)
+        world_matrix = armature.matrix_world @ pose_bone.matrix
+
+        # Get parent's world matrix for conversion to local space
+        if pose_bone.parent:
+            parent_world = armature.matrix_world @ pose_bone.parent.matrix
+            # Convert to local space relative to parent
+            local_matrix = parent_world.inverted() @ world_matrix
+        else:
+            local_matrix = armature.matrix_world.inverted() @ world_matrix
+
+        # Extract rotation and apply to pose bone
+        # Use the bone's rest matrix to compute proper local rotation
+        rest_matrix = pose_bone.bone.matrix_local
+        if pose_bone.parent:
+            parent_rest = pose_bone.parent.bone.matrix_local
+            rest_local = parent_rest.inverted() @ rest_matrix
+        else:
+            rest_local = rest_matrix
+
+        # Compute the pose rotation: local_matrix = rest_local @ pose_rotation
+        # Therefore: pose_rotation = rest_local.inverted() @ local_matrix
+        pose_matrix = rest_local.inverted() @ local_matrix
+
+        # Apply rotation based on rotation mode
+        if pose_bone.rotation_mode == 'QUATERNION':
+            pose_bone.rotation_quaternion = pose_matrix.to_quaternion()
+        elif pose_bone.rotation_mode == 'AXIS_ANGLE':
+            axis, angle = pose_matrix.to_quaternion().to_axis_angle()
+            pose_bone.rotation_axis_angle = (angle, axis[0], axis[1], axis[2])
+        else:
+            # Euler mode
+            pose_bone.rotation_euler = pose_matrix.to_euler(pose_bone.rotation_mode)
+
+    print(f"Snapped FK bones to IK pose for switch '{switch_name}'")
+    return True
 
 
-def snap_ik_to_fk(armature: 'bpy.types.Object', switch_name: str, ik_controls: Dict) -> None:
+def snap_ik_to_fk(armature: 'bpy.types.Object', switch_name: str) -> bool:
     """
     Snap IK target/pole to match current FK pose.
 
     Called before switching from FK to IK mode to prevent popping.
+    Moves the IK target to match the FK tip bone's world position,
+    and calculates the pole position from the FK chain's bend direction.
+
+    Args:
+        armature: The armature object.
+        switch_name: The IK/FK switch name (e.g., "arm_l").
+
+    Returns:
+        True if snapping was successful, False otherwise.
     """
-    # This would move the IK target to match the FK end effector position
-    # Implementation depends on the specific bone chain
-    pass
+    import json
+
+    # Get switch metadata from armature custom property
+    meta_prop = f"_ikfk_meta_{switch_name}"
+    if meta_prop not in armature:
+        print(f"Warning: No IK/FK metadata found for switch '{switch_name}'")
+        return False
+
+    try:
+        meta = json.loads(armature[meta_prop])
+    except (json.JSONDecodeError, TypeError):
+        print(f"Warning: Invalid IK/FK metadata for switch '{switch_name}'")
+        return False
+
+    fk_bones = meta.get('fk_bones', [])
+    target_name = meta.get('target_name')
+    pole_name = meta.get('pole_name')
+    chain_length = meta.get('chain_length', 2)
+
+    if not fk_bones or len(fk_bones) < 2:
+        print(f"Warning: Need at least 2 FK bones for switch '{switch_name}'")
+        return False
+
+    # Ensure we're in pose mode
+    if bpy.context.mode != 'POSE':
+        bpy.context.view_layer.objects.active = armature
+        bpy.ops.object.mode_set(mode='POSE')
+
+    # Force scene update
+    bpy.context.view_layer.update()
+
+    # Get FK tip bone (last in chain)
+    tip_bone_name = fk_bones[-1]
+    tip_pose_bone = armature.pose.bones.get(tip_bone_name)
+    if not tip_pose_bone:
+        print(f"Warning: FK tip bone '{tip_bone_name}' not found")
+        return False
+
+    # Calculate tip world position (use tail for IK target position)
+    tip_world_pos = armature.matrix_world @ tip_pose_bone.tail
+
+    # Snap IK target
+    if target_name:
+        target_obj = bpy.data.objects.get(target_name)
+        if target_obj:
+            target_obj.location = tip_world_pos
+            print(f"Snapped IK target '{target_name}' to FK tip position")
+        else:
+            print(f"Warning: IK target '{target_name}' not found")
+
+    # Snap pole target if it exists
+    if pole_name and len(fk_bones) >= 2:
+        pole_obj = bpy.data.objects.get(pole_name)
+        if pole_obj:
+            # Calculate pole position from the FK chain's bend direction
+            # Get the middle bone (typically the elbow/knee)
+            # For a 2-bone chain: fk_bones[0] = upper, fk_bones[1] = lower
+            # The bend direction is perpendicular to the plane formed by:
+            # upper_head -> upper_tail/lower_head -> lower_tail
+
+            upper_bone_name = fk_bones[0]
+            lower_bone_name = fk_bones[1] if len(fk_bones) > 1 else fk_bones[0]
+
+            upper_pose_bone = armature.pose.bones.get(upper_bone_name)
+            lower_pose_bone = armature.pose.bones.get(lower_bone_name)
+
+            if upper_pose_bone and lower_pose_bone:
+                # Get world positions
+                p1 = armature.matrix_world @ upper_pose_bone.head  # Shoulder/hip
+                p2 = armature.matrix_world @ upper_pose_bone.tail  # Elbow/knee
+                p3 = armature.matrix_world @ lower_pose_bone.tail  # Wrist/ankle
+
+                # Vector from shoulder to wrist (the line the IK would straighten to)
+                chain_vec = p3 - p1
+
+                # Vector from shoulder to elbow
+                to_mid = p2 - p1
+
+                # Project to_mid onto chain_vec to find the closest point on the line
+                chain_len_sq = chain_vec.length_squared
+                if chain_len_sq > 0.0001:
+                    t = to_mid.dot(chain_vec) / chain_len_sq
+                    closest_on_line = p1 + chain_vec * t
+
+                    # The bend direction is from closest_on_line to the actual elbow position
+                    bend_dir = p2 - closest_on_line
+
+                    if bend_dir.length > 0.001:
+                        # Place pole along the bend direction, offset from the elbow
+                        pole_distance = 0.3  # Distance from elbow to pole
+                        pole_pos = p2 + bend_dir.normalized() * pole_distance
+                        pole_obj.location = pole_pos
+                        print(f"Snapped pole target '{pole_name}' to FK bend direction")
+                    else:
+                        # Chain is nearly straight, place pole in a default direction
+                        # Use the existing pole position or a sensible default
+                        print(f"Warning: FK chain nearly straight, keeping pole at current position")
+                else:
+                    print(f"Warning: FK chain has zero length")
+            else:
+                print(f"Warning: Could not find FK bones for pole calculation")
+        else:
+            print(f"Warning: Pole target '{pole_name}' not found")
+
+    return True

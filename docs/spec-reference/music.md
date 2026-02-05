@@ -45,7 +45,7 @@ Each entry in `instruments[]` is a `TrackerInstrument`. You must set exactly one
 - `ref`: path to an external `audio` spec with `recipe.kind: audio_v1`
 - `synthesis_audio_v1`: inline `audio_v1` params baked into a tracker sample
 - `wav`: path to a WAV sample file
-- `synthesis`: legacy inline tracker synth (prefer `ref` or `synthesis_audio_v1`)
+- `synthesis`: deprecated inline tracker synth (prefer `ref` or `synthesis_audio_v1`)
 
 ## Recipe: `music.tracker_song_compose_v1`
 

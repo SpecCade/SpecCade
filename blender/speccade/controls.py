@@ -189,8 +189,13 @@ def setup_finger_controls(
             bone_name = f"{bone_prefix}_{finger}{bone_idx:02d}{side_suffix}"
 
             if bone_name not in armature.pose.bones:
-                # Try alternate naming convention
+                # Try alternate naming convention with underscore before index
                 bone_name = f"{bone_prefix}_{finger}_{bone_idx:02d}{side_suffix}"
+
+            if bone_name not in armature.pose.bones:
+                # Try skeleton preset convention: {finger}_{bone_idx:02d}{side_suffix}
+                # e.g., "index_01_l", "thumb_02_r"
+                bone_name = f"{finger}_{bone_idx:02d}{side_suffix}"
 
             if bone_name not in armature.pose.bones:
                 continue

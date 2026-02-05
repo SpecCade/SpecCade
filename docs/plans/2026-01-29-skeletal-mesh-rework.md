@@ -12,7 +12,7 @@ The current `skeletal_mesh.blender_rigged_mesh_v1` recipe is a hybrid that does 
 - Neither produces clean "rigid skinned" output (1 bone per mesh part)
 - Soft skinning requires precise weight control that LLMs cannot realistically provide
 
-The legacy pure-Python system supported true armature-driven modeling (extrude geometry along bone axes), but this was lost in the Rust+Starlark migration.
+The original pure-Python system supported true armature-driven modeling (extrude geometry along bone axes), but this was lost in the Rust+Starlark migration.
 
 ## Solution
 

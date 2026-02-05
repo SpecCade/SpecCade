@@ -133,7 +133,7 @@ Instrument source options (mutually exclusive):
 - `ref` (recommended) - Path to external `audio_v1` spec (reusable across songs)
 - `synthesis_audio_v1` - Inline `audio_v1` params (powerful but not reusable)
 - `wav` - Path to external WAV sample
-- `synthesis` - Legacy simple synth (prototyping only)
+- `synthesis` - Deprecated simple synth (prototyping only)
 
 **Compose IR Workflow:**
 1. Start with `defs` for reusable pattern fragments (kick, snare, hat layers)
@@ -178,7 +178,7 @@ Ghost notes (probabilistic):
 - Keep `prob`/`choose` for small variations, not core structure
 - Always validate: `speccade validate --spec FILE`
 - Review expanded output before generating
-- Avoid legacy `synthesis` - Only for quick prototyping
+- Avoid deprecated `synthesis` - Only for quick prototyping
 
 ## Output Conventions
 

@@ -9,6 +9,7 @@ Key functions:
 - handle_mesh_to_sprite(): Render a 3D mesh from multiple angles into a sprite atlas
 - handle_validation_grid(): Generate a 6-view validation grid PNG for visual QA
 - get_mesh_bounds(): Compute world-space bounding box of a mesh object
+- create_skeleton_debug_mesh(): Generate debug mesh visualization of skeleton bones
 """
 
 import json
@@ -36,8 +37,10 @@ from .modifiers import apply_modifier, apply_all_modifiers
 from .materials import apply_materials
 from .uv_mapping import apply_uv_projection
 from .skeleton import create_armature, apply_skeleton_overrides, create_custom_skeleton
-from .body_parts import create_body_part, create_legacy_part
+from .skeleton_presets import SKELETON_PRESETS
+from .body_parts import create_body_part, create_extrusion_part
 from .armature_driven import build_armature_driven_character_mesh
+from .handlers_mesh import create_wall_kit, create_pipe_kit, create_door_kit
 
 
 # =============================================================================
@@ -53,6 +56,135 @@ VALIDATION_GRID_VIEWS = [
     ("RIGHT", 270.0, 30.0),
     ("ISO", 45.0, 35.264),  # Isometric angle
 ]
+
+
+def create_skeleton_debug_mesh(armature: 'bpy.types.Object') -> 'bpy.types.Object':
+    """
+    Create a debug mesh visualization of an armature skeleton.
+
+    Generates capsule-like geometry for each bone, useful for previewing
+    skeletal animations without a full character mesh.
+
+    Args:
+        armature: The armature object to visualize.
+
+    Returns:
+        A mesh object representing the skeleton debug visualization.
+    """
+    # Collect all bone data in object mode
+    bone_data = []
+    for bone in armature.data.bones:
+        # Get bone world positions
+        head_world = armature.matrix_world @ bone.head_local
+        tail_world = armature.matrix_world @ bone.tail_local
+        length = (tail_world - head_world).length
+
+        # Determine bone radius based on length (thicker for longer bones)
+        # Use a minimum radius to ensure visibility
+        radius = max(length * 0.08, 0.02)
+
+        bone_data.append({
+            'name': bone.name,
+            'head': head_world.copy(),
+            'tail': tail_world.copy(),
+            'length': length,
+            'radius': radius,
+        })
+
+    if not bone_data:
+        # No bones - create a small placeholder cube
+        bpy.ops.mesh.primitive_cube_add(size=0.1, location=(0, 0, 0))
+        return bpy.context.active_object
+
+    # Create combined mesh for all bone visualizations
+    import bmesh
+    bm = bmesh.new()
+
+    for bd in bone_data:
+        head = bd['head']
+        tail = bd['tail']
+        length = bd['length']
+        radius = bd['radius']
+
+        if length < 0.001:
+            # Degenerate bone - skip or add a small sphere
+            continue
+
+        # Create a cylinder along the bone direction
+        direction = (tail - head).normalized()
+
+        # Find perpendicular vectors for cylinder orientation
+        up = Vector((0, 0, 1))
+        if abs(direction.dot(up)) > 0.99:
+            up = Vector((1, 0, 0))
+        right = direction.cross(up).normalized()
+        forward = right.cross(direction).normalized()
+
+        # Create cylinder vertices (8 segments)
+        segments = 8
+        verts_bottom = []
+        verts_top = []
+
+        for i in range(segments):
+            angle = (i / segments) * 2 * math.pi
+            offset = (math.cos(angle) * right + math.sin(angle) * forward) * radius
+
+            v_bottom = bm.verts.new(head + offset)
+            v_top = bm.verts.new(tail + offset)
+            verts_bottom.append(v_bottom)
+            verts_top.append(v_top)
+
+        # Create faces
+        bm.verts.ensure_lookup_table()
+
+        # Side faces
+        for i in range(segments):
+            next_i = (i + 1) % segments
+            try:
+                bm.faces.new([
+                    verts_bottom[i],
+                    verts_bottom[next_i],
+                    verts_top[next_i],
+                    verts_top[i],
+                ])
+            except ValueError:
+                pass  # Face already exists
+
+        # Cap faces (simplified - just close the ends)
+        try:
+            bm.faces.new(verts_bottom)
+        except ValueError:
+            pass
+        try:
+            bm.faces.new(list(reversed(verts_top)))
+        except ValueError:
+            pass
+
+    # Create mesh from bmesh
+    mesh_data = bpy.data.meshes.new("SkeletonDebugMesh")
+    bm.to_mesh(mesh_data)
+    bm.free()
+
+    # Create object
+    debug_obj = bpy.data.objects.new("SkeletonDebug", mesh_data)
+    bpy.context.collection.objects.link(debug_obj)
+
+    # Apply smooth shading
+    for poly in debug_obj.data.polygons:
+        poly.use_smooth = True
+
+    # Add a simple material for visibility
+    mat = bpy.data.materials.new("SkeletonDebugMaterial")
+    mat.use_nodes = True
+    nodes = mat.node_tree.nodes
+    principled = nodes.get("Principled BSDF")
+    if principled:
+        # Light blue-gray color for bone visualization
+        principled.inputs["Base Color"].default_value = (0.6, 0.7, 0.8, 1.0)
+        principled.inputs["Roughness"].default_value = 0.5
+    debug_obj.data.materials.append(mat)
+
+    return debug_obj
 
 
 # =============================================================================
@@ -341,7 +473,7 @@ def handle_validation_grid(
     out_root: Path,
     report_path: Path,
     create_body_part_fn=None,
-    create_legacy_part_fn=None,
+    create_extrusion_part_fn=None,
 ) -> None:
     """
     Generate a 6-view validation grid PNG for LLM-based visual verification.
@@ -355,7 +487,7 @@ def handle_validation_grid(
         out_root: Root directory for output files.
         report_path: Path to write the generation report.
         create_body_part_fn: Optional function to create body parts for skeletal meshes.
-        create_legacy_part_fn: Optional function to create legacy parts for skeletal meshes.
+        create_extrusion_part_fn: Optional function to create extrusion parts for skeletal meshes.
     """
     start_time = time.time()
 
@@ -431,6 +563,25 @@ def handle_validation_grid(
                     # Continue without displacement noise
                     print(f"Warning: Could not apply displacement texture: {e}")
 
+        elif recipe_kind == "static_mesh.modular_kit_v1":
+            # Modular kit - walls, pipes, doors
+            kit_type_spec = params.get("kit_type", {})
+            kit_type = kit_type_spec.get("type", "wall")
+
+            if kit_type == "wall":
+                obj = create_wall_kit(kit_type_spec)
+            elif kit_type == "pipe":
+                obj = create_pipe_kit(kit_type_spec)
+            elif kit_type == "door":
+                obj = create_door_kit(kit_type_spec)
+            else:
+                raise ValueError(f"Unknown modular kit type: {kit_type}")
+
+            # Apply export settings
+            export_settings = params.get("export", {})
+            if export_settings.get("apply_modifiers", True):
+                apply_all_modifiers(obj)
+
         elif recipe_kind.startswith("static_mesh.") or recipe_kind == "blender_primitives_v1":
             # Static mesh - extract mesh params
             primitive = params.get("base_primitive", "cube")
@@ -480,7 +631,7 @@ def handle_validation_grid(
             elif skeleton_spec:
                 armature = create_custom_skeleton(skeleton_spec)
             else:
-                armature = create_armature("humanoid_basic_v1")
+                armature = create_armature("humanoid_connected_v1")
 
             if recipe_kind == "skeletal_mesh.armature_driven_v1":
                 # Reuse the shared builder so previews match generation behavior.
@@ -523,6 +674,37 @@ def handle_validation_grid(
                 raise ValueError(
                     f"Unsupported skeletal_mesh recipe kind for preview: {recipe_kind}"
                 )
+
+        elif recipe_kind.startswith("skeletal_animation."):
+            # Skeletal animation preview - create debug mesh from skeleton preset
+            skeleton_preset = params.get("skeleton_preset", None)
+            skeleton_param = params.get("skeleton", None)
+
+            # Handle helpers_v1 format where "skeleton" is a string preset name
+            if isinstance(skeleton_param, str):
+                # Map short names to full preset names
+                skeleton_map = {
+                    "humanoid": "humanoid_connected_v1",
+                    "quadruped": "quadruped_basic_v1",
+                }
+                skeleton_preset = skeleton_map.get(skeleton_param, skeleton_param)
+                skeleton_spec = []
+            else:
+                skeleton_spec = skeleton_param if skeleton_param else []
+
+            # Create armature from preset or custom skeleton
+            if skeleton_preset:
+                armature = create_armature(skeleton_preset)
+                if skeleton_spec and isinstance(skeleton_spec, list):
+                    apply_skeleton_overrides(armature, skeleton_spec)
+            elif skeleton_spec and isinstance(skeleton_spec, list):
+                armature = create_custom_skeleton(skeleton_spec)
+            else:
+                # Default to humanoid connected if no skeleton info provided
+                armature = create_armature("humanoid_connected_v1")
+
+            # Create debug mesh visualization of the skeleton
+            obj = create_skeleton_debug_mesh(armature)
 
         elif recipe_kind == "mesh_to_sprite_v1":
             # Sprite mesh - extract mesh subparams

@@ -105,7 +105,7 @@ impl MapDefinition {
     }
 }
 
-/// Legacy parameters for the `texture.packed_v1` recipe.
+/// Parameters for the `texture.packed_v1` recipe.
 ///
 /// This recipe generates multiple texture maps and packs them into
 /// the output channels as specified by the output's `channels` field.

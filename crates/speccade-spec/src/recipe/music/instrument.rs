@@ -17,7 +17,7 @@ pub struct TrackerInstrument {
     /// Reference to external spec file (mutually exclusive with synthesis and wav).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub r#ref: Option<String>,
-    /// Inline `audio_v1` synthesis params (mutually exclusive with `ref`, `wav`, and legacy
+    /// Inline `audio_v1` synthesis params (mutually exclusive with `ref`, `wav`, and deprecated
     /// `synthesis`).
     ///
     /// When set, this instrument is baked to a tracker sample by running the unified audio
@@ -27,7 +27,7 @@ pub struct TrackerInstrument {
     pub synthesis_audio_v1: Option<AudioV1Params>,
     /// Synthesis configuration (mutually exclusive with ref and wav).
     ///
-    /// Legacy field: prefer `synthesis_audio_v1` (or `ref` to an `audio_v1` spec) for new
+    /// Deprecated: prefer `synthesis_audio_v1` (or `ref` to an `audio_v1` spec) for new
     /// content.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub synthesis: Option<InstrumentSynthesis>,

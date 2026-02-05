@@ -37,50 +37,55 @@ spec(
 
 # === Music spec with loop_mode variants ===
 # Using tracker_instrument with different loop_mode values
-music_spec(
+spec(
     asset_id = "enum-coverage-music-01",
+    asset_type = "music",
     seed = 99102,
-    output_path = "music/enum_coverage_loops.xm",
-    format = "xm",
-    bpm = 120,
-    speed = 6,
-    channels = 4,
-    instruments = [
-        tracker_instrument(
-            name = "inst_auto",
-            synthesis = instrument_synthesis("sine"),
-            envelope = envelope(0.01, 0.1, 0.5, 0.2),
-            loop_mode = "auto"
-        ),
-        tracker_instrument(
-            name = "inst_none",
-            synthesis = instrument_synthesis("triangle"),
-            envelope = envelope(0.01, 0.1, 0.5, 0.2),
-            loop_mode = "none"
-        ),
-        tracker_instrument(
-            name = "inst_forward",
-            synthesis = instrument_synthesis("sawtooth"),
-            envelope = envelope(0.01, 0.1, 0.5, 0.2),
-            loop_mode = "forward"
-        ),
-        tracker_instrument(
-            name = "inst_pingpong",
-            synthesis = instrument_synthesis("pulse", 0.5),
-            envelope = envelope(0.01, 0.1, 0.5, 0.2),
-            loop_mode = "pingpong"
-        )
-    ],
-    patterns = {
-        "main": tracker_pattern(64, notes = {
-            "0": [pattern_note(0, "C4", 0)],
-            "1": [pattern_note(0, "E4", 1)],
-            "2": [pattern_note(0, "G4", 2)],
-            "3": [pattern_note(0, "C5", 3)]
-        })
-    },
-    arrangement = [arrangement_entry("main", 2)],
-    description = "Music enum coverage - loop_mode variants (auto, none, forward, pingpong)"
+    description = "Music enum coverage - loop_mode variants (auto, none, forward, pingpong)",
+    outputs = [output("music/enum_coverage_loops.xm", "xm")],
+    recipe = {
+        "kind": "music.tracker_v1",
+        "params": {
+            "bpm": 120,
+            "speed": 6,
+            "channels": 4,
+            "instruments": [
+                tracker_instrument(
+                    name = "inst_auto",
+                    synthesis = instrument_synthesis("sine"),
+                    envelope = envelope(0.01, 0.1, 0.5, 0.2),
+                    loop_mode = "auto"
+                ),
+                tracker_instrument(
+                    name = "inst_none",
+                    synthesis = instrument_synthesis("triangle"),
+                    envelope = envelope(0.01, 0.1, 0.5, 0.2),
+                    loop_mode = "none"
+                ),
+                tracker_instrument(
+                    name = "inst_forward",
+                    synthesis = instrument_synthesis("sawtooth"),
+                    envelope = envelope(0.01, 0.1, 0.5, 0.2),
+                    loop_mode = "forward"
+                ),
+                tracker_instrument(
+                    name = "inst_pingpong",
+                    synthesis = instrument_synthesis("pulse", 0.5),
+                    envelope = envelope(0.01, 0.1, 0.5, 0.2),
+                    loop_mode = "pingpong"
+                )
+            ],
+            "patterns": {
+                "main": tracker_pattern(64, notes = {
+                    "0": [pattern_note(0, "C4", 0)],
+                    "1": [pattern_note(0, "E4", 1)],
+                    "2": [pattern_note(0, "G4", 2)],
+                    "3": [pattern_note(0, "C5", 3)]
+                })
+            },
+            "arrangement": [arrangement_entry("main", 2)]
+        }
+    }
 )
 
 # === Texture spec example (format::png, asset_type::texture) ===
@@ -194,34 +199,60 @@ spec(
 )
 
 # === Skeletal mesh spec example (format::glb, asset_type::skeletal_mesh) ===
-skeletal_mesh_spec(
+spec(
     asset_id = "enum-coverage-skeletal-01",
+    asset_type = "skeletal_mesh",
     seed = 99109,
-    output_path = "characters/enum_coverage.glb",
-    format = "glb",
-    skeleton_preset = "humanoid_basic_v1",
     description = "Skeletal mesh enum coverage - skeletal_mesh asset_type, glb format",
-    bone_meshes = {
-        "spine": {
-            "profile": "circle(8)",
-            "profile_radius": 0.1,
-            "material_index": 0
+    outputs = [output("characters/enum_coverage.glb", "glb")],
+    recipe = {
+        "kind": "skeletal_mesh.armature_driven_v1",
+        "params": {
+            "skeleton_preset": "humanoid_connected_v1",
+            "bone_meshes": {
+                "spine": {
+                    "profile": "circle(8)",
+                    "profile_radius": 0.1,
+                    "material_index": 0
+                }
+            },
+            "material_slots": [
+                material_slot(name = "body", base_color = [0.8, 0.6, 0.5, 1.0])
+            ]
         }
-    },
-    material_slots = [
-        material_slot(name = "body", base_color = [0.8, 0.6, 0.5, 1.0])
-    ]
+    }
 )
 
 # === Skeletal animation spec example (asset_type::skeletal_animation) ===
-skeletal_animation_spec(
+spec(
     asset_id = "enum-coverage-anim-01",
+    asset_type = "skeletal_animation",
     seed = 99110,
-    output_path = "animations/enum_coverage.glb",
-    format = "glb",
-    skeleton_preset = "humanoid_basic_v1",
-    clip_name = "idle",
-    duration_seconds = 1.0,
-    fps = 30,
-    description = "Skeletal animation enum coverage - skeletal_animation asset_type"
+    description = "Skeletal animation enum coverage - skeletal_animation asset_type",
+    outputs = [output("animations/enum_coverage.glb", "glb")],
+    recipe = {
+        "kind": "skeletal_animation.keyframe_v1",
+        "params": {
+            "skeleton_preset": "humanoid_connected_v1",
+            "clip_name": "idle",
+            "duration_seconds": 1.0,
+            "fps": 30,
+            "loop": False,
+            "interpolation": "linear",
+            "keyframes": [
+                {
+                    "time": 0.0,
+                    "bones": {
+                        "spine": {"rotation": [0, 0, 0]}
+                    }
+                },
+                {
+                    "time": 1.0,
+                    "bones": {
+                        "spine": {"rotation": [0, 0, 0]}
+                    }
+                }
+            ]
+        }
+    }
 )

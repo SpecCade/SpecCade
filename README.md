@@ -146,18 +146,6 @@ speccade template list --asset-type texture
 speccade template copy preset_texture_material_set_basic --to ./specs/texture/my_material.json
 ```
 
-### Migration
-
-```bash
-# Migrate legacy `.studio/specs/*.spec.py` files to SpecCade JSON specs
-speccade migrate --project <path> --allow-exec-specs
-
-# Audit legacy specs without migrating
-speccade migrate --project <path> --audit --audit-threshold 0.90
-```
-
-See [`docs/MIGRATION.md`](docs/MIGRATION.md) for migration guide and safety notes.
-
 ## Asset Types
 
 Audio, music, textures, sprites, UI, fonts, static meshes, skeletal meshes, and animations. See [`docs/spec-reference/README.md`](docs/spec-reference/README.md) for the full list with recipe kinds, and [`PARITY_MATRIX.md`](PARITY_MATRIX.md) for backend coverage.
@@ -170,10 +158,8 @@ Same spec + seed = identical output. See [`docs/DETERMINISM.md`](docs/DETERMINIS
 
 - **[Docs Map](docs/README.md)** — What to read first
 - **[Spec Reference](docs/spec-reference/README.md)** — Canonical contract + per-asset reference
-- **[Migration Guide](docs/MIGRATION.md)** — Moving from legacy `.studio` system
 - **[Determinism Policy](docs/DETERMINISM.md)** — RNG, hashing, and validation rules
 - **[Contributing](docs/CONTRIBUTING.md)** — Development setup and contribution guidelines
-- **[Spec Reference](docs/spec-reference/README.md)** — Per-asset spec contracts (formerly RFC-0001)
 
 ## Use Cases
 
@@ -207,7 +193,6 @@ Build reusable spec libraries. Share specs as JSON. Generate locally or in the c
 
 - **Rust:** stable toolchain (CI uses `dtolnay/rust-toolchain@stable`)
 - **Blender:** 3.6+ (for mesh/character/animation generation)
-- **Python:** 3.x (optional, only needed for `migrate --allow-exec-specs`)
 
 Run `speccade doctor` to check your environment.
 

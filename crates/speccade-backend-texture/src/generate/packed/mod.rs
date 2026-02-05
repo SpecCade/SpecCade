@@ -1,4 +1,4 @@
-//! Legacy packed texture map generation for `texture.packed_v1`.
+//! Packed texture map generation for `texture.packed_v1`.
 
 use std::collections::HashMap;
 
@@ -24,7 +24,7 @@ use pattern_generators::{
 const DEFAULT_NOISE_SCALE: f64 = 0.05;
 const DEFAULT_FBM_OCTAVES: u8 = 4;
 
-/// Generate all packed texture maps for legacy `texture.packed_v1`.
+/// Generate all packed texture maps for `texture.packed_v1`.
 pub fn generate_packed_maps(
     params: &TexturePackedV1Params,
     seed: u32,

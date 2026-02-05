@@ -1,4 +1,4 @@
-//! Tests for the legacy part system.
+//! Tests for the extrusion parts system.
 
 use super::super::*;
 
@@ -101,7 +101,7 @@ fn test_scale_factor_per_axis() {
 }
 
 #[test]
-fn test_legacy_part_basic() {
+fn test_extrusion_part_basic() {
     let json = r#"{
         "bone": "chest",
         "base": "hexagon(6)",
@@ -109,7 +109,7 @@ fn test_legacy_part_basic() {
         "cap_start": true,
         "cap_end": false
     }"#;
-    let part: LegacyPart = serde_json::from_str(json).unwrap();
+    let part: ExtrusionPart = serde_json::from_str(json).unwrap();
     assert_eq!(part.bone, Some("chest".to_string()));
     assert_eq!(part.base, Some("hexagon(6)".to_string()));
     assert_eq!(part.base_radius, Some(BaseRadius::Uniform(0.2)));
@@ -118,7 +118,7 @@ fn test_legacy_part_basic() {
 }
 
 #[test]
-fn test_legacy_part_with_steps() {
+fn test_extrusion_part_with_steps() {
     let json = r#"{
         "bone": "arm_upper_l",
         "base": "circle(8)",
@@ -129,7 +129,7 @@ fn test_legacy_part_with_steps() {
             {"extrude": 0.1, "scale": 0.8, "rotate": 10}
         ]
     }"#;
-    let part: LegacyPart = serde_json::from_str(json).unwrap();
+    let part: ExtrusionPart = serde_json::from_str(json).unwrap();
     assert_eq!(part.steps.len(), 3);
     assert!(matches!(&part.steps[0], Step::Shorthand(s) if s == "0.1"));
     assert!(matches!(&part.steps[1], Step::Full(_)));
@@ -137,12 +137,12 @@ fn test_legacy_part_with_steps() {
 }
 
 #[test]
-fn test_legacy_part_with_mirror() {
+fn test_extrusion_part_with_mirror() {
     let json = r#"{
         "bone": "arm_upper_r",
         "mirror": "arm_upper_l"
     }"#;
-    let part: LegacyPart = serde_json::from_str(json).unwrap();
+    let part: ExtrusionPart = serde_json::from_str(json).unwrap();
     assert_eq!(part.mirror, Some("arm_upper_l".to_string()));
 }
 
@@ -158,7 +158,7 @@ fn test_instance() {
 }
 
 #[test]
-fn test_legacy_part_with_instances() {
+fn test_extrusion_part_with_instances() {
     let json = r#"{
         "bone": "spike",
         "base": "circle(6)",
@@ -169,7 +169,7 @@ fn test_legacy_part_with_instances() {
             {"position": [-0.1, 0.0, 0.1], "rotation": [0, 0, -30]}
         ]
     }"#;
-    let part: LegacyPart = serde_json::from_str(json).unwrap();
+    let part: ExtrusionPart = serde_json::from_str(json).unwrap();
     assert_eq!(part.instances.len(), 3);
     assert_eq!(part.instances[0].position, Some([0.0, 0.0, 0.1]));
     assert_eq!(part.instances[1].rotation, Some([0.0, 0.0, 30.0]));
@@ -212,7 +212,7 @@ fn test_sub_part_or_list_multiple() {
 }
 
 #[test]
-fn test_legacy_part_with_fingers() {
+fn test_extrusion_part_with_fingers() {
     let json = r#"{
         "bone": "hand_l",
         "base": "circle(8)",
@@ -225,7 +225,7 @@ fn test_legacy_part_with_fingers() {
             {"bone": "finger_pinky_l", "base_radius": 0.01}
         ]
     }"#;
-    let part: LegacyPart = serde_json::from_str(json).unwrap();
+    let part: ExtrusionPart = serde_json::from_str(json).unwrap();
     assert!(part.thumb.is_some());
     assert_eq!(part.fingers.len(), 4);
 }

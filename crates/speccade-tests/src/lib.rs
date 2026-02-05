@@ -2,10 +2,8 @@
 //!
 //! This crate provides integration tests for parity-critical flows:
 //!
-//! - Migration: Legacy .spec.py -> canonical JSON
-//! - Generation: Spec JSON -> output files
+//! - Generation: Spec -> output files
 //! - Validation: Output file existence and validity
-//! - Audit: Migrator audit mode on test fixtures
 //! - **Determinism**: Verify byte-identical output across runs (Tier 1)
 //!
 //! ## Running Tests

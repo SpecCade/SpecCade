@@ -70,7 +70,7 @@ Every SpecCade spec is a JSON document with two logical sections:
 | `description` | string | Human-readable description | omitted |
 | `style_tags` | array | Semantic tags (e.g., `["retro", "8bit"]`) | omitted |
 | `engine_targets` | array | Target engines: `"godot"`, `"unity"`, `"unreal"` | omitted |
-| `migration_notes` | array | Informational notes from `speccade migrate` | omitted |
+| `migration_notes` | array | Informational notes (e.g., conversion history) | omitted |
 | `variants` | array | Variant specs for procedural variations | omitted |
 
 ## Seeds and Determinism

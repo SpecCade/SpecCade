@@ -8,7 +8,7 @@ use crate::compiler::stdlib::validation::{validate_enum, validate_non_empty};
 
 use super::util::{hashed_key, new_dict};
 
-/// Valid synthesis types for legacy synthesis.
+/// Valid synthesis types for deprecated synthesis.
 const SYNTHESIS_TYPES: &[&str] = &["pulse", "square", "triangle", "sawtooth", "sine", "noise"];
 
 /// Valid loop modes.
