@@ -11,7 +11,6 @@ spec(
     outputs = [
         output("sprite/enum_coverage_sheet.png", "png"),
         output("sprite/enum_coverage_sheet.json", "json", kind = "metadata"),
-        output("sprite/enum_coverage_preview.png", "png", kind = "preview")
     ],
     recipe = {
         "kind": "sprite.sheet_v1",
