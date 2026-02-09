@@ -25,6 +25,11 @@ pub struct AnimationResult {
     pub report: BlenderReport,
 }
 
+fn expected_frame_count_from_duration(duration_seconds: f64, fps: u8) -> u32 {
+    let raw_frames = (duration_seconds * f64::from(fps)).max(0.0);
+    (raw_frames + 0.5).floor().max(1.0) as u32
+}
+
 /// Generates an animation from a spec.
 ///
 /// # Arguments
@@ -108,7 +113,7 @@ fn validate_animation_metrics(
     let tolerances = MetricTolerances::default();
 
     // Calculate expected frame count
-    let expected_frame_count = (params.duration_seconds * params.fps as f64).ceil() as u32;
+    let expected_frame_count = expected_frame_count_from_duration(params.duration_seconds, params.fps);
 
     // Validate frame count (exact match required)
     if let Some(actual_frame_count) = metrics.animation_frame_count {
@@ -176,7 +181,7 @@ pub fn generate_from_params(
 ///
 /// Useful for validation and testing.
 pub fn expected_metrics(params: &SkeletalAnimationBlenderClipV1Params) -> BlenderMetrics {
-    let frame_count = (params.duration_seconds * params.fps as f64).ceil() as u32;
+    let frame_count = expected_frame_count_from_duration(params.duration_seconds, params.fps);
     let bone_count = params.skeleton_preset.bone_count() as u32;
 
     BlenderMetrics::for_animation(bone_count, frame_count, params.duration_seconds)

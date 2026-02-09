@@ -18,6 +18,72 @@ except ImportError:
     Vector = None  # type: ignore
 
 
+def _normalize_bone_lookup_key(name: str) -> str:
+    """Normalize a bone name for tolerant lookup across naming conventions."""
+    return ''.join(ch for ch in name.lower() if ch.isalnum())
+
+
+def _build_pose_bone_lookup(armature: 'bpy.types.Object') -> Dict[str, str]:
+    """Build a lookup that resolves case/format variations to actual pose bone names."""
+    lookup: Dict[str, str] = {}
+    for pose_bone in armature.pose.bones:
+        bone_name = pose_bone.name
+        keys = (
+            bone_name,
+            bone_name.lower(),
+            _normalize_bone_lookup_key(bone_name),
+        )
+        for key in keys:
+            if key and key not in lookup:
+                lookup[key] = bone_name
+    return lookup
+
+
+def _resolve_pose_bone(
+    armature: 'bpy.types.Object',
+    lookup: Dict[str, str],
+    requested_name: str,
+) -> Optional['bpy.types.PoseBone']:
+    """Resolve a spec bone name to an existing pose bone."""
+    if not requested_name:
+        return None
+
+    pose_bone = armature.pose.bones.get(requested_name)
+    if pose_bone is not None:
+        return pose_bone
+
+    candidates = (
+        requested_name,
+        requested_name.lower(),
+        _normalize_bone_lookup_key(requested_name),
+    )
+    for key in candidates:
+        resolved_name = lookup.get(key)
+        if resolved_name:
+            resolved = armature.pose.bones.get(resolved_name)
+            if resolved is not None:
+                return resolved
+    return None
+
+
+def compute_frame_count(
+    fps: int,
+    duration_frames: Optional[int],
+    duration_seconds: Optional[float],
+    *,
+    default_frame_count: int = 30,
+) -> int:
+    """Compute clip frame count using stable half-up rounding."""
+    if duration_frames is not None:
+        return max(1, int(duration_frames))
+
+    if duration_seconds is not None:
+        raw_frames = max(0.0, float(duration_seconds) * float(fps))
+        return max(1, int(math.floor(raw_frames + 0.5)))
+
+    return max(1, int(default_frame_count))
+
+
 # =============================================================================
 # Procedural Animation Layers
 # =============================================================================
@@ -49,6 +115,7 @@ def apply_procedural_layers(
 
     bpy.context.view_layer.objects.active = armature
     bpy.ops.object.mode_set(mode='POSE')
+    bone_lookup = _build_pose_bone_lookup(armature)
 
     for layer in layers:
         layer_type = layer.get('type', 'breathing')
@@ -59,7 +126,7 @@ def apply_procedural_layers(
         phase_offset = layer.get('phase_offset', 0.0)
         frequency = layer.get('frequency', 0.3)
 
-        pose_bone = armature.pose.bones.get(target)
+        pose_bone = _resolve_pose_bone(armature, bone_lookup, target)
         if not pose_bone:
             print(f"Warning: Bone '{target}' not found for procedural layer")
             continue
@@ -129,6 +196,7 @@ def apply_poses_and_phases(
 
     bpy.context.view_layer.objects.active = armature
     bpy.ops.object.mode_set(mode='POSE')
+    bone_lookup = _build_pose_bone_lookup(armature)
 
     for phase in phases:
         phase_name = phase.get('name', 'unnamed')
@@ -144,7 +212,7 @@ def apply_poses_and_phases(
             bones_data = pose_def.get('bones', {})
 
             for bone_name, transform in bones_data.items():
-                pose_bone = armature.pose.bones.get(bone_name)
+                pose_bone = _resolve_pose_bone(armature, bone_lookup, bone_name)
                 if not pose_bone:
                     continue
 
@@ -404,12 +472,12 @@ def create_animation(armature: 'bpy.types.Object', params: Dict) -> 'bpy.types.A
     # Calculate frame range - support both duration_frames and duration_seconds
     duration_frames = params.get("duration_frames")
     duration_seconds = params.get("duration_seconds")
-    if duration_frames:
-        frame_count = duration_frames
-    elif duration_seconds:
-        frame_count = int(duration_seconds * fps)
-    else:
-        frame_count = 30  # Default to 1 second at 30fps
+    frame_count = compute_frame_count(
+        fps,
+        duration_frames,
+        duration_seconds,
+        default_frame_count=30,
+    )
     bpy.context.scene.frame_start = 1
     bpy.context.scene.frame_end = frame_count
 
@@ -425,6 +493,8 @@ def create_animation(armature: 'bpy.types.Object', params: Dict) -> 'bpy.types.A
         "CONSTANT": "CONSTANT",
     }
     interp_mode = interp_map.get(interpolation, "LINEAR")
+    bone_lookup = _build_pose_bone_lookup(armature)
+    missing_bones = set()
 
     # Apply keyframes
     for kf_spec in keyframes:
@@ -438,9 +508,9 @@ def create_animation(armature: 'bpy.types.Object', params: Dict) -> 'bpy.types.A
         bones_data = kf_spec.get("bones", {})
 
         for bone_name, transform in bones_data.items():
-            pose_bone = armature.pose.bones.get(bone_name)
+            pose_bone = _resolve_pose_bone(armature, bone_lookup, bone_name)
             if not pose_bone:
-                print(f"Warning: Bone {bone_name} not found")
+                missing_bones.add(str(bone_name))
                 continue
 
             # Apply rotation
@@ -482,6 +552,9 @@ def create_animation(armature: 'bpy.types.Object', params: Dict) -> 'bpy.types.A
                 scale = transform["scale"]
                 pose_bone.scale = Vector(scale)
                 pose_bone.keyframe_insert(data_path="scale", frame=frame)
+
+    for bone_name in sorted(missing_bones):
+        print(f"Warning: Bone '{bone_name}' not found")
 
     return action
 

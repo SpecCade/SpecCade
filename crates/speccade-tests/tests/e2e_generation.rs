@@ -2410,6 +2410,69 @@ fn test_generate_animation() {
     assert!(gen_result.metrics.animation_frame_count.is_some());
 }
 
+/// CamelCase bone names should resolve to preset snake_case bones.
+#[test]
+#[ignore] // Run with SPECCADE_RUN_BLENDER_TESTS=1
+fn test_generate_animation_camelcase_bone_names() {
+    if !should_run_blender_tests() {
+        println!("Blender tests not enabled, skipping");
+        return;
+    }
+
+    if !is_blender_available() {
+        println!("Blender not available, skipping");
+        return;
+    }
+
+    let harness = TestHarness::new();
+    let spec = Spec::builder("test-anim-camelcase-bones-01", AssetType::SkeletalAnimation)
+        .license("CC0-1.0")
+        .seed(1)
+        .output(OutputSpec::primary(
+            OutputFormat::Glb,
+            "animations/camelcase_bones.glb",
+        ))
+        .recipe(Recipe::new(
+            "skeletal_animation.blender_clip_v1",
+            serde_json::json!({
+                "skeleton_preset": "humanoid_basic_v1",
+                "clip_name": "camelcase_bones",
+                "duration_seconds": 0.8,
+                "fps": 60,
+                "loop": true,
+                "interpolation": "constant",
+                "keyframes": [
+                    {
+                        "time": 0.0,
+                        "bones": {
+                            "Hips": { "position": [0.0, 0.0, 0.0] },
+                            "UpperArmL": { "rotation": [15.0, 0.0, 0.0] }
+                        }
+                    },
+                    {
+                        "time": 0.8,
+                        "bones": {
+                            "Hips": { "position": [0.0, 0.0, 0.0] },
+                            "UpperArmL": { "rotation": [-15.0, 0.0, 0.0] }
+                        }
+                    }
+                ]
+            }),
+        ))
+        .build();
+
+    let result = speccade_backend_blender::animation::generate(&spec, harness.path());
+    assert!(
+        result.is_ok(),
+        "Animation generation failed: {:?}",
+        result.err()
+    );
+
+    let gen_result = result.unwrap();
+    assert_eq!(gen_result.metrics.animation_frame_count, Some(48));
+    assert_eq!(gen_result.metrics.animation_duration_seconds, Some(0.8));
+}
+
 /// Test rigged (IK-aware) animation generation with Blender.
 #[test]
 #[ignore] // Run with SPECCADE_RUN_BLENDER_TESTS=1

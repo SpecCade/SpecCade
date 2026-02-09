@@ -33,6 +33,7 @@ from .skeletal_mesh_rework import classify_skeletal_mesh_kind, compute_safe_rena
 from .ik_fk import apply_rig_setup, snap_fk_to_ik, snap_ik_to_fk
 from .animation import (
     create_animation,
+    compute_frame_count,
     apply_procedural_layers,
     apply_poses_and_phases,
     bake_animation,
@@ -616,13 +617,12 @@ def handle_rigged_animation(spec: Dict, out_root: Path, report_path: Path) -> No
         fps = params.get("fps", 30)
         duration_frames = params.get("duration_frames")
         duration_seconds = params.get("duration_seconds")
-
-        if duration_frames:
-            frame_count = duration_frames
-        elif duration_seconds:
-            frame_count = int(duration_seconds * fps)
-        else:
-            frame_count = 30  # Default to 1 second at 30fps
+        frame_count = compute_frame_count(
+            fps,
+            duration_frames,
+            duration_seconds,
+            default_frame_count=30,
+        )
 
         # Set frame range
         bpy.context.scene.frame_start = 1
