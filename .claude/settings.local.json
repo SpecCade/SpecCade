@@ -93,7 +93,19 @@
       "Bash(git stash:*)",
       "WebFetch(domain:docs.blender.org)",
       "WebFetch(domain:blenderartists.org)",
-      "WebFetch(domain:topologyguides.com)"
+      "WebFetch(domain:topologyguides.com)",
+      "Bash(do echo \"Testing: $spec\")",
+      "Bash(Get-ChildItem \"D:\\\\Development\\\\nethercore-project\\\\speccade\\\\out\\\\validation\"\" -Filter \"*.png \")",
+      "Bash(Select-Object Name, Length, LastWriteTime)",
+      "Bash(perl:*)",
+      "Bash(set RUST_LOG=debug:*)",
+      "Bash(tee:*)",
+      "Bash(if not exist spec mkdir spec)",
+      "Bash(if not exist reports mkdir reports)",
+      "Bash(if not exist logs mkdir logs)",
+      "Bash(if not exist previews mkdir previews)",
+      "Bash(if not exist assets mkdir assets)",
+      "WebFetch(domain:arxiv.org)"
     ]
   },
   "disabledMcpjsonServers": [

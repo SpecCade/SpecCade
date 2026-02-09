@@ -240,6 +240,7 @@ mod tests {
         SkeletalMeshArmatureDrivenV1Params {
             skeleton_preset: Some(SkeletonPreset::HumanoidBasicV1),
             skeleton: vec![],
+            skinning_mode: None,
             bone_meshes: std::collections::HashMap::new(),
             bool_shapes: std::collections::HashMap::new(),
             material_slots: vec![],

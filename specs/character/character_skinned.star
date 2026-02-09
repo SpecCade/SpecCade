@@ -70,61 +70,92 @@ spec(
         "params": {
             "skeleton_preset": "humanoid_connected_v1",
             "bone_meshes": {
-                "spine": {
+                "hips": {
                     "profile": "circle(8)",
-                    "profile_radius": 0.15,
+                    "profile_radius": {"absolute": 0.12},
                     "material_index": 0,
                     "cap_start": True,
                     "cap_end": False
                 },
+                "spine": {
+                    "profile": "circle(8)",
+                    "profile_radius": {"absolute": 0.13},
+                    "material_index": 0,
+                    "cap_start": False,
+                    "cap_end": False
+                },
                 "chest": {
                     "profile": "circle(8)",
-                    "profile_radius": 0.18,
+                    "profile_radius": {"absolute": 0.14},
                     "material_index": 0,
                     "cap_start": False,
                     "cap_end": True
                 },
+                "neck": {
+                    "profile": "circle(8)",
+                    "profile_radius": {"absolute": 0.05},
+                    "material_index": 0,
+                    "cap_start": True,
+                    "cap_end": False
+                },
                 "head": {
                     "profile": "circle(8)",
-                    "profile_radius": 0.08,
+                    "profile_radius": {"absolute": 0.05},
                     "material_index": 1,
                     "cap_start": False,
                     "cap_end": True,
                     "attachments": [
                         {
                             "primitive": "sphere",
-                            "dimensions": [0.15, 0.18, 0.15],
-                            "offset": [0, 0, 0.6],
+                            "dimensions": [0.55, 0.65, 0.55],
+                            "offset": [0, 0, 0.4],
                             "material_index": 1
                         }
                     ]
                 },
-                "shoulder_l": {"profile": "circle(6)", "profile_radius": 0.07, "cap_start": True, "cap_end": False, "material_index": 0},
+                "shoulder_l": {"profile": "circle(6)", "profile_radius": {"absolute": 0.06}, "cap_start": True, "cap_end": False, "material_index": 0},
                 "shoulder_r": {"mirror": "shoulder_l"},
                 "upper_arm_l": {
                     "profile": "circle(6)",
-                    "profile_radius": 0.08,
-                    "material_index": 0,
-                    "rotate": [0, 0, 90]
+                    "profile_radius": {"absolute": 0.05},
+                    "material_index": 0
                 },
-                "upper_arm_r": {
+                "upper_arm_r": {"mirror": "upper_arm_l"},
+                "lower_arm_l": {
                     "profile": "circle(6)",
-                    "profile_radius": 0.08,
+                    "profile_radius": {"absolute": 0.04},
                     "material_index": 0,
-                    "rotate": [0, 0, -90]
+                    "cap_end": True
                 },
+                "lower_arm_r": {"mirror": "lower_arm_l"},
+                "hand_l": {
+                    "profile": "circle(6)",
+                    "profile_radius": {"absolute": 0.03},
+                    "material_index": 0,
+                    "cap_end": True
+                },
+                "hand_r": {"mirror": "hand_l"},
                 "upper_leg_l": {
                     "profile": "circle(6)",
-                    "profile_radius": 0.1,
+                    "profile_radius": {"absolute": 0.07},
                     "material_index": 0,
-                    "rotate": [180, 0, 0]
+                    "cap_start": True
                 },
-                "upper_leg_r": {
+                "upper_leg_r": {"mirror": "upper_leg_l"},
+                "lower_leg_l": {
                     "profile": "circle(6)",
-                    "profile_radius": 0.1,
+                    "profile_radius": {"absolute": 0.05},
                     "material_index": 0,
-                    "rotate": [180, 0, 0]
-                }
+                    "cap_end": True
+                },
+                "lower_leg_r": {"mirror": "lower_leg_l"},
+                "foot_l": {
+                    "profile": "circle(6)",
+                    "profile_radius": {"absolute": 0.04},
+                    "material_index": 0,
+                    "cap_end": True
+                },
+                "foot_r": {"mirror": "foot_l"}
             },
             "material_slots": [
                 material_slot(

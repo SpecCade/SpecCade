@@ -16,8 +16,8 @@ spec(
             [0.2, 0.2, 0.2],
             [
                 bevel_modifier(0.01, 1),
-                # Create 5 copies along X axis
-                array_modifier(5, [0.3, 0.0, 0.0])
+                # Create 5 copies along X axis with 100% gap (equal to cube width)
+                array_modifier(5, [2.0, 0.0, 0.0])
             ]
         )
     }

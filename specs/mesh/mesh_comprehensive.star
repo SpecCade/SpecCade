@@ -14,7 +14,7 @@ spec(
             "dimensions": [1.2, 1.2, 2.2],
             "modifiers": [
                 bevel_modifier(0.03, 2, 35.0),
-                subdivision_modifier(2, 2),
+                subdivision_modifier(1, 1),
                 mirror_modifier(True, False, False),
                 array_modifier(2, [0.0, 1.6, 0.0]),
                 solidify_modifier(0.04, 0.0),
@@ -110,8 +110,8 @@ spec(
                 "save_blend": False,
             },
             "constraints": {
-                "max_triangles": 50000,
-                "max_vertices": 50000,
+                "max_triangles": 100000,
+                "max_vertices": 100000,
                 "max_materials": 8,
             },
         },

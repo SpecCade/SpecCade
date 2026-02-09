@@ -1,0 +1,633 @@
+# SpecCade Asset Inventory - All Blender-Backend Assets
+# Generated: 2026-02-06
+# Total: 61 assets (19 character, 16 mesh, 24 animation, 2 sprite)
+#
+# Reproduction: cargo run -p speccade-cli -- generate-all --spec-dir specs --include-blender --out-root assets
+# Preview grids: for each spec, run: cargo run -p speccade-cli -- preview-grid --spec <path>
+
+assets:
+  # ===========================
+  # CHARACTER SPECS (skeletal_mesh) - 19 assets
+  # ===========================
+
+  - asset_id: "colored_regions"
+    spec_path: "specs/character/colored_regions.star"
+    asset_type: "skeletal_mesh"
+    recipe_kind: "skeletal_mesh.armature_driven_v1"
+    intended_design: "Character with colored texture regions - demonstrates region colors and advanced UV modes"
+    output_format: "glb"
+    output_path: "assets/character/colored_regions.glb"
+    preview_path: "previews/colored_regions.grid.png"
+    seed: 7006
+
+  - asset_id: "hand_with_fingers"
+    spec_path: "specs/character/hand_with_fingers.star"
+    asset_type: "skeletal_mesh"
+    recipe_kind: "skeletal_mesh.armature_driven_v1"
+    intended_design: "Hand with thumb and fingers - demonstrates sub-part features"
+    output_format: "glb"
+    output_path: "assets/character/hand_with_fingers.glb"
+    preview_path: "previews/hand_with_fingers.grid.png"
+    seed: 7003
+
+  - asset_id: "rigid_simple_humanoid"
+    spec_path: "specs/character/rigid_simple_humanoid.star"
+    asset_type: "skeletal_mesh"
+    recipe_kind: "skeletal_mesh.armature_driven_v1"
+    intended_design: "Simplified rigid humanoid for testing - custom skeleton with explicit bone positions, minimal bones"
+    output_format: "glb"
+    output_path: "assets/skeletal_mesh/rigid_simple_humanoid.glb"
+    preview_path: "previews/rigid_simple_humanoid.grid.png"
+    seed: 7400
+
+  - asset_id: "rigid_segmented_humanoid"
+    spec_path: "specs/character/rigid_segmented_humanoid.star"
+    asset_type: "skeletal_mesh"
+    recipe_kind: "skeletal_mesh.armature_driven_v1"
+    intended_design: "Realistic humanoid with rigid skinning - each segment bound to one bone, no gaps between parts, 20 bones with absolute radii"
+    output_format: "glb"
+    output_path: "assets/skeletal_mesh/rigid_segmented_humanoid.glb"
+    preview_path: "previews/rigid_segmented_humanoid.grid.png"
+    seed: 7300
+
+  - asset_id: "quadruped_dog"
+    spec_path: "specs/character/quadruped_dog.star"
+    asset_type: "skeletal_mesh"
+    recipe_kind: "skeletal_mesh.armature_driven_v1"
+    intended_design: "Golden fixture: quadruped dog with custom skeleton, bridge edge loops between coaxial body segments, cone ear attachments"
+    output_format: "glb"
+    output_path: "assets/skeletal_mesh/quadruped_dog.glb"
+    preview_path: "previews/quadruped_dog.grid.png"
+    seed: 7110
+
+  - asset_id: "creature_spider"
+    spec_path: "specs/character/creature_spider.star"
+    asset_type: "skeletal_mesh"
+    recipe_kind: "skeletal_mesh.armature_driven_v1"
+    intended_design: "Golden fixture: creature spider with custom skeleton, 8 mirrored legs, bridged body segments, ico_sphere eye attachments"
+    output_format: "glb"
+    output_path: "assets/skeletal_mesh/creature_spider.glb"
+    preview_path: "previews/creature_spider.grid.png"
+    seed: 7111
+
+  - asset_id: "skinned_mesh_basic"
+    spec_path: "specs/character/skinned_mesh_basic.star"
+    asset_type: "skeletal_mesh"
+    recipe_kind: "skeletal_mesh.armature_driven_v1"
+    intended_design: "Golden fixture: basic skinned humanoid character using humanoid_connected_v1 preset with sphere head attachment"
+    output_format: "glb"
+    output_path: "assets/skeletal_mesh/skinned_mesh_basic.glb"
+    preview_path: "previews/skinned_mesh_basic.grid.png"
+    seed: 7120
+
+  - asset_id: "humanoid_male"
+    spec_path: "specs/character/humanoid_male.star"
+    asset_type: "skeletal_mesh"
+    recipe_kind: "skeletal_mesh.armature_driven_v1"
+    intended_design: "Golden fixture: humanoid male with preset skeleton, hexagon chest, bool jaw cut, ico_sphere visor, 3 materials (skin/cloth/metal)"
+    output_format: "glb"
+    output_path: "assets/skeletal_mesh/humanoid_male.glb"
+    preview_path: "previews/humanoid_male.grid.png"
+    seed: 7101
+
+  - asset_id: "humanoid_female"
+    spec_path: "specs/character/humanoid_female.star"
+    asset_type: "skeletal_mesh"
+    recipe_kind: "skeletal_mesh.armature_driven_v1"
+    intended_design: "Golden fixture: humanoid female with preset skeleton, hexagon chest, bool eye cuts with mirror, torus necklace, extrude nose attachment, 3 materials (skin/cloth/accent)"
+    output_format: "glb"
+    output_path: "assets/skeletal_mesh/humanoid_female.glb"
+    preview_path: "previews/humanoid_female.grid.png"
+    seed: 7102
+
+  - asset_id: "preset_humanoid"
+    spec_path: "specs/character/preset_humanoid.star"
+    asset_type: "skeletal_mesh"
+    recipe_kind: "skeletal_mesh.armature_driven_v1"
+    intended_design: "Humanoid using skeleton_preset humanoid_connected_v1 - demonstrates modern body_parts system with shoulder connectors"
+    output_format: "glb"
+    output_path: "assets/character/preset_humanoid.glb"
+    preview_path: "previews/preset_humanoid.grid.png"
+    seed: 7005
+
+  - asset_id: "character_comprehensive"
+    spec_path: "specs/character/character_comprehensive.star"
+    asset_type: "skeletal_mesh"
+    recipe_kind: "skeletal_mesh.armature_driven_v1"
+    intended_design: "Golden fixture: comprehensive armature-driven skeletal mesh exercising bool_shapes, modifiers, attachments, 3 materials, export and constraints"
+    output_format: "glb"
+    output_path: "assets/skeletal_mesh/character_comprehensive.glb"
+    preview_path: "previews/character_comprehensive.grid.png"
+    seed: 7200
+
+  - asset_id: "simple_biped"
+    spec_path: "specs/character/simple_biped.star"
+    asset_type: "skeletal_mesh"
+    recipe_kind: "skeletal_mesh.armature_driven_v1"
+    intended_design: "Simple biped character - minimal humanoid skeleton with full limbs, shoulders, hands and feet using mirror bones"
+    output_format: "glb"
+    output_path: "assets/character/simple_biped.glb"
+    preview_path: "previews/simple_biped.grid.png"
+    seed: 7001
+
+  - asset_id: "rigid_segmented_stylized_female"
+    spec_path: "specs/character/rigid_segmented_stylized_female.star"
+    asset_type: "skeletal_mesh"
+    recipe_kind: "skeletal_mesh.armature_driven_v1"
+    intended_design: "Stylized female humanoid with rigid skinning - feminine proportions, cylinder shoulder connectors"
+    output_format: "glb"
+    output_path: "assets/skeletal_mesh/rigid_segmented_stylized_female.glb"
+    preview_path: "previews/rigid_segmented_stylized_female.grid.png"
+    seed: 7301
+
+  - asset_id: "rigid_robotic_arm"
+    spec_path: "specs/character/rigid_robotic_arm.star"
+    asset_type: "skeletal_mesh"
+    recipe_kind: "skeletal_mesh.armature_driven_v1"
+    intended_design: "Industrial robotic arm with segmented joints - hexagon base, circle joints, torus elbow ring, rectangle gripper, 3 materials"
+    output_format: "glb"
+    output_path: "assets/skeletal_mesh/rigid_robotic_arm.glb"
+    preview_path: "previews/rigid_robotic_arm.grid.png"
+    seed: 7400
+
+  - asset_id: "character_humanoid_blank"
+    spec_path: "specs/character/character_humanoid_blank.star"
+    asset_type: "skeletal_mesh"
+    recipe_kind: "skeletal_mesh.armature_driven_v1"
+    intended_design: "Blank-material humanoid placeholder - all parts use single white material"
+    output_format: "glb"
+    output_path: "assets/characters/humanoid_blank.glb"
+    preview_path: "previews/character_humanoid_blank.grid.png"
+    seed: 42
+
+  - asset_id: "character_humanoid"
+    spec_path: "specs/character/character_humanoid.star"
+    asset_type: "skeletal_mesh"
+    recipe_kind: "skeletal_mesh.armature_driven_v1"
+    intended_design: "Stdlib humanoid character - basic humanoid with sphere head attachment, skin-tone body and lighter head materials"
+    output_format: "glb"
+    output_path: "assets/characters/humanoid.glb"
+    preview_path: "previews/character_humanoid.grid.png"
+    seed: 42
+
+  - asset_id: "character_skinned"
+    spec_path: "specs/character/character_skinned.star"
+    asset_type: "skeletal_mesh"
+    recipe_kind: "skeletal_mesh.armature_driven_v1"
+    intended_design: "Stdlib skinned character - demonstrates body_part helpers, skeletal_texturing, and skinning_config functions"
+    output_format: "glb"
+    output_path: "assets/characters/skinned_character.glb"
+    preview_path: "previews/character_skinned.grid.png"
+    seed: 42
+
+  - asset_id: "rigid_segmented_stylized_female_v2"
+    spec_path: "specs/character/rigid_segmented_stylized_female_v2.star"
+    asset_type: "skeletal_mesh"
+    recipe_kind: "skeletal_mesh.armature_driven_v1"
+    intended_design: "Stylized female humanoid v2 - improved anatomy with heel/arch/toe feet, calf muscle bulge, bust/buttock sphere attachments, cone nose"
+    output_format: "glb"
+    output_path: "assets/skeletal_mesh/rigid_segmented_stylized_female_v2.glb"
+    preview_path: "previews/rigid_segmented_stylized_female_v2.grid.png"
+    seed: 7302
+
+  - asset_id: "humanoid_male_v2"
+    spec_path: "specs/character/humanoid_male_v2.star"
+    asset_type: "skeletal_mesh"
+    recipe_kind: "skeletal_mesh.armature_driven_v1"
+    intended_design: "Humanoid male v2 - improved anatomy with broad shoulders, muscular build, pectoral/bicep/quad/calf attachments, brow ridge"
+    output_format: "glb"
+    output_path: "assets/skeletal_mesh/humanoid_male_v2.glb"
+    preview_path: "previews/humanoid_male_v2.grid.png"
+    seed: 7103
+
+  # ===========================
+  # MESH SPECS (static_mesh) - 16 assets
+  # ===========================
+
+  - asset_id: "armor_plate"
+    spec_path: "specs/mesh/armor_plate.star"
+    asset_type: "static_mesh"
+    recipe_kind: "static_mesh.shrinkwrap_v1"
+    intended_design: "Armor chestplate wrapped onto body torso using nearest_surface mode"
+    output_format: "glb"
+    output_path: "assets/mesh/armor_plate.glb"
+    preview_path: "previews/armor_plate.grid.png"
+    seed: 7001
+
+  - asset_id: "cloth_drape"
+    spec_path: "specs/mesh/cloth_drape.star"
+    asset_type: "static_mesh"
+    recipe_kind: "static_mesh.shrinkwrap_v1"
+    intended_design: "Draped cloth/cape wrapped onto body using project mode"
+    output_format: "glb"
+    output_path: "assets/mesh/cloth_drape.glb"
+    preview_path: "previews/cloth_drape.grid.png"
+    seed: 7002
+
+  - asset_id: "fitted_accessory"
+    spec_path: "specs/mesh/fitted_accessory.star"
+    asset_type: "static_mesh"
+    recipe_kind: "static_mesh.shrinkwrap_v1"
+    intended_design: "Fitted ring/bracelet/belt wrapped onto curved surface"
+    output_format: "glb"
+    output_path: "assets/mesh/fitted_accessory.glb"
+    preview_path: "previews/fitted_accessory.grid.png"
+    seed: 7003
+
+  - asset_id: "mesh_array"
+    spec_path: "specs/mesh/mesh_array.star"
+    asset_type: "static_mesh"
+    recipe_kind: "static_mesh.blender_primitives_v1"
+    intended_design: "Array modifier - 5 beveled cube copies along X axis"
+    output_format: "glb"
+    output_path: "assets/meshes/array.glb"
+    preview_path: "previews/mesh_array.grid.png"
+    seed: 42
+
+  - asset_id: "mesh_cube"
+    spec_path: "specs/mesh/mesh_cube.star"
+    asset_type: "static_mesh"
+    recipe_kind: "static_mesh.blender_primitives_v1"
+    intended_design: "Simple cube with bevel and subdivision modifiers"
+    output_format: "glb"
+    output_path: "assets/meshes/cube.glb"
+    preview_path: "previews/mesh_cube.grid.png"
+    seed: 42
+
+  - asset_id: "mesh_decimate"
+    spec_path: "specs/mesh/mesh_decimate.star"
+    asset_type: "static_mesh"
+    recipe_kind: "static_mesh.blender_primitives_v1"
+    intended_design: "Decimate modifier - ico_sphere decimated to 30% for LOD"
+    output_format: "glb"
+    output_path: "assets/meshes/decimate.glb"
+    preview_path: "previews/mesh_decimate.grid.png"
+    seed: 42
+
+  - asset_id: "mesh_edge_split"
+    spec_path: "specs/mesh/mesh_edge_split.star"
+    asset_type: "static_mesh"
+    recipe_kind: "static_mesh.blender_primitives_v1"
+    intended_design: "Edge split modifier - cube with edges split at 30 degrees"
+    output_format: "glb"
+    output_path: "assets/meshes/edge_split.glb"
+    preview_path: "previews/mesh_edge_split.grid.png"
+    seed: 42
+
+  - asset_id: "mesh_mirror"
+    spec_path: "specs/mesh/mesh_mirror.star"
+    asset_type: "static_mesh"
+    recipe_kind: "static_mesh.blender_primitives_v1"
+    intended_design: "Mirror modifier - asymmetric cube mirrored on X and Y axes"
+    output_format: "glb"
+    output_path: "assets/meshes/mirror.glb"
+    preview_path: "previews/mesh_mirror.grid.png"
+    seed: 42
+
+  - asset_id: "mesh_modifiers"
+    spec_path: "specs/mesh/mesh_modifiers.star"
+    asset_type: "static_mesh"
+    recipe_kind: "static_mesh.blender_primitives_v1"
+    intended_design: "Combined modifiers - cube with bevel + subdivision + edge split"
+    output_format: "glb"
+    output_path: "assets/meshes/modifiers.glb"
+    preview_path: "previews/mesh_modifiers.grid.png"
+    seed: 42
+
+  - asset_id: "mesh_modular_kit"
+    spec_path: "specs/mesh/mesh_modular_kit.star"
+    asset_type: "static_mesh"
+    recipe_kind: "static_mesh.modular_kit_v1"
+    intended_design: "Modular wall section with door cutout, door frame, and baseboard"
+    output_format: "glb"
+    output_path: "assets/meshes/wall_kit.glb"
+    preview_path: "previews/mesh_modular_kit.grid.png"
+    seed: 42
+
+  - asset_id: "mesh_organic_sculpt"
+    spec_path: "specs/mesh/mesh_organic_sculpt.star"
+    asset_type: "static_mesh"
+    recipe_kind: "static_mesh.organic_sculpt_v1"
+    intended_design: "Organic sculpt - metaball blob with voxel remeshing, smoothing, and displacement"
+    output_format: "glb"
+    output_path: "assets/meshes/organic_blob.glb"
+    preview_path: "previews/mesh_organic_sculpt.grid.png"
+    seed: 42
+
+  - asset_id: "mesh_primitives"
+    spec_path: "specs/mesh/mesh_primitives.star"
+    asset_type: "static_mesh"
+    recipe_kind: "static_mesh.blender_primitives_v1"
+    intended_design: "Primitives coverage - cylinder with bevel and triangulate"
+    output_format: "glb"
+    output_path: "assets/meshes/coverage_cylinder.glb"
+    preview_path: "previews/mesh_primitives.grid.png"
+    seed: 42
+
+  - asset_id: "mesh_solidify"
+    spec_path: "specs/mesh/mesh_solidify.star"
+    asset_type: "static_mesh"
+    recipe_kind: "static_mesh.blender_primitives_v1"
+    intended_design: "Solidify modifier - plane with 0.1 thickness and bevel"
+    output_format: "glb"
+    output_path: "assets/meshes/solidify.glb"
+    preview_path: "previews/mesh_solidify.grid.png"
+    seed: 42
+
+  - asset_id: "mesh_sphere"
+    spec_path: "specs/mesh/mesh_sphere.star"
+    asset_type: "static_mesh"
+    recipe_kind: "static_mesh.blender_primitives_v1"
+    intended_design: "Decimated sphere - 2.0 unit sphere with 50% polygon reduction"
+    output_format: "glb"
+    output_path: "assets/meshes/sphere.glb"
+    preview_path: "previews/mesh_sphere.grid.png"
+    seed: 42
+
+  - asset_id: "environment_house"
+    spec_path: "specs/mesh/environment_house.star"
+    asset_type: "static_mesh"
+    recipe_kind: "static_mesh.blender_primitives_v1"
+    intended_design: "Simple house blockout with cone roof, chimney, door/window frames, 4 materials"
+    output_format: "glb"
+    output_path: "assets/meshes/environment_house.glb"
+    preview_path: "previews/environment_house.grid.png"
+    seed: 4242
+
+  - asset_id: "mesh_comprehensive"
+    spec_path: "specs/mesh/mesh_comprehensive.star"
+    asset_type: "static_mesh"
+    recipe_kind: "static_mesh.blender_primitives_v1"
+    intended_design: "Comprehensive mesh - cylinder with all modifier types, LOD chain, collision mesh, baking, attachments, 4 materials"
+    output_format: "glb"
+    output_path: "assets/meshes/mesh_comprehensive.glb"
+    preview_path: "previews/mesh_comprehensive.grid.png"
+    seed: 4243
+
+  # ===========================
+  # ANIMATION SPECS (skeletal_animation) - 24 assets
+  # ===========================
+
+  - asset_id: "idle_sway_basic"
+    spec_path: "specs/animation/idle_sway_basic.star"
+    asset_type: "skeletal_animation"
+    recipe_kind: "skeletal_animation.helpers_v1"
+    intended_design: "Basic idle sway with subtle breathing and weight shifting, 120 frames at 30fps"
+    output_format: "glb"
+    output_path: "assets/animation/idle_sway_basic.glb"
+    preview_path: "previews/idle_sway_basic.grid.png"
+    seed: 300
+
+  - asset_id: "idle_sway_relaxed"
+    spec_path: "specs/animation/idle_sway_relaxed.star"
+    asset_type: "skeletal_animation"
+    recipe_kind: "skeletal_animation.helpers_v1"
+    intended_design: "Relaxed idle with pronounced hip sway and slower breathing, 180 frames at 24fps"
+    output_format: "glb"
+    output_path: "assets/animation/idle_sway_relaxed.glb"
+    preview_path: "previews/idle_sway_relaxed.grid.png"
+    seed: 400
+
+  - asset_id: "run_cycle_basic"
+    spec_path: "specs/animation/run_cycle_basic.star"
+    asset_type: "skeletal_animation"
+    recipe_kind: "skeletal_animation.helpers_v1"
+    intended_design: "Basic humanoid run cycle with 1.2 stride length, 30 cycle frames"
+    output_format: "glb"
+    output_path: "assets/animation/run_cycle_basic.glb"
+    preview_path: "previews/run_cycle_basic.grid.png"
+    seed: 100
+
+  - asset_id: "run_cycle_sprint"
+    spec_path: "specs/animation/run_cycle_sprint.star"
+    asset_type: "skeletal_animation"
+    recipe_kind: "skeletal_animation.helpers_v1"
+    intended_design: "Fast sprint with 1.5 stride, higher foot lift, aggressive arm swing"
+    output_format: "glb"
+    output_path: "assets/animation/run_cycle_sprint.glb"
+    preview_path: "previews/run_cycle_sprint.grid.png"
+    seed: 200
+
+  - asset_id: "walk_cycle_basic"
+    spec_path: "specs/animation/walk_cycle_basic.star"
+    asset_type: "skeletal_animation"
+    recipe_kind: "skeletal_animation.helpers_v1"
+    intended_design: "Basic humanoid walk cycle with 0.8 stride, 60 cycle frames"
+    output_format: "glb"
+    output_path: "assets/animation/walk_cycle_basic.glb"
+    preview_path: "previews/walk_cycle_basic.grid.png"
+    seed: 42
+
+  - asset_id: "walk_cycle_custom_ik"
+    spec_path: "specs/animation/walk_cycle_custom_ik.star"
+    asset_type: "skeletal_animation"
+    recipe_kind: "skeletal_animation.helpers_v1"
+    intended_design: "Walk cycle with custom IK pole angles, hip sway 4.0, spine twist 6.0"
+    output_format: "glb"
+    output_path: "assets/animation/walk_cycle_custom_ik.glb"
+    preview_path: "previews/walk_cycle_custom_ik.grid.png"
+    seed: 1234
+
+  - asset_id: "foot_roll_test"
+    spec_path: "specs/animation/foot_roll_test.star"
+    asset_type: "skeletal_animation"
+    recipe_kind: "skeletal_animation.blender_rigged_v1"
+    intended_design: "FootSystem verification - heel/ball/toe roll pivots during walk"
+    output_format: "glb"
+    output_path: "assets/animation/foot_roll_test.glb"
+    preview_path: "previews/foot_roll_test.grid.png"
+    seed: 9001
+
+  - asset_id: "walk_cycle_ik"
+    spec_path: "specs/animation/walk_cycle_ik.star"
+    asset_type: "skeletal_animation"
+    recipe_kind: "skeletal_animation.blender_rigged_v1"
+    intended_design: "Walk cycle using IK targets with foot IK, 4 phases, bezier interpolation"
+    output_format: "glb"
+    output_path: "assets/animation/walk_cycle_ik.glb"
+    preview_path: "previews/walk_cycle_ik.grid.png"
+    seed: 8010
+
+  - asset_id: "aim_constraint_test"
+    spec_path: "specs/animation/aim_constraint_test.star"
+    asset_type: "skeletal_animation"
+    recipe_kind: "skeletal_animation.blender_rigged_v1"
+    intended_design: "AimConstraint test - head tracks a moving look_target across 4 positions"
+    output_format: "glb"
+    output_path: "assets/animation/aim_constraint_test.glb"
+    preview_path: "previews/aim_constraint_test.grid.png"
+    seed: 9002
+
+  - asset_id: "bone_constraints_test"
+    spec_path: "specs/animation/bone_constraints_test.star"
+    asset_type: "skeletal_animation"
+    recipe_kind: "skeletal_animation.blender_rigged_v1"
+    intended_design: "Bone constraints test - hinge joints on elbows/knees, ball joints on shoulders"
+    output_format: "glb"
+    output_path: "assets/animation/bone_constraints_test.glb"
+    preview_path: "previews/bone_constraints_test.grid.png"
+    seed: 9004
+
+  - asset_id: "ikfk_snap_test"
+    spec_path: "specs/animation/ikfk_snap_test.star"
+    asset_type: "skeletal_animation"
+    recipe_kind: "skeletal_animation.blender_rigged_v1"
+    intended_design: "IK/FK snapping test - arms switch IK to FK and back without pose pops"
+    output_format: "glb"
+    output_path: "assets/animation/ikfk_snap_test.glb"
+    preview_path: "previews/ikfk_snap_test.grid.png"
+    seed: 9006
+
+  - asset_id: "space_switch_test"
+    spec_path: "specs/animation/space_switch_test.star"
+    asset_type: "skeletal_animation"
+    recipe_kind: "skeletal_animation.blender_rigged_v1"
+    intended_design: "Space switching test - left hand switches between world/root/chest spaces"
+    output_format: "glb"
+    output_path: "assets/animation/space_switch_test.glb"
+    preview_path: "previews/space_switch_test.grid.png"
+    seed: 9006
+
+  - asset_id: "ikfk_switch_test"
+    spec_path: "specs/animation/ikfk_switch_test.star"
+    asset_type: "skeletal_animation"
+    recipe_kind: "skeletal_animation.blender_rigged_v1"
+    intended_design: "IK/FK switching test - arms switch from IK to FK mode"
+    output_format: "glb"
+    output_path: "assets/animation/ikfk_switch_test.glb"
+    preview_path: "previews/ikfk_switch_test.grid.png"
+    seed: 9005
+
+  - asset_id: "twist_bones_test"
+    spec_path: "specs/animation/twist_bones_test.star"
+    asset_type: "skeletal_animation"
+    recipe_kind: "skeletal_animation.blender_rigged_v1"
+    intended_design: "TwistBone test - arm rotation distributed across twist bones at 50% influence"
+    output_format: "glb"
+    output_path: "assets/animation/twist_bones_test.glb"
+    preview_path: "previews/twist_bones_test.grid.png"
+    seed: 9003
+
+  - asset_id: "finger_controls_test"
+    spec_path: "specs/animation/finger_controls_test.star"
+    asset_type: "skeletal_animation"
+    recipe_kind: "skeletal_animation.blender_rigged_v1"
+    intended_design: "Finger controls test - hands open/close with curl/spread controls"
+    output_format: "glb"
+    output_path: "assets/animation/finger_controls_test.glb"
+    preview_path: "previews/finger_controls_test.grid.png"
+    seed: 9007
+
+  - asset_id: "floating_bob"
+    spec_path: "specs/animation/floating_bob.star"
+    asset_type: "skeletal_animation"
+    recipe_kind: "skeletal_animation.keyframe_v1"
+    intended_design: "Floating bob - vertical oscillation with spine tilt and arm sway, 3s loop"
+    output_format: "glb"
+    output_path: "assets/animation/floating_bob.glb"
+    preview_path: "previews/floating_bob.grid.png"
+    seed: 8007
+
+  - asset_id: "idle_breathe"
+    spec_path: "specs/animation/idle_breathe.star"
+    asset_type: "skeletal_animation"
+    recipe_kind: "skeletal_animation.keyframe_v1"
+    intended_design: "Idle breathing - subtle chest expansion on spine/chest/head, 2s loop"
+    output_format: "glb"
+    output_path: "assets/animation/idle_breathe.glb"
+    preview_path: "previews/idle_breathe.grid.png"
+    seed: 8001
+
+  - asset_id: "attack_swing"
+    spec_path: "specs/animation/attack_swing.star"
+    asset_type: "skeletal_animation"
+    recipe_kind: "skeletal_animation.keyframe_v1"
+    intended_design: "Attack swing - overhead right arm swing with spine twist, 0.8s"
+    output_format: "glb"
+    output_path: "assets/animation/attack_swing.glb"
+    preview_path: "previews/attack_swing.grid.png"
+    seed: 8003
+
+  - asset_id: "jump"
+    spec_path: "specs/animation/jump.star"
+    asset_type: "skeletal_animation"
+    recipe_kind: "skeletal_animation.keyframe_v1"
+    intended_design: "Jump - squat, launch, apex, landing in 4 phases, 1.2s"
+    output_format: "glb"
+    output_path: "assets/animation/jump.glb"
+    preview_path: "previews/jump.grid.png"
+    seed: 8004
+
+  - asset_id: "death_fall"
+    spec_path: "specs/animation/death_fall.star"
+    asset_type: "skeletal_animation"
+    recipe_kind: "skeletal_animation.keyframe_v1"
+    intended_design: "Death fall - ragdoll collapse with spine bending, 1.5s"
+    output_format: "glb"
+    output_path: "assets/animation/death_fall.glb"
+    preview_path: "previews/death_fall.grid.png"
+    seed: 8005
+
+  - asset_id: "walk_cycle_keyframe"
+    spec_path: "specs/animation/walk_cycle.star"
+    asset_type: "skeletal_animation"
+    recipe_kind: "skeletal_animation.keyframe_v1"
+    intended_design: "Walk cycle - bipedal locomotion with leg/arm counter-swing, 1s loop"
+    output_format: "glb"
+    output_path: "assets/animation/walk_cycle.glb"
+    preview_path: "previews/walk_cycle_keyframe.grid.png"
+    seed: 8002
+
+  - asset_id: "quadruped_walk"
+    spec_path: "specs/animation/quadruped_walk.star"
+    asset_type: "skeletal_animation"
+    recipe_kind: "skeletal_animation.keyframe_v1"
+    intended_design: "Quadruped walk cycle - four-legged locomotion with spine sway, 1.33s loop"
+    output_format: "glb"
+    output_path: "assets/animation/quadruped_walk.glb"
+    preview_path: "previews/quadruped_walk.grid.png"
+    seed: 8008
+
+  - asset_id: "ik_arm_reach"
+    spec_path: "specs/animation/ik_arm_reach.star"
+    asset_type: "skeletal_animation"
+    recipe_kind: "skeletal_animation.keyframe_v1"
+    intended_design: "Arm reach - right arm reaches forward with spine lean, 2s"
+    output_format: "glb"
+    output_path: "assets/animation/ik_arm_reach.glb"
+    preview_path: "previews/ik_arm_reach.grid.png"
+    seed: 8006
+
+  - asset_id: "animation_comprehensive"
+    spec_path: "specs/animation/animation_comprehensive.star"
+    asset_type: "skeletal_animation"
+    recipe_kind: "skeletal_animation.keyframe_v1"
+    intended_design: "Comprehensive animation - multiple bones, all transforms, 5 keyframes, 1.5s loop"
+    output_format: "glb"
+    output_path: "assets/animations/animation_comprehensive.glb"
+    preview_path: "previews/animation_comprehensive.grid.png"
+    seed: 4244
+
+  # ===========================
+  # SPRITE SPECS (render_from_mesh) - 2 assets
+  # ===========================
+
+  - asset_id: "sprite_render_from_mesh"
+    spec_path: "specs/sprite/sprite_render_from_mesh.star"
+    asset_type: "sprite"
+    recipe_kind: "sprite.render_from_mesh_v1"
+    intended_design: "Beveled cube rendered from 8 angles into 64x64 per-frame atlas, orthographic camera"
+    output_format: "png"
+    output_path: "assets/sprites/cube_atlas.png"
+    preview_path: "previews/sprite_render_from_mesh.grid.png"
+    seed: 42
+
+  - asset_id: "sprite_render_validation"
+    spec_path: "specs/sprite/sprite_render_validation.star"
+    asset_type: "sprite"
+    recipe_kind: "sprite.render_from_mesh_v1"
+    intended_design: "Compound directional ship mesh rendered at 4 angles for directional validation, 256x256 per-frame"
+    output_format: "png"
+    output_path: "assets/sprites/ship_validation_atlas.png"
+    preview_path: "previews/sprite_render_validation.grid.png"
+    seed: 42

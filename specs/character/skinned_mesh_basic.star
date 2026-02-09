@@ -17,14 +17,14 @@ spec(
             "bone_meshes": {
                 "spine": {
                     "profile": "circle(8)",
-                    "profile_radius": 0.12,
+                    "profile_radius": {"absolute": 0.12},
                     "material_index": 0,
                     "cap_start": True,
                     "cap_end": False,
                 },
                 "chest": {
                     "profile": "circle(8)",
-                    "profile_radius": 0.14,
+                    "profile_radius": {"absolute": 0.14},
                     "material_index": 0,
                     "cap_start": False,
                     "cap_end": True,
@@ -48,7 +48,7 @@ spec(
                 # Note: Can't bridge because shoulder is diagonal, upper_arm is horizontal
                 "shoulder_l": {
                     "profile": "circle(6)",
-                    "profile_radius": 0.07,
+                    "profile_radius": {"absolute": 0.07},
                     "material_index": 0,
                     "cap_start": True,
                     "cap_end": False,
@@ -56,15 +56,31 @@ spec(
                 "shoulder_r": {"mirror": "shoulder_l"},
                 "upper_arm_l": {
                     "profile": "circle(6)",
-                    "profile_radius": 0.06,
+                    "profile_radius": {"absolute": 0.06},
                     "material_index": 0,
                     "cap_start": False,  # Shoulder end overlaps this start
-                    "cap_end": True,
+                    "cap_end": False,
                 },
                 "upper_arm_r": {"mirror": "upper_arm_l"},
+                "lower_arm_l": {
+                    "profile": "circle(6)",
+                    "profile_radius": {"absolute": 0.05},
+                    "material_index": 0,
+                    "cap_start": False,
+                    "cap_end": False,
+                },
+                "lower_arm_r": {"mirror": "lower_arm_l"},
+                "hand_l": {
+                    "profile": "circle(6)",
+                    "profile_radius": {"absolute": 0.04},
+                    "material_index": 0,
+                    "cap_start": False,
+                    "cap_end": True,
+                },
+                "hand_r": {"mirror": "hand_l"},
                 "upper_leg_l": {
                     "profile": "circle(6)",
-                    "profile_radius": 0.08,
+                    "profile_radius": {"absolute": 0.08},
                     "material_index": 0,
                 },
                 "upper_leg_r": {"mirror": "upper_leg_l"},

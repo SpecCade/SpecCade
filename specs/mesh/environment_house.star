@@ -14,7 +14,6 @@ spec(
             "dimensions": [3.0, 4.0, 2.5],
             "modifiers": [
                 bevel_modifier(0.04, 3),
-                subdivision_modifier(1),
                 edge_split_modifier(40.0),
                 triangulate_modifier("beauty", "shortest_diagonal"),
             ],
@@ -54,12 +53,12 @@ spec(
                 },
             ],
             "attachments": [
-                # Roof
+                # Roof — cone sized to match wall footprint (3.0 x 4.0)
                 {
                     "primitive": "cone",
-                    "dimensions": [4.4, 4.4, 1.6],
-                    "position": [0.0, 0.0, 2.0],
-                    "rotation": [0.0, 0.0, 45.0],
+                    "dimensions": [3.4, 4.4, 2.0],
+                    "position": [0.0, 0.0, 2.25],
+                    "rotation": [0.0, 0.0, 0.0],
                 },
                 # Chimney
                 {

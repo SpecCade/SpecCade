@@ -28,7 +28,7 @@ spec(
             "bone_meshes": {
                 "spine": {
                     "profile": "circle(12)",
-                    "profile_radius": 0.115,
+                    "profile_radius": {"absolute": 0.115},
                     "extrusion_steps": [
                         # 0% -> 30%: slight bulge to 1.10
                         {"extrude": 0.30, "scale": 1.10},
@@ -41,7 +41,7 @@ spec(
                 },
                 "chest": {
                     "profile": "hexagon(8)",
-                    "profile_radius": [0.16, 0.12],
+                    "profile_radius": {"absolute": 0.14},
                     "translate": [0.0, 0.02, 0.0],
                     "rotate": [-3.0, 0.0, 0.0],
                     "extrusion_steps": [
@@ -90,7 +90,7 @@ spec(
                 # Shoulder bones bridge from chest to upper arms
                 "shoulder_l": {
                     "profile": "circle(10)",
-                    "profile_radius": 0.09,
+                    "profile_radius": {"absolute": 0.08},
                     "extrusion_steps": [
                         {"extrude": 0.4, "scale": 1.1},
                         {"extrude": 0.6, "scale": 0.95},
@@ -102,7 +102,7 @@ spec(
                 "shoulder_r": {"mirror": "shoulder_l"},
                 "upper_arm_l": {
                     "profile": "circle(10)",
-                    "profile_radius": 0.085,
+                    "profile_radius": {"absolute": 0.075},
                     "extrusion_steps": [
                         # 0% -> 22%: shoulder bulge to 1.15
                         {"extrude": 0.22, "scale": 1.15},
@@ -113,12 +113,38 @@ spec(
                     ],
                     "material_index": 0,
                     "cap_start": False,
-                    "cap_end": True,
+                    "cap_end": False,
                 },
                 "upper_arm_r": {"mirror": "upper_arm_l"},
+                "lower_arm_l": {
+                    "profile": "circle(10)",
+                    "profile_radius": {"absolute": 0.055},
+                    "extrusion_steps": [
+                        {"extrude": 0.20, "scale": 1.05},
+                        {"extrude": 0.55, "scale": 0.88},
+                        {"extrude": 0.25, "scale": 0.80},
+                    ],
+                    "material_index": 0,
+                    "cap_start": False,
+                    "cap_end": False,
+                },
+                "lower_arm_r": {"mirror": "lower_arm_l"},
+                "hand_l": {
+                    "profile": "circle(10)",
+                    "profile_radius": {"absolute": 0.04},
+                    "extrusion_steps": [
+                        {"extrude": 0.25, "scale": 1.3},
+                        {"extrude": 0.50, "scale": 1.1},
+                        {"extrude": 0.25, "scale": 0.6},
+                    ],
+                    "material_index": 0,
+                    "cap_start": False,
+                    "cap_end": True,
+                },
+                "hand_r": {"mirror": "hand_l"},
                 "upper_leg_l": {
                     "profile": "circle(10)",
-                    "profile_radius": 0.12,
+                    "profile_radius": {"absolute": 0.12},
                     "extrusion_steps": [
                         # 0% -> 30%: thigh bulge to 1.10
                         {"extrude": 0.30, "scale": 1.10},

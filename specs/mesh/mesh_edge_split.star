@@ -2,6 +2,8 @@
 #
 # This example demonstrates the edge_split_modifier() function
 # which splits edges sharper than a given angle.
+# Uses a cylinder so some edges are smooth (<30°) and some are split (>30°),
+# creating a visible difference vs a plain smooth-shaded cylinder.
 
 spec(
     asset_id = "stdlib-mesh-edge-split-01",
@@ -11,11 +13,10 @@ spec(
     recipe = {
         "kind": "static_mesh.blender_primitives_v1",
         "params": mesh_recipe(
-            "cube",
+            "cylinder",
             [1.0, 1.0, 1.0],
             [
                 edge_split_modifier(angle = 30.0),
-                bevel_modifier(width = 0.05, segments = 2),
             ]
         )
     }

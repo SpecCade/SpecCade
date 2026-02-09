@@ -51,39 +51,39 @@ spec(
                     "tail": [0.0, 0.50, 0.45],
                     "parent": "neck",
                 },
-                # Tail goes backward (-Y)
+                # Tail goes backward (-Y) from spine_rear tail
                 {
                     "bone": "tail",
-                    "head": [0.0, -0.15, 0.38],
-                    "tail": [0.0, -0.35, 0.42],
+                    "head": [0.0, -0.15, 0.35],
+                    "tail": [0.0, -0.32, 0.45],
                     "parent": "spine_rear",
                 },
-                # Front left leg - goes DOWN from chest
+                # Front left leg - goes DOWN from chest, outside body radius
                 {
                     "bone": "front_leg_l",
-                    "head": [-0.08, 0.18, 0.35],
-                    "tail": [-0.08, 0.18, 0.0],
+                    "head": [-0.10, 0.18, 0.35],
+                    "tail": [-0.10, 0.18, 0.0],
                     "parent": "chest",
                 },
                 # Front right leg
                 {
                     "bone": "front_leg_r",
-                    "head": [0.08, 0.18, 0.35],
-                    "tail": [0.08, 0.18, 0.0],
+                    "head": [0.10, 0.18, 0.35],
+                    "tail": [0.10, 0.18, 0.0],
                     "parent": "chest",
                 },
-                # Hind left leg - goes DOWN from rear spine
+                # Hind left leg - goes DOWN from rear spine, outside body radius
                 {
                     "bone": "hind_leg_l",
-                    "head": [-0.08, -0.10, 0.35],
-                    "tail": [-0.08, -0.10, 0.0],
+                    "head": [-0.10, -0.10, 0.35],
+                    "tail": [-0.10, -0.10, 0.0],
                     "parent": "spine_rear",
                 },
                 # Hind right leg
                 {
                     "bone": "hind_leg_r",
-                    "head": [0.08, -0.10, 0.35],
-                    "tail": [0.08, -0.10, 0.0],
+                    "head": [0.10, -0.10, 0.35],
+                    "tail": [0.10, -0.10, 0.0],
                     "parent": "spine_rear",
                 },
             ],
@@ -106,7 +106,7 @@ spec(
                         {"extrude": 0.60, "scale": 1.0},
                     ],
                     "material_index": 0,
-                    "connect_end": "bridge",
+                    "connect_start": "bridge",
                 },
                 "spine_front": {
                     "profile": "circle(12)",
@@ -143,9 +143,11 @@ spec(
                 },
                 "head": {
                     "profile": "circle(12)",
-                    "profile_radius": {"absolute": 0.10},
+                    "profile_radius": {"absolute": 0.065},
                     "extrusion_steps": [
-                        {"extrude": 1.0, "scale": 1.0},
+                        {"extrude": 0.3, "scale": 1.15},
+                        {"extrude": 0.5, "scale": 1.0},
+                        {"extrude": 0.2, "scale": 0.75},
                     ],
                     "material_index": 0,
                     "connect_start": "bridge",
@@ -153,15 +155,15 @@ spec(
                     "attachments": [
                         {
                             "primitive": "cone",
-                            "dimensions": [0.08, 0.08, 0.12],
-                            "offset": [-0.08, 0.10, 0.08],
+                            "dimensions": [0.06, 0.06, 0.10],
+                            "offset": [-0.06, 0.08, 0.06],
                             "rotation": [0.0, 0.0, -20.0],
                             "material_index": 1,
                         },
                         {
                             "primitive": "cone",
-                            "dimensions": [0.08, 0.08, 0.12],
-                            "offset": [0.08, 0.10, 0.08],
+                            "dimensions": [0.06, 0.06, 0.10],
+                            "offset": [0.06, 0.08, 0.06],
                             "rotation": [0.0, 0.0, 20.0],
                             "material_index": 1,
                         },
@@ -169,17 +171,18 @@ spec(
                 },
                 "tail": {
                     "profile": "circle(8)",
-                    "profile_radius": 0.06,
+                    "profile_radius": {"absolute": 0.025},
                     "extrusion_steps": [
                         {"extrude": 0.50, "scale": 0.80},
-                        {"extrude": 0.50, "scale": 0.50},
+                        {"extrude": 0.50, "scale": 0.40},
                     ],
                     "material_index": 0,
+                    "cap_start": True,
                     "cap_end": True,
                 },
                 "front_leg_l": {
                     "profile": "circle(8)",
-                    "profile_radius": 0.05,
+                    "profile_radius": {"absolute": 0.035},
                     "extrusion_steps": [
                         {"extrude": 0.30, "scale": 0.92},
                         {"extrude": 0.40, "scale": 0.82},
@@ -191,7 +194,7 @@ spec(
                 },
                 "front_leg_r": {
                     "profile": "circle(8)",
-                    "profile_radius": 0.05,
+                    "profile_radius": {"absolute": 0.035},
                     "extrusion_steps": [
                         {"extrude": 0.30, "scale": 0.92},
                         {"extrude": 0.40, "scale": 0.82},
@@ -203,7 +206,7 @@ spec(
                 },
                 "hind_leg_l": {
                     "profile": "circle(8)",
-                    "profile_radius": 0.055,
+                    "profile_radius": {"absolute": 0.04},
                     "extrusion_steps": [
                         {"extrude": 0.30, "scale": 0.93},
                         {"extrude": 0.40, "scale": 0.80},
@@ -215,7 +218,7 @@ spec(
                 },
                 "hind_leg_r": {
                     "profile": "circle(8)",
-                    "profile_radius": 0.055,
+                    "profile_radius": {"absolute": 0.04},
                     "extrusion_steps": [
                         {"extrude": 0.30, "scale": 0.93},
                         {"extrude": 0.40, "scale": 0.80},

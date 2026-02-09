@@ -12,6 +12,8 @@ pub enum SkeletonPreset {
     HumanoidDetailedV1,
     /// Game-optimized humanoid with 40 bones (twist bones, 1-bone fingers).
     HumanoidGameV1,
+    /// Connected humanoid skeleton with 20 bones (all bones connected, no gaps).
+    HumanoidConnectedV1,
 }
 
 impl SkeletonPreset {
@@ -149,6 +151,28 @@ impl SkeletonPreset {
                 "lower_leg_twist_r",
                 "foot_r",
                 "toe_r",
+            ],
+            SkeletonPreset::HumanoidConnectedV1 => &[
+                "root",
+                "hips",
+                "spine",
+                "chest",
+                "neck",
+                "head",
+                "shoulder_l",
+                "upper_arm_l",
+                "lower_arm_l",
+                "hand_l",
+                "shoulder_r",
+                "upper_arm_r",
+                "lower_arm_r",
+                "hand_r",
+                "upper_leg_l",
+                "lower_leg_l",
+                "foot_l",
+                "upper_leg_r",
+                "lower_leg_r",
+                "foot_r",
             ],
         }
     }

@@ -44,4 +44,7 @@ HUMANOID_CONNECTED_V1_BONES = {
 # Map preset names to their bone definitions
 SKELETON_PRESETS = {
     "humanoid_connected_v1": HUMANOID_CONNECTED_V1_BONES,
+    # Aliases for backward compatibility with animation helpers_v1
+    "humanoid": HUMANOID_CONNECTED_V1_BONES,
+    "humanoid_basic_v1": HUMANOID_CONNECTED_V1_BONES,
 }

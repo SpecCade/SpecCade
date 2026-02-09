@@ -2,6 +2,7 @@
 
 use crate::error::{ErrorCode, ValidationError, ValidationResult};
 use crate::output::{OutputFormat, OutputKind};
+use crate::recipe::mesh::MeshPrimitive;
 use crate::recipe::Recipe;
 use crate::spec::Spec;
 use crate::validation::BudgetProfile;
@@ -172,9 +173,11 @@ pub(crate) fn validate_single_primary_output_format(
 fn validate_static_mesh_blender_primitives(recipe: &Recipe, result: &mut ValidationResult) {
     match recipe.as_static_mesh_blender_primitives() {
         Ok(params) => {
-            // Validate dimensions are positive
+            // Validate dimensions are positive (plane allows Z=0)
+            let is_plane = params.base_primitive == MeshPrimitive::Plane;
             for (i, &dim) in params.dimensions.iter().enumerate() {
-                if dim <= 0.0 {
+                let allow_zero = is_plane && i == 2; // plane Z dimension is 0
+                if dim < 0.0 || (!allow_zero && dim <= 0.0) {
                     let axis = ["X", "Y", "Z"][i];
                     result.add_error(ValidationError::with_path(
                         ErrorCode::InvalidRecipeParams,
