@@ -1,6 +1,6 @@
 //! Recipe-specific output validation.
 
-use crate::error::{ErrorCode, ValidationError, ValidationResult};
+use crate::error::{ErrorCode, ValidationError, ValidationResult, ValidationWarning, WarningCode};
 use crate::output::{OutputFormat, OutputKind};
 use crate::recipe::mesh::MeshPrimitive;
 use crate::recipe::Recipe;
@@ -557,6 +557,151 @@ fn validate_static_mesh_organic_sculpt(recipe: &Recipe, result: &mut ValidationR
 
 /// Validates params for `skeletal_mesh.armature_driven_v1` recipe.
 fn validate_skeletal_mesh_armature_driven(recipe: &Recipe, result: &mut ValidationResult) {
+    fn add_invalid_params_error(result: &mut ValidationResult, message: String, path: String) {
+        result.add_error(ValidationError::with_path(
+            ErrorCode::InvalidRecipeParams,
+            message,
+            path,
+        ));
+    }
+
+    fn validate_unit_interval(
+        result: &mut ValidationResult,
+        value: f64,
+        field_name: &str,
+        path: String,
+    ) {
+        if !(0.0..=1.0).contains(&value) {
+            add_invalid_params_error(
+                result,
+                format!("{field_name} must be in range [0.0, 1.0], got {value}"),
+                path,
+            );
+        }
+    }
+
+    fn validate_bone_part_shape(
+        result: &mut ValidationResult,
+        shape: &crate::recipe::character::BonePartShape,
+        path_prefix: &str,
+    ) {
+        match shape {
+            crate::recipe::character::BonePartShape::Primitive(primitive) => {
+                for (idx, dim) in primitive.dimensions.iter().enumerate() {
+                    if *dim <= 0.0 {
+                        add_invalid_params_error(
+                            result,
+                            format!("dimensions[{idx}] must be positive, got {dim}"),
+                            format!("{path_prefix}.dimensions[{idx}]"),
+                        );
+                    }
+                }
+            }
+            crate::recipe::character::BonePartShape::Asset(asset) => {
+                if asset.asset.trim().is_empty() {
+                    add_invalid_params_error(
+                        result,
+                        "asset path must be a non-empty string".to_string(),
+                        format!("{path_prefix}.asset"),
+                    );
+                }
+
+                if let Some(scale) = asset.scale {
+                    if !scale.is_finite() || scale <= 0.0 {
+                        add_invalid_params_error(
+                            result,
+                            format!("asset.scale must be a finite, positive number, got {scale}"),
+                            format!("{path_prefix}.scale"),
+                        );
+                    }
+                }
+            }
+            crate::recipe::character::BonePartShape::AssetRef(asset_ref) => {
+                let candidate = asset_ref.asset_ref.trim();
+                if candidate.is_empty() {
+                    add_invalid_params_error(
+                        result,
+                        "asset_ref must be a non-empty asset id".to_string(),
+                        format!("{path_prefix}.asset_ref"),
+                    );
+                } else if !super::is_valid_asset_id(candidate) {
+                    add_invalid_params_error(
+                        result,
+                        format!(
+                            "asset_ref '{candidate}' must match the asset_id format (lowercase kebab/snake)"
+                        ),
+                        format!("{path_prefix}.asset_ref"),
+                    );
+                }
+
+                if let Some(scale) = asset_ref.scale {
+                    if !scale.is_finite() || scale <= 0.0 {
+                        add_invalid_params_error(
+                            result,
+                            format!(
+                                "asset_ref.scale must be a finite, positive number, got {scale}"
+                            ),
+                            format!("{path_prefix}.scale"),
+                        );
+                    }
+                }
+            }
+        }
+    }
+
+    fn validate_bone_part_scale(
+        result: &mut ValidationResult,
+        scale: &Option<crate::recipe::character::BonePartScale>,
+        path_prefix: &str,
+    ) {
+        let Some(scale) = scale.as_ref() else {
+            // Missing scale is normalized to defaults by runtime.
+            return;
+        };
+
+        if let Some(axes) = &scale.axes {
+            use std::collections::HashSet;
+
+            let mut seen = HashSet::new();
+            for axis in axes {
+                if !seen.insert(*axis) {
+                    add_invalid_params_error(
+                        result,
+                        format!("scale.axes contains duplicate axis '{axis:?}'"),
+                        format!("{path_prefix}.axes"),
+                    );
+                }
+            }
+        }
+
+        if let Some(amount) = &scale.amount_from_z {
+            if let Some(v) = amount.x {
+                validate_unit_interval(
+                    result,
+                    v,
+                    "scale.amount_from_z.x",
+                    format!("{path_prefix}.amount_from_z.x"),
+                );
+            }
+            if let Some(v) = amount.y {
+                validate_unit_interval(
+                    result,
+                    v,
+                    "scale.amount_from_z.y",
+                    format!("{path_prefix}.amount_from_z.y"),
+                );
+            }
+            if let Some(v) = amount.z {
+                validate_unit_interval(
+                    result,
+                    v,
+                    "scale.amount_from_z.z",
+                    format!("{path_prefix}.amount_from_z.z"),
+                );
+            }
+        }
+    }
+
     fn validate_profile(profile: &Option<String>) -> Result<(), String> {
         let Some(profile) = profile.as_ref() else {
             return Ok(());
@@ -646,32 +791,81 @@ fn validate_skeletal_mesh_armature_driven(recipe: &Recipe, result: &mut Validati
                         }
                     }
                     crate::recipe::character::ArmatureDrivenBoneMeshDef::Mesh(mesh) => {
-                        // Profile strings must match Blender's _parse_profile() grammar.
-                        if let Err(msg) = validate_profile(&mesh.profile) {
-                            result.add_error(ValidationError::with_path(
-                                ErrorCode::InvalidRecipeParams,
-                                msg,
-                                format!("recipe.params.bone_meshes.{bone_name}.profile"),
-                            ));
-                        }
+                        if let Some(part) = &mesh.part {
+                            // `part` and `extrusion_steps` are mutually exclusive.
+                            if !mesh.extrusion_steps.is_empty() {
+                                add_invalid_params_error(
+                                    result,
+                                    "part and extrusion_steps are mutually exclusive; choose one"
+                                        .to_string(),
+                                    format!("recipe.params.bone_meshes.{bone_name}.part"),
+                                );
+                            }
 
-                        // Validate extrusion_steps
-                        for (idx, step) in mesh.extrusion_steps.iter().enumerate() {
-                            let extrude_val = match step {
-                                crate::recipe::character::ExtrusionStep::Shorthand(d) => *d,
-                                crate::recipe::character::ExtrusionStep::Full(def) => def.extrude,
-                            };
-                            if extrude_val <= 0.0 {
+                            let part_base_path =
+                                format!("recipe.params.bone_meshes.{bone_name}.part.base");
+                            validate_bone_part_shape(result, &part.base, &part_base_path);
+
+                            for (op_idx, op) in part.operations.iter().enumerate() {
+                                let op_path =
+                                    format!("recipe.params.bone_meshes.{bone_name}.part.operations[{op_idx}].target");
+                                validate_bone_part_shape(result, &op.target, &op_path);
+                            }
+
+                            let scale_path =
+                                format!("recipe.params.bone_meshes.{bone_name}.part.scale");
+                            validate_bone_part_scale(result, &part.scale, &scale_path);
+
+                            if matches!(
+                                mesh.connect_start,
+                                Some(crate::recipe::character::ConnectionMode::Bridge)
+                            ) {
+                                result.add_warning(ValidationWarning::with_path(
+                                    WarningCode::UnusedRecipeParams,
+                                    "connect_start='bridge' is ignored when part is set",
+                                    format!("recipe.params.bone_meshes.{bone_name}.connect_start"),
+                                ));
+                            }
+                            if matches!(
+                                mesh.connect_end,
+                                Some(crate::recipe::character::ConnectionMode::Bridge)
+                            ) {
+                                result.add_warning(ValidationWarning::with_path(
+                                    WarningCode::UnusedRecipeParams,
+                                    "connect_end='bridge' is ignored when part is set",
+                                    format!("recipe.params.bone_meshes.{bone_name}.connect_end"),
+                                ));
+                            }
+                        } else {
+                            // Profile strings must match Blender's _parse_profile() grammar.
+                            if let Err(msg) = validate_profile(&mesh.profile) {
                                 result.add_error(ValidationError::with_path(
                                     ErrorCode::InvalidRecipeParams,
-                                    format!(
-                                        "extrusion_steps[{idx}].extrude must be positive, got {}",
-                                        extrude_val
-                                    ),
-                                    format!(
-                                        "recipe.params.bone_meshes.{bone_name}.extrusion_steps[{idx}]"
-                                    ),
+                                    msg,
+                                    format!("recipe.params.bone_meshes.{bone_name}.profile"),
                                 ));
+                            }
+
+                            // Validate extrusion_steps.
+                            for (idx, step) in mesh.extrusion_steps.iter().enumerate() {
+                                let extrude_val = match step {
+                                    crate::recipe::character::ExtrusionStep::Shorthand(d) => *d,
+                                    crate::recipe::character::ExtrusionStep::Full(def) => {
+                                        def.extrude
+                                    }
+                                };
+                                if extrude_val <= 0.0 {
+                                    result.add_error(ValidationError::with_path(
+                                        ErrorCode::InvalidRecipeParams,
+                                        format!(
+                                            "extrusion_steps[{idx}].extrude must be positive, got {}",
+                                            extrude_val
+                                        ),
+                                        format!(
+                                            "recipe.params.bone_meshes.{bone_name}.extrusion_steps[{idx}]"
+                                        ),
+                                    ));
+                                }
                             }
                         }
 

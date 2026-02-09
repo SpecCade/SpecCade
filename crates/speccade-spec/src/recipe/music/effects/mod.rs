@@ -5,9 +5,9 @@
 
 mod conversion;
 pub mod it_codes;
-mod tracker_options;
 #[cfg(test)]
 mod tests;
+mod tracker_options;
 mod validation;
 pub mod xm_codes;
 

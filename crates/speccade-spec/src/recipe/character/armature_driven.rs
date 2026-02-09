@@ -110,6 +110,146 @@ pub enum SkinningMode {
     Rigid,
 }
 
+// ============================================================================
+// Modular Bone Part Types
+// ============================================================================
+
+/// A bone mesh defined by composing shapes via boolean operations.
+/// Alternative to extrusion steps.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct BonePart {
+    /// Base shape.
+    pub base: BonePartShape,
+
+    /// Sequential boolean operations applied to the base.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub operations: Vec<BonePartOperation>,
+
+    /// How dimensions scale when placed on a bone.
+    ///
+    /// If omitted, defaults are interpreted as:
+    /// `axes = ["x", "y", "z"]` and `amount_from_z = {x: 1.0, y: 1.0, z: 1.0}`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub scale: Option<BonePartScale>,
+}
+
+/// Controls how a bone part's dimensions map to world units.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct BonePartScale {
+    /// Axes allowed to follow bone length.
+    ///
+    /// `None` means defaults (`x`, `y`, `z` enabled).
+    /// `Some([])` means fixed-size on all axes.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub axes: Option<Vec<BonePartScaleAxis>>,
+
+    /// Per-axis interpolation amount from fixed (0.0) to full bone-length scaling (1.0).
+    ///
+    /// Any omitted axis defaults to 1.0 when that axis is enabled.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub amount_from_z: Option<BonePartScaleAmountFromZ>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum BonePartScaleAxis {
+    X,
+    Y,
+    Z,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct BonePartScaleAmountFromZ {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub x: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub y: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub z: Option<f64>,
+}
+
+/// A shape source for bone part composition.
+/// Disambiguated by unique key: `primitive`, `asset`, or `asset_ref`.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum BonePartShape {
+    Primitive(BonePartPrimitive),
+    Asset(BonePartAsset),
+    AssetRef(BonePartAssetRef),
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct BonePartPrimitive {
+    pub primitive: MeshPrimitive,
+
+    /// Dimensions in bone-relative units [x, y, z].
+    pub dimensions: [f64; 3],
+
+    /// Offset from bone head in bone-local coordinates.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub offset: Option<[f64; 3]>,
+
+    /// Rotation in degrees [rx, ry, rz].
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub rotation: Option<[f64; 3]>,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct BonePartAsset {
+    pub asset: String,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub offset: Option<[f64; 3]>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub rotation: Option<[f64; 3]>,
+
+    /// Shape-local uniform scale applied before part scale factors.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub scale: Option<f64>,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct BonePartAssetRef {
+    pub asset_ref: String,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub offset: Option<[f64; 3]>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub rotation: Option<[f64; 3]>,
+
+    /// Shape-local uniform scale applied before part scale factors.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub scale: Option<f64>,
+}
+
+/// A boolean operation in a bone part composition.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct BonePartOperation {
+    /// Boolean operation type.
+    pub op: BonePartOpType,
+
+    /// Target shape for the operation.
+    pub target: BonePartShape,
+}
+
+/// Boolean operation type.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum BonePartOpType {
+    Union,
+    Difference,
+    Intersect,
+}
+
 /// Parameters for the `skeletal_mesh.armature_driven_v1` recipe.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -175,6 +315,10 @@ pub struct ArmatureDrivenBoneMesh {
     /// Cross-section radius in bone-relative units, elliptical units, or absolute units.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub profile_radius: Option<BoneRelativeLength>,
+
+    /// Composed shape definition (alternative to `extrusion_steps`).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub part: Option<BonePart>,
 
     /// Step-based extrusion along the bone axis.
     /// Steps sum to 1.0 = mesh exactly spans bone head to tail.

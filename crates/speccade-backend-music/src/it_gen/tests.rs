@@ -270,7 +270,10 @@ fn test_tempo_change_it() {
 fn test_it_non_periodic_noise_one_shot_does_not_loop() {
     let instrument = TrackerInstrument {
         name: "Hihat".to_string(),
-        synthesis: Some(InstrumentSynthesis::Noise { periodic: false, base_note: None }),
+        synthesis: Some(InstrumentSynthesis::Noise {
+            periodic: false,
+            base_note: None,
+        }),
         envelope: Envelope {
             attack: 0.001,
             decay: 0.02,
@@ -340,7 +343,10 @@ fn test_synthesized_noise_instrument_c5_speed() {
     // Noise synthesis with no base_note generates at MIDI 72 (IT's default)
     let instrument = TrackerInstrument {
         name: "Test Noise".to_string(),
-        synthesis: Some(InstrumentSynthesis::Noise { periodic: false, base_note: None }),
+        synthesis: Some(InstrumentSynthesis::Noise {
+            periodic: false,
+            base_note: None,
+        }),
         default_volume: Some(64),
         ..Default::default()
     };
@@ -464,7 +470,10 @@ fn test_it_variant_b_no_base_note_pattern_note_c5() {
     // Instrument with no base_note
     let instrument = TrackerInstrument {
         name: "Drum Snare".to_string(),
-        synthesis: Some(InstrumentSynthesis::Noise { periodic: false, base_note: None }),
+        synthesis: Some(InstrumentSynthesis::Noise {
+            periodic: false,
+            base_note: None,
+        }),
         // base_note: None - defaults to MIDI 72 (C5) for IT format
         default_volume: Some(64),
         ..Default::default()

@@ -30,7 +30,7 @@ Build mesh **from** the skeleton (armature-driven modeling). Output uses rigid s
 |-------|------|----------|-------|
 | `skeleton_preset` | string | No* | Preset skeleton ID (e.g. `humanoid_basic_v1`) |
 | `skeleton` | array | No* | Custom bones; at least one of `skeleton_preset` / `skeleton` |
-| `bone_meshes` | object | No | Per-bone mesh definitions (profile/extrusion/modifiers) |
+| `bone_meshes` | object | No | Per-bone mesh definitions (extrusion path or `part` composition path) |
 | `bool_shapes` | object | No | Named boolean subtraction shapes referenced by modifiers |
 | `material_slots` | array | No | Material slots (PBR-ish params) |
 | `export` | object | No | GLB export settings (triangulation, normals, uvs, weights) |
@@ -52,11 +52,36 @@ Minimal recipe example:
 }
 ```
 
+### Modular Bone Parts (`bone_meshes.<bone>.part`)
+
+`part` is an alternative to `extrusion_steps`. It builds a bone mesh by composing shapes:
+
+- `base`: required shape (`primitive`, `asset`, or `asset_ref`)
+- `operations[]`: optional ordered boolean ops (`union`, `difference`, `intersect`)
+- `scale`: optional axis-mask scaling policy coupled to bone length
+
+Rules:
+
+- `part` and `extrusion_steps` are mutually exclusive.
+- `attachments`, `modifiers`, `material_index`, `translate`, and `rotate` still apply.
+- `cap_start` / `cap_end` are ignored when `part` is present.
+- `connect_start` / `connect_end = "bridge"` is ignored for `part` meshes (validation warning).
+
+Scale defaults:
+
+- Omitted `scale` (or `scale: {}`) behaves as uniform follow: axes `x/y/z` with amount `1.0` each.
+- `scale.axes = []` means fixed size (no axis follows bone length).
+- If an enabled axis omits `amount_from_z.<axis>`, it defaults to `1.0`.
+
 ### Units + Bone-Relative Semantics
 
 - Most per-bone geometry fields are specified in *bone-local* coordinates (origin at the bone head).
+- Bone-local `z` is the **bone axis** (`head -> tail`); `x/y` are perpendicular and rotate with the bone.
 - *Bone-relative units* mean values are interpreted as a fraction of the bone length (head-to-tail distance).
 - Angles are in degrees.
+
+Axis caution (common foot-direction pitfall):
+- For bones that point forward (for example `foot_*`), forward extension is typically local `+z`, **not** local `+y`.
 
 Common bone-relative fields:
 

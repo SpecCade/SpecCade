@@ -255,7 +255,10 @@ fn test_xm_pattern_no_note_marker_preserves_instrument_column() {
 fn test_xm_non_periodic_noise_one_shot_does_not_loop() {
     let instrument = TrackerInstrument {
         name: "Hihat".to_string(),
-        synthesis: Some(InstrumentSynthesis::Noise { periodic: false, base_note: None }),
+        synthesis: Some(InstrumentSynthesis::Noise {
+            periodic: false,
+            base_note: None,
+        }),
         envelope: Envelope {
             attack: 0.001,
             decay: 0.02,
@@ -297,7 +300,10 @@ fn create_test_instrument(synthesis: InstrumentSynthesis) -> TrackerInstrument {
 fn test_synthesized_pulse_instrument_pitch_correction() {
     // Synthesized Pulse instrument generates at MIDI 60 (C4), 22050 Hz
     // Should get relative_note = 16
-    let instr = create_test_instrument(InstrumentSynthesis::Pulse { duty_cycle: 0.5, base_note: None });
+    let instr = create_test_instrument(InstrumentSynthesis::Pulse {
+        duty_cycle: 0.5,
+        base_note: None,
+    });
     let spec_dir = Path::new(".");
 
     let (xm_instr, _) = generate_xm_instrument(&instr, 42, 0, spec_dir).unwrap();
@@ -328,7 +334,10 @@ fn test_synthesized_sine_instrument_pitch_correction() {
 fn test_synthesized_noise_instrument_pitch_correction() {
     // Synthesized Noise instrument generates at MIDI 60 (C4), 22050 Hz
     // Should get relative_note = 16
-    let instr = create_test_instrument(InstrumentSynthesis::Noise { periodic: false, base_note: None });
+    let instr = create_test_instrument(InstrumentSynthesis::Noise {
+        periodic: false,
+        base_note: None,
+    });
     let spec_dir = Path::new(".");
 
     let (xm_instr, _) = generate_xm_instrument(&instr, 42, 0, spec_dir).unwrap();
@@ -373,7 +382,10 @@ fn test_synthesized_sawtooth_instrument_pitch_correction() {
 fn test_finetune_value_for_synthesized_instruments() {
     // All synthesized instruments at 22050 Hz should have finetune ~101
     // (from the fractional part of 16.79 semitones)
-    let instr = create_test_instrument(InstrumentSynthesis::Pulse { duty_cycle: 0.5, base_note: None });
+    let instr = create_test_instrument(InstrumentSynthesis::Pulse {
+        duty_cycle: 0.5,
+        base_note: None,
+    });
     let spec_dir = Path::new(".");
 
     let (xm_instr, _) = generate_xm_instrument(&instr, 42, 0, spec_dir).unwrap();
@@ -455,7 +467,10 @@ fn test_xm_variant_b_no_base_note_pattern_note_c4() {
     // Instrument with no base_note
     let instrument = TrackerInstrument {
         name: "Drum Snare".to_string(),
-        synthesis: Some(InstrumentSynthesis::Noise { periodic: false, base_note: None }),
+        synthesis: Some(InstrumentSynthesis::Noise {
+            periodic: false,
+            base_note: None,
+        }),
         // base_note: None - defaults to MIDI 60 (C4)
         default_volume: Some(64),
         ..Default::default()

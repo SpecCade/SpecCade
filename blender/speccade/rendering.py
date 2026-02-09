@@ -115,13 +115,14 @@ def setup_preview_camera(
     # Position camera based on preset
     preset = camera_preset.lower().replace("-", "_")
     if preset == "three_quarter":
-        angle = math.radians(45)
+        # Front-right three-quarter under +Y-forward convention.
+        angle = math.radians(135)
         cam_x = center.x + distance * math.sin(angle)
         cam_y = center.y - distance * math.cos(angle)
         cam_z = center.z + height * 0.3
     elif preset == "front":
         cam_x = center.x
-        cam_y = center.y - distance
+        cam_y = center.y + distance
         cam_z = center.z + height * 0.2
     elif preset == "side":
         cam_x = center.x + distance
@@ -129,7 +130,7 @@ def setup_preview_camera(
         cam_z = center.z + height * 0.2
     elif preset == "back":
         cam_x = center.x
-        cam_y = center.y + distance
+        cam_y = center.y - distance
         cam_z = center.z + height * 0.2
     elif preset == "top":
         cam_x = center.x
@@ -137,7 +138,7 @@ def setup_preview_camera(
         cam_z = center.z + distance * 1.5
     else:
         # Default to three_quarter
-        angle = math.radians(45)
+        angle = math.radians(135)
         cam_x = center.x + distance * math.sin(angle)
         cam_y = center.y - distance * math.cos(angle)
         cam_z = center.z + height * 0.3

@@ -436,7 +436,10 @@ fn test_granular_stereo_with_pan_spread() {
     let result = generate_from_params(&params, 42).expect("should generate");
 
     // Granular with pan_spread > 0 should produce stereo output
-    assert!(result.wav.is_stereo, "granular with pan_spread should be stereo");
+    assert!(
+        result.wav.is_stereo,
+        "granular with pan_spread should be stereo"
+    );
     assert!(!result.wav.wav_data.is_empty());
 }
 
@@ -477,7 +480,10 @@ fn test_granular_mono_without_pan_spread() {
     let result = generate_from_params(&params, 42).expect("should generate");
 
     // Granular without pan_spread and center pan should be mono
-    assert!(!result.wav.is_stereo, "granular without pan_spread should be mono");
+    assert!(
+        !result.wav.is_stereo,
+        "granular without pan_spread should be mono"
+    );
     assert!(!result.wav.wav_data.is_empty());
 }
 

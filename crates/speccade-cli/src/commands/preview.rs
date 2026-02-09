@@ -333,7 +333,10 @@ pub fn run(
 
         // Determine output directory (same as generate command)
         let spec_file = std::path::Path::new(spec_path);
-        let default_out = spec_file.parent().unwrap_or(std::path::Path::new(".")).join("output");
+        let default_out = spec_file
+            .parent()
+            .unwrap_or(std::path::Path::new("."))
+            .join("output");
         let out_dir = out.map(std::path::Path::new).unwrap_or(&default_out);
 
         // Find primary output file
@@ -350,11 +353,7 @@ pub fn run(
 
                 // Use system default application
                 if let Err(e) = open::that(&output_path) {
-                    eprintln!(
-                        "{} Failed to open preview: {}",
-                        "ERROR".red().bold(),
-                        e
-                    );
+                    eprintln!("{} Failed to open preview: {}", "ERROR".red().bold(), e);
                     return Ok(ExitCode::FAILURE);
                 }
             } else {
@@ -363,7 +362,10 @@ pub fn run(
                     "WARN".yellow().bold(),
                     output_path.display()
                 );
-                println!("Run 'speccade generate {}' first to create the output.", spec_path);
+                println!(
+                    "Run 'speccade generate {}' first to create the output.",
+                    spec_path
+                );
             }
         } else {
             println!(

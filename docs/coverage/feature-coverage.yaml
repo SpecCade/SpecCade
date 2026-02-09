@@ -10,37 +10,31 @@ stdlib:
   - name: animation_export_settings
     covered: true
     examples:
-    - specs/animation/animation_comprehensive.star:98
-    - specs/animation/animation_walk_cycle.star:71
+    - specs/animation/animation_stdlib_coverage.star:59
   - name: animation_keyframe
     covered: true
     examples:
-    - specs/animation/animation_comprehensive.star:16
-    - specs/animation/animation_comprehensive.star:32
-    - specs/animation/animation_comprehensive.star:48
+    - specs/animation/animation_stdlib_coverage.star:39
+    - specs/animation/animation_stdlib_coverage.star:50
   - name: bone_transform
     covered: true
     examples:
-    - specs/animation/animation_comprehensive.star:19
-    - specs/animation/animation_comprehensive.star:20
-    - specs/animation/animation_comprehensive.star:21
+    - specs/animation/animation_stdlib_coverage.star:42
+    - specs/animation/animation_stdlib_coverage.star:43
+    - specs/animation/animation_stdlib_coverage.star:53
   - name: ik_keyframe
     covered: true
     examples:
-    - specs/animation/animation_ik.star:34
-    - specs/animation/animation_ik.star:44
+    - specs/animation/animation_stdlib_coverage.star:13
   - name: ik_target_transform
     covered: true
     examples:
-    - specs/animation/animation_ik.star:23
-    - specs/animation/animation_ik.star:28
-    - specs/animation/animation_ik.star:37
+    - specs/animation/animation_stdlib_coverage.star:16
+    - specs/animation/animation_stdlib_coverage.star:21
   - name: skeletal_animation_spec
     covered: true
     examples:
-    - specs/animation/animation_comprehensive.star:3
-    - specs/animation/animation_ik.star:55
-    - specs/animation/animation_walk_cycle.star:18
+    - specs/animation/animation_stdlib_coverage.star:28
   audio:
   - name: allpass
     covered: true
@@ -188,7 +182,7 @@ stdlib:
   - name: skeletal_mesh_skinned_spec
     covered: true
     examples:
-    - specs/character/character_skinned.star:62
+    - specs/character/character_stdlib_coverage.star:11
   - name: spectral_source
     covered: true
     examples:
@@ -474,7 +468,7 @@ stdlib:
           example: specs/audio/audio_instrument_fm_advanced.star:34
         linear:
           covered: true
-          example: specs/animation/animation_ik.star:82
+          example: specs/animation/animation_ik.star:23
         logarithmic:
           covered: true
           example: specs/audio/audio_formant_coverage.star:219
@@ -537,7 +531,7 @@ stdlib:
           example: specs/audio/enum_coverage_supersaw.star:39
         linear:
           covered: true
-          example: specs/animation/animation_ik.star:82
+          example: specs/animation/animation_ik.star:23
   - name: vocoder
     covered: true
     examples:
@@ -548,7 +542,7 @@ stdlib:
       band_spacing:
         linear:
           covered: true
-          example: specs/animation/animation_ik.star:82
+          example: specs/animation/animation_ik.star:23
         logarithmic:
           covered: true
           example: specs/audio/audio_formant_coverage.star:219
@@ -604,32 +598,27 @@ stdlib:
   - name: custom_bone
     covered: true
     examples:
-    - specs/animation/animation_ik.star:8
-    - specs/animation/animation_ik.star:15
+    - specs/character/character_stdlib_coverage.star:33
+    - specs/character/character_stdlib_coverage.star:38
+    - specs/character/character_stdlib_coverage.star:44
   - name: material_slot
     covered: true
     examples:
-    - specs/audio/spec_enum_coverage.star:212
-    - specs/character/character_humanoid.star:85
-    - specs/character/character_humanoid.star:89
+    - specs/audio/spec_enum_coverage.star:220
+    - specs/character/character_humanoid.star:117
+    - specs/character/character_humanoid.star:121
   - name: skeletal_constraints
     covered: true
     examples:
-    - specs/character/character_humanoid.star:98
-    - specs/character/character_humanoid_blank.star:79
-    - specs/character/character_skinned.star:90
+    - specs/character/character_stdlib_coverage.star:81
   - name: skeletal_export_settings
     covered: true
     examples:
-    - specs/character/character_humanoid.star:94
-    - specs/character/character_humanoid_blank.star:75
-    - specs/character/character_skinned.star:86
+    - specs/character/character_stdlib_coverage.star:73
   - name: skeletal_mesh_spec
     covered: true
     examples:
-    - specs/audio/spec_enum_coverage.star:197
-    - specs/character/character_humanoid.star:18
-    - specs/character/character_humanoid_blank.star:7
+    - specs/character/character_stdlib_coverage.star:27
   - name: skeletal_texturing
     covered: true
     examples:
@@ -653,8 +642,8 @@ stdlib:
     covered: true
     examples:
     - specs/animation/aim_constraint_test.star:9
-    - specs/animation/bone_constraints_test.star:9
-    - specs/animation/finger_controls_test.star:9
+    - specs/animation/animation_comprehensive.star:9
+    - specs/animation/animation_ik.star:14
     enum_coverage:
       format:
         glb:
@@ -662,22 +651,22 @@ stdlib:
           example: specs/animation/aim_constraint_test.star:9
         gltf:
           covered: true
-          example: specs/audio/spec_enum_coverage.star:123
+          example: specs/audio/spec_enum_coverage.star:128
         it:
           covered: true
-          example: specs/music/advanced_features.star:91
+          example: specs/music/advanced_features.star:93
         json:
           covered: true
           example: specs/audio/spec_enum_coverage.star:19
         png:
           covered: true
-          example: specs/audio/spec_enum_coverage.star:92
+          example: specs/audio/spec_enum_coverage.star:97
         wav:
           covered: true
           example: specs/audio/audio_filter_bandpass.star:11
         xm:
           covered: true
-          example: specs/audio/spec_enum_coverage.star:44
+          example: specs/audio/spec_enum_coverage.star:45
       kind:
         metadata:
           covered: true
@@ -692,8 +681,8 @@ stdlib:
     covered: true
     examples:
     - specs/animation/aim_constraint_test.star:3
-    - specs/animation/bone_constraints_test.star:3
-    - specs/animation/finger_controls_test.star:3
+    - specs/animation/animation_comprehensive.star:3
+    - specs/animation/animation_ik.star:8
     enum_coverage:
       asset_type:
         audio:
@@ -704,28 +693,28 @@ stdlib:
           example: specs/font/bitmap_basic.star:5
         music:
           covered: true
-          example: specs/music/music_automation.star:43
+          example: specs/audio/spec_enum_coverage.star:42
         skeletal_animation:
           covered: true
           example: specs/animation/aim_constraint_test.star:5
         skeletal_mesh:
           covered: true
-          example: specs/character/character_comprehensive.star:5
+          example: specs/audio/spec_enum_coverage.star:204
         sprite:
           covered: true
-          example: specs/audio/spec_enum_coverage.star:134
+          example: specs/audio/spec_enum_coverage.star:139
         static_mesh:
           covered: true
-          example: specs/audio/spec_enum_coverage.star:109
+          example: specs/audio/spec_enum_coverage.star:114
         texture:
           covered: true
-          example: specs/audio/spec_enum_coverage.star:89
+          example: specs/audio/spec_enum_coverage.star:94
         ui:
           covered: true
-          example: specs/audio/spec_enum_coverage.star:177
+          example: specs/audio/spec_enum_coverage.star:182
         vfx:
           covered: true
-          example: specs/audio/spec_enum_coverage.star:157
+          example: specs/audio/spec_enum_coverage.star:162
   mesh:
   - name: mesh_primitive
     covered: true
@@ -734,8 +723,8 @@ stdlib:
   - name: mesh_recipe
     covered: true
     examples:
-    - specs/audio/spec_enum_coverage.star:114
-    - specs/audio/spec_enum_coverage.star:126
+    - specs/audio/spec_enum_coverage.star:119
+    - specs/audio/spec_enum_coverage.star:131
     - specs/mesh/mesh_array.star:14
   - name: mesh_spec
     covered: true
@@ -767,14 +756,14 @@ stdlib:
   - name: edge_split_modifier
     covered: true
     examples:
-    - specs/mesh/environment_house.star:18
-    - specs/mesh/mesh_edge_split.star:17
+    - specs/mesh/environment_house.star:17
+    - specs/mesh/mesh_edge_split.star:19
     - specs/mesh/mesh_modifiers.star:25
   - name: mirror_modifier
     covered: true
     examples:
     - specs/mesh/mesh_comprehensive.star:18
-    - specs/mesh/mesh_mirror.star:19
+    - specs/mesh/mesh_mirror.star:22
   - name: solidify_modifier
     covered: true
     examples:
@@ -783,13 +772,13 @@ stdlib:
   - name: subdivision_modifier
     covered: true
     examples:
-    - specs/mesh/environment_house.star:17
     - specs/mesh/mesh_comprehensive.star:17
     - specs/mesh/mesh_cube.star:29
+    - specs/mesh/mesh_decimate.star:19
   - name: triangulate_modifier
     covered: true
     examples:
-    - specs/mesh/environment_house.star:19
+    - specs/mesh/environment_house.star:18
     - specs/mesh/mesh_comprehensive.star:22
     - specs/mesh/mesh_primitives.star:18
   music:
@@ -851,9 +840,9 @@ stdlib:
   - name: instrument_synthesis
     covered: true
     examples:
-    - specs/audio/spec_enum_coverage.star:51
-    - specs/audio/spec_enum_coverage.star:57
-    - specs/audio/spec_enum_coverage.star:63
+    - specs/audio/spec_enum_coverage.star:55
+    - specs/audio/spec_enum_coverage.star:61
+    - specs/audio/spec_enum_coverage.star:67
     enum_coverage:
       synth_type:
         noise:
@@ -877,57 +866,55 @@ stdlib:
   - name: tracker_instrument
     covered: true
     examples:
-    - specs/audio/spec_enum_coverage.star:49
-    - specs/audio/spec_enum_coverage.star:55
-    - specs/audio/spec_enum_coverage.star:61
+    - specs/audio/spec_enum_coverage.star:53
+    - specs/audio/spec_enum_coverage.star:59
+    - specs/audio/spec_enum_coverage.star:65
     enum_coverage:
       loop_mode:
         auto:
           covered: true
-          example: specs/audio/spec_enum_coverage.star:53
+          example: specs/audio/spec_enum_coverage.star:57
         forward:
           covered: true
-          example: specs/audio/spec_enum_coverage.star:65
+          example: specs/audio/spec_enum_coverage.star:69
         none:
           covered: true
-          example: specs/audio/spec_enum_coverage.star:59
+          example: specs/audio/spec_enum_coverage.star:63
         pingpong:
           covered: true
-          example: specs/audio/spec_enum_coverage.star:71
+          example: specs/audio/spec_enum_coverage.star:75
   music.patterns:
   - name: arrangement_entry
     covered: true
     examples:
-    - specs/audio/spec_enum_coverage.star:82
-    - specs/music/advanced_features.star:103
-    - specs/music/advanced_features.star:104
+    - specs/audio/spec_enum_coverage.star:86
+    - specs/music/advanced_features.star:108
+    - specs/music/advanced_features.star:109
   - name: pattern_note
     covered: true
     examples:
-    - specs/audio/spec_enum_coverage.star:76
-    - specs/audio/spec_enum_coverage.star:77
-    - specs/audio/spec_enum_coverage.star:78
+    - specs/audio/spec_enum_coverage.star:80
+    - specs/audio/spec_enum_coverage.star:81
+    - specs/audio/spec_enum_coverage.star:82
   - name: tracker_pattern
     covered: true
     examples:
-    - specs/audio/spec_enum_coverage.star:75
+    - specs/audio/spec_enum_coverage.star:79
     - specs/music/advanced_features.star:23
     - specs/music/advanced_features.star:37
   music.song:
   - name: music_spec
     covered: true
     examples:
-    - specs/audio/spec_enum_coverage.star:40
-    - specs/music/advanced_features.star:87
-    - specs/music/ambient_slow.star:30
+    - specs/music/music_spec_coverage.star:37
     enum_coverage:
       format:
         it:
           covered: true
-          example: specs/music/advanced_features.star:91
+          example: specs/music/advanced_features.star:93
         xm:
           covered: true
-          example: specs/audio/spec_enum_coverage.star:44
+          example: specs/audio/spec_enum_coverage.star:45
   - name: tracker_song
     covered: true
     examples:
@@ -937,10 +924,10 @@ stdlib:
       format:
         it:
           covered: true
-          example: specs/music/advanced_features.star:91
+          example: specs/music/advanced_features.star:93
         xm:
           covered: true
-          example: specs/audio/spec_enum_coverage.star:44
+          example: specs/audio/spec_enum_coverage.star:45
   texture:
   - name: decal_metadata
     covered: true
@@ -987,7 +974,7 @@ stdlib:
   - name: texture_graph
     covered: true
     examples:
-    - specs/audio/spec_enum_coverage.star:97
+    - specs/audio/spec_enum_coverage.star:102
     - specs/texture/normal_comprehensive.star:12
     - specs/texture/texture_blend.star:14
   texture.nodes:
@@ -1067,7 +1054,7 @@ stdlib:
   - name: noise_node
     covered: true
     examples:
-    - specs/audio/spec_enum_coverage.star:99
+    - specs/audio/spec_enum_coverage.star:104
     - specs/texture/normal_comprehensive.star:15
     - specs/texture/normal_comprehensive.star:16
     enum_coverage:
@@ -1077,7 +1064,7 @@ stdlib:
           example: specs/texture/texture_noise_algorithms.star:34
         perlin:
           covered: true
-          example: specs/audio/spec_enum_coverage.star:99
+          example: specs/audio/spec_enum_coverage.star:104
         simplex:
           covered: true
           example: specs/texture/normal_comprehensive.star:16

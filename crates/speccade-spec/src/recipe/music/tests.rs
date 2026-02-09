@@ -541,7 +541,11 @@ fn test_instrument_synthesis_noise_with_base_note() {
 fn test_instrument_synthesis_noise_without_base_note_deserializes() {
     let json = r#"{"type":"noise","periodic":false}"#;
     let parsed: InstrumentSynthesis = serde_json::from_str(json).unwrap();
-    if let InstrumentSynthesis::Noise { periodic, base_note } = parsed {
+    if let InstrumentSynthesis::Noise {
+        periodic,
+        base_note,
+    } = parsed
+    {
         assert!(!periodic);
         assert!(base_note.is_none());
     } else {

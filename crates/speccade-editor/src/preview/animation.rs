@@ -16,7 +16,9 @@ fn get_cache_dir() -> PathBuf {
     static CACHE_DIR: OnceLock<PathBuf> = OnceLock::new();
     CACHE_DIR
         .get_or_init(|| {
-            let dir = std::env::temp_dir().join("speccade-editor-cache").join("animation");
+            let dir = std::env::temp_dir()
+                .join("speccade-editor-cache")
+                .join("animation");
             let _ = std::fs::create_dir_all(&dir);
             dir
         })
@@ -147,9 +149,10 @@ pub fn generate_animation_preview(spec: &Spec, _settings: &PreviewSettings) -> P
                             )
                             .with_lint(lint_result)
                         }
-                        Err(e) => {
-                            PreviewResult::failure("animation", format!("Failed to read GLB: {}", e))
-                        }
+                        Err(e) => PreviewResult::failure(
+                            "animation",
+                            format!("Failed to read GLB: {}", e),
+                        ),
                     }
                 }
                 None => PreviewResult::failure("animation", "No GLB output generated"),
@@ -185,10 +188,16 @@ fn extract_animation_metadata(glb_bytes: &[u8], spec: &Spec) -> serde_json::Valu
                             channel_count += 1;
                             let sampler = channel.sampler();
                             let input_accessor = sampler.input();
-                            if let (Some(min), Some(max)) = (input_accessor.min(), input_accessor.max()) {
+                            if let (Some(min), Some(max)) =
+                                (input_accessor.min(), input_accessor.max())
+                            {
                                 if let (Some(max_time), Some(min_time)) = (
-                                    max.as_array().and_then(|a| a.first()).and_then(|v| v.as_f64()),
-                                    min.as_array().and_then(|a| a.first()).and_then(|v| v.as_f64()),
+                                    max.as_array()
+                                        .and_then(|a| a.first())
+                                        .and_then(|v| v.as_f64()),
+                                    min.as_array()
+                                        .and_then(|a| a.first())
+                                        .and_then(|v| v.as_f64()),
                                 ) {
                                     duration = duration.max((max_time - min_time) as f32);
                                 }

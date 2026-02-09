@@ -198,6 +198,280 @@ fn test_skeletal_mesh_armature_driven_minimal_valid_spec() {
 }
 
 #[test]
+fn test_skeletal_mesh_armature_driven_part_minimal_valid_spec() {
+    let spec = crate::spec::Spec::builder(
+        "skeletal-mesh-armature-driven-part-minimal",
+        AssetType::SkeletalMesh,
+    )
+    .license("CC0-1.0")
+    .seed(123)
+    .output(OutputSpec::primary(OutputFormat::Glb, "character.glb"))
+    .recipe(Recipe::new(
+        "skeletal_mesh.armature_driven_v1",
+        serde_json::json!({
+            "skeleton_preset": "humanoid_basic_v1",
+            "bone_meshes": {
+                "spine": {
+                    "part": {
+                        "base": {
+                            "primitive": "cylinder",
+                            "dimensions": [0.08, 0.08, 1.0]
+                        }
+                    }
+                }
+            }
+        }),
+    ))
+    .build();
+
+    let result = validate_for_generate(&spec);
+    assert!(result.is_ok(), "errors: {:?}", result.errors);
+}
+
+#[test]
+fn test_skeletal_mesh_armature_driven_part_rejects_with_extrusion_steps() {
+    let spec = crate::spec::Spec::builder(
+        "skeletal-mesh-armature-driven-part-mutual-exclusive",
+        AssetType::SkeletalMesh,
+    )
+    .license("CC0-1.0")
+    .seed(123)
+    .output(OutputSpec::primary(OutputFormat::Glb, "character.glb"))
+    .recipe(Recipe::new(
+        "skeletal_mesh.armature_driven_v1",
+        serde_json::json!({
+            "skeleton_preset": "humanoid_basic_v1",
+            "bone_meshes": {
+                "spine": {
+                    "part": {
+                        "base": {
+                            "primitive": "cube",
+                            "dimensions": [0.1, 0.1, 1.0]
+                        }
+                    },
+                    "extrusion_steps": [{"extrude": 1.0}]
+                }
+            }
+        }),
+    ))
+    .build();
+
+    let result = validate_for_generate(&spec);
+    assert!(!result.is_ok());
+    assert!(
+        result
+            .errors
+            .iter()
+            .any(|e| e.message.contains("mutually exclusive")),
+        "expected mutual exclusivity error, got {:?}",
+        result.errors
+    );
+}
+
+#[test]
+fn test_skeletal_mesh_armature_driven_part_rejects_non_positive_dimensions() {
+    let spec = crate::spec::Spec::builder(
+        "skeletal-mesh-armature-driven-part-bad-dim",
+        AssetType::SkeletalMesh,
+    )
+    .license("CC0-1.0")
+    .seed(123)
+    .output(OutputSpec::primary(OutputFormat::Glb, "character.glb"))
+    .recipe(Recipe::new(
+        "skeletal_mesh.armature_driven_v1",
+        serde_json::json!({
+            "skeleton_preset": "humanoid_basic_v1",
+            "bone_meshes": {
+                "spine": {
+                    "part": {
+                        "base": {
+                            "primitive": "cube",
+                            "dimensions": [0.0, 0.1, 1.0]
+                        }
+                    }
+                }
+            }
+        }),
+    ))
+    .build();
+
+    let result = validate_for_generate(&spec);
+    assert!(!result.is_ok());
+    assert!(
+        result
+            .errors
+            .iter()
+            .any(|e| e.message.contains("dimensions[0]")),
+        "expected dimensions error, got {:?}",
+        result.errors
+    );
+}
+
+#[test]
+fn test_skeletal_mesh_armature_driven_part_rejects_duplicate_scale_axes() {
+    let spec = crate::spec::Spec::builder(
+        "skeletal-mesh-armature-driven-part-duplicate-axes",
+        AssetType::SkeletalMesh,
+    )
+    .license("CC0-1.0")
+    .seed(123)
+    .output(OutputSpec::primary(OutputFormat::Glb, "character.glb"))
+    .recipe(Recipe::new(
+        "skeletal_mesh.armature_driven_v1",
+        serde_json::json!({
+            "skeleton_preset": "humanoid_basic_v1",
+            "bone_meshes": {
+                "spine": {
+                    "part": {
+                        "base": {
+                            "primitive": "cube",
+                            "dimensions": [0.1, 0.1, 1.0]
+                        },
+                        "scale": {
+                            "axes": ["x", "x"]
+                        }
+                    }
+                }
+            }
+        }),
+    ))
+    .build();
+
+    let result = validate_for_generate(&spec);
+    assert!(!result.is_ok());
+    assert!(
+        result
+            .errors
+            .iter()
+            .any(|e| e.message.contains("duplicate axis")),
+        "expected duplicate-axis error, got {:?}",
+        result.errors
+    );
+}
+
+#[test]
+fn test_skeletal_mesh_armature_driven_part_rejects_scale_amount_out_of_range() {
+    let spec = crate::spec::Spec::builder(
+        "skeletal-mesh-armature-driven-part-scale-oob",
+        AssetType::SkeletalMesh,
+    )
+    .license("CC0-1.0")
+    .seed(123)
+    .output(OutputSpec::primary(OutputFormat::Glb, "character.glb"))
+    .recipe(Recipe::new(
+        "skeletal_mesh.armature_driven_v1",
+        serde_json::json!({
+            "skeleton_preset": "humanoid_basic_v1",
+            "bone_meshes": {
+                "spine": {
+                    "part": {
+                        "base": {
+                            "primitive": "cube",
+                            "dimensions": [0.1, 0.1, 1.0]
+                        },
+                        "scale": {
+                            "axes": ["x", "y", "z"],
+                            "amount_from_z": {"x": 1.2}
+                        }
+                    }
+                }
+            }
+        }),
+    ))
+    .build();
+
+    let result = validate_for_generate(&spec);
+    assert!(!result.is_ok());
+    assert!(
+        result
+            .errors
+            .iter()
+            .any(|e| e.message.contains("scale.amount_from_z.x")),
+        "expected amount_from_z range error, got {:?}",
+        result.errors
+    );
+}
+
+#[test]
+fn test_skeletal_mesh_armature_driven_part_rejects_non_positive_asset_scale() {
+    let spec = crate::spec::Spec::builder(
+        "skeletal-mesh-armature-driven-part-asset-scale",
+        AssetType::SkeletalMesh,
+    )
+    .license("CC0-1.0")
+    .seed(123)
+    .output(OutputSpec::primary(OutputFormat::Glb, "character.glb"))
+    .recipe(Recipe::new(
+        "skeletal_mesh.armature_driven_v1",
+        serde_json::json!({
+            "skeleton_preset": "humanoid_basic_v1",
+            "bone_meshes": {
+                "spine": {
+                    "part": {
+                        "base": {
+                            "asset": "./parts/chest.glb",
+                            "scale": 0.0
+                        }
+                    }
+                }
+            }
+        }),
+    ))
+    .build();
+
+    let result = validate_for_generate(&spec);
+    assert!(!result.is_ok());
+    assert!(
+        result
+            .errors
+            .iter()
+            .any(|e| e.message.contains("asset.scale")),
+        "expected asset.scale error, got {:?}",
+        result.errors
+    );
+}
+
+#[test]
+fn test_skeletal_mesh_armature_driven_part_bridge_params_emit_warning() {
+    let spec = crate::spec::Spec::builder(
+        "skeletal-mesh-armature-driven-part-bridge-warning",
+        AssetType::SkeletalMesh,
+    )
+    .license("CC0-1.0")
+    .seed(123)
+    .output(OutputSpec::primary(OutputFormat::Glb, "character.glb"))
+    .recipe(Recipe::new(
+        "skeletal_mesh.armature_driven_v1",
+        serde_json::json!({
+            "skeleton_preset": "humanoid_basic_v1",
+            "bone_meshes": {
+                "spine": {
+                    "part": {
+                        "base": {
+                            "primitive": "cube",
+                            "dimensions": [0.1, 0.1, 1.0]
+                        }
+                    },
+                    "connect_end": "bridge"
+                }
+            }
+        }),
+    ))
+    .build();
+
+    let result = validate_for_generate(&spec);
+    assert!(result.is_ok(), "errors: {:?}", result.errors);
+    assert!(
+        result.warnings.iter().any(|w| {
+            w.code == crate::error::WarningCode::UnusedRecipeParams
+                && w.message.contains("connect_end='bridge' is ignored")
+        }),
+        "expected bridge warning, got {:?}",
+        result.warnings
+    );
+}
+
+#[test]
 fn test_skeletal_mesh_armature_driven_rejects_empty_bone_meshes() {
     let spec = crate::spec::Spec::builder(
         "skeletal-mesh-armature-driven-empty",

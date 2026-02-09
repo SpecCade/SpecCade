@@ -49,12 +49,17 @@ from .handlers_mesh import create_wall_kit, create_pipe_kit, create_door_kit
 
 VALIDATION_GRID_VIEWS = [
     # (label, azimuth_deg, elevation_deg)
-    ("FRONT", 0.0, 30.0),
-    ("BACK", 180.0, 30.0),
+    # Canonical convention is +Y forward. With this camera rig:
+    # - azimuth 180 => camera on +Y side (front view)
+    # - azimuth   0 => camera on -Y side (back view)
+    ("FRONT", 180.0, 30.0),
+    ("BACK", 0.0, 30.0),
     ("TOP", 0.0, 90.0),
-    ("LEFT", 90.0, 30.0),
-    ("RIGHT", 270.0, 30.0),
-    ("ISO", 45.0, 35.264),  # Isometric angle
+    # Character-left is -X, character-right is +X.
+    ("LEFT", 270.0, 30.0),
+    ("RIGHT", 90.0, 30.0),
+    # Front-right isometric
+    ("ISO", 135.0, 35.264),
 ]
 
 

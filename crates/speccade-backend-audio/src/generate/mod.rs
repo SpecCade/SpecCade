@@ -223,16 +223,18 @@ fn generate_from_unified_params(params: &AudioV1Params, seed: u32) -> AudioResul
             continue;
         }
 
-        let layer_output =
-            generate_layer(layer, layer_idx, num_samples, sample_rate, layer_seed)?;
+        let layer_output = generate_layer(layer, layer_idx, num_samples, sample_rate, layer_seed)?;
 
         // Create the mixer layer based on mono/stereo output
         let mut mix_layer = match layer_output {
             layer::LayerOutput::Mono(mut samples) => {
                 // Apply pitch envelope if specified (mono only for now)
                 if let Some(ref pitch_env) = params.pitch_envelope {
-                    let pitch_curve =
-                        modulation::generate_pitch_envelope_curve(pitch_env, sample_rate, num_samples);
+                    let pitch_curve = modulation::generate_pitch_envelope_curve(
+                        pitch_env,
+                        sample_rate,
+                        num_samples,
+                    );
                     samples = modulation::apply_pitch_envelope_to_layer_samples(
                         layer,
                         layer_idx,

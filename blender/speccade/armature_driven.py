@@ -261,6 +261,12 @@ def get_bridge_pairs(bone_hierarchy: dict, bone_meshes: dict) -> list[tuple[str,
         if isinstance(child_mesh, dict) and "mirror" in child_mesh:
             continue
 
+        # Part-based meshes do not emit bridge edge-loop groups.
+        if isinstance(parent_mesh, dict) and parent_mesh.get("part"):
+            continue
+        if isinstance(child_mesh, dict) and child_mesh.get("part"):
+            continue
+
         parent_connect_end = parent_mesh.get("connect_end")
         child_connect_start = child_mesh.get("connect_start")
 
@@ -716,6 +722,90 @@ def _resolve_profile_radius(mesh_spec: dict, *, bone_length: float) -> tuple[flo
         raise ValueError(f"profile_radius.y must be > 0, got {ry!r}")
 
     return (rx, ry)
+
+
+def _resolve_part_scale_factors(
+    scale_spec,
+    *,
+    bone_length: float,
+) -> tuple[float, float, float]:
+    """Resolve part scale rules into per-axis scale factors.
+
+    Defaults:
+    - Missing scale or missing axes => axes = ["x", "y", "z"]
+    - Missing amount_from_z for an enabled axis => 1.0
+    """
+    if isinstance(bone_length, bool) or not isinstance(bone_length, (int, float)):
+        raise TypeError(
+            f"bone_length must be a number, got {type(bone_length).__name__}: {bone_length!r}"
+        )
+    bone_len = float(bone_length)
+    if not math.isfinite(bone_len) or bone_len <= 0.0:
+        raise ValueError(f"bone_length must be a finite, positive number, got {bone_len!r}")
+
+    if scale_spec is None:
+        scale_spec = {}
+
+    if not isinstance(scale_spec, dict):
+        raise TypeError(
+            f"part.scale must be a dict when provided, got {type(scale_spec).__name__}: {scale_spec!r}"
+        )
+
+    axes_raw = scale_spec.get("axes")
+    if axes_raw is None:
+        axes_set = {"x", "y", "z"}
+    else:
+        if not isinstance(axes_raw, list):
+            raise TypeError(
+                f"part.scale.axes must be a list when provided, got {type(axes_raw).__name__}: {axes_raw!r}"
+            )
+        axes_set = set()
+        for i, axis in enumerate(axes_raw):
+            if not isinstance(axis, str):
+                raise TypeError(
+                    f"part.scale.axes[{i}] must be a str, got {type(axis).__name__}: {axis!r}"
+                )
+            axis_lc = axis.strip().lower()
+            if axis_lc not in ("x", "y", "z"):
+                raise ValueError(
+                    f"part.scale.axes[{i}] must be one of 'x'|'y'|'z', got {axis!r}"
+                )
+            if axis_lc in axes_set:
+                raise ValueError(f"part.scale.axes contains duplicate axis: {axis!r}")
+            axes_set.add(axis_lc)
+
+    amount_raw = scale_spec.get("amount_from_z")
+    if amount_raw is None:
+        amount_raw = {}
+    if not isinstance(amount_raw, dict):
+        raise TypeError(
+            f"part.scale.amount_from_z must be a dict when provided, got {type(amount_raw).__name__}: {amount_raw!r}"
+        )
+
+    def _amount_for(axis: str) -> float:
+        v = amount_raw.get(axis, 1.0)
+        if isinstance(v, bool) or not isinstance(v, (int, float)):
+            raise TypeError(
+                f"part.scale.amount_from_z.{axis} must be a number, got {type(v).__name__}: {v!r}"
+            )
+        out = float(v)
+        if not math.isfinite(out):
+            raise ValueError(
+                f"part.scale.amount_from_z.{axis} must be finite, got {out!r}"
+            )
+        if out < 0.0 or out > 1.0:
+            raise ValueError(
+                f"part.scale.amount_from_z.{axis} must be in [0.0, 1.0], got {out!r}"
+            )
+        return out
+
+    def _factor(axis: str) -> float:
+        if axis not in axes_set:
+            return 1.0
+        amount = _amount_for(axis)
+        return 1.0 + amount * (bone_len - 1.0)
+
+    return (_factor("x"), _factor("y"), _factor("z"))
 
 
 def _build_mesh_with_steps(
@@ -1285,7 +1375,7 @@ def build_armature_driven_character_mesh(*, armature, params: dict, out_root) ->
             _primitive_add_with_uvs(bpy.ops.mesh.primitive_plane_add, size=1.0, location=location_w)
             return _require_active_mesh(context='primitive_plane_add(attachment)')
         raise ValueError(
-            f"unsupported attachment primitive: {primitive!r}; expected one of: cube, sphere, ico_sphere, cylinder, cone, torus, plane"
+            f"unsupported primitive: {primitive!r}; expected one of: cube, sphere, ico_sphere, cylinder, cone, torus, plane"
         )
 
     def _require_active_mesh(*, context: str):
@@ -1296,6 +1386,295 @@ def build_armature_driven_character_mesh(*, armature, params: dict, out_root) ->
             raise RuntimeError(
                 f"{context}: expected a MESH active object, got {getattr(obj, 'type', None)!r}"
             )
+        return obj
+
+    def _resolve_part_asset_source(*, value: str, is_asset_ref: bool):
+        from pathlib import Path
+
+        if not isinstance(value, str) or not value.strip():
+            return None
+
+        token = value.strip()
+        out_root_path = Path(out_root)
+        raw_path = Path(token)
+        candidates: list[Path] = []
+
+        if raw_path.suffix:
+            candidates.append(raw_path)
+        else:
+            candidates.append(raw_path.with_suffix('.glb'))
+            candidates.append(raw_path.with_suffix('.gltf'))
+
+        resolved: list[Path] = []
+        for c in candidates:
+            if c.is_absolute():
+                resolved.append(c)
+            else:
+                resolved.append(out_root_path / c)
+
+        if is_asset_ref:
+            # Common generated output locations by asset type.
+            named = [token] if raw_path.suffix else [f"{token}.glb", f"{token}.gltf"]
+            for name in named:
+                for prefix in (
+                    "",
+                    "skeletal_mesh",
+                    "static_mesh",
+                    "mesh",
+                    "meshes",
+                    "characters",
+                    "assets",
+                ):
+                    if prefix:
+                        resolved.append(out_root_path / prefix / name)
+                    else:
+                        resolved.append(out_root_path / name)
+
+            # If asset_ref maps to an asset_id, generated outputs often include `<asset_id>.glb`.
+            # Search deterministically under out_root as a fallback.
+            if not raw_path.suffix:
+                for ext in (".glb", ".gltf"):
+                    pattern = f"{token}{ext}"
+                    try:
+                        matches = sorted(out_root_path.rglob(pattern))
+                    except Exception:
+                        matches = []
+                    resolved.extend(matches)
+
+        seen: set[str] = set()
+        ordered: list[Path] = []
+        for c in resolved:
+            key = str(c)
+            if key in seen:
+                continue
+            seen.add(key)
+            ordered.append(c)
+
+        return next((c for c in ordered if c.exists() and c.is_file()), None)
+
+    def _import_gltf_mesh(*, src, object_name: str):
+        _ensure_object_mode()
+        bpy.ops.object.select_all(action='DESELECT')
+        bpy.ops.import_scene.gltf(filepath=str(src))
+
+        imported_meshes = [o for o in bpy.context.selected_objects if o.type == 'MESH']
+        if not imported_meshes:
+            raise ValueError(f"import produced no meshes: {src}")
+
+        imported_meshes.sort(key=lambda o: o.name)
+        if len(imported_meshes) > 1:
+            _select_only(imported_meshes, active=imported_meshes[0])
+            bpy.ops.object.join()
+            obj = bpy.context.active_object
+        else:
+            obj = imported_meshes[0]
+
+        if obj is None or getattr(obj, 'type', None) != 'MESH':
+            raise ValueError(f"failed to import mesh from {src}")
+
+        obj.name = object_name
+        _ensure_material_slot_placeholders(obj)
+        return obj
+
+    def _build_mesh_from_part(
+        *,
+        bone_name: str,
+        part_spec: dict,
+        bone_length: float,
+        head_w,
+        base_q,
+    ) -> object:
+        def _bone_local_head_to_world(v_rel_head) -> Vector:
+            v = _parse_vec3(v_rel_head, name='part vec3')
+            if v is None:
+                raise TypeError("part vec3 is required")
+            x, y, z = v
+            local = Vector((x * bone_length, y * bone_length, z * bone_length))
+            return head_w + _quat_rotate_vec(base_q, local)
+
+        def _parse_positive_scalar(raw, *, name: str, default: float) -> float:
+            if raw is None:
+                out = float(default)
+            else:
+                if isinstance(raw, bool) or not isinstance(raw, (int, float)):
+                    raise TypeError(f"{name} must be a number")
+                out = float(raw)
+            if not math.isfinite(out) or out <= 0.0:
+                raise ValueError(f"{name} must be a finite, positive number, got {out!r}")
+            return out
+
+        def _apply_shape_rotation(obj, rot_raw, *, name: str) -> None:
+            obj.rotation_mode = 'QUATERNION'
+            rot = _parse_vec3(rot_raw, name=name)
+            if rot is not None:
+                rx, ry, rz = rot
+                rot_q = Euler(
+                    (math.radians(rx), math.radians(ry), math.radians(rz)),
+                    'XYZ',
+                ).to_quaternion()
+                obj.rotation_quaternion = _quat_mul(base_q, rot_q)
+            else:
+                obj.rotation_quaternion = base_q
+            _apply_rotation_only(obj)
+
+        def _create_part_shape(
+            *,
+            shape_spec,
+            path_name: str,
+            label: str,
+            part_scale_factors: tuple[float, float, float],
+        ) -> object:
+            if not isinstance(shape_spec, dict):
+                raise TypeError(f"{path_name} must be a dict")
+
+            fx, fy, fz = part_scale_factors
+
+            if 'primitive' in shape_spec:
+                primitive = shape_spec.get('primitive')
+                if not isinstance(primitive, str) or not primitive:
+                    raise TypeError(f"{path_name}.primitive must be a non-empty str")
+
+                dims = _parse_vec3(shape_spec.get('dimensions'), name=f"{path_name}.dimensions")
+                if dims is None:
+                    raise TypeError(f"{path_name}.dimensions is required")
+                dx, dy, dz = dims
+                if dx <= 0.0 or dy <= 0.0 or dz <= 0.0:
+                    raise ValueError(
+                        f"{path_name}.dimensions must be > 0, got ({dx!r}, {dy!r}, {dz!r})"
+                    )
+
+                offset = shape_spec.get('offset', [0.0, 0.0, 0.0])
+                location_w = _bone_local_head_to_world(offset)
+
+                obj = _create_primitive_mesh(primitive=primitive, location_w=location_w)
+                obj.name = f"Part_{bone_name}_{label}"
+                _ensure_material_slot_placeholders(obj)
+
+                obj.scale = (dx * fx, dy * fy, dz * fz)
+                _apply_scale_only(obj)
+                _apply_shape_rotation(obj, shape_spec.get('rotation'), name=f"{path_name}.rotation")
+                return obj
+
+            if 'asset' in shape_spec:
+                asset = shape_spec.get('asset')
+                if not isinstance(asset, str) or not asset:
+                    raise TypeError(f"{path_name}.asset must be a non-empty str")
+
+                src = _resolve_part_asset_source(value=asset, is_asset_ref=False)
+                if src is None:
+                    raise ValueError(f"{path_name}.asset source not found: {asset!r}")
+
+                obj = _import_gltf_mesh(src=src, object_name=f"PartAsset_{bone_name}_{label}")
+                obj.location = _bone_local_head_to_world(shape_spec.get('offset', [0.0, 0.0, 0.0]))
+
+                shape_scale = _parse_positive_scalar(
+                    shape_spec.get('scale'),
+                    name=f"{path_name}.scale",
+                    default=1.0,
+                )
+                obj.scale = (shape_scale * fx, shape_scale * fy, shape_scale * fz)
+                _apply_scale_only(obj)
+                _apply_shape_rotation(obj, shape_spec.get('rotation'), name=f"{path_name}.rotation")
+                return obj
+
+            if 'asset_ref' in shape_spec:
+                asset_ref = shape_spec.get('asset_ref')
+                if not isinstance(asset_ref, str) or not asset_ref:
+                    raise TypeError(f"{path_name}.asset_ref must be a non-empty str")
+
+                src = _resolve_part_asset_source(value=asset_ref, is_asset_ref=True)
+                if src is None:
+                    raise ValueError(f"{path_name}.asset_ref could not be resolved: {asset_ref!r}")
+
+                obj = _import_gltf_mesh(src=src, object_name=f"PartAssetRef_{bone_name}_{label}")
+                obj.location = _bone_local_head_to_world(shape_spec.get('offset', [0.0, 0.0, 0.0]))
+
+                shape_scale = _parse_positive_scalar(
+                    shape_spec.get('scale'),
+                    name=f"{path_name}.scale",
+                    default=1.0,
+                )
+                obj.scale = (shape_scale * fx, shape_scale * fy, shape_scale * fz)
+                _apply_scale_only(obj)
+                _apply_shape_rotation(obj, shape_spec.get('rotation'), name=f"{path_name}.rotation")
+                return obj
+
+            raise ValueError(
+                f"{path_name} must contain one of: 'primitive', 'asset', or 'asset_ref'"
+            )
+
+        if not isinstance(part_spec, dict):
+            raise TypeError(f"bone_meshes['{bone_name}'].part must be a dict")
+        if 'base' not in part_spec:
+            raise TypeError(f"bone_meshes['{bone_name}'].part.base is required")
+
+        part_scale_factors = _resolve_part_scale_factors(
+            part_spec.get('scale'),
+            bone_length=bone_length,
+        )
+
+        obj = _create_part_shape(
+            shape_spec=part_spec['base'],
+            path_name=f"bone_meshes['{bone_name}'].part.base",
+            label="base",
+            part_scale_factors=part_scale_factors,
+        )
+
+        operations = part_spec.get('operations', []) or []
+        if not isinstance(operations, list):
+            raise TypeError(f"bone_meshes['{bone_name}'].part.operations must be a list")
+
+        for oi, op_spec in enumerate(operations):
+            if not isinstance(op_spec, dict):
+                raise TypeError(
+                    f"bone_meshes['{bone_name}'].part.operations[{oi}] must be a dict"
+                )
+
+            op = op_spec.get('op')
+            if not isinstance(op, str) or not op:
+                raise TypeError(
+                    f"bone_meshes['{bone_name}'].part.operations[{oi}].op must be a non-empty str"
+                )
+
+            target_spec = op_spec.get('target')
+            if not isinstance(target_spec, dict):
+                raise TypeError(
+                    f"bone_meshes['{bone_name}'].part.operations[{oi}].target must be a dict"
+                )
+
+            target_obj = _create_part_shape(
+                shape_spec=target_spec,
+                path_name=f"bone_meshes['{bone_name}'].part.operations[{oi}].target",
+                label=f"op_{oi}",
+                part_scale_factors=part_scale_factors,
+            )
+
+            op_lc = op.strip().lower()
+            if op_lc == 'union':
+                blender_op = 'UNION'
+            elif op_lc == 'difference':
+                blender_op = 'DIFFERENCE'
+            elif op_lc in ('intersect', 'intersection'):
+                blender_op = 'INTERSECT'
+            else:
+                raise ValueError(
+                    f"bone_meshes['{bone_name}'].part.operations[{oi}].op unsupported: {op!r}"
+                )
+
+            mod = obj.modifiers.new(name=f"PartBool_{oi}", type='BOOLEAN')
+            mod.operation = blender_op
+            mod.object = target_obj
+            try:
+                mod.solver = 'EXACT'
+            except Exception:
+                pass
+            _apply_modifier(obj, modifier_name=mod.name)
+
+            try:
+                bpy.data.objects.remove(target_obj, do_unlink=True)
+            except Exception:
+                pass
+
         return obj
 
     if not isinstance(params, dict):
@@ -1527,54 +1906,64 @@ def build_armature_driven_character_mesh(*, armature, params: dict, out_root) ->
 
         base_q = axis_n.to_track_quat('Z', 'Y')
 
-        kind, segments = _parse_profile(mesh_spec.get('profile'))
-        rx, ry = _resolve_profile_radius(mesh_spec, bone_length=length)
-
-        cap_start = mesh_spec.get('cap_start', True)
-        cap_end = mesh_spec.get('cap_end', True)
-        if not isinstance(cap_start, bool):
-            raise TypeError(
-                f"bone_meshes['{bone_name}'].cap_start must be a bool, got {type(cap_start).__name__}: {cap_start!r}"
-            )
-        if not isinstance(cap_end, bool):
-            raise TypeError(
-                f"bone_meshes['{bone_name}'].cap_end must be a bool, got {type(cap_end).__name__}: {cap_end!r}"
-            )
-
         bone_material_index = _parse_material_index(
             mesh_spec.get('material_index'),
             default=0,
             name=f"bone_meshes['{bone_name}'].material_index",
         )
 
-        extrusion_steps = mesh_spec.get('extrusion_steps', [])
-        if not extrusion_steps:
-            # Default: single extrusion spanning full bone length with no scale change
-            extrusion_steps = [{"extrude": 1.0, "scale": 1.0}]
-
         connect_start = mesh_spec.get("connect_start")
         connect_end = mesh_spec.get("connect_end")
 
-        obj = _build_mesh_with_steps(
-            bpy_module=bpy,
-            bmesh_module=bmesh,
-            bone_name=bone_name,
-            bone_length=length,
-            head_w=head_w,
-            base_q=base_q,
-            profile=(kind, segments),
-            profile_radius=(rx, ry),
-            steps=extrusion_steps,
-            cap_start=cap_start,
-            cap_end=cap_end,
-            ensure_object_mode=_ensure_object_mode,
-            select_only=_select_only,
-            apply_scale_only=_apply_scale_only,
-            apply_rotation_only=_apply_rotation_only,
-            quat_rotate_vec=_quat_rotate_vec,
-            connect_start=connect_start,
-            connect_end=connect_end,
-        )
+        part_present = ('part' in mesh_spec) and (mesh_spec.get('part') is not None)
+        if part_present:
+            obj = _build_mesh_from_part(
+                bone_name=bone_name,
+                part_spec=mesh_spec.get('part'),
+                bone_length=length,
+                head_w=head_w,
+                base_q=base_q,
+            )
+        else:
+            kind, segments = _parse_profile(mesh_spec.get('profile'))
+            rx, ry = _resolve_profile_radius(mesh_spec, bone_length=length)
+
+            cap_start = mesh_spec.get('cap_start', True)
+            cap_end = mesh_spec.get('cap_end', True)
+            if not isinstance(cap_start, bool):
+                raise TypeError(
+                    f"bone_meshes['{bone_name}'].cap_start must be a bool, got {type(cap_start).__name__}: {cap_start!r}"
+                )
+            if not isinstance(cap_end, bool):
+                raise TypeError(
+                    f"bone_meshes['{bone_name}'].cap_end must be a bool, got {type(cap_end).__name__}: {cap_end!r}"
+                )
+
+            extrusion_steps = mesh_spec.get('extrusion_steps', [])
+            if not extrusion_steps:
+                # Default: single extrusion spanning full bone length with no scale change
+                extrusion_steps = [{"extrude": 1.0, "scale": 1.0}]
+
+            obj = _build_mesh_with_steps(
+                bpy_module=bpy,
+                bmesh_module=bmesh,
+                bone_name=bone_name,
+                bone_length=length,
+                head_w=head_w,
+                base_q=base_q,
+                profile=(kind, segments),
+                profile_radius=(rx, ry),
+                steps=extrusion_steps,
+                cap_start=cap_start,
+                cap_end=cap_end,
+                ensure_object_mode=_ensure_object_mode,
+                select_only=_select_only,
+                apply_scale_only=_apply_scale_only,
+                apply_rotation_only=_apply_rotation_only,
+                quat_rotate_vec=_quat_rotate_vec,
+                connect_start=connect_start,
+                connect_end=connect_end,
+            )
         _ensure_material_slot_placeholders(obj)
 
         _set_all_poly_material_index(obj, material_index=bone_material_index)

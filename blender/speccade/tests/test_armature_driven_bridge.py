@@ -87,6 +87,30 @@ class TestBridgeEdgeLoopHelpers(unittest.TestCase):
         pairs = get_bridge_pairs(bone_hierarchy, bone_meshes)
         self.assertEqual(pairs, [])  # No bridge - requires both sides
 
+    def test_get_bridge_pairs_skips_part_meshes(self) -> None:
+        from speccade.armature_driven import get_bridge_pairs
+
+        bone_hierarchy = {
+            "spine": {"parent": None, "children": ["chest"]},
+            "chest": {"parent": "spine", "children": []},
+        }
+        bone_meshes = {
+            "spine": {
+                "part": {
+                    "base": {"primitive": "cube", "dimensions": [0.2, 0.2, 1.0]},
+                },
+                "connect_end": "bridge",
+            },
+            "chest": {
+                "part": {
+                    "base": {"primitive": "cube", "dimensions": [0.2, 0.2, 1.0]},
+                },
+                "connect_start": "bridge",
+            },
+        }
+        pairs = get_bridge_pairs(bone_hierarchy, bone_meshes)
+        self.assertEqual(pairs, [])
+
 
 class TestEdgeLoopTracking(unittest.TestCase):
     """Test edge loop vertex group tracking (requires Blender mock or skip)."""
