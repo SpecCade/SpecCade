@@ -321,14 +321,12 @@ fn compare_structures(xm: &FormatSummary, it: &FormatSummary) -> Vec<ParityMisma
 
 /// Check parity with detailed note-level comparison.
 ///
-/// This extends the basic parity check to also verify note placements
-/// within patterns. Due to format differences, this comparison is best-effort.
+/// This extends the basic parity check with order-table comparison:
 ///
-/// # Note
+/// - XM order-table entries up to song length
+/// - IT orders with separator/end markers (254/255) normalized out
 ///
-/// This function currently performs the same checks as `check_parity`.
-/// Detailed note-level comparison requires additional pattern parsing
-/// infrastructure that may be added in future versions.
+/// Detailed note-level parity remains future work.
 pub fn check_parity_detailed(xm_data: &[u8], it_data: &[u8]) -> Result<ParityReport, ParityError> {
     // Validate and parse XM
     let xm_report =

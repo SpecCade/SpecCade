@@ -13,7 +13,7 @@
 use std::collections::HashMap;
 use std::path::Path;
 
-use speccade_backend_music::parity::{check_parity, ParityReport};
+use speccade_backend_music::parity::{check_parity, check_parity_detailed, ParityReport};
 use speccade_backend_music::{generate_music, GenerateResult};
 use speccade_spec::recipe::audio::Envelope;
 use speccade_spec::recipe::music::{
@@ -252,6 +252,25 @@ fn test_xm_it_tempo_bpm_parity() {
     // Tempo and BPM should match
     assert_eq!(xm_summary.tempo, it_summary.tempo);
     assert_eq!(xm_summary.bpm, it_summary.bpm);
+}
+
+#[test]
+fn test_xm_it_detailed_parity_with_loop_restart() {
+    let spec_dir = Path::new(".");
+    let mut xm_spec = create_test_spec(TrackerFormat::Xm);
+    xm_spec.r#loop = true;
+    xm_spec.restart_position = Some(1);
+
+    let mut it_spec = create_test_spec(TrackerFormat::It);
+    it_spec.r#loop = true;
+    it_spec.restart_position = Some(1);
+
+    let xm = generate_music(&xm_spec, 42, spec_dir).expect("XM generation should succeed");
+    let it = generate_music(&it_spec, 42, spec_dir).expect("IT generation should succeed");
+
+    let report =
+        check_parity_detailed(&xm.data, &it.data).expect("Detailed parity check should complete");
+    assert_parity(&report);
 }
 
 // ============================================================================
