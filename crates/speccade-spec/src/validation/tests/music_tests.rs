@@ -155,3 +155,113 @@ fn test_music_dual_outputs_rejects_duplicate_primary_format() {
         .iter()
         .any(|e| e.code == crate::error::ErrorCode::OutputValidationFailed));
 }
+
+#[test]
+fn test_music_semantics_reject_invalid_bpm_and_channels() {
+    let spec = crate::spec::Spec::builder("test-song-06", AssetType::Music)
+        .license("CC0-1.0")
+        .seed(42)
+        .output(OutputSpec::primary(OutputFormat::Xm, "songs/test.xm"))
+        .recipe(crate::recipe::Recipe::new(
+            "music.tracker_song_v1",
+            serde_json::json!({
+                "format": "xm",
+                "bpm": 300,
+                "speed": 6,
+                "channels": 40
+            }),
+        ))
+        .build();
+
+    let result = validate_for_generate(&spec);
+    assert!(!result.is_ok());
+    assert!(result
+        .errors
+        .iter()
+        .any(|e| e.message.contains("bpm must be 32-255")));
+    assert!(result
+        .errors
+        .iter()
+        .any(|e| e.message.contains("channels must be 1-32")));
+}
+
+#[test]
+fn test_music_semantics_reject_invalid_pattern_note_and_effect() {
+    let spec = crate::spec::Spec::builder("test-song-07", AssetType::Music)
+        .license("CC0-1.0")
+        .seed(42)
+        .output(OutputSpec::primary(OutputFormat::Xm, "songs/test.xm"))
+        .recipe(crate::recipe::Recipe::new(
+            "music.tracker_song_v1",
+            serde_json::json!({
+                "format": "xm",
+                "bpm": 120,
+                "speed": 6,
+                "channels": 1,
+                "instruments": [{ "name": "lead", "synthesis": { "type": "sine" } }],
+                "patterns": {
+                    "intro": {
+                        "rows": 4,
+                        "data": [
+                            { "row": 0, "channel": 3, "note": "C4", "inst": 0, "effect_name": "does_not_exist" }
+                        ]
+                    }
+                }
+            }),
+        ))
+        .build();
+
+    let result = validate_for_generate(&spec);
+    assert!(!result.is_ok());
+    assert!(result
+        .errors
+        .iter()
+        .any(|e| e.message.contains("exceeds configured channels")));
+    assert!(result
+        .errors
+        .iter()
+        .any(|e| e.message.contains("unknown effect_name")));
+}
+
+#[test]
+fn test_music_semantics_reject_invalid_arrangement_and_automation() {
+    let spec = crate::spec::Spec::builder("test-song-08", AssetType::Music)
+        .license("CC0-1.0")
+        .seed(42)
+        .output(OutputSpec::primary(OutputFormat::Xm, "songs/test.xm"))
+        .recipe(crate::recipe::Recipe::new(
+            "music.tracker_song_v1",
+            serde_json::json!({
+                "format": "xm",
+                "bpm": 120,
+                "speed": 6,
+                "channels": 1,
+                "instruments": [{ "name": "lead", "synthesis": { "type": "sine" } }],
+                "patterns": {
+                    "intro": { "rows": 4 }
+                },
+                "arrangement": [
+                    { "pattern": "missing", "repeat": 1 }
+                ],
+                "automation": [
+                    { "type": "tempo_change", "pattern": "intro", "row": 10, "bpm": 20 }
+                ]
+            }),
+        ))
+        .build();
+
+    let result = validate_for_generate(&spec);
+    assert!(!result.is_ok());
+    assert!(result
+        .errors
+        .iter()
+        .any(|e| e.message.contains("arrangement references unknown pattern")));
+    assert!(result
+        .errors
+        .iter()
+        .any(|e| e.message.contains("tempo_change row")));
+    assert!(result
+        .errors
+        .iter()
+        .any(|e| e.message.contains("tempo_change bpm must be 32-255")));
+}
