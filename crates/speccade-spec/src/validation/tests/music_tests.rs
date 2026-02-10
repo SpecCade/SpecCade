@@ -68,7 +68,13 @@ fn test_music_allows_dual_xm_it_primary_outputs() {
                 "format": "xm",
                 "bpm": 120,
                 "speed": 6,
-                "channels": 4
+                "channels": 4,
+                "patterns": {
+                    "intro": { "rows": 4 }
+                },
+                "arrangement": [
+                    { "pattern": "intro", "repeat": 1 }
+                ]
             }),
         ))
         .build();
@@ -297,4 +303,63 @@ fn test_music_semantics_reject_it_loop_restart_position_above_255() {
         .errors
         .iter()
         .any(|e| e.message.contains("IT restart_position must be 0-255")));
+}
+
+#[test]
+fn test_music_semantics_reject_empty_arrangement() {
+    let spec = crate::spec::Spec::builder("test-song-10", AssetType::Music)
+        .license("CC0-1.0")
+        .seed(42)
+        .output(OutputSpec::primary(OutputFormat::Xm, "songs/test.xm"))
+        .recipe(crate::recipe::Recipe::new(
+            "music.tracker_song_v1",
+            serde_json::json!({
+                "format": "xm",
+                "bpm": 120,
+                "speed": 6,
+                "channels": 4,
+                "patterns": {
+                    "intro": { "rows": 4 }
+                }
+            }),
+        ))
+        .build();
+
+    let result = validate_for_generate(&spec);
+    assert!(!result.is_ok());
+    assert!(result
+        .errors
+        .iter()
+        .any(|e| e.message.contains("arrangement must contain at least one entry")));
+}
+
+#[test]
+fn test_music_compose_semantics_reject_empty_arrangement() {
+    let spec = crate::spec::Spec::builder("test-song-compose-10", AssetType::Music)
+        .license("CC0-1.0")
+        .seed(42)
+        .output(OutputSpec::primary(OutputFormat::Xm, "songs/test.xm"))
+        .recipe(crate::recipe::Recipe::new(
+            "music.tracker_song_compose_v1",
+            serde_json::json!({
+                "format": "xm",
+                "bpm": 120,
+                "speed": 6,
+                "channels": 4,
+                "patterns": {
+                    "p0": {
+                        "rows": 4,
+                        "program": { "op": "stack", "parts": [] }
+                    }
+                }
+            }),
+        ))
+        .build();
+
+    let result = validate_for_generate(&spec);
+    assert!(!result.is_ok());
+    assert!(result
+        .errors
+        .iter()
+        .any(|e| e.message.contains("arrangement must contain at least one entry")));
 }

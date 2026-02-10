@@ -320,6 +320,14 @@ fn validate_tracker_song_semantics(
         result,
     );
 
+    if params.arrangement.is_empty() {
+        result.add_error(ValidationError::with_path(
+            ErrorCode::InvalidRecipeParams,
+            "arrangement must contain at least one entry",
+            "recipe.params.arrangement",
+        ));
+    }
+
     match params.format {
         TrackerFormat::Xm => {
             if params.instruments.len() > 128 {
@@ -670,6 +678,14 @@ fn validate_tracker_song_compose_semantics(
         "recipe.params",
         result,
     );
+
+    if params.arrangement.is_empty() {
+        result.add_error(ValidationError::with_path(
+            ErrorCode::InvalidRecipeParams,
+            "arrangement must contain at least one entry",
+            "recipe.params.arrangement",
+        ));
+    }
 
     let mut order_count: usize = 0;
     for (idx, entry) in params.arrangement.iter().enumerate() {
