@@ -72,7 +72,7 @@ pub(super) fn register_functions() -> Vec<FunctionInfo> {
             "Creates a complete tracker song recipe.",
             vec![
                 param!("format", "string", req, enum: &["xm", "it"]),
-                param!("bpm", "int", req, range: Some(30.0), Some(300.0)),
+                param!("bpm", "int", req, range: Some(32.0), Some(255.0)),
                 param!("speed", "int", req, range: Some(1.0), Some(31.0)),
                 param!("channels", "int", req, range: Some(1.0), Some(64.0)),
                 param!("instruments", "list", req),
@@ -91,7 +91,7 @@ pub(super) fn register_functions() -> Vec<FunctionInfo> {
                 param!("seed", "int", req, range: Some(0.0), Some(4294967295.0)),
                 param!("output_path", "string", req),
                 param!("format", "string", req, enum: &["xm", "it"]),
-                param!("bpm", "int", req, range: Some(30.0), Some(300.0)),
+                param!("bpm", "int", req, range: Some(32.0), Some(255.0)),
                 param!("speed", "int", req, range: Some(1.0), Some(31.0)),
                 param!("channels", "int", req, range: Some(1.0), Some(64.0)),
                 param!("instruments", "list", req),

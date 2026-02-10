@@ -12,7 +12,7 @@ use std::path::Path;
 use speccade_spec::recipe::music::MusicTrackerSongV1Params;
 
 use crate::generate::{GenerateError, GenerateResult, MusicLoopReport};
-use crate::it::ItModule;
+use crate::it::{ItModule, ItValidator};
 
 mod automation;
 mod instrument;
@@ -44,14 +44,15 @@ pub fn generate_it(
 ) -> Result<GenerateResult, GenerateError> {
     // Validate parameters
     validate_it_params(params)?;
+    let bpm = u8::try_from(params.bpm).map_err(|_| {
+        GenerateError::InvalidParameter(format!(
+            "bpm {} exceeds IT header range (must be 32-255)",
+            params.bpm
+        ))
+    })?;
 
     // Create module
-    let mut module = ItModule::new(
-        "SpecCade Song",
-        params.channels,
-        params.speed,
-        params.bpm as u8,
-    );
+    let mut module = ItModule::new("SpecCade Song", params.channels, params.speed, bpm);
 
     // Apply IT-specific options
     if let Some(ref it_opts) = params.it_options {
@@ -123,6 +124,22 @@ pub fn generate_it(
 
     // Generate bytes
     let data = module.to_bytes()?;
+    let report = ItValidator::validate(&data)
+        .map_err(|e| GenerateError::FormatValidation(format!("generated IT parse failed: {}", e)))?;
+    if !report.is_valid {
+        let details = report
+            .errors
+            .iter()
+            .take(3)
+            .map(ToString::to_string)
+            .collect::<Vec<_>>()
+            .join("; ");
+        return Err(GenerateError::FormatValidation(format!(
+            "generated IT failed validation with {} error(s): {}",
+            report.errors.len(),
+            details
+        )));
+    }
     let hash = blake3::hash(&data).to_hex().to_string();
 
     Ok(GenerateResult {
@@ -144,9 +161,9 @@ fn validate_it_params(params: &MusicTrackerSongV1Params) -> Result<(), GenerateE
             params.channels
         )));
     }
-    if params.bpm < 30 || params.bpm > 300 {
+    if params.bpm < 32 || params.bpm > 255 {
         return Err(GenerateError::InvalidParameter(format!(
-            "bpm must be 30-300, got {}",
+            "bpm must be 32-255, got {}",
             params.bpm
         )));
     }

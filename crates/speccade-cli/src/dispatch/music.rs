@@ -1,10 +1,63 @@
 //! Music backend dispatch handler
 
 use super::{write_output_bytes, DispatchError, DispatchResult};
+use speccade_backend_music::{it::ItValidator, xm::XmValidator};
 use speccade_spec::recipe::music::{MusicTrackerSongV1Params, TrackerFormat};
 use speccade_spec::{OutputFormat, OutputKind, OutputResult, Spec, StageTiming};
 use std::path::{Path, PathBuf};
 use std::time::Instant;
+
+fn validate_generated_module_bytes(
+    format: OutputFormat,
+    data: &[u8],
+) -> Result<(), DispatchError> {
+    match format {
+        OutputFormat::Xm => {
+            let report = XmValidator::validate(data).map_err(|e| {
+                DispatchError::BackendError(format!("Generated XM failed parse validation: {}", e))
+            })?;
+            if !report.valid {
+                let details = report
+                    .errors
+                    .iter()
+                    .take(3)
+                    .map(ToString::to_string)
+                    .collect::<Vec<_>>()
+                    .join("; ");
+                return Err(DispatchError::BackendError(format!(
+                    "Generated XM failed validation with {} error(s): {}",
+                    report.errors.len(),
+                    details
+                )));
+            }
+            Ok(())
+        }
+        OutputFormat::It => {
+            let report = ItValidator::validate(data).map_err(|e| {
+                DispatchError::BackendError(format!("Generated IT failed parse validation: {}", e))
+            })?;
+            if !report.is_valid {
+                let details = report
+                    .errors
+                    .iter()
+                    .take(3)
+                    .map(ToString::to_string)
+                    .collect::<Vec<_>>()
+                    .join("; ");
+                return Err(DispatchError::BackendError(format!(
+                    "Generated IT failed validation with {} error(s): {}",
+                    report.errors.len(),
+                    details
+                )));
+            }
+            Ok(())
+        }
+        other => Err(DispatchError::BackendError(format!(
+            "Unsupported format for music validation: {}",
+            other
+        ))),
+    }
+}
 
 /// Generate music using the music backend
 pub(super) fn generate_music(
@@ -72,6 +125,7 @@ fn generate_music_from_params(
 
         let result = speccade_backend_music::generate_music(params, spec.seed, spec_dir)
             .map_err(|e| DispatchError::BackendError(format!("Music generation failed: {}", e)))?;
+        validate_generated_module_bytes(primary_output.format, &result.data)?;
 
         write_output_bytes(out_root, &primary_output.path, &result.data)?;
 
@@ -164,6 +218,7 @@ fn generate_music_from_params(
             )));
         }
 
+        validate_generated_module_bytes(output.format, &gen.data)?;
         write_output_bytes(out_root, &output.path, &gen.data)?;
         results.push(OutputResult::tier1(
             OutputKind::Primary,
@@ -308,6 +363,14 @@ fn generate_music_from_params_profiled(
             render_start.elapsed().as_millis() as u64,
         ));
 
+        // Stage: validate_output
+        let validate_start = Instant::now();
+        validate_generated_module_bytes(primary_output.format, &result.data)?;
+        stages.push(StageTiming::new(
+            "validate_output",
+            validate_start.elapsed().as_millis() as u64,
+        ));
+
         // Stage: encode_output
         let encode_start = Instant::now();
         write_output_bytes(out_root, &primary_output.path, &result.data)?;
@@ -409,6 +472,13 @@ fn generate_music_from_params_profiled(
                 actual_format, output.format
             )));
         }
+
+        let validate_start = Instant::now();
+        validate_generated_module_bytes(output.format, &gen.data)?;
+        stages.push(StageTiming::new(
+            format!("validate_output_{}", output.format),
+            validate_start.elapsed().as_millis() as u64,
+        ));
 
         write_output_bytes(out_root, &output.path, &gen.data)?;
         results.push(OutputResult::tier1(

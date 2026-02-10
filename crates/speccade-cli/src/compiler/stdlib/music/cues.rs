@@ -64,7 +64,7 @@ fn register_cue_functions(builder: &mut GlobalsBuilder) {
     ///
     /// # Arguments
     /// * `name` - Cue name (required)
-    /// * `bpm` - Beats per minute (30-300, default: 90)
+    /// * `bpm` - Beats per minute (32-255, default: 90)
     /// * `measures` - Number of measures (1-64, default: 8)
     /// * `rows_per_beat` - Rows per beat for pattern timing (default: 4)
     /// * `channels` - Number of channels (default: 4)
@@ -106,7 +106,7 @@ fn register_cue_functions(builder: &mut GlobalsBuilder) {
     ///
     /// # Arguments
     /// * `name` - Cue name (required)
-    /// * `bpm` - Beats per minute (30-300, default: 120)
+    /// * `bpm` - Beats per minute (32-255, default: 120)
     /// * `measures` - Number of measures (1-64, default: 8)
     /// * `rows_per_beat` - Rows per beat for pattern timing (default: 4)
     /// * `channels` - Number of channels (default: 8)
@@ -148,7 +148,7 @@ fn register_cue_functions(builder: &mut GlobalsBuilder) {
     ///
     /// # Arguments
     /// * `name` - Cue name (required)
-    /// * `bpm` - Beats per minute (30-300, default: 140)
+    /// * `bpm` - Beats per minute (32-255, default: 140)
     /// * `measures` - Number of measures (1-64, default: 8)
     /// * `rows_per_beat` - Rows per beat for pattern timing (default: 4)
     /// * `channels` - Number of channels (default: 12)
@@ -193,7 +193,7 @@ fn register_cue_functions(builder: &mut GlobalsBuilder) {
     /// * `stinger_type` - Type: "victory", "defeat", "pickup", "levelup", "discovery",
     ///   "danger", "alert", "custom" (default: "custom")
     /// * `duration_beats` - Duration in beats (1-32, default: 4)
-    /// * `bpm` - Beats per minute (30-300, inherited from context or default: 120)
+    /// * `bpm` - Beats per minute (32-255, inherited from context or default: 120)
     /// * `rows_per_beat` - Rows per beat for pattern timing (default: 4)
     /// * `channels` - Number of channels (default: 4)
     /// * `format` - Tracker format: "xm" or "it" (default: "xm")
@@ -225,9 +225,9 @@ fn register_cue_functions(builder: &mut GlobalsBuilder) {
         validate_enum(format, &["xm", "it"], "stinger", "format")
             .map_err(|e| anyhow::anyhow!(e))?;
 
-        if !(30..=300).contains(&bpm) {
+        if !(32..=255).contains(&bpm) {
             return Err(anyhow::anyhow!(
-                "S103: stinger(): 'bpm' must be 30-300, got {}",
+                "S103: stinger(): 'bpm' must be 32-255, got {}",
                 bpm
             ));
         }
@@ -340,7 +340,7 @@ fn register_cue_functions(builder: &mut GlobalsBuilder) {
     /// * `from_intensity` - Starting intensity: "low", "main", "hi" (default: "main")
     /// * `to_intensity` - Target intensity: "low", "main", "hi" (default: "main")
     /// * `measures` - Number of measures (1-8, default: 2)
-    /// * `bpm` - Beats per minute (30-300, default: 120)
+    /// * `bpm` - Beats per minute (32-255, default: 120)
     /// * `rows_per_beat` - Rows per beat for pattern timing (default: 4)
     /// * `channels` - Number of channels (default: 8)
     /// * `format` - Tracker format: "xm" or "it" (default: "xm")
@@ -386,9 +386,9 @@ fn register_cue_functions(builder: &mut GlobalsBuilder) {
         validate_enum(format, &["xm", "it"], "transition", "format")
             .map_err(|e| anyhow::anyhow!(e))?;
 
-        if !(30..=300).contains(&bpm) {
+        if !(32..=255).contains(&bpm) {
             return Err(anyhow::anyhow!(
-                "S103: transition(): 'bpm' must be 30-300, got {}",
+                "S103: transition(): 'bpm' must be 32-255, got {}",
                 bpm
             ));
         }
@@ -504,7 +504,7 @@ fn register_cue_functions(builder: &mut GlobalsBuilder) {
     /// # Arguments
     /// * `name` - Cue name (required)
     /// * `intensity` - Intensity level: "low", "main", "hi" (required)
-    /// * `bpm` - Beats per minute (30-300)
+    /// * `bpm` - Beats per minute (32-255)
     /// * `measures` - Number of measures (1-64, default: 8)
     /// * `rows_per_beat` - Rows per beat for pattern timing (default: 4)
     /// * `channels` - Number of channels

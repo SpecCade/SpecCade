@@ -290,9 +290,9 @@ pub fn build_loop_cue<'v>(
     validate_non_empty(name, "loop_cue", "name").map_err(|e| anyhow::anyhow!(e))?;
     validate_enum(format, &["xm", "it"], "loop_cue", "format").map_err(|e| anyhow::anyhow!(e))?;
 
-    if !(30..=300).contains(&bpm) {
+    if !(32..=255).contains(&bpm) {
         return Err(anyhow::anyhow!(
-            "S103: loop_cue(): 'bpm' must be 30-300, got {}",
+            "S103: loop_cue(): 'bpm' must be 32-255, got {}",
             bpm
         ));
     }

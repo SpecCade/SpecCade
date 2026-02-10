@@ -29,7 +29,7 @@ This is the canonical tracker module recipe.
 Key params (see `MusicTrackerSongV1Params` for the full schema):
 
 - `format`: `xm` or `it`
-- `bpm`: 30-300
+- `bpm`: 32-255
 - `speed`: 1-31
 - `channels`: XM 1-32, IT 1-64
 - `instruments`: list of `TrackerInstrument`

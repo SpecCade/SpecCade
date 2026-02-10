@@ -95,6 +95,15 @@ fn test_xm_param_validation() {
 }
 
 #[test]
+fn test_xm_param_validation_rejects_bpm_above_tracker_limit() {
+    let mut params = create_test_params();
+    params.bpm = 300;
+
+    let err = validate_xm_params(&params).unwrap_err();
+    assert!(err.to_string().contains("bpm must be 32-255"));
+}
+
+#[test]
 fn test_volume_fade_xm() {
     let mut pattern = XmPattern::empty(16, 4);
 
@@ -106,6 +115,20 @@ fn test_volume_fade_xm() {
 
     let note_end = pattern.get_note(8, 0).unwrap();
     assert_eq!(note_end.volume, 0x10);
+}
+
+#[test]
+fn test_volume_fade_xm_rejects_out_of_range_channel() {
+    let mut pattern = XmPattern::empty(16, 1);
+    let err = apply_volume_fade_xm(&mut pattern, 3, 0, 8, 64, 0).unwrap_err();
+    assert!(err.to_string().contains("channel 3 out of range"));
+}
+
+#[test]
+fn test_tempo_change_xm_rejects_out_of_range_row() {
+    let mut pattern = XmPattern::empty(4, 1);
+    let err = apply_tempo_change_xm(&mut pattern, 8, 140).unwrap_err();
+    assert!(err.to_string().contains("tempo change row 8 out of range"));
 }
 
 // =========================================================================
@@ -249,6 +272,129 @@ fn test_xm_pattern_no_note_marker_preserves_instrument_column() {
         cell.instrument, 1,
         "No-note marker should still allow instrument-only events"
     );
+}
+
+#[test]
+fn test_xm_pattern_rejects_out_of_range_channel() {
+    let instruments = vec![TrackerInstrument {
+        name: "Lead".to_string(),
+        synthesis: Some(InstrumentSynthesis::Sine { base_note: None }),
+        ..Default::default()
+    }];
+
+    let pattern = TrackerPattern {
+        rows: 1,
+        data: Some(vec![PatternNote {
+            row: 0,
+            channel: Some(2),
+            note: "C4".to_string(),
+            inst: 0,
+            ..Default::default()
+        }]),
+        ..Default::default()
+    };
+
+    let err = convert_pattern_to_xm(&pattern, 1, &instruments).unwrap_err();
+    assert!(
+        err.to_string()
+            .contains("exceeds configured channel count"),
+        "unexpected error: {}",
+        err
+    );
+}
+
+#[test]
+fn test_xm_pattern_rejects_out_of_range_row() {
+    let instruments = vec![TrackerInstrument {
+        name: "Lead".to_string(),
+        synthesis: Some(InstrumentSynthesis::Sine { base_note: None }),
+        ..Default::default()
+    }];
+
+    let pattern = TrackerPattern {
+        rows: 1,
+        data: Some(vec![PatternNote {
+            row: 4,
+            channel: Some(0),
+            note: "C4".to_string(),
+            inst: 0,
+            ..Default::default()
+        }]),
+        ..Default::default()
+    };
+
+    let err = convert_pattern_to_xm(&pattern, 1, &instruments).unwrap_err();
+    assert!(err.to_string().contains("row 4 is out of range"));
+}
+
+#[test]
+fn test_xm_pattern_rejects_unknown_effect_name() {
+    let instruments = vec![TrackerInstrument {
+        name: "Lead".to_string(),
+        synthesis: Some(InstrumentSynthesis::Sine { base_note: None }),
+        ..Default::default()
+    }];
+
+    let pattern = TrackerPattern {
+        rows: 1,
+        data: Some(vec![PatternNote {
+            row: 0,
+            channel: Some(0),
+            note: "C4".to_string(),
+            inst: 0,
+            effect_name: Some("does_not_exist".to_string()),
+            param: Some(1),
+            ..Default::default()
+        }]),
+        ..Default::default()
+    };
+
+    let err = convert_pattern_to_xm(&pattern, 1, &instruments).unwrap_err();
+    assert!(err.to_string().contains("unknown effect_name"));
+}
+
+#[test]
+fn test_xm_pattern_rejects_it_only_effect_name() {
+    let instruments = vec![TrackerInstrument {
+        name: "Lead".to_string(),
+        synthesis: Some(InstrumentSynthesis::Sine { base_note: None }),
+        ..Default::default()
+    }];
+
+    let pattern = TrackerPattern {
+        rows: 1,
+        data: Some(vec![PatternNote {
+            row: 0,
+            channel: Some(0),
+            note: "C4".to_string(),
+            inst: 0,
+            effect_name: Some("set_channel_volume".to_string()),
+            param: Some(32),
+            ..Default::default()
+        }]),
+        ..Default::default()
+    };
+
+    let err = convert_pattern_to_xm(&pattern, 1, &instruments).unwrap_err();
+    assert!(err.to_string().contains("not supported in XM"));
+}
+
+#[test]
+fn test_xm_pattern_rejects_explicit_note_with_missing_instrument() {
+    let pattern = TrackerPattern {
+        rows: 1,
+        data: Some(vec![PatternNote {
+            row: 0,
+            channel: Some(0),
+            note: "C4".to_string(),
+            inst: 0,
+            ..Default::default()
+        }]),
+        ..Default::default()
+    };
+
+    let err = convert_pattern_to_xm(&pattern, 1, &[]).unwrap_err();
+    assert!(err.to_string().contains("pattern references instrument 0"));
 }
 
 #[test]

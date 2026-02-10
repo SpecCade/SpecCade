@@ -70,6 +70,10 @@ pub enum GenerateError {
     #[error("Automation error: {0}")]
     AutomationError(String),
 
+    /// Generated module failed format validation.
+    #[error("Format validation failed: {0}")]
+    FormatValidation(String),
+
     /// Compose expansion error.
     #[error("Compose expansion error: {0}")]
     ComposeExpand(#[from] crate::compose::ExpandError),
@@ -85,6 +89,7 @@ impl BackendError for GenerateError {
             GenerateError::SampleLoadError(_) => "MUSIC_005",
             GenerateError::InstrumentError(_) => "MUSIC_006",
             GenerateError::AutomationError(_) => "MUSIC_007",
+            GenerateError::FormatValidation(_) => "MUSIC_008",
             GenerateError::ComposeExpand(err) => err.code(),
         }
     }

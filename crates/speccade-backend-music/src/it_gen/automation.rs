@@ -72,6 +72,19 @@ pub(super) fn apply_volume_fade_it(
             "start_row must be less than end_row".to_string(),
         ));
     }
+    if channel as usize >= pattern.notes.first().map_or(0, Vec::len) {
+        return Err(GenerateError::AutomationError(format!(
+            "channel {} out of range for pattern with {} channel(s)",
+            channel,
+            pattern.notes.first().map_or(0, Vec::len)
+        )));
+    }
+    if end_row >= pattern.num_rows {
+        return Err(GenerateError::AutomationError(format!(
+            "row range {}..={} out of range for pattern with {} row(s)",
+            start_row, end_row, pattern.num_rows
+        )));
+    }
 
     let num_steps = (end_row - start_row) as f64;
     let vol_diff = end_vol as f64 - start_vol as f64;
@@ -103,6 +116,12 @@ pub(super) fn apply_tempo_change_it(
         return Err(GenerateError::AutomationError(format!(
             "BPM {} is too low (min 32)",
             bpm
+        )));
+    }
+    if row >= pattern.num_rows {
+        return Err(GenerateError::AutomationError(format!(
+            "tempo change row {} out of range for pattern with {} row(s)",
+            row, pattern.num_rows
         )));
     }
 

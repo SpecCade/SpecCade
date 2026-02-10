@@ -72,7 +72,7 @@ fn register_song_functions(builder: &mut GlobalsBuilder) {
     ///
     /// # Arguments
     /// * `format` - Tracker format: "xm" or "it"
-    /// * `bpm` - Beats per minute (30-300)
+    /// * `bpm` - Beats per minute (32-255)
     /// * `speed` - Tracker speed (ticks per row, 1-31)
     /// * `channels` - Number of channels (XM: 1-32, IT: 1-64)
     /// * `instruments` - List of instrument dicts from `tracker_instrument()`
@@ -125,9 +125,9 @@ fn register_song_functions(builder: &mut GlobalsBuilder) {
             .map_err(|e| anyhow::anyhow!(e))?;
 
         // Validate BPM
-        if !(30..=300).contains(&bpm) {
+        if !(32..=255).contains(&bpm) {
             return Err(anyhow::anyhow!(
-                "S103: tracker_song(): 'bpm' must be 30-300, got {}",
+                "S103: tracker_song(): 'bpm' must be 32-255, got {}",
                 bpm
             ));
         }
@@ -239,7 +239,7 @@ fn register_song_functions(builder: &mut GlobalsBuilder) {
     /// * `seed` - Deterministic seed (0 to 2^32-1)
     /// * `output_path` - Output file path
     /// * `format` - Tracker format: "xm" or "it"
-    /// * `bpm` - Beats per minute (30-300)
+    /// * `bpm` - Beats per minute (32-255)
     /// * `speed` - Tracker speed (ticks per row, 1-31)
     /// * `channels` - Number of channels (XM: 1-32, IT: 1-64)
     /// * `instruments` - List of instrument dicts from `tracker_instrument()`
@@ -306,9 +306,9 @@ fn register_song_functions(builder: &mut GlobalsBuilder) {
         }
 
         // Validate BPM
-        if !(30..=300).contains(&bpm) {
+        if !(32..=255).contains(&bpm) {
             return Err(anyhow::anyhow!(
-                "S103: music_spec(): 'bpm' must be 30-300, got {}",
+                "S103: music_spec(): 'bpm' must be 32-255, got {}",
                 bpm
             ));
         }

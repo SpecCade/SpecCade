@@ -99,6 +99,15 @@ fn test_it_param_validation() {
 }
 
 #[test]
+fn test_it_param_validation_rejects_bpm_above_tracker_limit() {
+    let mut params = create_test_params();
+    params.bpm = 300;
+
+    let err = validate_it_params(&params).unwrap_err();
+    assert!(err.to_string().contains("bpm must be 32-255"));
+}
+
+#[test]
 fn test_volume_fade_it() {
     let mut pattern = ItPattern::empty(16, 4);
 
@@ -110,6 +119,20 @@ fn test_volume_fade_it() {
 
     let note_end = pattern.get_note(8, 0).unwrap();
     assert_eq!(note_end.volume, 0);
+}
+
+#[test]
+fn test_volume_fade_it_rejects_out_of_range_channel() {
+    let mut pattern = ItPattern::empty(16, 1);
+    let err = automation::apply_volume_fade_it(&mut pattern, 3, 0, 8, 64, 0).unwrap_err();
+    assert!(err.to_string().contains("channel 3 out of range"));
+}
+
+#[test]
+fn test_tempo_change_it_rejects_out_of_range_row() {
+    let mut pattern = ItPattern::empty(4, 1);
+    let err = automation::apply_tempo_change_it(&mut pattern, 8, 140).unwrap_err();
+    assert!(err.to_string().contains("tempo change row 8 out of range"));
 }
 
 // =========================================================================
@@ -253,6 +276,129 @@ fn test_it_pattern_no_note_marker_preserves_instrument_column() {
         cell.instrument, 1,
         "No-note marker should still allow instrument-only events"
     );
+}
+
+#[test]
+fn test_it_pattern_rejects_out_of_range_channel() {
+    let instruments = vec![TrackerInstrument {
+        name: "Lead".to_string(),
+        synthesis: Some(InstrumentSynthesis::Sine { base_note: None }),
+        ..Default::default()
+    }];
+
+    let pattern = TrackerPattern {
+        rows: 1,
+        data: Some(vec![PatternNote {
+            row: 0,
+            channel: Some(2),
+            note: "C5".to_string(),
+            inst: 0,
+            ..Default::default()
+        }]),
+        ..Default::default()
+    };
+
+    let err = pattern::convert_pattern_to_it(&pattern, 1, &instruments).unwrap_err();
+    assert!(
+        err.to_string()
+            .contains("exceeds configured channel count"),
+        "unexpected error: {}",
+        err
+    );
+}
+
+#[test]
+fn test_it_pattern_rejects_out_of_range_row() {
+    let instruments = vec![TrackerInstrument {
+        name: "Lead".to_string(),
+        synthesis: Some(InstrumentSynthesis::Sine { base_note: None }),
+        ..Default::default()
+    }];
+
+    let pattern = TrackerPattern {
+        rows: 1,
+        data: Some(vec![PatternNote {
+            row: 4,
+            channel: Some(0),
+            note: "C5".to_string(),
+            inst: 0,
+            ..Default::default()
+        }]),
+        ..Default::default()
+    };
+
+    let err = pattern::convert_pattern_to_it(&pattern, 1, &instruments).unwrap_err();
+    assert!(err.to_string().contains("row 4 is out of range"));
+}
+
+#[test]
+fn test_it_pattern_rejects_unknown_effect_name() {
+    let instruments = vec![TrackerInstrument {
+        name: "Lead".to_string(),
+        synthesis: Some(InstrumentSynthesis::Sine { base_note: None }),
+        ..Default::default()
+    }];
+
+    let pattern = TrackerPattern {
+        rows: 1,
+        data: Some(vec![PatternNote {
+            row: 0,
+            channel: Some(0),
+            note: "C5".to_string(),
+            inst: 0,
+            effect_name: Some("does_not_exist".to_string()),
+            param: Some(1),
+            ..Default::default()
+        }]),
+        ..Default::default()
+    };
+
+    let err = pattern::convert_pattern_to_it(&pattern, 1, &instruments).unwrap_err();
+    assert!(err.to_string().contains("unknown effect_name"));
+}
+
+#[test]
+fn test_it_pattern_rejects_xm_only_effect_name() {
+    let instruments = vec![TrackerInstrument {
+        name: "Lead".to_string(),
+        synthesis: Some(InstrumentSynthesis::Sine { base_note: None }),
+        ..Default::default()
+    }];
+
+    let pattern = TrackerPattern {
+        rows: 1,
+        data: Some(vec![PatternNote {
+            row: 0,
+            channel: Some(0),
+            note: "C5".to_string(),
+            inst: 0,
+            effect_name: Some("key_off".to_string()),
+            param: Some(1),
+            ..Default::default()
+        }]),
+        ..Default::default()
+    };
+
+    let err = pattern::convert_pattern_to_it(&pattern, 1, &instruments).unwrap_err();
+    assert!(err.to_string().contains("not supported in IT"));
+}
+
+#[test]
+fn test_it_pattern_rejects_explicit_note_with_missing_instrument() {
+    let pattern = TrackerPattern {
+        rows: 1,
+        data: Some(vec![PatternNote {
+            row: 0,
+            channel: Some(0),
+            note: "C5".to_string(),
+            inst: 0,
+            ..Default::default()
+        }]),
+        ..Default::default()
+    };
+
+    let err = pattern::convert_pattern_to_it(&pattern, 1, &[]).unwrap_err();
+    assert!(err.to_string().contains("pattern references instrument 0"));
 }
 
 #[test]

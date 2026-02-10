@@ -132,7 +132,7 @@ pub struct MusicTrackerSongComposeV1Params {
     pub title: Option<String>,
     /// Tracker format: "xm" or "it".
     pub format: TrackerFormat,
-    /// Beats per minute (30-300).
+    /// Beats per minute (32-255).
     pub bpm: u16,
     /// Tracker speed (ticks per row, 1-31).
     pub speed: u8,
