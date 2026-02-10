@@ -265,3 +265,36 @@ fn test_music_semantics_reject_invalid_arrangement_and_automation() {
         .iter()
         .any(|e| e.message.contains("tempo_change bpm must be 32-255")));
 }
+
+#[test]
+fn test_music_semantics_reject_it_loop_restart_position_above_255() {
+    let spec = crate::spec::Spec::builder("test-song-09", AssetType::Music)
+        .license("CC0-1.0")
+        .seed(42)
+        .output(OutputSpec::primary(OutputFormat::It, "songs/test.it"))
+        .recipe(crate::recipe::Recipe::new(
+            "music.tracker_song_v1",
+            serde_json::json!({
+                "format": "it",
+                "bpm": 120,
+                "speed": 6,
+                "channels": 4,
+                "loop": true,
+                "restart_position": 300,
+                "patterns": {
+                    "intro": { "rows": 4 }
+                },
+                "arrangement": [
+                    { "pattern": "intro", "repeat": 1 }
+                ]
+            }),
+        ))
+        .build();
+
+    let result = validate_for_generate(&spec);
+    assert!(!result.is_ok());
+    assert!(result
+        .errors
+        .iter()
+        .any(|e| e.message.contains("IT restart_position must be 0-255")));
+}

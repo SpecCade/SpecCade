@@ -330,10 +330,84 @@ fn compare_structures(xm: &FormatSummary, it: &FormatSummary) -> Vec<ParityMisma
 /// Detailed note-level comparison requires additional pattern parsing
 /// infrastructure that may be added in future versions.
 pub fn check_parity_detailed(xm_data: &[u8], it_data: &[u8]) -> Result<ParityReport, ParityError> {
-    // For now, delegate to the basic check.
-    // Full note-level comparison would require decoding packed pattern data
-    // from both formats and normalizing to a common representation.
-    check_parity(xm_data, it_data)
+    // Validate and parse XM
+    let xm_report =
+        XmValidator::validate(xm_data).map_err(|e| ParityError::XmParseError(e.to_string()))?;
+    if !xm_report.valid {
+        let errors: Vec<String> = xm_report.errors.iter().map(|e| e.to_string()).collect();
+        return Err(ParityError::XmValidationError(errors));
+    }
+
+    // Validate and parse IT
+    let it_report =
+        ItValidator::validate(it_data).map_err(|e| ParityError::ItParseError(e.to_string()))?;
+    if !it_report.is_valid {
+        let errors: Vec<String> = it_report.errors.iter().map(|e| e.to_string()).collect();
+        return Err(ParityError::ItValidationError(errors));
+    }
+
+    let xm_summary = extract_xm_summary(&xm_report);
+    let it_summary = extract_it_summary(&it_report);
+
+    let mut mismatches = compare_structures(&xm_summary, &it_summary);
+    mismatches.extend(compare_order_tables(&xm_report, &it_report));
+
+    if mismatches.is_empty() {
+        Ok(ParityReport::success(xm_summary, it_summary))
+    } else {
+        Ok(ParityReport::failure(
+            mismatches,
+            Some(xm_summary),
+            Some(it_summary),
+        ))
+    }
+}
+
+fn compare_order_tables(
+    xm_report: &XmValidationReport,
+    it_report: &ItValidationReport,
+) -> Vec<ParityMismatch> {
+    let mut mismatches = Vec::new();
+
+    let xm_header = match xm_report.header.as_ref() {
+        Some(h) => h,
+        None => return mismatches,
+    };
+
+    let xm_len = xm_header.song_length as usize;
+    let xm_orders = &xm_header.pattern_order[..xm_len.min(xm_header.pattern_order.len())];
+    let it_orders: Vec<u8> = it_report
+        .orders
+        .iter()
+        .copied()
+        .filter(|order| *order != 254 && *order != 255)
+        .collect();
+
+    if xm_orders.len() != it_orders.len() {
+        mismatches.push(ParityMismatch {
+            category: "order_length",
+            message: format!(
+                "XM order length is {}, IT order length is {}",
+                xm_orders.len(),
+                it_orders.len()
+            ),
+        });
+    }
+
+    let min_len = xm_orders.len().min(it_orders.len());
+    for i in 0..min_len {
+        if xm_orders[i] != it_orders[i] {
+            mismatches.push(ParityMismatch {
+                category: "order_entry",
+                message: format!(
+                    "Order {} differs (XM={}, IT={})",
+                    i, xm_orders[i], it_orders[i]
+                ),
+            });
+        }
+    }
+
+    mismatches
 }
 
 #[cfg(test)]
@@ -481,5 +555,27 @@ mod tests {
 
         let result = check_parity(&xm, &invalid_it);
         assert!(matches!(result, Err(ParityError::ItParseError(_))));
+    }
+
+    #[test]
+    fn test_parity_detailed_detects_order_length_mismatch() {
+        let mut xm_module = XmModule::new("Test", 4, 6, 125);
+        xm_module.add_pattern(XmPattern::empty(64, 4));
+        xm_module.set_order_table(&[0, 0]);
+        let xm = xm_module.to_bytes().unwrap();
+
+        let mut it_module = ItModule::new("Test", 4, 6, 125);
+        it_module.add_instrument(ItInstrument::new("Inst1"));
+        it_module.add_sample(ItSample::new("Sample1", vec![0u8; 100], 22050));
+        it_module.add_pattern(ItPattern::empty(64, 4));
+        it_module.set_orders(&[0]);
+        let it = it_module.to_bytes().unwrap();
+
+        let report = check_parity_detailed(&xm, &it).unwrap();
+        assert!(!report.is_parity);
+        assert!(report
+            .mismatches
+            .iter()
+            .any(|m| m.category == "order_length"));
     }
 }

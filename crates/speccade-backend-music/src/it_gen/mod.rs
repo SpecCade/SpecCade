@@ -12,7 +12,7 @@ use std::path::Path;
 use speccade_spec::recipe::music::MusicTrackerSongV1Params;
 
 use crate::generate::{GenerateError, GenerateResult, MusicLoopReport};
-use crate::it::{ItModule, ItValidator};
+use crate::it::{effects as it_effects, ItModule, ItNote, ItValidator};
 
 mod automation;
 mod instrument;
@@ -122,6 +122,14 @@ pub fn generate_it(
     }
     module.set_orders(&order_table);
 
+    // IT loop behavior: insert a terminal position jump in the last order entry.
+    //
+    // This makes IT honor `loop` semantics instead of silently ignoring them.
+    if params.r#loop {
+        let restart = params.restart_position.unwrap_or(0);
+        apply_it_loop_jump(&mut module, &order_table, restart, params.channels)?;
+    }
+
     // Generate bytes
     let data = module.to_bytes()?;
     let report = ItValidator::validate(&data)
@@ -153,6 +161,73 @@ pub fn generate_it(
     })
 }
 
+fn apply_it_loop_jump(
+    module: &mut ItModule,
+    order_table: &[u8],
+    restart_position: u16,
+    num_channels: u8,
+) -> Result<(), GenerateError> {
+    if restart_position as usize >= order_table.len() {
+        return Err(GenerateError::InvalidParameter(format!(
+            "restart_position {} is out of range for arrangement length {}",
+            restart_position,
+            order_table.len()
+        )));
+    }
+    let restart_param = u8::try_from(restart_position).map_err(|_| {
+        GenerateError::InvalidParameter(format!(
+            "IT loop restart_position {} exceeds effect parameter range (0-255)",
+            restart_position
+        ))
+    })?;
+
+    let last_pattern_idx = *order_table.last().ok_or_else(|| {
+        GenerateError::InvalidParameter("cannot apply IT loop: arrangement is empty".to_string())
+    })? as usize;
+
+    let last_pattern = module.patterns.get_mut(last_pattern_idx).ok_or_else(|| {
+        GenerateError::InvalidParameter(format!(
+            "cannot apply IT loop: order table references missing pattern index {}",
+            last_pattern_idx
+        ))
+    })?;
+
+    if last_pattern.num_rows == 0 {
+        return Err(GenerateError::InvalidParameter(format!(
+            "cannot apply IT loop: last pattern {} has zero rows",
+            last_pattern_idx
+        )));
+    }
+    let last_row = last_pattern.num_rows - 1;
+
+    let mut selected_channel = None;
+    for channel in 0..num_channels {
+        let note = last_pattern
+            .get_note(last_row, channel)
+            .copied()
+            .unwrap_or_else(ItNote::empty);
+        if note.effect == 0
+            || (note.effect == it_effects::POSITION_JUMP && note.effect_param == restart_param)
+        {
+            selected_channel = Some((channel, note));
+            break;
+        }
+    }
+
+    let (channel, mut note) = selected_channel.ok_or_else(|| {
+        GenerateError::InvalidParameter(format!(
+            "cannot apply IT loop: no channel available on last row {} (all {} channel(s) already use effects)",
+            last_row, num_channels
+        ))
+    })?;
+
+    note.effect = it_effects::POSITION_JUMP;
+    note.effect_param = restart_param;
+    last_pattern.set_note(last_row, channel, note);
+
+    Ok(())
+}
+
 /// Validate IT-specific parameters.
 fn validate_it_params(params: &MusicTrackerSongV1Params) -> Result<(), GenerateError> {
     if params.channels < 1 || params.channels > 64 {
@@ -179,6 +254,14 @@ fn validate_it_params(params: &MusicTrackerSongV1Params) -> Result<(), GenerateE
             u8::MAX,
             params.patterns.len()
         )));
+    }
+    if let Some(restart_position) = params.restart_position {
+        if restart_position > u8::MAX as u16 {
+            return Err(GenerateError::InvalidParameter(format!(
+                "IT restart_position must be 0-255, got {}",
+                restart_position
+            )));
+        }
     }
     Ok(())
 }

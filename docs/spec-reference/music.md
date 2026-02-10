@@ -32,6 +32,7 @@ Key params (see `MusicTrackerSongV1Params` for the full schema):
 - `bpm`: 32-255
 - `speed`: 1-31
 - `channels`: XM 1-32, IT 1-64
+- `loop` / `restart_position`: XM uses header restart; IT emits a terminal position jump
 - `instruments`: list of `TrackerInstrument`
 - `patterns`: map of pattern name -> `TrackerPattern`
 - `arrangement`: list of `ArrangementEntry`

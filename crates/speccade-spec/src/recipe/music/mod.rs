@@ -43,12 +43,12 @@ pub struct MusicTrackerSongV1Params {
     pub channels: u8,
     /// Whether the song should loop.
     ///
-    /// Note: currently applied for XM via `restart_position`. IT output currently ignores looping.
+    /// XM uses `restart_position`; IT encodes a terminal position jump effect.
     #[serde(default)]
     pub r#loop: bool,
     /// Restart position (order-table index) to jump to when looping.
     ///
-    /// Note: currently used for XM only.
+    /// Used by XM directly and by IT loop jump insertion.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub restart_position: Option<u16>,
     /// Instrument definitions.

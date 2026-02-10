@@ -10,7 +10,7 @@ use speccade_spec::recipe::music::{
 };
 
 use crate::it::sample_flags;
-use crate::it::ItPattern;
+use crate::it::{effects as it_effects, ItModule, ItNote, ItPattern};
 use crate::note::note_name_to_it;
 
 use super::*;
@@ -105,6 +105,15 @@ fn test_it_param_validation_rejects_bpm_above_tracker_limit() {
 
     let err = validate_it_params(&params).unwrap_err();
     assert!(err.to_string().contains("bpm must be 32-255"));
+}
+
+#[test]
+fn test_it_param_validation_rejects_restart_position_above_255() {
+    let mut params = create_test_params();
+    params.restart_position = Some(300);
+
+    let err = validate_it_params(&params).unwrap_err();
+    assert!(err.to_string().contains("restart_position must be 0-255"));
 }
 
 #[test]
@@ -410,6 +419,45 @@ fn test_tempo_change_it() {
     let note = pattern.get_note(4, 0).unwrap();
     assert_eq!(note.effect, 0x14);
     assert_eq!(note.effect_param, 140);
+}
+
+#[test]
+fn test_it_loop_inserts_position_jump_on_last_row() {
+    let mut module = ItModule::new("Test", 4, 6, 125);
+    module.add_pattern(ItPattern::empty(16, 4));
+    let order_table = vec![0u8];
+    module.set_orders(&order_table);
+
+    apply_it_loop_jump(&mut module, &order_table, 0, 4).unwrap();
+
+    let last_row_note = module.patterns[0].get_note(15, 0).unwrap();
+    assert_eq!(last_row_note.effect, it_effects::POSITION_JUMP);
+    assert_eq!(last_row_note.effect_param, 0);
+}
+
+#[test]
+fn test_it_loop_errors_when_no_channel_effect_slot_available() {
+    let mut module = ItModule::new("Test", 2, 6, 125);
+    let mut pattern = ItPattern::empty(4, 2);
+    pattern.set_note(3, 0, ItNote::empty().with_effect(0x01, 0x10));
+    pattern.set_note(3, 1, ItNote::empty().with_effect(0x02, 0x20));
+    module.add_pattern(pattern);
+    let order_table = vec![0u8];
+    module.set_orders(&order_table);
+
+    let err = apply_it_loop_jump(&mut module, &order_table, 0, 2).unwrap_err();
+    assert!(err.to_string().contains("no channel available"));
+}
+
+#[test]
+fn test_generate_it_rejects_restart_position_out_of_arrangement_range() {
+    let mut params = create_test_params();
+    params.restart_position = Some(5);
+
+    let result = generate_it(&params, 42, Path::new("."));
+    assert!(result.is_err());
+    let err = result.err().expect("expected error");
+    assert!(err.to_string().contains("restart_position 5 is out of range"));
 }
 
 #[test]

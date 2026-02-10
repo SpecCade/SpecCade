@@ -530,8 +530,29 @@ fn validate_tracker_song_semantics(
             "recipe.params.arrangement",
         ));
     }
+    if params.format == TrackerFormat::It && params.r#loop && order_count > 256 {
+        result.add_error(ValidationError::with_path(
+            ErrorCode::InvalidRecipeParams,
+            format!(
+                "IT loop jump supports restart/order positions up to 255, arrangement expands to {}",
+                order_count
+            ),
+            "recipe.params.arrangement",
+        ));
+    }
 
     if params.r#loop {
+        if params.format == TrackerFormat::It {
+            if let Some(restart) = params.restart_position {
+                if restart > u8::MAX as u16 {
+                    result.add_error(ValidationError::with_path(
+                        ErrorCode::InvalidRecipeParams,
+                        format!("IT restart_position must be 0-255, got {}", restart),
+                        "recipe.params.restart_position",
+                    ));
+                }
+            }
+        }
         if let Some(restart) = params.restart_position {
             if restart as usize >= order_count.max(1) {
                 result.add_error(ValidationError::with_path(
@@ -683,8 +704,29 @@ fn validate_tracker_song_compose_semantics(
             "recipe.params.arrangement",
         ));
     }
+    if params.format == TrackerFormat::It && params.r#loop && order_count > 256 {
+        result.add_error(ValidationError::with_path(
+            ErrorCode::InvalidRecipeParams,
+            format!(
+                "IT loop jump supports restart/order positions up to 255, arrangement expands to {}",
+                order_count
+            ),
+            "recipe.params.arrangement",
+        ));
+    }
 
     if params.r#loop {
+        if params.format == TrackerFormat::It {
+            if let Some(restart) = params.restart_position {
+                if restart > u8::MAX as u16 {
+                    result.add_error(ValidationError::with_path(
+                        ErrorCode::InvalidRecipeParams,
+                        format!("IT restart_position must be 0-255, got {}", restart),
+                        "recipe.params.restart_position",
+                    ));
+                }
+            }
+        }
         if let Some(restart) = params.restart_position {
             if restart as usize >= order_count.max(1) {
                 result.add_error(ValidationError::with_path(
