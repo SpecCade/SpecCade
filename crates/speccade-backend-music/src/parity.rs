@@ -12,6 +12,7 @@
 use std::fmt;
 
 use crate::it::validator::{ItValidationReport, ItValidator};
+use crate::note::it_note_to_xm;
 use crate::xm::{XmValidationReport, XmValidator};
 
 /// A mismatch found during parity checking.
@@ -153,6 +154,17 @@ impl fmt::Display for ParityError {
 }
 
 impl std::error::Error for ParityError {}
+
+const MAX_CELL_MISMATCHES: usize = 128;
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+struct CanonCell {
+    note: u8,
+    instrument: u8,
+    volume: u8,
+    effect: u8,
+    effect_param: u8,
+}
 
 /// Check structural parity between XM and IT module data.
 ///
@@ -319,14 +331,13 @@ fn compare_structures(xm: &FormatSummary, it: &FormatSummary) -> Vec<ParityMisma
     mismatches
 }
 
-/// Check parity with detailed note-level comparison.
+/// Check parity with detailed cell-level comparison.
 ///
-/// This extends the basic parity check with order-table comparison:
+/// This extends the basic structural checks with:
+/// - Order-table comparison
+/// - Order-expanded pattern cell comparison for note/instrument/volume
 ///
-/// - XM order-table entries up to song length
-/// - IT orders with separator/end markers (254/255) normalized out
-///
-/// Detailed note-level parity remains future work.
+/// Effect parity is still treated as best-effort due format-specific behavior.
 pub fn check_parity_detailed(xm_data: &[u8], it_data: &[u8]) -> Result<ParityReport, ParityError> {
     // Validate and parse XM
     let xm_report =
@@ -350,6 +361,18 @@ pub fn check_parity_detailed(xm_data: &[u8], it_data: &[u8]) -> Result<ParityRep
     let mut mismatches = compare_structures(&xm_summary, &it_summary);
     mismatches.extend(compare_order_tables(&xm_report, &it_report));
 
+    let xm_patterns = decode_xm_patterns(xm_data, &xm_report)?;
+    let it_patterns = decode_it_patterns(it_data, &it_report)?;
+    let (xm_orders, it_orders) = normalize_orders(&xm_report, &it_report);
+    let xm_channels = xm_summary.channel_count as usize;
+    mismatches.extend(compare_cell_level_parity(
+        &xm_patterns,
+        &it_patterns,
+        &xm_orders,
+        &it_orders,
+        xm_channels,
+    ));
+
     if mismatches.is_empty() {
         Ok(ParityReport::success(xm_summary, it_summary))
     } else {
@@ -366,20 +389,7 @@ fn compare_order_tables(
     it_report: &ItValidationReport,
 ) -> Vec<ParityMismatch> {
     let mut mismatches = Vec::new();
-
-    let xm_header = match xm_report.header.as_ref() {
-        Some(h) => h,
-        None => return mismatches,
-    };
-
-    let xm_len = xm_header.song_length as usize;
-    let xm_orders = &xm_header.pattern_order[..xm_len.min(xm_header.pattern_order.len())];
-    let it_orders: Vec<u8> = it_report
-        .orders
-        .iter()
-        .copied()
-        .filter(|order| *order != 254 && *order != 255)
-        .collect();
+    let (xm_orders, it_orders) = normalize_orders(xm_report, it_report);
 
     if xm_orders.len() != it_orders.len() {
         mismatches.push(ParityMismatch {
@@ -408,11 +418,391 @@ fn compare_order_tables(
     mismatches
 }
 
+fn normalize_orders(xm_report: &XmValidationReport, it_report: &ItValidationReport) -> (Vec<u8>, Vec<u8>) {
+    let xm_orders = xm_report
+        .header
+        .as_ref()
+        .map(|h| {
+            let len = h.song_length as usize;
+            h.pattern_order[..len.min(h.pattern_order.len())].to_vec()
+        })
+        .unwrap_or_default();
+
+    let it_orders = it_report
+        .orders
+        .iter()
+        .copied()
+        .filter(|order| *order != 254 && *order != 255)
+        .collect();
+
+    (xm_orders, it_orders)
+}
+
+fn normalize_xm_volume(vol: u8) -> u8 {
+    if (0x10..=0x50).contains(&vol) {
+        vol - 0x10
+    } else {
+        0
+    }
+}
+
+fn decode_xm_patterns(
+    xm_data: &[u8],
+    xm_report: &XmValidationReport,
+) -> Result<Vec<Vec<Vec<CanonCell>>>, ParityError> {
+    let header = xm_report
+        .header
+        .as_ref()
+        .ok_or_else(|| ParityError::XmParseError("missing XM header in validation report".to_string()))?;
+    let num_channels = header.num_channels as usize;
+    let mut offset = 60 + header.header_size as usize;
+    let mut decoded = Vec::with_capacity(xm_report.patterns.len());
+
+    for pattern in &xm_report.patterns {
+        let header_len = pattern.header_length as usize;
+        let packed_len = pattern.packed_size as usize;
+        let data_start = offset + header_len;
+        let data_end = data_start + packed_len;
+        if data_end > xm_data.len() {
+            return Err(ParityError::XmParseError(format!(
+                "pattern {} extends beyond XM data (end={}, len={})",
+                pattern.index,
+                data_end,
+                xm_data.len()
+            )));
+        }
+        let pattern_rows = decode_xm_pattern_data(
+            &xm_data[data_start..data_end],
+            pattern.index,
+            pattern.num_rows as usize,
+            num_channels,
+        )?;
+        decoded.push(pattern_rows);
+        offset = data_end;
+    }
+
+    Ok(decoded)
+}
+
+fn decode_xm_pattern_data(
+    data: &[u8],
+    pattern_index: usize,
+    num_rows: usize,
+    num_channels: usize,
+) -> Result<Vec<Vec<CanonCell>>, ParityError> {
+    let mut rows = vec![vec![CanonCell::default(); num_channels]; num_rows];
+    let mut pos = 0usize;
+
+    for row in 0..num_rows {
+        for channel in 0..num_channels {
+            if pos >= data.len() {
+                return Err(ParityError::XmParseError(format!(
+                    "pattern {} truncated at row {} channel {}",
+                    pattern_index, row, channel
+                )));
+            }
+
+            let first = data[pos];
+            pos += 1;
+            let mut cell = CanonCell::default();
+
+            if first & 0x80 != 0 {
+                if first & 0x01 != 0 {
+                    if pos >= data.len() {
+                        return Err(ParityError::XmParseError(format!(
+                            "pattern {} note field truncated",
+                            pattern_index
+                        )));
+                    }
+                    cell.note = data[pos];
+                    pos += 1;
+                }
+                if first & 0x02 != 0 {
+                    if pos >= data.len() {
+                        return Err(ParityError::XmParseError(format!(
+                            "pattern {} instrument field truncated",
+                            pattern_index
+                        )));
+                    }
+                    cell.instrument = data[pos];
+                    pos += 1;
+                }
+                if first & 0x04 != 0 {
+                    if pos >= data.len() {
+                        return Err(ParityError::XmParseError(format!(
+                            "pattern {} volume field truncated",
+                            pattern_index
+                        )));
+                    }
+                    cell.volume = normalize_xm_volume(data[pos]);
+                    pos += 1;
+                }
+                if first & 0x08 != 0 {
+                    if pos >= data.len() {
+                        return Err(ParityError::XmParseError(format!(
+                            "pattern {} effect field truncated",
+                            pattern_index
+                        )));
+                    }
+                    cell.effect = data[pos];
+                    pos += 1;
+                }
+                if first & 0x10 != 0 {
+                    if pos >= data.len() {
+                        return Err(ParityError::XmParseError(format!(
+                            "pattern {} effect param field truncated",
+                            pattern_index
+                        )));
+                    }
+                    cell.effect_param = data[pos];
+                    pos += 1;
+                }
+            } else {
+                if pos + 4 > data.len() {
+                    return Err(ParityError::XmParseError(format!(
+                        "pattern {} uncompressed note truncated",
+                        pattern_index
+                    )));
+                }
+                cell.note = first;
+                cell.instrument = data[pos];
+                cell.volume = normalize_xm_volume(data[pos + 1]);
+                cell.effect = data[pos + 2];
+                cell.effect_param = data[pos + 3];
+                pos += 4;
+            }
+
+            rows[row][channel] = cell;
+        }
+    }
+
+    Ok(rows)
+}
+
+fn decode_it_patterns(
+    it_data: &[u8],
+    it_report: &ItValidationReport,
+) -> Result<Vec<Vec<Vec<CanonCell>>>, ParityError> {
+    let mut decoded = Vec::with_capacity(it_report.patterns.len());
+    for pattern in &it_report.patterns {
+        if pattern.offset == 0 {
+            decoded.push(vec![vec![CanonCell::default(); 64]; pattern.num_rows as usize]);
+            continue;
+        }
+
+        let offset = pattern.offset as usize;
+        let data_start = offset + 8;
+        let data_end = data_start + pattern.packed_length as usize;
+        if data_end > it_data.len() {
+            return Err(ParityError::ItParseError(format!(
+                "pattern {} extends beyond IT data (end={}, len={})",
+                pattern.index,
+                data_end,
+                it_data.len()
+            )));
+        }
+
+        let rows = decode_it_pattern_data(
+            &it_data[data_start..data_end],
+            pattern.index,
+            pattern.num_rows as usize,
+        )?;
+        decoded.push(rows);
+    }
+    Ok(decoded)
+}
+
+fn decode_it_pattern_data(
+    packed_data: &[u8],
+    pattern_index: usize,
+    num_rows: usize,
+) -> Result<Vec<Vec<CanonCell>>, ParityError> {
+    let mut rows = vec![vec![CanonCell::default(); 64]; num_rows];
+    let mut pos = 0usize;
+    let mut row = 0usize;
+    let mut channel_masks = [0u8; 64];
+    let mut prev_note = [0u8; 64];
+    let mut prev_inst = [0u8; 64];
+    let mut prev_vol = [0u8; 64];
+    let mut prev_fx = [0u8; 64];
+    let mut prev_fx_param = [0u8; 64];
+
+    while pos < packed_data.len() && row < num_rows {
+        let channel_var = packed_data[pos];
+        pos += 1;
+
+        if channel_var == 0 {
+            row += 1;
+            continue;
+        }
+
+        let channel = ((channel_var - 1) & 63) as usize;
+        let mask = if channel_var & 0x80 != 0 {
+            if pos >= packed_data.len() {
+                return Err(ParityError::ItParseError(format!(
+                    "pattern {} truncated before mask byte",
+                    pattern_index
+                )));
+            }
+            let m = packed_data[pos];
+            pos += 1;
+            channel_masks[channel] = m;
+            m
+        } else {
+            channel_masks[channel]
+        };
+
+        let mut cell = rows[row][channel];
+
+        if mask & 0x01 != 0 {
+            if pos >= packed_data.len() {
+                return Err(ParityError::ItParseError(format!(
+                    "pattern {} note field truncated",
+                    pattern_index
+                )));
+            }
+            let note = packed_data[pos];
+            pos += 1;
+            prev_note[channel] = note;
+            cell.note = it_note_to_xm(note);
+        } else if mask & 0x10 != 0 {
+            cell.note = it_note_to_xm(prev_note[channel]);
+        }
+
+        if mask & 0x02 != 0 {
+            if pos >= packed_data.len() {
+                return Err(ParityError::ItParseError(format!(
+                    "pattern {} instrument field truncated",
+                    pattern_index
+                )));
+            }
+            let inst = packed_data[pos];
+            pos += 1;
+            prev_inst[channel] = inst;
+            cell.instrument = inst;
+        } else if mask & 0x20 != 0 {
+            cell.instrument = prev_inst[channel];
+        }
+
+        if mask & 0x04 != 0 {
+            if pos >= packed_data.len() {
+                return Err(ParityError::ItParseError(format!(
+                    "pattern {} volume field truncated",
+                    pattern_index
+                )));
+            }
+            let vol = packed_data[pos];
+            pos += 1;
+            prev_vol[channel] = vol;
+            cell.volume = if vol <= 64 { vol } else { 0 };
+        } else if mask & 0x40 != 0 {
+            let vol = prev_vol[channel];
+            cell.volume = if vol <= 64 { vol } else { 0 };
+        }
+
+        if mask & 0x08 != 0 {
+            if pos + 1 >= packed_data.len() {
+                return Err(ParityError::ItParseError(format!(
+                    "pattern {} effect field truncated",
+                    pattern_index
+                )));
+            }
+            let fx = packed_data[pos];
+            let fx_param = packed_data[pos + 1];
+            pos += 2;
+            prev_fx[channel] = fx;
+            prev_fx_param[channel] = fx_param;
+            cell.effect = fx;
+            cell.effect_param = fx_param;
+        } else if mask & 0x80 != 0 {
+            cell.effect = prev_fx[channel];
+            cell.effect_param = prev_fx_param[channel];
+        }
+
+        rows[row][channel] = cell;
+    }
+
+    Ok(rows)
+}
+
+fn compare_cell_level_parity(
+    xm_patterns: &[Vec<Vec<CanonCell>>],
+    it_patterns: &[Vec<Vec<CanonCell>>],
+    xm_orders: &[u8],
+    it_orders: &[u8],
+    xm_channels: usize,
+) -> Vec<ParityMismatch> {
+    let mut mismatches = Vec::new();
+    let max_orders = xm_orders.len().min(it_orders.len());
+
+    'order_loop: for order_idx in 0..max_orders {
+        let xm_pattern_idx = xm_orders[order_idx] as usize;
+        let it_pattern_idx = it_orders[order_idx] as usize;
+
+        if xm_pattern_idx >= xm_patterns.len() || it_pattern_idx >= it_patterns.len() {
+            continue;
+        }
+
+        let xm_rows = &xm_patterns[xm_pattern_idx];
+        let it_rows = &it_patterns[it_pattern_idx];
+        let max_rows = xm_rows.len().min(it_rows.len());
+
+        for row in 0..max_rows {
+            let max_channels = xm_channels.min(xm_rows[row].len()).min(it_rows[row].len());
+            for channel in 0..max_channels {
+                let xm_cell = xm_rows[row][channel];
+                let it_cell = it_rows[row][channel];
+
+                if xm_cell.note != it_cell.note {
+                    mismatches.push(ParityMismatch {
+                        category: "note_cell",
+                        message: format!(
+                            "order {} row {} ch {} note differs (XM={}, IT={})",
+                            order_idx, row, channel, xm_cell.note, it_cell.note
+                        ),
+                    });
+                }
+                if xm_cell.instrument != it_cell.instrument {
+                    mismatches.push(ParityMismatch {
+                        category: "instrument_cell",
+                        message: format!(
+                            "order {} row {} ch {} instrument differs (XM={}, IT={})",
+                            order_idx, row, channel, xm_cell.instrument, it_cell.instrument
+                        ),
+                    });
+                }
+                if xm_cell.volume != it_cell.volume {
+                    mismatches.push(ParityMismatch {
+                        category: "volume_cell",
+                        message: format!(
+                            "order {} row {} ch {} volume differs (XM={}, IT={})",
+                            order_idx, row, channel, xm_cell.volume, it_cell.volume
+                        ),
+                    });
+                }
+
+                if mismatches.len() >= MAX_CELL_MISMATCHES {
+                    mismatches.push(ParityMismatch {
+                        category: "cell_mismatch_limit",
+                        message: format!(
+                            "stopped after {} cell mismatches",
+                            MAX_CELL_MISMATCHES
+                        ),
+                    });
+                    break 'order_loop;
+                }
+            }
+        }
+    }
+
+    mismatches
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::it::{ItInstrument, ItModule, ItPattern, ItSample};
-    use crate::xm::{XmInstrument, XmModule, XmPattern, XmSample};
+    use crate::it::{ItInstrument, ItModule, ItNote, ItPattern, ItSample};
+    use crate::xm::{XmInstrument, XmModule, XmNote, XmPattern, XmSample};
 
     fn create_minimal_xm(instruments: usize, patterns: usize, rows: u16) -> Vec<u8> {
         let mut module = XmModule::new("Test", 4, 6, 125);
@@ -575,5 +965,46 @@ mod tests {
             .mismatches
             .iter()
             .any(|m| m.category == "order_length"));
+    }
+
+    fn create_single_note_xm(note: XmNote) -> Vec<u8> {
+        let mut xm_module = XmModule::new("CellDetail", 4, 6, 125);
+        let mut pattern = XmPattern::empty(64, 4);
+        pattern.set_note(0, 0, note);
+        xm_module.add_pattern(pattern);
+        let sample = XmSample::new("Smp1", vec![0u8; 200], true);
+        xm_module.add_instrument(XmInstrument::new("Inst1", sample));
+        xm_module.set_order_table(&[0]);
+        xm_module.to_bytes().unwrap()
+    }
+
+    fn create_single_note_it(note: ItNote) -> Vec<u8> {
+        let mut it_module = ItModule::new("CellDetail", 4, 6, 125);
+        let mut pattern = ItPattern::empty(64, 4);
+        pattern.set_note(0, 0, note);
+        it_module.add_pattern(pattern);
+        it_module.add_instrument(ItInstrument::new("Inst1"));
+        it_module.add_sample(ItSample::new("Smp1", vec![0u8; 100], 22050));
+        it_module.set_orders(&[0]);
+        it_module.to_bytes().unwrap()
+    }
+
+    #[test]
+    fn test_parity_detailed_detects_note_cell_mismatch() {
+        let xm = create_single_note_xm(XmNote::from_name("C4", 1, Some(64)));
+        let it = create_single_note_it(ItNote::from_name("D4", 1, 64));
+
+        let report = check_parity_detailed(&xm, &it).unwrap();
+        assert!(!report.is_parity);
+        assert!(report.mismatches.iter().any(|m| m.category == "note_cell"));
+    }
+
+    #[test]
+    fn test_parity_detailed_accepts_matching_note_cells() {
+        let xm = create_single_note_xm(XmNote::from_name("C4", 1, Some(64)));
+        let it = create_single_note_it(ItNote::from_name("C4", 1, 64));
+
+        let report = check_parity_detailed(&xm, &it).unwrap();
+        assert!(report.is_parity, "{:?}", report.mismatches);
     }
 }
