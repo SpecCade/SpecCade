@@ -177,6 +177,30 @@ fn test_parse_effect_name_unknown() {
 }
 
 #[test]
+fn test_decode_xm_effect_speed_vs_tempo() {
+    assert_eq!(
+        decode_xm_effect(xm_codes::SET_SPEED_TEMPO, 6),
+        Some(TrackerEffect::SetSpeed { speed: 6 })
+    );
+    assert_eq!(
+        decode_xm_effect(xm_codes::SET_SPEED_TEMPO, 140),
+        Some(TrackerEffect::SetTempo { bpm: 140 })
+    );
+}
+
+#[test]
+fn test_decode_it_effect_fine_portamento() {
+    assert_eq!(
+        decode_it_effect(it_codes::PORTA_UP, 0xF4),
+        Some(TrackerEffect::FinePortamentoUp { speed: 4 })
+    );
+    assert_eq!(
+        decode_it_effect(it_codes::PORTA_DOWN, 0xE3),
+        Some(TrackerEffect::ExtraFinePortaDown { speed: 3 })
+    );
+}
+
+#[test]
 fn test_serialization_roundtrip() {
     let effect = TrackerEffect::Vibrato { speed: 4, depth: 8 };
     let json = serde_json::to_string(&effect).unwrap();

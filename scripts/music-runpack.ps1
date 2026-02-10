@@ -87,6 +87,10 @@ $baseSteps = @(
 
 if ($DeepGate) {
   $baseSteps += @{
+    Name = "integration external player conformance"
+    Command = "cargo test -p speccade-tests --test music_external_conformance"
+  }
+  $baseSteps += @{
     Name = "integration golden hash verification"
     Command = "cargo test -p speccade-tests --test golden_hash_verification -- --nocapture"
   }

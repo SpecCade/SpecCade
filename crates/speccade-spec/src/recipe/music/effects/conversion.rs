@@ -230,3 +230,164 @@ pub fn parse_effect_name(
         _ => None,
     }
 }
+
+/// Decode XM effect code+param into a typed tracker effect.
+pub fn decode_xm_effect(code: u8, param: u8) -> Option<TrackerEffect> {
+    use xm_codes::*;
+
+    if code == 0 && param == 0 {
+        return None;
+    }
+
+    let hi = (param >> 4) & 0x0F;
+    let lo = param & 0x0F;
+
+    match code {
+        ARPEGGIO => Some(TrackerEffect::Arpeggio { x: hi, y: lo }),
+        PORTA_UP => Some(TrackerEffect::PortamentoUp { speed: param }),
+        PORTA_DOWN => Some(TrackerEffect::PortamentoDown { speed: param }),
+        TONE_PORTA => Some(TrackerEffect::TonePortamento { speed: param }),
+        VIBRATO => Some(TrackerEffect::Vibrato {
+            speed: hi,
+            depth: lo,
+        }),
+        TONE_PORTA_VOL_SLIDE => Some(TrackerEffect::TonePortaVolumeSlide { up: hi, down: lo }),
+        VIBRATO_VOL_SLIDE => Some(TrackerEffect::VibratoVolumeSlide { up: hi, down: lo }),
+        TREMOLO => Some(TrackerEffect::Tremolo {
+            speed: hi,
+            depth: lo,
+        }),
+        SET_PANNING => Some(TrackerEffect::SetPanning { pan: param }),
+        SAMPLE_OFFSET => Some(TrackerEffect::SampleOffset { offset: param }),
+        VOL_SLIDE => Some(TrackerEffect::VolumeSlide { up: hi, down: lo }),
+        POSITION_JUMP => Some(TrackerEffect::PositionJump { position: param }),
+        SET_VOLUME => Some(TrackerEffect::SetVolume { volume: param }),
+        PATTERN_BREAK => Some(TrackerEffect::PatternBreak { row: param }),
+        SET_SPEED_TEMPO => {
+            if param <= 31 {
+                Some(TrackerEffect::SetSpeed { speed: param })
+            } else {
+                Some(TrackerEffect::SetTempo { bpm: param })
+            }
+        }
+        GLOBAL_VOL => Some(TrackerEffect::SetGlobalVolume { volume: param }),
+        GLOBAL_VOL_SLIDE => Some(TrackerEffect::GlobalVolumeSlide { up: hi, down: lo }),
+        KEY_OFF => Some(TrackerEffect::KeyOff { tick: param }),
+        SET_ENV_POS => Some(TrackerEffect::SetEnvelopePosition { position: param }),
+        PAN_SLIDE => Some(TrackerEffect::PanningSlide {
+            left: lo,
+            right: hi,
+        }),
+        RETRIGGER => Some(TrackerEffect::Retrigger {
+            volume_change: hi,
+            interval: lo,
+        }),
+        TREMOR => Some(TrackerEffect::Tremor {
+            on_time: hi,
+            off_time: lo,
+        }),
+        EXTRA_FINE_PORTA => match hi {
+            0x1 => Some(TrackerEffect::ExtraFinePortaUp { speed: lo }),
+            0x2 => Some(TrackerEffect::ExtraFinePortaDown { speed: lo }),
+            _ => Some(TrackerEffect::Raw { code, param }),
+        },
+        EXTENDED => match hi {
+            0x1 => Some(TrackerEffect::FinePortamentoUp { speed: lo }),
+            0x2 => Some(TrackerEffect::FinePortamentoDown { speed: lo }),
+            0x4 => Some(TrackerEffect::SetVibratoWaveform { waveform: lo }),
+            0x5 => Some(TrackerEffect::SetFinetune { value: lo }),
+            0x6 => Some(TrackerEffect::PatternLoop { count: lo }),
+            0x7 => Some(TrackerEffect::SetTremoloWaveform { waveform: lo }),
+            0xC => Some(TrackerEffect::NoteCut { ticks: lo }),
+            0xD => Some(TrackerEffect::NoteDelay { ticks: lo }),
+            _ => Some(TrackerEffect::Raw { code, param }),
+        },
+        _ => Some(TrackerEffect::Raw { code, param }),
+    }
+}
+
+/// Decode IT effect code+param into a typed tracker effect.
+pub fn decode_it_effect(code: u8, param: u8) -> Option<TrackerEffect> {
+    use it_codes::*;
+
+    if code == 0 && param == 0 {
+        return None;
+    }
+
+    let hi = (param >> 4) & 0x0F;
+    let lo = param & 0x0F;
+
+    match code {
+        SET_SPEED => Some(TrackerEffect::SetSpeed { speed: param }),
+        POSITION_JUMP => Some(TrackerEffect::PositionJump { position: param }),
+        PATTERN_BREAK => Some(TrackerEffect::PatternBreak { row: param }),
+        VOLUME_SLIDE => Some(TrackerEffect::VolumeSlide { up: hi, down: lo }),
+        PORTA_DOWN => {
+            if hi == 0xF {
+                Some(TrackerEffect::FinePortamentoDown { speed: lo })
+            } else if hi == 0xE {
+                Some(TrackerEffect::ExtraFinePortaDown { speed: lo })
+            } else {
+                Some(TrackerEffect::PortamentoDown { speed: param })
+            }
+        }
+        PORTA_UP => {
+            if hi == 0xF {
+                Some(TrackerEffect::FinePortamentoUp { speed: lo })
+            } else if hi == 0xE {
+                Some(TrackerEffect::ExtraFinePortaUp { speed: lo })
+            } else {
+                Some(TrackerEffect::PortamentoUp { speed: param })
+            }
+        }
+        TONE_PORTA => Some(TrackerEffect::TonePortamento { speed: param }),
+        VIBRATO => Some(TrackerEffect::Vibrato {
+            speed: hi,
+            depth: lo,
+        }),
+        TREMOR => Some(TrackerEffect::Tremor {
+            on_time: hi,
+            off_time: lo,
+        }),
+        ARPEGGIO => Some(TrackerEffect::Arpeggio { x: hi, y: lo }),
+        VIBRATO_VOL_SLIDE => Some(TrackerEffect::VibratoVolumeSlide { up: hi, down: lo }),
+        TONE_PORTA_VOL_SLIDE => Some(TrackerEffect::TonePortaVolumeSlide { up: hi, down: lo }),
+        SET_CHANNEL_VOL => Some(TrackerEffect::SetChannelVolume { volume: param }),
+        CHANNEL_VOL_SLIDE => Some(TrackerEffect::ChannelVolumeSlide { up: hi, down: lo }),
+        SAMPLE_OFFSET => Some(TrackerEffect::SampleOffset { offset: param }),
+        PANNING_SLIDE => Some(TrackerEffect::PanningSlide {
+            left: hi,
+            right: lo,
+        }),
+        RETRIGGER => Some(TrackerEffect::Retrigger {
+            volume_change: hi,
+            interval: lo,
+        }),
+        TREMOLO => Some(TrackerEffect::Tremolo {
+            speed: hi,
+            depth: lo,
+        }),
+        EXTENDED => match hi {
+            0x2 => Some(TrackerEffect::SetFinetune { value: lo }),
+            0x3 => Some(TrackerEffect::SetVibratoWaveform { waveform: lo }),
+            0x4 => Some(TrackerEffect::SetTremoloWaveform { waveform: lo }),
+            0xB => Some(TrackerEffect::PatternLoop { count: lo }),
+            0xC => Some(TrackerEffect::NoteCut { ticks: lo }),
+            0xD => Some(TrackerEffect::NoteDelay { ticks: lo }),
+            _ => Some(TrackerEffect::Raw { code, param }),
+        },
+        TEMPO => Some(TrackerEffect::SetTempo { bpm: param }),
+        FINE_VIBRATO => Some(TrackerEffect::FineVibrato {
+            speed: hi,
+            depth: lo,
+        }),
+        SET_GLOBAL_VOL => Some(TrackerEffect::SetGlobalVolume { volume: param }),
+        GLOBAL_VOL_SLIDE => Some(TrackerEffect::GlobalVolumeSlide { up: hi, down: lo }),
+        SET_PANNING => Some(TrackerEffect::SetPanning { pan: param }),
+        PANBRELLO => Some(TrackerEffect::Panbrello {
+            speed: hi,
+            depth: lo,
+        }),
+        _ => Some(TrackerEffect::Raw { code, param }),
+    }
+}

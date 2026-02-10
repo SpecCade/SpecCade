@@ -11,7 +11,7 @@ mod tracker_options;
 mod validation;
 pub mod xm_codes;
 
-pub use conversion::parse_effect_name;
+pub use conversion::{decode_it_effect, decode_xm_effect, parse_effect_name};
 pub use tracker_options::{AutomationEntry, ItOptions, PatternEffect};
 pub use validation::EffectValidationError;
 

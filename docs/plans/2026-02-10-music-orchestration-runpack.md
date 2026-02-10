@@ -19,7 +19,8 @@ This runpack is for long-running XM/IT confidence work with repeatable test gate
 3. `cargo test -p speccade-cli`
 4. `cargo test -p speccade-tests --test music_parity`
 5. `cargo test -p speccade-tests --test compose`
-6. Optional deep gate: `cargo test -p speccade-tests --test golden_hash_verification -- --nocapture`
+6. Optional deep gate: `cargo test -p speccade-tests --test music_external_conformance`
+7. Optional deep gate: `cargo test -p speccade-tests --test golden_hash_verification -- --nocapture`
 
 ## Usage
 
@@ -36,6 +37,14 @@ This runpack is for long-running XM/IT confidence work with repeatable test gate
 # Commit staged changes after each successful cycle
 ./scripts/music-runpack.ps1 -Cycles 6 -CheckpointStaged -CheckpointPrefix "music hardening"
 ```
+
+## External Conformance Player
+
+- `music_external_conformance` uses `ffmpeg` to decode generated XM/IT modules.
+- Resolution order:
+1. `SPECCADE_FFMPEG_BIN`
+2. `ffmpeg` on `PATH`
+- If no player is found, the test logs a skip and exits successfully.
 
 ## Checkpoint Model
 

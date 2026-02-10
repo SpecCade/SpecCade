@@ -14,6 +14,7 @@ use std::fmt;
 use crate::it::validator::{ItValidationReport, ItValidator};
 use crate::note::it_note_to_xm;
 use crate::xm::{XmValidationReport, XmValidator};
+use speccade_spec::recipe::music::{decode_it_effect, decode_xm_effect, TrackerEffect};
 
 /// A mismatch found during parity checking.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -365,12 +366,18 @@ pub fn check_parity_detailed(xm_data: &[u8], it_data: &[u8]) -> Result<ParityRep
     let it_patterns = decode_it_patterns(it_data, &it_report)?;
     let (xm_orders, it_orders) = normalize_orders(&xm_report, &it_report);
     let xm_channels = xm_summary.channel_count as usize;
+    let xm_restart = xm_report
+        .header
+        .as_ref()
+        .map(|h| h.restart_position as u8)
+        .unwrap_or(0);
     mismatches.extend(compare_cell_level_parity(
         &xm_patterns,
         &it_patterns,
         &xm_orders,
         &it_orders,
         xm_channels,
+        xm_restart,
     ));
 
     if mismatches.is_empty() {
@@ -418,7 +425,10 @@ fn compare_order_tables(
     mismatches
 }
 
-fn normalize_orders(xm_report: &XmValidationReport, it_report: &ItValidationReport) -> (Vec<u8>, Vec<u8>) {
+fn normalize_orders(
+    xm_report: &XmValidationReport,
+    it_report: &ItValidationReport,
+) -> (Vec<u8>, Vec<u8>) {
     let xm_orders = xm_report
         .header
         .as_ref()
@@ -450,10 +460,9 @@ fn decode_xm_patterns(
     xm_data: &[u8],
     xm_report: &XmValidationReport,
 ) -> Result<Vec<Vec<Vec<CanonCell>>>, ParityError> {
-    let header = xm_report
-        .header
-        .as_ref()
-        .ok_or_else(|| ParityError::XmParseError("missing XM header in validation report".to_string()))?;
+    let header = xm_report.header.as_ref().ok_or_else(|| {
+        ParityError::XmParseError("missing XM header in validation report".to_string())
+    })?;
     let num_channels = header.num_channels as usize;
     let mut offset = 60 + header.header_size as usize;
     let mut decoded = Vec::with_capacity(xm_report.patterns.len());
@@ -586,7 +595,10 @@ fn decode_it_patterns(
     let mut decoded = Vec::with_capacity(it_report.patterns.len());
     for pattern in &it_report.patterns {
         if pattern.offset == 0 {
-            decoded.push(vec![vec![CanonCell::default(); 64]; pattern.num_rows as usize]);
+            decoded.push(vec![
+                vec![CanonCell::default(); 64];
+                pattern.num_rows as usize
+            ]);
             continue;
         }
 
@@ -731,9 +743,12 @@ fn compare_cell_level_parity(
     xm_orders: &[u8],
     it_orders: &[u8],
     xm_channels: usize,
+    xm_restart: u8,
 ) -> Vec<ParityMismatch> {
     let mut mismatches = Vec::new();
     let max_orders = xm_orders.len().min(it_orders.len());
+
+    let last_it_pattern_idx = it_orders.last().copied().unwrap_or(0);
 
     'order_loop: for order_idx in 0..max_orders {
         let xm_pattern_idx = xm_orders[order_idx] as usize;
@@ -746,9 +761,9 @@ fn compare_cell_level_parity(
         let xm_rows = &xm_patterns[xm_pattern_idx];
         let it_rows = &it_patterns[it_pattern_idx];
         let max_rows = xm_rows.len().min(it_rows.len());
-
         for row in 0..max_rows {
             let max_channels = xm_channels.min(xm_rows[row].len()).min(it_rows[row].len());
+            let is_last_row_in_pattern = row + 1 == max_rows;
             for channel in 0..max_channels {
                 let xm_cell = xm_rows[row][channel];
                 let it_cell = it_rows[row][channel];
@@ -781,13 +796,24 @@ fn compare_cell_level_parity(
                     });
                 }
 
+                if let Some(effect_mismatch) = compare_effect_cell(
+                    xm_cell,
+                    it_cell,
+                    order_idx,
+                    row,
+                    channel,
+                    is_last_row_in_pattern,
+                    it_orders[order_idx],
+                    last_it_pattern_idx,
+                    xm_restart,
+                ) {
+                    mismatches.push(effect_mismatch);
+                }
+
                 if mismatches.len() >= MAX_CELL_MISMATCHES {
                     mismatches.push(ParityMismatch {
                         category: "cell_mismatch_limit",
-                        message: format!(
-                            "stopped after {} cell mismatches",
-                            MAX_CELL_MISMATCHES
-                        ),
+                        message: format!("stopped after {} cell mismatches", MAX_CELL_MISMATCHES),
                     });
                     break 'order_loop;
                 }
@@ -796,6 +822,59 @@ fn compare_cell_level_parity(
     }
 
     mismatches
+}
+
+fn compare_effect_cell(
+    xm_cell: CanonCell,
+    it_cell: CanonCell,
+    order_idx: usize,
+    row: usize,
+    channel: usize,
+    is_last_row_in_pattern: bool,
+    current_it_pattern: u8,
+    last_it_pattern: u8,
+    xm_restart: u8,
+) -> Option<ParityMismatch> {
+    let xm_none = xm_cell.effect == 0 && xm_cell.effect_param == 0;
+    let it_none = it_cell.effect == 0 && it_cell.effect_param == 0;
+
+    if xm_none && it_none {
+        return None;
+    }
+
+    let xm_effect = decode_xm_effect(xm_cell.effect, xm_cell.effect_param);
+    let it_effect = decode_it_effect(it_cell.effect, it_cell.effect_param);
+
+    if xm_effect == it_effect {
+        return None;
+    }
+
+    // IT loop semantics are emitted as a terminal PositionJump effect inside
+    // the final ordered pattern. If that pattern is reused, this jump appears
+    // on every occurrence of that pattern in the order list.
+    if xm_none && is_last_row_in_pattern && current_it_pattern == last_it_pattern {
+        if let Some(TrackerEffect::PositionJump { position }) = it_effect {
+            if position == xm_restart {
+                return None;
+            }
+        }
+    }
+
+    Some(ParityMismatch {
+        category: "effect_cell",
+        message: format!(
+            "order {} row {} ch {} effect differs (XM={:02X}/{:02X} {:?}, IT={:02X}/{:02X} {:?})",
+            order_idx,
+            row,
+            channel,
+            xm_cell.effect,
+            xm_cell.effect_param,
+            xm_effect,
+            it_cell.effect,
+            it_cell.effect_param,
+            it_effect
+        ),
+    })
 }
 
 #[cfg(test)]
@@ -1006,5 +1085,31 @@ mod tests {
 
         let report = check_parity_detailed(&xm, &it).unwrap();
         assert!(report.is_parity, "{:?}", report.mismatches);
+    }
+
+    #[test]
+    fn test_parity_detailed_accepts_semantically_equivalent_effects() {
+        let xm_note = XmNote::from_name("C4", 1, Some(64)).with_effect(0x0, 0x37); // arpeggio
+        let it_note = ItNote::from_name("C4", 1, 64).with_effect(10, 0x37); // arpeggio
+
+        let xm = create_single_note_xm(xm_note);
+        let it = create_single_note_it(it_note);
+        let report = check_parity_detailed(&xm, &it).unwrap();
+        assert!(report.is_parity, "{:?}", report.mismatches);
+    }
+
+    #[test]
+    fn test_parity_detailed_detects_effect_cell_mismatch() {
+        let xm_note = XmNote::from_name("C4", 1, Some(64)).with_effect(0x0, 0x37); // arpeggio
+        let it_note = ItNote::from_name("C4", 1, 64).with_effect(8, 0x37); // vibrato
+
+        let xm = create_single_note_xm(xm_note);
+        let it = create_single_note_it(it_note);
+        let report = check_parity_detailed(&xm, &it).unwrap();
+        assert!(!report.is_parity);
+        assert!(report
+            .mismatches
+            .iter()
+            .any(|m| m.category == "effect_cell"));
     }
 }

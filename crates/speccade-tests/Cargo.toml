@@ -89,5 +89,9 @@ serde_yaml = { workspace = true }
 name = "feature_coverage"
 path = "tests/feature_coverage.rs"
 
+[[test]]
+name = "music_external_conformance"
+path = "tests/music_external_conformance.rs"
+
 [dev-dependencies]
 pretty_assertions = { workspace = true }
