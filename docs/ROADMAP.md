@@ -35,35 +35,25 @@ Reference: `docs/rfcs/RFC-0009-editor-architecture.md`
 
 ### Resolved Decisions
 
-- [x] `EDITOR-001` ~~Decide "editor" delivery shape~~ **RESOLVED: Tauri standalone app only**
   - No VSCode extension (no user demand)
   - Tauri 2.x with Monaco editor, three.js for 3D, Web Audio for sound
   - Single codebase, no abstraction layer needed for v1
   - Layout: `crates/speccade-editor/` (Rust backend) + `editor/` (Tauri frontend)
-- [x] `EDITOR-Q001` ~~GPU acceleration for preview~~ **RESOLVED: WebGL2-only for v1**
   - three.js with WebGL2 is sufficient for preview quality
   - WebGPU deferred to v2+ when platform support matures
-- [x] `EDITOR-Q002` ~~Large mesh handling in preview~~ **RESOLVED: LOD proxies with progressive refinement**
   - Generate low-poly proxy immediately (sub-100ms)
   - Refine to full quality on user request or when idle
   - Show visual indicator for "preview" vs "full quality" state
-- [x] `EDITOR-Q003` ~~Collaboration~~ **RESOLVED: Explicitly deferred to v2+**
   - v1 is single-user only
   - No collaboration infrastructure needed
 
 ### Implementation Tasks
 
-- [x] `EDITOR-002` ~~Scaffold Tauri 2.x project structure with Rust backend + TypeScript frontend.~~ Done: 2026-01-25
   - Tauri 2.x app at `editor/` with full frontend (Monaco, three.js, Web Audio) + `crates/speccade-editor/` Rust backend with IPC commands.
-- [x] `EDITOR-003` ~~Integrate Monaco editor with Starlark syntax highlighting and basic validation.~~ Done: 2026-01-25
   - Monaco wrapper component with Starlark language definition, token provider for keywords/builtins/stdlib, 500ms debounced validation with inline error display.
-- [x] `EDITOR-004` ~~Implement spec file watcher with debounced recompilation via `speccade-cli` commands.~~ Done: 2026-01-25
   - File watcher in `crates/speccade-editor/src/watcher.rs` with 100ms debounce, `file-changed` events to frontend, eval + validate on change.
-- [x] `EDITOR-005` ~~Add three.js 3D preview panel with mesh/texture rendering.~~ Done: 2026-01-25
   - `editor/src/components/MeshPreview.ts` (443 lines) with WebGLRenderer, OrbitControls, GLTFLoader, lighting, grid, quality badges, auto-refine.
-- [x] `EDITOR-006` ~~Add Web Audio preview panel for audio/music specs.~~ Done: 2026-01-25
   - `editor/src/components/AudioPreview.ts` (827 lines) + `MusicPreview.ts` with waveform visualization, spectrum analyzer, play/stop, loop regions, tracker module playback.
-- [x] `EDITOR-007` ~~Implement LOD proxy generation for large mesh preview (sub-100ms first frame).~~ Done: 2026-01-25
   - QEM edge-collapse decimation with silhouette preservation, auto-proxy for >10k triangle meshes, quality badges, refine button, auto-refine on 2s idle.
 
 ---
@@ -72,24 +62,20 @@ Reference: `docs/rfcs/RFC-0009-editor-architecture.md`
 
 Reference: `docs/rfcs/RFC-0010-mesh-llm-verification.md`
 
-- [x] `MESHVER-003` ~~VLM integration policy~~ **RESOLVED: Experimental/opt-in with minimal v1 scope**
   - Off by default
   - User provides API key at runtime via `--vlm-key` (not persisted)
   - Only rendered images uploaded (never mesh data)
   - Marked as "experimental" in docs
 
 Resolved questions:
-- [x] `MESHVER-Q001` ~~VLM latency targets~~ **RESOLVED: Batch mode only (10-30s acceptable)**
   - VLM verification is manual trigger, not hot-reload
   - Show progress indicator during VLM call
   - 30s default timeout (configurable)
-- [x] `MESHVER-Q002` ~~Verification caching~~ **RESOLVED: Cache by spec_hash + render_settings_hash**
   - Geometric metrics always cached (deterministic)
   - VLM results cached with hash key
   - Invalidate on: spec change, render settings change, VLM model change
   - Cache location: `~/.cache/speccade/verification/`
   - `--no-cache` flag to force re-verification
-- [x] `MESHVER-Q003` ~~Hallucination guardrails~~ **RESOLVED: Start simple, iterate based on experience**
   - Single prompt, transparent output in v1
   - Show raw VLM response alongside structured report
   - Geometric metrics are ground truth (VLM cannot override)
@@ -99,66 +85,48 @@ Resolved questions:
 
 ## Textures
 
-- [x] `TEX-003` ~~Channel swizzle ops~~ **RESOLVED: Not needed now**
   - Current approach (combine maps to RGB channels on export) is sufficient
   - Users can create separate maps and combine them in the output stage
   - Revisit if users request more granular in-pipeline channel manipulation
-- [x] `TEX-008` ~~Define and implement matcap generation (`texture.matcap_v1`) for stylized shading presets.~~ Done: 2026-01-24
   - Tier 1 implementation with 8 presets (ToonBasic, ToonRim, Metallic, Ceramic, Clay, Skin, Plastic, Velvet), toon steps, outline, curvature/cavity masks.
-- [x] `TEX-009` ~~Add a material preset system for stable art direction ("preset + parameterization" at CLI-time).~~ Done: 2026-01-24
   - Tier 1 implementation with 8 PBR presets (ToonMetal, StylizedWood, NeonGlow, CeramicGlaze, SciFiPanel, CleanPlastic, RoughStone, BrushedMetal). Generates 4 outputs: albedo, roughness, metallic, normal.
 
 ---
 
 ## New Asset Types (2D VFX / UI / Fonts)
 
-- [x] `GEN-005` ~~Add VFX particle "material/profile" presets (additive/soft/distort/etc.).~~ Done: 2026-01-24
   - Tier 1 metadata-only recipe with 6 profiles (Additive, Soft, Distort, Multiply, Screen, Normal). Outputs rendering hints for particle systems.
-- [x] `GEN-006` ~~Add UI kit presets and item card templates with slots (icon/rarity/background).~~ Done: 2026-01-24
   - Tier 1 implementation generating PNG atlas + metadata JSON. 5 rarity tiers (Common, Uncommon, Rare, Epic, Legendary) with customizable slots (icon, rarity indicator, background).
-- [x] `GEN-007` ~~Add deterministic damage-number sprites (font + outline + crit styles).~~ Done: 2026-01-24
   - Tier 1 implementation with 3 style types (Normal, Critical, Healing). Generates PNG atlas + metadata JSON with outline and optional glow effects.
 
 ---
 
 ## Mesh/Animation Feature Expansion (Blender Tier)
 
-- [x] `MESH-008` ~~Add a render-to-sprite bridge (render `static_mesh` with lighting preset -> `sprite.sheet_v1`).~~ Done: 2026-01-25
   - Tier 2 (Blender) implementation with camera/lighting presets, multi-angle rendering, atlas packing.
-- [x] `MESH-009` ~~Add modular kit generators (walls/doors/pipes) built from primitives + modifiers.~~ Done: 2026-01-25
   - Tier 2 (Blender) implementation with Wall (cutouts, baseboard, crown), Pipe (segments, bends, T-junctions), and Door (frame, panel, hinges) kit types.
-- [x] `MESH-010` ~~Add organic modeling gap-fill (metaballs -> remesh -> smooth -> displacement noise) with strict budgets.~~ Done: 2026-01-25
   - Tier 2 (Blender) implementation with metaball primitives (sphere, capsule, cube, ellipsoid), remeshing modes (voxel, sharp, smooth), and displacement noise.
-- [x] `MESH-011` ~~Add shrinkwrap workflows (armor/clothes wrapping onto body parts) with strict stability validation.~~ Done: 2026-01-25
   - Tier 2 (Blender) implementation with nearest_surface/project/nearest_vertex modes, offset, smooth iterations, self-intersection validation. 3 golden specs.
-- [x] `MESH-012` ~~Add boolean kitbashing (union/difference + cleanup) with determinism/validation constraints.~~ Done: 2026-01-25
   - Tier 2 (Blender) implementation with union/difference/intersect operations, exact/fast solver, cleanup (merge doubles, recalc normals). 3 golden specs.
-- [x] `MESH-013` ~~Add animation helper presets (IK targets + constraint presets) for procedural walk/run cycles.~~ Done: 2026-01-27
   - Wired `skeletal_animation.helpers_v1` to backend dispatch: `animation_helpers.rs` backend module, Blender entrypoint handler, CLI dispatch. Walk cycle, run cycle, and idle sway presets generate end-to-end.
-- [x] `MESH-014` ~~Add `save_blend` to static mesh export for Blender validation.~~ Done: 2026-01-28
   - Added `save_blend: bool` to `MeshExportSettings`, save `.blend` in all Tier 2 mesh handlers (static mesh, modular kit, organic sculpt, mesh-to-sprite), parse `blend_path` in Rust backend. CLI `--save-blend` flag for forcing.
   - Plan: `docs/plans/2026-01-28-blender-export-for-meshes.md`
 
 ### Skeletal Animation / Rigging / IK (Blender Tier)
 
-- [x] `ANIM-004` ~~Fill remaining rigging parity gaps and document them (IK stretch, foot roll, missing presets).~~ Mostly done: 2026-01-27
   - **IK stretch**: ✅ `StretchSettings` in `skeletal/settings.rs`, Blender `apply_stretch_settings()` at line 2931.
   - **Foot roll**: ✅ `FootSystem` in `skeletal/foot.rs`, Blender `setup_foot_system()` + `create_foot_roll_bones()`.
   - **Spine presets**: ❌ Not implemented (no SpineIK preset in `IkChainPreset` enum). Add if needed.
-- [x] `ANIM-005` ~~Validate "hard" constraint types in real assets (ball/planar + stiffness/influence semantics).~~ Mostly done: 2026-01-27
   - **Ball socket**: ✅ `BoneConstraint::Ball` in `constraints.rs`, Blender `_setup_ball_constraint()` at line 2542.
   - **Planar**: ✅ `BoneConstraint::Planar` in `constraints.rs`, Blender `_setup_planar_constraint()` at line 2576.
   - **Post-generation validation**: ❌ Not in validation constraints enum. Add `MaxBallViolations`/`MaxPlanarViolations` if runtime validation needed.
-- [x] `ANIM-006` ~~Add root motion controls + validation (export + verify).~~ Done: 2026-01-27
   - `RootMotionSettings` with 4 modes (Keep, Extract, BakeToHip, Lock) and per-axis control. Added to clip and rigged animation params. Blender implementation for all modes. `root_motion_mode` in report metrics.
 
 ---
 
 ## Tooling / QA
 
-- [x] `QA-006` ~~Define a plugin/backends extension story (subprocess or WASM) with strict I/O contracts + determinism reporting.~~ Done: 2026-01-25
   - Extension types in speccade-spec (manifest, contract, determinism levels), subprocess runner with timeout/hash verification, reference implementation in examples/extensions/simple-subprocess/, architecture docs.
-- [x] `QA-010` ~~Add structural metrics for LLM-friendly 3D feedback.~~ Done: 2026-01-27
   - Non-opinionated geometry metrics in reports: aspect ratios, symmetry, component adjacency, bone coverage, scale reference. Blender computation in `structural_metrics.py`, Rust types in `report/structural.rs`, docs in `spec-reference/structural-metrics.md`.
 
 ---
