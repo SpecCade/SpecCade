@@ -6,7 +6,7 @@
 use anyhow::{Context, Result};
 use colored::Colorize;
 use serde::{Deserialize, Serialize};
-use speccade_spec::{canonical_spec_hash, validate_for_generate, Spec};
+use speccade_spec::{canonical_spec_hash, validate_for_generate};
 use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -15,6 +15,10 @@ use std::time::Instant;
 use walkdir::WalkDir;
 
 use crate::dispatch::{dispatch_generate, get_backend_tier, is_backend_available};
+use crate::input::load_spec;
+
+/// All recognized spec file extensions (JSON + Starlark).
+const SPEC_EXTENSIONS: &[&str] = &["json", "star", "bzl"];
 
 /// Asset types that require Blender (Tier 2 backends)
 const BLENDER_ASSET_TYPES: &[&str] = &["static_mesh", "skeletal_mesh", "skeletal_animation"];
@@ -146,10 +150,21 @@ pub fn run(
         .filter_map(|e| e.ok())
     {
         let path = entry.path();
-        if path.extension().is_some_and(|ext| ext == "json")
-            && !path
-                .file_name()
-                .is_some_and(|name| name.to_string_lossy().contains(".report."))
+        let ext_lower = path
+            .extension()
+            .and_then(|e| e.to_str())
+            .map(|s| s.to_lowercase());
+        let is_spec_ext = ext_lower
+            .as_deref()
+            .is_some_and(|ext| SPEC_EXTENSIONS.contains(&ext));
+        let is_report = path
+            .file_name()
+            .is_some_and(|name| name.to_string_lossy().contains(".report."));
+        let is_library = path
+            .file_name()
+            .is_some_and(|name| name.to_string_lossy().starts_with('_'));
+
+        if is_spec_ext && !is_report && !is_library
         {
             // Check if this is a Blender asset type
             let is_blender = BLENDER_ASSET_TYPES.iter().any(|t| {
@@ -402,24 +417,16 @@ fn process_spec(
         skipped_fresh: false,
     };
 
-    // Read and parse spec
-    let spec_content = match fs::read_to_string(spec_path) {
-        Ok(content) => content,
+    // Load and parse spec (supports both JSON and Starlark)
+    let load_result = match load_spec(spec_path) {
+        Ok(lr) => lr,
         Err(e) => {
-            result.error = Some(format!("Failed to read spec file: {}", e));
+            result.error = Some(format!("Failed to load spec: {}", e));
             result.duration_ms = start.elapsed().as_millis() as u64;
             return result;
         }
     };
-
-    let spec = match Spec::from_json(&spec_content) {
-        Ok(s) => s,
-        Err(e) => {
-            result.error = Some(format!("Failed to parse spec: {}", e));
-            result.duration_ms = start.elapsed().as_millis() as u64;
-            return result;
-        }
-    };
+    let spec = load_result.spec;
 
     result.asset_id = spec.asset_id.clone();
 
@@ -487,26 +494,17 @@ fn process_spec(
         return result;
     }
 
-    // Determine output directory structure based on number of outputs
-    // Single output: {asset_type}/{spec_name}.{ext} (flat)
-    // Multiple outputs: {asset_type}/{spec_name}/... (subdirectory)
-    let output_count = spec.outputs.len();
-    let spec_out_dir = if output_count == 1 {
-        // Single output: write directly to asset type folder
-        out_root.join(&asset_type)
-    } else {
-        // Multiple outputs: create subdirectory
-        out_root.join(&asset_type).join(&result.asset_id)
-    };
-
-    if let Err(e) = fs::create_dir_all(&spec_out_dir) {
+    // Use out_root directly — spec output_path already contains the full
+    // relative path (e.g., "audio/sfx/primary_fire.wav"), so the backend
+    // creates the correct directory structure under out_root.
+    if let Err(e) = fs::create_dir_all(out_root) {
         result.error = Some(format!("Failed to create output directory: {}", e));
         result.duration_ms = start.elapsed().as_millis() as u64;
         return result;
     }
 
     // Dispatch generation (no preview mode for batch generation)
-    match dispatch_generate(&spec, spec_out_dir.to_str().unwrap_or("."), spec_path, None) {
+    match dispatch_generate(&spec, out_root.to_str().unwrap_or("."), spec_path, None) {
         Ok(outputs) => {
             result.success = true;
             result.output_hashes = outputs.iter().filter_map(|o| o.hash.clone()).collect();

@@ -342,7 +342,7 @@ fn register_basic_synthesis(builder: &mut GlobalsBuilder) {
             hashed_key(heap, "frequency"),
             heap.alloc(frequency).to_value(),
         );
-        dict.insert_hashed(hashed_key(heap, "damping"), heap.alloc(damping).to_value());
+        dict.insert_hashed(hashed_key(heap, "decay"), heap.alloc(damping).to_value());
         dict.insert_hashed(hashed_key(heap, "blend"), heap.alloc(blend).to_value());
 
         Ok(dict)
