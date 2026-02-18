@@ -164,8 +164,7 @@ pub fn run(
             .file_name()
             .is_some_and(|name| name.to_string_lossy().starts_with('_'));
 
-        if is_spec_ext && !is_report && !is_library
-        {
+        if is_spec_ext && !is_report && !is_library {
             // Check if this is a Blender asset type
             let is_blender = BLENDER_ASSET_TYPES.iter().any(|t| {
                 path.components()

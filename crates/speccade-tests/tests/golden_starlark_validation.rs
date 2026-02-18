@@ -4,7 +4,6 @@
 //! to ensure they compile and validate successfully.
 
 use speccade_cli::input::load_spec;
-use speccade_spec::validation::{validate_spec_with_budget, BudgetProfile};
 use std::fs;
 use std::path::PathBuf;
 
@@ -30,6 +29,10 @@ fn collect_star_files(dir: &std::path::Path) -> Vec<PathBuf> {
     for entry in entries.flatten() {
         let path = entry.path();
         if path.is_dir() {
+            // Skip adversarial specs — they have their own test harness
+            if path.file_name().map_or(false, |n| n == "adversarial") {
+                continue;
+            }
             files.extend(collect_star_files(&path));
         } else if path.extension().map_or(false, |e| e == "star") {
             files.push(path);

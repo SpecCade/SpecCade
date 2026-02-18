@@ -28,6 +28,7 @@ speccade/
 │   ├── speccade-backend-blender  # Mesh/animation via Blender (Tier 2)
 │   ├── speccade-lint             # Semantic quality lints for generated assets
 │   ├── speccade-editor           # Tauri editor backend (IPC + file watching)
+│   ├── speccade-mcp              # MCP server for IDE/editor integration
 │   └── speccade-tests            # Integration + determinism validation
 ├── blender/
 │   ├── entrypoint.py             # Thin shim (imports speccade.main)
@@ -153,6 +154,19 @@ Used by the CLI `speccade lint` subcommand.
 Editor backend crate used by the Tauri app under `editor/`.
 
 Wraps `speccade-cli` for eval/validate/generate workflows and wires filesystem watching + previews.
+
+### speccade-mcp
+Model Context Protocol (MCP) server for IDE and editor integration. Exposes SpecCade operations as MCP tools over stdio transport using `rmcp`.
+
+**Tools exposed:**
+- **Discovery:** `stdlib_reference`, `list_templates`, `get_template`, `list_specs`, `read_spec`
+- **Authoring:** `write_spec`, `eval_spec`
+- **Generation:** `validate_spec`, `generate_preview`, `generate_full`, `generate_png_outputs`
+- **Analysis:** `analyze_asset`, `compare_assets`
+
+**Architecture:** Delegates to `speccade-cli` commands via subprocess (`cli_runner`). This keeps the MCP server thin and ensures parity with CLI behavior.
+
+**Usage:** `speccade-mcp --project-dir <path>` — runs as a stdio MCP server for tools like Claude Code, VS Code extensions, or any MCP-compatible client.
 
 ## Starlark Compilation Pipeline
 

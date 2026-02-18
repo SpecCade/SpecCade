@@ -6,8 +6,12 @@ pub mod constraints;
 mod path_safety;
 mod recipe_outputs;
 mod recipe_outputs_audio;
+mod recipe_outputs_mesh;
 mod recipe_outputs_music;
+mod recipe_outputs_sprite;
 mod recipe_outputs_texture;
+mod recipe_outputs_ui;
+mod recipe_outputs_vfx;
 
 #[cfg(test)]
 mod tests;

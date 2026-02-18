@@ -4,8 +4,13 @@
 
 mod audio;
 mod blender;
+mod font;
 mod music;
+mod output_helpers;
+mod sprite;
 mod texture;
+mod ui;
+mod vfx;
 mod waveform;
 
 use speccade_spec::{BackendError, OutputKind, OutputResult, Spec, StageTiming};
@@ -117,10 +122,10 @@ pub fn dispatch_generate(
         }
 
         // Sprite sheet backend
-        "sprite.sheet_v1" => texture::generate_sprite_sheet(spec, out_root_path),
+        "sprite.sheet_v1" => sprite::generate_sprite_sheet(spec, out_root_path),
 
         // Sprite animation backend
-        "sprite.animation_v1" => texture::generate_sprite_animation(spec, out_root_path),
+        "sprite.animation_v1" => sprite::generate_sprite_animation(spec, out_root_path),
 
         // Sprite render-from-mesh backend (Blender Tier 2)
         "sprite.render_from_mesh_v1" => {
@@ -128,25 +133,25 @@ pub fn dispatch_generate(
         }
 
         // VFX flipbook backend
-        "vfx.flipbook_v1" => texture::generate_vfx_flipbook(spec, out_root_path),
+        "vfx.flipbook_v1" => vfx::generate_vfx_flipbook(spec, out_root_path),
 
         // VFX particle profile backend (metadata-only)
-        "vfx.particle_profile_v1" => texture::generate_vfx_particle_profile(spec, out_root_path),
+        "vfx.particle_profile_v1" => vfx::generate_vfx_particle_profile(spec, out_root_path),
 
         // UI nine-slice backend
-        "ui.nine_slice_v1" => texture::generate_ui_nine_slice(spec, out_root_path),
+        "ui.nine_slice_v1" => ui::generate_ui_nine_slice(spec, out_root_path),
 
         // UI icon set backend
-        "ui.icon_set_v1" => texture::generate_ui_icon_set(spec, out_root_path),
+        "ui.icon_set_v1" => ui::generate_ui_icon_set(spec, out_root_path),
 
         // UI item card backend
-        "ui.item_card_v1" => texture::generate_ui_item_card(spec, out_root_path),
+        "ui.item_card_v1" => ui::generate_ui_item_card(spec, out_root_path),
 
         // UI damage number backend
-        "ui.damage_number_v1" => texture::generate_ui_damage_number(spec, out_root_path),
+        "ui.damage_number_v1" => ui::generate_ui_damage_number(spec, out_root_path),
 
         // Bitmap font backend
-        "font.bitmap_v1" => texture::generate_font_bitmap(spec, out_root_path),
+        "font.bitmap_v1" => font::generate_font_bitmap(spec, out_root_path),
 
         // Blender static mesh backend
         "static_mesh.blender_primitives_v1" => {
@@ -319,17 +324,17 @@ pub fn dispatch_generate_profiled(
 
         "sprite.sheet_v1" => {
             if profile {
-                texture::generate_sprite_sheet_profiled(spec, out_root_path)
+                sprite::generate_sprite_sheet_profiled(spec, out_root_path)
             } else {
-                texture::generate_sprite_sheet(spec, out_root_path).map(DispatchResult::new)
+                sprite::generate_sprite_sheet(spec, out_root_path).map(DispatchResult::new)
             }
         }
 
         "sprite.animation_v1" => {
             if profile {
-                texture::generate_sprite_animation_profiled(spec, out_root_path)
+                sprite::generate_sprite_animation_profiled(spec, out_root_path)
             } else {
-                texture::generate_sprite_animation(spec, out_root_path).map(DispatchResult::new)
+                sprite::generate_sprite_animation(spec, out_root_path).map(DispatchResult::new)
             }
         }
 
@@ -340,57 +345,57 @@ pub fn dispatch_generate_profiled(
 
         "vfx.flipbook_v1" => {
             if profile {
-                texture::generate_vfx_flipbook_profiled(spec, out_root_path)
+                vfx::generate_vfx_flipbook_profiled(spec, out_root_path)
             } else {
-                texture::generate_vfx_flipbook(spec, out_root_path).map(DispatchResult::new)
+                vfx::generate_vfx_flipbook(spec, out_root_path).map(DispatchResult::new)
             }
         }
 
         "vfx.particle_profile_v1" => {
             if profile {
-                texture::generate_vfx_particle_profile_profiled(spec, out_root_path)
+                vfx::generate_vfx_particle_profile_profiled(spec, out_root_path)
             } else {
-                texture::generate_vfx_particle_profile(spec, out_root_path).map(DispatchResult::new)
+                vfx::generate_vfx_particle_profile(spec, out_root_path).map(DispatchResult::new)
             }
         }
 
         "ui.nine_slice_v1" => {
             if profile {
-                texture::generate_ui_nine_slice_profiled(spec, out_root_path)
+                ui::generate_ui_nine_slice_profiled(spec, out_root_path)
             } else {
-                texture::generate_ui_nine_slice(spec, out_root_path).map(DispatchResult::new)
+                ui::generate_ui_nine_slice(spec, out_root_path).map(DispatchResult::new)
             }
         }
 
         "ui.icon_set_v1" => {
             if profile {
-                texture::generate_ui_icon_set_profiled(spec, out_root_path)
+                ui::generate_ui_icon_set_profiled(spec, out_root_path)
             } else {
-                texture::generate_ui_icon_set(spec, out_root_path).map(DispatchResult::new)
+                ui::generate_ui_icon_set(spec, out_root_path).map(DispatchResult::new)
             }
         }
 
         "ui.item_card_v1" => {
             if profile {
-                texture::generate_ui_item_card_profiled(spec, out_root_path)
+                ui::generate_ui_item_card_profiled(spec, out_root_path)
             } else {
-                texture::generate_ui_item_card(spec, out_root_path).map(DispatchResult::new)
+                ui::generate_ui_item_card(spec, out_root_path).map(DispatchResult::new)
             }
         }
 
         "ui.damage_number_v1" => {
             if profile {
-                texture::generate_ui_damage_number_profiled(spec, out_root_path)
+                ui::generate_ui_damage_number_profiled(spec, out_root_path)
             } else {
-                texture::generate_ui_damage_number(spec, out_root_path).map(DispatchResult::new)
+                ui::generate_ui_damage_number(spec, out_root_path).map(DispatchResult::new)
             }
         }
 
         "font.bitmap_v1" => {
             if profile {
-                texture::generate_font_bitmap_profiled(spec, out_root_path)
+                font::generate_font_bitmap_profiled(spec, out_root_path)
             } else {
-                texture::generate_font_bitmap(spec, out_root_path).map(DispatchResult::new)
+                font::generate_font_bitmap(spec, out_root_path).map(DispatchResult::new)
             }
         }
 

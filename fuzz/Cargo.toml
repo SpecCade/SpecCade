@@ -1,0 +1,17 @@
+[package]
+name = "speccade-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2021"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+speccade-spec = { path = "../crates/speccade-spec" }
+serde_json = "1"
+
+[[bin]]
+name = "fuzz_json_deser"
+path = "fuzz_targets/fuzz_json_deser.rs"

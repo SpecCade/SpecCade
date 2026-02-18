@@ -284,9 +284,9 @@ stdlib:
   - name: audio_layer
     covered: true
     examples:
+    - specs/adversarial/zero_duration_audio.star:16
     - specs/audio/audio_filter_bandpass.star:19
     - specs/audio/audio_filter_ladder.star:19
-    - specs/audio/audio_filter_misc.star:18
   audio.modulation:
   - name: lfo
     covered: true
@@ -303,7 +303,7 @@ stdlib:
           example: specs/audio/audio_filter_ladder.star:20
         sine:
           covered: true
-          example: specs/audio/audio_filter_misc.star:33
+          example: specs/adversarial/empty_pattern_music.star:6
         square:
           covered: true
           example: specs/audio/audio_filter_misc.star:61
@@ -347,7 +347,7 @@ stdlib:
       vowel:
         a:
           covered: true
-          example: specs/audio/audio_filter_misc.star:57
+          example: specs/adversarial/circular_graph_texture.star:9
         e:
           covered: true
           example: specs/audio/audio_formant_coverage.star:38
@@ -363,7 +363,7 @@ stdlib:
       vowel_morph:
         a:
           covered: true
-          example: specs/audio/audio_filter_misc.star:57
+          example: specs/adversarial/circular_graph_texture.star:9
         e:
           covered: true
           example: specs/audio/audio_formant_coverage.star:38
@@ -458,9 +458,9 @@ stdlib:
   - name: oscillator
     covered: true
     examples:
+    - specs/adversarial/zero_duration_audio.star:17
     - specs/audio/audio_filter_ladder.star:20
     - specs/audio/audio_filter_misc.star:26
-    - specs/audio/audio_filter_misc.star:33
     enum_coverage:
       curve:
         exponential:
@@ -481,7 +481,7 @@ stdlib:
           example: specs/audio/audio_filter_ladder.star:20
         sine:
           covered: true
-          example: specs/audio/audio_filter_misc.star:33
+          example: specs/adversarial/empty_pattern_music.star:6
         square:
           covered: true
           example: specs/audio/audio_filter_misc.star:61
@@ -508,7 +508,7 @@ stdlib:
           example: specs/audio/audio_filter_ladder.star:20
         sine:
           covered: true
-          example: specs/audio/audio_filter_misc.star:33
+          example: specs/adversarial/empty_pattern_music.star:6
         square:
           covered: true
           example: specs/audio/audio_filter_misc.star:61
@@ -635,20 +635,20 @@ stdlib:
   - name: envelope
     covered: true
     examples:
-    - specs/audio/audio_filter_bandpass.star:21
-    - specs/audio/audio_filter_ladder.star:21
-    - specs/audio/audio_filter_misc.star:20
+    - specs/adversarial/empty_pattern_music.star:7
+    - specs/adversarial/max_channels_music.star:7
+    - specs/adversarial/zero_duration_audio.star:18
   - name: output
     covered: true
     examples:
-    - specs/animation/aim_constraint_test.star:9
-    - specs/animation/animation_comprehensive.star:9
-    - specs/animation/animation_ik.star:14
+    - specs/adversarial/circular_graph_texture.star:9
+    - specs/adversarial/duplicate_bone_names.star:9
+    - specs/adversarial/empty_pattern_music.star:18
     enum_coverage:
       format:
         glb:
           covered: true
-          example: specs/animation/aim_constraint_test.star:9
+          example: specs/adversarial/duplicate_bone_names.star:9
         gltf:
           covered: true
           example: specs/audio/spec_enum_coverage.star:128
@@ -660,13 +660,13 @@ stdlib:
           example: specs/audio/spec_enum_coverage.star:19
         png:
           covered: true
-          example: specs/audio/spec_enum_coverage.star:97
+          example: specs/adversarial/circular_graph_texture.star:9
         wav:
           covered: true
-          example: specs/audio/audio_filter_bandpass.star:11
+          example: specs/adversarial/zero_duration_audio.star:9
         xm:
           covered: true
-          example: specs/audio/spec_enum_coverage.star:45
+          example: specs/adversarial/empty_pattern_music.star:18
       kind:
         metadata:
           covered: true
@@ -680,26 +680,26 @@ stdlib:
   - name: spec
     covered: true
     examples:
-    - specs/animation/aim_constraint_test.star:3
-    - specs/animation/animation_comprehensive.star:3
-    - specs/animation/animation_ik.star:8
+    - specs/adversarial/circular_graph_texture.star:4
+    - specs/adversarial/duplicate_bone_names.star:4
+    - specs/adversarial/empty_pattern_music.star:13
     enum_coverage:
       asset_type:
         audio:
           covered: true
-          example: specs/audio/audio_filter_bandpass.star:9
+          example: specs/adversarial/zero_duration_audio.star:6
         font:
           covered: true
           example: specs/font/bitmap_basic.star:5
         music:
           covered: true
-          example: specs/audio/spec_enum_coverage.star:42
+          example: specs/adversarial/empty_pattern_music.star:15
         skeletal_animation:
           covered: true
           example: specs/animation/aim_constraint_test.star:5
         skeletal_mesh:
           covered: true
-          example: specs/audio/spec_enum_coverage.star:204
+          example: specs/adversarial/duplicate_bone_names.star:6
         sprite:
           covered: true
           example: specs/audio/spec_enum_coverage.star:139
@@ -708,7 +708,7 @@ stdlib:
           example: specs/audio/spec_enum_coverage.star:114
         texture:
           covered: true
-          example: specs/audio/spec_enum_coverage.star:94
+          example: specs/adversarial/circular_graph_texture.star:6
         ui:
           covered: true
           example: specs/audio/spec_enum_coverage.star:182
@@ -840,9 +840,9 @@ stdlib:
   - name: instrument_synthesis
     covered: true
     examples:
+    - specs/adversarial/empty_pattern_music.star:6
+    - specs/adversarial/max_channels_music.star:6
     - specs/audio/spec_enum_coverage.star:55
-    - specs/audio/spec_enum_coverage.star:61
-    - specs/audio/spec_enum_coverage.star:67
     enum_coverage:
       synth_type:
         noise:
@@ -856,7 +856,7 @@ stdlib:
           example: specs/audio/audio_filter_ladder.star:20
         sine:
           covered: true
-          example: specs/audio/audio_filter_misc.star:33
+          example: specs/adversarial/empty_pattern_music.star:6
         square:
           covered: true
           example: specs/audio/audio_filter_misc.star:61
@@ -866,9 +866,9 @@ stdlib:
   - name: tracker_instrument
     covered: true
     examples:
+    - specs/adversarial/empty_pattern_music.star:4
+    - specs/adversarial/max_channels_music.star:4
     - specs/audio/spec_enum_coverage.star:53
-    - specs/audio/spec_enum_coverage.star:59
-    - specs/audio/spec_enum_coverage.star:65
     enum_coverage:
       loop_mode:
         auto:
@@ -887,21 +887,21 @@ stdlib:
   - name: arrangement_entry
     covered: true
     examples:
+    - specs/adversarial/empty_pattern_music.star:28
+    - specs/adversarial/max_channels_music.star:29
     - specs/audio/spec_enum_coverage.star:86
-    - specs/music/advanced_features.star:108
-    - specs/music/advanced_features.star:109
   - name: pattern_note
     covered: true
     examples:
+    - specs/adversarial/max_channels_music.star:11
     - specs/audio/spec_enum_coverage.star:80
     - specs/audio/spec_enum_coverage.star:81
-    - specs/audio/spec_enum_coverage.star:82
   - name: tracker_pattern
     covered: true
     examples:
+    - specs/adversarial/empty_pattern_music.star:11
+    - specs/adversarial/max_channels_music.star:10
     - specs/audio/spec_enum_coverage.star:79
-    - specs/music/advanced_features.star:23
-    - specs/music/advanced_features.star:37
   music.song:
   - name: music_spec
     covered: true
@@ -914,7 +914,7 @@ stdlib:
           example: specs/music/advanced_features.star:93
         xm:
           covered: true
-          example: specs/audio/spec_enum_coverage.star:45
+          example: specs/adversarial/empty_pattern_music.star:18
   - name: tracker_song
     covered: true
     examples:
@@ -927,17 +927,19 @@ stdlib:
           example: specs/music/advanced_features.star:93
         xm:
           covered: true
-          example: specs/audio/spec_enum_coverage.star:45
+          example: specs/adversarial/empty_pattern_music.star:18
   texture:
   - name: decal_metadata
     covered: true
     examples:
     - specs/texture/texture_advanced.star:23
     - specs/texture/texture_advanced.star:61
+    - specs/texture/texture_decal.star:25
   - name: decal_spec
     covered: true
     examples:
     - specs/texture/texture_advanced.star:50
+    - specs/texture/texture_decal.star:7
   - name: matcap_v1
     covered: true
     examples:
@@ -956,6 +958,7 @@ stdlib:
     covered: true
     examples:
     - specs/texture/texture_advanced.star:93
+    - specs/texture/texture_splat_set.star:42
   - name: texture_spec
     covered: true
     examples:
@@ -964,6 +967,7 @@ stdlib:
     covered: true
     examples:
     - specs/texture/texture_advanced.star:132
+    - specs/texture/texture_trimsheet.star:35
   - name: trimsheet_tile
     covered: true
     examples:
@@ -974,9 +978,9 @@ stdlib:
   - name: texture_graph
     covered: true
     examples:
+    - specs/adversarial/missing_graph_node_texture.star:12
+    - specs/adversarial/zero_resolution_texture.star:12
     - specs/audio/spec_enum_coverage.star:102
-    - specs/texture/normal_comprehensive.star:12
-    - specs/texture/texture_blend.star:14
   texture.nodes:
   - name: add_node
     covered: true
@@ -994,7 +998,7 @@ stdlib:
     examples:
     - specs/texture/normal_comprehensive.star:26
     - specs/texture/texture_comprehensive.star:21
-    - specs/texture/texture_nodes_misc.star:20
+    - specs/texture/texture_decal.star:19
   - name: color_ramp_node
     covered: true
     examples:
@@ -1039,6 +1043,7 @@ stdlib:
     covered: true
     examples:
     - specs/texture/texture_comprehensive.star:28
+    - specs/texture/texture_decal.star:17
     - specs/texture/texture_nodes_misc.star:16
   - name: lerp_node
     covered: true
@@ -1054,9 +1059,9 @@ stdlib:
   - name: noise_node
     covered: true
     examples:
+    - specs/adversarial/missing_graph_node_texture.star:14
+    - specs/adversarial/zero_resolution_texture.star:14
     - specs/audio/spec_enum_coverage.star:104
-    - specs/texture/normal_comprehensive.star:15
-    - specs/texture/normal_comprehensive.star:16
     enum_coverage:
       algorithm:
         fbm:
@@ -1067,7 +1072,7 @@ stdlib:
           example: specs/audio/spec_enum_coverage.star:104
         simplex:
           covered: true
-          example: specs/texture/normal_comprehensive.star:16
+          example: specs/adversarial/missing_graph_node_texture.star:14
         value:
           covered: true
           example: specs/texture/texture_noise_algorithms.star:17
@@ -1078,6 +1083,7 @@ stdlib:
     covered: true
     examples:
     - specs/texture/normal_comprehensive.star:27
+    - specs/texture/texture_decal.star:18
     - specs/texture/texture_normalmap.star:30
   - name: palette_node
     covered: true
@@ -1102,7 +1108,7 @@ stdlib:
     examples:
     - specs/texture/texture_advanced.star:57
     - specs/texture/texture_comprehensive.star:31
-    - specs/texture/texture_nodes_misc.star:17
+    - specs/texture/texture_decal.star:16
   - name: wang_tiles_node
     covered: true
     examples:

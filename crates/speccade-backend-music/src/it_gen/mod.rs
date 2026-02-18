@@ -132,8 +132,9 @@ pub fn generate_it(
 
     // Generate bytes
     let data = module.to_bytes()?;
-    let report = ItValidator::validate(&data)
-        .map_err(|e| GenerateError::FormatValidation(format!("generated IT parse failed: {}", e)))?;
+    let report = ItValidator::validate(&data).map_err(|e| {
+        GenerateError::FormatValidation(format!("generated IT parse failed: {}", e))
+    })?;
     if !report.is_valid {
         let details = report
             .errors

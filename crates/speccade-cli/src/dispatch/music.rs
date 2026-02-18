@@ -7,10 +7,7 @@ use speccade_spec::{OutputFormat, OutputKind, OutputResult, Spec, StageTiming};
 use std::path::{Path, PathBuf};
 use std::time::Instant;
 
-fn validate_generated_module_bytes(
-    format: OutputFormat,
-    data: &[u8],
-) -> Result<(), DispatchError> {
+fn validate_generated_module_bytes(format: OutputFormat, data: &[u8]) -> Result<(), DispatchError> {
     match format {
         OutputFormat::Xm => {
             let report = XmValidator::validate(data).map_err(|e| {

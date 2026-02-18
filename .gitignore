@@ -14,7 +14,7 @@ test_outputs/
 test_spec.json
 *.report.json
 test/
-validation/
+/validation/
 
 __pycache__/
 test-outputs/

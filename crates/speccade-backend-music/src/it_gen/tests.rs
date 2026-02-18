@@ -309,8 +309,7 @@ fn test_it_pattern_rejects_out_of_range_channel() {
 
     let err = pattern::convert_pattern_to_it(&pattern, 1, &instruments).unwrap_err();
     assert!(
-        err.to_string()
-            .contains("exceeds configured channel count"),
+        err.to_string().contains("exceeds configured channel count"),
         "unexpected error: {}",
         err
     );
@@ -457,7 +456,9 @@ fn test_generate_it_rejects_restart_position_out_of_arrangement_range() {
     let result = generate_it(&params, 42, Path::new("."));
     assert!(result.is_err());
     let err = result.err().expect("expected error");
-    assert!(err.to_string().contains("restart_position 5 is out of range"));
+    assert!(err
+        .to_string()
+        .contains("restart_position 5 is out of range"));
 }
 
 #[test]

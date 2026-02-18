@@ -327,10 +327,9 @@ fn test_music_semantics_reject_empty_arrangement() {
 
     let result = validate_for_generate(&spec);
     assert!(!result.is_ok());
-    assert!(result
-        .errors
-        .iter()
-        .any(|e| e.message.contains("arrangement must contain at least one entry")));
+    assert!(result.errors.iter().any(|e| e
+        .message
+        .contains("arrangement must contain at least one entry")));
 }
 
 #[test]
@@ -358,8 +357,7 @@ fn test_music_compose_semantics_reject_empty_arrangement() {
 
     let result = validate_for_generate(&spec);
     assert!(!result.is_ok());
-    assert!(result
-        .errors
-        .iter()
-        .any(|e| e.message.contains("arrangement must contain at least one entry")));
+    assert!(result.errors.iter().any(|e| e
+        .message
+        .contains("arrangement must contain at least one entry")));
 }

@@ -4290,8 +4290,8 @@
           "type": "int",
           "required": true,
           "range": {
-            "min": 30.0,
-            "max": 300.0
+            "min": 32.0,
+            "max": 255.0
           }
         },
         {
@@ -4385,8 +4385,8 @@
           "type": "int",
           "required": true,
           "range": {
-            "min": 30.0,
-            "max": 300.0
+            "min": 32.0,
+            "max": 255.0
           }
         },
         {

@@ -93,5 +93,22 @@ path = "tests/feature_coverage.rs"
 name = "music_external_conformance"
 path = "tests/music_external_conformance.rs"
 
+[[test]]
+name = "proptest_validation"
+path = "tests/proptest_validation.rs"
+
+[[test]]
+name = "adversarial_specs"
+path = "tests/adversarial_specs.rs"
+
+[[test]]
+name = "validate_asset_integration"
+path = "tests/validate_asset_integration.rs"
+
+[[test]]
+name = "golden_starlark_validation"
+path = "tests/golden_starlark_validation.rs"
+
 [dev-dependencies]
 pretty_assertions = { workspace = true }
+proptest = { workspace = true }

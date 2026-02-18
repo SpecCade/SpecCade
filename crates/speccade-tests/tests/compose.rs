@@ -108,7 +108,12 @@ fn compose_generation_it_matches_expanded() {
         let expanded_gen =
             generate_music(&expected, spec.seed, spec_dir).expect("expanded generate");
 
-        assert_eq!(compose_gen.extension, "it", "example: {}", compose_path.display());
+        assert_eq!(
+            compose_gen.extension,
+            "it",
+            "example: {}",
+            compose_path.display()
+        );
         assert_eq!(
             expanded_gen.extension,
             "it",

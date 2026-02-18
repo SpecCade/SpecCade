@@ -12,7 +12,6 @@
 //! ```
 
 use std::fs;
-use std::path::PathBuf;
 
 use speccade_tests::harness::TestHarness;
 

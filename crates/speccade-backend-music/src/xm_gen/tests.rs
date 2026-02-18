@@ -296,8 +296,7 @@ fn test_xm_pattern_rejects_out_of_range_channel() {
 
     let err = convert_pattern_to_xm(&pattern, 1, &instruments).unwrap_err();
     assert!(
-        err.to_string()
-            .contains("exceeds configured channel count"),
+        err.to_string().contains("exceeds configured channel count"),
         "unexpected error: {}",
         err
     );

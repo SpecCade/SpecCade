@@ -343,7 +343,10 @@ fn validate_tracker_song_semantics(
             if params.patterns.len() > 256 {
                 result.add_error(ValidationError::with_path(
                     ErrorCode::InvalidRecipeParams,
-                    format!("XM supports at most 256 patterns, got {}", params.patterns.len()),
+                    format!(
+                        "XM supports at most 256 patterns, got {}",
+                        params.patterns.len()
+                    ),
                     "recipe.params.patterns",
                 ));
             }
@@ -362,7 +365,10 @@ fn validate_tracker_song_semantics(
             if params.patterns.len() > 200 {
                 result.add_error(ValidationError::with_path(
                     ErrorCode::InvalidRecipeParams,
-                    format!("IT supports at most 200 patterns, got {}", params.patterns.len()),
+                    format!(
+                        "IT supports at most 200 patterns, got {}",
+                        params.patterns.len()
+                    ),
                     "recipe.params.patterns",
                 ));
             }
@@ -518,10 +524,7 @@ fn validate_tracker_song_semantics(
         if !params.patterns.contains_key(&entry.pattern) {
             result.add_error(ValidationError::with_path(
                 ErrorCode::InvalidRecipeParams,
-                format!(
-                    "arrangement references unknown pattern '{}'",
-                    entry.pattern
-                ),
+                format!("arrangement references unknown pattern '{}'", entry.pattern),
                 format!("recipe.params.arrangement[{}].pattern", idx),
             ));
         }

@@ -123,8 +123,9 @@ pub fn generate_xm(
 
     // Generate bytes
     let data = module.to_bytes()?;
-    let report = XmValidator::validate(&data)
-        .map_err(|e| GenerateError::FormatValidation(format!("generated XM parse failed: {}", e)))?;
+    let report = XmValidator::validate(&data).map_err(|e| {
+        GenerateError::FormatValidation(format!("generated XM parse failed: {}", e))
+    })?;
     if !report.valid {
         let details = report
             .errors
@@ -308,8 +309,8 @@ pub(crate) fn convert_pattern_to_xm(
                 };
                 n = n.with_effect(effect_code, param);
             } else if let Some(ref effect_name) = note.effect_name {
-                let typed_effect =
-                    parse_effect_name(effect_name, note.param, note.effect_xy).ok_or_else(|| {
+                let typed_effect = parse_effect_name(effect_name, note.param, note.effect_xy)
+                    .ok_or_else(|| {
                         GenerateError::InvalidParameter(format!(
                             "unknown effect_name '{}' at row {}, channel {}",
                             effect_name, note.row, channel

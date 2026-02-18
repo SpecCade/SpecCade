@@ -113,7 +113,8 @@ fn validate_animation_metrics(
     let tolerances = MetricTolerances::default();
 
     // Calculate expected frame count
-    let expected_frame_count = expected_frame_count_from_duration(params.duration_seconds, params.fps);
+    let expected_frame_count =
+        expected_frame_count_from_duration(params.duration_seconds, params.fps);
 
     // Validate frame count (exact match required)
     if let Some(actual_frame_count) = metrics.animation_frame_count {
