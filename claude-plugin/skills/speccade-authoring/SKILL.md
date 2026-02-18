@@ -1,3 +1,17 @@
+---
+name: speccade-authoring
+description: >-
+  Authoring SpecCade specs for deterministic asset generation. Covers audio
+  synthesis (16+ types), texture procedural nodes, tracker music (XM/IT format),
+  mesh generation, and the Starlark/JSON spec format. Use when creating, editing,
+  or debugging sound, texture, music, or 3D mesh specs.
+license: MIT
+compatibility: Requires speccade CLI installed.
+metadata:
+  author: nethercore-systems
+  version: "1.0.0"
+---
+
 # SpecCade Authoring
 
 This skill provides knowledge for authoring SpecCade specs - the declarative spec format (Starlark preferred, JSON accepted) that drives deterministic asset generation for audio, textures, music, and 3D meshes.

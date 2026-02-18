@@ -1,4 +1,5 @@
 ---
+name: spec-debugger
 description: |
   Use this agent when the user encounters spec validation errors, generation failures, or
   unexpected asset output. Diagnoses issues by analyzing error messages, reading specs,

@@ -1,4 +1,5 @@
 ---
+name: spec-architect
 description: |
   Use this agent proactively when the user wants to create, design, or author SpecCade assets.
   Triggered by intent to make sounds, textures, music, or 3D models using the deterministic
