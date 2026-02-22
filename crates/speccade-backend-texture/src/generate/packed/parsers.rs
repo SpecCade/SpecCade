@@ -47,6 +47,7 @@ pub fn parse_noise_type(
         "perlin" => Ok(NoiseKind::Perlin),
         "simplex" => Ok(NoiseKind::Simplex),
         "worley" => Ok(NoiseKind::Worley),
+        "gabor" => Ok(NoiseKind::Gabor),
         "fbm" => Ok(NoiseKind::Fbm),
         _ => Err(GenerateError::InvalidParameter(format!(
             "unsupported noise_type '{}'",

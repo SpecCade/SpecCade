@@ -4,11 +4,13 @@
 //! and produce deterministic output given the same seed.
 
 mod fbm;
+mod gabor;
 mod perlin;
 mod simplex;
 mod worley;
 
 pub use fbm::Fbm;
+pub use gabor::GaborNoise;
 pub use perlin::PerlinNoise;
 pub use simplex::SimplexNoise;
 pub use worley::{DistanceFunction, WorleyNoise, WorleyReturn};

@@ -6,7 +6,7 @@
 //!
 //! # Features
 //!
-//! - **Noise Primitives**: Simplex, Perlin, Worley/Voronoi, and FBM
+//! - **Noise Primitives**: Simplex, Perlin, Worley/Voronoi, Gabor, and FBM
 //! - **Pattern Primitives**: Brick, checkerboard, wood grain, scratches, edge wear
 //! - **Procedural Graph Ops**: Named DAG nodes producing grayscale or RGBA outputs
 //! - **Deterministic PNG**: Fixed compression settings for byte-identical output
@@ -94,7 +94,7 @@ pub use generate::{
 };
 pub use maps::{GrayscaleBuffer, TextureBuffer};
 pub use matcap::{generate_matcap, MatcapError, MatcapResult};
-pub use noise::{Fbm, Noise2D, PerlinNoise, SimplexNoise, WorleyNoise};
+pub use noise::{Fbm, GaborNoise, Noise2D, PerlinNoise, SimplexNoise, WorleyNoise};
 pub use normal_map::{generate_normal_map, save_normal_map, NormalMapError, NormalMapResult};
 pub use packing::{
     extract_channel, pack_channels, resolve_channel_source, ChannelSource, ColorComponent,

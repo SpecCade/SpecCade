@@ -11,7 +11,9 @@ Textures use a node-based procedural graph system. Nodes are connected by ID ref
 
 | Function | Description |
 |----------|-------------|
-| `noise_node(id, algorithm, scale, octaves, persistence, lacunarity)` | Noise generator (perlin, simplex, worley, value, fbm) |
+| `noise_node(id, algorithm, scale, octaves, persistence, lacunarity)` | Noise generator (perlin, simplex, worley, value, gabor, fbm) |
+| `reaction_diffusion_preset(preset)` | Tuned Gray-Scott parameter presets (mitosis, worms, spots) |
+| `reaction_diffusion_node(id, steps, feed, kill, diffuse_a, diffuse_b, dt, seed_density)` | Gray-Scott reaction-diffusion pattern |
 | `gradient_node(id, direction, start, end, center, inner, outer)` | Gradient (horizontal, vertical, radial) |
 | `constant_node(id, value)` | Constant value |
 | `threshold_node(id, input, threshold)` | Binary threshold |

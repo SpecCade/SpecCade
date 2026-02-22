@@ -26,13 +26,16 @@ fn new_dict<'v>(_heap: &'v Heap) -> Dict<'v> {
 }
 
 /// Valid noise algorithms.
-const NOISE_ALGORITHMS: &[&str] = &["perlin", "simplex", "worley", "value", "fbm"];
+const NOISE_ALGORITHMS: &[&str] = &["perlin", "simplex", "worley", "value", "gabor", "fbm"];
 
 /// Valid gradient directions.
 const GRADIENT_DIRECTIONS: &[&str] = &["horizontal", "vertical", "radial"];
 
 /// Valid stripe directions.
 const STRIPE_DIRECTIONS: &[&str] = &["horizontal", "vertical"];
+
+/// Valid reaction-diffusion preset names.
+const REACTION_DIFFUSION_PRESETS: &[&str] = &["mitosis", "worms", "spots"];
 
 /// Registers texture node functions into a GlobalsBuilder.
 pub fn register(builder: &mut GlobalsBuilder) {
@@ -45,7 +48,7 @@ fn register_texture_node_functions(builder: &mut GlobalsBuilder) {
     ///
     /// # Arguments
     /// * `id` - Unique node identifier
-    /// * `algorithm` - Noise algorithm: "perlin", "simplex", "worley", "value", "fbm"
+    /// * `algorithm` - Noise algorithm: "perlin", "simplex", "worley", "value", "gabor", "fbm"
     /// * `scale` - Noise scale factor (default: 0.1)
     /// * `octaves` - Number of octaves for fractal noise (default: 4)
     /// * `persistence` - Amplitude decay per octave (default: 0.5)
@@ -58,6 +61,7 @@ fn register_texture_node_functions(builder: &mut GlobalsBuilder) {
     /// ```starlark
     /// noise_node("height", "perlin", 0.1, 4)
     /// noise_node("detail", "simplex", 0.05, 6, 0.5, 2.0)
+    /// noise_node("grain", "gabor", 0.12, 2)
     /// ```
     fn noise_node<'v>(
         id: &str,
@@ -103,6 +107,172 @@ fn register_texture_node_functions(builder: &mut GlobalsBuilder) {
         );
 
         dict.insert_hashed(hashed_key(heap, "noise"), heap.alloc(noise_dict).to_value());
+
+        Ok(dict)
+    }
+
+    /// Returns tuned parameters for a reaction-diffusion preset.
+    ///
+    /// # Arguments
+    /// * `preset` - Preset name: "mitosis", "worms", "spots" (default: "mitosis")
+    ///
+    /// # Returns
+    /// A dict with reaction_diffusion_node-compatible parameters:
+    /// `steps`, `feed`, `kill`, `diffuse_a`, `diffuse_b`, `dt`, `seed_density`.
+    ///
+    /// # Example
+    /// ```starlark
+    /// p = reaction_diffusion_preset("worms")
+    /// reaction_diffusion_node(
+    ///     "rd",
+    ///     p["steps"], p["feed"], p["kill"],
+    ///     p["diffuse_a"], p["diffuse_b"], p["dt"], p["seed_density"]
+    /// )
+    /// ```
+    fn reaction_diffusion_preset<'v>(
+        #[starlark(default = "mitosis")] preset: &str,
+        heap: &'v Heap,
+    ) -> anyhow::Result<Dict<'v>> {
+        validate_enum(
+            preset,
+            REACTION_DIFFUSION_PRESETS,
+            "reaction_diffusion_preset",
+            "preset",
+        )
+        .map_err(|e| anyhow::anyhow!(e))?;
+
+        let (steps, feed, kill, diffuse_a, diffuse_b, dt, seed_density) = match preset {
+            "mitosis" => (180, 0.0367, 0.0649, 1.0, 0.5, 1.0, 0.08),
+            "worms" => (220, 0.078, 0.061, 1.0, 0.5, 1.0, 0.05),
+            "spots" => (160, 0.03, 0.057, 1.0, 0.5, 1.0, 0.06),
+            _ => unreachable!("preset validated above"),
+        };
+
+        let mut dict = new_dict(heap);
+        dict.insert_hashed(
+            hashed_key(heap, "preset"),
+            heap.alloc_str(preset).to_value(),
+        );
+        dict.insert_hashed(hashed_key(heap, "steps"), heap.alloc(steps).to_value());
+        dict.insert_hashed(hashed_key(heap, "feed"), heap.alloc(feed).to_value());
+        dict.insert_hashed(hashed_key(heap, "kill"), heap.alloc(kill).to_value());
+        dict.insert_hashed(
+            hashed_key(heap, "diffuse_a"),
+            heap.alloc(diffuse_a).to_value(),
+        );
+        dict.insert_hashed(
+            hashed_key(heap, "diffuse_b"),
+            heap.alloc(diffuse_b).to_value(),
+        );
+        dict.insert_hashed(hashed_key(heap, "dt"), heap.alloc(dt).to_value());
+        dict.insert_hashed(
+            hashed_key(heap, "seed_density"),
+            heap.alloc(seed_density).to_value(),
+        );
+
+        Ok(dict)
+    }
+
+    /// Creates a reaction-diffusion texture node (Gray-Scott model).
+    ///
+    /// # Arguments
+    /// * `id` - Unique node identifier
+    /// * `steps` - Number of simulation steps (default: 120, max: 2000)
+    /// * `feed` - Feed rate (default: 0.055)
+    /// * `kill` - Kill rate (default: 0.062)
+    /// * `diffuse_a` - Diffusion rate for chemical A (default: 1.0)
+    /// * `diffuse_b` - Diffusion rate for chemical B (default: 0.5)
+    /// * `dt` - Simulation timestep (default: 1.0)
+    /// * `seed_density` - Initial seed density for B chemical (default: 0.03)
+    ///
+    /// # Returns
+    /// A dict matching the TextureProceduralNode with ReactionDiffusion op.
+    ///
+    /// # Example
+    /// ```starlark
+    /// reaction_diffusion_node("rd")
+    /// reaction_diffusion_node("rd_detail", 180, 0.054, 0.064, 1.0, 0.5, 1.0, 0.04)
+    /// ```
+    fn reaction_diffusion_node<'v>(
+        id: &str,
+        #[starlark(default = 120)] steps: i32,
+        #[starlark(default = 0.055)] feed: f64,
+        #[starlark(default = 0.062)] kill: f64,
+        #[starlark(default = 1.0)] diffuse_a: f64,
+        #[starlark(default = 0.5)] diffuse_b: f64,
+        #[starlark(default = 1.0)] dt: f64,
+        #[starlark(default = 0.03)] seed_density: f64,
+        heap: &'v Heap,
+    ) -> anyhow::Result<Dict<'v>> {
+        validate_non_empty(id, "reaction_diffusion_node", "id").map_err(|e| anyhow::anyhow!(e))?;
+        validate_positive_int(steps as i64, "reaction_diffusion_node", "steps")
+            .map_err(|e| anyhow::anyhow!(e))?;
+
+        if steps > 2000 {
+            return Err(anyhow::anyhow!(
+                "S103: reaction_diffusion_node(): 'steps' must be <= 2000, got {}",
+                steps
+            ));
+        }
+        if !(0.0..=1.0).contains(&feed) || feed == 0.0 {
+            return Err(anyhow::anyhow!(
+                "S103: reaction_diffusion_node(): 'feed' must be in (0.0, 1.0], got {}",
+                feed
+            ));
+        }
+        if !(0.0..=1.0).contains(&kill) || kill == 0.0 {
+            return Err(anyhow::anyhow!(
+                "S103: reaction_diffusion_node(): 'kill' must be in (0.0, 1.0], got {}",
+                kill
+            ));
+        }
+        if diffuse_a <= 0.0 || diffuse_a > 2.0 {
+            return Err(anyhow::anyhow!(
+                "S103: reaction_diffusion_node(): 'diffuse_a' must be in (0.0, 2.0], got {}",
+                diffuse_a
+            ));
+        }
+        if diffuse_b <= 0.0 || diffuse_b > 2.0 {
+            return Err(anyhow::anyhow!(
+                "S103: reaction_diffusion_node(): 'diffuse_b' must be in (0.0, 2.0], got {}",
+                diffuse_b
+            ));
+        }
+        if dt <= 0.0 || dt > 2.0 {
+            return Err(anyhow::anyhow!(
+                "S103: reaction_diffusion_node(): 'dt' must be in (0.0, 2.0], got {}",
+                dt
+            ));
+        }
+        if !(0.0..=0.5).contains(&seed_density) {
+            return Err(anyhow::anyhow!(
+                "S103: reaction_diffusion_node(): 'seed_density' must be in [0.0, 0.5], got {}",
+                seed_density
+            ));
+        }
+
+        let mut dict = new_dict(heap);
+        dict.insert_hashed(hashed_key(heap, "id"), heap.alloc_str(id).to_value());
+        dict.insert_hashed(
+            hashed_key(heap, "type"),
+            heap.alloc_str("reaction_diffusion").to_value(),
+        );
+        dict.insert_hashed(hashed_key(heap, "steps"), heap.alloc(steps).to_value());
+        dict.insert_hashed(hashed_key(heap, "feed"), heap.alloc(feed).to_value());
+        dict.insert_hashed(hashed_key(heap, "kill"), heap.alloc(kill).to_value());
+        dict.insert_hashed(
+            hashed_key(heap, "diffuse_a"),
+            heap.alloc(diffuse_a).to_value(),
+        );
+        dict.insert_hashed(
+            hashed_key(heap, "diffuse_b"),
+            heap.alloc(diffuse_b).to_value(),
+        );
+        dict.insert_hashed(hashed_key(heap, "dt"), heap.alloc(dt).to_value());
+        dict.insert_hashed(
+            hashed_key(heap, "seed_density"),
+            heap.alloc(seed_density).to_value(),
+        );
 
         Ok(dict)
     }
@@ -953,12 +1123,101 @@ mod tests {
     }
 
     #[test]
+    fn test_noise_node_gabor() {
+        let result = eval_to_json("noise_node(\"grain\", \"gabor\", 0.08, 2)").unwrap();
+        let noise = &result["noise"];
+        assert_eq!(noise["algorithm"], "gabor");
+        assert_eq!(noise["scale"], 0.08);
+        assert_eq!(noise["octaves"], 2);
+    }
+
+    #[test]
     fn test_noise_node_invalid_algorithm() {
         let result = eval_to_json("noise_node(\"n\", \"fractal\")");
         assert!(result.is_err());
         let err = result.unwrap_err();
         assert!(err.contains("S104"));
         assert!(err.contains("algorithm"));
+    }
+
+    #[test]
+    fn test_reaction_diffusion_node_defaults() {
+        let result = eval_to_json("reaction_diffusion_node(\"rd\")").unwrap();
+        assert_eq!(result["id"], "rd");
+        assert_eq!(result["type"], "reaction_diffusion");
+        assert_eq!(result["steps"], 120);
+        assert_eq!(result["feed"], 0.055);
+        assert_eq!(result["kill"], 0.062);
+        assert_eq!(result["diffuse_a"], 1.0);
+        assert_eq!(result["diffuse_b"], 0.5);
+        assert_eq!(result["dt"], 1.0);
+        assert_eq!(result["seed_density"], 0.03);
+    }
+
+    #[test]
+    fn test_reaction_diffusion_node_custom() {
+        let result =
+            eval_to_json("reaction_diffusion_node(\"rd\", 180, 0.054, 0.064, 1.0, 0.5, 1.0, 0.04)")
+                .unwrap();
+        assert_eq!(result["steps"], 180);
+        assert_eq!(result["feed"], 0.054);
+        assert_eq!(result["kill"], 0.064);
+        assert_eq!(result["seed_density"], 0.04);
+    }
+
+    #[test]
+    fn test_reaction_diffusion_node_invalid_steps() {
+        let result = eval_to_json("reaction_diffusion_node(\"rd\", 0)");
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert!(err.contains("steps"));
+    }
+
+    #[test]
+    fn test_reaction_diffusion_node_invalid_feed() {
+        let result = eval_to_json("reaction_diffusion_node(\"rd\", 120, 0.0)");
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert!(err.contains("feed"));
+    }
+
+    #[test]
+    fn test_reaction_diffusion_preset_default() {
+        let result = eval_to_json("reaction_diffusion_preset()").unwrap();
+        assert_eq!(result["preset"], "mitosis");
+        assert_eq!(result["steps"], 180);
+        assert_eq!(result["feed"], 0.0367);
+        assert_eq!(result["kill"], 0.0649);
+    }
+
+    #[test]
+    fn test_reaction_diffusion_preset_worms() {
+        let result = eval_to_json("reaction_diffusion_preset(\"worms\")").unwrap();
+        assert_eq!(result["preset"], "worms");
+        assert_eq!(result["steps"], 220);
+        assert_eq!(result["feed"], 0.078);
+        assert_eq!(result["kill"], 0.061);
+    }
+
+    #[test]
+    fn test_reaction_diffusion_preset_invalid() {
+        let result = eval_to_json("reaction_diffusion_preset(\"bad\")");
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert!(err.contains("S104"));
+        assert!(err.contains("preset"));
+    }
+
+    #[test]
+    fn test_reaction_diffusion_node_with_preset_dict() {
+        let result = eval_to_json(
+            "p = reaction_diffusion_preset(\"spots\")\nreaction_diffusion_node(\"rd\", p[\"steps\"], p[\"feed\"], p[\"kill\"], p[\"diffuse_a\"], p[\"diffuse_b\"], p[\"dt\"], p[\"seed_density\"])",
+        )
+        .unwrap();
+        assert_eq!(result["type"], "reaction_diffusion");
+        assert_eq!(result["steps"], 160);
+        assert_eq!(result["feed"], 0.03);
+        assert_eq!(result["kill"], 0.057);
     }
 
     // ========================================================================

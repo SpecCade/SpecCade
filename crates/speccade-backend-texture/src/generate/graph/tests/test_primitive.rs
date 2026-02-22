@@ -111,3 +111,112 @@ fn gradient_and_stripes_ops_produce_expected_patterns() {
     assert!(approx_eq(stripes.get(3, 0), 0.0));
     assert!(approx_eq(stripes.get(4, 0), 1.0));
 }
+
+#[test]
+fn gabor_noise_node_generates_non_uniform_field() {
+    let params = make_params(
+        true,
+        vec![TextureProceduralNode {
+            id: "g".to_string(),
+            op: TextureProceduralOp::Noise {
+                noise: NoiseConfig {
+                    algorithm: NoiseAlgorithm::Gabor,
+                    scale: 0.1,
+                    octaves: 1,
+                    persistence: 0.5,
+                    lacunarity: 2.0,
+                },
+            },
+        }],
+    );
+
+    let nodes = generate_graph(&params, 77).unwrap();
+    let g = nodes.get("g").unwrap().as_grayscale().unwrap();
+    let a = g.get(0, 0);
+    let b = g.get(g.width / 2, g.height / 2);
+    assert!(
+        (a - b).abs() > 1e-6,
+        "expected non-uniform Gabor field values"
+    );
+}
+
+#[test]
+fn reaction_diffusion_is_deterministic() {
+    let params = make_params(
+        true,
+        vec![TextureProceduralNode {
+            id: "rd".to_string(),
+            op: TextureProceduralOp::ReactionDiffusion {
+                steps: 64,
+                feed: 0.055,
+                kill: 0.062,
+                diffuse_a: 1.0,
+                diffuse_b: 0.5,
+                dt: 1.0,
+                seed_density: 0.03,
+            },
+        }],
+    );
+
+    let nodes_a = generate_graph(&params, 42).unwrap();
+    let nodes_b = generate_graph(&params, 42).unwrap();
+    let rd_a = nodes_a.get("rd").unwrap().as_grayscale().unwrap();
+    let rd_b = nodes_b.get("rd").unwrap().as_grayscale().unwrap();
+    assert_eq!(rd_a.data, rd_b.data);
+}
+
+#[test]
+fn reaction_diffusion_generates_non_uniform_field() {
+    let params = make_params(
+        true,
+        vec![TextureProceduralNode {
+            id: "rd".to_string(),
+            op: TextureProceduralOp::ReactionDiffusion {
+                steps: 180,
+                feed: 0.037,
+                kill: 0.065,
+                diffuse_a: 1.0,
+                diffuse_b: 0.5,
+                dt: 1.0,
+                seed_density: 0.08,
+            },
+        }],
+    );
+
+    let nodes = generate_graph(&params, 123).unwrap();
+    let rd = nodes.get("rd").unwrap().as_grayscale().unwrap();
+    let mut min_v = f64::INFINITY;
+    let mut max_v = f64::NEG_INFINITY;
+    for v in &rd.data {
+        min_v = min_v.min(*v);
+        max_v = max_v.max(*v);
+    }
+    assert!(
+        max_v - min_v > 1e-3,
+        "expected reaction-diffusion to produce non-uniform values, min={}, max={}",
+        min_v,
+        max_v
+    );
+}
+
+#[test]
+fn reaction_diffusion_rejects_invalid_params() {
+    let params = make_params(
+        true,
+        vec![TextureProceduralNode {
+            id: "rd".to_string(),
+            op: TextureProceduralOp::ReactionDiffusion {
+                steps: 0,
+                feed: 0.055,
+                kill: 0.062,
+                diffuse_a: 1.0,
+                diffuse_b: 0.5,
+                dt: 1.0,
+                seed_density: 0.03,
+            },
+        }],
+    );
+
+    let err = generate_graph(&params, 42).unwrap_err();
+    assert!(err.to_string().contains("reaction_diffusion.steps"));
+}

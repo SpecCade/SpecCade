@@ -1,8 +1,8 @@
 schema_version: 1
 generated_at: 1970-01-01T00:00:00Z
 summary:
-  total_features: 244
-  covered: 244
+  total_features: 250
+  covered: 250
   uncovered: 0
   coverage_percent: 100.0
 stdlib:
@@ -1067,6 +1067,9 @@ stdlib:
         fbm:
           covered: true
           example: specs/texture/texture_noise_algorithms.star:34
+        gabor:
+          covered: true
+          example: specs/texture/texture_gabor_noise.star:13
         perlin:
           covered: true
           example: specs/audio/spec_enum_coverage.star:104
@@ -1091,6 +1094,29 @@ stdlib:
     - specs/texture/texture_advanced.star:11
     - specs/texture/texture_advanced.star:36
     - specs/texture/texture_comprehensive.star:40
+  - name: reaction_diffusion_node
+    covered: true
+    examples:
+    - specs/texture/texture_reaction_diffusion.star:15
+    - specs/texture/texture_reaction_diffusion_spots.star:15
+    - specs/texture/texture_reaction_diffusion_worms.star:15
+  - name: reaction_diffusion_preset
+    covered: true
+    examples:
+    - specs/texture/texture_reaction_diffusion.star:3
+    - specs/texture/texture_reaction_diffusion_spots.star:3
+    - specs/texture/texture_reaction_diffusion_worms.star:3
+    enum_coverage:
+      preset:
+        mitosis:
+          covered: true
+          example: specs/texture/texture_reaction_diffusion.star:3
+        spots:
+          covered: true
+          example: specs/texture/texture_reaction_diffusion_spots.star:3
+        worms:
+          covered: true
+          example: specs/texture/texture_reaction_diffusion_worms.star:3
   - name: stripes_node
     covered: true
     examples:

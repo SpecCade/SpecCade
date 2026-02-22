@@ -387,3 +387,42 @@ fn noise_pattern_rejects_non_noise_params() {
     let err = generate_packed_maps(&params, 0).unwrap_err();
     assert!(err.to_string().contains("does not accept"));
 }
+
+#[test]
+fn noise_pattern_gabor_is_supported() {
+    let mut maps = HashMap::new();
+    maps.insert(
+        "height".to_string(),
+        MapDefinition::Pattern {
+            pattern: "noise".to_string(),
+            noise_type: Some("gabor".to_string()),
+            octaves: None,
+            axis: None,
+            frequency: None,
+            duty_cycle: None,
+            phase: None,
+            cells: None,
+            line_width: None,
+            start: None,
+            end: None,
+            jitter: None,
+            distance_fn: None,
+        },
+    );
+
+    let params = TexturePackedV1Params {
+        resolution: [32, 32],
+        tileable: true,
+        maps,
+    };
+
+    let generated = generate_packed_maps(&params, 55).unwrap();
+    let height = generated.get("height").expect("height map should exist");
+
+    let sample_a = height.get(0, 0).r;
+    let sample_b = height.get(16, 16).r;
+    assert!(
+        (sample_a - sample_b).abs() > 1e-6,
+        "gabor noise should not be perfectly uniform"
+    );
+}

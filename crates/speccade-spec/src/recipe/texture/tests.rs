@@ -144,6 +144,7 @@ fn test_layer_noise_all_algorithms() {
         NoiseAlgorithm::Simplex,
         NoiseAlgorithm::Worley,
         NoiseAlgorithm::Value,
+        NoiseAlgorithm::Gabor,
         NoiseAlgorithm::Fbm,
     ] {
         let layer = TextureLayer::NoisePattern {

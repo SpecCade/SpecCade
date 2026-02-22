@@ -5392,6 +5392,7 @@
             "simplex",
             "worley",
             "value",
+            "gabor",
             "fbm"
           ]
         },
@@ -5471,6 +5472,104 @@
         }
       ],
       "returns": "A dict matching the TextureProceduralNode with Palette op."
+    },
+    {
+      "name": "reaction_diffusion_node",
+      "category": "texture.nodes",
+      "description": "Creates a reaction-diffusion texture node (Gray-Scott model).",
+      "params": [
+        {
+          "name": "id",
+          "type": "str",
+          "required": true
+        },
+        {
+          "name": "steps",
+          "type": "int",
+          "required": false,
+          "default": 120,
+          "range": {
+            "min": 1.0,
+            "max": 2000.0
+          }
+        },
+        {
+          "name": "feed",
+          "type": "float",
+          "required": false,
+          "range": {
+            "min": 0.0,
+            "max": 1.0
+          }
+        },
+        {
+          "name": "kill",
+          "type": "float",
+          "required": false,
+          "range": {
+            "min": 0.0,
+            "max": 1.0
+          }
+        },
+        {
+          "name": "diffuse_a",
+          "type": "float",
+          "required": false,
+          "range": {
+            "min": 0.0,
+            "max": 2.0
+          }
+        },
+        {
+          "name": "diffuse_b",
+          "type": "float",
+          "required": false,
+          "range": {
+            "min": 0.0,
+            "max": 2.0
+          }
+        },
+        {
+          "name": "dt",
+          "type": "float",
+          "required": false,
+          "range": {
+            "min": 0.0,
+            "max": 2.0
+          }
+        },
+        {
+          "name": "seed_density",
+          "type": "float",
+          "required": false,
+          "range": {
+            "min": 0.0,
+            "max": 0.5
+          }
+        }
+      ],
+      "returns": "A dict matching the TextureProceduralNode with ReactionDiffusion op.",
+      "example": "reaction_diffusion_node(\"rd\", 180, 0.054, 0.064, 1.0, 0.5, 1.0, 0.04)"
+    },
+    {
+      "name": "reaction_diffusion_preset",
+      "category": "texture.nodes",
+      "description": "Returns tuned parameters for a reaction-diffusion preset.",
+      "params": [
+        {
+          "name": "preset",
+          "type": "str",
+          "required": false,
+          "default": "mitosis",
+          "enum_values": [
+            "mitosis",
+            "worms",
+            "spots"
+          ]
+        }
+      ],
+      "returns": "A dict with reaction_diffusion_node-compatible parameters: `steps`, `feed`, `kill`, `diffuse_a`, `diffuse_b`, `dt`, `seed_density`.",
+      "example": "reaction_diffusion_preset(\"worms\")"
     },
     {
       "name": "stripes_node",

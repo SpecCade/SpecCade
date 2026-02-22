@@ -6,7 +6,7 @@
 use speccade_spec::recipe::texture::{NoiseAlgorithm, NoiseConfig};
 
 use crate::maps::GrayscaleBuffer;
-use crate::noise::{Fbm, Noise2D, PerlinNoise, SimplexNoise, WorleyNoise};
+use crate::noise::{Fbm, GaborNoise, Noise2D, PerlinNoise, SimplexNoise, WorleyNoise};
 use crate::pattern::Pattern2D;
 
 /// Create a noise generator from configuration.
@@ -29,6 +29,7 @@ pub fn create_noise_generator(config: &NoiseConfig, seed: u32) -> Box<dyn Noise2
         NoiseAlgorithm::Simplex => Box::new(SimplexNoise::new(seed)),
         NoiseAlgorithm::Worley => Box::new(WorleyNoise::new(seed)),
         NoiseAlgorithm::Value => Box::new(PerlinNoise::new(seed)), // Use Perlin as fallback
+        NoiseAlgorithm::Gabor => Box::new(GaborNoise::new(seed)),
         NoiseAlgorithm::Fbm => Box::new(
             Fbm::new(PerlinNoise::new(seed))
                 .with_octaves(config.octaves)
@@ -212,6 +213,21 @@ mod tests {
             algorithm: NoiseAlgorithm::Fbm,
             scale: 0.1,
             octaves: 4,
+            persistence: 0.5,
+            lacunarity: 2.0,
+        };
+
+        let noise = create_noise_generator(&config, 42);
+        let val = noise.sample_01(0.5, 0.5);
+        assert!((0.0..=1.0).contains(&val));
+    }
+
+    #[test]
+    fn test_create_noise_generator_gabor() {
+        let config = NoiseConfig {
+            algorithm: NoiseAlgorithm::Gabor,
+            scale: 0.1,
+            octaves: 1,
             persistence: 0.5,
             lacunarity: 2.0,
         };

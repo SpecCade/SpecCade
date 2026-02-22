@@ -19,7 +19,8 @@ use super::ops_math::{
     eval_add, eval_clamp, eval_invert, eval_lerp, eval_multiply, eval_threshold,
 };
 use super::ops_primitive::{
-    eval_checkerboard, eval_constant, eval_gradient, eval_noise, eval_stripes,
+    eval_checkerboard, eval_constant, eval_gradient, eval_noise, eval_reaction_diffusion,
+    eval_stripes,
 };
 use super::ops_stochastic::{eval_texture_bomb, eval_wang_tiles, BombBlendMode};
 use super::GraphValue;
@@ -69,6 +70,28 @@ pub(super) fn eval_node<'a>(
         TextureProceduralOp::Noise { noise } => {
             eval_noise(width, height, tileable, noise, derived_seed)
         }
+
+        TextureProceduralOp::ReactionDiffusion {
+            steps,
+            feed,
+            kill,
+            diffuse_a,
+            diffuse_b,
+            dt,
+            seed_density,
+        } => eval_reaction_diffusion(
+            width,
+            height,
+            tileable,
+            *steps,
+            *feed,
+            *kill,
+            *diffuse_a,
+            *diffuse_b,
+            *dt,
+            *seed_density,
+            derived_seed,
+        )?,
 
         TextureProceduralOp::Gradient {
             direction,

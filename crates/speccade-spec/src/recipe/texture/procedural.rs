@@ -42,6 +42,31 @@ pub enum TextureProceduralOp {
     /// Noise field (grayscale).
     Noise { noise: NoiseConfig },
 
+    /// Reaction-diffusion field (Gray-Scott, grayscale).
+    ReactionDiffusion {
+        /// Number of simulation steps.
+        #[serde(default = "default_rd_steps")]
+        steps: u32,
+        /// Feed rate.
+        #[serde(default = "default_rd_feed")]
+        feed: f64,
+        /// Kill rate.
+        #[serde(default = "default_rd_kill")]
+        kill: f64,
+        /// Diffusion rate for chemical A.
+        #[serde(default = "default_rd_diffuse_a")]
+        diffuse_a: f64,
+        /// Diffusion rate for chemical B.
+        #[serde(default = "default_rd_diffuse_b")]
+        diffuse_b: f64,
+        /// Simulation time step.
+        #[serde(default = "default_rd_dt")]
+        dt: f64,
+        /// Initial seeded B-chemical density.
+        #[serde(default = "default_rd_seed_density")]
+        seed_density: f64,
+    },
+
     /// Gradient (grayscale).
     Gradient {
         direction: GradientDirection,
@@ -231,6 +256,34 @@ fn default_scale_variation() -> [f64; 2] {
 
 fn default_bomb_blend_mode() -> String {
     "max".to_string()
+}
+
+fn default_rd_steps() -> u32 {
+    120
+}
+
+fn default_rd_feed() -> f64 {
+    0.055
+}
+
+fn default_rd_kill() -> f64 {
+    0.062
+}
+
+fn default_rd_diffuse_a() -> f64 {
+    1.0
+}
+
+fn default_rd_diffuse_b() -> f64 {
+    0.5
+}
+
+fn default_rd_dt() -> f64 {
+    1.0
+}
+
+fn default_rd_seed_density() -> f64 {
+    0.03
 }
 
 #[cfg(test)]
@@ -661,5 +714,91 @@ mod tests {
         assert!((scale_variation[1] - 1.2).abs() < 1e-6);
         assert!((*rotation_variation - 180.0).abs() < 1e-6);
         assert_eq!(blend_mode, "add");
+    }
+
+    #[test]
+    fn reaction_diffusion_roundtrip() {
+        let json = r#"
+        {
+          "resolution": [64, 64],
+          "tileable": true,
+          "nodes": [
+            {
+              "id": "rd",
+              "type": "reaction_diffusion",
+              "steps": 180,
+              "feed": 0.054,
+              "kill": 0.064,
+              "diffuse_a": 1.0,
+              "diffuse_b": 0.5,
+              "dt": 1.0,
+              "seed_density": 0.04
+            }
+          ]
+        }
+        "#;
+
+        let params: TextureProceduralV1Params = serde_json::from_str(json).unwrap();
+        let node = params.nodes.iter().find(|n| n.id == "rd").unwrap();
+        let TextureProceduralOp::ReactionDiffusion {
+            steps,
+            feed,
+            kill,
+            diffuse_a,
+            diffuse_b,
+            dt,
+            seed_density,
+        } = &node.op
+        else {
+            panic!("expected reaction_diffusion op");
+        };
+
+        assert_eq!(*steps, 180);
+        assert!((*feed - 0.054).abs() < 1e-6);
+        assert!((*kill - 0.064).abs() < 1e-6);
+        assert!((*diffuse_a - 1.0).abs() < 1e-6);
+        assert!((*diffuse_b - 0.5).abs() < 1e-6);
+        assert!((*dt - 1.0).abs() < 1e-6);
+        assert!((*seed_density - 0.04).abs() < 1e-6);
+
+        let reserialized = serde_json::to_string(&params).unwrap();
+        let reparsed: TextureProceduralV1Params = serde_json::from_str(&reserialized).unwrap();
+        assert_eq!(reparsed, params);
+    }
+
+    #[test]
+    fn reaction_diffusion_defaults() {
+        let json = r#"
+        {
+          "resolution": [64, 64],
+          "tileable": false,
+          "nodes": [
+            { "id": "rd", "type": "reaction_diffusion" }
+          ]
+        }
+        "#;
+
+        let params: TextureProceduralV1Params = serde_json::from_str(json).unwrap();
+        let node = params.nodes.iter().find(|n| n.id == "rd").unwrap();
+        let TextureProceduralOp::ReactionDiffusion {
+            steps,
+            feed,
+            kill,
+            diffuse_a,
+            diffuse_b,
+            dt,
+            seed_density,
+        } = &node.op
+        else {
+            panic!("expected reaction_diffusion op");
+        };
+
+        assert_eq!(*steps, 120);
+        assert!((*feed - 0.055).abs() < 1e-6);
+        assert!((*kill - 0.062).abs() < 1e-6);
+        assert!((*diffuse_a - 1.0).abs() < 1e-6);
+        assert!((*diffuse_b - 0.5).abs() < 1e-6);
+        assert!((*dt - 1.0).abs() < 1e-6);
+        assert!((*seed_density - 0.03).abs() < 1e-6);
     }
 }

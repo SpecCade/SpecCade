@@ -119,3 +119,38 @@ fn test_texture_procedural_rejects_obvious_type_mismatch() {
         .iter()
         .any(|e| e.message.contains("type mismatch")));
 }
+
+#[test]
+fn test_texture_procedural_accepts_reaction_diffusion() {
+    let mut output = OutputSpec::primary(OutputFormat::Png, "textures/rd.png");
+    output.source = Some("rd".to_string());
+
+    let spec = crate::spec::Spec::builder("procedural-rd-01", AssetType::Texture)
+        .license("CC0-1.0")
+        .seed(9)
+        .output(output)
+        .recipe(Recipe::new(
+            "texture.procedural_v1",
+            serde_json::json!({
+                "resolution": [32, 32],
+                "tileable": true,
+                "nodes": [
+                    {
+                        "id": "rd",
+                        "type": "reaction_diffusion",
+                        "steps": 64,
+                        "feed": 0.055,
+                        "kill": 0.062,
+                        "diffuse_a": 1.0,
+                        "diffuse_b": 0.5,
+                        "dt": 1.0,
+                        "seed_density": 0.03
+                    }
+                ]
+            }),
+        ))
+        .build();
+
+    let result = validate_for_generate(&spec);
+    assert!(result.is_ok(), "errors: {:?}", result.errors);
+}

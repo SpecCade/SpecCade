@@ -1,7 +1,7 @@
 //! Pattern generation functions for packed textures.
 
 use crate::maps::GrayscaleBuffer;
-use crate::noise::{tile_coord, Fbm, Noise2D, PerlinNoise, SimplexNoise, WorleyNoise};
+use crate::noise::{tile_coord, Fbm, GaborNoise, Noise2D, PerlinNoise, SimplexNoise, WorleyNoise};
 
 use super::parsers::Axis;
 
@@ -13,6 +13,7 @@ pub enum NoiseKind {
     Perlin,
     Simplex,
     Worley,
+    Gabor,
     Fbm,
 }
 
@@ -21,6 +22,7 @@ pub fn build_noise(kind: NoiseKind, seed: u32, octaves: u8) -> Box<dyn Noise2D> 
         NoiseKind::Perlin => Box::new(PerlinNoise::new(seed)),
         NoiseKind::Simplex => Box::new(SimplexNoise::new(seed)),
         NoiseKind::Worley => Box::new(WorleyNoise::new(seed)),
+        NoiseKind::Gabor => Box::new(GaborNoise::new(seed)),
         NoiseKind::Fbm => Box::new(
             Fbm::new(PerlinNoise::new(seed))
                 .with_octaves(octaves)

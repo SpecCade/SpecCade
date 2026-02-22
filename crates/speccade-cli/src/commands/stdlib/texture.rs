@@ -11,7 +11,7 @@ pub(super) fn register_functions() -> Vec<FunctionInfo> {
             "Creates a noise texture node.",
             vec![
                 param!("id", "string", req),
-                param!("algorithm", "string", opt, "perlin", enum: &["perlin", "simplex", "worley", "value", "fbm"]),
+                param!("algorithm", "string", opt, "perlin", enum: &["perlin", "simplex", "worley", "value", "gabor", "fbm"]),
                 param!("scale", "float", opt, 0.1, range: Some(0.0), None),
                 param!("octaves", "int", opt, 4, range: Some(1.0), None),
                 param!("persistence", "float", opt, 0.5),
@@ -19,6 +19,31 @@ pub(super) fn register_functions() -> Vec<FunctionInfo> {
             ],
             "A texture node dict.",
             r#"noise_node("height", "perlin", 0.1, 4)"#
+        ),
+        func!(
+            "reaction_diffusion_node",
+            "texture.nodes",
+            "Creates a Gray-Scott reaction-diffusion texture node.",
+            vec![
+                param!("id", "string", req),
+                param!("steps", "int", opt, 120, range: Some(1.0), Some(2000.0)),
+                param!("feed", "float", opt, 0.055, range: Some(0.0), Some(1.0)),
+                param!("kill", "float", opt, 0.062, range: Some(0.0), Some(1.0)),
+                param!("diffuse_a", "float", opt, 1.0, range: Some(0.0), Some(2.0)),
+                param!("diffuse_b", "float", opt, 0.5, range: Some(0.0), Some(2.0)),
+                param!("dt", "float", opt, 1.0, range: Some(0.0), Some(2.0)),
+                param!("seed_density", "float", opt, 0.03, range: Some(0.0), Some(0.5)),
+            ],
+            "A texture node dict.",
+            r#"reaction_diffusion_node("rd", 180, 0.054, 0.064, 1.0, 0.5, 1.0, 0.04)"#
+        ),
+        func!(
+            "reaction_diffusion_preset",
+            "texture.nodes",
+            "Returns tuned parameters for a reaction-diffusion preset.",
+            vec![param!("preset", "string", opt, "mitosis", enum: &["mitosis", "worms", "spots"]),],
+            "A dict with reaction_diffusion_node-compatible parameters.",
+            r#"reaction_diffusion_preset("worms")"#
         ),
         func!(
             "gradient_node",

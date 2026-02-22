@@ -214,6 +214,7 @@ fn test_all_noise_algorithms() {
         NoiseAlgorithm::Simplex,
         NoiseAlgorithm::Worley,
         NoiseAlgorithm::Value,
+        NoiseAlgorithm::Gabor,
         NoiseAlgorithm::Fbm,
     ] {
         let params = TextureNormalV1Params {

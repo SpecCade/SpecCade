@@ -114,6 +114,7 @@ pub(super) fn validate_texture_procedural_outputs_with_budget(
             | TextureProceduralOp::NormalFromHeight { .. } => GraphValueType::Color,
             TextureProceduralOp::Constant { .. }
             | TextureProceduralOp::Noise { .. }
+            | TextureProceduralOp::ReactionDiffusion { .. }
             | TextureProceduralOp::Gradient { .. }
             | TextureProceduralOp::Stripes { .. }
             | TextureProceduralOp::Checkerboard { .. }
@@ -287,6 +288,7 @@ pub(super) fn validate_texture_procedural_outputs_with_budget(
             }
             TextureProceduralOp::Constant { .. }
             | TextureProceduralOp::Noise { .. }
+            | TextureProceduralOp::ReactionDiffusion { .. }
             | TextureProceduralOp::Gradient { .. }
             | TextureProceduralOp::Stripes { .. }
             | TextureProceduralOp::Checkerboard { .. } => {

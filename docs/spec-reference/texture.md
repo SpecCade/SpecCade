@@ -57,6 +57,7 @@ Nodes reference other nodes by id. The graph must be a DAG (no cycles).
 
 - `constant { value }`
 - `noise { noise }`
+- `reaction_diffusion { steps?, feed?, kill?, diffuse_a?, diffuse_b?, dt?, seed_density? }`
 - `gradient { direction, start?, end?, center?, inner?, outer? }`
 - `stripes { direction, stripe_width, color1, color2 }`
 - `checkerboard { tile_size, color1, color2 }`
@@ -98,6 +99,7 @@ Algorithms:
 - `simplex`
 - `worley`
 - `value`
+- `gabor`
 - `fbm`
 
 ## Example: Minimal Procedural Spec

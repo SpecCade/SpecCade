@@ -65,6 +65,8 @@ pub enum NoiseAlgorithm {
     Worley,
     /// Value noise.
     Value,
+    /// Gabor noise (anisotropic, oriented grain).
+    Gabor,
     /// Fractal Brownian motion.
     Fbm,
 }

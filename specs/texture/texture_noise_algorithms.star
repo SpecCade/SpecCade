@@ -1,7 +1,7 @@
 # Noise algorithm coverage - demonstrates all noise algorithm variants
 #
 # This example covers the 'value' and 'fbm' algorithm enum values for noise_node.
-# Combined with other specs using 'perlin', 'simplex', and 'worley', this achieves
+# Combined with other specs using 'perlin', 'simplex', 'worley', and 'gabor', this achieves
 # full enum coverage for the algorithm parameter.
 
 # Value noise texture

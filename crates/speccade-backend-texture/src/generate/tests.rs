@@ -514,6 +514,7 @@ fn test_noise_algorithm_all() {
         NoiseAlgorithm::Simplex,
         NoiseAlgorithm::Worley,
         NoiseAlgorithm::Value,
+        NoiseAlgorithm::Gabor,
         NoiseAlgorithm::Fbm,
     ] {
         let mut params = make_params();
