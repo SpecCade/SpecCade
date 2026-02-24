@@ -33,7 +33,7 @@ speccade/
 ├── blender/
 │   ├── entrypoint.py             # Thin shim (imports speccade.main)
 │   ├── structural_metrics.py     # LLM-friendly 3D feedback
-│   └── speccade/                 # Modular Python package (21 modules)
+│   └── speccade/                 # Modular Python package (23 modules)
 ├── editor/                       # Tauri editor frontend (TypeScript)
 ├── schemas/                      # JSON schemas
 ├── packs/                        # Example packs/inputs
