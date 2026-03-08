@@ -35,8 +35,9 @@ spec(
     description = "Slow ambient track - IT format with more channels",
     outputs = [output("ambient_slow.it", "it")],
     recipe = {
-        "kind": "music.tracker_v1",
+        "kind": "music.tracker_song_v1",
         "params": {
+            "format": "it",
             "bpm": 70,
             "speed": 8,
             "channels": 8,

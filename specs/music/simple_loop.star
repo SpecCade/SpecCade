@@ -33,8 +33,9 @@ spec(
     description = "Simple 4-channel loop - basic XM module",
     outputs = [output("simple_loop.xm", "xm")],
     recipe = {
-        "kind": "music.tracker_v1",
+        "kind": "music.tracker_song_v1",
         "params": {
+            "format": "xm",
             "bpm": 120,
             "speed": 6,
             "channels": 4,

@@ -85,10 +85,20 @@ fn test_validate_asset_rejects_audio() {
         "license": "CC0-1.0",
         "seed": 42,
         "recipe": {
-            "kind": "audio.sfx_preset",
+            "kind": "audio_v1",
             "params": {
-                "preset": "sine_beep",
-                "duration_ms": 500
+                "duration_seconds": 0.5,
+                "sample_rate": 44100,
+                "layers": [
+                    {
+                        "synthesis": {
+                            "source_type": "oscillator",
+                            "waveform": "sine",
+                            "frequency_hz": 440.0
+                        },
+                        "volume": 0.8
+                    }
+                ]
             }
         },
         "outputs": [
@@ -255,10 +265,22 @@ fn test_validate_asset_skeletal_mesh() {
         "license": "CC0-1.0",
         "seed": 42,
         "recipe": {
-            "kind": "skeletal_mesh.simple",
+            "kind": "skeletal_mesh.armature_driven_v1",
             "params": {
-                "base_mesh": "humanoid",
-                "bone_count": 4
+                "skeleton_preset": "humanoid_connected_v1",
+                "bone_meshes": {
+                    "spine": {
+                        "profile": "circle(8)",
+                        "profile_radius": {"absolute": 0.1},
+                        "material_index": 0
+                    }
+                },
+                "material_slots": [
+                    {
+                        "name": "body",
+                        "base_color": [0.8, 0.6, 0.5, 1.0]
+                    }
+                ]
             }
         },
         "outputs": [
@@ -311,10 +333,28 @@ fn test_validate_asset_skeletal_animation() {
         "license": "CC0-1.0",
         "seed": 42,
         "recipe": {
-            "kind": "skeletal_animation.idle",
+            "kind": "skeletal_animation.blender_clip_v1",
             "params": {
-                "duration_seconds": 2.0,
-                "loop": true
+                "skeleton_preset": "humanoid_connected_v1",
+                "clip_name": "idle",
+                "duration_seconds": 1.0,
+                "fps": 24,
+                "loop": true,
+                "interpolation": "linear",
+                "keyframes": [
+                    {
+                        "time": 0.0,
+                        "bones": {
+                            "spine": {"rotation": [0.0, 0.0, 0.0]}
+                        }
+                    },
+                    {
+                        "time": 1.0,
+                        "bones": {
+                            "spine": {"rotation": [0.0, 0.0, 0.0]}
+                        }
+                    }
+                ]
             }
         },
         "outputs": [
@@ -367,10 +407,17 @@ fn test_validate_asset_rejects_texture() {
         "license": "CC0-1.0",
         "seed": 42,
         "recipe": {
-            "kind": "texture.procedural",
+            "kind": "texture.procedural_v1",
             "params": {
-                "pattern": "checkerboard",
-                "size": 256
+                "resolution": [64, 64],
+                "tileable": true,
+                "nodes": [
+                    {
+                        "id": "checker",
+                        "type": "checkerboard",
+                        "scale": 8.0
+                    }
+                ]
             }
         },
         "outputs": [

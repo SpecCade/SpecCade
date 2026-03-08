@@ -121,6 +121,41 @@ pub enum RecipeKind {
 }
 
 impl RecipeKind {
+    /// Returns all recipe kinds in the public surface.
+    pub fn all() -> &'static [RecipeKind] {
+        &[
+            RecipeKind::AudioV1,
+            RecipeKind::MusicTrackerSongV1,
+            RecipeKind::MusicTrackerSongComposeV1,
+            RecipeKind::TextureProceduralV1,
+            RecipeKind::TextureTrimsheetV1,
+            RecipeKind::TextureDecalV1,
+            RecipeKind::TextureSplatSetV1,
+            RecipeKind::TextureMatcapV1,
+            RecipeKind::TextureMaterialPresetV1,
+            RecipeKind::StaticMeshBlenderPrimitivesV1,
+            RecipeKind::StaticMeshModularKitV1,
+            RecipeKind::StaticMeshOrganicSculptV1,
+            RecipeKind::StaticMeshShrinkwrapV1,
+            RecipeKind::StaticMeshBooleanKitV1,
+            RecipeKind::SkeletalMeshArmatureDrivenV1,
+            RecipeKind::SkeletalMeshSkinnedMeshV1,
+            RecipeKind::SkeletalAnimationBlenderClipV1,
+            RecipeKind::SkeletalAnimationBlenderRiggedV1,
+            RecipeKind::SkeletalAnimationHelpersV1,
+            RecipeKind::SpriteSheetV1,
+            RecipeKind::SpriteAnimationV1,
+            RecipeKind::SpriteRenderFromMeshV1,
+            RecipeKind::VfxFlipbookV1,
+            RecipeKind::VfxParticleProfileV1,
+            RecipeKind::UiNineSliceV1,
+            RecipeKind::UiIconSetV1,
+            RecipeKind::UiItemCardV1,
+            RecipeKind::UiDamageNumberV1,
+            RecipeKind::FontBitmapV1,
+        ]
+    }
+
     /// Returns the recipe kind as a string.
     pub fn as_str(&self) -> &'static str {
         match self {
@@ -790,6 +825,15 @@ mod tests {
         assert!(RecipeKind::MusicTrackerSongComposeV1.is_tier1());
         assert!(!RecipeKind::StaticMeshBlenderPrimitivesV1.is_tier1());
         assert!(!RecipeKind::SkeletalAnimationBlenderClipV1.is_tier1());
+    }
+
+    #[test]
+    fn test_recipe_kind_all_contains_every_variant() {
+        let kinds = RecipeKind::all();
+        assert_eq!(kinds.len(), 29);
+        assert!(kinds.contains(&RecipeKind::TextureMaterialPresetV1));
+        assert!(kinds.contains(&RecipeKind::StaticMeshShrinkwrapV1));
+        assert!(kinds.contains(&RecipeKind::StaticMeshBooleanKitV1));
     }
 
     #[test]

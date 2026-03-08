@@ -4,6 +4,133 @@ use super::DispatchError;
 use speccade_spec::{OutputFormat, OutputKind, OutputResult, Spec};
 use std::path::{Path, PathBuf};
 
+fn static_mesh_output_metrics(
+    metrics: &speccade_backend_blender::BlenderMetrics,
+) -> speccade_spec::OutputMetrics {
+    let lod_levels = metrics.lod_levels.clone().map(|levels| {
+        levels
+            .into_iter()
+            .map(|level| speccade_spec::StaticMeshLodLevelMetrics {
+                lod_level: level.lod_level,
+                target_tris: level.target_tris,
+                simplification_ratio: level.simplification_ratio,
+                vertex_count: level.vertex_count,
+                face_count: level.face_count,
+                edge_count: level.edge_count,
+                triangle_count: level.triangle_count,
+                quad_count: level.quad_count,
+                quad_percentage: level.quad_percentage,
+                manifold: level.manifold,
+                non_manifold_edge_count: level.non_manifold_edge_count,
+                degenerate_face_count: level.degenerate_face_count,
+                zero_area_face_count: level.zero_area_face_count,
+                uv_island_count: level.uv_island_count,
+                uv_coverage: level.uv_coverage,
+                uv_overlap_percentage: level.uv_overlap_percentage,
+                has_uv_map: level.has_uv_map,
+                uv_layer_count: level.uv_layer_count,
+                texel_density: level.texel_density,
+                bounding_box: level
+                    .bounding_box
+                    .as_ref()
+                    .map(|bb| speccade_spec::BoundingBox {
+                        min: [bb.min[0] as f32, bb.min[1] as f32, bb.min[2] as f32],
+                        max: [bb.max[0] as f32, bb.max[1] as f32, bb.max[2] as f32],
+                    }),
+                bounds_min: level.bounds_min,
+                bounds_max: level.bounds_max,
+                material_slot_count: level.material_slot_count,
+            })
+            .collect()
+    });
+
+    let collision_mesh =
+        metrics
+            .collision_mesh
+            .clone()
+            .map(|m| speccade_spec::CollisionMeshMetrics {
+                vertex_count: m.vertex_count,
+                face_count: m.face_count,
+                triangle_count: m.triangle_count,
+                bounding_box: speccade_spec::CollisionBoundingBox {
+                    min: m.bounding_box.min,
+                    max: m.bounding_box.max,
+                },
+                collision_type: m.collision_type,
+            });
+
+    speccade_spec::OutputMetrics {
+        vertex_count: metrics.vertex_count,
+        face_count: metrics.face_count,
+        edge_count: metrics.edge_count,
+        triangle_count: metrics.triangle_count,
+        quad_count: metrics.quad_count,
+        quad_percentage: metrics.quad_percentage,
+        manifold: metrics.manifold,
+        non_manifold_edge_count: metrics.non_manifold_edge_count,
+        degenerate_face_count: metrics.degenerate_face_count,
+        zero_area_face_count: metrics.zero_area_face_count,
+        uv_island_count: metrics.uv_island_count,
+        uv_coverage: metrics.uv_coverage,
+        uv_overlap_percentage: metrics.uv_overlap_percentage,
+        has_uv_map: metrics.has_uv_map,
+        uv_layer_count: metrics.uv_layer_count,
+        texel_density: metrics.texel_density,
+        bounding_box: metrics
+            .bounding_box
+            .as_ref()
+            .map(|bb| speccade_spec::BoundingBox {
+                min: [bb.min[0] as f32, bb.min[1] as f32, bb.min[2] as f32],
+                max: [bb.max[0] as f32, bb.max[1] as f32, bb.max[2] as f32],
+            }),
+        bounds_min: metrics.bounds_min,
+        bounds_max: metrics.bounds_max,
+        lod_count: metrics.lod_count,
+        lod_levels,
+        collision_mesh,
+        collision_mesh_path: metrics.collision_mesh_path.clone(),
+        navmesh: metrics
+            .navmesh
+            .clone()
+            .map(|m| speccade_spec::NavmeshMetrics {
+                walkable_face_count: m.walkable_face_count,
+                non_walkable_face_count: m.non_walkable_face_count,
+                walkable_percentage: m.walkable_percentage,
+                stair_candidates: m.stair_candidates,
+            }),
+        baking: metrics
+            .baking
+            .clone()
+            .map(|b| speccade_spec::BakingMetrics {
+                baked_maps: b
+                    .baked_maps
+                    .into_iter()
+                    .map(|m| speccade_spec::BakedMapInfo {
+                        bake_type: m.bake_type,
+                        path: m.path,
+                        resolution: m.resolution,
+                    })
+                    .collect(),
+                ray_distance: b.ray_distance,
+                margin: b.margin,
+            }),
+        bone_count: None,
+        max_bone_influences: None,
+        unweighted_vertex_count: None,
+        weight_normalization_percentage: None,
+        max_weight_deviation: None,
+        material_slot_count: metrics.material_slot_count,
+        animation_frame_count: None,
+        animation_duration_seconds: None,
+        hinge_axis_violations: None,
+        range_violations: None,
+        velocity_spikes: None,
+        root_motion_delta: None,
+        root_motion_mode: None,
+        structural: metrics.structural.clone(),
+    }
+}
+
 /// Generate static mesh using the Blender backend
 pub(super) fn generate_blender_static_mesh(
     spec: &Spec,
@@ -538,6 +665,63 @@ pub(super) fn generate_blender_organic_sculpt(
         OutputFormat::Glb,
         PathBuf::from(&primary_output.path),
         metrics,
+    )])
+}
+
+/// Generate shrinkwrap mesh using the Blender backend
+pub(super) fn generate_blender_shrinkwrap(
+    spec: &Spec,
+    out_root: &Path,
+) -> Result<Vec<OutputResult>, DispatchError> {
+    let result = speccade_backend_blender::shrinkwrap::generate(spec, out_root)
+        .map_err(|e| DispatchError::BackendError(format!("Shrinkwrap generation failed: {}", e)))?;
+
+    let primary_output = spec
+        .outputs
+        .iter()
+        .find(|o| o.kind == OutputKind::Primary)
+        .ok_or_else(|| DispatchError::BackendError("No primary output specified".to_string()))?;
+    if primary_output.format != OutputFormat::Glb {
+        return Err(DispatchError::BackendError(format!(
+            "static_mesh.shrinkwrap_v1 requires primary output format 'glb', got '{}'",
+            primary_output.format
+        )));
+    }
+
+    Ok(vec![OutputResult::tier2(
+        OutputKind::Primary,
+        OutputFormat::Glb,
+        PathBuf::from(&primary_output.path),
+        static_mesh_output_metrics(&result.metrics),
+    )])
+}
+
+/// Generate boolean kit mesh using the Blender backend
+pub(super) fn generate_blender_boolean_kit(
+    spec: &Spec,
+    out_root: &Path,
+) -> Result<Vec<OutputResult>, DispatchError> {
+    let result = speccade_backend_blender::boolean_kit::generate(spec, out_root).map_err(|e| {
+        DispatchError::BackendError(format!("Boolean kit generation failed: {}", e))
+    })?;
+
+    let primary_output = spec
+        .outputs
+        .iter()
+        .find(|o| o.kind == OutputKind::Primary)
+        .ok_or_else(|| DispatchError::BackendError("No primary output specified".to_string()))?;
+    if primary_output.format != OutputFormat::Glb {
+        return Err(DispatchError::BackendError(format!(
+            "static_mesh.boolean_kit_v1 requires primary output format 'glb', got '{}'",
+            primary_output.format
+        )));
+    }
+
+    Ok(vec![OutputResult::tier2(
+        OutputKind::Primary,
+        OutputFormat::Glb,
+        PathBuf::from(&primary_output.path),
+        static_mesh_output_metrics(&result.metrics),
     )])
 }
 

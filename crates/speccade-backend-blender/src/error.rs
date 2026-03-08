@@ -48,7 +48,7 @@ pub enum BlenderError {
 
     /// Invalid recipe kind for this backend.
     #[error(
-        "Invalid recipe kind '{kind}' for Blender backend. Expected one of: static_mesh.blender_primitives_v1, static_mesh.modular_kit_v1, static_mesh.organic_sculpt_v1, skeletal_mesh.armature_driven_v1, skeletal_mesh.skinned_mesh_v1, skeletal_animation.blender_clip_v1, skeletal_animation.blender_rigged_v1, skeletal_animation.helpers_v1, sprite.render_from_mesh_v1"
+        "Invalid recipe kind '{kind}' for Blender backend. Expected one of: static_mesh.blender_primitives_v1, static_mesh.modular_kit_v1, static_mesh.organic_sculpt_v1, static_mesh.shrinkwrap_v1, static_mesh.boolean_kit_v1, skeletal_mesh.armature_driven_v1, skeletal_mesh.skinned_mesh_v1, skeletal_animation.blender_clip_v1, skeletal_animation.blender_rigged_v1, skeletal_animation.helpers_v1, sprite.render_from_mesh_v1"
     )]
     InvalidRecipeKind { kind: String },
 

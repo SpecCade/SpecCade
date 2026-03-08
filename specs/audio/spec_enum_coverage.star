@@ -44,8 +44,9 @@ spec(
     description = "Music enum coverage - loop_mode variants (auto, none, forward, pingpong)",
     outputs = [output("music/enum_coverage_loops.xm", "xm")],
     recipe = {
-        "kind": "music.tracker_v1",
+        "kind": "music.tracker_song_v1",
         "params": {
+            "format": "xm",
             "bpm": 120,
             "speed": 6,
             "channels": 4,
@@ -231,7 +232,7 @@ spec(
     description = "Skeletal animation enum coverage - skeletal_animation asset_type",
     outputs = [output("animations/enum_coverage.glb", "glb")],
     recipe = {
-        "kind": "skeletal_animation.keyframe_v1",
+        "kind": "skeletal_animation.blender_clip_v1",
         "params": {
             "skeleton_preset": "humanoid_connected_v1",
             "clip_name": "idle",

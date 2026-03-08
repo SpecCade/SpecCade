@@ -55,8 +55,9 @@ spec(
     description = "Fast chiptune track - high tempo, square waves",
     outputs = [output("chiptune_fast.xm", "xm")],
     recipe = {
-        "kind": "music.tracker_v1",
+        "kind": "music.tracker_song_v1",
         "params": {
+            "format": "xm",
             "bpm": 160,
             "speed": 4,
             "channels": 4,

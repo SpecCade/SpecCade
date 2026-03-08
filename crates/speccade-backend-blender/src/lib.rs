@@ -10,6 +10,8 @@
 //! - **`static_mesh.blender_primitives_v1`** - Generate static meshes from primitives
 //! - **`static_mesh.modular_kit_v1`** - Generate modular kit meshes (walls, pipes, doors)
 //! - **`static_mesh.organic_sculpt_v1`** - Generate organic sculpt meshes (metaballs, remesh)
+//! - **`static_mesh.shrinkwrap_v1`** - Generate wrapped meshes (armor/clothing)
+//! - **`static_mesh.boolean_kit_v1`** - Generate hard-surface meshes with boolean kitbashing
 //! - **`skeletal_mesh.armature_driven_v1`** - Generate mesh from armature (rigid skinning)
 //! - **`skeletal_mesh.skinned_mesh_v1`** - Bind existing mesh to armature (rigid/auto weights)
 //! - **`skeletal_animation.blender_clip_v1`** - Generate animation clips (simple keyframes)
@@ -71,6 +73,8 @@
 //!
 //! - [`static_mesh`] - Static mesh generation
 //! - [`modular_kit`] - Modular kit mesh generation (walls, pipes, doors)
+//! - [`shrinkwrap`] - Wrapped meshes (armor/clothing)
+//! - [`boolean_kit`] - Hard-surface boolean kitbashing
 //! - [`skeletal_mesh`] - Skeletal mesh generation
 //! - [`animation`] - Animation clip generation (simple keyframes)
 //! - [`rigged_animation`] - IK/rig-aware animation generation
@@ -81,6 +85,7 @@
 
 pub mod animation;
 pub mod animation_helpers;
+pub mod boolean_kit;
 pub mod error;
 pub mod mesh_to_sprite;
 pub mod metrics;
@@ -88,6 +93,7 @@ pub mod modular_kit;
 pub mod orchestrator;
 pub mod organic_sculpt;
 pub mod rigged_animation;
+pub mod shrinkwrap;
 pub mod skeletal_mesh;
 pub mod static_mesh;
 
@@ -99,10 +105,12 @@ pub use orchestrator::{GenerationMode, Orchestrator, OrchestratorConfig};
 // Re-export result types
 pub use animation::AnimationResult;
 pub use animation_helpers::AnimationHelpersResult;
+pub use boolean_kit::BooleanKitResult;
 pub use mesh_to_sprite::MeshToSpriteResult;
 pub use modular_kit::ModularKitResult;
 pub use organic_sculpt::OrganicSculptResult;
 pub use rigged_animation::RiggedAnimationResult;
+pub use shrinkwrap::ShrinkwrapResult;
 pub use skeletal_mesh::SkeletalMeshResult;
 pub use static_mesh::StaticMeshResult;
 
@@ -128,6 +136,14 @@ pub fn generate(
         "static_mesh.organic_sculpt_v1" => {
             let result = organic_sculpt::generate(spec, out_root)?;
             Ok(GenerateResult::OrganicSculpt(result))
+        }
+        "static_mesh.shrinkwrap_v1" => {
+            let result = shrinkwrap::generate(spec, out_root)?;
+            Ok(GenerateResult::Shrinkwrap(result))
+        }
+        "static_mesh.boolean_kit_v1" => {
+            let result = boolean_kit::generate(spec, out_root)?;
+            Ok(GenerateResult::BooleanKit(result))
         }
         "skeletal_mesh.armature_driven_v1" | "skeletal_mesh.skinned_mesh_v1" => {
             let result = skeletal_mesh::generate(spec, out_root)?;
@@ -164,6 +180,10 @@ pub enum GenerateResult {
     ModularKit(ModularKitResult),
     /// Organic sculpt mesh result (metaballs, remesh, smooth, displacement).
     OrganicSculpt(OrganicSculptResult),
+    /// Shrinkwrap mesh result.
+    Shrinkwrap(ShrinkwrapResult),
+    /// Boolean kit mesh result.
+    BooleanKit(BooleanKitResult),
     /// Skeletal mesh result.
     SkeletalMesh(SkeletalMeshResult),
     /// Animation result (simple keyframes).
@@ -183,6 +203,8 @@ impl GenerateResult {
             GenerateResult::StaticMesh(r) => &r.output_path,
             GenerateResult::ModularKit(r) => &r.output_path,
             GenerateResult::OrganicSculpt(r) => &r.output_path,
+            GenerateResult::Shrinkwrap(r) => &r.output_path,
+            GenerateResult::BooleanKit(r) => &r.output_path,
             GenerateResult::SkeletalMesh(r) => &r.output_path,
             GenerateResult::Animation(r) => &r.output_path,
             GenerateResult::RiggedAnimation(r) => &r.output_path,
@@ -198,6 +220,8 @@ impl GenerateResult {
             GenerateResult::StaticMesh(r) => Some(&r.metrics),
             GenerateResult::ModularKit(r) => Some(&r.metrics),
             GenerateResult::OrganicSculpt(r) => Some(&r.metrics),
+            GenerateResult::Shrinkwrap(r) => Some(&r.metrics),
+            GenerateResult::BooleanKit(r) => Some(&r.metrics),
             GenerateResult::SkeletalMesh(r) => Some(&r.metrics),
             GenerateResult::Animation(r) => Some(&r.metrics),
             GenerateResult::RiggedAnimation(r) => Some(&r.metrics),
@@ -220,6 +244,8 @@ impl GenerateResult {
             GenerateResult::StaticMesh(r) => &r.report,
             GenerateResult::ModularKit(r) => &r.report,
             GenerateResult::OrganicSculpt(r) => &r.report,
+            GenerateResult::Shrinkwrap(r) => &r.report,
+            GenerateResult::BooleanKit(r) => &r.report,
             GenerateResult::SkeletalMesh(r) => &r.report,
             GenerateResult::Animation(r) => &r.report,
             GenerateResult::RiggedAnimation(r) => &r.report,
@@ -241,6 +267,16 @@ impl GenerateResult {
     /// Returns true if this is an organic sculpt mesh result.
     pub fn is_organic_sculpt(&self) -> bool {
         matches!(self, GenerateResult::OrganicSculpt(_))
+    }
+
+    /// Returns true if this is a shrinkwrap result.
+    pub fn is_shrinkwrap(&self) -> bool {
+        matches!(self, GenerateResult::Shrinkwrap(_))
+    }
+
+    /// Returns true if this is a boolean kit result.
+    pub fn is_boolean_kit(&self) -> bool {
+        matches!(self, GenerateResult::BooleanKit(_))
     }
 
     /// Returns true if this is a skeletal mesh result.
@@ -277,6 +313,8 @@ mod tests {
     fn test_mode_dispatch() {
         assert!(orchestrator::mode_from_recipe_kind("static_mesh.blender_primitives_v1").is_ok());
         assert!(orchestrator::mode_from_recipe_kind("static_mesh.modular_kit_v1").is_ok());
+        assert!(orchestrator::mode_from_recipe_kind("static_mesh.shrinkwrap_v1").is_ok());
+        assert!(orchestrator::mode_from_recipe_kind("static_mesh.boolean_kit_v1").is_ok());
         assert!(orchestrator::mode_from_recipe_kind("skeletal_mesh.armature_driven_v1").is_ok());
         assert!(orchestrator::mode_from_recipe_kind("skeletal_mesh.skinned_mesh_v1").is_ok());
         assert!(orchestrator::mode_from_recipe_kind("skeletal_animation.blender_clip_v1").is_ok());

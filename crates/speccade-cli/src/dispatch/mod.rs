@@ -166,6 +166,12 @@ pub fn dispatch_generate(
             blender::generate_blender_organic_sculpt(spec, out_root_path)
         }
 
+        // Blender shrinkwrap mesh backend
+        "static_mesh.shrinkwrap_v1" => blender::generate_blender_shrinkwrap(spec, out_root_path),
+
+        // Blender boolean kit mesh backend
+        "static_mesh.boolean_kit_v1" => blender::generate_blender_boolean_kit(spec, out_root_path),
+
         // Blender skeletal mesh backend
         "skeletal_mesh.armature_driven_v1" | "skeletal_mesh.skinned_mesh_v1" => {
             blender::generate_blender_skeletal_mesh(spec, out_root_path)
@@ -412,6 +418,14 @@ pub fn dispatch_generate_profiled(
             blender::generate_blender_organic_sculpt(spec, out_root_path).map(DispatchResult::new)
         }
 
+        "static_mesh.shrinkwrap_v1" => {
+            blender::generate_blender_shrinkwrap(spec, out_root_path).map(DispatchResult::new)
+        }
+
+        "static_mesh.boolean_kit_v1" => {
+            blender::generate_blender_boolean_kit(spec, out_root_path).map(DispatchResult::new)
+        }
+
         "skeletal_mesh.armature_driven_v1" | "skeletal_mesh.skinned_mesh_v1" => {
             blender::generate_blender_skeletal_mesh(spec, out_root_path).map(DispatchResult::new)
         }
@@ -477,6 +491,7 @@ pub fn is_backend_available(kind: &str) -> bool {
             | "texture.decal_v1"
             | "texture.splat_set_v1"
             | "texture.matcap_v1"
+            | "texture.material_preset_v1"
             | "sprite.sheet_v1"
             | "sprite.animation_v1"
             | "vfx.flipbook_v1"
@@ -489,6 +504,8 @@ pub fn is_backend_available(kind: &str) -> bool {
             | "static_mesh.blender_primitives_v1"
             | "static_mesh.modular_kit_v1"
             | "static_mesh.organic_sculpt_v1"
+            | "static_mesh.shrinkwrap_v1"
+            | "static_mesh.boolean_kit_v1"
             | "skeletal_mesh.armature_driven_v1"
             | "skeletal_mesh.skinned_mesh_v1"
             | "skeletal_animation.blender_clip_v1"
@@ -547,6 +564,8 @@ mod tests {
             get_backend_tier("static_mesh.blender_primitives_v1"),
             Some(2)
         );
+        assert_eq!(get_backend_tier("static_mesh.shrinkwrap_v1"), Some(2));
+        assert_eq!(get_backend_tier("static_mesh.boolean_kit_v1"), Some(2));
         assert_eq!(
             get_backend_tier("skeletal_mesh.armature_driven_v1"),
             Some(2)
@@ -573,7 +592,10 @@ mod tests {
         assert!(is_backend_available("music.tracker_song_compose_v1"));
         assert!(is_backend_available("texture.procedural_v1"));
         assert!(is_backend_available("texture.trimsheet_v1"));
+        assert!(is_backend_available("texture.material_preset_v1"));
         assert!(is_backend_available("static_mesh.blender_primitives_v1"));
+        assert!(is_backend_available("static_mesh.shrinkwrap_v1"));
+        assert!(is_backend_available("static_mesh.boolean_kit_v1"));
         assert!(is_backend_available("skeletal_mesh.armature_driven_v1"));
         assert!(is_backend_available("skeletal_mesh.skinned_mesh_v1"));
         assert!(is_backend_available("skeletal_animation.blender_clip_v1"));

@@ -8,6 +8,7 @@ loads spec files, and dispatches to the appropriate handler based on the mode.
 import argparse
 import json
 import sys
+import traceback
 from pathlib import Path
 
 from .report import write_report
@@ -102,6 +103,7 @@ def main() -> int:
     except Exception as e:
         # Report already written in handler
         print(f"Error: {e}", file=sys.stderr)
+        traceback.print_exc(file=sys.stderr)
         return 1
 
 

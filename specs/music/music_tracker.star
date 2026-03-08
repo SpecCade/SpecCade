@@ -18,12 +18,6 @@ lead_inst = tracker_instrument(
 # Define patterns with notes
 intro_pattern = tracker_pattern(64, notes = {
     "0": [
-        pattern_note(0, "C3", 0),
-        pattern_note(16, "E3", 0),
-        pattern_note(32, "G3", 0),
-        pattern_note(48, "C4", 0)
-    ],
-    "1": [
         pattern_note(0, "E4", 1, vol = 40),
         pattern_note(8, "G4", 1, vol = 40),
         pattern_note(16, "C5", 1, vol = 40),
@@ -32,21 +26,27 @@ intro_pattern = tracker_pattern(64, notes = {
         pattern_note(40, "C5", 1, vol = 40),
         pattern_note(48, "E5", 1, vol = 40),
         pattern_note(56, "G5", 1, vol = 40)
+    ],
+    "1": [
+        pattern_note(0, "C3", 0),
+        pattern_note(16, "E3", 0),
+        pattern_note(32, "G3", 0),
+        pattern_note(48, "C4", 0)
     ]
 })
 
 verse_pattern = tracker_pattern(64, notes = {
     "0": [
-        pattern_note(0, "A2", 0),
-        pattern_note(16, "C3", 0),
-        pattern_note(32, "E3", 0),
-        pattern_note(48, "A3", 0)
-    ],
-    "1": [
         pattern_note(0, "A4", 1),
         pattern_note(16, "C5", 1),
         pattern_note(32, "E5", 1),
         pattern_note(48, "A5", 1)
+    ],
+    "1": [
+        pattern_note(0, "A2", 0),
+        pattern_note(16, "C3", 0),
+        pattern_note(32, "E3", 0),
+        pattern_note(48, "A3", 0)
     ]
 })
 
@@ -59,11 +59,12 @@ spec(
     tags = ["retro", "chiptune", "example"],
     outputs = [output("music/example.xm", "xm")],
     recipe = {
-        "kind": "music.tracker_v1",
+        "kind": "music.tracker_song_v1",
         "params": {
+            "format": "xm",
             "bpm": 120,
             "speed": 6,
-            "channels": 4,
+            "channels": 2,
             "instruments": [bass_inst, lead_inst],
             "patterns": {
                 "intro": intro_pattern,

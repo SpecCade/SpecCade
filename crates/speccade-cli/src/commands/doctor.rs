@@ -4,6 +4,7 @@
 
 use anyhow::Result;
 use colored::Colorize;
+use speccade_spec::recipe::RecipeKind;
 use std::env;
 use std::process::{Command, ExitCode};
 
@@ -104,17 +105,7 @@ pub fn run() -> Result<ExitCode> {
 
     // Check 4: Available backends
     println!("{}", "Backends:".bold());
-    let recipe_kinds = [
-        "audio_v1",
-        "music.tracker_song_v1",
-        "music.tracker_song_compose_v1",
-        "texture.procedural_v1",
-        "static_mesh.blender_primitives_v1",
-        "skeletal_mesh.armature_driven_v1",
-        "skeletal_mesh.skinned_mesh_v1",
-        "skeletal_animation.blender_clip_v1",
-    ];
-    for kind in recipe_kinds {
+    for kind in RecipeKind::all().iter().map(RecipeKind::as_str) {
         let available = is_backend_available(kind);
         let tier = get_backend_tier(kind);
         let tier_str = match tier {

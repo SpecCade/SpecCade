@@ -623,11 +623,27 @@ class _BlenderAtlasImage:
         self._img = bpy_image
 
     def save(self, path: str) -> None:
-        scene = bpy.context.scene
-        scene.render.image_settings.file_format = 'PNG'
-        scene.render.image_settings.color_mode = 'RGBA'
-        scene.render.image_settings.color_depth = '8'
-        self._img.save_render(filepath=path, scene=scene)
+        save_image_png(self._img, Path(path))
+
+
+def copy_image_pixels(source: 'bpy.types.Image', name: str) -> 'bpy.types.Image':
+    """Create a standalone image copy so it can be saved without using Render Result APIs."""
+    width, height = source.size[0], source.size[1]
+    image = bpy.data.images.new(name, width=width, height=height, alpha=True)
+    image.alpha_mode = 'STRAIGHT'
+    pixel_count = width * height * 4
+    pixels = [0.0] * pixel_count
+    source.pixels.foreach_get(pixels)
+    image.pixels.foreach_set(pixels)
+    return image
+
+
+def save_image_png(image: 'bpy.types.Image', path: Path) -> None:
+    """Persist a Blender image as PNG using the standard image save API."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    image.filepath_raw = str(path)
+    image.file_format = 'PNG'
+    image.save()
 
 
 def create_atlas_image(

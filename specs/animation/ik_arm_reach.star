@@ -8,7 +8,7 @@ spec(
     description = "Arm reach animation - reaching forward motion",
     outputs = [output("ik_arm_reach.glb", "glb")],
     recipe = {
-        "kind": "skeletal_animation.keyframe_v1",
+        "kind": "skeletal_animation.blender_clip_v1",
         "params": {
             "skeleton_preset": "humanoid_connected_v1",
             "clip_name": "arm_reach",

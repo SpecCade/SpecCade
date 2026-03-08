@@ -32,7 +32,11 @@ except ImportError:
 from .report import write_report
 from .scene import clear_scene, setup_scene, create_primitive
 from .metrics import compute_mesh_metrics
-from .rendering import setup_lighting, pack_frames_into_atlas, create_atlas_image
+from .rendering import (
+    create_atlas_image,
+    pack_frames_into_atlas,
+    setup_lighting,
+)
 from .modifiers import apply_modifier, apply_all_modifiers
 from .materials import apply_materials
 from .uv_mapping import apply_uv_projection
@@ -306,6 +310,8 @@ def handle_mesh_to_sprite(spec: Dict, out_root: Path, report_path: Path) -> None
         bpy.context.scene.render.resolution_x = frame_resolution[0]
         bpy.context.scene.render.resolution_y = frame_resolution[1]
         bpy.context.scene.render.film_transparent = (background_color[3] < 1.0)
+        bpy.context.scene.render.image_settings.file_format = 'PNG'
+        bpy.context.scene.render.image_settings.color_mode = 'RGBA'
 
         if not bpy.context.scene.render.film_transparent:
             bpy.context.scene.world = bpy.data.worlds.new("Background")
@@ -319,7 +325,11 @@ def handle_mesh_to_sprite(spec: Dict, out_root: Path, report_path: Path) -> None
         bpy.context.scene.camera = camera
 
         # Create temp directory for individual frames
-        temp_frames_dir = Path(tempfile.mkdtemp(prefix="speccade_frames_"))
+        out_root.mkdir(parents=True, exist_ok=True)
+        temp_frames_dir = out_root / "_speccade_frames"
+        if temp_frames_dir.exists():
+            shutil.rmtree(temp_frames_dir)
+        temp_frames_dir.mkdir(parents=True, exist_ok=True)
         frame_paths = []
         frame_metadata = []
 
@@ -344,9 +354,11 @@ def handle_mesh_to_sprite(spec: Dict, out_root: Path, report_path: Path) -> None
             camera.rotation_euler = rot_quat.to_euler()
 
             # Render frame
-            frame_path = temp_frames_dir / f"frame_{i:04d}.png"
-            bpy.context.scene.render.filepath = str(frame_path)
+            frame_path = (temp_frames_dir / f"frame_{i:04d}.png").resolve()
+            bpy.context.scene.render.filepath = frame_path.as_posix()
             bpy.ops.render.render(write_still=True)
+            if not frame_path.exists():
+                raise RuntimeError(f"Render output missing after render: {frame_path}")
             frame_paths.append(frame_path)
 
             frame_metadata.append({
@@ -424,7 +436,7 @@ def handle_mesh_to_sprite(spec: Dict, out_root: Path, report_path: Path) -> None
         for frame_path in frame_paths:
             if frame_path.exists():
                 frame_path.unlink()
-        temp_frames_dir.rmdir()
+        shutil.rmtree(temp_frames_dir, ignore_errors=True)
 
         # Build metrics
         metrics = {

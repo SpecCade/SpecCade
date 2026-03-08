@@ -8,7 +8,7 @@ spec(
     description = "Walk cycle animation - basic bipedal locomotion",
     outputs = [output("walk_cycle.glb", "glb")],
     recipe = {
-        "kind": "skeletal_animation.keyframe_v1",
+        "kind": "skeletal_animation.blender_clip_v1",
         "params": {
             "skeleton_preset": "humanoid_connected_v1",
             "clip_name": "walk_cycle",

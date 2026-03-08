@@ -340,6 +340,8 @@ pub fn validate_for_generate_with_budget(spec: &Spec, budget: &BudgetProfile) ->
             "static_mesh.blender_primitives_v1",
             "static_mesh.modular_kit_v1",
             "static_mesh.organic_sculpt_v1",
+            "static_mesh.shrinkwrap_v1",
+            "static_mesh.boolean_kit_v1",
             "skeletal_mesh.armature_driven_v1",
             "skeletal_mesh.skinned_mesh_v1",
             "skeletal_animation.blender_clip_v1",

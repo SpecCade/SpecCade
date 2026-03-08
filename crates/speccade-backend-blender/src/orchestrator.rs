@@ -28,6 +28,10 @@ pub enum GenerationMode {
     ModularKit,
     /// Organic sculpt generation (metaballs, remesh, smooth, displacement).
     OrganicSculpt,
+    /// Shrinkwrap generation for armor/clothing wrapping.
+    Shrinkwrap,
+    /// Boolean kitbashing generation for hard-surface modeling.
+    BooleanKit,
     /// Skeletal mesh generation.
     SkeletalMesh,
     /// Animation generation (simple keyframes).
@@ -49,6 +53,8 @@ impl GenerationMode {
             GenerationMode::StaticMesh => "static_mesh",
             GenerationMode::ModularKit => "modular_kit",
             GenerationMode::OrganicSculpt => "organic_sculpt",
+            GenerationMode::Shrinkwrap => "shrinkwrap",
+            GenerationMode::BooleanKit => "boolean_kit",
             GenerationMode::SkeletalMesh => "skeletal_mesh",
             GenerationMode::Animation => "animation",
             GenerationMode::RiggedAnimation => "rigged_animation",
@@ -391,6 +397,8 @@ pub fn mode_from_recipe_kind(kind: &str) -> BlenderResult<GenerationMode> {
         "static_mesh.blender_primitives_v1" => Ok(GenerationMode::StaticMesh),
         "static_mesh.modular_kit_v1" => Ok(GenerationMode::ModularKit),
         "static_mesh.organic_sculpt_v1" => Ok(GenerationMode::OrganicSculpt),
+        "static_mesh.shrinkwrap_v1" => Ok(GenerationMode::Shrinkwrap),
+        "static_mesh.boolean_kit_v1" => Ok(GenerationMode::BooleanKit),
         "skeletal_mesh.armature_driven_v1" => Ok(GenerationMode::SkeletalMesh),
         "skeletal_mesh.skinned_mesh_v1" => Ok(GenerationMode::SkeletalMesh),
         "skeletal_animation.blender_clip_v1" => Ok(GenerationMode::Animation),
@@ -442,6 +450,8 @@ mod tests {
         assert_eq!(GenerationMode::StaticMesh.as_str(), "static_mesh");
         assert_eq!(GenerationMode::ModularKit.as_str(), "modular_kit");
         assert_eq!(GenerationMode::OrganicSculpt.as_str(), "organic_sculpt");
+        assert_eq!(GenerationMode::Shrinkwrap.as_str(), "shrinkwrap");
+        assert_eq!(GenerationMode::BooleanKit.as_str(), "boolean_kit");
         assert_eq!(GenerationMode::SkeletalMesh.as_str(), "skeletal_mesh");
         assert_eq!(GenerationMode::Animation.as_str(), "animation");
         assert_eq!(GenerationMode::RiggedAnimation.as_str(), "rigged_animation");
@@ -471,6 +481,14 @@ mod tests {
         assert_eq!(
             mode_from_recipe_kind("static_mesh.organic_sculpt_v1").unwrap(),
             GenerationMode::OrganicSculpt
+        );
+        assert_eq!(
+            mode_from_recipe_kind("static_mesh.shrinkwrap_v1").unwrap(),
+            GenerationMode::Shrinkwrap
+        );
+        assert_eq!(
+            mode_from_recipe_kind("static_mesh.boolean_kit_v1").unwrap(),
+            GenerationMode::BooleanKit
         );
         assert_eq!(
             mode_from_recipe_kind("skeletal_mesh.armature_driven_v1").unwrap(),

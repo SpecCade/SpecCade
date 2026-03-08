@@ -177,6 +177,13 @@ fn main() -> ExitCode {
             }
             CoverageCommands::Report => commands::coverage::run_report(),
         },
+        Commands::Contract { command } => match command {
+            ContractCommands::Verify {
+                manifest,
+                output,
+                json,
+            } => commands::contract::run_verify(manifest.as_deref(), output.as_deref(), json),
+        },
         Commands::Verify {
             report,
             constraints,
@@ -1749,6 +1756,36 @@ mod tests {
                 _ => panic!("expected report subcommand"),
             },
             _ => panic!("expected coverage command"),
+        }
+    }
+
+    #[test]
+    fn test_cli_parses_contract_verify() {
+        let cli = Cli::try_parse_from([
+            "speccade",
+            "contract",
+            "verify",
+            "--manifest",
+            "specs/contract_manifest.json",
+            "--output",
+            "tmp/contract.json",
+            "--json",
+        ])
+        .unwrap();
+
+        match cli.command {
+            Commands::Contract { command } => match command {
+                ContractCommands::Verify {
+                    manifest,
+                    output,
+                    json,
+                } => {
+                    assert_eq!(manifest.as_deref(), Some("specs/contract_manifest.json"));
+                    assert_eq!(output.as_deref(), Some("tmp/contract.json"));
+                    assert!(json);
+                }
+            },
+            _ => panic!("expected contract command"),
         }
     }
 }

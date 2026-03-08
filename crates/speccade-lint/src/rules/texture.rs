@@ -429,7 +429,7 @@ impl LintRule for AllWhiteRule {
 }
 
 /// Rule: texture/corrupt-alpha
-/// Detects images with alpha channel that is all 0 or all 255 (uniform).
+/// Detects images with alpha channel that is effectively unusable (all 0).
 pub struct CorruptAlphaRule;
 
 impl LintRule for CorruptAlphaRule {
@@ -438,7 +438,7 @@ impl LintRule for CorruptAlphaRule {
     }
 
     fn description(&self) -> &'static str {
-        "Alpha channel is uniform (all 0 or all 255)"
+        "Alpha channel is fully transparent across the entire image"
     }
 
     fn applies_to(&self) -> &[AssetType] {
@@ -472,23 +472,17 @@ impl LintRule for CorruptAlphaRule {
             }
         }
 
-        // Uniform alpha is suspicious - either all 0 (invisible) or all 255 (why have alpha?)
-        if min_alpha == max_alpha && (min_alpha == 0 || min_alpha == 255) {
+        // A fully transparent alpha channel usually indicates a broken export.
+        // Fully opaque alpha is common and should not fail lint on its own.
+        if min_alpha == 0 && max_alpha == 0 {
             vec![LintIssue::new(
                 self.id(),
                 self.default_severity(),
-                format!(
-                    "Alpha channel is uniform (all {})",
-                    if min_alpha == 0 {
-                        "transparent"
-                    } else {
-                        "opaque"
-                    }
-                ),
+                "Alpha channel is fully transparent".to_string(),
                 "Check alpha source node",
             )
             .with_actual_value(format!("alpha={}", min_alpha))
-            .with_expected_range("variable alpha values")]
+            .with_expected_range("at least some non-zero alpha values")]
         } else {
             vec![]
         }
@@ -993,7 +987,7 @@ mod tests {
     }
 
     #[test]
-    fn test_corrupt_alpha_rule_triggers_all_255() {
+    fn test_corrupt_alpha_rule_passes_all_255() {
         // 2x2 RGBA image with all alpha = 255
         let mut pixels = Vec::new();
         for _ in 0..4 {
@@ -1005,8 +999,7 @@ mod tests {
         let rule = CorruptAlphaRule;
         let issues = rule.check(&asset, None);
 
-        assert_eq!(issues.len(), 1);
-        assert_eq!(issues[0].rule_id, "texture/corrupt-alpha");
+        assert!(issues.is_empty());
     }
 
     #[test]

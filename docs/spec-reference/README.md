@@ -11,7 +11,7 @@ If a doc/example disagrees with validation, treat `speccade validate` + Rust typ
 - [Texture Specs](texture.md) - Unified procedural texture graphs
 - [Audio Specs](audio.md) - Sound effects and instrument samples
 - [Music Specs](music.md) - Tracker module songs
-- [Static Mesh Specs](mesh.md) - Blender primitive meshes with modifiers
+- [Static Mesh Specs](mesh.md) - Static mesh Blender recipes and mesh validation
 - [Character Specs](character.md) - Skeletal meshes with armatures
 - [Animation Specs](animation.md) - Skeletal animation clips
 - [Structural Metrics](structural-metrics.md) - LLM-friendly geometric analysis for 3D assets
@@ -176,13 +176,13 @@ Currently supported output kinds are:
 | Asset Type | Recipe Kinds | Output Formats | Documentation |
 |------------|--------------|----------------|---------------|
 | `audio` | `audio_v1` | WAV | [audio.md](audio.md) |
-| `music` | `music.tracker_song_v1` (canonical), `music.tracker_song_compose_v1` (draft) | XM, IT | [music.md](music.md) |
+| `music` | `music.tracker_song_v1` (canonical), `music.tracker_song_compose_v1` (authoring sugar) | XM, IT | [music.md](music.md) |
 | `texture` | `texture.procedural_v1`, `texture.trimsheet_v1`, `texture.decal_v1`, `texture.splat_set_v1`, `texture.matcap_v1`, `texture.material_preset_v1` | PNG / JSON | [texture.md](texture.md) |
 | `sprite` | `sprite.sheet_v1`, `sprite.animation_v1`, `sprite.render_from_mesh_v1` | PNG / JSON | [sprite.md](sprite.md) |
 | `vfx` | `vfx.flipbook_v1`, `vfx.particle_profile_v1` | PNG / JSON | [vfx.md](vfx.md) |
 | `ui` | `ui.nine_slice_v1`, `ui.icon_set_v1`, `ui.item_card_v1`, `ui.damage_number_v1` | PNG / JSON | [ui.md](ui.md) |
 | `font` | `font.bitmap_v1` | PNG / JSON | [font.md](font.md) |
-| `static_mesh` | `static_mesh.blender_primitives_v1`, `static_mesh.modular_kit_v1`, `static_mesh.organic_sculpt_v1` | GLB | [mesh.md](mesh.md) |
+| `static_mesh` | `static_mesh.blender_primitives_v1`, `static_mesh.modular_kit_v1`, `static_mesh.organic_sculpt_v1`, `static_mesh.shrinkwrap_v1`, `static_mesh.boolean_kit_v1` | GLB | [mesh.md](mesh.md) |
 | `skeletal_mesh` | `skeletal_mesh.armature_driven_v1`, `skeletal_mesh.skinned_mesh_v1` | GLB | [character.md](character.md) |
 | `skeletal_animation` | `skeletal_animation.blender_clip_v1`, `skeletal_animation.blender_rigged_v1`, `skeletal_animation.helpers_v1` | GLB | [animation.md](animation.md) |
 

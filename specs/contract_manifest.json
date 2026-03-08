@@ -1,0 +1,322 @@
+{
+  "schema_version": 1,
+  "docs": [
+    {
+      "path": "docs/spec-reference/README.md",
+      "required_recipe_kinds": [
+        "audio_v1",
+        "music.tracker_song_v1",
+        "music.tracker_song_compose_v1",
+        "texture.procedural_v1",
+        "texture.trimsheet_v1",
+        "texture.decal_v1",
+        "texture.splat_set_v1",
+        "texture.matcap_v1",
+        "texture.material_preset_v1",
+        "static_mesh.blender_primitives_v1",
+        "static_mesh.modular_kit_v1",
+        "static_mesh.organic_sculpt_v1",
+        "static_mesh.shrinkwrap_v1",
+        "static_mesh.boolean_kit_v1",
+        "skeletal_mesh.armature_driven_v1",
+        "skeletal_mesh.skinned_mesh_v1",
+        "skeletal_animation.blender_clip_v1",
+        "skeletal_animation.blender_rigged_v1",
+        "skeletal_animation.helpers_v1",
+        "sprite.sheet_v1",
+        "sprite.animation_v1",
+        "sprite.render_from_mesh_v1",
+        "vfx.flipbook_v1",
+        "vfx.particle_profile_v1",
+        "ui.nine_slice_v1",
+        "ui.icon_set_v1",
+        "ui.item_card_v1",
+        "ui.damage_number_v1",
+        "font.bitmap_v1"
+      ]
+    },
+    { "path": "docs/spec-reference/audio.md", "required_recipe_kinds": ["audio_v1"] },
+    {
+      "path": "docs/spec-reference/music.md",
+      "required_recipe_kinds": [
+        "music.tracker_song_v1",
+        "music.tracker_song_compose_v1"
+      ]
+    },
+    {
+      "path": "docs/spec-reference/texture.md",
+      "required_recipe_kinds": [
+        "texture.procedural_v1",
+        "texture.trimsheet_v1",
+        "texture.decal_v1",
+        "texture.splat_set_v1",
+        "texture.matcap_v1",
+        "texture.material_preset_v1"
+      ]
+    },
+    {
+      "path": "docs/spec-reference/sprite.md",
+      "required_recipe_kinds": [
+        "sprite.sheet_v1",
+        "sprite.animation_v1",
+        "sprite.render_from_mesh_v1"
+      ]
+    },
+    {
+      "path": "docs/spec-reference/vfx.md",
+      "required_recipe_kinds": [
+        "vfx.flipbook_v1",
+        "vfx.particle_profile_v1"
+      ]
+    },
+    {
+      "path": "docs/spec-reference/ui.md",
+      "required_recipe_kinds": [
+        "ui.nine_slice_v1",
+        "ui.icon_set_v1",
+        "ui.item_card_v1",
+        "ui.damage_number_v1"
+      ]
+    },
+    { "path": "docs/spec-reference/font.md", "required_recipe_kinds": ["font.bitmap_v1"] },
+    {
+      "path": "docs/spec-reference/mesh.md",
+      "required_recipe_kinds": [
+        "static_mesh.blender_primitives_v1",
+        "static_mesh.modular_kit_v1",
+        "static_mesh.organic_sculpt_v1",
+        "static_mesh.shrinkwrap_v1",
+        "static_mesh.boolean_kit_v1"
+      ]
+    },
+    {
+      "path": "docs/spec-reference/character.md",
+      "required_recipe_kinds": [
+        "skeletal_mesh.armature_driven_v1",
+        "skeletal_mesh.skinned_mesh_v1"
+      ]
+    },
+    {
+      "path": "docs/spec-reference/animation.md",
+      "required_recipe_kinds": [
+        "skeletal_animation.blender_clip_v1",
+        "skeletal_animation.blender_rigged_v1",
+        "skeletal_animation.helpers_v1"
+      ]
+    }
+  ],
+  "examples": [
+    {
+      "recipe_kind": "audio_v1",
+      "spec_path": "specs/audio/simple_beep.star",
+      "allowed_info_rule_ids": ["audio/no-effects"]
+    },
+    {
+      "recipe_kind": "music.tracker_song_v1",
+      "spec_path": "specs/music/music_tracker.star"
+    },
+    {
+      "recipe_kind": "music.tracker_song_compose_v1",
+      "spec_path": "specs/music/compose_minimal_16rows.json",
+      "allowed_warning_rule_ids": ["music/sparse-pattern"],
+      "allowed_info_rule_ids": ["music/unused-channel"]
+    },
+    {
+      "recipe_kind": "texture.procedural_v1",
+      "spec_path": "specs/texture/texture_noise.star",
+      "allowed_warning_rule_ids": ["texture/banding", "texture/noisy"],
+      "allowed_info_rule_ids": ["texture/large-solid-regions"]
+    },
+    {
+      "recipe_kind": "texture.trimsheet_v1",
+      "spec_path": "specs/texture/texture_trimsheet.star",
+      "allowed_warning_rule_ids": ["texture/banding", "texture/tile-seam"],
+      "allowed_info_rule_ids": ["texture/large-solid-regions"]
+    },
+    {
+      "recipe_kind": "texture.decal_v1",
+      "spec_path": "specs/texture/texture_decal.star",
+      "allowed_warning_rule_ids": ["texture/tile-seam"]
+    },
+    {
+      "recipe_kind": "texture.splat_set_v1",
+      "spec_path": "specs/texture/texture_splat_set.star",
+      "lint_include_paths": ["terrain/highland_splat_grass.albedo.png"],
+      "allowed_warning_rule_ids": ["texture/low-contrast", "texture/color-cast"]
+    },
+    {
+      "recipe_kind": "texture.matcap_v1",
+      "spec_path": "specs/texture/texture_matcap.star",
+      "allowed_warning_rule_ids": ["texture/banding", "texture/color-cast"],
+      "allowed_info_rule_ids": ["texture/large-solid-regions"]
+    },
+    {
+      "recipe_kind": "texture.material_preset_v1",
+      "spec_path": "specs/texture/texture_material_preset.star",
+      "lint_include_paths": ["materials/toon_metal_albedo.png"],
+      "allowed_warning_rule_ids": ["texture/low-contrast"]
+    },
+    {
+      "recipe_kind": "static_mesh.blender_primitives_v1",
+      "spec_path": "specs/mesh/skinned_mesh_source.star",
+      "expectations": {
+        "require_geometry": true,
+        "require_manifold": true,
+        "require_uvs": true,
+        "min_material_slots": 1
+      }
+    },
+    {
+      "recipe_kind": "static_mesh.modular_kit_v1",
+      "spec_path": "specs/mesh/mesh_modular_kit.star",
+      "allowed_warning_rule_ids": ["mesh/uv-overlap", "mesh/uv-stretch", "mesh/missing-material"],
+      "expectations": {
+        "require_geometry": true,
+        "require_manifold": true,
+        "require_uvs": true
+      }
+    },
+    {
+      "recipe_kind": "static_mesh.organic_sculpt_v1",
+      "spec_path": "specs/mesh/mesh_organic_sculpt.star",
+      "allowed_warning_rule_ids": ["mesh/uv-overlap", "mesh/missing-material"],
+      "expectations": {
+        "require_geometry": true,
+        "require_manifold": true,
+        "require_uvs": true
+      }
+    },
+    {
+      "recipe_kind": "static_mesh.shrinkwrap_v1",
+      "spec_path": "specs/mesh/armor_plate.star",
+      "allowed_warning_rule_ids": ["mesh/missing-material"],
+      "expectations": {
+        "require_geometry": true,
+        "require_manifold": true,
+        "require_uvs": true
+      }
+    },
+    {
+      "recipe_kind": "static_mesh.boolean_kit_v1",
+      "spec_path": "specs/mesh/mesh_boolean_kit.star",
+      "allowed_warning_rule_ids": ["mesh/uv-overlap", "mesh/uv-stretch", "mesh/missing-material"],
+      "expectations": {
+        "require_geometry": true,
+        "require_manifold": true,
+        "require_uvs": true
+      }
+    },
+    {
+      "recipe_kind": "skeletal_mesh.armature_driven_v1",
+      "spec_path": "specs/character/preset_humanoid.star",
+      "expectations": {
+        "require_geometry": true,
+        "require_manifold": true,
+        "require_uvs": true,
+        "min_material_slots": 2,
+        "min_bone_count": 20
+      }
+    },
+    {
+      "recipe_kind": "skeletal_mesh.skinned_mesh_v1",
+      "spec_path": "specs/character/skinned_mesh_contract.star",
+      "setup_specs": ["specs/mesh/skinned_mesh_source.star"],
+      "expectations": {
+        "require_geometry": true,
+        "require_uvs": true,
+        "min_material_slots": 1,
+        "min_bone_count": 20
+      }
+    },
+    {
+      "recipe_kind": "skeletal_animation.blender_clip_v1",
+      "spec_path": "specs/animation/idle_breathe.star",
+      "expectations": {
+        "min_bone_count": 20,
+        "min_animation_frames": 30,
+        "max_hinge_axis_violations": 0,
+        "max_range_violations": 0,
+        "max_velocity_spikes": 0,
+        "max_root_motion_magnitude": 0.01
+      }
+    },
+    {
+      "recipe_kind": "skeletal_animation.blender_rigged_v1",
+      "spec_path": "specs/animation/walk_cycle_ik.star",
+      "expectations": {
+        "min_bone_count": 20,
+        "min_animation_frames": 60,
+        "max_hinge_axis_violations": 0,
+        "max_range_violations": 0,
+        "max_velocity_spikes": 0,
+        "max_root_motion_magnitude": 0.01
+      }
+    },
+    {
+      "recipe_kind": "skeletal_animation.helpers_v1",
+      "spec_path": "specs/animation/walk_cycle_basic.star",
+      "expectations": {
+        "min_bone_count": 20,
+        "min_animation_frames": 60,
+        "max_hinge_axis_violations": 0,
+        "max_range_violations": 0,
+        "max_velocity_spikes": 0
+      }
+    },
+    {
+      "recipe_kind": "sprite.sheet_v1",
+      "spec_path": "specs/sprite/sprite_sheet_basic.star",
+      "allowed_warning_rule_ids": ["texture/banding", "texture/tile-seam"],
+      "allowed_info_rule_ids": ["texture/large-solid-regions"]
+    },
+    {
+      "recipe_kind": "sprite.animation_v1",
+      "spec_path": "specs/sprite/sprite_animation_basic.star"
+    },
+    {
+      "recipe_kind": "sprite.render_from_mesh_v1",
+      "spec_path": "specs/sprite/sprite_render_from_mesh.star",
+      "allowed_info_rule_ids": ["texture/power-of-two", "texture/large-solid-regions"]
+    },
+    {
+      "recipe_kind": "vfx.flipbook_v1",
+      "spec_path": "specs/vfx/explosion_flipbook.star",
+      "allowed_warning_rule_ids": ["texture/tile-seam"],
+      "allowed_info_rule_ids": ["texture/large-solid-regions"]
+    },
+    {
+      "recipe_kind": "vfx.particle_profile_v1",
+      "spec_path": "specs/vfx/vfx_particle_profile.star"
+    },
+    {
+      "recipe_kind": "ui.nine_slice_v1",
+      "spec_path": "specs/ui/nine_slice_simple.star",
+      "allowed_warning_rule_ids": ["texture/banding", "texture/tile-seam"],
+      "allowed_info_rule_ids": ["texture/large-solid-regions"]
+    },
+    {
+      "recipe_kind": "ui.icon_set_v1",
+      "spec_path": "specs/ui/icon_set_basic.star",
+      "allowed_warning_rule_ids": ["texture/low-contrast", "texture/banding", "texture/tile-seam"],
+      "allowed_info_rule_ids": ["texture/large-solid-regions"]
+    },
+    {
+      "recipe_kind": "ui.item_card_v1",
+      "spec_path": "specs/ui/ui_item_card.star",
+      "allowed_warning_rule_ids": ["texture/banding"],
+      "allowed_info_rule_ids": ["texture/power-of-two", "texture/large-solid-regions"]
+    },
+    {
+      "recipe_kind": "ui.damage_number_v1",
+      "spec_path": "specs/ui/ui_damage_number.star",
+      "allowed_warning_rule_ids": ["texture/banding", "texture/color-cast"],
+      "allowed_info_rule_ids": ["texture/power-of-two", "texture/large-solid-regions"]
+    },
+    {
+      "recipe_kind": "font.bitmap_v1",
+      "spec_path": "specs/font/bitmap_basic.star",
+      "allowed_warning_rule_ids": ["texture/banding", "texture/tile-seam", "texture/noisy"],
+      "allowed_info_rule_ids": ["texture/power-of-two", "texture/large-solid-regions"]
+    }
+  ]
+}

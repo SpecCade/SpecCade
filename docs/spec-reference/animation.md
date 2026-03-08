@@ -1,11 +1,11 @@
 # Animation (Skeletal Animation) Specs
 
-Skeletal animations are keyframe-based animation clips for skeletal meshes.
+Skeletal animations cover direct FK clips, rigged IK clips, and procedural helper presets for locomotion.
 
 | Property | Value |
 |----------|-------|
 | Asset Type | `skeletal_animation` |
-| Recipe Kinds | `skeletal_animation.blender_clip_v1`, `skeletal_animation.blender_rigged_v1` |
+| Recipe Kinds | `skeletal_animation.blender_clip_v1`, `skeletal_animation.blender_rigged_v1`, `skeletal_animation.helpers_v1` |
 | Output Formats | `glb` |
 | Determinism | Tier 2 (metric validation) |
 
@@ -22,6 +22,7 @@ SpecCade provides two recipe kinds for skeletal animation, each with a distinct 
 |-------------|----------|----------|
 | `blender_clip_v1` | Simple FK animations | Direct bone keyframes, time-based |
 | `blender_rigged_v1` | IK-enabled animations | IK targets, poses, phases, procedural layers |
+| `helpers_v1` | Preset locomotion helpers | Procedural walk/run/idle cycles, auto IK setup |
 
 **Choose `blender_clip_v1` when:**
 - Animating with direct bone rotations (forward kinematics)
@@ -34,6 +35,11 @@ SpecCade provides two recipe kinds for skeletal animation, each with a distinct 
 - Defining named poses and animation phases
 - Using procedural layers (breathing, sway)
 - Need IK/FK blending or foot roll systems
+
+**Choose `helpers_v1` when:**
+- You want canonical walk, run, or idle helper presets
+- You want the repo-standard locomotion defaults instead of hand-authoring every keyframe
+- You want deterministic helper inputs with backend-validated animation metrics
 
 **Schema Enforcement:** Validation will reject IK-specific fields (`rig_setup`, `poses`, `phases`, `ik_keyframes`, `procedural_layers`, etc.) in `blender_clip_v1` specs with a clear error message directing you to use `blender_rigged_v1` instead.
 
@@ -441,6 +447,54 @@ Animate IK targets directly:
           }
         }
       ]
+    }
+  }
+}
+```
+
+---
+
+## helpers_v1: Procedural Locomotion Helpers
+
+The `skeletal_animation.helpers_v1` recipe generates canonical locomotion clips from a small preset-driven parameter surface.
+
+### Main Parameters
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `skeleton` | string | No | `humanoid` or `quadruped` (default: `humanoid`) |
+| `preset` | string | Yes | `walk_cycle`, `run_cycle`, or `idle_sway` |
+| `settings` | object | No | Preset tuning such as stride length and cycle frames |
+| `ik_targets` | object | No | Optional per-limb IK tuning |
+| `clip_name` | string | No | Exported clip name |
+| `fps` | u8 | No | Frames per second (default: `30`) |
+| `save_blend` | bool | No | Save `.blend` alongside GLB |
+
+### Presets
+
+| Preset | Default Cycle | Notes |
+|--------|---------------|-------|
+| `walk_cycle` | 60 frames | Foot roll enabled, moderate arm swing |
+| `run_cycle` | 30 frames | Faster timing, larger stride and swing |
+| `idle_sway` | 120 frames | No stride, subtle torso/weight motion |
+
+### Example Spec
+
+```json
+{
+  "recipe": {
+    "kind": "skeletal_animation.helpers_v1",
+    "params": {
+      "skeleton": "humanoid",
+      "preset": "walk_cycle",
+      "settings": {
+        "stride_length": 0.8,
+        "cycle_frames": 60,
+        "foot_roll": true,
+        "arm_swing": 0.3
+      },
+      "clip_name": "walk_basic",
+      "fps": 30
     }
   }
 }

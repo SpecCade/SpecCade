@@ -1,0 +1,86 @@
+{
+  "spec_version": 1,
+  "asset_id": "compose_minimal_16rows",
+  "asset_type": "music",
+  "license": "CC0-1.0",
+  "seed": 1,
+  "description": "Minimal compose-v1 example for contract validation",
+  "outputs": [
+    {
+      "kind": "primary",
+      "format": "xm",
+      "path": "compose_minimal_16rows.xm"
+    }
+  ],
+  "recipe": {
+    "kind": "music.tracker_song_compose_v1",
+    "params": {
+      "format": "xm",
+      "bpm": 150,
+      "speed": 6,
+      "channels": 4,
+      "loop": false,
+      "instruments": [
+        {
+          "name": "pulse_lead",
+          "base_note": "C4",
+          "default_volume": 48,
+          "synthesis": {
+            "type": "pulse",
+            "duty_cycle": 0.5
+          }
+        }
+      ],
+      "patterns": {
+        "p0": {
+          "rows": 16,
+          "program": {
+            "op": "stack",
+            "merge": "merge_fields",
+            "parts": [
+              {
+                "op": "emit",
+                "at": {
+                  "op": "range",
+                  "start": 0,
+                  "step": 4,
+                  "count": 4
+                },
+                "cell": {
+                  "channel": 0,
+                  "note": "C4",
+                  "inst": 0,
+                  "vol": 48
+                }
+              },
+              {
+                "op": "emit_seq",
+                "at": {
+                  "op": "range",
+                  "start": 2,
+                  "step": 4,
+                  "count": 4
+                },
+                "cell": {
+                  "channel": 1,
+                  "inst": 0,
+                  "vol": 40
+                },
+                "note_seq": {
+                  "mode": "cycle",
+                  "values": ["E4", "G4", "A4", "G4"]
+                }
+              }
+            ]
+          }
+        }
+      },
+      "arrangement": [
+        {
+          "pattern": "p0",
+          "repeat": 1
+        }
+      ]
+    }
+  }
+}

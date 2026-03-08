@@ -313,6 +313,12 @@ pub(crate) enum Commands {
         command: CoverageCommands,
     },
 
+    /// Verify the checked repo contract (examples, docs, coverage, quality)
+    Contract {
+        #[command(subcommand)]
+        command: ContractCommands,
+    },
+
     /// Verify generated assets against constraints
     Verify {
         /// Path to the report file (*.report.json)
@@ -462,4 +468,22 @@ pub(crate) enum CoverageCommands {
     },
     /// Print coverage summary to stdout
     Report,
+}
+
+#[derive(Subcommand, Debug)]
+pub(crate) enum ContractCommands {
+    /// Verify canonical examples, docs, and coverage against the checked manifest
+    Verify {
+        /// Path to the contract manifest (default: specs/contract_manifest.json)
+        #[arg(long)]
+        manifest: Option<String>,
+
+        /// Write the verification report as JSON to a file
+        #[arg(long)]
+        output: Option<String>,
+
+        /// Print the verification report as JSON
+        #[arg(long)]
+        json: bool,
+    },
 }

@@ -92,8 +92,9 @@ spec(
     description = "Advanced features demo - showcases IT format with multiple patterns",
     outputs = [output("advanced_features.it", "it")],
     recipe = {
-        "kind": "music.tracker_v1",
+        "kind": "music.tracker_song_v1",
         "params": {
+            "format": "it",
             "bpm": 120,
             "speed": 6,
             "channels": 8,

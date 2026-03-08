@@ -5,8 +5,8 @@ This document covers texture generation in SpecCade.
 ## Overview
 
 **Asset Type:** `texture`  
-**Recipe Kind:** `texture.procedural_v1`  
-**Output Format:** PNG
+**Recipe Kinds:** `texture.procedural_v1`, `texture.trimsheet_v1`, `texture.decal_v1`, `texture.splat_set_v1`, `texture.matcap_v1`, `texture.material_preset_v1`  
+**Output Formats:** PNG, JSON
 
 `texture.procedural_v1` is a deterministic, named-node DAG. Each node produces either:
 
@@ -14,6 +14,19 @@ This document covers texture generation in SpecCade.
 - **Color** (RGBA, normalized `[0, 1]`)
 
 Outputs bind file paths to node ids. There are no dedicated "material", "normal", or "packed" recipe kinds.
+
+## Recipe Kind Selection
+
+| Recipe Kind | Use Case | Notes |
+|-------------|----------|-------|
+| `texture.procedural_v1` | General-purpose node graphs | Canonical DAG-based texture authoring surface |
+| `texture.trimsheet_v1` | Atlas/trimsheet packing | Emits texture atlas plus metadata |
+| `texture.decal_v1` | Decal sheets | RGBA + placement-oriented metadata |
+| `texture.splat_set_v1` | Terrain layer packs | Multi-layer splat masks and terrain blends |
+| `texture.matcap_v1` | Stylized matcaps | Single-view shading lookup textures |
+| `texture.material_preset_v1` | Preset PBR authoring | Higher-level preset wrapper for common material families |
+
+The rest of this page documents `texture.procedural_v1` in detail because it is the most general texture surface. For the other texture recipe kinds, use the checked examples in `specs/texture/` and the Rust SSOT in `crates/speccade-spec/src/recipe/texture/`.
 
 ## Outputs
 

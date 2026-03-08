@@ -8,7 +8,7 @@ spec(
     description = "Floating bob animation - gentle vertical oscillation",
     outputs = [output("floating_bob.glb", "glb")],
     recipe = {
-        "kind": "skeletal_animation.keyframe_v1",
+        "kind": "skeletal_animation.blender_clip_v1",
         "params": {
             "skeleton_preset": "humanoid_connected_v1",
             "clip_name": "floating_bob",

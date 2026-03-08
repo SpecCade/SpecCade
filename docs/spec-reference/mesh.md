@@ -6,10 +6,20 @@
 | Property | Value |
 |----------|-------|
 | Asset Type | `static_mesh` |
-| Recipe Kind | `static_mesh.blender_primitives_v1` |
-| Output Format | `glb` |
+| Recipe Kinds | `static_mesh.blender_primitives_v1`, `static_mesh.modular_kit_v1`, `static_mesh.organic_sculpt_v1`, `static_mesh.shrinkwrap_v1`, `static_mesh.boolean_kit_v1` |
+| Output Formats | `glb` |
 | Determinism | Tier 2 (metric validation) |
 | Coordinate System | Z-up, Y-forward. Dimensions: [X width, Y depth, Z height] |
+
+## Recipe Kind Selection
+
+| Recipe Kind | Use Case | Notes |
+|-------------|----------|-------|
+| `static_mesh.blender_primitives_v1` | General-purpose mesh construction | Primitive base + modifiers, UVs, normals, materials |
+| `static_mesh.modular_kit_v1` | Wall/pipe/door kits | Reusable architectural and kitbash parts |
+| `static_mesh.organic_sculpt_v1` | Organic blobs and creatures | Metaballs, remesh, smoothing, displacement |
+| `static_mesh.shrinkwrap_v1` | Cloth, armor, fitted accessories | Wrap one mesh onto another with validation |
+| `static_mesh.boolean_kit_v1` | Hard-surface kitbashing | Sequential union/difference/intersect operations |
 
 ## Recipe Parameters
 

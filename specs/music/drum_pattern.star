@@ -59,8 +59,9 @@ spec(
     description = "Drum-focused track - showcases percussion synthesis",
     outputs = [output("drum_pattern.xm", "xm")],
     recipe = {
-        "kind": "music.tracker_v1",
+        "kind": "music.tracker_song_v1",
         "params": {
+            "format": "xm",
             "bpm": 140,
             "speed": 6,
             "channels": 6,

@@ -8,7 +8,7 @@ spec(
     description = "Attack swing animation - simple overhead swing",
     outputs = [output("attack_swing.glb", "glb")],
     recipe = {
-        "kind": "skeletal_animation.keyframe_v1",
+        "kind": "skeletal_animation.blender_clip_v1",
         "params": {
             "skeleton_preset": "humanoid_connected_v1",
             "clip_name": "attack_swing",

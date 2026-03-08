@@ -6,6 +6,7 @@ pub mod audit;
 pub mod batch_validate;
 pub mod cache;
 pub mod compare;
+pub mod contract;
 pub mod coverage;
 pub mod doctor;
 pub mod eval;
@@ -38,6 +39,7 @@ mod tests {
         let _ = audit::run;
         let _ = batch_validate::run;
         let _ = compare::run;
+        let _ = contract::run_verify;
         let _ = doctor::run;
         let _ = eval::run;
         let _ = expand::run;

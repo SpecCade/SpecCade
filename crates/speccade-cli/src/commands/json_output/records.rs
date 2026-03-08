@@ -189,6 +189,7 @@ pub struct GenerateResult {
     /// Duration in milliseconds
     pub duration_ms: u64,
     /// Variant results (if expand_variants was enabled)
+    #[serde(default)]
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub variants: Vec<VariantResult>,
 }
@@ -385,5 +386,28 @@ mod tests {
         // Pretty-printed JSON uses `: ` (colon followed by space)
         assert!(json.contains("\"success\": true"));
         assert!(json.contains("\"out_root\": \"./out\""));
+    }
+
+    #[test]
+    fn test_generate_result_deserializes_without_variants_field() {
+        let json = r#"{
+            "success": true,
+            "errors": [],
+            "warnings": [],
+            "result": {
+                "asset_id": "test-asset",
+                "asset_type": "audio",
+                "source_kind": "starlark",
+                "out_root": "./out",
+                "cache_hit": false,
+                "outputs": [],
+                "report_path": "test.report.json",
+                "duration_ms": 250
+            }
+        }"#;
+
+        let output: GenerateOutput = serde_json::from_str(json).unwrap();
+        assert!(output.success);
+        assert!(output.result.unwrap().variants.is_empty());
     }
 }
