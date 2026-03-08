@@ -2,6 +2,10 @@
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
+**Status:** Implemented
+
+This document is retained as implementation history. The animation viewer now exists in `editor/src/components/AnimationPreview.ts`, with backend preview generation in `crates/speccade-editor/src/preview/animation.rs`.
+
 **Goal:** Add an animation viewer to the editor preview panel for QA, iteration, and debugging of skeletal animations.
 
 **Architecture:** Hybrid rendering (Blender generates preview GLB, three.js plays it interactively). Supports both spec-driven preview and exported GLB viewing with full debug controls (play/pause, frame-stepping, timeline scrubbing, bone inspection).

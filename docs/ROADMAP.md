@@ -14,7 +14,7 @@ The following major work areas are complete:
 
 - **LLM-Native Authoring** (LLM-001–011): Machine-readable stdlib, structured CLI output, budget profiles, analysis/metrics, templates, preview generation, embeddings, batch analysis, and WebSocket server.
 - **Audio** (AUDIO-001–011): Preset library with QA gates, audit/analyze tools, loop-point generation, effects (EQ/limiter), filters (notch/allpass), synthesis (supersaw/waveguide/membrane), LUFS/true-peak, oneshot/loop helpers, foley layering, batch variations, LFO expansion.
-- **Music** (MUSIC-001–010): Pattern IR snapshot tests, extended operators, expand UX, XM/IT parity, tracker effects, swing/humanize, genre kits, cue templates, drum quality examples.
+- **Music** (MUSIC-001–011): Pattern IR snapshot tests, extended operators, expand UX, XM/IT parity, tracker effects, swing/humanize, genre kits, cue templates, drum quality examples, instrument pitch validation/reporting.
 - **Mesh/Animation Core** (MESH-001–007, CHAR-001–003, ANIM-001–003): Modifier stacks, UV unwrap, normals automation, LOD generation, collision meshes, navmesh metadata, baking suite, Starlark constructors, validation/verification.
 - **Textures Core** (TEX-001–002, 004–007): Procedural ops (blur/warp/morphology), templates, Wang tiles, trimsheets, decals, splat sets.
 - **New Asset Types Core** (GEN-001–004): Spritesheets/animations, VFX flipbooks, UI nine-slice/icon sets, bitmap fonts.
@@ -133,11 +133,7 @@ Resolved questions:
 
 ## Music
 
-- [ ] `MUSIC-011` Add instrument pitch validation and auto-correction for XM/IT export.
-  - Pitch deviation measurement (`xm_pitch_deviation_cents`, `it_pitch_deviation_cents`) that simulates each tracker format's playback formula and reports error in cents.
-  - Fix IT `c5_speed` truncation bug (round instead of truncate).
-  - Surface `pitch_deviation_cents` in `MusicInstrumentLoopReport` for every exported instrument.
-  - Plan: `docs/plans/2026-01-28-instrument-pitch-validation.md`
+No open music roadmap items are currently tracked in this file.
 
 ---
 

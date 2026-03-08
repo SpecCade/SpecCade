@@ -21,9 +21,6 @@ The audio analysis backend extracts structured metrics from generated audio, ena
 # Analyze a generated audio file
 speccade analyze --input output.wav --output metrics.json
 
-# Analyze directly from spec (generate + analyze)
-speccade analyze --spec kick.star --output metrics.json
-
 # Compare two outputs
 speccade compare --a kick_v1.wav --b kick_v2.wav --output comparison.json
 

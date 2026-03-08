@@ -1,6 +1,6 @@
 //! Preview command implementation
 //!
-//! Opens an asset preview (stub for Blender preview).
+//! Opens an asset preview or exports an animated GIF preview.
 
 use anyhow::{Context, Result};
 use colored::Colorize;

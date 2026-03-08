@@ -1,7 +1,9 @@
 # ProjectExplorer — GUI Usability Redesign
 
 **Date:** 2026-01-28
-**Status:** Design approved, not yet implemented
+**Status:** Implemented
+
+This document is retained as design history. The project explorer now exists in the editor frontend at `editor/src/components/ProjectExplorer.ts` and is wired from `editor/src/main.ts`.
 
 ## Summary
 

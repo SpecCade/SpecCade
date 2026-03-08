@@ -208,7 +208,7 @@ my_kick = kick_template.fill(punch=0.8, sub_weight=0.6, click=0.3)
 
 Add `speccade analyze` command:
 ```bash
-speccade analyze --spec kick.star --output metrics.json
+speccade analyze --input output.wav --output metrics.json
 ```
 
 Returns structured metrics:
