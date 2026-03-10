@@ -5807,7 +5807,7 @@
     },
     {
       "id": "texture/corrupt-alpha",
-      "description": "Alpha channel is uniform (all 0 or all 255)",
+      "description": "Alpha channel is fully transparent across the entire image",
       "severity": "error",
       "applies_to": [
         "texture"
