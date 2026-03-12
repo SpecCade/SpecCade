@@ -195,6 +195,57 @@ pub(crate) enum Commands {
         force: bool,
     },
 
+    /// Run a profile-based asset pipeline across the spec corpus
+    Pipeline {
+        /// Pipeline profile to execute
+        #[arg(
+            long,
+            default_value = "all-fast",
+            value_parser = ["music", "tier1-fast", "all-fast", "all-full", "tier2-validate"]
+        )]
+        profile: String,
+
+        /// Directory containing spec files (default: ./specs)
+        #[arg(short, long)]
+        spec_dir: Option<String>,
+
+        /// Output root directory (default: ./test-outputs)
+        #[arg(short, long)]
+        out_root: Option<String>,
+
+        /// Number of pipeline cycles to run
+        #[arg(long, default_value_t = 1)]
+        cycles: u32,
+
+        /// Seconds to sleep between cycles
+        #[arg(long, default_value_t = 0)]
+        sleep_seconds: u64,
+
+        /// Include Blender-based Tier 2 assets when the profile permits them
+        #[arg(long)]
+        include_blender: bool,
+
+        /// Maximum number of specs to process in parallel
+        #[arg(long)]
+        max_parallel: Option<usize>,
+
+        /// Enable optional deep validation gates for profiles that support them
+        #[arg(long)]
+        deep_gate: bool,
+
+        /// Commit staged changes after each successful cycle
+        #[arg(long)]
+        checkpoint_staged: bool,
+
+        /// Prefix to use for checkpoint commit messages
+        #[arg(long, requires = "checkpoint_staged")]
+        checkpoint_prefix: Option<String>,
+
+        /// Output machine-readable JSON diagnostics
+        #[arg(long)]
+        json: bool,
+    },
+
     /// Preview an asset (opens in viewer/editor, or exports GIF with --gif)
     Preview {
         /// Path to the spec JSON file

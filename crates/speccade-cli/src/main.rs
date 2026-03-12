@@ -117,6 +117,31 @@ fn main() -> ExitCode {
             verbose,
             force,
         ),
+        Commands::Pipeline {
+            profile,
+            spec_dir,
+            out_root,
+            cycles,
+            sleep_seconds,
+            include_blender,
+            max_parallel,
+            deep_gate,
+            checkpoint_staged,
+            checkpoint_prefix,
+            json,
+        } => commands::pipeline::run_with_options(
+            &profile,
+            spec_dir.as_deref(),
+            out_root.as_deref(),
+            cycles,
+            sleep_seconds,
+            include_blender,
+            max_parallel,
+            deep_gate,
+            checkpoint_staged,
+            checkpoint_prefix.as_deref(),
+            json,
+        ),
         Commands::Preview {
             spec,
             out_root,
@@ -840,6 +865,107 @@ mod tests {
             }
             _ => panic!("expected generate-all command"),
         }
+    }
+
+    #[test]
+    fn test_cli_parses_pipeline_defaults() {
+        let cli = Cli::try_parse_from(["speccade", "pipeline"]).unwrap();
+        match cli.command {
+            Commands::Pipeline {
+                profile,
+                spec_dir,
+                out_root,
+                cycles,
+                sleep_seconds,
+                include_blender,
+                max_parallel,
+                deep_gate,
+                checkpoint_staged,
+                checkpoint_prefix,
+                json,
+            } => {
+                assert_eq!(profile, "all-fast");
+                assert!(spec_dir.is_none());
+                assert!(out_root.is_none());
+                assert_eq!(cycles, 1);
+                assert_eq!(sleep_seconds, 0);
+                assert!(!include_blender);
+                assert!(max_parallel.is_none());
+                assert!(!deep_gate);
+                assert!(!checkpoint_staged);
+                assert!(checkpoint_prefix.is_none());
+                assert!(!json);
+            }
+            _ => panic!("expected pipeline command"),
+        }
+    }
+
+    #[test]
+    fn test_cli_parses_pipeline_with_options() {
+        let cli = Cli::try_parse_from([
+            "speccade",
+            "pipeline",
+            "--profile",
+            "all-full",
+            "--spec-dir",
+            "/path/to/specs",
+            "--out-root",
+            "/path/to/output",
+            "--cycles",
+            "3",
+            "--sleep-seconds",
+            "60",
+            "--include-blender",
+            "--max-parallel",
+            "4",
+            "--deep-gate",
+            "--checkpoint-staged",
+            "--checkpoint-prefix",
+            "pipeline checkpoint",
+            "--json",
+        ])
+        .unwrap();
+        match cli.command {
+            Commands::Pipeline {
+                profile,
+                spec_dir,
+                out_root,
+                cycles,
+                sleep_seconds,
+                include_blender,
+                max_parallel,
+                deep_gate,
+                checkpoint_staged,
+                checkpoint_prefix,
+                json,
+            } => {
+                assert_eq!(profile, "all-full");
+                assert_eq!(spec_dir.as_deref(), Some("/path/to/specs"));
+                assert_eq!(out_root.as_deref(), Some("/path/to/output"));
+                assert_eq!(cycles, 3);
+                assert_eq!(sleep_seconds, 60);
+                assert!(include_blender);
+                assert_eq!(max_parallel, Some(4));
+                assert!(deep_gate);
+                assert!(checkpoint_staged);
+                assert_eq!(checkpoint_prefix.as_deref(), Some("pipeline checkpoint"));
+                assert!(json);
+            }
+            _ => panic!("expected pipeline command"),
+        }
+    }
+
+    #[test]
+    fn test_cli_rejects_pipeline_checkpoint_prefix_without_checkpoint_flag() {
+        let err = Cli::try_parse_from([
+            "speccade",
+            "pipeline",
+            "--checkpoint-prefix",
+            "pipeline checkpoint",
+        ])
+        .err()
+        .unwrap();
+        assert!(err.to_string().contains("--checkpoint-staged"));
     }
 
     #[test]

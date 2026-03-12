@@ -17,6 +17,7 @@ pub mod generate_all;
 pub mod inspect;
 pub mod json_output; // Directory module: analysis, convert, manifest, records
 pub mod lint;
+pub mod pipeline;
 pub mod preview;
 pub mod preview_grid;
 #[cfg(feature = "serve")]
@@ -48,6 +49,7 @@ mod tests {
         let _ = generate_all::run;
         let _ = inspect::run;
         let _ = lint::run;
+        let _ = pipeline::run;
         let _ = preview::run;
         let _ = preview_grid::run;
         let _ = template::list;
