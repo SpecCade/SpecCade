@@ -9,284 +9,77 @@ license: MIT
 compatibility: Requires speccade CLI installed.
 metadata:
   author: nethercore-systems
-  version: "1.0.0"
+  version: "1.0.1"
 ---
 
 # SpecCade Authoring
 
-This skill provides knowledge for authoring SpecCade specs - the declarative spec format (Starlark preferred, JSON accepted) that drives deterministic asset generation for audio, textures, music, and 3D meshes.
+Author assets **with** SpecCade; do not change its implementation merely to make a recipe pass. Prefer Starlark helpers to hand-maintained JSON. JSON is supported when requested.
 
-## When to Use
+## Authority and first inspection
 
-Use this skill when users ask about creating, editing, or understanding SpecCade specs. Triggered by questions like:
-- "How do I create a sound/texture/asset?"
-- "What synthesis types are available?"
-- "How does the spec format work?"
-- "What effects can I apply?"
-- "How do I write tracker music?"
-- "What is the compose IR / pattern IR?"
-- "How do emit, stack, and repeat work?"
+- Current Rust types/validation in `crates/speccade-spec/src/recipe/` define the contract.
+- Run `speccade --version`, `speccade doctor`, and relevant `--help` against the executable you will use. A binary in a dirty developer checkout may not match published source.
+- `speccade stdlib dump --format json` exposes current helper names, argument names and defaults. Do not guess them from a related synthesizer or Blender API.
+- Reuse the nearest checked-in `specs/` or `packs/preset_library_v1/` example. Validate it at this revision before adapting it. Editor schemas and older prose are secondary.
 
-## Core Concepts
+## Small authoring loop
 
-### Spec Structure
+1. Fix the intended asset, duration/dimensions, target format, seed and output path. Keep the editable `.star` source.
+2. Evaluate the helpers, then validate the complete spec before generation.
+3. Generate into an explicit output root, read the report and decode the actual output. Never treat a schema pass as backend success.
+4. Import/pack and exercise the asset in the target application. Listening/viewing decides quality; format and budget checks do not.
 
-Every SpecCade spec is a JSON file with these required fields:
-
-```json
-{
-  "spec_version": 1,
-  "asset_id": "my_asset_name",
-  "asset_type": "audio",
-  "license": "CC0-1.0",
-  "seed": 12345,
-  "outputs": [{ "kind": "primary", "format": "wav", "path": "out/my_asset.wav" }],
-  "recipe": {
-    "kind": "audio_v1",
-    "params": { ... }
-  }
-}
-```
-
-**Key rules:**
-- `asset_id`: lowercase, 3-64 chars, pattern `^[a-z][a-z0-9_-]{2,63}$`
-- `seed`: u32 (0 to 4294967295) - drives deterministic generation
-- `outputs`: at least one with `kind: "primary"`
-- `recipe.kind`: must match asset type prefix
-
-## Preferred Format
-
-LLMs should always output Starlark (`.star`) specs using stdlib functions unless the user explicitly requests JSON. Starlark provides validation, composability, and schema resilience over raw JSON. See [`docs/starlark-authoring.md`](../../../docs/starlark-authoring.md) for full guidance.
-
-### Asset Types
-
-| Type | Recipe Kind | Output | Backend |
-|------|-------------|--------|---------|
-| audio | `audio_v1` | WAV | Rust (Tier 1) |
-| texture | `texture.procedural_v1` | PNG | Rust (Tier 1) |
-| music | `music.tracker_song_v1` | XM/IT | Rust (Tier 1) |
-| static_mesh | `static_mesh.blender_primitives_v1` | GLB | Blender (Tier 2) |
-| skeletal_mesh | `skeletal_mesh.armature_driven_v1`, `skeletal_mesh.skinned_mesh_v1` | GLB | Blender (Tier 2) |
-| skeletal_animation | `skeletal_animation.blender_clip_v1` | GLB | Blender (Tier 2) |
-
-**Tier 1** = byte-identical output (same spec + seed = same file)
-**Tier 2** = metric-validated (depends on Blender version)
-
-### Workflow
-
-1. **Write spec**: Create Starlark (`.star`) using stdlib functions
-2. **Validate**: `speccade validate --spec my_spec.json`
-3. **Generate**: `speccade generate --spec my_spec.json --out-root ./output`
-4. **Iterate**: Adjust params, regenerate
-
-### CLI Commands
+For **Nethercore ZX**, these commands use its `nethercore` budget. Other targets should choose their own budget rather than inheriting ZX restrictions:
 
 ```bash
-speccade validate --spec FILE          # Check spec validity
-speccade generate --spec FILE          # Generate asset
-speccade generate-all --spec-dir DIR   # Batch generate
-speccade doctor                        # Check dependencies
-speccade fmt --spec FILE               # Reformat spec
+speccade eval --spec asset.star --pretty
+speccade validate --spec asset.star --budget nethercore --json
+speccade generate --spec asset.star --out-root ./output --budget nethercore --json
 ```
 
-## Audio Specs
+`nethercore` and `zx-8bit` are distinct presets. No bulk generation until one representative asset works end to end.
 
-Audio specs use `audio_v1` recipe with layers, effects, and envelopes.
+## Minimal ZX audio starting point
 
-**Minimal structure:**
-```json
-{
-  "recipe": {
-    "kind": "audio_v1",
-    "params": {
-      "duration_seconds": 1.0,
-      "sample_rate": 44100,
-      "layers": [{
-        "synthesis": { "type": "oscillator", "waveform": "sine", "frequency": 440.0 },
-        "envelope": { "attack": 0.01, "decay": 0.1, "sustain": 0.5, "release": 0.3 },
-        "volume": 0.8
-      }]
-    }
-  }
-}
-```
-
-**16+ synthesis types available** - see `references/audio-synthesis.md`
-**7 effects** - see `references/audio-effects.md`
-
-## Texture Specs
-
-Texture specs use procedural node graphs:
-
-```json
-{
-  "recipe": {
-    "kind": "texture.procedural_v1",
-    "params": {
-      "resolution": [512, 512],
-      "tileable": true,
-      "nodes": [
-        { "id": "base", "type": "noise", "noise": { "type": "perlin", "scale": 4.0 } },
-        { "id": "color", "type": "color_ramp", "input": "base", "stops": [...] }
-      ]
-    }
-  }
-}
-```
-
-**Node types** - see `references/texture-nodes.md`
-
-## Music Specs
-
-Music uses tracker format (XM/IT) with patterns and instruments.
-
-### Basic Tracker Song (`music.tracker_song_v1`)
-
-```json
-{
-  "recipe": {
-    "kind": "music.tracker_song_v1",
-    "params": {
-      "format": "xm",
-      "tempo": 125,
-      "channels": 8,
-      "patterns": [...],
-      "instruments": [...]
-    }
-  }
-}
-```
-
-### Compose IR (`music.tracker_song_compose_v1`)
-
-For compact, operator-based authoring, use the Pattern IR format:
-
-```json
-{
-  "recipe": {
-    "kind": "music.tracker_song_compose_v1",
-    "params": {
-      "format": "xm",
-      "bpm": 150,
-      "channels": 8,
-      "instruments": [...],
-      "defs": { "kick_4": { "op": "emit", "at": {...}, "cell": {...} } },
-      "patterns": { "verse": { "rows": 64, "program": { "op": "stack", "parts": [...] } } },
-      "arrangement": [{ "pattern": "verse", "repeat": 4 }]
-    }
-  }
-}
-```
-
-Key operators: `stack`, `emit`, `emit_seq`, `repeat`, `concat`, `ref`, `prob`, `choose`
-
-**Tracker format** - see `references/music-tracker.md`
-**Compose IR** - see `references/music-compose-ir.md`
-
-## Mesh Specs
-
-3D meshes require Blender (Tier 2):
-
-```json
-{
-  "recipe": {
-    "kind": "static_mesh.blender_primitives_v1",
-    "params": {
-      "primitive": "cube",
-      "size": [1.0, 1.0, 1.0]
-    }
-  }
-}
-```
-
-**Blender backends** - see `references/mesh-blender.md`
-
-## Common Patterns
-
-### Kick Drum
-```json
-"layers": [{
-  "synthesis": { "type": "oscillator", "waveform": "sine", "frequency": 150.0,
-    "frequency_sweep": { "end_frequency": 40.0, "duration": 0.15, "curve": "exponential" }
-  },
-  "envelope": { "attack": 0.001, "decay": 0.2, "sustain": 0.0, "release": 0.1 }
-}]
-```
-
-### Hi-Hat
-```json
-"layers": [{
-  "synthesis": { "type": "noise", "noise_type": "white" },
-  "envelope": { "attack": 0.001, "decay": 0.05, "sustain": 0.0, "release": 0.05 },
-  "filter": { "type": "highpass", "cutoff": 8000.0 }
-}]
-```
-
-### Pad with Reverb
-```json
-"layers": [{
-  "synthesis": { "type": "additive", "harmonics": [1.0, 0.5, 0.25, 0.125] },
-  "envelope": { "attack": 0.5, "decay": 0.3, "sustain": 0.7, "release": 1.0 }
-}],
-"effects": [{ "type": "reverb", "room_size": 0.8, "wet": 0.4 }]
-```
-
-## Validation Errors
-
-Common errors and fixes:
-
-| Code | Meaning | Fix |
-|------|---------|-----|
-| E001 | Invalid asset_id format | Use lowercase, 3-64 chars |
-| E002 | Missing required field | Add the field to spec |
-| E003 | Recipe/asset type mismatch | Match recipe.kind to asset_type |
-| E010 | Invalid synthesis params | Check synthesis type requirements |
-
-## References
-
-For detailed documentation:
-- `references/audio-synthesis.md` - All 16+ synthesis types with params
-- `references/audio-effects.md` - Effects chain reference
-- `references/texture-nodes.md` - Procedural texture nodes
-- `references/music-tracker.md` - XM/IT tracker format basics
-- `references/music-compose-ir.md` - Pattern IR operators and authoring
-- `references/mesh-blender.md` - Blender backend reference
-- `references/spec-format.md` - Full JSON schema
-
-## Character / Humanoid
-
-Skeletal meshes have two recipe kinds:
-
-- `skeletal_mesh.armature_driven_v1`: build mesh from a skeleton (procedural / LLM-friendly)
-- `skeletal_mesh.skinned_mesh_v1`: bind an existing mesh to a skeleton (import/rig workflows)
-
-Minimal Starlark starting point for an armature-driven humanoid:
+Adapted from `specs/audio/audio_filter_bandpass.star`, with target sample rate explicit:
 
 ```starlark
 spec(
-    asset_id = "my-humanoid-01",
-    asset_type = "skeletal_mesh",
+    asset_id = "zx-bandpass-01",
+    asset_type = "audio",
     seed = 42,
-    outputs = [output("characters/my_humanoid.glb", "glb")],
+    outputs = [output("sounds/bandpass.wav", "wav")],
     recipe = {
-        "kind": "skeletal_mesh.armature_driven_v1",
+        "kind": "audio_v1",
         "params": {
-            "skeleton_preset": "humanoid_basic_v1",
-            "bone_meshes": {
-                "spine": {"profile": "hexagon(8)", "profile_radius": 0.15, "taper": 0.9},
-            },
+            "duration_seconds": 1.5,
+            "sample_rate": 22050,
+            "layers": [audio_layer(
+                synthesis = noise_burst("white"),
+                envelope = envelope(0.05, 0.3, 0.7, 0.4),
+                volume = 0.7,
+                filter = bandpass(1000, 4.0, 4000),
+            )],
         },
     },
 )
 ```
 
-Full reference: `docs/spec-reference/character.md`
+Verify generated WAV metadata: mono, signed 16-bit PCM, 22,050 Hz. The current Nethercore raw WAV packer does not safely infer/convert an arbitrary source format.
 
-## Example Specs
+## Routing
 
-Find working examples in `speccade/packs/preset_library_v1/`:
-- `audio/drums/` - Kick, snare, hats
-- `audio/bass/` - Bass sounds
-- `audio/leads/` - Lead synths
-- `audio/pads/` - Pad sounds
-- `audio/fx/` - Risers, impacts, transitions
+- Audio synthesis/filtering: [audio-synthesis](references/audio-synthesis.md), [effects](references/audio-effects.md).
+- PNG/procedural materials: [texture nodes](references/texture-nodes.md). Each output's `source` selects its terminal node ID.
+- Tracker music: [tracker](references/music-tracker.md), [compose IR](references/music-compose-ir.md).
+- GLB meshes/rigs: [Blender](references/mesh-blender.md); canonical character guidance is `docs/spec-reference/character.md` and `crates/speccade-spec/src/recipe/character/`.
+- Spec/report conventions: [spec format](references/spec-format.md).
+- **ZX integration:** [Nethercore boundary](references/nethercore-zx-integration.md): raw inputs, stable manifest IDs, tracker sample extraction, WAV and GLB limits, runtime gates.
+
+## Determinism and delivery
+
+- Tier 1 Rust backends: compare bytes for the same validated source/spec/seed and pinned implementation/dependencies. Determinism is not a promise across versions.
+- Tier 2 Blender backends: pin Blender; validate triangle/bone/frame counts, bounds and expected animation. Do not demand byte-identical GLB.
+- Do not silently replace a failed backend or asset with a placeholder. Keep errors attached to the real attempted recipe; make one directed correction.
+- Preserve authored sources and useful reports. Avoid retaining duplicate generated batches. Deliver only verified artifacts; keep sensory acceptance separate.
